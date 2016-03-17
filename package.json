@@ -1,6 +1,6 @@
 {
-  "name": "relay-runtime-query",
-  "version": "0.7.1",
+  "name": "apollo-client",
+  "version": "0.0.1",
   "description": "Compile your Relay GraphQL queries at runtime, no need for Babel. Only for use in development.",
   "main": "./lib/index.js",
   "jsnext:main": "./src/index.js",

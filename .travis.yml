@@ -1,6 +1,7 @@
 language: node_js
 node_js:
   - "5.1"
+  - "4.2"
 
 # Allow Travis tests to run in containers.
 sudo: false

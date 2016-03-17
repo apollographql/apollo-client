@@ -77,6 +77,36 @@ describe('normalize', async () => {
       ],
     };
 
+    assert.deepEqual(normalizeResult(result), {
+      [result.id]: {
+        ..._.omit(result, 'nestedArray'),
+        nestedArray: result.nestedArray.map(_.property('id')),
+      },
+      [result.nestedArray[0].id]: result.nestedArray[0],
+      [result.nestedArray[1].id]: result.nestedArray[1],
+    });
+  });
+
+  it('properly normalizes a nested array without IDs', async () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        {
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+        {
+          stringField: 'This is a string also!',
+          numberField: 7,
+          nullField: null,
+        },
+      ],
+    };
+
     const normalized = normalizeResult(result);
 
     assert.deepEqual(normalized, {
@@ -84,8 +114,8 @@ describe('normalize', async () => {
         ..._.omit(result, 'nestedArray'),
         nestedArray: result.nestedArray.map(_.property('id')),
       },
-      [result.nestedArray[0].id]: result.nestedArray[0],
-      [result.nestedArray[1].id]: result.nestedArray[1],
+      [result.id + '.nestedArray.0']: result.nestedArray[0],
+      [result.id + '.nestedArray.1']: result.nestedArray[1],
     });
   });
 });

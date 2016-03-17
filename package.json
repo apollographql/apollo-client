@@ -26,7 +26,9 @@
   "license": "MIT",
   "dependencies": {
     "babel-polyfill": "^6.5.0",
-    "graphql": "^0.4.17"
+    "graphql": "^0.4.17",
+    "lodash": "^4.6.1",
+    "redux": "^3.3.1"
   },
   "devDependencies": {
     "babel-core": "6.3.21",

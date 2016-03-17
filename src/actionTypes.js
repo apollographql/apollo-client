@@ -1,0 +1,1 @@
+export const RECEIVE_RESULT = 'RECEIVE_RESULT';

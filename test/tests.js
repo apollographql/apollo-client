@@ -1,5 +1,7 @@
 import { assert } from 'chai';
 
+import { normalizeResult } from '../src';
+
 // Uncomment the below to generate a new schema JSON
 // describe("graphql", () => {
 //   it("can introspect star wars", async () => {
@@ -13,9 +15,16 @@ import { assert } from 'chai';
 //   });
 // });
 
+describe('normalization', async () => {
+  it('properly normalizes a trivial item', async () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5
+    };
 
-describe('some tests', async () => {
-  it('does stuff', async () => {
-    assert.isTrue(true);
+    assert.deepEqual(normalizeResult(result), {
+      [result.id]: result
+    });
   });
 });

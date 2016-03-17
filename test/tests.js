@@ -159,7 +159,8 @@ describe('run GraphQL fragments on the store', () => {
       store,
       fragment: `
         fragment FragmentName on Item {
-          stringField
+          stringField,
+          numberField
         }
       `,
       rootId: 'abcd',
@@ -167,7 +168,8 @@ describe('run GraphQL fragments on the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     assert.deepEqual(queryResult, {
-      stringField: result.stringField
+      stringField: result.stringField,
+      numberField: result.numberField
     });
   });
 });

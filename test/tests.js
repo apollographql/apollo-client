@@ -274,6 +274,31 @@ describe('run GraphQL fragments on the store', () => {
       ]
     });
   });
+
+  it('throws on a missing field', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    };
+
+    const store = normalizeResult(_.cloneDeep(result));
+
+    assert.throws(() => {
+      const queryResult = runFragment({
+        store,
+        fragment: `
+          fragment FragmentName on Item {
+            stringField,
+            missingField
+          }
+        `,
+        rootId: 'abcd',
+      });
+    }, /field missingField on object/);
+  });
+
 });
 
 function assertEqualSansDataId(a, b) {

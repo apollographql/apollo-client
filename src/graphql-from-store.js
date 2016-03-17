@@ -1,5 +1,5 @@
 import { parse } from 'graphql/language';
-import { isArray } from 'lodash';
+import { isArray, has } from 'lodash';
 
 export function runFragment({ store, fragment, rootId }) {
   const parsedFragment = parse(fragment);
@@ -27,6 +27,10 @@ function runSelectionSet({ store, rootId, selectionSet}) {
 
   selectionSet.selections.forEach((selection) => {
     const key = selection.name.value;
+
+    if (! has(rootObj, key)) {
+      throw new Error(`Can't find field ${key} on object ${rootObj}.`);
+    }
 
     if (! selection.selectionSet) {
       result[key] = rootObj[key];

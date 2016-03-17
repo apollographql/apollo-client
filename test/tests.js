@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { normalizeResult } from '../src/normalize';
 import _ from 'lodash';
+import { runFragment } from '../src/graphql-from-store';
 
 describe('normalize', async () => {
   it('properly normalizes a trivial item', async () => {
@@ -11,7 +12,7 @@ describe('normalize', async () => {
       nullField: null,
     };
 
-    assert.deepEqual(normalizeResult(result), {
+    assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
       [result.id]: result
     });
   });
@@ -30,7 +31,7 @@ describe('normalize', async () => {
       },
     };
 
-    assert.deepEqual(normalizeResult(result), {
+    assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
       [result.id]: _.omit(result, 'nestedObj'),
       [result.nestedObj.id]: result.nestedObj,
     });
@@ -49,7 +50,7 @@ describe('normalize', async () => {
       },
     };
 
-    assert.deepEqual(normalizeResult(result), {
+    assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
       [result.id]: _.omit(result, 'nestedObj'),
       [result.id + '.nestedObj']: result.nestedObj,
     });
@@ -77,7 +78,7 @@ describe('normalize', async () => {
       ],
     };
 
-    assert.deepEqual(normalizeResult(result), {
+    assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
       [result.id]: {
         ..._.omit(result, 'nestedArray'),
         nestedArray: result.nestedArray.map(_.property('id')),
@@ -107,15 +108,61 @@ describe('normalize', async () => {
       ],
     };
 
-    const normalized = normalizeResult(result);
+    const normalized = normalizeResult(_.cloneDeep(result));
 
-    assert.deepEqual(normalized, {
+    assertEqualSansDataId(normalized, {
       [result.id]: {
         ..._.omit(result, 'nestedArray'),
-        nestedArray: result.nestedArray.map(_.property('id')),
+        nestedArray: [result.id + '.nestedArray.0', result.id + '.nestedArray.1'],
       },
       [result.id + '.nestedArray.0']: result.nestedArray[0],
       [result.id + '.nestedArray.1']: result.nestedArray[1],
     });
   });
 });
+
+describe('run GraphQL fragments on the store', () => {
+  it('runs a basic fragment', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    };
+
+    const store = normalizeResult(_.cloneDeep(result));
+
+    const queryResult = runFragment({
+      store,
+      fragment: `
+        fragment on Item {
+          stringField
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    assertEqualSansDataId(queryResult, {
+      stringField: result.stringField
+    });
+  });
+});
+
+function assertEqualSansDataId(a, b) {
+  const filteredA = omitDataIdFields(a);
+  const filteredB = omitDataIdFields(b);
+
+  assert.deepEqual(filteredA, filteredB);
+}
+
+function omitDataIdFields(obj) {
+  if (! _.isObject(obj)) {
+    return obj;
+  }
+
+  const omitted = _.omit(obj, ['__data_id']);
+
+  return _.mapValues(omitted, (value) => {
+    return omitDataIdFields(value);
+  });
+}

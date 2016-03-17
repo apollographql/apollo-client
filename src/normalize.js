@@ -1,9 +1,11 @@
 import { forOwn, isString, isNumber, isBoolean, isNull, isArray } from 'lodash';
 
 export function normalizeResult(result, normalized = {}) {
-  if (! isString(result.id)) {
+  if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to normalizeResult must have a string ID');
   }
+
+  result.__data_id = result.__data_id || result.id;
 
   const thisValue = {};
 
@@ -20,10 +22,12 @@ export function normalizeResult(result, normalized = {}) {
 
       value.forEach((item, index) => {
         if (! isString(item.id)) {
-          item.id = result.id + '.' + key + '.' + index;
+          item.__data_id = result.__data_id + '.' + key + '.' + index;
+        } else {
+          item.__data_id = item.id;
         }
 
-        thisIdList.push(item.id);
+        thisIdList.push(item.__data_id);
 
         normalizeResult(item, normalized);
       });
@@ -35,13 +39,15 @@ export function normalizeResult(result, normalized = {}) {
     // It's an object
     if (! isString(value.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
-      value.id = result.id + '.' + key;
+      value.__data_id = result.id + '.' + key;
+    } else {
+      value.__data_id = value.id;
     }
 
     normalizeResult(value, normalized);
   });
 
-  normalized[result.id] = thisValue;
+  normalized[result.__data_id] = thisValue;
 
   return normalized;
 }

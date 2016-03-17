@@ -1,4 +1,5 @@
 import { parse } from 'graphql/language';
+import { isArray } from 'lodash';
 
 export function runFragment({ store, fragment, rootId }) {
   const parsedFragment = parse(fragment);
@@ -29,16 +30,26 @@ function runSelectionSet({ store, rootId, selectionSet}) {
 
     if (! selection.selectionSet) {
       result[key] = rootObj[key];
-    } else {
-      const newId = rootObj[key];
-
-      // This is a nested query
-      result[key] = runSelectionSet({
-        store,
-        rootId: newId,
-        selectionSet: selection.selectionSet
-      });
+      return;
     }
+
+    if (isArray(rootObj[key])) {
+      result[key] = rootObj[key].map((id) => {
+        return runSelectionSet({
+          store,
+          rootId: id,
+          selectionSet: selection.selectionSet
+        })
+      });
+      return;
+    }
+
+    // This is a nested query
+    result[key] = runSelectionSet({
+      store,
+      rootId: rootObj[key],
+      selectionSet: selection.selectionSet
+    });
   });
 
   return result;

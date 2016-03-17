@@ -220,6 +220,60 @@ describe('run GraphQL fragments on the store', () => {
       }
     });
   });
+
+  it('runs a nested fragment with an array without IDs', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        {
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+        {
+          stringField: 'This is a string also!',
+          numberField: 7,
+          nullField: null,
+        },
+      ],
+    };
+
+    const store = normalizeResult(_.cloneDeep(result));
+
+    const queryResult = runFragment({
+      store,
+      fragment: `
+        fragment FragmentName on Item {
+          stringField,
+          numberField,
+          nestedArray {
+            stringField,
+            numberField
+          }
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: 'This is a string!',
+      numberField: 5,
+      nestedArray: [
+        {
+          stringField: 'This is a string too!',
+          numberField: 6,
+        },
+        {
+          stringField: 'This is a string also!',
+          numberField: 7,
+        }
+      ]
+    });
+  });
 });
 
 function assertEqualSansDataId(a, b) {

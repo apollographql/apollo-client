@@ -1,0 +1,48 @@
+{
+  "name": "relay-runtime-query",
+  "version": "0.7.1",
+  "description": "Compile your Relay GraphQL queries at runtime, no need for Babel. Only for use in development.",
+  "main": "./lib/index.js",
+  "jsnext:main": "./src/index.js",
+  "scripts": {
+    "test": "mocha --reporter spec --full-trace test/index.js",
+    "compile": "babel --presets es2015,stage-0 -d lib/ src/",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "meteor/relay-runtime-query"
+  },
+  "keywords": [
+    "ecmascript",
+    "es2015",
+    "jsnext",
+    "javascript",
+    "relay",
+    "npm",
+    "react"
+  ],
+  "author": "Sashko Stubailo <sashko@stubailo.com>",
+  "license": "MIT",
+  "dependencies": {
+    "babel-polyfill": "^6.5.0",
+    "babel-relay-plugin": "0.7.1",
+    "graphql": "^0.4.17",
+    "inherits": "^2.0.1",
+    "react": "^0.14.7",
+    "react-dom": "^0.14.7",
+    "react-relay": "0.7.1",
+    "util": "^0.10.3"
+  },
+  "devDependencies": {
+    "babel-core": "6.3.21",
+    "babel-loader": "6.2.0",
+    "babel-plugin-transform-flow-strip-types": "^6.5.0",
+    "babel-preset-es2015": "^6.5.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "graphql": "^0.4.17",
+    "graphql-relay": "^0.3.6",
+    "lodash": "^4.5.1",
+    "mocha": "^2.3.3"
+  }
+}

@@ -6,6 +6,10 @@ In the planning stage.
 
 --------
 
+## Resources
+
+1. http://hueypetersen.com/posts/2015/09/30/quick-look-at-the-relay-store/
+
 ## Goals
 
 ### Properties

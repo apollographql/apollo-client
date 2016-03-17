@@ -1,3 +1,6 @@
+/* eslint no-param-reassign: 0 */
+// fix this by using immutablejs later
+
 import { forOwn, isString, isNumber, isBoolean, isNull, isArray } from 'lodash';
 
 export function normalizeResult(result, normalized = {}) {

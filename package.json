@@ -7,7 +7,8 @@
   "scripts": {
     "test": "mocha --reporter spec --full-trace test/index.js",
     "compile": "babel --presets es2015,stage-0 -d lib/ src/",
-    "prepublish": "npm run compile"
+    "prepublish": "npm run compile",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -32,13 +33,30 @@
   },
   "devDependencies": {
     "babel-core": "6.3.21",
+    "babel-eslint": "^6.0.0-beta.6",
     "babel-loader": "6.2.0",
     "babel-preset-es2015": "^6.5.0",
     "babel-preset-stage-0": "^6.5.0",
     "chai": "^3.5.0",
+    "eslint": "^2.4.0",
+    "eslint-config-airbnb": "^6.1.0",
     "graphql": "^0.4.17",
     "graphql-relay": "^0.3.6",
     "lodash": "^4.5.1",
     "mocha": "^2.3.3"
+  },
+  "eslintConfig": {
+    "parser": "babel-eslint",
+    "extends": [
+      "airbnb/base"
+    ],
+    "rules": {
+      "no-use-before-define": 0,
+      "arrow-body-style": 0,
+      "dot-notation": 0
+    },
+    "env": {
+      "mocha": true
+    }
   }
 }

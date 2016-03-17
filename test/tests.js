@@ -3,8 +3,8 @@ import { normalizeResult } from '../src/normalize';
 import _ from 'lodash';
 import { runFragment } from '../src/graphql-from-store';
 
-describe('normalize', async () => {
-  it('properly normalizes a trivial item', async () => {
+describe('normalize', () => {
+  it('properly normalizes a trivial item', () => {
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -13,11 +13,11 @@ describe('normalize', async () => {
     };
 
     assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
-      [result.id]: result
+      [result.id]: result,
     });
   });
 
-  it('properly normalizes a nested object with an ID', async () => {
+  it('properly normalizes a nested object with an ID', () => {
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -40,7 +40,7 @@ describe('normalize', async () => {
     });
   });
 
-  it('properly normalizes a nested object without an ID', async () => {
+  it('properly normalizes a nested object without an ID', () => {
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -56,13 +56,13 @@ describe('normalize', async () => {
     assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
       [result.id]: {
         ..._.omit(result, 'nestedObj'),
-        nestedObj: result.id + '.nestedObj',
+        nestedObj: `${result.id}.nestedObj`,
       },
-      [result.id + '.nestedObj']: result.nestedObj,
+      [`${result.id}.nestedObj`]: result.nestedObj,
     });
   });
 
-  it('properly normalizes a nested array with IDs', async () => {
+  it('properly normalizes a nested array with IDs', () => {
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -94,7 +94,7 @@ describe('normalize', async () => {
     });
   });
 
-  it('properly normalizes a nested array without IDs', async () => {
+  it('properly normalizes a nested array without IDs', () => {
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -119,10 +119,13 @@ describe('normalize', async () => {
     assertEqualSansDataId(normalized, {
       [result.id]: {
         ..._.omit(result, 'nestedArray'),
-        nestedArray: [result.id + '.nestedArray.0', result.id + '.nestedArray.1'],
+        nestedArray: [
+          `${result.id}.nestedArray.0`,
+          `${result.id}.nestedArray.1`,
+        ],
       },
-      [result.id + '.nestedArray.0']: result.nestedArray[0],
-      [result.id + '.nestedArray.1']: result.nestedArray[1],
+      [`${result.id}.nestedArray.0`]: result.nestedArray[0],
+      [`${result.id}.nestedArray.1`]: result.nestedArray[1],
     });
   });
 });
@@ -175,7 +178,7 @@ describe('run GraphQL fragments on the store', () => {
     // The result of the query shouldn't contain __data_id fields
     assert.deepEqual(queryResult, {
       stringField: result.stringField,
-      numberField: result.numberField
+      numberField: result.numberField,
     });
   });
 
@@ -216,8 +219,8 @@ describe('run GraphQL fragments on the store', () => {
       numberField: 5,
       nestedObj: {
         stringField: 'This is a string too!',
-        numberField: 6
-      }
+        numberField: 6,
+      },
     });
   });
 
@@ -270,8 +273,8 @@ describe('run GraphQL fragments on the store', () => {
         {
           stringField: 'This is a string also!',
           numberField: 7,
-        }
-      ]
+        },
+      ],
     });
   });
 
@@ -286,7 +289,7 @@ describe('run GraphQL fragments on the store', () => {
     const store = normalizeResult(_.cloneDeep(result));
 
     assert.throws(() => {
-      const queryResult = runFragment({
+      runFragment({
         store,
         fragment: `
           fragment FragmentName on Item {
@@ -298,7 +301,6 @@ describe('run GraphQL fragments on the store', () => {
       });
     }, /field missingField on object/);
   });
-
 });
 
 function assertEqualSansDataId(a, b) {

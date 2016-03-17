@@ -14,10 +14,10 @@ export function runFragment({ store, fragment, rootId }) {
 
   const fragmentDef = parsedFragment.definitions[0];
 
-  return runSelectionSet({ store, rootId, selectionSet: fragmentDef.selectionSet })
+  return runSelectionSet({ store, rootId, selectionSet: fragmentDef.selectionSet });
 }
 
-function runSelectionSet({ store, rootId, selectionSet}) {
+function runSelectionSet({ store, rootId, selectionSet }) {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
@@ -42,8 +42,8 @@ function runSelectionSet({ store, rootId, selectionSet}) {
         return runSelectionSet({
           store,
           rootId: id,
-          selectionSet: selection.selectionSet
-        })
+          selectionSet: selection.selectionSet,
+        });
       });
       return;
     }
@@ -52,7 +52,7 @@ function runSelectionSet({ store, rootId, selectionSet}) {
     result[key] = runSelectionSet({
       store,
       rootId: rootObj[key],
-      selectionSet: selection.selectionSet
+      selectionSet: selection.selectionSet,
     });
   });
 
@@ -73,6 +73,6 @@ function stripLoc(obj) {
   });
 }
 
-function printAST(fragAst) {
-  console.log(JSON.stringify(stripLoc(fragAst), null, 2));
+function printAST(fragAst) { // eslint-disable-line no-unused-vars
+  console.log(JSON.stringify(stripLoc(fragAst), null, 2)); // eslint-disable-line no-console
 }

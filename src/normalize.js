@@ -5,7 +5,7 @@ export function normalizeResult(result, normalized = {}) {
     throw new Error('Result passed to normalizeResult must have a string ID');
   }
 
-  result.__data_id = result.__data_id || result.id;
+  const resultDataId = result['__data_id'] || result.id;
 
   const thisValue = {};
 
@@ -22,12 +22,12 @@ export function normalizeResult(result, normalized = {}) {
 
       value.forEach((item, index) => {
         if (! isString(item.id)) {
-          item.__data_id = result.__data_id + '.' + key + '.' + index;
+          item['__data_id'] = `${resultDataId}.${key}.${index}`;
         } else {
-          item.__data_id = item.id;
+          item['__data_id'] = item.id;
         }
 
-        thisIdList.push(item.__data_id);
+        thisIdList.push(item['__data_id']);
 
         normalizeResult(item, normalized);
       });
@@ -39,16 +39,16 @@ export function normalizeResult(result, normalized = {}) {
     // It's an object
     if (! isString(value.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
-      value.__data_id = result.id + '.' + key;
+      value['__data_id'] = `${resultDataId}.${key}`;
     } else {
-      value.__data_id = value.id;
+      value['__data_id'] = value.id;
     }
 
-    thisValue[key] = value.__data_id;
+    thisValue[key] = value['__data_id'];
     normalizeResult(value, normalized);
   });
 
-  normalized[result.__data_id] = thisValue;
+  normalized[resultDataId] = thisValue;
 
   return normalized;
 }

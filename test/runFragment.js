@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import _ from 'lodash';
 
-import { runFragment } from '../src/graphql-from-store';
+import { runFragment } from '../src/runFragment';
 import { normalizeResult } from '../src/normalize';
 
 describe('run GraphQL fragments on the store', () => {

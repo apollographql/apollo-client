@@ -122,6 +122,29 @@ describe('normalize', async () => {
 });
 
 describe('run GraphQL fragments on the store', () => {
+  it('rejects malformed queries', () => {
+    assert.throws(() => {
+      runFragment({
+        store: {},
+        fragment: `
+          fragment X on Y { name }
+          fragment W on Y { address }
+        `,
+        rootId: 'asdf',
+      });
+    }, /exactly one definition/);
+
+    assert.throws(() => {
+      runFragment({
+        store: {},
+        fragment: `
+          { name }
+        `,
+        rootId: 'asdf',
+      });
+    }, /be a fragment/);
+  });
+
   it('runs a basic fragment', () => {
     const result = {
       id: 'abcd',
@@ -135,14 +158,15 @@ describe('run GraphQL fragments on the store', () => {
     const queryResult = runFragment({
       store,
       fragment: `
-        fragment on Item {
+        fragment FragmentName on Item {
           stringField
         }
       `,
       rootId: 'abcd',
     });
 
-    assertEqualSansDataId(queryResult, {
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
       stringField: result.stringField
     });
   });

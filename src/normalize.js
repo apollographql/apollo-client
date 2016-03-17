@@ -44,6 +44,7 @@ export function normalizeResult(result, normalized = {}) {
       value.__data_id = value.id;
     }
 
+    thisValue[key] = value.__data_id;
     normalizeResult(value, normalized);
   });
 

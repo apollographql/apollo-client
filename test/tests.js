@@ -32,7 +32,10 @@ describe('normalize', async () => {
     };
 
     assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
-      [result.id]: _.omit(result, 'nestedObj'),
+      [result.id]: {
+        ..._.omit(result, 'nestedObj'),
+        nestedObj: result.nestedObj.id,
+      },
       [result.nestedObj.id]: result.nestedObj,
     });
   });
@@ -51,7 +54,10 @@ describe('normalize', async () => {
     };
 
     assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
-      [result.id]: _.omit(result, 'nestedObj'),
+      [result.id]: {
+        ..._.omit(result, 'nestedObj'),
+        nestedObj: result.id + '.nestedObj',
+      },
       [result.id + '.nestedObj']: result.nestedObj,
     });
   });
@@ -170,6 +176,48 @@ describe('run GraphQL fragments on the store', () => {
     assert.deepEqual(queryResult, {
       stringField: result.stringField,
       numberField: result.numberField
+    });
+  });
+
+  it('runs a nested fragment', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedObj: {
+        id: 'abcde',
+        stringField: 'This is a string too!',
+        numberField: 6,
+        nullField: null,
+      },
+    };
+
+    const store = normalizeResult(_.cloneDeep(result));
+
+    const queryResult = runFragment({
+      store,
+      fragment: `
+        fragment FragmentName on Item {
+          stringField,
+          numberField,
+          nestedObj {
+            stringField,
+            numberField
+          }
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: 'This is a string!',
+      numberField: 5,
+      nestedObj: {
+        stringField: 'This is a string too!',
+        numberField: 6
+      }
     });
   });
 });

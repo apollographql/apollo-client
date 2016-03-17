@@ -12,12 +12,33 @@ export function runFragment({ store, fragment, rootId }) {
   }
 
   const fragmentDef = parsedFragment.definitions[0];
-  const rootObj = store[rootId];
+
+  return runSelectionSet({ store, rootId, selectionSet: fragmentDef.selectionSet })
+}
+
+function runSelectionSet({ store, rootId, selectionSet}) {
+  if (selectionSet.kind !== 'SelectionSet') {
+    throw new Error('Must be a selection set.');
+  }
 
   const result = {};
-  fragmentDef.selectionSet.selections.forEach((selection) => {
+  const rootObj = store[rootId];
+
+  selectionSet.selections.forEach((selection) => {
     const key = selection.name.value;
-    result[key] = rootObj[key];
+
+    if (! selection.selectionSet) {
+      result[key] = rootObj[key];
+    } else {
+      const newId = rootObj[key];
+
+      // This is a nested query
+      result[key] = runSelectionSet({
+        store,
+        rootId: newId,
+        selectionSet: selection.selectionSet
+      });
+    }
   });
 
   return result;
@@ -35,4 +56,8 @@ function stripLoc(obj) {
   return _.mapValues(omitted, (value) => {
     return stripLoc(value);
   });
+}
+
+function printAST(fragAst) {
+  console.log(JSON.stringify(stripLoc(fragAst), null, 2));
 }

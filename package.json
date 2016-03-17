@@ -6,7 +6,7 @@
   "jsnext:main": "./src/index.js",
   "scripts": {
     "test": "mocha --reporter spec --full-trace test/index.js",
-      "posttest": "npm run lint",
+    "posttest": "npm run lint",
     "compile": "babel --presets es2015,stage-0 -d lib/ src/",
     "prepublish": "npm run compile",
     "lint": "eslint ."
@@ -41,6 +41,7 @@
     "chai": "^3.5.0",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.1.0",
+    "eslint-plugin-import": "^1.1.0",
     "graphql": "^0.4.17",
     "graphql-relay": "^0.3.6",
     "lodash": "^4.5.1",
@@ -49,7 +50,8 @@
   "eslintConfig": {
     "parser": "babel-eslint",
     "extends": [
-      "airbnb/base"
+      "airbnb/base",
+      "plugin:import/errors"
     ],
     "rules": {
       "no-use-before-define": 0,

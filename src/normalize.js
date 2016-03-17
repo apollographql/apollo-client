@@ -16,7 +16,20 @@ export function normalizeResult(result, normalized = {}) {
 
     // If it's an array
     if (isArray(value)) {
-      throw new Error('Arrays not implemented!');
+      const thisIdList = [];
+
+      value.forEach((item, index) => {
+        if (! isString(item.id)) {
+          item.id = result.id + '.' + key + '.' + index;
+        }
+
+        thisIdList.push(item.id);
+
+        normalizeResult(item, normalized);
+      });
+
+      thisValue[key] = thisIdList;
+      return;
     }
 
     // It's an object

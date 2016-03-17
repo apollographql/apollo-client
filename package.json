@@ -6,6 +6,7 @@
   "jsnext:main": "./src/index.js",
   "scripts": {
     "test": "mocha --reporter spec --full-trace test/index.js",
+      "posttest": "npm run lint",
     "compile": "babel --presets es2015,stage-0 -d lib/ src/",
     "prepublish": "npm run compile",
     "lint": "eslint ."

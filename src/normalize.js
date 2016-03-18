@@ -15,18 +15,18 @@ import { parseFragmentIfString } from './parser';
 export function normalizeResult({
   result,
   fragment,
-  selectionSetArg,
+  selectionSet,
   normalized = {},
 }) {
   // Argument validation
   if (!fragment && !selectionSet) {
-    throw new Error('Must pass either fragment of selectionSet.');
+    throw new Error('Must pass either fragment or selectionSet.');
   }
 
-  let selectionSet = selectionSetArg;
+  let actualSelectionSet = selectionSet;
   if (fragment) {
     const parsedFragment = parseFragmentIfString(fragment);
-    selectionSet = parsedFragment.selectionSet;
+    actualSelectionSet = parsedFragment.selectionSet;
   }
 
   if (! isString(result.id) && ! isString(result.__data_id)) {
@@ -38,7 +38,7 @@ export function normalizeResult({
 
   const normalizedRootObj = {};
 
-  selectionSet.selections.forEach((selection) => {
+  actualSelectionSet.selections.forEach((selection) => {
     const fieldName = selection.name.value;
     const resultFieldName = selection.alias ? selection.alias.value : fieldName;
     const value = result[resultFieldName];
@@ -69,6 +69,7 @@ export function normalizeResult({
         normalizeResult({
           result: item,
           normalized,
+          selectionSet: selection.selectionSet,
         });
       });
 
@@ -85,9 +86,11 @@ export function normalizeResult({
     }
 
     normalizedRootObj[fieldName] = value['__data_id'];
+
     normalizeResult({
       result: value,
       normalized,
+      selectionSet: selection.selectionSet,
     });
   });
 

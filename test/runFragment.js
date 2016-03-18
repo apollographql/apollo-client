@@ -2,9 +2,8 @@ import { assert } from 'chai';
 import _ from 'lodash';
 
 import { runFragment } from '../src/runFragment';
-import { normalizeResult } from '../src/normalize';
 
-describe('run GraphQL fragments on the store', () => {
+describe('runFragment', () => {
   it('rejects malformed queries', () => {
     assert.throws(() => {
       runFragment({
@@ -178,7 +177,7 @@ describe('run GraphQL fragments on the store', () => {
       nullField: null,
     };
 
-    const store = normalizeResult({ result: _.cloneDeep(result) });
+    const store = { abcd: result };
 
     assert.throws(() => {
       runFragment({

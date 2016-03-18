@@ -12,8 +12,40 @@ describe('normalize', () => {
       nullField: null,
     };
 
-    assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
+    assertEqualSansDataId(normalizeResult({ result: _.cloneDeep(result) }), {
       [result.id]: result,
+    });
+  });
+
+  it('properly normalizes a trivial item given the fragment that fetched it', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        aliasedField: stringField,
+        numberField,
+        nullField
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      aliasedField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    };
+
+    const normalized = normalizeResult({
+      result,
+      fragment,
+    });
+
+    assertEqualSansDataId(normalized, {
+      [result.id]: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+      },
     });
   });
 
@@ -31,7 +63,7 @@ describe('normalize', () => {
       },
     };
 
-    assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
+    assertEqualSansDataId(normalizeResult({ result: _.cloneDeep(result) }), {
       [result.id]: {
         ..._.omit(result, 'nestedObj'),
         nestedObj: result.nestedObj.id,
@@ -53,7 +85,7 @@ describe('normalize', () => {
       },
     };
 
-    assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
+    assertEqualSansDataId(normalizeResult({ result: _.cloneDeep(result) }), {
       [result.id]: {
         ..._.omit(result, 'nestedObj'),
         nestedObj: `${result.id}.nestedObj`,
@@ -84,7 +116,7 @@ describe('normalize', () => {
       ],
     };
 
-    assertEqualSansDataId(normalizeResult(_.cloneDeep(result)), {
+    assertEqualSansDataId(normalizeResult({ result: _.cloneDeep(result) }), {
       [result.id]: {
         ..._.omit(result, 'nestedArray'),
         nestedArray: result.nestedArray.map(_.property('id')),
@@ -114,7 +146,7 @@ describe('normalize', () => {
       ],
     };
 
-    const normalized = normalizeResult(_.cloneDeep(result));
+    const normalized = normalizeResult({ result: _.cloneDeep(result) });
 
     assertEqualSansDataId(normalized, {
       [result.id]: {

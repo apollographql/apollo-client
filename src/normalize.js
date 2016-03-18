@@ -3,7 +3,7 @@
 
 import { forOwn, isString, isNumber, isBoolean, isNull, isArray } from 'lodash';
 
-export function normalizeResult(result, normalized = {}) {
+export function normalizeResult({ result, normalized = {} }) {
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to normalizeResult must have a string ID');
   }
@@ -32,7 +32,10 @@ export function normalizeResult(result, normalized = {}) {
 
         thisIdList.push(item['__data_id']);
 
-        normalizeResult(item, normalized);
+        normalizeResult({
+          result: item,
+          normalized,
+        });
       });
 
       thisValue[key] = thisIdList;
@@ -48,7 +51,10 @@ export function normalizeResult(result, normalized = {}) {
     }
 
     thisValue[key] = value['__data_id'];
-    normalizeResult(value, normalized);
+    normalizeResult({
+      result: value,
+      normalized,
+    });
   });
 
   normalized[resultDataId] = thisValue;

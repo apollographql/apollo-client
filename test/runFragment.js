@@ -36,7 +36,9 @@ describe('run GraphQL fragments on the store', () => {
       nullField: null,
     };
 
-    const store = normalizeResult({ result: _.cloneDeep(result) });
+    const store = {
+      abcd: result
+    };
 
     const queryResult = runFragment({
       store,
@@ -70,7 +72,13 @@ describe('run GraphQL fragments on the store', () => {
       },
     };
 
-    const store = normalizeResult({ result: _.cloneDeep(result) });
+    const store = {
+      abcd: {
+        ..._.omit(result, 'nestedObj'),
+        nestedObj: 'abcde',
+      },
+      abcde: result.nestedObj,
+    };
 
     const queryResult = runFragment({
       store,
@@ -118,7 +126,17 @@ describe('run GraphQL fragments on the store', () => {
       ],
     };
 
-    const store = normalizeResult({ result: _.cloneDeep(result) });
+    const store = {
+      abcd: {
+        ..._.omit(result, 'nestedArray'),
+        nestedArray: [
+          'abcd.nestedArray.0',
+          'abcd.nestedArray.1',
+        ],
+      },
+      'abcd.nestedArray.0': result.nestedArray[0],
+      'abcd.nestedArray.1': result.nestedArray[1],
+    };
 
     const queryResult = runFragment({
       store,

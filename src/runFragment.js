@@ -1,18 +1,8 @@
-import { parse } from 'graphql/language';
 import { isArray, has } from 'lodash';
+import { parseFragmentIfString } from './parser';
 
 export function runFragment({ store, fragment, rootId }) {
-  const parsedFragment = parse(fragment);
-
-  if (parsedFragment.definitions.length !== 1) {
-    throw new Error('Must have exactly one definition in document.');
-  }
-
-  if (parsedFragment.definitions[0].kind !== 'FragmentDefinition') {
-    throw new Error('Must be a fragment.');
-  }
-
-  const fragmentDef = parsedFragment.definitions[0];
+  const fragmentDef = parseFragmentIfString(fragment);
 
   return runSelectionSet({ store, rootId, selectionSet: fragmentDef.selectionSet });
 }

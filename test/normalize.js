@@ -5,6 +5,15 @@ import { normalizeResult } from '../src/normalize';
 
 describe('normalize', () => {
   it('properly normalizes a trivial item', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField
+      }
+    `;
+
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -12,12 +21,15 @@ describe('normalize', () => {
       nullField: null,
     };
 
-    assertEqualSansDataId(normalizeResult({ result: _.cloneDeep(result) }), {
+    assertEqualSansDataId(normalizeResult({
+      fragment,
+      result: _.cloneDeep(result),
+    }), {
       [result.id]: result,
     });
   });
 
-  it('properly normalizes a trivial item given the fragment that fetched it', () => {
+  it('properly normalizes an aliased field', () => {
     const fragment = `
       fragment Item on ItemType {
         id,
@@ -50,6 +62,21 @@ describe('normalize', () => {
   });
 
   it('properly normalizes a nested object with an ID', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedObj {
+          id,
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -63,7 +90,10 @@ describe('normalize', () => {
       },
     };
 
-    assertEqualSansDataId(normalizeResult({ result: _.cloneDeep(result) }), {
+    assertEqualSansDataId(normalizeResult({
+      fragment,
+      result: _.cloneDeep(result),
+    }), {
       [result.id]: {
         ..._.omit(result, 'nestedObj'),
         nestedObj: result.nestedObj.id,
@@ -73,6 +103,20 @@ describe('normalize', () => {
   });
 
   it('properly normalizes a nested object without an ID', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedObj {
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -85,7 +129,10 @@ describe('normalize', () => {
       },
     };
 
-    assertEqualSansDataId(normalizeResult({ result: _.cloneDeep(result) }), {
+    assertEqualSansDataId(normalizeResult({
+      fragment,
+      result: _.cloneDeep(result),
+    }), {
       [result.id]: {
         ..._.omit(result, 'nestedObj'),
         nestedObj: `${result.id}.nestedObj`,
@@ -95,6 +142,21 @@ describe('normalize', () => {
   });
 
   it('properly normalizes a nested array with IDs', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedArray {
+          id,
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -116,7 +178,10 @@ describe('normalize', () => {
       ],
     };
 
-    assertEqualSansDataId(normalizeResult({ result: _.cloneDeep(result) }), {
+    assertEqualSansDataId(normalizeResult({
+      fragment,
+      result: _.cloneDeep(result),
+    }), {
       [result.id]: {
         ..._.omit(result, 'nestedArray'),
         nestedArray: result.nestedArray.map(_.property('id')),
@@ -127,6 +192,20 @@ describe('normalize', () => {
   });
 
   it('properly normalizes a nested array without IDs', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedArray {
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
     const result = {
       id: 'abcd',
       stringField: 'This is a string!',
@@ -146,7 +225,10 @@ describe('normalize', () => {
       ],
     };
 
-    const normalized = normalizeResult({ result: _.cloneDeep(result) });
+    const normalized = normalizeResult({
+      fragment,
+      result: _.cloneDeep(result),
+    });
 
     assertEqualSansDataId(normalized, {
       [result.id]: {

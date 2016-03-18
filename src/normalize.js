@@ -2,20 +2,25 @@
 // fix this by using immutablejs later
 
 import { forOwn, isString, isNumber, isBoolean, isNull, isArray } from 'lodash';
+import { parseFragmentIfString } from './parser';
 
-export function normalizeResult({ result, normalized = {} }) {
+export function normalizeResult({
+  result,
+  fragment,
+  normalized = {},
+}) {
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to normalizeResult must have a string ID');
   }
 
   const resultDataId = result['__data_id'] || result.id;
 
-  const thisValue = {};
+  const normalizedRootObj = {};
 
   forOwn(result, (value, key) => {
     // If it's a scalar, just store it in the cache
     if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
-      thisValue[key] = value;
+      normalizedRootObj[key] = value;
       return;
     }
 
@@ -38,7 +43,7 @@ export function normalizeResult({ result, normalized = {} }) {
         });
       });
 
-      thisValue[key] = thisIdList;
+      normalizedRootObj[key] = thisIdList;
       return;
     }
 
@@ -50,14 +55,14 @@ export function normalizeResult({ result, normalized = {} }) {
       value['__data_id'] = value.id;
     }
 
-    thisValue[key] = value['__data_id'];
+    normalizedRootObj[key] = value['__data_id'];
     normalizeResult({
       result: value,
       normalized,
     });
   });
 
-  normalized[resultDataId] = thisValue;
+  normalized[resultDataId] = normalizedRootObj;
 
   return normalized;
 }

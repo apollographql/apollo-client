@@ -13,13 +13,6 @@ describe('execute', () => {
       }
     `;
 
-    // This is the query we would run if we were actually running one
-    // const query = `
-    //   people_one(id: "1") {
-    //     name
-    //   }
-    // `;
-
     const fullResult = {
       people_one: {
         name: 'Luke Skywalker',

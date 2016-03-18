@@ -12,11 +12,21 @@ import {
 
 import { parseFragmentIfString } from './parser';
 
+/**
+ * Convert a nested GraphQL result into a normalized cache, where each object from the schema
+ * appears exactly once.
+ * @param  {Object} result Arbitrary nested JSON, returned from the GraphQL server
+ * @param  {String} [fragment] The GraphQL fragment used to fetch the data in result
+ * @param  {SelectionSet} [selectionSet] The parsed selection set for the subtree of the query this
+ *                                       result represents
+ * @param  {Object} [cache] The cache to merge into
+ * @return {Object} The resulting cache
+ */
 export function normalizeResult({
   result,
   fragment,
   selectionSet,
-  normalized = {},
+  cache = {},
 }) {
   // Argument validation
   if (!fragment && !selectionSet) {
@@ -79,7 +89,7 @@ export function normalizeResult({
 
         normalizeResult({
           result: item,
-          normalized,
+          cache,
           selectionSet: selection.selectionSet,
         });
       });
@@ -100,12 +110,12 @@ export function normalizeResult({
 
     normalizeResult({
       result: value,
-      normalized,
+      cache,
       selectionSet: selection.selectionSet,
     });
   });
 
-  normalized[resultDataId] = normalizedRootObj;
+  cache[resultDataId] = normalizedRootObj;
 
-  return normalized;
+  return cache;
 }

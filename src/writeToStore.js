@@ -33,7 +33,7 @@ import {
  * @param  {Object} [cache] The cache to merge into
  * @return {Object} The resulting cache
  */
-export function normalizeResult({
+export function writeFragmentToStore({
   result,
   fragment,
   cache = {},
@@ -46,14 +46,14 @@ export function normalizeResult({
   const parsedFragment = parseFragmentIfString(fragment);
   const selectionSet = parsedFragment.selectionSet;
 
-  return writeSelectionSetResult({
+  return writeSelectionSetToStore({
     result,
     selectionSet,
     cache,
   });
 }
 
-export function writeQueryResult({
+export function writeQueryToStore({
   result,
   query,
   cache = {},
@@ -65,20 +65,20 @@ export function writeQueryResult({
     ...result,
   };
 
-  return writeSelectionSetResult({
+  return writeSelectionSetToStore({
     result: resultWithDataId,
     selectionSet: queryDefinition.selectionSet,
     cache,
   });
 }
 
-function writeSelectionSetResult({
+function writeSelectionSetToStore({
   result,
   selectionSet,
   cache,
 }) {
   if (! isString(result.id) && ! isString(result.__data_id)) {
-    throw new Error('Result passed to writeSelectionSetResult must have a string ID');
+    throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
   }
 
   const resultDataId = result['__data_id'] || result.id;
@@ -116,7 +116,7 @@ function writeSelectionSetResult({
 
         thisIdList.push(clonedItem['__data_id']);
 
-        writeSelectionSetResult({
+        writeSelectionSetToStore({
           result: clonedItem,
           cache,
           selectionSet: selection.selectionSet,
@@ -138,7 +138,7 @@ function writeSelectionSetResult({
 
     normalizedRootObj[cacheFieldName] = clonedValue['__data_id'];
 
-    writeSelectionSetResult({
+    writeSelectionSetToStore({
       result: clonedValue,
       cache,
       selectionSet: selection.selectionSet,

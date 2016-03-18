@@ -1,12 +1,12 @@
 import { assert } from 'chai';
 import _ from 'lodash';
 
-import { runFragment } from '../src/runFragment';
+import { readFragmentFromStore } from '../src/readFromStore';
 
-describe('runFragment', () => {
+describe('reading from the store', () => {
   it('rejects malformed queries', () => {
     assert.throws(() => {
-      runFragment({
+      readFragmentFromStore({
         store: {},
         fragment: `
           fragment X on Y { name }
@@ -17,7 +17,7 @@ describe('runFragment', () => {
     }, /exactly one definition/);
 
     assert.throws(() => {
-      runFragment({
+      readFragmentFromStore({
         store: {},
         fragment: `
           { name }
@@ -39,7 +39,7 @@ describe('runFragment', () => {
       abcd: result,
     };
 
-    const queryResult = runFragment({
+    const queryResult = readFragmentFromStore({
       store,
       fragment: `
         fragment FragmentName on Item {
@@ -79,7 +79,7 @@ describe('runFragment', () => {
       abcde: result.nestedObj,
     };
 
-    const queryResult = runFragment({
+    const queryResult = readFragmentFromStore({
       store,
       fragment: `
         fragment FragmentName on Item {
@@ -137,7 +137,7 @@ describe('runFragment', () => {
       'abcd.nestedArray.1': result.nestedArray[1],
     };
 
-    const queryResult = runFragment({
+    const queryResult = readFragmentFromStore({
       store,
       fragment: `
         fragment FragmentName on Item {
@@ -180,7 +180,7 @@ describe('runFragment', () => {
     const store = { abcd: result };
 
     assert.throws(() => {
-      runFragment({
+      readFragmentFromStore({
         store,
         fragment: `
           fragment FragmentName on Item {

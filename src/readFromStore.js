@@ -17,27 +17,27 @@ import {
 //   printAST,
 // } from './debug';
 
-export function runQuery({ store, query }) {
+export function readQueryFromStore({ store, query }) {
   const queryDef = parseQueryIfString(query);
 
-  return runSelectionSet({
+  return readSelectionSetFromStore({
     store,
     rootId: 'ROOT_QUERY',
     selectionSet: queryDef.selectionSet,
   });
 }
 
-export function runFragment({ store, fragment, rootId }) {
+export function readFragmentFromStore({ store, fragment, rootId }) {
   const fragmentDef = parseFragmentIfString(fragment);
 
-  return runSelectionSet({
+  return readSelectionSetFromStore({
     store,
     rootId,
     selectionSet: fragmentDef.selectionSet,
   });
 }
 
-function runSelectionSet({ store, rootId, selectionSet }) {
+function readSelectionSetFromStore({ store, rootId, selectionSet }) {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
@@ -60,7 +60,7 @@ function runSelectionSet({ store, rootId, selectionSet }) {
 
     if (isArray(cacheObj[cacheFieldName])) {
       result[resultFieldName] = cacheObj[cacheFieldName].map((id) => {
-        return runSelectionSet({
+        return readSelectionSetFromStore({
           store,
           rootId: id,
           selectionSet: selection.selectionSet,
@@ -70,7 +70,7 @@ function runSelectionSet({ store, rootId, selectionSet }) {
     }
 
     // This is a nested query
-    result[resultFieldName] = runSelectionSet({
+    result[resultFieldName] = readSelectionSetFromStore({
       store,
       rootId: cacheObj[cacheFieldName],
       selectionSet: selection.selectionSet,

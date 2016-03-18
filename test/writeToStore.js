@@ -1,9 +1,9 @@
 import { assert } from 'chai';
 import _ from 'lodash';
 
-import { normalizeResult } from '../src/normalize';
+import { writeFragmentToStore } from '../src/writeToStore';
 
-describe('normalize', () => {
+describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {
     const fragment = `
       fragment Item on ItemType {
@@ -21,7 +21,7 @@ describe('normalize', () => {
       nullField: null,
     };
 
-    assertEqualSansDataId(normalizeResult({
+    assertEqualSansDataId(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     }), {
@@ -46,7 +46,7 @@ describe('normalize', () => {
       nullField: null,
     };
 
-    const normalized = normalizeResult({
+    const normalized = writeFragmentToStore({
       result,
       fragment,
     });
@@ -80,7 +80,7 @@ describe('normalize', () => {
       nullField: null,
     };
 
-    const normalized = normalizeResult({
+    const normalized = writeFragmentToStore({
       result,
       fragment,
     });
@@ -125,7 +125,7 @@ describe('normalize', () => {
       },
     };
 
-    assertEqualSansDataId(normalizeResult({
+    assertEqualSansDataId(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     }), {
@@ -164,7 +164,7 @@ describe('normalize', () => {
       },
     };
 
-    assertEqualSansDataId(normalizeResult({
+    assertEqualSansDataId(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     }), {
@@ -213,7 +213,7 @@ describe('normalize', () => {
       ],
     };
 
-    assertEqualSansDataId(normalizeResult({
+    assertEqualSansDataId(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     }), {
@@ -260,7 +260,7 @@ describe('normalize', () => {
       ],
     };
 
-    const normalized = normalizeResult({
+    const normalized = writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     });

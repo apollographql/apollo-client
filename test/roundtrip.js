@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 
-import { writeQueryResult } from '../src/normalize';
-import { runQuery } from '../src/runFragment';
+import { writeQueryToStore } from '../src/writeToStore';
+import { readQueryFromStore } from '../src/readFromStore';
 
 describe('roundtrip', () => {
   it('properly normalizes a real graphql result', () => {
@@ -20,12 +20,12 @@ describe('roundtrip', () => {
 });
 
 function storeRoundtrip(query, result) {
-  const store = writeQueryResult({
+  const store = writeQueryToStore({
     result,
     query,
   });
 
-  const reconstructedResult = runQuery({
+  const reconstructedResult = readQueryFromStore({
     store,
     query,
   });

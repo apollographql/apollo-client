@@ -1,3 +1,3 @@
-import './normalize';
-import './runFragment';
+import './writeToStore';
+import './readFromStore';
 import './roundtrip';

@@ -1,26 +1,55 @@
 /* eslint no-param-reassign: 0 */
 // fix this by using immutablejs later
 
-import { forOwn, isString, isNumber, isBoolean, isNull, isArray } from 'lodash';
+import {
+  isString,
+  isNumber,
+  isBoolean,
+  isNull,
+  isArray,
+  isUndefined,
+} from 'lodash';
+
 import { parseFragmentIfString } from './parser';
 
 export function normalizeResult({
   result,
   fragment,
+  selectionSetArg,
   normalized = {},
 }) {
+  // Argument validation
+  if (!fragment && !selectionSet) {
+    throw new Error('Must pass either fragment of selectionSet.');
+  }
+
+  let selectionSet = selectionSetArg;
+  if (fragment) {
+    const parsedFragment = parseFragmentIfString(fragment);
+    selectionSet = parsedFragment.selectionSet;
+  }
+
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to normalizeResult must have a string ID');
   }
+  // End argument validation
 
   const resultDataId = result['__data_id'] || result.id;
 
   const normalizedRootObj = {};
 
-  forOwn(result, (value, key) => {
+  selectionSet.selections.forEach((selection) => {
+    const fieldName = selection.name.value;
+    const resultFieldName = selection.alias ? selection.alias.value : fieldName;
+    const value = result[resultFieldName];
+
+    if (isUndefined(value)) {
+      throw new Error(`Can't find field ${resultFieldName} on result object ${resultDataId}.`);
+    }
+
     // If it's a scalar, just store it in the cache
     if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
-      normalizedRootObj[key] = value;
+      normalizedRootObj[fieldName] = value;
       return;
     }
 
@@ -30,7 +59,7 @@ export function normalizeResult({
 
       value.forEach((item, index) => {
         if (! isString(item.id)) {
-          item['__data_id'] = `${resultDataId}.${key}.${index}`;
+          item['__data_id'] = `${resultDataId}.${fieldName}.${index}`;
         } else {
           item['__data_id'] = item.id;
         }
@@ -43,19 +72,19 @@ export function normalizeResult({
         });
       });
 
-      normalizedRootObj[key] = thisIdList;
+      normalizedRootObj[fieldName] = thisIdList;
       return;
     }
 
     // It's an object
     if (! isString(value.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
-      value['__data_id'] = `${resultDataId}.${key}`;
+      value['__data_id'] = `${resultDataId}.${fieldName}`;
     } else {
       value['__data_id'] = value.id;
     }
 
-    normalizedRootObj[key] = value['__data_id'];
+    normalizedRootObj[fieldName] = value['__data_id'];
     normalizeResult({
       result: value,
       normalized,

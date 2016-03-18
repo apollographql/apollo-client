@@ -37,7 +37,7 @@ describe('run GraphQL fragments on the store', () => {
     };
 
     const store = {
-      abcd: result
+      abcd: result,
     };
 
     const queryResult = runFragment({

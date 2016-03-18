@@ -1,15 +1,40 @@
-import { isArray, has } from 'lodash';
-import { parseFragmentIfString, parseIfString } from './parser';
+import {
+  isArray,
+  has,
+} from 'lodash';
+
+import {
+  parseFragmentIfString,
+  parseQueryIfString,
+} from './parser';
+
+import {
+  cacheFieldNameFromSelection,
+  resultFieldNameFromSelection,
+} from './cacheUtils';
+
+// import {
+//   printAST,
+// } from './debug';
 
 export function runQuery({ store, query }) {
-  const queryDef = parseIfString(query);
-  console.log(queryDef);
+  const queryDef = parseQueryIfString(query);
+
+  return runSelectionSet({
+    store,
+    rootId: 'ROOT_QUERY',
+    selectionSet: queryDef.selectionSet,
+  });
 }
 
 export function runFragment({ store, fragment, rootId }) {
   const fragmentDef = parseFragmentIfString(fragment);
 
-  return runSelectionSet({ store, rootId, selectionSet: fragmentDef.selectionSet });
+  return runSelectionSet({
+    store,
+    rootId,
+    selectionSet: fragmentDef.selectionSet,
+  });
 }
 
 function runSelectionSet({ store, rootId, selectionSet }) {
@@ -18,22 +43,23 @@ function runSelectionSet({ store, rootId, selectionSet }) {
   }
 
   const result = {};
-  const rootObj = store[rootId];
+  const cacheObj = store[rootId];
 
   selectionSet.selections.forEach((selection) => {
-    const key = selection.name.value;
+    const cacheFieldName = cacheFieldNameFromSelection(selection);
+    const resultFieldName = resultFieldNameFromSelection(selection);
 
-    if (! has(rootObj, key)) {
-      throw new Error(`Can't find field ${key} on object ${rootObj}.`);
+    if (! has(cacheObj, cacheFieldName)) {
+      throw new Error(`Can't find field ${cacheFieldName} on object ${cacheObj}.`);
     }
 
     if (! selection.selectionSet) {
-      result[key] = rootObj[key];
+      result[resultFieldName] = cacheObj[cacheFieldName];
       return;
     }
 
-    if (isArray(rootObj[key])) {
-      result[key] = rootObj[key].map((id) => {
+    if (isArray(cacheObj[cacheFieldName])) {
+      result[resultFieldName] = cacheObj[cacheFieldName].map((id) => {
         return runSelectionSet({
           store,
           rootId: id,
@@ -44,30 +70,12 @@ function runSelectionSet({ store, rootId, selectionSet }) {
     }
 
     // This is a nested query
-    result[key] = runSelectionSet({
+    result[resultFieldName] = runSelectionSet({
       store,
-      rootId: rootObj[key],
+      rootId: cacheObj[cacheFieldName],
       selectionSet: selection.selectionSet,
     });
   });
 
   return result;
-}
-
-function stripLoc(obj) {
-  // For development only!
-  const _ = require('lodash');
-  if (! _.isObject(obj)) {
-    return obj;
-  }
-
-  const omitted = _.omit(obj, ['loc']);
-
-  return _.mapValues(omitted, (value) => {
-    return stripLoc(value);
-  });
-}
-
-function printAST(fragAst) { // eslint-disable-line no-unused-vars
-  console.log(JSON.stringify(stripLoc(fragAst), null, 2)); // eslint-disable-line no-console
 }

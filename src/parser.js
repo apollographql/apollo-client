@@ -30,3 +30,19 @@ export function parseFragmentIfString(fragment) {
 
   return fragmentDef;
 }
+
+export function parseQueryIfString(query) {
+  const parsedQuery = parseIfString(query);
+
+  if (parsedQuery.kind !== 'Document' && parsedQuery.definitions.length !== 1) {
+    throw new Error('Must have exactly one definition in document.');
+  }
+
+  const queryDefinition = parsedQuery.definitions[0];
+
+  if (queryDefinition.operation !== 'query') {
+    throw new Error('Definition must be a query.');
+  }
+
+  return queryDefinition;
+}

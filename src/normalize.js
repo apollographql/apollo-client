@@ -9,7 +9,19 @@ import {
   isUndefined,
 } from 'lodash';
 
-import { parseFragmentIfString } from './parser';
+import {
+  parseFragmentIfString,
+  parseQueryIfString,
+} from './parser';
+
+import {
+  cacheFieldNameFromSelection,
+  resultFieldNameFromSelection,
+} from './cacheUtils';
+
+// import {
+//   printAST,
+// } from './debug';
 
 /**
  * Convert a nested GraphQL result into a normalized cache, where each object from the schema
@@ -41,6 +53,25 @@ export function normalizeResult({
   });
 }
 
+export function writeQueryResult({
+  result,
+  query,
+  cache = {},
+}) {
+  const queryDefinition = parseQueryIfString(query);
+
+  const resultWithDataId = {
+    __data_id: 'ROOT_QUERY',
+    ...result,
+  };
+
+  return writeSelectionSetResult({
+    result: resultWithDataId,
+    selectionSet: queryDefinition.selectionSet,
+    cache,
+  });
+}
+
 function writeSelectionSetResult({
   result,
   selectionSet,
@@ -55,19 +86,9 @@ function writeSelectionSetResult({
   const normalizedRootObj = {};
 
   selectionSet.selections.forEach((selection) => {
-    let cacheFieldName = selection.name.value;
-    if (selection.arguments.length) {
-      const argObj = {};
-      selection.arguments.forEach((argument) => {
-        argObj[argument.name.value] = argument.value.value;
-      });
-      const stringifiedArgs = JSON.stringify(argObj);
-      cacheFieldName = `${cacheFieldName}(${stringifiedArgs})`;
-    }
+    const cacheFieldName = cacheFieldNameFromSelection(selection);
+    const resultFieldName = resultFieldNameFromSelection(selection);
 
-    const resultFieldName = selection.alias ?
-      selection.alias.value :
-      cacheFieldName;
     const value = result[resultFieldName];
 
     if (isUndefined(value)) {

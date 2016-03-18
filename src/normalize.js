@@ -24,30 +24,37 @@ import { parseFragmentIfString } from './parser';
 export function normalizeResult({
   result,
   fragment,
-  selectionSet,
   cache = {},
 }) {
   // Argument validation
-  if (!fragment && !selectionSet) {
-    throw new Error('Must pass either fragment or selectionSet.');
+  if (!fragment) {
+    throw new Error('Must pass fragment.');
   }
 
-  let actualSelectionSet = selectionSet;
-  if (fragment) {
-    const parsedFragment = parseFragmentIfString(fragment);
-    actualSelectionSet = parsedFragment.selectionSet;
-  }
+  const parsedFragment = parseFragmentIfString(fragment);
+  const selectionSet = parsedFragment.selectionSet;
 
+  return writeSelectionSetResult({
+    result,
+    selectionSet,
+    cache,
+  });
+}
+
+function writeSelectionSetResult({
+  result,
+  selectionSet,
+  cache,
+}) {
   if (! isString(result.id) && ! isString(result.__data_id)) {
-    throw new Error('Result passed to normalizeResult must have a string ID');
+    throw new Error('Result passed to writeSelectionSetResult must have a string ID');
   }
-  // End argument validation
 
   const resultDataId = result['__data_id'] || result.id;
 
   const normalizedRootObj = {};
 
-  actualSelectionSet.selections.forEach((selection) => {
+  selectionSet.selections.forEach((selection) => {
     let cacheFieldName = selection.name.value;
     if (selection.arguments.length) {
       const argObj = {};
@@ -88,7 +95,7 @@ export function normalizeResult({
 
         thisIdList.push(clonedItem['__data_id']);
 
-        normalizeResult({
+        writeSelectionSetResult({
           result: clonedItem,
           cache,
           selectionSet: selection.selectionSet,
@@ -110,7 +117,7 @@ export function normalizeResult({
 
     normalizedRootObj[cacheFieldName] = clonedValue['__data_id'];
 
-    normalizeResult({
+    writeSelectionSetResult({
       result: clonedValue,
       cache,
       selectionSet: selection.selectionSet,

@@ -1,5 +1,10 @@
 import { isArray, has } from 'lodash';
-import { parseFragmentIfString } from './parser';
+import { parseFragmentIfString, parseIfString } from './parser';
+
+export function runQuery({ store, query }) {
+  const queryDef = parseIfString(query);
+  console.log(queryDef);
+}
 
 export function runFragment({ store, fragment, rootId }) {
   const fragmentDef = parseFragmentIfString(fragment);

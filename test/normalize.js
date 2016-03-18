@@ -61,6 +61,41 @@ describe('normalize', () => {
     });
   });
 
+  it('properly normalizes a aliased fields with arguments', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        aliasedField1: stringField(arg: 1),
+        aliasedField2: stringField(arg: 2),
+        numberField,
+        nullField
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      aliasedField1: 'The arg was 1!',
+      aliasedField2: 'The arg was 2!',
+      numberField: 5,
+      nullField: null,
+    };
+
+    const normalized = normalizeResult({
+      result,
+      fragment,
+    });
+
+    assertEqualSansDataId(normalized, {
+      [result.id]: {
+        id: 'abcd',
+        'stringField({"arg":"1"})': 'The arg was 1!',
+        'stringField({"arg":"2"})': 'The arg was 2!',
+        numberField: 5,
+        nullField: null,
+      },
+    });
+  });
+
   it('properly normalizes a nested object with an ID', () => {
     const fragment = `
       fragment Item on ItemType {

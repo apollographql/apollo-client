@@ -39,8 +39,19 @@ export function normalizeResult({
   const normalizedRootObj = {};
 
   actualSelectionSet.selections.forEach((selection) => {
-    const fieldName = selection.name.value;
-    const resultFieldName = selection.alias ? selection.alias.value : fieldName;
+    let cacheFieldName = selection.name.value;
+    if (selection.arguments.length) {
+      const argObj = {};
+      selection.arguments.forEach((argument) => {
+        argObj[argument.name.value] = argument.value.value;
+      });
+      const stringifiedArgs = JSON.stringify(argObj);
+      cacheFieldName = `${cacheFieldName}(${stringifiedArgs})`;
+    }
+
+    const resultFieldName = selection.alias ?
+      selection.alias.value :
+      cacheFieldName;
     const value = result[resultFieldName];
 
     if (isUndefined(value)) {
@@ -49,7 +60,7 @@ export function normalizeResult({
 
     // If it's a scalar, just store it in the cache
     if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
-      normalizedRootObj[fieldName] = value;
+      normalizedRootObj[cacheFieldName] = value;
       return;
     }
 
@@ -59,7 +70,7 @@ export function normalizeResult({
 
       value.forEach((item, index) => {
         if (! isString(item.id)) {
-          item['__data_id'] = `${resultDataId}.${fieldName}.${index}`;
+          item['__data_id'] = `${resultDataId}.${cacheFieldName}.${index}`;
         } else {
           item['__data_id'] = item.id;
         }
@@ -73,19 +84,19 @@ export function normalizeResult({
         });
       });
 
-      normalizedRootObj[fieldName] = thisIdList;
+      normalizedRootObj[cacheFieldName] = thisIdList;
       return;
     }
 
     // It's an object
     if (! isString(value.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
-      value['__data_id'] = `${resultDataId}.${fieldName}`;
+      value['__data_id'] = `${resultDataId}.${cacheFieldName}`;
     } else {
       value['__data_id'] = value.id;
     }
 
-    normalizedRootObj[fieldName] = value['__data_id'];
+    normalizedRootObj[cacheFieldName] = value['__data_id'];
 
     normalizeResult({
       result: value,

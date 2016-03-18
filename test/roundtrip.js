@@ -5,7 +5,7 @@ import { runQuery } from '../src/runFragment';
 
 describe('roundtrip', () => {
   it('properly normalizes a real graphql result', () => {
-    cacheRoundtrip(`
+    storeRoundtrip(`
       {
         people_one(id: "1") {
           name
@@ -19,7 +19,7 @@ describe('roundtrip', () => {
   });
 });
 
-function cacheRoundtrip(query, result) {
+function storeRoundtrip(query, result) {
   const store = writeQueryResult({
     result,
     query,

@@ -1,4 +1,3 @@
-/* eslint no-param-reassign: 0 */
 // fix this by using immutablejs later
 
 import {
@@ -79,16 +78,18 @@ export function normalizeResult({
       const thisIdList = [];
 
       value.forEach((item, index) => {
+        const clonedItem = { ...item };
+
         if (! isString(item.id)) {
-          item['__data_id'] = `${resultDataId}.${cacheFieldName}.${index}`;
+          clonedItem['__data_id'] = `${resultDataId}.${cacheFieldName}.${index}`;
         } else {
-          item['__data_id'] = item.id;
+          clonedItem['__data_id'] = clonedItem.id;
         }
 
-        thisIdList.push(item['__data_id']);
+        thisIdList.push(clonedItem['__data_id']);
 
         normalizeResult({
-          result: item,
+          result: clonedItem,
           cache,
           selectionSet: selection.selectionSet,
         });
@@ -99,23 +100,24 @@ export function normalizeResult({
     }
 
     // It's an object
-    if (! isString(value.id)) {
+    const clonedValue = { ...value };
+    if (! isString(clonedValue.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
-      value['__data_id'] = `${resultDataId}.${cacheFieldName}`;
+      clonedValue['__data_id'] = `${resultDataId}.${cacheFieldName}`;
     } else {
-      value['__data_id'] = value.id;
+      clonedValue['__data_id'] = clonedValue.id;
     }
 
-    normalizedRootObj[cacheFieldName] = value['__data_id'];
+    normalizedRootObj[cacheFieldName] = clonedValue['__data_id'];
 
     normalizeResult({
-      result: value,
+      result: clonedValue,
       cache,
       selectionSet: selection.selectionSet,
     });
   });
 
-  cache[resultDataId] = normalizedRootObj;
+  cache[resultDataId] = normalizedRootObj; // eslint-disable-line no-param-reassign
 
   return cache;
 }

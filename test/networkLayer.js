@@ -13,7 +13,11 @@ describe('NetworkLayer', () => {
     it('should throw without an endpoint', () => {
       assert.throws(() => {
         const networkLayer = new NetworkLayer(); // eslint-disable-line no-unused-vars
+<<<<<<< 77b78f46d5fba4d880874f20ef2283b3771e837b
       }, /A remote endpoint is required for a newtork layer/);
+=======
+      }, /A remote enpdoint is required for a newtork layer/);
+>>>>>>> started working on network layer following pattern of Relay
     });
 
     it('should create an instance with a given uri', () => {
@@ -75,7 +79,11 @@ describe('NetworkLayer', () => {
       };
 
       assert.eventually.deepEqual(
+<<<<<<< 77b78f46d5fba4d880874f20ef2283b3771e837b
         Swapi.query([simpleRequest]),
+=======
+        Swapi.query(simpleRequest),
+>>>>>>> started working on network layer following pattern of Relay
         [
           {
             data: {
@@ -111,7 +119,11 @@ describe('NetworkLayer', () => {
         getDebugName() { return 'People query'; },
       };
 
+<<<<<<< 77b78f46d5fba4d880874f20ef2283b3771e837b
       assert.isRejected(Swapi.query([simpleRequest]), /Server request for query/)
+=======
+      assert.isRejected(Swapi.query(simpleRequest), /Server request for query/)
+>>>>>>> started working on network layer following pattern of Relay
         .notify(done);
     });
 

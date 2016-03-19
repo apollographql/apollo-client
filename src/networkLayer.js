@@ -13,7 +13,11 @@ class NetworkLayer {
 
   constructor(uri, opts = {}) {
     if (!uri) {
+<<<<<<< 77b78f46d5fba4d880874f20ef2283b3771e837b
       throw new Error('A remote endpoint is required for a newtork layer');
+=======
+      throw new Error('A remote enpdoint is required for a newtork layer');
+>>>>>>> started working on network layer following pattern of Relay
     }
 
     if (!isString(uri)) {
@@ -25,12 +29,23 @@ class NetworkLayer {
   }
 
   query(requests) {
+<<<<<<< 77b78f46d5fba4d880874f20ef2283b3771e837b
     if (!isArray(requests)) {
       throw new Error('Requests must be an array of requests');
     }
 
     const clonedRequests = [...requests];
 
+=======
+    let clonedRequests = [];
+
+    if (!isArray(requests)) {
+      clonedRequests = [requests];
+    } else {
+      clonedRequests = [...requests];
+    }
+
+>>>>>>> started working on network layer following pattern of Relay
     return Promise.all(clonedRequests.map(request => (
       this._query(request).then(
         result => result.json()
@@ -72,12 +87,15 @@ class NetworkLayer {
 
 }
 
+<<<<<<< 77b78f46d5fba4d880874f20ef2283b3771e837b
 /*
 
   An easy way to breakdown the errors of a query
   from https://github.com/facebook/relay/blob/master/src/network-layer/default/RelayDefaultNetworkLayer.js#L174
 
 */
+=======
+>>>>>>> started working on network layer following pattern of Relay
 function formatRequestErrors(request, errors) {
   const CONTEXT_BEFORE = 20;
   const CONTEXT_LENGTH = 60;

@@ -38,7 +38,8 @@ describe('diffing queries against the store', () => {
     const firstQuery = `
       {
         people_one(id: "1") {
-          id,
+          __typename
+          id
           name
         }
       }
@@ -46,6 +47,7 @@ describe('diffing queries against the store', () => {
 
     const result = {
       people_one: {
+        __typename: 'Person',
         id: 'lukeId',
         name: 'Luke Skywalker',
       },
@@ -71,6 +73,7 @@ describe('diffing queries against the store', () => {
     }).missingSelectionSets), [
       {
         id: 'lukeId',
+        typeName: 'Person',
         selectionSet: {
           kind: 'SelectionSet',
           selections: [
@@ -129,10 +132,7 @@ describe('diffing queries against the store', () => {
       query: secondQuery,
     }).missingSelectionSets[0];
 
-    assert.equal(printNodeQuery({
-      typeName: 'Person',
-      ...diffedSelectionSet,
-    }), `{
+    assert.equal(printNodeQuery(diffedSelectionSet), `{
   node(id: "lukeId") {
     ... on Person {
       age

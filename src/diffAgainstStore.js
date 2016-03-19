@@ -110,8 +110,14 @@ export function diffSelectionSetAgainstStore({
   // If we weren't able to resolve some selections from the cache, construct them into
   // a query we can fetch from the server
   if (missingSelections.length) {
+    if (! cacheObj.__typename) {
+      throw new Error(
+        `Can't generate query to refetch object ${rootId}, since __typename wasn't in the cache.`);
+    }
+
     missingSelectionSets.push({
       id: rootId,
+      typeName: cacheObj.__typename,
       selectionSet: {
         kind: 'SelectionSet',
         selections: missingSelections,

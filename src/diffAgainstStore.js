@@ -33,6 +33,17 @@ export function diffFragmentAgainstStore({ store, fragment, rootId }) {
   });
 }
 
+/**
+ * Given a store, a root ID, and a selection set, return as much of the result as possible and
+ * identify which selection sets and root IDs need to be fetched to get the rest of the requested
+ * data.
+ * @param  {SelectionSet} selectionSet A GraphQL selection set
+ * @param  {Store} store The Apollo Client store object
+ * @param  {String} rootId The ID of the root object that the selection set applies to
+ * @param  {Boolean} [throwOnMissingField] Throw an error rather than returning any selection sets
+ * when a field isn't found in the store.
+ * @return {result: Object, missingSelectionSets: [SelectionSet]}
+ */
 export function diffSelectionSetAgainstStore({
   selectionSet,
   store,
@@ -59,9 +70,7 @@ export function diffSelectionSetAgainstStore({
         throw new Error(`Can't find field ${cacheFieldName} on object ${cacheObj}.`);
       }
 
-      missingSelections.push({
-        selection,
-      });
+      missingSelections.push(selection);
 
       return;
     }

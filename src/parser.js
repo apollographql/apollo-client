@@ -1,6 +1,8 @@
 import { parse } from 'graphql/language';
 import { isString } from 'lodash';
 
+import { printAST } from './debug';
+
 export function parseIfString(doc) {
   let parsed = doc;
 

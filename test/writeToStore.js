@@ -176,6 +176,45 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes a nested object with arguments but without an ID', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedObj(arg: "val") {
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedObj: {
+        stringField: 'This is a string too!',
+        numberField: 6,
+        nullField: null,
+      },
+    };
+
+    assertEqualSansDataId(writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    }), {
+      [result.id]: {
+        ..._.omit(result, 'nestedObj'),
+        'nestedObj({"arg":"val"})': `${result.id}.nestedObj({"arg":"val"})`,
+      },
+      [`${result.id}.nestedObj({"arg":"val"})`]: result.nestedObj,
+    });
+  });
+
   it('properly normalizes a nested array with IDs', () => {
     const fragment = `
       fragment Item on ItemType {

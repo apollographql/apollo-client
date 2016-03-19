@@ -1,5 +1,3 @@
-// fix this by using immutablejs later
-
 import {
   isString,
   isNumber,

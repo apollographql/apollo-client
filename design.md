@@ -26,6 +26,7 @@ I think there is a "minimum viable" set of features for a good GraphQL client. A
 4. The ability to preload data you might need later
 5. Minimal server roundtrips to render the initial UI
 6. Query aggregation from your UI tree
+7. Basic handling of pagination, most critically being able to fetch a new page of items when you already have some
 
 ### Stateless, well-documented store format
 

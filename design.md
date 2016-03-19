@@ -29,7 +29,7 @@ I think there is a "minimum viable" set of features for a good GraphQL client. A
 
 ### Stateless, well-documented store format
 
-All state of the GraphQL cache should be kept in a single immutable state object (referred to as the "store"), and every operation on the cache should be implemented as a function from the previous store object to a new one. The store format should be easy to understand by the application developer, rather than an implementation detail of the library.
+All state of the GraphQL cache should be kept in a single immutable state object (referred to as the "store"), and every operation on the store should be implemented as a function from the previous store object to a new one. The store format should be easily understood and inspected by the application developer, rather than an implementation detail of the library.
 
 This will have many benefits compared to other approaches:
 

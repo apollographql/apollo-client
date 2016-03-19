@@ -13,7 +13,7 @@ describe('NetworkLayer', () => {
     it('should throw without an endpoint', () => {
       assert.throws(() => {
         const networkLayer = new NetworkLayer(); // eslint-disable-line no-unused-vars
-      }, /A remote enpdoint is required for a newtork layer/);
+      }, /A remote endpoint is required for a newtork layer/);
     });
 
     it('should create an instance with a given uri', () => {
@@ -75,7 +75,7 @@ describe('NetworkLayer', () => {
       };
 
       assert.eventually.deepEqual(
-        Swapi.query(simpleRequest),
+        Swapi.query([simpleRequest]),
         [
           {
             data: {
@@ -111,7 +111,7 @@ describe('NetworkLayer', () => {
         getDebugName() { return 'People query'; },
       };
 
-      assert.isRejected(Swapi.query(simpleRequest), /Server request for query/)
+      assert.isRejected(Swapi.query([simpleRequest]), /Server request for query/)
         .notify(done);
     });
 

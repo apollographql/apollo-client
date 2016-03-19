@@ -13,7 +13,7 @@ class NetworkLayer {
 
   constructor(uri, opts = {}) {
     if (!uri) {
-      throw new Error('A remote enpdoint is required for a newtork layer');
+      throw new Error('A remote endpoint is required for a newtork layer');
     }
 
     if (!isString(uri)) {
@@ -25,13 +25,11 @@ class NetworkLayer {
   }
 
   query(requests) {
-    let clonedRequests = [];
-
     if (!isArray(requests)) {
-      clonedRequests = [requests];
-    } else {
-      clonedRequests = [...requests];
+      throw new Error('Requests must be an array of requests');
     }
+
+    const clonedRequests = [...requests];
 
     return Promise.all(clonedRequests.map(request => (
       this._query(request).then(

@@ -5,6 +5,7 @@ import { assert } from 'chai';
 import { diffQueryAgainstStore } from '../src/diffAgainstStore';
 import { writeQueryToStore } from '../src/writeToStore';
 import { stripLoc } from '../src/debug';
+import { printNodeQuery } from '../src/queryPrinting';
 
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
@@ -88,5 +89,56 @@ describe('diffing queries against the store', () => {
         },
       },
     ]);
+  });
+
+  it('generates the right query when the store is missing one field', () => {
+    const firstQuery = `
+      {
+        people_one(id: "1") {
+          __typename,
+          id,
+          name
+        }
+      }
+    `;
+
+    const result = {
+      people_one: {
+        __typename: 'Person',
+        id: 'lukeId',
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const store = writeQueryToStore({
+      result,
+      query: firstQuery,
+    });
+
+    const secondQuery = `
+      {
+        people_one(id: "1") {
+          name,
+          age
+        }
+      }
+    `;
+
+    const diffedSelectionSet = diffQueryAgainstStore({
+      store,
+      query: secondQuery,
+    }).missingSelectionSets[0];
+
+    assert.equal(printNodeQuery({
+      typeName: 'Person',
+      ...diffedSelectionSet,
+    }), `{
+  node(id: "lukeId") {
+    ... on Person {
+      age
+    }
+  }
+}
+`);
   });
 });

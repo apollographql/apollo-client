@@ -4,10 +4,11 @@ If we are building a client-side GraphQL client and cache, we should have some g
 
 ## Principles
 
-1. Transparent - a developer should be able to keep everything the Apollo Client is doing in their mind at once. They don't necessarily need to understand every part of the implementation, but nothing it's doing should be a surprise. This should take precedence over performance optimizations.
-2. Standalone - the published library should not depend on any specific build or runtime environment, view framework, router, philosophy, or other. When you install it via NPM, the batteries are included. Anything that isn't included, like certain polyfills, is clearly documented.
-3. Compatible - the Apollo Client should be compatible with as many GraphQL schemas, transports, and execution models as possible. There might be optimizations that rely on specific server-side features, but as much as possible it should "just work".
-4. Usable - given the above, developer experience should be a priority. The API for the developer should have a simple mental model, a minimal surface area, and be clearly documented.
+1. Functional - the application developer should get real value out of using this library. It does real work other than just sending POST requests over the wire and returning the results. This work benefits both the application developer and the end user to achieve performance, usability, and simplicity of app implementation.
+1. Transparent - a developer should be able to keep everything the Apollo Client is doing in their mind at once. They don't necessarily need to understand every part of the implementation, but nothing it's doing should be a surprise. This should take precedence over fine-grained performance optimizations.
+1. Standalone - the published library should not depend on any specific build or runtime environment, view framework, router, philosophy, or other. When you install it via NPM, the batteries are included. Anything that isn't included, like certain polyfills, is clearly documented.
+1. Compatible - the Apollo Client should be compatible with as many GraphQL schemas, transports, and execution models as possible. There might be optimizations that rely on specific server-side features, but as much as possible it should "just work".
+1. Usable - given the above, developer experience should be a priority. The API for the developer should have a simple mental model, a minimal surface area, and be clearly documented.
 
 ## Implementation
 

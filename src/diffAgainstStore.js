@@ -58,7 +58,7 @@ export function diffSelectionSetAgainstStore({
       }
 
       missingFields.push({
-        id: cacheObj.__data_id,
+        id: rootId,
         field: cacheFieldName,
       });
       return;

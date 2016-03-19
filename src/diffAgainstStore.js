@@ -44,7 +44,9 @@ export function diffSelectionSetAgainstStore({
   }
 
   const result = {};
-  const missingFields = [];
+  const missingSelectionSets = [];
+
+  const missingSelections = [];
 
   const cacheObj = store[rootId];
 
@@ -57,10 +59,10 @@ export function diffSelectionSetAgainstStore({
         throw new Error(`Can't find field ${cacheFieldName} on object ${cacheObj}.`);
       }
 
-      missingFields.push({
-        id: rootId,
-        field: cacheFieldName,
+      missingSelections.push({
+        selection,
       });
+
       return;
     }
 
@@ -78,7 +80,7 @@ export function diffSelectionSetAgainstStore({
           selectionSet: selection.selectionSet,
         });
 
-        itemDiffResult.missingFields.forEach(field => missingFields.push(field));
+        itemDiffResult.missingSelectionSets.forEach(field => missingSelectionSets.push(field));
         return itemDiffResult.result;
       });
       return;
@@ -92,12 +94,24 @@ export function diffSelectionSetAgainstStore({
     });
 
     // This is a nested query
-    subObjDiffResult.missingFields.forEach(field => missingFields.push(field));
+    subObjDiffResult.missingSelectionSets.forEach(field => missingSelectionSets.push(field));
     result[resultFieldName] = subObjDiffResult.result;
   });
 
+  // If we weren't able to resolve some selections from the cache, construct them into
+  // a query we can fetch from the server
+  if (missingSelections.length) {
+    missingSelectionSets.push({
+      id: rootId,
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: missingSelections,
+      },
+    });
+  }
+
   return {
     result,
-    missingFields,
+    missingSelectionSets,
   };
 }

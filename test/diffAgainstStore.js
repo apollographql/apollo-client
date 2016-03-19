@@ -1,7 +1,10 @@
+/* eslint quote-props:0 */
+
 import { assert } from 'chai';
 
 import { diffQueryAgainstStore } from '../src/diffAgainstStore';
 import { writeQueryToStore } from '../src/writeToStore';
+import { stripLoc } from '../src/debug';
 
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
@@ -27,13 +30,14 @@ describe('diffing queries against the store', () => {
     assert.deepEqual(diffQueryAgainstStore({
       store,
       query,
-    }).missingFields, []);
+    }).missingSelectionSets, []);
   });
 
-  it('returns something when the store is not enough', () => {
+  it('returns correct selection set when the store is missing one field', () => {
     const firstQuery = `
       {
         people_one(id: "1") {
+          id,
           name
         }
       }
@@ -41,6 +45,7 @@ describe('diffing queries against the store', () => {
 
     const result = {
       people_one: {
+        id: 'lukeId',
         name: 'Luke Skywalker',
       },
     };
@@ -59,13 +64,30 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    assert.deepEqual(diffQueryAgainstStore({
+    assert.deepEqual(stripLoc(diffQueryAgainstStore({
       store,
       query: secondQuery,
-    }).missingFields, [
+    }).missingSelectionSets), [
       {
-        field: 'age',
-        id: 'ROOT_QUERY.people_one({\"id\":\"1\"})',
+        id: 'lukeId',
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: [
+            {
+              'selection': {
+                'alias': null,
+                'arguments': [],
+                'directives': [],
+                'kind': 'Field',
+                'name': {
+                  'kind': 'Name',
+                  'value': 'age',
+                },
+                'selectionSet': null,
+              },
+            },
+          ],
+        },
       },
     ]);
   });

@@ -14,7 +14,7 @@ The Apollo Client should be...
 
 ## Implementation
 
-I think the principles above place the following constraints on the implementation:
+I think the principles above naturally lead to the following constraints on the implementation:
 
 ### Necessary features
 

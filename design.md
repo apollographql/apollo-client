@@ -18,7 +18,9 @@ I think the principles above naturally lead to the following constraints on the 
 
 ### Necessary features
 
-I think there is a "minimum viable" set of features for a good GraphQL client. Almost all GraphQL clients that aren't Relay don't have some of these features, and the necessity to have them, even when they don't have many other requirements, is what drives people to use Relay which often brings more functionality and complexity than they need for their application. Based on talking to some developers, I believe that list includes:
+I think there is a "minimum viable" set of features for a good GraphQL client. Almost all GraphQL clients that aren't Relay don't have some of these features, and the necessity to have them, even when they don't have many other requirements, is what drives people to use Relay which often brings more functionality and complexity than they need for their application. Bringing us to [this graph from React Conf](https://www.dropbox.com/s/kppd4kdz40h96kj/Screenshot%202016-03-19%2016.40.19.png?dl=0) ([full slides here](https://github.com/jaredly/reactconf)).
+
+Based on talking to some developers, I believe that list includes:
 
 1. Optimistic UI for mutations
 2. A cache so that you don't refetch data you already have

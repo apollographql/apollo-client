@@ -5,7 +5,6 @@ import { assert } from 'chai';
 import { diffQueryAgainstStore } from '../src/diffAgainstStore';
 import { writeQueryToStore } from '../src/writeToStore';
 import { stripLoc } from '../src/debug';
-import { selectionSetToNodeQueryDefinition } from '../src/selectionSetToQuery';
 
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
@@ -89,36 +88,5 @@ describe('diffing queries against the store', () => {
         },
       },
     ]);
-  });
-
-  it('converts selection set to a query string', () => {
-    const id = 'lukeId';
-    const selectionSet = {
-      kind: 'SelectionSet',
-      selections: [
-        {
-          'kind': 'Field',
-          'alias': null,
-          'arguments': [],
-          'directives': [],
-          'name': {
-            'kind': 'Name',
-            'value': 'age',
-          },
-          'selectionSet': null,
-        },
-      ],
-    };
-
-    // Note - the indentation inside template strings is meaningful!
-    assert.equal(selectionSetToNodeQueryDefinition({
-      id,
-      selectionSet,
-    }), `{
-  node(id: "lukeId") {
-    age
-  }
-}
-`);
   });
 });

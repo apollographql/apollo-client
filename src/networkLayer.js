@@ -74,6 +74,12 @@ class NetworkLayer {
 
 }
 
+/*
+
+  An easy way to breakdown the errors of a query
+  from https://github.com/facebook/relay/blob/master/src/network-layer/default/RelayDefaultNetworkLayer.js#L174
+
+*/
 function formatRequestErrors(request, errors) {
   const CONTEXT_BEFORE = 20;
   const CONTEXT_LENGTH = 60;

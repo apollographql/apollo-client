@@ -1,7 +1,7 @@
 /* eslint quote-props:0 */
 
 import { assert } from 'chai';
-import { selectionSetToNodeQueryDefinition } from '../src/selectionSetToQuery';
+import { printNodeQuery } from '../src/queryPrinting';
 
 describe('printing queries', () => {
   it('converts selection set to a query string', () => {
@@ -25,7 +25,7 @@ describe('printing queries', () => {
     };
 
     // Note - the indentation inside template strings is meaningful!
-    assert.equal(selectionSetToNodeQueryDefinition({
+    assert.equal(printNodeQuery({
       id,
       typeName,
       selectionSet,

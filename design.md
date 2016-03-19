@@ -4,7 +4,7 @@ If we are building a client-side GraphQL client and cache, we should have some g
 
 ## Principles
 
-1. Functional - the application developer should get real value out of using this library. It does real work other than just sending POST requests over the wire and returning the results. This work benefits both the application developer and the end user to achieve performance, usability, and simplicity of app implementation.
+1. Functional - the application developer should get real value out of using this library. This benefits both the application developer and the end user to achieve performance, usability, and simplicity of app implementation. It should have more features than [Lokka](https://github.com/kadirahq/lokka) but less than [Relay](https://github.com/facebook/relay). 
 1. Transparent - a developer should be able to keep everything the Apollo Client is doing in their mind at once. They don't necessarily need to understand every part of the implementation, but nothing it's doing should be a surprise. This should take precedence over fine-grained performance optimizations.
 1. Standalone - the published library should not depend on any specific build or runtime environment, view framework, router, philosophy, or other. When you install it via NPM, the batteries are included. Anything that isn't included, like certain polyfills, is clearly documented.
 1. Compatible - the Apollo Client should be compatible with as many GraphQL schemas, transports, and execution models as possible. There might be optimizations that rely on specific server-side features, but as much as possible it should "just work".
@@ -13,6 +13,17 @@ If we are building a client-side GraphQL client and cache, we should have some g
 ## Implementation
 
 I think the principles above place the following constraints on the implementation:
+
+### Necessary features
+
+I think there is a "minimum viable" set of features for a good GraphQL client. Almost all GraphQL clients that aren't Relay don't have some of these features, and the necessity to have them is what requires people to buy into all of Relay. Based on talking to some developers, I believe that list includes:
+
+1. Optimistic UI for mutations
+2. A cache so that you don't refetch data you already have
+3. The ability to manually refetch data when you know it has changed
+4. The ability to preload data you might need later
+5. Minimal server roundtrips to render the initial UI
+6. Query aggregation from your UI tree
 
 ### Stateless, well-documented store format
 

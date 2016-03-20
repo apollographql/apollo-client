@@ -1,7 +1,10 @@
 // == `parser.js` == //
 // @flow
 import { parse } from 'graphql/language';
-import type { Document, Definition } from 'graphql/language/ast';
+import type {
+  Document,
+  OperationDefinition,
+} from 'graphql/language/ast';
 import { isString } from 'lodash';
 
 export function parseIfString(doc: Document | string): Document {
@@ -34,14 +37,14 @@ export function parseFragmentIfString(fragment: Document | string): Document {
   return fragmentDef;
 }
 
-export function parseQueryIfString(query: Document | string): Definition {
+export function parseQueryIfString(query: Document | string): OperationDefinition {
   const parsedQuery: Document = parseIfString(query);
 
   if (parsedQuery.kind !== 'Document' && parsedQuery.definitions.length !== 1) {
     throw new Error('Must have exactly one definition in document.');
   }
 
-  const queryDefinition: Definition = parsedQuery.definitions[0];
+  const queryDefinition: OperationDefinition = parsedQuery.definitions[0];
 
   if (queryDefinition.operation !== 'query') {
     throw new Error('Definition must be a query.');

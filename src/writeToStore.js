@@ -21,7 +21,7 @@ import {
 
 import type {
   Document,
-  Definition,
+  OperationDefinition,
   SelectionSet,
 } from 'graphql/language/ast';
 
@@ -64,7 +64,7 @@ export function writeQueryToStore({
   query,
   cache = {},
 }: Object): Object {
-  const queryDefinition: Definition = parseQueryIfString(query);
+  const queryDefinition: OperationDefinition = parseQueryIfString(query);
 
   const resultWithDataId: Object = {
     __data_id: 'ROOT_QUERY',

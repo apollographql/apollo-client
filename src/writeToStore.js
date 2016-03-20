@@ -43,7 +43,7 @@ export function writeFragmentToStore({
   result,
   fragment,
   cache = {},
-}: Object): Object {
+}: { result: Object, fragment: Document | string, cache: Object }): Object {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
@@ -63,7 +63,7 @@ export function writeQueryToStore({
   result,
   query,
   cache = {},
-}: Object): Object {
+}: { result: Object, query: Document | string, cache: Object }): Object {
   const queryDefinition: OperationDefinition = parseQueryIfString(query);
 
   const resultWithDataId: Object = {
@@ -82,7 +82,7 @@ function writeSelectionSetToStore({
   result,
   selectionSet,
   cache,
-}: Object): Object {
+}: { result: Object, selectionSet: SelectionSet, cache: Object }): Object {
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
   }

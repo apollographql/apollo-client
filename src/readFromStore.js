@@ -16,7 +16,9 @@ import {
 } from './cacheUtils';
 
 import type {
+  Document,
   Definition,
+  SelectionSet,
 } from 'graphql/language/ast';
 
 // import {
@@ -26,7 +28,7 @@ import type {
 export function readQueryFromStore({
   store,
   query,
-}: Object): Object {
+}: { store: Object, query: Document | string }): Object {
   const queryDef: Definition = parseQueryIfString(query);
 
   return readSelectionSetFromStore({
@@ -40,7 +42,7 @@ export function readFragmentFromStore({
   store,
   fragment,
   rootId,
-}: Object): Object {
+}: { store: Object, fragment: Document | string, rootId: string }): Object {
   const fragmentDef = parseFragmentIfString(fragment);
 
   return readSelectionSetFromStore({
@@ -54,7 +56,7 @@ function readSelectionSetFromStore({
   store,
   rootId,
   selectionSet,
-}: Object): Object {
+}: { store: Object, rootId: string, selectionSet: SelectionSet }): Object {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }

@@ -4,8 +4,8 @@ import { parse } from 'graphql/language';
 import type { Document } from 'graphql/language/ast';
 import { isString } from 'lodash';
 
-export function parseIfString(doc: Document | String): Document {
-  let parsed: Document | String = doc;
+export function parseIfString(doc: Document | string): Document {
+  let parsed: Document | string = doc;
 
   if (isString(doc)) {
     parsed = parse(doc);
@@ -18,7 +18,7 @@ export function parseIfString(doc: Document | String): Document {
   return parsed;
 }
 
-export function parseFragmentIfString(fragment: Document | String): Document {
+export function parseFragmentIfString(fragment: Document | string): Document {
   const parsedFragment: Document = parseIfString(fragment);
 
   if (parsedFragment.definitions.length !== 1) {
@@ -34,7 +34,7 @@ export function parseFragmentIfString(fragment: Document | String): Document {
   return fragmentDef;
 }
 
-export function parseQueryIfString(query: Document | String): Object {
+export function parseQueryIfString(query: Document | string): Object {
   const parsedQuery: Document = parseIfString(query);
 
   if (parsedQuery.kind !== 'Document' && parsedQuery.definitions.length !== 1) {

@@ -1,4 +1,8 @@
-export function cacheFieldNameFromSelection(selection) {
+// @flow
+
+import type { Selection } from 'graphql/language/ast';
+
+export function cacheFieldNameFromSelection(selection: Selection): string {
   if (selection.arguments.length) {
     const argObj = {};
     selection.arguments.forEach((argument) => {
@@ -11,7 +15,7 @@ export function cacheFieldNameFromSelection(selection) {
   return selection.name.value;
 }
 
-export function resultFieldNameFromSelection(selection) {
+export function resultFieldNameFromSelection(selection: Selection): string {
   return selection.alias ?
     selection.alias.value :
     selection.name.value;

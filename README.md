@@ -2,7 +2,7 @@
 
 ![Build status](https://travis-ci.org/apollostack/apollo-client.svg?branch=master)
 
-A simple but functional GraphQL client built on Redux for a great development experience.
+A simple but functional GraphQL client with a great development experience.
 
 In the planning stage.
 

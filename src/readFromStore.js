@@ -1,17 +1,11 @@
 import {
-  isArray,
-  has,
-} from 'lodash';
-
-import {
   parseFragmentIfString,
   parseQueryIfString,
 } from './parser';
 
 import {
-  cacheFieldNameFromSelection,
-  resultFieldNameFromSelection,
-} from './cacheUtils';
+  diffSelectionSetAgainstStore,
+} from './diffAgainstStore';
 
 // import {
 //   printAST,
@@ -38,43 +32,13 @@ export function readFragmentFromStore({ store, fragment, rootId }) {
 }
 
 function readSelectionSetFromStore({ store, rootId, selectionSet }) {
-  if (selectionSet.kind !== 'SelectionSet') {
-    throw new Error('Must be a selection set.');
-  }
-
-  const result = {};
-  const cacheObj = store[rootId];
-
-  selectionSet.selections.forEach((selection) => {
-    const cacheFieldName = cacheFieldNameFromSelection(selection);
-    const resultFieldName = resultFieldNameFromSelection(selection);
-
-    if (! has(cacheObj, cacheFieldName)) {
-      throw new Error(`Can't find field ${cacheFieldName} on object ${cacheObj}.`);
-    }
-
-    if (! selection.selectionSet) {
-      result[resultFieldName] = cacheObj[cacheFieldName];
-      return;
-    }
-
-    if (isArray(cacheObj[cacheFieldName])) {
-      result[resultFieldName] = cacheObj[cacheFieldName].map((id) => {
-        return readSelectionSetFromStore({
-          store,
-          rootId: id,
-          selectionSet: selection.selectionSet,
-        });
-      });
-      return;
-    }
-
-    // This is a nested query
-    result[resultFieldName] = readSelectionSetFromStore({
-      store,
-      rootId: cacheObj[cacheFieldName],
-      selectionSet: selection.selectionSet,
-    });
+  const {
+    result,
+  } = diffSelectionSetAgainstStore({
+    selectionSet,
+    rootId,
+    store,
+    throwOnMissingField: true,
   });
 
   return result;

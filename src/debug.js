@@ -1,6 +1,11 @@
-function stripLoc(obj) {
+export function stripLoc(obj) {
   // For development only!
   const _ = require('lodash');
+
+  if (_.isArray(obj)) {
+    return obj.map(stripLoc);
+  }
+
   if (! _.isObject(obj)) {
     return obj;
   }

@@ -1,3 +1,5 @@
+// == `readFromStore.js` == //
+// @flow
 import {
   isArray,
   has,
@@ -13,12 +15,19 @@ import {
   resultFieldNameFromSelection,
 } from './cacheUtils';
 
+import type {
+  Definition,
+} from 'graphql/language/ast';
+
 // import {
 //   printAST,
 // } from './debug';
 
-export function readQueryFromStore({ store, query }) {
-  const queryDef = parseQueryIfString(query);
+export function readQueryFromStore({
+  store,
+  query,
+}: Object): Object {
+  const queryDef: Definition = parseQueryIfString(query);
 
   return readSelectionSetFromStore({
     store,
@@ -27,7 +36,11 @@ export function readQueryFromStore({ store, query }) {
   });
 }
 
-export function readFragmentFromStore({ store, fragment, rootId }) {
+export function readFragmentFromStore({
+  store,
+  fragment,
+  rootId,
+}: Object): Object {
   const fragmentDef = parseFragmentIfString(fragment);
 
   return readSelectionSetFromStore({
@@ -37,13 +50,17 @@ export function readFragmentFromStore({ store, fragment, rootId }) {
   });
 }
 
-function readSelectionSetFromStore({ store, rootId, selectionSet }) {
+function readSelectionSetFromStore({
+  store,
+  rootId,
+  selectionSet,
+}: Object): Object {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
 
-  const result = {};
-  const cacheObj = store[rootId];
+  const result: Object = {};
+  const cacheObj: Object = store[rootId];
 
   selectionSet.selections.forEach((selection) => {
     const cacheFieldName = cacheFieldNameFromSelection(selection);

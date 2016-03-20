@@ -1,5 +1,5 @@
+// == `cacheUtils.js` == //
 // @flow
-
 import type { Selection } from 'graphql/language/ast';
 
 export function cacheFieldNameFromSelection(selection: Selection): string {

@@ -6,10 +6,12 @@
   "jsnext:main": "./src/index.js",
   "scripts": {
     "test": "mocha --reporter spec --full-trace test/index.js",
-    "posttest": "npm run lint",
+    "posttest": "npm run lint && npm run flow",
     "compile": "babel --presets es2015,stage-0 -d lib/ src/",
     "prepublish": "npm run compile",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "flow": "flow; test $? -eq 0 -o $? -eq 2",
+    "watch": "babel --watch=./src --out-dir=./lib"
   },
   "repository": {
     "type": "git",
@@ -36,6 +38,7 @@
     "babel-core": "6.3.21",
     "babel-eslint": "^6.0.0-beta.6",
     "babel-loader": "6.2.0",
+    "babel-plugin-transform-flow-strip-types": "^6.7.0",
     "babel-preset-es2015": "^6.5.0",
     "babel-preset-stage-0": "^6.5.0",
     "chai": "^3.5.0",
@@ -43,6 +46,7 @@
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.1.0",
     "eslint-plugin-import": "^1.1.0",
+    "flow-bin": "^0.22.1",
     "graphql": "^0.4.17",
     "graphql-relay": "^0.3.6",
     "lodash": "^4.5.1",

@@ -1,3 +1,5 @@
+// == `writeToStore.js` == //
+// @flow
 import {
   isString,
   isNumber,
@@ -17,6 +19,12 @@ import {
   resultFieldNameFromSelection,
 } from './cacheUtils';
 
+import type {
+  Document,
+  OperationDefinition,
+  SelectionSet,
+} from 'graphql/language/ast';
+
 // import {
 //   printAST,
 // } from './debug';
@@ -35,14 +43,14 @@ export function writeFragmentToStore({
   result,
   fragment,
   cache = {},
-}) {
+}: { result: Object, fragment: Document | string, cache: Object }): Object {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
   }
 
-  const parsedFragment = parseFragmentIfString(fragment);
-  const selectionSet = parsedFragment.selectionSet;
+  const parsedFragment: Document = parseFragmentIfString(fragment);
+  const selectionSet: SelectionSet = parsedFragment.selectionSet;
 
   return writeSelectionSetToStore({
     result,
@@ -55,10 +63,10 @@ export function writeQueryToStore({
   result,
   query,
   cache = {},
-}) {
-  const queryDefinition = parseQueryIfString(query);
+}: { result: Object, query: Document | string, cache: Object }): Object {
+  const queryDefinition: OperationDefinition = parseQueryIfString(query);
 
-  const resultWithDataId = {
+  const resultWithDataId: Object = {
     __data_id: 'ROOT_QUERY',
     ...result,
   };
@@ -74,20 +82,20 @@ function writeSelectionSetToStore({
   result,
   selectionSet,
   cache,
-}) {
+}: { result: Object, selectionSet: SelectionSet, cache: Object }): Object {
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
   }
 
-  const resultDataId = result['__data_id'] || result.id;
+  const resultDataId: string = result['__data_id'] || result.id;
 
-  const normalizedRootObj = {};
+  const normalizedRootObj: Object = {};
 
   selectionSet.selections.forEach((selection) => {
-    const cacheFieldName = cacheFieldNameFromSelection(selection);
-    const resultFieldName = resultFieldNameFromSelection(selection);
+    const cacheFieldName: string = cacheFieldNameFromSelection(selection);
+    const resultFieldName: string = resultFieldNameFromSelection(selection);
 
-    const value = result[resultFieldName];
+    const value: any = result[resultFieldName];
 
     if (isUndefined(value)) {
       throw new Error(`Can't find field ${resultFieldName} on result object ${resultDataId}.`);
@@ -101,10 +109,10 @@ function writeSelectionSetToStore({
 
     // If it's an array
     if (isArray(value)) {
-      const thisIdList = [];
+      const thisIdList: Array<string> = [];
 
       value.forEach((item, index) => {
-        const clonedItem = { ...item };
+        const clonedItem: Object = { ...item };
 
         if (! isString(item.id)) {
           clonedItem['__data_id'] = `${resultDataId}.${cacheFieldName}.${index}`;
@@ -126,7 +134,7 @@ function writeSelectionSetToStore({
     }
 
     // It's an object
-    const clonedValue = { ...value };
+    const clonedValue: Object = { ...value };
     if (! isString(clonedValue.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
       clonedValue['__data_id'] = `${resultDataId}.${cacheFieldName}`;

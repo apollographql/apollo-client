@@ -1,4 +1,6 @@
-function stripLoc(obj) {
+// == `debug.js` == //
+// @flow
+function stripLoc(obj: Object) {
   // For development only!
   const _ = require('lodash');
   if (! _.isObject(obj)) {
@@ -12,6 +14,6 @@ function stripLoc(obj) {
   });
 }
 
-export function printAST(fragAst) { // eslint-disable-line no-unused-vars
+export function printAST(fragAst: Object) { // eslint-disable-line no-unused-vars
   console.log(JSON.stringify(stripLoc(fragAst), null, 2)); // eslint-disable-line no-console
 }

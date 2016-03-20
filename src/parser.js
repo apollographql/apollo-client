@@ -1,10 +1,12 @@
 // == `parser.js` == //
 // @flow
 import { parse } from 'graphql/language';
+
 import type {
   Document,
   OperationDefinition,
 } from 'graphql/language/ast';
+
 import { isString } from 'lodash';
 
 export function parseIfString(doc: Document | string): Document {

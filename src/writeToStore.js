@@ -109,7 +109,7 @@ function writeSelectionSetToStore({
 
     // If it's an array
     if (isArray(value)) {
-      const thisIdList: Array<string | number> = [];
+      const thisIdList: Array<string> = [];
 
       value.forEach((item, index) => {
         const clonedItem: Object = { ...item };

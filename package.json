@@ -8,7 +8,7 @@
     "pretest": "npm run compile",
     "test": "mocha --reporter spec --full-trace test/index.js",
     "posttest": "npm run lint",
-    "postinstall": "./node_modules/.bin/typings i",,
+    "postinstall": "./node_modules/.bin/typings i",
     "compile": "tsc",
     "prepublish": "npm run compile",
     "lint": "eslint ."

@@ -77,7 +77,7 @@ describe('reading from the store', () => {
     const store = {
       abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: 'abcde' }),
       abcde: result.nestedObj,
-    }
+    };
 
     const queryResult = readFragmentFromStore({
       store,

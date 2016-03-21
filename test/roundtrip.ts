@@ -24,7 +24,7 @@ describe('roundtrip', () => {
   it('with an alias', () => {
     storeRoundtrip(`
       {
-      	luke: people_one(id: "1") {
+        luke: people_one(id: "1") {
           name,
         },
         vader: people_one(id: "4") {

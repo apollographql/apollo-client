@@ -70,7 +70,7 @@ export function writeQueryToStore({
   cache = {},
 }: { result: Object, query: Document | string, cache?: Object}): Object {
   const queryDefinition: OperationDefinition = parseQueryIfString(query);
-  
+
   const resultWithDataId: Object = assign({
     __data_id: 'ROOT_QUERY',
   }, result);

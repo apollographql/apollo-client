@@ -29,7 +29,10 @@ import {
 //   printAST,
 // } from './debug';
 
-export function readQueryFromStore({ store, query }: { store: Object, query: Document | string }): Object {
+export function readQueryFromStore({ store, query }: {
+  store: Object,
+  query: Document | string
+}): Object {
   const queryDef: OperationDefinition = parseQueryIfString(query);
 
   return readSelectionSetFromStore({
@@ -42,7 +45,7 @@ export function readQueryFromStore({ store, query }: { store: Object, query: Doc
 export function readFragmentFromStore({
     store,
     fragment,
-    rootId
+    rootId,
 }: { store: Object, fragment: Document | string, rootId: string }): Object {
   const fragmentDef: FragmentDefinition = parseFragmentIfString(fragment);
 
@@ -56,7 +59,7 @@ export function readFragmentFromStore({
 function readSelectionSetFromStore({
     store,
     rootId,
-    selectionSet
+    selectionSet,
 }: {store: Object, rootId: string, selectionSet: SelectionSet }): Object {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -69,9 +72,9 @@ function readSelectionSetFromStore({
     if (selection.kind !== 'Field') {
        throw new Error('Only fields supported so far, not fragments.');
     }
-    
+
     const field = <Field> selection;
-    
+
     const cacheFieldName: string = cacheFieldNameFromField(field);
     const resultFieldName: string = resultFieldNameFromField(field);
 

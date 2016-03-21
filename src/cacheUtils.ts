@@ -9,7 +9,7 @@ import {
   StringValue,
   BooleanValue,
   Value,
-} from 'graphql'
+} from 'graphql';
 
 import {
   includes,
@@ -25,6 +25,7 @@ export function cacheFieldNameFromField(field: Field): string {
       const scalarArgumentValue = ensureScalarValue(argument.value);
       argObj[argument.name.value] = scalarArgumentValue.value;
     });
+
     const stringifiedArgs: string = JSON.stringify(argObj);
     return `${field.name.value}(${stringifiedArgs})`;
   }
@@ -42,6 +43,6 @@ function ensureScalarValue(value: Value): IntValue | FloatValue | StringValue | 
   if (! includes(SCALAR_TYPES, value.kind)) {
     throw new Error('Only scalar argument types currently supported.');
   }
-  
+
   return value as IntValue | FloatValue | StringValue | BooleanValue;
 }

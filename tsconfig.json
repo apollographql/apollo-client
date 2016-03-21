@@ -1,21 +1,21 @@
 {
-    "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "sourceMap": false,
-        "declaration": true,
-        "noImplicitAny": false,
-        "rootDir": "src",
-        "outDir": "lib",
-        "allowSyntheticDefaultImports": true,
-        "pretty": true,
-        "removeComments": true
-    },
-    "exclude": [
-        "node_modules",
-        "typings",
-        "lib",
-        "test"
-    ]
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": false,
+    "declaration": true,
+    "noImplicitAny": false,
+    "rootDir": "src",
+    "outDir": "lib",
+    "allowSyntheticDefaultImports": true,
+    "pretty": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "node_modules",
+    "typings",
+    "lib",
+    "test"
+  ]
 }

@@ -11,7 +11,7 @@
     "postinstall": "./node_modules/.bin/typings i",
     "compile": "tsc",
     "prepublish": "npm run compile",
-    "lint": "eslint ."
+    "lint": "tslint src/*.ts && tslint test/*.ts"
   },
   "repository": {
     "type": "git",
@@ -42,6 +42,7 @@
     "lodash": "^4.5.1",
     "mocha": "^2.3.3",
     "request-promise": "^2.0.1",
+    "tslint": "^3.6.0",
     "typescript": "^1.8.9",
     "typescript-require": "^0.2.9-1",
     "typings": "^0.7.9"

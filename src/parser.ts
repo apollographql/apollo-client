@@ -3,12 +3,13 @@
 /// <reference path="../typings/browser/definitions/lodash/index.d.ts" />
 
 import { parse } from 'graphql';
+
 import {
-  Definition,
   OperationDefinition,
   Document,
-  FragmentDefinition
+  FragmentDefinition,
 } from 'graphql';
+
 import { isString } from 'lodash';
 
 export function parseIfString(doc: Document | string): Document {
@@ -49,9 +50,9 @@ export function parseQueryIfString(query:  Document | string): OperationDefiniti
   if (parsedQuery.kind !== 'Document' && parsedQuery.definitions.length !== 1) {
     throw new Error('Must have exactly one definition in document.');
   }
-  
+
   const queryDefinition: OperationDefinition = <OperationDefinition> parsedQuery.definitions[0];
-  
+
   if (queryDefinition.operation !== 'query') {
     throw new Error('Definition must be a query.');
   }

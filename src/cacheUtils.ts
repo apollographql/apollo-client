@@ -1,23 +1,47 @@
 /// <reference path="../typings/browser/ambient/es6-promise/index.d.ts" />
 /// <reference path="../typings/browser/ambient/graphql/index.d.ts" />
 
-import { Field, Argument } from 'graphql'
+import {
+  Field,
+  Argument,
+  IntValue,
+  FloatValue,
+  StringValue,
+  BooleanValue,
+  Value,
+} from 'graphql'
 
-export function cacheFieldNameFromSelection(selection: Field): string {
-  if (selection.arguments.length) {
+import {
+  includes,
+} from 'lodash';
+
+const SCALAR_TYPES = ['IntValue', 'FloatValue', 'StringValue', 'BooleanValue'];
+
+export function cacheFieldNameFromField(field: Field): string {
+  if (field.arguments.length) {
     const argObj: Object = {};
-    selection.arguments.forEach((argument: Argument) => {
-      argObj[argument.name.value] = argument.value.value;
+
+    field.arguments.forEach((argument: Argument) => {
+      const scalarArgumentValue = ensureScalarValue(argument.value);
+      argObj[argument.name.value] = scalarArgumentValue.value;
     });
     const stringifiedArgs: string = JSON.stringify(argObj);
-    return `${selection.name.value}(${stringifiedArgs})`;
+    return `${field.name.value}(${stringifiedArgs})`;
   }
 
-  return selection.name.value;
+  return field.name.value;
 }
 
-export function resultFieldNameFromSelection(selection: Field): string {
-  return selection.alias ?
-    selection.alias.value :
-    selection.name.value;
+export function resultFieldNameFromField(field: Field): string {
+  return field.alias ?
+    field.alias.value :
+    field.name.value;
+}
+
+function ensureScalarValue(value: Value): IntValue | FloatValue | StringValue | BooleanValue {
+  if (! includes(SCALAR_TYPES, value.kind)) {
+    throw new Error('Only scalar argument types currently supported.');
+  }
+  
+  return value as IntValue | FloatValue | StringValue | BooleanValue;
 }

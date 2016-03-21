@@ -18,8 +18,8 @@ import {
 } from './parser';
 
 import {
-  cacheFieldNameFromSelection,
-  resultFieldNameFromSelection,
+  cacheFieldNameFromField,
+  resultFieldNameFromField,
 } from './cacheUtils';
 
 import {
@@ -27,6 +27,7 @@ import {
   OperationDefinition,
   SelectionSet,
   FragmentDefinition,
+  Field,
 } from 'graphql';
 
 // import {
@@ -95,8 +96,10 @@ function writeSelectionSetToStore({
   const normalizedRootObj: Object = {};
 
   selectionSet.selections.forEach((selection) => {
-    const cacheFieldName: string = cacheFieldNameFromSelection(selection);
-    const resultFieldName: string = resultFieldNameFromSelection(selection);
+    const field = selection as Field;
+
+    const cacheFieldName: string = cacheFieldNameFromField(field);
+    const resultFieldName: string = resultFieldNameFromField(field);
 
     const value: any = result[resultFieldName];
 
@@ -128,7 +131,7 @@ function writeSelectionSetToStore({
         writeSelectionSetToStore({
           result: clonedItem,
           cache,
-          selectionSet: selection.selectionSet,
+          selectionSet: field.selectionSet,
         });
       });
 
@@ -150,7 +153,7 @@ function writeSelectionSetToStore({
     writeSelectionSetToStore({
       result: clonedValue,
       cache,
-      selectionSet: selection.selectionSet,
+      selectionSet: field.selectionSet,
     });
   });
 

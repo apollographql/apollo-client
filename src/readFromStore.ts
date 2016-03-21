@@ -13,14 +13,16 @@ import {
 } from './parser';
 
 import {
-  cacheFieldNameFromSelection,
-  resultFieldNameFromSelection,
+  cacheFieldNameFromField,
+  resultFieldNameFromField,
 } from './cacheUtils';
 
 import {
   Document,
   OperationDefinition,
+  FragmentDefinition,
   SelectionSet,
+  Field,
 } from 'graphql';
 
 // import {
@@ -42,7 +44,7 @@ export function readFragmentFromStore({
     fragment,
     rootId
 }: { store: Object, fragment: Document | string, rootId: string }): Object {
-  const fragmentDef: OperationDefinition = parseFragmentIfString(fragment);
+  const fragmentDef: FragmentDefinition = parseFragmentIfString(fragment);
 
   return readSelectionSetFromStore({
     store,
@@ -64,14 +66,20 @@ function readSelectionSetFromStore({
   const cacheObj: Object = store[rootId];
 
   selectionSet.selections.forEach((selection) => {
-    const cacheFieldName: string = cacheFieldNameFromSelection(selection);
-    const resultFieldName: string = resultFieldNameFromSelection(selection);
+    if (selection.kind !== 'Field') {
+       throw new Error('Only fields supported so far, not fragments.');
+    }
+    
+    const field = <Field> selection;
+    
+    const cacheFieldName: string = cacheFieldNameFromField(field);
+    const resultFieldName: string = resultFieldNameFromField(field);
 
     if (! has(cacheObj, cacheFieldName)) {
       throw new Error(`Can't find field ${cacheFieldName} on object ${cacheObj}.`);
     }
 
-    if (! selection.selectionSet) {
+    if (! field.selectionSet) {
       result[resultFieldName] = cacheObj[cacheFieldName];
       return;
     }
@@ -81,7 +89,7 @@ function readSelectionSetFromStore({
         return readSelectionSetFromStore({
           store,
           rootId: id,
-          selectionSet: selection.selectionSet,
+          selectionSet: field.selectionSet,
         });
       });
       return;
@@ -91,7 +99,7 @@ function readSelectionSetFromStore({
     result[resultFieldName] = readSelectionSetFromStore({
       store,
       rootId: cacheObj[cacheFieldName],
-      selectionSet: selection.selectionSet,
+      selectionSet: field.selectionSet,
     });
   });
 

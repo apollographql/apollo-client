@@ -17,13 +17,23 @@ import {
   resultFieldNameFromField,
 } from './cacheUtils';
 
-export function diffQueryAgainstStore({ store, query }) {
+import {
+  Document,
+  SelectionSet,
+  Field,
+} from 'graphql';
+
+export function diffQueryAgainstStore({ store, query }: {
+  store: Object,
+  query: Document | string
+}) {
   const queryDef = parseQueryIfString(query);
 
   return diffSelectionSetAgainstStore({
     store,
     rootId: 'ROOT_QUERY',
     selectionSet: queryDef.selectionSet,
+    throwOnMissingField: false,
   });
 }
 
@@ -34,6 +44,7 @@ export function diffFragmentAgainstStore({ store, fragment, rootId }) {
     store,
     rootId,
     selectionSet: fragmentDef.selectionSet,
+    throwOnMissingField: false,
   });
 }
 
@@ -53,33 +64,49 @@ export function diffSelectionSetAgainstStore({
   store,
   rootId,
   throwOnMissingField = false,
+}: {
+  selectionSet: SelectionSet,
+  store: Object,
+  rootId: string,
+  throwOnMissingField: Boolean,
 }) {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
 
   const result = {};
-  const missingSelectionSets = [];
 
-  const missingSelections = [];
+  const missingSelectionSets: {
+    selectionSet: SelectionSet,
+    typeName: string,
+    id: string,
+  }[] = [];
+
+  const missingSelections: Field[] = [];
 
   const cacheObj = store[rootId];
 
   selectionSet.selections.forEach((selection) => {
-    const cacheFieldName = cacheFieldNameFromField(selection);
-    const resultFieldName = resultFieldNameFromField(selection);
+    if (selection.kind !== 'Field') {
+       throw new Error('Only fields supported so far, not fragments.');
+    }
+
+    const field = selection as Field;
+
+    const cacheFieldName = cacheFieldNameFromField(field);
+    const resultFieldName = resultFieldNameFromField(field);
 
     if (! has(cacheObj, cacheFieldName)) {
       if (throwOnMissingField) {
         throw new Error(`Can't find field ${cacheFieldName} on object ${cacheObj}.`);
       }
 
-      missingSelections.push(selection);
+      missingSelections.push(field);
 
       return;
     }
 
-    if (! selection.selectionSet) {
+    if (! field.selectionSet) {
       result[resultFieldName] = cacheObj[cacheFieldName];
       return;
     }
@@ -90,10 +117,11 @@ export function diffSelectionSetAgainstStore({
           store,
           throwOnMissingField,
           rootId: id,
-          selectionSet: selection.selectionSet,
+          selectionSet: field.selectionSet,
         });
 
-        itemDiffResult.missingSelectionSets.forEach(field => missingSelectionSets.push(field));
+        itemDiffResult.missingSelectionSets.forEach(
+          itemSelectionSet => missingSelectionSets.push(itemSelectionSet));
         return itemDiffResult.result;
       });
       return;
@@ -103,11 +131,13 @@ export function diffSelectionSetAgainstStore({
       store,
       throwOnMissingField,
       rootId: cacheObj[cacheFieldName],
-      selectionSet: selection.selectionSet,
+      selectionSet: field.selectionSet,
     });
 
     // This is a nested query
-    subObjDiffResult.missingSelectionSets.forEach(field => missingSelectionSets.push(field));
+    subObjDiffResult.missingSelectionSets.forEach(
+      subObjSelectionSet => missingSelectionSets.push(subObjSelectionSet));
+
     result[resultFieldName] = subObjDiffResult.result;
   });
 

@@ -13,8 +13,6 @@ import {
 
 import {
   Document,
-  OperationDefinition,
-  FragmentDefinition,
   SelectionSet,
 } from 'graphql';
 
@@ -26,7 +24,7 @@ export function readQueryFromStore({ store, query }: {
   store: Object,
   query: Document | string
 }): Object {
-  const queryDef: OperationDefinition = parseQueryIfString(query);
+  const queryDef = parseQueryIfString(query);
 
   return readSelectionSetFromStore({
     store,
@@ -40,7 +38,7 @@ export function readFragmentFromStore({
     fragment,
     rootId,
 }: { store: Object, fragment: Document | string, rootId: string }): Object {
-  const fragmentDef: FragmentDefinition = parseFragmentIfString(fragment);
+  const fragmentDef = parseFragmentIfString(fragment);
 
   return readSelectionSetFromStore({
     store,

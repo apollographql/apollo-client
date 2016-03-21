@@ -1,3 +1,7 @@
+/// <reference path="../typings/browser/ambient/es6-promise/index.d.ts" />
+/// <reference path="../typings/browser/ambient/graphql/index.d.ts" />
+/// <reference path="../typings/browser/definitions/lodash/index.d.ts" />
+
 import {
   isArray,
   has,
@@ -13,12 +17,18 @@ import {
   resultFieldNameFromSelection,
 } from './cacheUtils';
 
+import {
+  Document,
+  OperationDefinition,
+  SelectionSet,
+} from 'graphql';
+
 // import {
 //   printAST,
 // } from './debug';
 
-export function readQueryFromStore({ store, query }) {
-  const queryDef = parseQueryIfString(query);
+export function readQueryFromStore({ store, query }: { store: Object, query: Document | string }): Object {
+  const queryDef: OperationDefinition = parseQueryIfString(query);
 
   return readSelectionSetFromStore({
     store,
@@ -27,8 +37,12 @@ export function readQueryFromStore({ store, query }) {
   });
 }
 
-export function readFragmentFromStore({ store, fragment, rootId }) {
-  const fragmentDef = parseFragmentIfString(fragment);
+export function readFragmentFromStore({
+    store,
+    fragment,
+    rootId
+}: { store: Object, fragment: Document | string, rootId: string }): Object {
+  const fragmentDef: OperationDefinition = parseFragmentIfString(fragment);
 
   return readSelectionSetFromStore({
     store,
@@ -37,17 +51,21 @@ export function readFragmentFromStore({ store, fragment, rootId }) {
   });
 }
 
-function readSelectionSetFromStore({ store, rootId, selectionSet }) {
+function readSelectionSetFromStore({
+    store,
+    rootId,
+    selectionSet
+}: {store: Object, rootId: string, selectionSet: SelectionSet }): Object {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
 
-  const result = {};
-  const cacheObj = store[rootId];
+  const result: Object = {};
+  const cacheObj: Object = store[rootId];
 
   selectionSet.selections.forEach((selection) => {
-    const cacheFieldName = cacheFieldNameFromSelection(selection);
-    const resultFieldName = resultFieldNameFromSelection(selection);
+    const cacheFieldName: string = cacheFieldNameFromSelection(selection);
+    const resultFieldName: string = resultFieldNameFromSelection(selection);
 
     if (! has(cacheObj, cacheFieldName)) {
       throw new Error(`Can't find field ${cacheFieldName} on object ${cacheObj}.`);

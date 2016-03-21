@@ -1,7 +1,10 @@
-import { assert } from 'chai';
-import _ from 'lodash';
+/// <reference path="../typings/browser/ambient/chai/index.d.ts" />
+/// <reference path="../typings/browser/ambient/mocha/index.d.ts" />
 
-import { writeFragmentToStore } from '../src/writeToStore';
+import { assert } from 'chai';
+import * as _ from 'lodash';
+
+import { writeFragmentToStore } from '../lib/writeToStore';
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {
@@ -129,10 +132,9 @@ describe('writing to the store', () => {
       fragment,
       result: _.cloneDeep(result),
     }), {
-      [result.id]: {
-        ..._.omit(result, 'nestedObj'),
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
         nestedObj: result.nestedObj.id,
-      },
+      }),
       [result.nestedObj.id]: result.nestedObj,
     });
   });
@@ -168,10 +170,9 @@ describe('writing to the store', () => {
       fragment,
       result: _.cloneDeep(result),
     }), {
-      [result.id]: {
-        ..._.omit(result, 'nestedObj'),
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
         nestedObj: `${result.id}.nestedObj`,
-      },
+      }),
       [`${result.id}.nestedObj`]: result.nestedObj,
     });
   });
@@ -207,10 +208,9 @@ describe('writing to the store', () => {
       fragment,
       result: _.cloneDeep(result),
     }), {
-      [result.id]: {
-        ..._.omit(result, 'nestedObj'),
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
         'nestedObj({"arg":"val"})': `${result.id}.nestedObj({"arg":"val"})`,
-      },
+      }),
       [`${result.id}.nestedObj({"arg":"val"})`]: result.nestedObj,
     });
   });
@@ -256,10 +256,9 @@ describe('writing to the store', () => {
       fragment,
       result: _.cloneDeep(result),
     }), {
-      [result.id]: {
-        ..._.omit(result, 'nestedArray'),
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: result.nestedArray.map(_.property('id')),
-      },
+      }),
       [result.nestedArray[0].id]: result.nestedArray[0],
       [result.nestedArray[1].id]: result.nestedArray[1],
     });
@@ -305,13 +304,12 @@ describe('writing to the store', () => {
     });
 
     assertEqualSansDataId(normalized, {
-      [result.id]: {
-        ..._.omit(result, 'nestedArray'),
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
           `${result.id}.nestedArray.0`,
           `${result.id}.nestedArray.1`,
         ],
-      },
+      }),
       [`${result.id}.nestedArray.0`]: result.nestedArray[0],
       [`${result.id}.nestedArray.1`]: result.nestedArray[1],
     });

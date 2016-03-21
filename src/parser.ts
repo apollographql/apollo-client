@@ -1,11 +1,18 @@
-import { parse } from 'graphql/language';
+/// <reference path="../typings/browser/ambient/es6-promise/index.d.ts" />
+/// <reference path="../typings/browser/ambient/graphql/index.d.ts" />
+/// <reference path="../typings/browser/definitions/lodash/index.d.ts" />
+
+import { parse } from 'graphql';
+import { Definition, OperationDefinition, Document } from 'graphql';
 import { isString } from 'lodash';
 
-export function parseIfString(doc) {
-  let parsed = doc;
+export function parseIfString(doc: Document | string): Document {
+  let parsed: Document;
 
   if (isString(doc)) {
     parsed = parse(doc);
+  } else {
+    parsed = doc;
   }
 
   if (!parsed || parsed.kind !== 'Document') {
@@ -15,8 +22,8 @@ export function parseIfString(doc) {
   return parsed;
 }
 
-export function parseFragmentIfString(fragment) {
-  const parsedFragment = parseIfString(fragment);
+export function parseFragmentIfString(fragment:  Document | string): Definition {
+  const parsedFragment: Document = parseIfString(fragment);
 
   if (parsedFragment.definitions.length !== 1) {
     throw new Error('Must have exactly one definition in document.');
@@ -31,15 +38,15 @@ export function parseFragmentIfString(fragment) {
   return fragmentDef;
 }
 
-export function parseQueryIfString(query) {
-  const parsedQuery = parseIfString(query);
+export function parseQueryIfString(query:  Document | string): OperationDefinition {
+  const parsedQuery: Document = parseIfString(query);
 
   if (parsedQuery.kind !== 'Document' && parsedQuery.definitions.length !== 1) {
     throw new Error('Must have exactly one definition in document.');
   }
-
-  const queryDefinition = parsedQuery.definitions[0];
-
+  
+  const queryDefinition: OperationDefinition = parsedQuery.definitions[0];
+  
   if (queryDefinition.operation !== 'query') {
     throw new Error('Definition must be a query.');
   }

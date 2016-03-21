@@ -42,7 +42,7 @@ export function readFragmentFromStore({
     fragment,
     rootId
 }: { store: Object, fragment: Document | string, rootId: string }): Object {
-  const fragmentDef: OperationDefinition = parseFragmentIfString(fragment);
+  const fragmentDef: any = parseFragmentIfString(fragment); // OperationDefinition
 
   return readSelectionSetFromStore({
     store,
@@ -55,7 +55,7 @@ function readSelectionSetFromStore({
     store,
     rootId,
     selectionSet
-}: {store: Object, rootId: string, selectionSet: SelectionSet }): Object {
+}: {store: Object, rootId: string, selectionSet: any }): Object { // SelectionSet
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }

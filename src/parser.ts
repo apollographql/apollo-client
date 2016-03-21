@@ -38,7 +38,7 @@ export function parseFragmentIfString(fragment:  Document | string): FragmentDef
     throw new Error('Must be a fragment.');
   }
 
-  const fragmentDef: FragmentDefinition = parsedFragment.definitions[0];
+  const fragmentDef: any = parsedFragment.definitions[0]; // FragmentDefinition
 
   return fragmentDef;
 }
@@ -50,7 +50,7 @@ export function parseQueryIfString(query:  Document | string): OperationDefiniti
     throw new Error('Must have exactly one definition in document.');
   }
   
-  const queryDefinition: OperationDefinition = parsedQuery.definitions[0];
+  const queryDefinition: any = parsedQuery.definitions[0]; // OperationDefinition
   
   if (queryDefinition.operation !== 'query') {
     throw new Error('Definition must be a query.');

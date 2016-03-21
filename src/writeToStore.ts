@@ -85,7 +85,7 @@ function writeSelectionSetToStore({
   result,
   selectionSet,
   cache,
-}: { result: any, selectionSet: SelectionSet, cache?: Object }): Object {
+}: { result: any, selectionSet: any, cache?: Object }): Object { // SelectionSet
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
   }

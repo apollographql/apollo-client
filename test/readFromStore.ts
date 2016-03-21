@@ -1,7 +1,10 @@
-import { assert } from 'chai';
-import _ from 'lodash';
+/// <reference path="../typings/browser/ambient/chai/index.d.ts" />
+/// <reference path="../typings/browser/ambient/mocha/index.d.ts" />
 
-import { readFragmentFromStore } from '../src/readFromStore';
+import { assert } from 'chai';
+import * as _ from 'lodash';
+
+import { readFragmentFromStore } from '../lib/readFromStore';
 
 describe('reading from the store', () => {
   it('rejects malformed queries', () => {
@@ -72,10 +75,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: {
-        ..._.omit(result, 'nestedObj'),
-        nestedObj: 'abcde',
-      },
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: 'abcde' }),
       abcde: result.nestedObj,
     };
 
@@ -126,13 +126,12 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: {
-        ..._.omit(result, 'nestedArray'),
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
           'abcd.nestedArray.0',
           'abcd.nestedArray.1',
         ],
-      },
+      }),
       'abcd.nestedArray.0': result.nestedArray[0],
       'abcd.nestedArray.1': result.nestedArray[1],
     };

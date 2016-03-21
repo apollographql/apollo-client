@@ -28,3 +28,7 @@ node_modules
 
 # don't commit compiled files
 lib
+
+# don't commit typescript files
+typings
+tmp

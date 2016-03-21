@@ -1,7 +1,10 @@
+/// <reference path="../typings/browser/ambient/chai/index.d.ts" />
+/// <reference path="../typings/browser/ambient/mocha/index.d.ts" />
+
 import { assert } from 'chai';
 
-import { writeQueryToStore } from '../src/writeToStore';
-import { readQueryFromStore } from '../src/readFromStore';
+import { writeQueryToStore } from '../lib/writeToStore';
+import { readQueryFromStore } from '../lib/readFromStore';
 
 describe('roundtrip', () => {
   it('real graphql result', () => {
@@ -21,7 +24,7 @@ describe('roundtrip', () => {
   it('with an alias', () => {
     storeRoundtrip(`
       {
-      	luke: people_one(id: "1") {
+        luke: people_one(id: "1") {
           name,
         },
         vader: people_one(id: "4") {

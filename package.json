@@ -5,11 +5,13 @@
   "main": "./lib/index.js",
   "jsnext:main": "./src/index.js",
   "scripts": {
+    "pretest": "npm run compile",
     "test": "mocha --reporter spec --full-trace test/index.js",
     "posttest": "npm run lint",
-    "compile": "babel --presets es2015,stage-0 -d lib/ src/",
+    "postinstall": "./node_modules/.bin/typings i",
+    "compile": "tsc",
     "prepublish": "npm run compile",
-    "lint": "eslint ."
+    "lint": "tslint src/*.ts && tslint test/*.ts"
   },
   "repository": {
     "type": "git",
@@ -27,30 +29,25 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "babel-polyfill": "^6.5.0",
-    "graphql": "^0.4.17",
+    "graphql": "^0.4.18",
     "lodash": "^4.6.1",
     "redux": "^3.3.1"
   },
   "devDependencies": {
-    "babel-core": "6.3.21",
-    "babel-eslint": "^6.0.0-beta.6",
-    "babel-loader": "6.2.0",
-    "babel-preset-es2015": "^6.5.0",
-    "babel-preset-stage-0": "^6.5.0",
     "chai": "^3.5.0",
     "dataloader": "^1.1.0",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.1.0",
     "eslint-plugin-import": "^1.1.0",
-    "graphql": "^0.4.17",
-    "graphql-relay": "^0.3.6",
     "lodash": "^4.5.1",
     "mocha": "^2.3.3",
-    "request-promise": "^2.0.1"
+    "request-promise": "^2.0.1",
+    "tslint": "^3.6.0",
+    "typescript": "^1.8.9",
+    "typescript-require": "^0.2.9-1",
+    "typings": "^0.7.9"
   },
   "eslintConfig": {
-    "parser": "babel-eslint",
     "extends": [
       "airbnb/base",
       "plugin:import/errors"

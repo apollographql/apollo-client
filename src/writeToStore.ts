@@ -114,7 +114,7 @@ function writeSelectionSetToStore({
       const thisIdList: Array<string> = [];
 
       value.forEach((item, index) => {
-        const clonedItem: Object = assign({}, item);
+        const clonedItem: any = assign({}, item);
 
         if (! isString(item.id)) {
           clonedItem['__data_id'] = `${resultDataId}.${cacheFieldName}.${index}`;
@@ -136,7 +136,7 @@ function writeSelectionSetToStore({
     }
 
     // It's an object
-    const clonedValue: Object = assign({}, value);
+    const clonedValue: any = assign({}, value);
     if (! isString(clonedValue.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
       clonedValue['__data_id'] = `${resultDataId}.${cacheFieldName}`;

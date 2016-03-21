@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "Compile your Relay GraphQL queries at runtime, no need for Babel. Only for use in development.",
   "main": "./lib/index.js",
-  "jsnext:main": "./src/index.js",
   "scripts": {
     "pretest": "npm run compile",
     "test": "mocha --reporter spec --full-trace test/index.js",
@@ -15,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "meteor/relay-runtime-query"
+    "url": "apollostack/apollo-client"
   },
   "keywords": [
     "ecmascript",
@@ -30,15 +29,11 @@
   "license": "MIT",
   "dependencies": {
     "graphql": "^0.4.18",
-    "lodash": "^4.6.1",
-    "redux": "^3.3.1"
+    "lodash": "^4.6.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "dataloader": "^1.1.0",
-    "eslint": "^2.4.0",
-    "eslint-config-airbnb": "^6.1.0",
-    "eslint-plugin-import": "^1.1.0",
     "lodash": "^4.5.1",
     "mocha": "^2.3.3",
     "request-promise": "^2.0.1",
@@ -46,19 +41,5 @@
     "typescript": "^1.8.9",
     "typescript-require": "^0.2.9-1",
     "typings": "^0.7.9"
-  },
-  "eslintConfig": {
-    "extends": [
-      "airbnb/base",
-      "plugin:import/errors"
-    ],
-    "rules": {
-      "no-use-before-define": 0,
-      "arrow-body-style": 0,
-      "dot-notation": 0
-    },
-    "env": {
-      "mocha": true
-    }
   }
 }

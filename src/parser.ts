@@ -3,7 +3,12 @@
 /// <reference path="../typings/browser/definitions/lodash/index.d.ts" />
 
 import { parse } from 'graphql';
-import { Definition, OperationDefinition, Document } from 'graphql';
+import {
+  Definition,
+  OperationDefinition,
+  Document,
+  FragmentDefinition
+} from 'graphql';
 import { isString } from 'lodash';
 
 export function parseIfString(doc: Document | string): Document {
@@ -22,7 +27,7 @@ export function parseIfString(doc: Document | string): Document {
   return parsed;
 }
 
-export function parseFragmentIfString(fragment:  Document | string): Definition {
+export function parseFragmentIfString(fragment:  Document | string): FragmentDefinition {
   const parsedFragment: Document = parseIfString(fragment);
 
   if (parsedFragment.definitions.length !== 1) {
@@ -33,7 +38,7 @@ export function parseFragmentIfString(fragment:  Document | string): Definition 
     throw new Error('Must be a fragment.');
   }
 
-  const fragmentDef = parsedFragment.definitions[0];
+  const fragmentDef: FragmentDefinition = parsedFragment.definitions[0];
 
   return fragmentDef;
 }

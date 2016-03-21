@@ -26,6 +26,7 @@ import {
   Document,
   OperationDefinition,
   SelectionSet,
+  FragmentDefinition,
 } from 'graphql';
 
 // import {
@@ -52,7 +53,7 @@ export function writeFragmentToStore({
     throw new Error('Must pass fragment.');
   }
 
-  const parsedFragment: OperationDefinition = parseFragmentIfString(fragment);
+  const parsedFragment: FragmentDefinition = parseFragmentIfString(fragment);
   const selectionSet: SelectionSet = parsedFragment.selectionSet;
 
   return writeSelectionSetToStore({

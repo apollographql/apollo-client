@@ -3,7 +3,11 @@
 // For development only!
 import * as _ from 'lodash';
 
-function stripLoc(obj: Object) {
+export function stripLoc(obj: Object) {
+  if (_.isArray(obj)) {
+    return obj.map(stripLoc);
+  }
+
   if (! _.isObject(obj)) {
     return obj;
   }

@@ -259,6 +259,10 @@ describe('QueryManager', () => {
     handle.onError((error) => {
       assert.equal(error[0].message, 'This is an error message.');
 
+      assert.throws(() => {
+        handle.onData((result) => null);
+      }, /Query was stopped. Please create a new one./);
+
       done();
     });
   });

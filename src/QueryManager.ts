@@ -79,6 +79,7 @@ export class QueryManager {
       typeName: 'Query',
     });
 
+    // XXX diff query against store to reduce network
     const request = {
       query: query,
     } as Request;
@@ -96,7 +97,6 @@ export class QueryManager {
       }));
     }).catch((errors: GraphQLError[]) => {
       this.broadcastErrors(watchHandle.id, errors);
-      // XXX maybe stop query and clean up callbacks!
     });
 
     return watchHandle;
@@ -120,18 +120,34 @@ export class QueryManager {
 
     this.selectionSetMap[queryId] = selectionSetWithRoot;
 
+    const isStopped = () => {
+      return ! this.selectionSetMap[queryId];
+    };
+
     return {
       id: queryId,
+      isStopped,
       stop: () => {
-        throw new Error('Not implemented');
+        this.stopQuery(queryId);
       },
       onData: (callback) => {
+        if (isStopped()) {
+          throw new Error('Query was stopped. Please create a new one.');
+        }
+
         this.registerDataCallback(queryId, callback);
       },
       onError: (callback) => {
+        if (isStopped()) { throw new Error('Query was stopped. Please create a new one.'); }
         this.registerErrorCallback(queryId, callback);
       },
     };
+  }
+
+  private stopQuery(queryId) {
+    delete this.selectionSetMap[queryId];
+    delete this.dataCallbacks[queryId];
+    delete this.errorCallbacks[queryId];
   }
 
   private broadcastQueryChange(queryId: string, result: any) {
@@ -141,7 +157,11 @@ export class QueryManager {
   }
 
   private broadcastErrors(queryId: string, errors: GraphQLError[]) {
-    this.errorCallbacks[queryId].forEach((callback) => {
+    const errorCallbacks = this.errorCallbacks[queryId];
+
+    this.stopQuery(queryId);
+
+    errorCallbacks.forEach((callback) => {
       callback(errors);
     });
   }
@@ -171,6 +191,7 @@ export interface SelectionSetWithRoot {
 
 export interface WatchedQueryHandle {
   id: string;
+  isStopped: () => boolean;
   stop();
   onData(callback: QueryResultCallback);
   onError(callback: QueryErrorCallback);

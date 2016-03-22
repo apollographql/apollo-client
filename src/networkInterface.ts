@@ -1,6 +1,4 @@
-/// <reference path="../typings/browser/ambient/es6-promise/index.d.ts" />
-/// <reference path="../typings/browser/ambient/graphql/index.d.ts" />
-/// <reference path="../typings/browser/ambient/isomorphic-fetch/index.d.ts" />
+/// <reference path="../typings/main.d.ts" />
 
 // ensure env has promise support
 // this should probably be moved elsewhere / should be part of the extra

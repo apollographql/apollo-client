@@ -26,9 +26,9 @@ import {
 } from './store';
 
 class QueryManager {
-  networkInterface: NetworkInterface;
-  queryDisperser: QueryDisperser;
-  store: Store;
+  private networkInterface: NetworkInterface;
+  private queryDisperser: QueryDisperser;
+  private store: Store;
 
   constructor({
     networkInterface,

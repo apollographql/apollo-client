@@ -1,9 +1,4 @@
-/// <reference path="../typings/browser/ambient/chai/index.d.ts" />
-/// <reference path="../typings/browser/ambient/chai-as-promised/index.d.ts" />
-/// <reference path="../typings/browser/ambient/promises-a-plus/index.d.ts" />
-/// <reference path="../typings/browser/ambient/mocha/index.d.ts" />
-/// <reference path="../typings/browser/definitions/lodash/index.d.ts" />
-/// <reference path="../typings/browser/ambient/isomorphic-fetch/index.d.ts" />
+/// <reference path="../typings/main.d.ts" />
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';

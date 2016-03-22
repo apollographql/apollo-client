@@ -40,7 +40,7 @@ describe('watching queries on the store', () => {
       selectionSet: fragmentDef.selectionSet,
     });
 
-    handle.onData((err, res) => {
+    handle.onData((res) => {
       assert.deepEqual(res, result);
       done();
     });
@@ -85,7 +85,7 @@ describe('watching queries on the store', () => {
 
     let numDone = 0;
 
-    handle1.onData((err, res) => {
+    handle1.onData((res) => {
       assert.deepEqual(res, {
         id: 'abcd',
         numberField: 5,
@@ -97,7 +97,7 @@ describe('watching queries on the store', () => {
       }
     });
 
-    handle2.onData((err, res) => {
+    handle2.onData((res) => {
       assert.deepEqual(res, {
         id: 'abcd',
         stringField: 'This is a string!',

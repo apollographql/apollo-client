@@ -1,6 +1,5 @@
 import {
   SelectionSet,
-  GraphQLError,
 } from 'graphql';
 
 import {
@@ -17,7 +16,7 @@ import {
 
 export class WatchedQueries {
   private selectionSetMap: { [queryId: number]: SelectionSetWithRoot };
-  private callbacks: { [queryId: number]: QueryStateChangeCallback[]};
+  private callbacks: { [queryId: number]: QueryResultCallback[]};
   private idCounter = 0;
 
   constructor() {
@@ -49,17 +48,17 @@ export class WatchedQueries {
         selectionSet: selectionSetWithRoot.selectionSet,
       });
 
-      this.broadcastQueryChange(queryId, null, resultFromStore);
+      this.broadcastQueryChange(queryId, resultFromStore);
     });
   }
 
-  private broadcastQueryChange(queryId: string, error: GraphQLError, result: any) {
+  private broadcastQueryChange(queryId: string, result: any) {
     this.callbacks[queryId].forEach((callback) => {
-      callback(error, result);
+      callback(result);
     });
   }
 
-  private registerQueryCallback(queryId: string, callback: QueryStateChangeCallback): void {
+  private registerQueryCallback(queryId: string, callback: QueryResultCallback): void {
     if (! this.callbacks[queryId]) {
       this.callbacks[queryId] = [];
     }
@@ -76,7 +75,7 @@ export interface SelectionSetWithRoot {
 
 export interface WatchedQueryHandle {
   stop();
-  onData(callback: QueryStateChangeCallback);
+  onData(callback: QueryResultCallback);
 }
 
-export type QueryStateChangeCallback = (error: GraphQLError, result: any) => void;
+export type QueryResultCallback = (result: any) => void;

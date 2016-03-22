@@ -4,6 +4,18 @@ import {
   SelectionSet,
 } from 'graphql';
 
+import {
+  createStore,
+} from 'redux';
+
+import {
+  assign,
+} from 'lodash';
+
+import {
+  writeSelectionSetToStore,
+} from './writeToStore';
+
 export interface Store {
   [dataId: string]: StoreObject;
 }
@@ -36,4 +48,28 @@ export interface QueryResultAction {
   type: string;
   result: any;
   selectionSet: SelectionSet;
+}
+
+export type ApolloAction = QueryResultAction;
+
+export function createApolloStore() {
+  return createStore(resultCacheReducer);
+}
+
+export function resultCacheReducer(previousState: Store = {}, action: ApolloAction): Store {
+  switch (action.type) {
+    case QUERY_RESULT_ACTION:
+      // XXX use immutablejs instead of cloning
+      const clonedState = assign({}, previousState) as Store;
+
+      const newState = writeSelectionSetToStore({
+        result: action.result,
+        selectionSet: action.selectionSet,
+        store: clonedState,
+      });
+
+      return newState;
+    default:
+      return previousState;
+  }
 }

@@ -11,6 +11,7 @@ import {
 
 import {
   assign,
+  forOwn,
 } from 'lodash';
 
 import {
@@ -26,10 +27,6 @@ import {
   SelectionSet,
   GraphQLError,
 } from 'graphql';
-
-import {
-  forOwn,
-} from 'lodash';
 
 import {
   readSelectionSetFromStore,
@@ -61,8 +58,8 @@ export class QueryManager {
     this.dataCallbacks = {};
     this.errorCallbacks = {};
 
-    this.store.subscribe((data) => {
-      this.broadcastNewStore(data);
+    this.store.subscribe(() => {
+      this.broadcastNewStore(this.store.getState());
     });
   }
 

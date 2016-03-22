@@ -72,7 +72,6 @@ export class QueryManager {
         __data_id: 'ROOT_QUERY',
       }, result[0].data);
 
-      console.log('result', resultWithDataId);
       printAST(queryDef.selectionSet);
 
       this.store.dispatch(createQueryResultAction({

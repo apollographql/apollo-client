@@ -6,8 +6,8 @@
     "sourceMap": false,
     "declaration": true,
     "noImplicitAny": false,
-    "rootDir": "src",
-    "outDir": "lib",
+    "rootDir": ".",
+    "outDir": "../lib",
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "removeComments": true

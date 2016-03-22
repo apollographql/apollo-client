@@ -3,4 +3,4 @@
 require('typescript-require');
 
 // The tests, however, can and should be written with ECMAScript 2015.
-require('./tests.ts');
+require('./tests');

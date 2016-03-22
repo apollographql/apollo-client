@@ -19,6 +19,7 @@ export function stripLoc(obj: Object) {
   });
 }
 
-export function printAST(fragAst: Object) { // eslint-disable-line no-unused-vars
-  console.log(JSON.stringify(stripLoc(fragAst), null, 2)); // eslint-disable-line no-console
+export function printAST(fragAst: Object) {
+  /* tslint:disable */
+  console.log(JSON.stringify(stripLoc(fragAst), null, 2));
 }

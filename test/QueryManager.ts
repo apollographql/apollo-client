@@ -29,7 +29,9 @@ import {
   parseFragmentIfString,
 } from '../src/parser';
 
-import { assert } from 'chai';
+import {
+  assert,
+} from 'chai';
 
 describe('QueryManager', () => {
   it('works with one query', (done) => {
@@ -210,6 +212,52 @@ describe('QueryManager', () => {
           ],
         },
       });
+
+      done();
+    });
+  });
+
+  it('handles GraphQL errors', (done) => {
+    // Let's mock a million things!
+    const networkInterface: NetworkInterface = {
+      _uri: '',
+      _opts: {},
+      query: (requests) => {
+        return new Promise((resolve) => {
+          setTimeout(resolve, 10);
+        }).then(() => {
+          throw [
+            {
+              name: 'Name',
+              message: 'This is an error message.',
+            },
+          ];
+        });
+      },
+    } as any as NetworkInterface;
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createStore(() => ({})),
+    });
+
+    // Done mocking, now we can get to business!
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    handle.onError((error) => {
+      assert.equal(error[0].message, 'This is an error message.');
 
       done();
     });

@@ -1,0 +1,27 @@
+# Test against this version of Node.js
+environment:
+  matrix:
+    # node.js
+    - nodejs_version: "5.1"
+    - nodejs_version: "4.2"
+
+# Install scripts. (runs after repo cloning)
+install:
+  # Get the latest stable version of Node.js or io.js
+  - ps: Install-Product node $env:nodejs_version
+  # install modules
+  - npm install -g typings tsc
+  - npm install
+
+# Post-install test scripts.
+test_script:
+  # run tests
+  - npm test
+
+# artifacts:
+#   - path: ./junit/xunit.xml
+#   - path: ./xunit.xml
+
+# nothing to compile in this project
+build: off
+deploy: off

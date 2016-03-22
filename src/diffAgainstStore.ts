@@ -13,9 +13,9 @@ import {
 } from './parser';
 
 import {
-  cacheFieldNameFromField,
-  resultFieldNameFromField,
-} from './cacheUtils';
+  storeKeyNameFromField,
+  resultKeyNameFromField,
+} from './storeUtils';
 
 import {
   Store,
@@ -92,7 +92,7 @@ export function diffSelectionSetAgainstStore({
 
   const missingSelections: Field[] = [];
 
-  const cacheObj = store[rootId];
+  const storeObj = store[rootId];
 
   selectionSet.selections.forEach((selection) => {
     if (selection.kind !== 'Field') {
@@ -101,12 +101,12 @@ export function diffSelectionSetAgainstStore({
 
     const field = selection as Field;
 
-    const cacheFieldName = cacheFieldNameFromField(field);
-    const resultFieldName = resultFieldNameFromField(field);
+    const storeFieldKey = storeKeyNameFromField(field);
+    const resultFieldKey = resultKeyNameFromField(field);
 
-    if (! has(cacheObj, cacheFieldName)) {
+    if (! has(storeObj, storeFieldKey)) {
       if (throwOnMissingField) {
-        throw new Error(`Can't find field ${cacheFieldName} on object ${cacheObj}.`);
+        throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
       }
 
       missingSelections.push(field);
@@ -115,12 +115,12 @@ export function diffSelectionSetAgainstStore({
     }
 
     if (! field.selectionSet) {
-      result[resultFieldName] = cacheObj[cacheFieldName];
+      result[resultFieldKey] = storeObj[storeFieldKey];
       return;
     }
 
-    if (isArray(cacheObj[cacheFieldName])) {
-      result[resultFieldName] = cacheObj[cacheFieldName].map((id) => {
+    if (isArray(storeObj[storeFieldKey])) {
+      result[resultFieldKey] = storeObj[storeFieldKey].map((id) => {
         const itemDiffResult = diffSelectionSetAgainstStore({
           store,
           throwOnMissingField,
@@ -138,7 +138,7 @@ export function diffSelectionSetAgainstStore({
     const subObjDiffResult = diffSelectionSetAgainstStore({
       store,
       throwOnMissingField,
-      rootId: cacheObj[cacheFieldName],
+      rootId: storeObj[storeFieldKey],
       selectionSet: field.selectionSet,
     });
 
@@ -146,20 +146,20 @@ export function diffSelectionSetAgainstStore({
     subObjDiffResult.missingSelectionSets.forEach(
       subObjSelectionSet => missingSelectionSets.push(subObjSelectionSet));
 
-    result[resultFieldName] = subObjDiffResult.result;
+    result[resultFieldKey] = subObjDiffResult.result;
   });
 
-  // If we weren't able to resolve some selections from the cache, construct them into
+  // If we weren't able to resolve some selections from the store, construct them into
   // a query we can fetch from the server
   if (missingSelections.length) {
-    if (! cacheObj.__typename) {
+    if (! storeObj.__typename) {
       throw new Error(
-        `Can't generate query to refetch object ${rootId}, since __typename wasn't in the cache.`);
+        `Can't generate query to refetch object ${rootId}, since __typename wasn't in the store.`);
     }
 
     missingSelectionSets.push({
       id: rootId,
-      typeName: cacheObj.__typename,
+      typeName: storeObj.__typename,
       selectionSet: {
         kind: 'SelectionSet',
         selections: missingSelections,

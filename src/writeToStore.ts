@@ -18,9 +18,9 @@ import {
 } from './parser';
 
 import {
-  cacheFieldNameFromField,
-  resultFieldNameFromField,
-} from './cacheUtils';
+  storeKeyNameFromField,
+  resultKeyNameFromField,
+} from './storeUtils';
 
 import {
   Document,
@@ -40,20 +40,20 @@ import {
 // } from './debug';
 
 /**
- * Convert a nested GraphQL result into a normalized cache, where each object from the schema
+ * Convert a nested GraphQL result into a normalized store, where each object from the schema
  * appears exactly once.
  * @param  {Object} result Arbitrary nested JSON, returned from the GraphQL server
  * @param  {String} [fragment] The GraphQL fragment used to fetch the data in result
  * @param  {SelectionSet} [selectionSet] The parsed selection set for the subtree of the query this
  *                                       result represents
- * @param  {Object} [cache] The cache to merge into
- * @return {Object} The resulting cache
+ * @param  {Object} [store] The store to merge into
+ * @return {Object} The resulting store
  */
 export function writeFragmentToStore({
   result,
   fragment,
-  cache = {} as Store,
-}: { result: Object, fragment: Document | string, cache?: Store }): Store {
+  store = {} as Store,
+}: { result: Object, fragment: Document | string, store?: Store }): Store {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
@@ -65,15 +65,15 @@ export function writeFragmentToStore({
   return writeSelectionSetToStore({
     result,
     selectionSet,
-    cache,
+    store,
   });
 }
 
 export function writeQueryToStore({
   result,
   query,
-  cache = {} as Store,
-}: { result: Object, query: Document | string, cache?: Store}): Store {
+  store = {} as Store,
+}: { result: Object, query: Document | string, store?: Store}): Store {
   const queryDefinition: OperationDefinition = parseQueryIfString(query);
 
   const resultWithDataId: Object = assign({
@@ -83,18 +83,18 @@ export function writeQueryToStore({
   return writeSelectionSetToStore({
     result: resultWithDataId,
     selectionSet: queryDefinition.selectionSet,
-    cache,
+    store,
   });
 }
 
 function writeSelectionSetToStore({
   result,
   selectionSet,
-  cache,
+  store,
 }: {
   result: any,
   selectionSet: SelectionSet,
-  cache?: Store
+  store?: Store
 }): Store {
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
@@ -107,18 +107,18 @@ function writeSelectionSetToStore({
   selectionSet.selections.forEach((selection) => {
     const field = selection as Field;
 
-    const cacheFieldName: string = cacheFieldNameFromField(field);
-    const resultFieldName: string = resultFieldNameFromField(field);
+    const storeFieldName: string = storeKeyNameFromField(field);
+    const resultFieldKey: string = resultKeyNameFromField(field);
 
-    const value: any = result[resultFieldName];
+    const value: any = result[resultFieldKey];
 
     if (isUndefined(value)) {
-      throw new Error(`Can't find field ${resultFieldName} on result object ${resultDataId}.`);
+      throw new Error(`Can't find field ${resultFieldKey} on result object ${resultDataId}.`);
     }
 
-    // If it's a scalar, just store it in the cache
+    // If it's a scalar, just store it in the store
     if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
-      normalizedRootObj[cacheFieldName] = value;
+      normalizedRootObj[storeFieldName] = value;
       return;
     }
 
@@ -130,7 +130,7 @@ function writeSelectionSetToStore({
         const clonedItem: any = assign({}, item);
 
         if (! isString(item.id)) {
-          clonedItem['__data_id'] = `${resultDataId}.${cacheFieldName}.${index}`;
+          clonedItem['__data_id'] = `${resultDataId}.${storeFieldName}.${index}`;
         } else {
           clonedItem['__data_id'] = clonedItem.id;
         }
@@ -139,12 +139,12 @@ function writeSelectionSetToStore({
 
         writeSelectionSetToStore({
           result: clonedItem,
-          cache,
+          store,
           selectionSet: field.selectionSet,
         });
       });
 
-      normalizedRootObj[cacheFieldName] = thisIdList;
+      normalizedRootObj[storeFieldName] = thisIdList;
       return;
     }
 
@@ -152,21 +152,21 @@ function writeSelectionSetToStore({
     const clonedValue: any = assign({}, value);
     if (! isString(clonedValue.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
-      clonedValue['__data_id'] = `${resultDataId}.${cacheFieldName}`;
+      clonedValue['__data_id'] = `${resultDataId}.${storeFieldName}`;
     } else {
       clonedValue['__data_id'] = clonedValue.id;
     }
 
-    normalizedRootObj[cacheFieldName] = clonedValue['__data_id'];
+    normalizedRootObj[storeFieldName] = clonedValue['__data_id'];
 
     writeSelectionSetToStore({
       result: clonedValue,
-      cache,
+      store,
       selectionSet: field.selectionSet,
     });
   });
 
-  cache[resultDataId] = normalizedRootObj; // eslint-disable-line no-param-reassign
+  store[resultDataId] = normalizedRootObj; // eslint-disable-line no-param-reassign
 
-  return cache;
+  return store;
 }

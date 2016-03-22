@@ -17,7 +17,7 @@ import {
 
 const SCALAR_TYPES = ['IntValue', 'FloatValue', 'StringValue', 'BooleanValue'];
 
-export function cacheFieldNameFromField(field: Field): string {
+export function storeKeyNameFromField(field: Field): string {
   if (field.arguments.length) {
     const argObj: Object = {};
 
@@ -33,7 +33,7 @@ export function cacheFieldNameFromField(field: Field): string {
   return field.name.value;
 }
 
-export function resultFieldNameFromField(field: Field): string {
+export function resultKeyNameFromField(field: Field): string {
   return field.alias ?
     field.alias.value :
     field.name.value;

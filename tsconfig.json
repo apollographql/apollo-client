@@ -7,7 +7,7 @@
     "declaration": true,
     "noImplicitAny": false,
     "rootDir": ".",
-    "outDir": "test-lib",
+    "outDir": "lib",
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "removeComments": true

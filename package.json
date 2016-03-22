@@ -1,11 +1,11 @@
 {
   "name": "apollo-client",
   "version": "0.0.1",
-  "description": "Compile your Relay GraphQL queries at runtime, no need for Babel. Only for use in development.",
+  "description": "A simple yet functional GraphQL client.",
   "main": "./lib/index.js",
   "scripts": {
     "pretest": "npm run compile",
-    "test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace test-lib/test/tests.js",
+    "test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace lib/test/tests.js",
     "posttest": "npm run lint",
     "postinstall": "./node_modules/.bin/typings i",
     "compile": "tsc",

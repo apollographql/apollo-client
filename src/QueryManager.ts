@@ -7,6 +7,7 @@ import {
 
 import {
   QueryDisperser,
+  WatchedQueryHandle,
 } from './QueryDisperser';
 
 import {
@@ -25,7 +26,11 @@ import {
   createQueryResultAction,
 } from './store';
 
-class QueryManager {
+import {
+  printAST,
+} from './debug';
+
+export class QueryManager {
   private networkInterface: NetworkInterface;
   private queryDisperser: QueryDisperser;
   private store: Store;
@@ -53,7 +58,7 @@ class QueryManager {
      query,
   }: {
     query: string,
-  }) {
+  }): WatchedQueryHandle {
     const queryDef = parseQueryIfString(query);
 
     const request = {
@@ -67,12 +72,21 @@ class QueryManager {
         __data_id: 'ROOT_QUERY',
       }, result[0].data);
 
+      console.log('result', resultWithDataId);
+      printAST(queryDef.selectionSet);
+
       this.store.dispatch(createQueryResultAction({
         result: resultWithDataId,
         selectionSet: queryDef.selectionSet,
       }));
     }).catch((error) => {
       // nothing
+    });
+
+    return this.queryDisperser.watchSelectionSet({
+      selectionSet: queryDef.selectionSet,
+      rootId: 'ROOT_QUERY',
+      typeName: 'Query',
     });
   }
 }

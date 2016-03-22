@@ -24,10 +24,16 @@ export function createQueryResultAction({
 }: {
   result: any,
   selectionSet: SelectionSet,
-}): any {
+}): QueryResultAction {
   return {
     type: QUERY_RESULT_ACTION,
     result,
     selectionSet,
   };
+}
+
+export interface QueryResultAction {
+  type: string;
+  result: any;
+  selectionSet: SelectionSet;
 }

@@ -85,10 +85,10 @@ export function writeQueryToStore({
   });
 }
 
-function writeSelectionSetToStore({
+export function writeSelectionSetToStore({
   result,
   selectionSet,
-  store,
+  store = {} as Store,
 }: {
   result: any,
   selectionSet: SelectionSet,

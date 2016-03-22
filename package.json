@@ -4,11 +4,11 @@
   "description": "Compile your Relay GraphQL queries at runtime, no need for Babel. Only for use in development.",
   "main": "./lib/index.js",
   "scripts": {
-    "pretest": "tsc",
+    "pretest": "npm run compile",
     "test": "istanbul cover _mocha -- --reporter spec --full-trace test-lib/test/tests.js",
     "posttest": "npm run lint",
     "postinstall": "./node_modules/.bin/typings i",
-    "compile": "tsc -p src",
+    "compile": "tsc",
     "prepublish": "npm run compile",
     "lint": "tslint src/*.ts && tslint test/*.ts"
   },

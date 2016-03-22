@@ -51,7 +51,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
     }));
   };
 
-  function query(requests: Array<Request>): Promise<any> {
+  function query(requests: Array<Request>): Promise<Array<IResponse>> {
     let clonedRequests = [...requests];
 
     return Promise.all(clonedRequests.map(request => (

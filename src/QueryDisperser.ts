@@ -14,7 +14,7 @@ import {
   readSelectionSetFromStore,
 } from './readFromStore';
 
-export class WatchedQueries {
+export class QueryDisperser {
   private selectionSetMap: { [queryId: number]: SelectionSetWithRoot };
   private callbacks: { [queryId: number]: QueryResultCallback[]};
   private idCounter = 0;

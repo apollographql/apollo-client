@@ -7,16 +7,16 @@ import {
 } from 'chai';
 
 import {
-  WatchedQueries,
-} from '../src/watchedQueries';
+  QueryDisperser,
+} from '../src/QueryDisperser';
 
 import {
   parseFragmentIfString,
 } from '../src/parser';
 
-describe('watching queries on the store', () => {
+describe('query disperser', () => {
   it('works with one query', (done) => {
-    const queryWatcher = new WatchedQueries();
+    const queryWatcher = new QueryDisperser();
 
     const fragmentDef = parseFragmentIfString(`
       fragment FragmentName on Item {
@@ -53,7 +53,7 @@ describe('watching queries on the store', () => {
   });
 
   it('works with two queries', (done) => {
-    const queryWatcher = new WatchedQueries();
+    const queryWatcher = new QueryDisperser();
 
     const fragment1Def = parseFragmentIfString(`
       fragment FragmentName on Item {

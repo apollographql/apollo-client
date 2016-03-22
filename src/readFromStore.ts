@@ -51,7 +51,7 @@ export function readFragmentFromStore({
   });
 }
 
-function readSelectionSetFromStore({
+export function readSelectionSetFromStore({
     store,
     rootId,
     selectionSet,

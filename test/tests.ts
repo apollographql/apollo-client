@@ -9,3 +9,4 @@ import './roundtrip';
 import './queryPrinting';
 import './diffAgainstStore';
 import './networkInterface';
+import './watchedQueries';

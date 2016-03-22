@@ -8,3 +8,4 @@ import './readFromStore';
 import './roundtrip';
 import './queryPrinting';
 import './diffAgainstStore';
+import './networkInterface';

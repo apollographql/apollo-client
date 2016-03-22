@@ -18,13 +18,17 @@ import {
 } from './cacheUtils';
 
 import {
+  Store,
+} from './store';
+
+import {
   Document,
   SelectionSet,
   Field,
 } from 'graphql';
 
 export function diffQueryAgainstStore({ store, query }: {
-  store: Object,
+  store: Store,
   query: Document | string
 }) {
   const queryDef = parseQueryIfString(query);
@@ -37,7 +41,11 @@ export function diffQueryAgainstStore({ store, query }: {
   });
 }
 
-export function diffFragmentAgainstStore({ store, fragment, rootId }) {
+export function diffFragmentAgainstStore({ store, fragment, rootId }: {
+  store: Store,
+  fragment: Document | string,
+  rootId: string,
+}) {
   const fragmentDef = parseFragmentIfString(fragment);
 
   return diffSelectionSetAgainstStore({
@@ -66,7 +74,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField = false,
 }: {
   selectionSet: SelectionSet,
-  store: Object,
+  store: Store,
   rootId: string,
   throwOnMissingField: Boolean,
 }) {

@@ -16,12 +16,16 @@ import {
   SelectionSet,
 } from 'graphql';
 
+import {
+  Store,
+} from './store';
+
 // import {
 //   printAST,
 // } from './debug';
 
 export function readQueryFromStore({ store, query }: {
-  store: Object,
+  store: Store,
   query: Document | string
 }): Object {
   const queryDef = parseQueryIfString(query);
@@ -37,7 +41,7 @@ export function readFragmentFromStore({
     store,
     fragment,
     rootId,
-}: { store: Object, fragment: Document | string, rootId: string }): Object {
+}: { store: Store, fragment: Document | string, rootId: string }): Object {
   const fragmentDef = parseFragmentIfString(fragment);
 
   return readSelectionSetFromStore({
@@ -51,7 +55,7 @@ function readSelectionSetFromStore({
     store,
     rootId,
     selectionSet,
-}: {store: Object, rootId: string, selectionSet: SelectionSet }): Object {
+}: {store: Store, rootId: string, selectionSet: SelectionSet }): Object {
   const {
     result,
   } = diffSelectionSetAgainstStore({

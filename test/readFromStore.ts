@@ -4,7 +4,13 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
 
-import { readFragmentFromStore } from '../lib/readFromStore';
+import {
+  readFragmentFromStore,
+} from '../src/readFromStore';
+
+import {
+  Store,
+} from '../src/store';
 
 describe('reading from the store', () => {
   it('rejects malformed queries', () => {
@@ -40,7 +46,7 @@ describe('reading from the store', () => {
 
     const store = {
       abcd: result,
-    };
+    } as Store;
 
     const queryResult = readFragmentFromStore({
       store,
@@ -55,8 +61,8 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     assert.deepEqual(queryResult, {
-      stringField: result.stringField,
-      numberField: result.numberField,
+      stringField: result['stringField'],
+      numberField: result['numberField'],
     });
   });
 
@@ -77,7 +83,7 @@ describe('reading from the store', () => {
     const store = {
       abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: 'abcde' }),
       abcde: result.nestedObj,
-    };
+    } as Store;
 
     const queryResult = readFragmentFromStore({
       store,
@@ -134,7 +140,7 @@ describe('reading from the store', () => {
       }),
       'abcd.nestedArray.0': result.nestedArray[0],
       'abcd.nestedArray.1': result.nestedArray[1],
-    };
+    } as Store;
 
     const queryResult = readFragmentFromStore({
       store,
@@ -176,7 +182,7 @@ describe('reading from the store', () => {
       nullField: null,
     };
 
-    const store = { abcd: result };
+    const store = { abcd: result } as Store;
 
     assert.throws(() => {
       readFragmentFromStore({

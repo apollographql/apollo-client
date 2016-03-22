@@ -30,6 +30,11 @@ import {
   Field,
 } from 'graphql';
 
+import {
+  Store,
+  StoreObject,
+} from './store';
+
 // import {
 //   printAST,
 // } from './debug';
@@ -47,8 +52,8 @@ import {
 export function writeFragmentToStore({
   result,
   fragment,
-  cache = {},
-}: { result: Object, fragment: Document | string, cache?: Object }): Object {
+  cache = {} as Store,
+}: { result: Object, fragment: Document | string, cache?: Store }): Store {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
@@ -67,8 +72,8 @@ export function writeFragmentToStore({
 export function writeQueryToStore({
   result,
   query,
-  cache = {},
-}: { result: Object, query: Document | string, cache?: Object}): Object {
+  cache = {} as Store,
+}: { result: Object, query: Document | string, cache?: Store}): Store {
   const queryDefinition: OperationDefinition = parseQueryIfString(query);
 
   const resultWithDataId: Object = assign({
@@ -86,14 +91,18 @@ function writeSelectionSetToStore({
   result,
   selectionSet,
   cache,
-}: { result: any, selectionSet: SelectionSet, cache?: Object }): Object {
+}: {
+  result: any,
+  selectionSet: SelectionSet,
+  cache?: Store
+}): Store {
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
   }
 
   const resultDataId: string = result['__data_id'] || result.id;
 
-  const normalizedRootObj: Object = {};
+  const normalizedRootObj: StoreObject = {};
 
   selectionSet.selections.forEach((selection) => {
     const field = selection as Field;

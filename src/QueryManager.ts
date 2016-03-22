@@ -11,6 +11,7 @@ import {
 
 import {
   assign,
+  forOwn,
 } from 'lodash';
 
 import {
@@ -26,10 +27,6 @@ import {
   SelectionSet,
   GraphQLError,
 } from 'graphql';
-
-import {
-  forOwn,
-} from 'lodash';
 
 import {
   readSelectionSetFromStore,

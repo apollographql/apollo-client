@@ -1,5 +1,4 @@
-/// <reference path="../typings/browser/ambient/chai/index.d.ts" />
-/// <reference path="../typings/browser/ambient/mocha/index.d.ts" />
+/// <reference path="../typings/main.d.ts" />
 
 import { assert } from 'chai';
 import * as _ from 'lodash';

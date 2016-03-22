@@ -1,4 +1,4 @@
-/// <reference path="../typings/browser/ambient/graphql/index.d.ts" />
+/// <reference path="../typings/main.d.ts" />
 
 import { print } from 'graphql';
 

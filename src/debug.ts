@@ -1,4 +1,4 @@
-/// <reference path="../typings/browser/definitions/lodash/index.d.ts" />
+/// <reference path="../typings/main.d.ts" />
 
 // For development only!
 import * as _ from 'lodash';

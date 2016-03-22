@@ -25,7 +25,7 @@ export interface Request {
 export interface NetworkInterface {
   _uri: string;
   _opts: RequestInit;
-  query(requests: Array<Request>): Promise<any>;
+  query(requests: Array<Request>): Promise<Array<GraphQLResult>>;
 }
 
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): NetworkInterface {
@@ -51,7 +51,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
     }));
   };
 
-  function query(requests: Array<Request>): Promise<Array<IResponse>> {
+  function query(requests: Array<Request>): Promise<Array<GraphQLResult>> {
     let clonedRequests = [...requests];
 
     return Promise.all(clonedRequests.map(request => (

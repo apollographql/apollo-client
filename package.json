@@ -28,10 +28,11 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "graphql": "^0.4.18",
-    "lodash": "^4.6.1",
     "es6-promise": "^3.1.2",
-    "isomorphic-fetch": "^2.2.1"
+    "graphql": "^0.4.18",
+    "isomorphic-fetch": "^2.2.1",
+    "lodash": "^4.6.1",
+    "redux": "^3.3.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",

@@ -1,6 +1,4 @@
-/// <reference path="../typings/browser/ambient/es6-promise/index.d.ts" />
-/// <reference path="../typings/browser/ambient/graphql/index.d.ts" />
-/// <reference path="../typings/browser/definitions/lodash/index.d.ts" />
+/// <reference path="../typings/main.d.ts" />
 
 import {
   isString,

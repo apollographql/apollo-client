@@ -2,12 +2,12 @@
   "name": "apollo-client",
   "version": "0.0.1",
   "description": "A simple yet functional GraphQL client.",
-  "main": "./lib/index.js",
+  "main": "./lib/src/index.js",
   "scripts": {
     "pretest": "npm run compile",
     "test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace lib/test/tests.js",
     "posttest": "npm run lint",
-    "install-typings": "./node_modules/.bin/typings i",
+    "postinstall": "./node_modules/.bin/typings && ./node_modules/.bin/typings i",
     "compile": "tsc",
     "prepublish": "npm run compile",
     "lint": "tslint src/*.ts && tslint test/*.ts"

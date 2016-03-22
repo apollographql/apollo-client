@@ -28,7 +28,7 @@ node_modules
 
 # don't commit compiled files
 lib
+test-lib
 
 # don't commit typescript files
 typings
-tmp

@@ -3,8 +3,8 @@
 
 import { assert } from 'chai';
 
-import { writeQueryToStore } from '../lib/writeToStore';
-import { readQueryFromStore } from '../lib/readFromStore';
+import { writeQueryToStore } from '../src/writeToStore';
+import { readQueryFromStore } from '../src/readFromStore';
 
 describe('roundtrip', () => {
   it('real graphql result', () => {

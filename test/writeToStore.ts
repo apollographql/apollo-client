@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
 
-import { writeFragmentToStore } from '../lib/writeToStore';
+import { writeFragmentToStore } from '../src/writeToStore';
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {

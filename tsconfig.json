@@ -3,13 +3,19 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
-    "sourceMap": false,
+    "sourceMap": true,
     "declaration": true,
     "noImplicitAny": false,
     "rootDir": ".",
-    "outDir": "../lib",
+    "outDir": "test-lib",
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "removeComments": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "typings",
+    "lib",
+    "test-lib"
+  ]
 }

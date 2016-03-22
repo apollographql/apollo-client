@@ -73,15 +73,15 @@ export class QueryManager {
   }): WatchedQueryHandle {
     const queryDef = parseQueryIfString(query);
 
-    const request = {
-      query: query,
-    } as Request;
-
     const watchHandle = this.watchSelectionSet({
       selectionSet: queryDef.selectionSet,
       rootId: 'ROOT_QUERY',
       typeName: 'Query',
     });
+
+    const request = {
+      query: query,
+    } as Request;
 
     this.networkInterface.query([
       request,

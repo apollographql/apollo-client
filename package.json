@@ -5,7 +5,7 @@
   "main": "./lib/index.js",
   "scripts": {
     "pretest": "tsc",
-    "test": "mocha --reporter spec --full-trace test-lib/test/tests.js",
+    "test": "istanbul cover _mocha -- --reporter spec --full-trace test-lib/test/tests.js",
     "posttest": "npm run lint",
     "postinstall": "./node_modules/.bin/typings i",
     "compile": "tsc -p src",
@@ -34,6 +34,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "dataloader": "^1.1.0",
+    "istanbul": "^0.4.2",
     "lodash": "^4.5.1",
     "mocha": "^2.3.3",
     "request-promise": "^2.0.1",

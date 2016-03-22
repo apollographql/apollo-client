@@ -10,9 +10,6 @@ import {
 
 import {
   Store,
-} from '../src/store';
-
-import {
   createApolloStore,
 } from '../src/store';
 

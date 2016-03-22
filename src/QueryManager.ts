@@ -26,10 +26,6 @@ import {
   createQueryResultAction,
 } from './store';
 
-import {
-  printAST,
-} from './debug';
-
 export class QueryManager {
   private networkInterface: NetworkInterface;
   private queryDisperser: QueryDisperser;
@@ -71,8 +67,6 @@ export class QueryManager {
       const resultWithDataId = assign({
         __data_id: 'ROOT_QUERY',
       }, result[0].data);
-
-      printAST(queryDef.selectionSet);
 
       this.store.dispatch(createQueryResultAction({
         result: resultWithDataId,

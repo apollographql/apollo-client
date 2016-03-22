@@ -24,6 +24,7 @@ import { assert } from 'chai';
 
 describe('QueryManager', () => {
   it('properly roundtrips through a Redux store', (done) => {
+    // Let's mock a million things!
     const networkInterface: NetworkInterface = {
       _uri: '',
       _opts: {},

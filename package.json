@@ -7,7 +7,7 @@
     "pretest": "npm run compile",
     "test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace lib/test/tests.js",
     "posttest": "npm run lint",
-    "postinstall": "./node_modules/.bin/typings i",
+    "install-typings": "./node_modules/.bin/typings i",
     "compile": "tsc",
     "prepublish": "npm run compile",
     "lint": "tslint src/*.ts && tslint test/*.ts"

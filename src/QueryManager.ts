@@ -96,7 +96,7 @@ export class QueryManager {
         selectionSet: queryDef.selectionSet,
       }));
     }).catch((errors: GraphQLError[]) => {
-      this.broadcastErrors(watchHandle.id, errors);
+      this.handleQueryErrorsAndStop(watchHandle.id, errors);
     });
 
     return watchHandle;
@@ -156,7 +156,7 @@ export class QueryManager {
     });
   }
 
-  private broadcastErrors(queryId: string, errors: GraphQLError[]) {
+  private handleQueryErrorsAndStop(queryId: string, errors: GraphQLError[]) {
     const errorCallbacks = this.errorCallbacks[queryId];
 
     this.stopQuery(queryId);

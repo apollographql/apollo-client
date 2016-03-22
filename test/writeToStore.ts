@@ -313,6 +313,51 @@ describe('writing to the store', () => {
       [`${result.id}.nestedArray.1`]: result.nestedArray[1],
     });
   });
+
+  it('merges nodes', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        numberField,
+        nullField
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      numberField: 5,
+      nullField: null,
+    };
+
+    const store = writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    });
+
+    const fragment2 = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        nullField
+      }
+    `;
+
+    const result2 = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      nullField: null,
+    };
+
+    const store2 = writeFragmentToStore({
+      store,
+      fragment: fragment2,
+      result: result2,
+    });
+
+    assert.deepEqual(store2, {
+      'abcd': _.assign({}, result, result2),
+    });
+  });
 });
 
 function assertEqualSansDataId(a, b) {

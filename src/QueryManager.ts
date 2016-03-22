@@ -61,8 +61,8 @@ export class QueryManager {
     this.dataCallbacks = {};
     this.errorCallbacks = {};
 
-    this.store.subscribe((data) => {
-      this.broadcastNewStore(data);
+    this.store.subscribe(() => {
+      this.broadcastNewStore(this.store.getState());
     });
   }
 

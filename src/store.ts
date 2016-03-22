@@ -5,7 +5,6 @@ import {
 } from 'graphql';
 
 import {
-  Reducer,
   createStore,
 } from 'redux';
 

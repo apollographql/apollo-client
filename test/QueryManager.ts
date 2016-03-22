@@ -13,16 +13,7 @@ import {
 } from '../src/store';
 
 import {
-  createStore,
-  Store as ReduxStore,
-} from 'redux';
-
-import {
-  writeSelectionSetToStore,
-} from '../src/writeToStore';
-
-import {
-  QueryResultAction,
+  createApolloStore,
 } from '../src/store';
 
 import {
@@ -37,7 +28,7 @@ describe('QueryManager', () => {
   it('works with one query', (done) => {
     const queryManager = new QueryManager({
       networkInterface: {} as NetworkInterface,
-      store: createStore(() => ({})),
+      store: createApolloStore(),
     });
 
     const fragmentDef = parseFragmentIfString(`
@@ -77,7 +68,7 @@ describe('QueryManager', () => {
   it('works with two queries', (done) => {
     const queryManager = new QueryManager({
       networkInterface: {} as NetworkInterface,
-      store: createStore(() => ({})),
+      store: createApolloStore(),
     });
 
     const fragment1Def = parseFragmentIfString(`
@@ -170,21 +161,9 @@ describe('QueryManager', () => {
       },
     };
 
-    let callback;
-
-    const store = {
-      subscribe: (cb) => {
-        callback = cb;
-      },
-      dispatch: (action: QueryResultAction) => {
-        const state = writeSelectionSetToStore(action);
-        callback(state);
-      },
-    };
-
     const queryManager = new QueryManager({
       networkInterface,
-      store: store as ReduxStore,
+      store: createApolloStore(),
     });
 
     // Done mocking, now we can get to business!
@@ -238,7 +217,7 @@ describe('QueryManager', () => {
 
     const queryManager = new QueryManager({
       networkInterface,
-      store: createStore(() => ({})),
+      store: createApolloStore(),
     });
 
     // Done mocking, now we can get to business!

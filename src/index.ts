@@ -27,7 +27,7 @@ export class ApolloClient {
   }: {
     networkInterface?: NetworkInterface,
     apolloStore?: Store,
-  }) {
+  } = {}) {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
 

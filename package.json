@@ -9,6 +9,7 @@
     "posttest": "npm run lint",
     "postinstall": "./node_modules/.bin/typings && ./node_modules/.bin/typings i",
     "compile": "tsc",
+    "watch": "tsc -w",
     "prepublish": "npm run compile",
     "lint": "tslint src/*.ts && tslint test/*.ts"
   },

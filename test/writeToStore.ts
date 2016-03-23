@@ -358,6 +358,40 @@ describe('writing to the store', () => {
       'abcd': _.assign({}, result, result2),
     });
   });
+
+  it('properly normalizes a nested object that returns null', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedObj {
+          id,
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedObj: null,
+    };
+
+    assertEqualSansDataId(writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    }), {
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+        nestedObj: null,
+      }),
+    });
+  });
 });
 
 function assertEqualSansDataId(a, b) {

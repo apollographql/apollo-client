@@ -196,4 +196,40 @@ describe('reading from the store', () => {
       });
     }, /field missingField on object/);
   });
+
+  it('runs a nested fragment where the reference is null', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedObj: null,
+    };
+
+    const store = {
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: null }),
+    } as Store;
+
+    const queryResult = readFragmentFromStore({
+      store,
+      fragment: `
+        fragment FragmentName on Item {
+          stringField,
+          numberField,
+          nestedObj {
+            stringField,
+            numberField
+          }
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: 'This is a string!',
+      numberField: 5,
+      nestedObj: null,
+    });
+  });
 });

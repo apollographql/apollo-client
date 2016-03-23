@@ -2,6 +2,7 @@
 
 import {
   isArray,
+  isNull,
   has,
 } from 'lodash';
 
@@ -114,6 +115,12 @@ export function diffSelectionSetAgainstStore({
 
     if (! field.selectionSet) {
       result[resultFieldKey] = storeObj[storeFieldKey];
+      return;
+    }
+
+    if (isNull(storeObj[storeFieldKey])) {
+      // Basically any field in a GraphQL response can be null
+      result[resultFieldKey] = null;
       return;
     }
 

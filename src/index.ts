@@ -34,7 +34,7 @@ export class ApolloClient {
     this.apolloStore = apolloStore ? apolloStore : createApolloStore();
 
     this.queryManager = new QueryManager({
-      networkInterface,
+      networkInterface: this.networkInterface,
       store: this.apolloStore,
     });
   }

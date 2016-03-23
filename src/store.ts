@@ -6,6 +6,7 @@ import {
 
 import {
   createStore,
+  compose,
 } from 'redux';
 
 import {
@@ -53,7 +54,9 @@ export interface QueryResultAction {
 export type ApolloAction = QueryResultAction;
 
 export function createApolloStore() {
-  return createStore(resultCacheReducer);
+  const anyWindow = window as any;
+  return createStore(resultCacheReducer, {},
+    anyWindow.devToolsExtension ? anyWindow.devToolsExtension() : undefined);
 }
 
 export function resultCacheReducer(previousState: Store = {}, action: ApolloAction): Store {

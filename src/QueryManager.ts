@@ -154,13 +154,18 @@ export class QueryManager {
   }
 
   private handleQueryErrorsAndStop(queryId: string, errors: GraphQLError[]) {
-    const errorCallbacks = this.errorCallbacks[queryId];
+    const errorCallbacks: QueryErrorCallback[] = this.errorCallbacks[queryId];
 
     this.stopQuery(queryId);
 
-    errorCallbacks.forEach((callback) => {
-      callback(errors);
-    });
+    if (errorCallbacks && errorCallbacks.length) {
+      errorCallbacks.forEach((callback) => {
+        callback(errors);
+      });
+    } else {
+      // XXX maybe provide some info here?
+      throw new Error('Uncaught query errors. Use onError on the query handle to get errors.');
+    }
   }
 
   private registerDataCallback(queryId: string, callback: QueryResultCallback): void {

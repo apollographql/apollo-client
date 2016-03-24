@@ -1,6 +1,6 @@
 {
-	"version": "0.2.0",
-	"configurations": [
+  "version": "0.2.0",
+  "configurations": [
     {
       "name": "Test",
       "type": "node",
@@ -9,18 +9,6 @@
       "args": ["lib/test/tests.js"],
       "cwd": "${workspaceRoot}",
       "runtimeExecutable": null
-    },
-		{
-			"name": "Attach",
-			"type": "node",
-			"request": "attach",
-			"port": 5858,
-			"address": "localhost",
-			"restart": false,
-			"sourceMaps": false,
-			"outDir": null,
-			"localRoot": "${workspaceRoot}",
-			"remoteRoot": null
-		}
-	]
+    }
+  ]
 }

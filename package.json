@@ -5,9 +5,9 @@
   "main": "./lib/src/index.js",
   "scripts": {
     "pretest": "npm run compile",
-    "test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace lib/test/tests.js",
+    "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace lib/test/tests.js",
     "posttest": "npm run lint",
-    "postinstall": "./node_modules/.bin/typings && ./node_modules/.bin/typings i",
+    "postinstall": "./node_modules/.bin/typings && typings i",
     "compile": "tsc",
     "watch": "tsc -w",
     "prepublish": "npm run compile",

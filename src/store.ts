@@ -53,7 +53,16 @@ export interface QueryResultAction {
 export type ApolloAction = QueryResultAction;
 
 export function createApolloStore() {
-  return createStore(resultCacheReducer);
+  const enhancers = [];
+
+  if (typeof window !== 'undefined') {
+    const anyWindow = window as any;
+    if (anyWindow.devToolsExtension) {
+      enhancers.push(anyWindow.devToolsExtension());
+    }
+  }
+
+  return createStore(resultCacheReducer, enhancers);
 }
 
 export function resultCacheReducer(previousState: Store = {}, action: ApolloAction): Store {

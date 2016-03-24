@@ -1,5 +1,3 @@
-/// <reference path="../typings/main.d.ts" />
-
 import { assert } from 'chai';
 import { printNodeQuery } from '../src/queryPrinting';
 

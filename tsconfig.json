@@ -12,10 +12,9 @@
     "pretty": true,
     "removeComments": true
   },
-  "exclude": [
-    "node_modules",
-    "typings",
-    "lib",
-    "test-lib"
-  ]
+  "files": [
+    "typings/main.d.ts",
+    "src/index.ts",
+    "test/tests.ts"
+   ]
 }

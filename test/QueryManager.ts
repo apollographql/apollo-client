@@ -267,8 +267,46 @@ describe('QueryManager', () => {
     queryManager.mutate({
       mutation,
     }).then((resultData) => {
-      console.log('in result');
       assert.deepEqual(resultData, data);
+      done();
+    }).catch((err) => {
+      console.error(err);
+      throw err;
+    });
+  });
+
+  it('runs a mutation and puts the result in the store', (done) => {
+    const mutation = `
+      mutation makeListPrivate {
+        makeListPrivate(id: "5") {
+          id,
+          isPrivate,
+        }
+      }
+    `;
+
+    const data = {
+      makeListPrivate: {
+        id: '5',
+        isPrivate: true,
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({ query: mutation }, { data });
+    const store = createApolloStore();
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+    });
+
+    queryManager.mutate({
+      mutation,
+    }).then((resultData) => {
+      assert.deepEqual(resultData, data);
+
+      // Make sure we updated the store with the new data
+      assert.deepEqual(store.getState()['5'], { id: '5', isPrivate: true });
       done();
     }).catch((err) => {
       console.error(err);
@@ -282,10 +320,7 @@ function mockNetworkInterface(
   fakeResult: GraphQLResult
 ) {
   const queryMock = (requests: Request[]) => {
-    console.log('query mock called');
     return new Promise<GraphQLResult[]>((resolve) => {
-      console.log('query mock initialized');
-
       resolve([fakeResult]);
     });
   };

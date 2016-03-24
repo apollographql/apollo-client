@@ -1,5 +1,3 @@
-/// <reference path="../typings/main.d.ts" />
-
 // For development only!
 import * as _ from 'lodash';
 

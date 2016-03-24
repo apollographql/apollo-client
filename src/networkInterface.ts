@@ -1,5 +1,3 @@
-/// <reference path="../typings/main.d.ts" />
-
 // ensure env has promise support
 // this should probably be moved elsewhere / should be part of the extra
 // deps for older environemnts

@@ -4,6 +4,8 @@ import {
 
 import {
   createStore,
+  compose,
+  applyMiddleware,
 } from 'redux';
 
 import {
@@ -50,6 +52,15 @@ export interface QueryResultAction {
 
 export type ApolloAction = QueryResultAction;
 
+const crashReporter = store => next => action => {
+  try {
+    return next(action);
+  } catch (err) {
+    console.error('Caught an exception!', err);
+    throw err;
+  }
+};
+
 export function createApolloStore() {
   const enhancers = [];
 
@@ -60,7 +71,9 @@ export function createApolloStore() {
     }
   }
 
-  return createStore(resultCacheReducer, enhancers);
+  enhancers.push(applyMiddleware(crashReporter));
+
+  return createStore(resultCacheReducer, compose(...enhancers));
 }
 
 export function resultCacheReducer(previousState: Store = {}, action: ApolloAction): Store {

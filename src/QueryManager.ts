@@ -5,6 +5,7 @@ import {
 
 import {
   parseQueryIfString,
+  parseMutationIfString,
 } from './parser';
 
 import {
@@ -58,6 +59,33 @@ export class QueryManager {
 
     this.store.subscribe(() => {
       this.broadcastNewStore(this.store.getState());
+    });
+  }
+
+  public mutate({
+    mutation,
+  }: {
+    mutation: string,
+  }): Promise<any> {
+    const mutationDef = parseMutationIfString(mutation);
+
+    const request = {
+      query: mutation,
+    } as Request;
+
+    return this.networkInterface.query([
+      request,
+    ]).then((result) => {
+      const resultWithDataId = assign({
+        __data_id: 'ROOT_MUTATION',
+      }, result[0].data);
+
+      this.store.dispatch(createQueryResultAction({
+        result: resultWithDataId,
+        selectionSet: mutationDef.selectionSet,
+      }));
+
+      return result[0].data;
     });
   }
 

@@ -4,6 +4,7 @@ import {
 
 import {
   NetworkInterface,
+  Request,
 } from '../src/networkInterface';
 
 import {
@@ -18,6 +19,10 @@ import {
 import {
   assert,
 } from 'chai';
+
+import {
+  GraphQLResult,
+} from 'graphql';
 
 describe('QueryManager', () => {
   it('works with one query', (done) => {
@@ -240,4 +245,52 @@ describe('QueryManager', () => {
       done();
     });
   });
+
+  it('runs a mutation', (done) => {
+    const mutation = `
+      mutation makeListPrivate {
+        makeListPrivate(id: "5")
+      }
+    `;
+
+    const data = {
+      makeListPrivate: true,
+    };
+
+    const networkInterface = mockNetworkInterface({ query: mutation }, { data });
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
+
+    queryManager.mutate({
+      mutation,
+    }).then((resultData) => {
+      console.log('in result');
+      assert.deepEqual(resultData, data);
+      done();
+    }).catch((err) => {
+      console.error(err);
+      throw err;
+    });
+  });
 });
+
+function mockNetworkInterface(
+  expectedRequest: Request,
+  fakeResult: GraphQLResult
+) {
+  const queryMock = (requests: Request[]) => {
+    console.log('query mock called');
+    return new Promise<GraphQLResult[]>((resolve) => {
+      console.log('query mock initialized');
+
+      resolve([fakeResult]);
+    });
+  };
+
+  return {
+    query: queryMock,
+  } as NetworkInterface;
+}

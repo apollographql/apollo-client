@@ -86,7 +86,7 @@ describe('network interface', () => {
       );
     });
 
-    it('should throw an error if the request fails', () => {
+    it('should return errors if the server responds with them', () => {
       const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
 
       // this is a stub for the end user client api
@@ -103,7 +103,25 @@ describe('network interface', () => {
         debugName: 'People query',
       };
 
-      return assert.isRejected(swapi.query([simpleRequest]), /Server request for query/);
+      // return assert.isRejected(swapi.query([simpleRequest]));
+      return assert.isRejected(
+        swapi.query([simpleRequest]),
+        [
+          {
+            errors: [
+              {
+                message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
+                locations: [
+                  {
+                    line: 8,
+                    column: 9,
+                  },
+                ],
+              },
+            ],
+          },
+        ]
+      );
     });
 
     it('should allow for multiple requests at once', () => {

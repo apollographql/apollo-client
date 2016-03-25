@@ -10,7 +10,7 @@ import {
   assign,
 } from 'lodash';
 
-import { GraphQLResult } from 'graphql';
+import { GraphQLResult, GraphQLError } from 'graphql';
 
 export interface Request {
   debugName?: string;
@@ -47,7 +47,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
     }));
   };
 
-  function query(requests: Array<Request>): Promise<Array<GraphQLResult>> {
+  function query(requests: Array<Request>): Promise<Array<GraphQLResult | GraphQLError>> {
     let clonedRequests = [...requests];
 
     return Promise.all(clonedRequests.map(request => (
@@ -55,11 +55,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
         .then(result => result.json())
         .then((payload: GraphQLResult) => {
           if (payload.hasOwnProperty('errors')) {
-            throw new Error(
-              `Server request for query '${request.debugName}'
-              failed for the following reasons:\n\n
-              ${JSON.stringify(payload.errors)}`
-            );
+            throw payload;
           } else if (!payload.hasOwnProperty('data')) {
             throw new Error(
               `Server response was missing for query '${request.debugName}'.`

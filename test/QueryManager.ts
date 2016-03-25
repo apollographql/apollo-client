@@ -52,6 +52,7 @@ describe('QueryManager', () => {
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragmentDef.selectionSet,
+      variables: {},
     });
 
     handle.onData((res) => {
@@ -92,12 +93,14 @@ describe('QueryManager', () => {
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragment1Def.selectionSet,
+      variables: {},
     });
 
     const handle2 = queryManager.watchSelectionSet({
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragment2Def.selectionSet,
+      variables: {},
     });
 
     let numDone = 0;
@@ -176,16 +179,55 @@ describe('QueryManager', () => {
     });
 
     handle.onData((result) => {
-      assert.deepEqual(result, {
-        allPeople: {
-          people: [
-            {
-              name: 'Luke Skywalker',
-            },
-          ],
-        },
-      });
+      assert.deepEqual(result, data);
+      done();
+    });
+  });
 
+  it('properly roundtrips through a Redux store with variables', (done) => {
+    const query = `
+      query people($firstArg: Int) {
+        allPeople(first: $firstArg) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      firstArg: 1,
+    };
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query, variables },
+        result: { data },
+      },
+    ]);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+      variables,
+    });
+
+    handle.onData((result) => {
+      assert.deepEqual(result, data);
       done();
     });
   });
@@ -260,6 +302,45 @@ describe('QueryManager', () => {
 
     queryManager.mutate({
       mutation,
+    }).then((resultData) => {
+      assert.deepEqual(resultData, data);
+      done();
+    }).catch((err) => {
+      console.error(err);
+      throw err;
+    });
+  });
+
+  it('runs a mutation with variables', (done) => {
+    const mutation = `
+      mutation makeListPrivate($listId: ID!) {
+        makeListPrivate(id: $listId)
+      }
+    `;
+
+    const variables = {
+      listId: '1',
+    };
+
+    const data = {
+      makeListPrivate: true,
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation, variables },
+        result: { data },
+      },
+    ]);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
+
+    queryManager.mutate({
+      mutation,
+      variables,
     }).then((resultData) => {
       assert.deepEqual(resultData, data);
       done();

@@ -19,9 +19,14 @@ import {
 //   printAST,
 // } from './debug';
 
-export function readQueryFromStore({ store, query }: {
+export function readQueryFromStore({
+  store,
+  query,
+  variables,
+}: {
   store: Store,
-  query: string
+  query: string,
+  variables?: Object,
 }): Object {
   const queryDef = parseQuery(query);
 
@@ -29,28 +34,42 @@ export function readQueryFromStore({ store, query }: {
     store,
     rootId: 'ROOT_QUERY',
     selectionSet: queryDef.selectionSet,
+    variables,
   });
 }
 
 export function readFragmentFromStore({
-    store,
-    fragment,
-    rootId,
-}: { store: Store, fragment: string, rootId: string }): Object {
+  store,
+  fragment,
+  rootId,
+  variables,
+}: {
+  store: Store,
+  fragment: string,
+  rootId: string,
+  variables?: Object,
+}): Object {
   const fragmentDef = parseFragment(fragment);
 
   return readSelectionSetFromStore({
     store,
     rootId,
     selectionSet: fragmentDef.selectionSet,
+    variables,
   });
 }
 
 export function readSelectionSetFromStore({
-    store,
-    rootId,
-    selectionSet,
-}: {store: Store, rootId: string, selectionSet: SelectionSet }): Object {
+  store,
+  rootId,
+  selectionSet,
+  variables,
+}: {
+  store: Store,
+  rootId: string,
+  selectionSet: SelectionSet,
+  variables: Object,
+}): Object {
   const {
     result,
   } = diffSelectionSetAgainstStore({
@@ -58,6 +77,7 @@ export function readSelectionSetFromStore({
     rootId,
     store,
     throwOnMissingField: true,
+    variables,
   });
 
   return result;

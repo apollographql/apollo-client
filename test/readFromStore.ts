@@ -64,6 +64,46 @@ describe('reading from the store', () => {
     });
   });
 
+  it('runs a basic fragment with arguments', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField(arg: $stringArg),
+        numberField(intArg: $intArg, floatArg: $floatArg),
+        nullField
+      }
+    `;
+
+    const variables = {
+      intArg: 5,
+      floatArg: 3.14,
+      stringArg: 'This is a string!',
+    };
+
+    const store = {
+      abcd: {
+        id: 'abcd',
+        nullField: null,
+        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'stringField({"arg":"This is a string!"})': 'Heyo',
+      },
+    } as Store;
+
+    const result = readFragmentFromStore({
+      store,
+      fragment,
+      variables,
+      rootId: 'abcd',
+    });
+
+    assert.deepEqual(result, {
+      id: 'abcd',
+      nullField: null,
+      numberField: 5,
+      stringField: 'Heyo',
+    });
+  });
+
   it('runs a nested fragment', () => {
     const result = {
       id: 'abcd',

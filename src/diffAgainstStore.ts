@@ -40,9 +40,14 @@ export interface MissingSelectionSet {
   selectionSet: SelectionSet;
 }
 
-export function diffQueryAgainstStore({ store, query }: {
+export function diffQueryAgainstStore({
+  store,
+  query,
+  variables,
+}: {
   store: Store,
   query: string
+  variables?: Object,
 }): DiffQueryStore {
   const queryDef = parseQuery(query);
 
@@ -51,13 +56,20 @@ export function diffQueryAgainstStore({ store, query }: {
     rootId: 'ROOT_QUERY',
     selectionSet: queryDef.selectionSet,
     throwOnMissingField: false,
+    variables,
   });
 }
 
-export function diffFragmentAgainstStore({ store, fragment, rootId }: {
+export function diffFragmentAgainstStore({
+  store,
+  fragment,
+  rootId,
+  variables,
+}: {
   store: Store,
   fragment: string,
   rootId: string,
+  variables?: Object,
 }): DiffQueryStore {
   const fragmentDef = parseFragment(fragment);
 
@@ -66,6 +78,7 @@ export function diffFragmentAgainstStore({ store, fragment, rootId }: {
     rootId,
     selectionSet: fragmentDef.selectionSet,
     throwOnMissingField: false,
+    variables,
   });
 }
 
@@ -85,11 +98,13 @@ export function diffSelectionSetAgainstStore({
   store,
   rootId,
   throwOnMissingField = false,
+  variables,
 }: {
   selectionSet: SelectionSet,
   store: Store,
   rootId: string,
   throwOnMissingField: Boolean,
+  variables: Object,
 }): DiffQueryStore {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -110,7 +125,7 @@ export function diffSelectionSetAgainstStore({
 
     const field = selection as Field;
 
-    const storeFieldKey = storeKeyNameFromField(field);
+    const storeFieldKey = storeKeyNameFromField(field, variables);
     const resultFieldKey = resultKeyNameFromField(field);
 
     if (! has(storeObj, storeFieldKey)) {
@@ -143,6 +158,7 @@ export function diffSelectionSetAgainstStore({
           throwOnMissingField,
           rootId: id,
           selectionSet: field.selectionSet,
+          variables,
         });
 
         itemDiffResult.missingSelectionSets.forEach(
@@ -158,6 +174,7 @@ export function diffSelectionSetAgainstStore({
         throwOnMissingField,
         rootId: storeValue,
         selectionSet: field.selectionSet,
+        variables,
       });
 
       // This is a nested query
@@ -165,7 +182,10 @@ export function diffSelectionSetAgainstStore({
         subObjSelectionSet => missingSelectionSets.push(subObjSelectionSet));
 
       result[resultFieldKey] = subObjDiffResult.result;
+      return;
     }
+
+    throw new Error('Unexpected number value in the store where the query had a subselection.');
   });
 
   // If we weren't able to resolve some selections from the store, construct them into

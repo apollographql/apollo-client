@@ -1,6 +1,5 @@
 import {
   Field,
-  Argument,
   IntValue,
   FloatValue,
   StringValue,
@@ -12,15 +11,23 @@ import {
   includes,
 } from 'lodash';
 
-const SCALAR_TYPES = ['IntValue', 'FloatValue', 'StringValue', 'BooleanValue'];
+type ScalarValue = IntValue | FloatValue | StringValue | BooleanValue;
+
+function isScalarValue(value: Value): value is ScalarValue {
+  const SCALAR_TYPES = ['IntValue', 'FloatValue', 'StringValue', 'BooleanValue'];
+  return includes(SCALAR_TYPES, value.kind);
+}
 
 export function storeKeyNameFromField(field: Field): string {
   if (field.arguments.length) {
     const argObj: Object = {};
 
-    field.arguments.forEach((argument: Argument) => {
-      const scalarArgumentValue = ensureScalarValue(argument.value);
-      argObj[argument.name.value] = scalarArgumentValue.value;
+    field.arguments.forEach(({name, value}) => {
+      if (isScalarValue(value)) {
+        argObj[name.value] = value.value;
+      } else {
+        throw new Error('Only scalar argument types currently supported.');
+      }
     });
 
     const stringifiedArgs: string = JSON.stringify(argObj);
@@ -34,12 +41,4 @@ export function resultKeyNameFromField(field: Field): string {
   return field.alias ?
     field.alias.value :
     field.name.value;
-}
-
-function ensureScalarValue(value: Value): IntValue | FloatValue | StringValue | BooleanValue {
-  if (! includes(SCALAR_TYPES, value.kind)) {
-    throw new Error('Only scalar argument types currently supported.');
-  }
-
-  return value as IntValue | FloatValue | StringValue | BooleanValue;
 }

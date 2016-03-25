@@ -125,7 +125,7 @@ export function writeSelectionSetToStore({
       value.forEach((item, index) => {
         const clonedItem: any = assign({}, item);
 
-        if (! isString(item.id)) {
+        if (! isString(clonedItem.id)) {
           clonedItem['__data_id'] = `${resultDataId}.${storeFieldName}.${index}`;
         } else {
           clonedItem['__data_id'] = clonedItem.id;

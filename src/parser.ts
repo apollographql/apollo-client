@@ -24,7 +24,7 @@ export function parseIfString(doc: Document | string): Document {
   return parsed;
 }
 
-export function parseFragmentIfString(fragment:  Document | string): FragmentDefinition {
+export function parseFragmentIfString(fragment: Document | string): FragmentDefinition {
   const parsedFragment: Document = parseIfString(fragment);
 
   if (parsedFragment.definitions.length !== 1) {
@@ -40,7 +40,7 @@ export function parseFragmentIfString(fragment:  Document | string): FragmentDef
   return fragmentDef;
 }
 
-export function parseQueryIfString(query:  Document | string): OperationDefinition {
+export function parseQueryIfString(query: Document | string): OperationDefinition {
   const parsedQuery: Document = parseIfString(query);
 
   if (parsedQuery.kind !== 'Document' && parsedQuery.definitions.length !== 1) {
@@ -54,4 +54,21 @@ export function parseQueryIfString(query:  Document | string): OperationDefiniti
   }
 
   return queryDefinition;
+}
+
+export function parseMutationIfString(mutation: Document | string): OperationDefinition {
+  const parsedMutation: Document = parseIfString(mutation);
+
+  if (parsedMutation.kind !== 'Document' && parsedMutation.definitions.length !== 1) {
+    throw new Error('Must have exactly one definition in document.');
+  }
+
+  const mutationDefinition: OperationDefinition =
+    parsedMutation.definitions[0] as OperationDefinition;
+
+  if (mutationDefinition.operation !== 'mutation') {
+    throw new Error('Definition must be a query.');
+  }
+
+  return mutationDefinition;
 }

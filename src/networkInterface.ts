@@ -55,7 +55,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
         .then(result => result.json())
         .then((payload: GraphQLResult) => {
           if (payload.hasOwnProperty('errors')) {
-            throw payload;
+            throw payload as GraphQLError;
           } else if (!payload.hasOwnProperty('data')) {
             throw new Error(
               `Server response was missing for query '${request.debugName}'.`

@@ -61,7 +61,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
               `Server response was missing for query '${request.debugName}'.`
             );
           } else {
-            return payload;
+            return payload as GraphQLResult;
           }
         })
     )));

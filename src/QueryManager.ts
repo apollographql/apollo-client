@@ -25,6 +25,7 @@ import {
 import {
   SelectionSet,
   GraphQLError,
+  GraphQLResult,
 } from 'graphql';
 
 import {
@@ -118,6 +119,25 @@ export class QueryManager {
     this.networkInterface.query([
       request,
     ]).then((result) => {
+      let errors: GraphQLError[] = [];
+      let results: GraphQLResult[] = [...result];
+
+      // pick errors off of mixed errors and data objects so they
+      // can be handled without blocking the good data
+      // that did come through
+      results = results.map((x: GraphQLResult) => {
+        if (x.errors && x.errors.length) {
+          errors = errors.concat(x.errors);
+        }
+
+        return { data: x.data };
+      });
+
+      if (errors.length) {
+        this.handleQueryErrorsAndStop(watchHandle.id, errors);
+      }
+
+      // XXX handle multiple GraphQLResults
       const resultWithDataId = assign({
         __data_id: 'ROOT_QUERY',
       }, result[0].data);

@@ -48,9 +48,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
   };
 
   function query(requests: Array<Request>): Promise<Array<GraphQLResult | GraphQLError>> {
-    let clonedRequests = [...requests];
-
-    return Promise.all(clonedRequests.map(request => (
+    return Promise.all(requests.map(request => (
       fetchFromRemoteEndpoint(request)
         .then(result => result.json())
         .then((payload: GraphQLResult) => {

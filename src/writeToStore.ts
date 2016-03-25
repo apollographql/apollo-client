@@ -9,8 +9,8 @@ import {
 } from 'lodash';
 
 import {
-  parseFragmentIfString,
-  parseQueryIfString,
+  parseFragment,
+  parseQuery,
 } from './parser';
 
 import {
@@ -19,7 +19,6 @@ import {
 } from './storeUtils';
 
 import {
-  Document,
   OperationDefinition,
   SelectionSet,
   FragmentDefinition,
@@ -49,13 +48,13 @@ export function writeFragmentToStore({
   result,
   fragment,
   store = {} as Store,
-}: { result: Object, fragment: Document | string, store?: Store }): Store {
+}: { result: Object, fragment: string, store?: Store }): Store {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
   }
 
-  const parsedFragment: FragmentDefinition = parseFragmentIfString(fragment);
+  const parsedFragment: FragmentDefinition = parseFragment(fragment);
   const selectionSet: SelectionSet = parsedFragment.selectionSet;
 
   return writeSelectionSetToStore({
@@ -69,8 +68,8 @@ export function writeQueryToStore({
   result,
   query,
   store = {} as Store,
-}: { result: Object, query: Document | string, store?: Store}): Store {
-  const queryDefinition: OperationDefinition = parseQueryIfString(query);
+}: { result: Object, query: string, store?: Store}): Store {
+  const queryDefinition: OperationDefinition = parseQuery(query);
 
   const resultWithDataId: Object = assign({
     __data_id: 'ROOT_QUERY',

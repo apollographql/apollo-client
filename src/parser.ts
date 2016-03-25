@@ -6,16 +6,8 @@ import {
   FragmentDefinition,
 } from 'graphql';
 
-import { isString } from 'lodash';
-
-export function parseIfString(doc: Document | string): Document {
-  let parsed: Document;
-
-  if (isString(doc)) {
-    parsed = parse(doc);
-  } else {
-    parsed = doc;
-  }
+export function parseDocument(doc: string): Document {
+  const parsed = parse(doc);
 
   if (!parsed || parsed.kind !== 'Document') {
     throw new Error('Not a valid GraphQL document.');
@@ -24,8 +16,8 @@ export function parseIfString(doc: Document | string): Document {
   return parsed;
 }
 
-export function parseFragmentIfString(fragment: Document | string): FragmentDefinition {
-  const parsedFragment: Document = parseIfString(fragment);
+export function parseFragment(fragment: string): FragmentDefinition {
+  const parsedFragment: Document = parseDocument(fragment);
 
   if (parsedFragment.definitions.length !== 1) {
     throw new Error('Must have exactly one definition in document.');
@@ -40,8 +32,8 @@ export function parseFragmentIfString(fragment: Document | string): FragmentDefi
   return fragmentDef;
 }
 
-export function parseQueryIfString(query: Document | string): OperationDefinition {
-  const parsedQuery: Document = parseIfString(query);
+export function parseQuery(query: string): OperationDefinition {
+  const parsedQuery: Document = parseDocument(query);
 
   if (parsedQuery.kind !== 'Document' && parsedQuery.definitions.length !== 1) {
     throw new Error('Must have exactly one definition in document.');
@@ -56,8 +48,8 @@ export function parseQueryIfString(query: Document | string): OperationDefinitio
   return queryDefinition;
 }
 
-export function parseMutationIfString(mutation: Document | string): OperationDefinition {
-  const parsedMutation: Document = parseIfString(mutation);
+export function parseMutation(mutation: string): OperationDefinition {
+  const parsedMutation: Document = parseDocument(mutation);
 
   if (parsedMutation.kind !== 'Document' && parsedMutation.definitions.length !== 1) {
     throw new Error('Must have exactly one definition in document.');

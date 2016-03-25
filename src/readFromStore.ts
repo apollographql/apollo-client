@@ -1,6 +1,6 @@
 import {
-  parseFragmentIfString,
-  parseQueryIfString,
+  parseFragment,
+  parseQuery,
 } from './parser';
 
 import {
@@ -8,7 +8,6 @@ import {
 } from './diffAgainstStore';
 
 import {
-  Document,
   SelectionSet,
 } from 'graphql';
 
@@ -22,9 +21,9 @@ import {
 
 export function readQueryFromStore({ store, query }: {
   store: Store,
-  query: Document | string
+  query: string
 }): Object {
-  const queryDef = parseQueryIfString(query);
+  const queryDef = parseQuery(query);
 
   return readSelectionSetFromStore({
     store,
@@ -37,8 +36,8 @@ export function readFragmentFromStore({
     store,
     fragment,
     rootId,
-}: { store: Store, fragment: Document | string, rootId: string }): Object {
-  const fragmentDef = parseFragmentIfString(fragment);
+}: { store: Store, fragment: string, rootId: string }): Object {
+  const fragmentDef = parseFragment(fragment);
 
   return readSelectionSetFromStore({
     store,

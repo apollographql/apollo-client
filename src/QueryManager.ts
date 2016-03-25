@@ -4,8 +4,8 @@ import {
 } from './networkInterface';
 
 import {
-  parseQueryIfString,
-  parseMutationIfString,
+  parseQuery,
+  parseMutation,
 } from './parser';
 
 import {
@@ -67,7 +67,7 @@ export class QueryManager {
   }: {
     mutation: string,
   }): Promise<any> {
-    const mutationDef = parseMutationIfString(mutation);
+    const mutationDef = parseMutation(mutation);
 
     const request = {
       query: mutation,
@@ -94,7 +94,7 @@ export class QueryManager {
   }: {
     query: string,
   }): WatchedQueryHandle {
-    const queryDef = parseQueryIfString(query);
+    const queryDef = parseQuery(query);
 
     const watchHandle = this.watchSelectionSet({
       selectionSet: queryDef.selectionSet,

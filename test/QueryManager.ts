@@ -13,7 +13,7 @@ import {
 } from '../src/store';
 
 import {
-  parseFragmentIfString,
+  parseFragment,
 } from '../src/parser';
 
 import {
@@ -31,7 +31,7 @@ describe('QueryManager', () => {
       store: createApolloStore(),
     });
 
-    const fragmentDef = parseFragmentIfString(`
+    const fragmentDef = parseFragment(`
       fragment FragmentName on Item {
         id
         stringField
@@ -71,7 +71,7 @@ describe('QueryManager', () => {
       store: createApolloStore(),
     });
 
-    const fragment1Def = parseFragmentIfString(`
+    const fragment1Def = parseFragment(`
       fragment FragmentName on Item {
         id
         numberField
@@ -79,7 +79,7 @@ describe('QueryManager', () => {
       }
     `);
 
-    const fragment2Def = parseFragmentIfString(`
+    const fragment2Def = parseFragment(`
       fragment FragmentName on Item {
         id
         stringField

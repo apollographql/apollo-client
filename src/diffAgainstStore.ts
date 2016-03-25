@@ -5,8 +5,8 @@ import {
 } from 'lodash';
 
 import {
-  parseFragmentIfString,
-  parseQueryIfString,
+  parseFragment,
+  parseQuery,
 } from './parser';
 
 import {
@@ -19,16 +19,15 @@ import {
 } from './store';
 
 import {
-  Document,
   SelectionSet,
   Field,
 } from 'graphql';
 
 export function diffQueryAgainstStore({ store, query }: {
   store: Store,
-  query: Document | string
+  query: string
 }) {
-  const queryDef = parseQueryIfString(query);
+  const queryDef = parseQuery(query);
 
   return diffSelectionSetAgainstStore({
     store,
@@ -40,10 +39,10 @@ export function diffQueryAgainstStore({ store, query }: {
 
 export function diffFragmentAgainstStore({ store, fragment, rootId }: {
   store: Store,
-  fragment: Document | string,
+  fragment: string,
   rootId: string,
 }) {
-  const fragmentDef = parseFragmentIfString(fragment);
+  const fragmentDef = parseFragment(fragment);
 
   return diffSelectionSetAgainstStore({
     store,

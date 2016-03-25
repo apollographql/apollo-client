@@ -138,35 +138,6 @@ describe('QueryManager', () => {
   });
 
   it('properly roundtrips through a Redux store', (done) => {
-    // Let's mock a million things!
-    const networkInterface: NetworkInterface = {
-      _uri: '',
-      _opts: {},
-      query: (requests) => {
-        return Promise.resolve(true).then(() => {
-          const response = {
-            data: {
-              allPeople: {
-                people: [
-                  {
-                    name: 'Luke Skywalker',
-                  },
-                ],
-              },
-            },
-          };
-
-          return [response];
-        });
-      },
-    };
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-    });
-
-    // Done mocking, now we can get to business!
     const query = `
       query people {
         allPeople(first: 1) {
@@ -176,6 +147,28 @@ describe('QueryManager', () => {
         }
       }
     `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query },
+        result: { data },
+      },
+    ]);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
 
     const handle = queryManager.watchQuery({
       query,

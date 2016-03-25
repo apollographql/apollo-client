@@ -197,30 +197,6 @@ describe('QueryManager', () => {
   });
 
   it('handles GraphQL errors', (done) => {
-    // Let's mock a million things!
-    const networkInterface: NetworkInterface = {
-      _uri: '',
-      _opts: {},
-      query: (requests) => {
-        return new Promise((resolve) => {
-          setTimeout(resolve, 10);
-        }).then(() => {
-          throw [
-            {
-              name: 'Name',
-              message: 'This is an error message.',
-            },
-          ];
-        });
-      },
-    } as any as NetworkInterface;
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-    });
-
-    // Done mocking, now we can get to business!
     const query = `
       query people {
         allPeople(first: 1) {
@@ -230,6 +206,25 @@ describe('QueryManager', () => {
         }
       }
     `;
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query },
+        result: {
+          errors: [
+            {
+              name: 'Name',
+              message: 'This is an error message.',
+            },
+          ],
+        },
+      },
+    ]);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
 
     const handle = queryManager.watchQuery({
       query,
@@ -257,7 +252,12 @@ describe('QueryManager', () => {
       makeListPrivate: true,
     };
 
-    const networkInterface = mockNetworkInterface({ query: mutation }, { data });
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation },
+        result: { data },
+      },
+    ]);
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -292,7 +292,13 @@ describe('QueryManager', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({ query: mutation }, { data });
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation },
+        result: { data },
+      },
+    ]);
+
     const store = createApolloStore();
 
     const queryManager = new QueryManager({
@@ -316,13 +322,30 @@ describe('QueryManager', () => {
 });
 
 function mockNetworkInterface(
-  expectedRequest: Request,
-  fakeResult: GraphQLResult
+  requestsResults: { request: Request, result: GraphQLResult }[]
 ) {
+  const requestToResultMap = {};
+
+  requestsResults.forEach(({request, result}) => {
+    requestToResultMap[JSON.stringify(request)] = result;
+  });
+
   const queryMock = (requests: Request[]) => {
-    return new Promise<GraphQLResult[]>((resolve) => {
-      resolve([fakeResult]);
-    });
+    return Promise.all(requests.map((request) => {
+      return new Promise((resolve, reject) => {
+        const result = requestToResultMap[JSON.stringify(request)];
+
+        if (! result) {
+          throw new Error(`Passed request that wasn't mocked: ${JSON.stringify(request)}`);
+        }
+
+        if (result.data) {
+          resolve(result);
+        } else {
+          reject(result.errors);
+        }
+      });
+    }));
   };
 
   return {

@@ -164,7 +164,7 @@ export function writeSelectionSetToStore({
   let newStoreObj = normalizedRootObj;
   if (store[resultDataId]) {
     // This object already exists in the store - extend it rather than overwriting the fields
-    newStoreObj = assign({}, store[resultDataId], normalizedRootObj);
+    newStoreObj = assign({}, store[resultDataId], normalizedRootObj) as StoreObject;
   }
 
   // Weird that we are overwriting. ImmutableJS could come in handy here

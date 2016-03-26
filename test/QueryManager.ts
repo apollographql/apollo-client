@@ -9,6 +9,7 @@ import {
 
 import {
   Store,
+  StoreObject,
   createApolloStore,
 } from '../src/store';
 
@@ -45,7 +46,7 @@ describe('QueryManager', () => {
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
-    };
+    } as StoreObject;
 
     const handle = queryManager.watchSelectionSet({
       rootId: 'abcd',

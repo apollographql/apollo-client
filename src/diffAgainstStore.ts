@@ -1,6 +1,7 @@
 import {
   isArray,
   isNull,
+  isString,
   has,
 } from 'lodash';
 
@@ -16,6 +17,7 @@ import {
 
 import {
   Store,
+  StoreValue,
 } from './store';
 
 import {
@@ -23,10 +25,25 @@ import {
   Field,
 } from 'graphql';
 
+export interface DiffQueryStore {
+  result: DiffResult;
+  missingSelectionSets: MissingSelectionSet[];
+}
+
+export interface DiffResult {
+  [resultFieldKey: string]: StoreValue | DiffResult | DiffResult[];
+}
+
+export interface MissingSelectionSet {
+  id: string;
+  typeName: string;
+  selectionSet: SelectionSet;
+}
+
 export function diffQueryAgainstStore({ store, query }: {
   store: Store,
   query: string
-}) {
+}): DiffQueryStore {
   const queryDef = parseQuery(query);
 
   return diffSelectionSetAgainstStore({
@@ -41,7 +58,7 @@ export function diffFragmentAgainstStore({ store, fragment, rootId }: {
   store: Store,
   fragment: string,
   rootId: string,
-}) {
+}): DiffQueryStore {
   const fragmentDef = parseFragment(fragment);
 
   return diffSelectionSetAgainstStore({
@@ -73,18 +90,14 @@ export function diffSelectionSetAgainstStore({
   store: Store,
   rootId: string,
   throwOnMissingField: Boolean,
-}) {
+}): DiffQueryStore {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
 
-  const result = {};
+  const result: DiffResult = {};
 
-  const missingSelectionSets: {
-    selectionSet: SelectionSet,
-    typeName: string,
-    id: string,
-  }[] = [];
+  const missingSelectionSets: MissingSelectionSet[] = [];
 
   const missingSelections: Field[] = [];
 
@@ -110,19 +123,21 @@ export function diffSelectionSetAgainstStore({
       return;
     }
 
+    const storeValue = storeObj[storeFieldKey];
+
     if (! field.selectionSet) {
-      result[resultFieldKey] = storeObj[storeFieldKey];
+      result[resultFieldKey] = storeValue;
       return;
     }
 
-    if (isNull(storeObj[storeFieldKey])) {
+    if (isNull(storeValue)) {
       // Basically any field in a GraphQL response can be null
       result[resultFieldKey] = null;
       return;
     }
 
-    if (isArray(storeObj[storeFieldKey])) {
-      result[resultFieldKey] = storeObj[storeFieldKey].map((id) => {
+    if (isArray(storeValue)) {
+      result[resultFieldKey] = storeValue.map((id) => {
         const itemDiffResult = diffSelectionSetAgainstStore({
           store,
           throwOnMissingField,
@@ -137,18 +152,20 @@ export function diffSelectionSetAgainstStore({
       return;
     }
 
-    const subObjDiffResult = diffSelectionSetAgainstStore({
-      store,
-      throwOnMissingField,
-      rootId: storeObj[storeFieldKey],
-      selectionSet: field.selectionSet,
-    });
+    if (isString(storeValue)) {
+      const subObjDiffResult = diffSelectionSetAgainstStore({
+        store,
+        throwOnMissingField,
+        rootId: storeValue,
+        selectionSet: field.selectionSet,
+      });
 
-    // This is a nested query
-    subObjDiffResult.missingSelectionSets.forEach(
-      subObjSelectionSet => missingSelectionSets.push(subObjSelectionSet));
+      // This is a nested query
+      subObjDiffResult.missingSelectionSets.forEach(
+        subObjSelectionSet => missingSelectionSets.push(subObjSelectionSet));
 
-    result[resultFieldKey] = subObjDiffResult.result;
+      result[resultFieldKey] = subObjDiffResult.result;
+    }
   });
 
   // If we weren't able to resolve some selections from the store, construct them into

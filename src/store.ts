@@ -25,8 +25,7 @@ export interface StoreObject {
   [storeFieldKey: string]: StoreValue;
 }
 
-// any is here because it's the only way to express null...
-export type StoreValue = number | string | string[] | any;
+export type StoreValue = number | string | string[];
 
 export const QUERY_RESULT_ACTION = 'QUERY_RESULT';
 

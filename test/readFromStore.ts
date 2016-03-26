@@ -7,6 +7,7 @@ import {
 
 import {
   Store,
+  StoreObject,
 } from '../src/store';
 
 describe('reading from the store', () => {
@@ -39,7 +40,7 @@ describe('reading from the store', () => {
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
-    };
+    } as StoreObject;
 
     const store = {
       abcd: result,
@@ -74,11 +75,11 @@ describe('reading from the store', () => {
         stringField: 'This is a string too!',
         numberField: 6,
         nullField: null,
-      },
+      } as StoreObject,
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: 'abcde' }),
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: 'abcde' }) as StoreObject,
       abcde: result.nestedObj,
     } as Store;
 
@@ -125,7 +126,7 @@ describe('reading from the store', () => {
           numberField: 7,
           nullField: null,
         },
-      ],
+      ] as StoreObject[],
     };
 
     const store = {
@@ -134,7 +135,7 @@ describe('reading from the store', () => {
           'abcd.nestedArray.0',
           'abcd.nestedArray.1',
         ],
-      }),
+      }) as StoreObject,
       'abcd.nestedArray.0': result.nestedArray[0],
       'abcd.nestedArray.1': result.nestedArray[1],
     } as Store;
@@ -177,7 +178,7 @@ describe('reading from the store', () => {
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
-    };
+    } as StoreObject;
 
     const store = { abcd: result } as Store;
 
@@ -205,7 +206,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: null }),
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: null }) as StoreObject,
     } as Store;
 
     const queryResult = readFragmentFromStore({

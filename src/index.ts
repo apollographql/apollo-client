@@ -14,6 +14,7 @@ import {
 import {
   QueryManager,
   WatchedQueryHandle,
+  WatchQueryOptions,
 } from './QueryManager';
 
 export class ApolloClient {
@@ -39,11 +40,7 @@ export class ApolloClient {
     });
   }
 
-  public watchQuery({
-    query,
-  }: {
-    query: string,
-  }): WatchedQueryHandle {
-    return this.queryManager.watchQuery({ query });
+  public watchQuery(options: WatchQueryOptions): WatchedQueryHandle {
+    return this.queryManager.watchQuery(options);
   }
 }

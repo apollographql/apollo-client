@@ -132,6 +132,7 @@ describe('diffing queries against the store', () => {
 
     assert.equal(printNodeQuery(diffedSelectionSet), `{
   node(id: "lukeId") {
+    id
     ... on Person {
       age
     }

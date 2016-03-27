@@ -29,6 +29,7 @@ describe('printing queries', () => {
       selectionSet,
     }), `{
   node(id: "lukeId") {
+    id
     ... on Person {
       age
     }

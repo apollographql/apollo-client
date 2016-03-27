@@ -94,10 +94,9 @@ export class QueryManager {
   public watchQuery({
      query,
      variables,
-  }: {
-    query: string,
-    variables?: Object,
-  }): WatchedQueryHandle {
+     forceFetch = true,
+     returnPartialData = false,
+  }: WatchQueryOptions): WatchedQueryHandle {
     const queryDef = parseQuery(query);
 
     const watchHandle = this.watchSelectionSet({
@@ -107,11 +106,14 @@ export class QueryManager {
       variables,
     });
 
-    // XXX diff query against store to reduce network
-    const request = {
+    let request = {
       query: query,
       variables,
-    } as Request;
+    };
+
+    if (! forceFetch) {
+      throw new Error('query diffing not implemented');
+    }
 
     this.networkInterface.query(request)
       .then((result: GraphQLResult) => {
@@ -134,6 +136,14 @@ export class QueryManager {
       }).catch((errors: GraphQLError[]) => {
         this.handleQueryErrorsAndStop(watchHandle.id, errors);
       });
+
+    if (returnPartialData) {
+      // Needs to be async to allow component to register result callback, even though we have
+      // the data right away
+      setTimeout(() => {
+        throw new Error('partial result return not implemented');
+      }, 0);
+    }
 
     return watchHandle;
   }
@@ -226,3 +236,10 @@ export interface WatchedQueryHandle {
 }
 
 export type QueryResultCallback = (error: GraphQLError[], result?: any) => void;
+
+export interface WatchQueryOptions {
+  query: string;
+  variables?: Object;
+  forceFetch?: boolean;
+  returnPartialData?: boolean;
+}

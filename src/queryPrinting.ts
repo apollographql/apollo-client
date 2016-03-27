@@ -24,6 +24,15 @@ function nodeQueryDefinition({
   typeName,
   selectionSet,
 }) {
+  const idField = {
+    kind: 'Field',
+    alias: null,
+    name: {
+      kind: 'Name',
+      value: 'id',
+    },
+  };
+
   return {
     kind: 'OperationDefinition',
     operation: 'query',
@@ -57,6 +66,7 @@ function nodeQueryDefinition({
           selectionSet: {
             kind: 'SelectionSet',
             selections: [
+              idField,
               inlineFragmentSelection({
                 typeName,
                 selectionSet,

@@ -48,7 +48,13 @@ export function writeFragmentToStore({
   result,
   fragment,
   store = {} as Store,
-}: { result: Object, fragment: string, store?: Store }): Store {
+  variables,
+}: {
+  result: Object,
+  fragment: string,
+  store?: Store,
+  variables?: Object,
+}): Store {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
@@ -61,6 +67,7 @@ export function writeFragmentToStore({
     result,
     selectionSet,
     store,
+    variables,
   });
 }
 
@@ -68,7 +75,13 @@ export function writeQueryToStore({
   result,
   query,
   store = {} as Store,
-}: { result: Object, query: string, store?: Store}): Store {
+  variables,
+}: {
+  result: Object,
+  query: string,
+  store?: Store,
+  variables?: Object,
+}): Store {
   const queryDefinition: OperationDefinition = parseQuery(query);
 
   const resultWithDataId: Object = assign({
@@ -79,6 +92,7 @@ export function writeQueryToStore({
     result: resultWithDataId,
     selectionSet: queryDefinition.selectionSet,
     store,
+    variables,
   });
 }
 
@@ -86,10 +100,12 @@ export function writeSelectionSetToStore({
   result,
   selectionSet,
   store = {} as Store,
+  variables,
 }: {
   result: any,
   selectionSet: SelectionSet,
-  store?: Store
+  store?: Store,
+  variables: Object,
 }): Store {
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
@@ -102,7 +118,7 @@ export function writeSelectionSetToStore({
   selectionSet.selections.forEach((selection) => {
     const field = selection as Field;
 
-    const storeFieldName: string = storeKeyNameFromField(field);
+    const storeFieldName: string = storeKeyNameFromField(field, variables);
     const resultFieldKey: string = resultKeyNameFromField(field);
 
     const value: any = result[resultFieldKey];
@@ -136,6 +152,7 @@ export function writeSelectionSetToStore({
           result: clonedItem,
           store,
           selectionSet: field.selectionSet,
+          variables,
         });
       });
 
@@ -158,6 +175,7 @@ export function writeSelectionSetToStore({
       result: clonedValue,
       store,
       selectionSet: field.selectionSet,
+      variables,
     });
   });
 

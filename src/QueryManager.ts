@@ -64,13 +64,16 @@ export class QueryManager {
 
   public mutate({
     mutation,
+    variables,
   }: {
     mutation: string,
+    variables?: Object,
   }): Promise<any> {
     const mutationDef = parseMutation(mutation);
 
     const request = {
       query: mutation,
+      variables,
     } as Request;
 
     return this.networkInterface.query([
@@ -83,6 +86,7 @@ export class QueryManager {
       this.store.dispatch(createQueryResultAction({
         result: resultWithDataId,
         selectionSet: mutationDef.selectionSet,
+        variables,
       }));
 
       return result[0].data;
@@ -91,8 +95,10 @@ export class QueryManager {
 
   public watchQuery({
      query,
+     variables,
   }: {
     query: string,
+    variables?: Object,
   }): WatchedQueryHandle {
     const queryDef = parseQuery(query);
 
@@ -100,11 +106,13 @@ export class QueryManager {
       selectionSet: queryDef.selectionSet,
       rootId: 'ROOT_QUERY',
       typeName: 'Query',
+      variables,
     });
 
     // XXX diff query against store to reduce network
     const request = {
       query: query,
+      variables,
     } as Request;
 
     this.networkInterface.query([
@@ -117,6 +125,7 @@ export class QueryManager {
       this.store.dispatch(createQueryResultAction({
         result: resultWithDataId,
         selectionSet: queryDef.selectionSet,
+        variables,
       }));
     }).catch((errors: GraphQLError[]) => {
       this.handleQueryErrorsAndStop(watchHandle.id, errors);
@@ -131,6 +140,7 @@ export class QueryManager {
         store,
         rootId: selectionSetWithRoot.rootId,
         selectionSet: selectionSetWithRoot.selectionSet,
+        variables: selectionSetWithRoot.variables,
       });
 
       this.broadcastQueryChange(queryId, resultFromStore);
@@ -215,6 +225,7 @@ export interface SelectionSetWithRoot {
   rootId: string;
   typeName: string;
   selectionSet: SelectionSet;
+  variables: Object;
 }
 
 export interface WatchedQueryHandle {

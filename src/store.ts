@@ -32,14 +32,17 @@ export const QUERY_RESULT_ACTION = 'QUERY_RESULT';
 export function createQueryResultAction({
   result,
   selectionSet,
+  variables,
 }: {
   result: any,
   selectionSet: SelectionSet,
+  variables: Object
 }): QueryResultAction {
   return {
     type: QUERY_RESULT_ACTION,
     result,
     selectionSet,
+    variables,
   };
 }
 
@@ -47,6 +50,7 @@ export interface QueryResultAction {
   type: string;
   result: any;
   selectionSet: SelectionSet;
+  variables: Object;
 }
 
 export type ApolloAction = QueryResultAction;
@@ -56,6 +60,7 @@ const crashReporter = store => next => action => {
     return next(action);
   } catch (err) {
     console.error('Caught an exception!', err);
+    console.error(err.stack);
     throw err;
   }
 };
@@ -84,6 +89,7 @@ export function resultCacheReducer(previousState: Store = {}, action: ApolloActi
       const newState = writeSelectionSetToStore({
         result: action.result,
         selectionSet: action.selectionSet,
+        variables: action.variables,
         store: clonedState,
       });
 

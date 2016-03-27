@@ -1,7 +1,9 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
 
-import { writeFragmentToStore } from '../src/writeToStore';
+import {
+  writeFragmentToStore,
+} from '../src/writeToStore';
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {
@@ -92,6 +94,45 @@ describe('writing to the store', () => {
         'stringField({"arg":"2"})': 'The arg was 2!',
         numberField: 5,
         nullField: null,
+      },
+    });
+  });
+
+  it('properly normalizes a fragment with variables', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField(arg: $stringArg),
+        numberField(intArg: $intArg, floatArg: $floatArg),
+        nullField
+      }
+    `;
+
+    const variables = {
+      intArg: 5,
+      floatArg: 3.14,
+      stringArg: 'This is a string!',
+    };
+
+    const result = {
+      id: 'abcd',
+      stringField: 'Heyo',
+      numberField: 5,
+      nullField: null,
+    };
+
+    const normalized = writeFragmentToStore({
+      result,
+      fragment,
+      variables,
+    });
+
+    assertEqualSansDataId(normalized, {
+      [result.id]: {
+        id: 'abcd',
+        nullField: null,
+        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'stringField({"arg":"This is a string!"})': 'Heyo',
       },
     });
   });

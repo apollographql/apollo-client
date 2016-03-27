@@ -69,20 +69,18 @@ describe('network interface', () => {
       };
 
       return assert.eventually.deepEqual(
-        swapi.query([simpleRequest]),
-        [
-          {
-            data: {
-              allPeople: {
-                people: [
-                  {
-                    name: 'Luke Skywalker',
-                  },
-                ],
-              },
+        swapi.query(simpleRequest),
+        {
+          data: {
+            allPeople: {
+              people: [
+                {
+                  name: 'Luke Skywalker',
+                },
+              ],
             },
           },
-        ]
+        }
       );
     });
 
@@ -103,32 +101,29 @@ describe('network interface', () => {
         debugName: 'People query',
       };
 
-      // return assert.isRejected(swapi.query([simpleRequest]));
-      return assert.isRejected(
-        swapi.query([simpleRequest]),
-        [
-          {
-            errors: [
-              {
-                message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
-                locations: [
-                  {
-                    line: 8,
-                    column: 9,
-                  },
-                ],
-              },
-            ],
-          },
-        ]
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        {
+          errors: [
+            {
+              message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF\n\n7:           }\n8:         \n           ^\n',
+              locations: [
+                {
+                  line: 8,
+                  column: 9,
+                },
+              ],
+            },
+          ],
+        }
       );
     });
 
-    it('should allow for multiple requests at once', () => {
-      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+    it('should throw on a network error', () => {
+      const nowhere = createNetworkInterface('http://does-not-exist.parseapp.com/');
 
       // this is a stub for the end user client api
-      const firstRequest = {
+      const doomedToFail = {
         query: `
           query people {
             allPeople(first: 1) {
@@ -142,47 +137,7 @@ describe('network interface', () => {
         debugName: 'People Query',
       };
 
-      const secondRequest = {
-        query: `
-          query ships {
-            allStarships(first: 1) {
-              starships {
-                name
-              }
-            }
-          }
-        `,
-        variables: {},
-        debugName: 'Ships Query',
-      };
-
-      return assert.eventually.deepEqual(
-        swapi.query([firstRequest, secondRequest]),
-        [
-          {
-            data: {
-              allPeople: {
-                people: [
-                  {
-                    name: 'Luke Skywalker',
-                  },
-                ],
-              },
-            },
-          },
-          {
-            data: {
-              allStarships: {
-                starships: [
-                  {
-                    name: 'CR90 corvette',
-                  },
-                ],
-              },
-            },
-          },
-        ]
-      );
+      return assert.isRejected(nowhere.query(doomedToFail));
     });
   });
 });

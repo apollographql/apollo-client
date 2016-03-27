@@ -10,7 +10,7 @@ import {
   assign,
 } from 'lodash';
 
-import { GraphQLResult, GraphQLError } from 'graphql';
+import { GraphQLResult } from 'graphql';
 
 export interface Request {
   debugName?: string;
@@ -21,7 +21,7 @@ export interface Request {
 export interface NetworkInterface {
   _uri: string;
   _opts: RequestInit;
-  query(requests: Array<Request>): Promise<Array<GraphQLResult>>;
+  query(request: Request): Promise<GraphQLResult>;
 }
 
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): NetworkInterface {
@@ -47,22 +47,18 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
     }));
   };
 
-  function query(requests: Array<Request>): Promise<Array<GraphQLResult | GraphQLError>> {
-    return Promise.all(requests.map(request => (
-      fetchFromRemoteEndpoint(request)
-        .then(result => result.json())
-        .then((payload: GraphQLResult) => {
-          if (payload.hasOwnProperty('errors')) {
-            throw payload as GraphQLError;
-          } else if (!payload.hasOwnProperty('data')) {
-            throw new Error(
-              `Server response was missing for query '${request.debugName}'.`
-            );
-          } else {
-            return payload as GraphQLResult;
-          }
-        })
-    )));
+  function query(request: Request): Promise<GraphQLResult> {
+    return fetchFromRemoteEndpoint(request)
+      .then(result => result.json())
+      .then((payload: GraphQLResult) => {
+        if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
+          throw new Error(
+            `Server response was missing for query '${request.debugName}'.`
+          );
+        } else {
+          return payload as GraphQLResult;
+        }
+      });
   };
 
   return {

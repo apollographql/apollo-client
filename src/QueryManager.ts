@@ -25,6 +25,7 @@ import {
 import {
   SelectionSet,
   GraphQLError,
+  GraphQLResult,
 } from 'graphql';
 
 import {
@@ -36,8 +37,7 @@ export class QueryManager {
   private store: ReduxStore;
   private selectionSetMap: { [queryId: number]: SelectionSetWithRoot };
 
-  private dataCallbacks: { [queryId: number]: QueryResultCallback[]};
-  private errorCallbacks: { [queryId: number]: QueryErrorCallback[]};
+  private resultCallbacks: { [queryId: number]: QueryResultCallback[]};
 
   private idCounter = 0;
 
@@ -54,8 +54,7 @@ export class QueryManager {
     this.store = store;
 
     this.selectionSetMap = {};
-    this.dataCallbacks = {};
-    this.errorCallbacks = {};
+    this.resultCallbacks = {};
 
     this.store.subscribe(() => {
       this.broadcastNewStore(this.store.getState());
@@ -76,21 +75,20 @@ export class QueryManager {
       variables,
     } as Request;
 
-    return this.networkInterface.query([
-      request,
-    ]).then((result) => {
-      const resultWithDataId = assign({
-        __data_id: 'ROOT_MUTATION',
-      }, result[0].data);
+    return this.networkInterface.query(request)
+      .then((result) => {
+        const resultWithDataId = assign({
+          __data_id: 'ROOT_MUTATION',
+        }, result.data);
 
-      this.store.dispatch(createQueryResultAction({
-        result: resultWithDataId,
-        selectionSet: mutationDef.selectionSet,
-        variables,
-      }));
+        this.store.dispatch(createQueryResultAction({
+          result: resultWithDataId,
+          selectionSet: mutationDef.selectionSet,
+          variables,
+        }));
 
-      return result[0].data;
-    });
+        return result.data;
+      });
   }
 
   public watchQuery({
@@ -115,21 +113,27 @@ export class QueryManager {
       variables,
     } as Request;
 
-    this.networkInterface.query([
-      request,
-    ]).then((result) => {
-      const resultWithDataId = assign({
-        __data_id: 'ROOT_QUERY',
-      }, result[0].data);
+    this.networkInterface.query(request)
+      .then((result: GraphQLResult) => {
+        let errors: GraphQLError[] = result.errors;
 
-      this.store.dispatch(createQueryResultAction({
-        result: resultWithDataId,
-        selectionSet: queryDef.selectionSet,
-        variables,
-      }));
-    }).catch((errors: GraphQLError[]) => {
-      this.handleQueryErrorsAndStop(watchHandle.id, errors);
-    });
+        if (errors && errors.length) {
+          this.handleQueryErrorsAndStop(watchHandle.id, errors);
+        }
+
+        // XXX handle multiple GraphQLResults
+        const resultWithDataId = assign({
+          __data_id: 'ROOT_QUERY',
+        }, result.data);
+
+        this.store.dispatch(createQueryResultAction({
+          result: resultWithDataId,
+          selectionSet: queryDef.selectionSet,
+          variables,
+        }));
+      }).catch((errors: GraphQLError[]) => {
+        this.handleQueryErrorsAndStop(watchHandle.id, errors);
+      });
 
     return watchHandle;
   }
@@ -163,34 +167,27 @@ export class QueryManager {
       stop: () => {
         this.stopQuery(queryId);
       },
-      onData: (callback) => {
-        if (isStopped()) {
-          throw new Error('Query was stopped. Please create a new one.');
-        }
-
-        this.registerDataCallback(queryId, callback);
-      },
-      onError: (callback) => {
+      onResult: (callback) => {
         if (isStopped()) { throw new Error('Query was stopped. Please create a new one.'); }
-        this.registerErrorCallback(queryId, callback);
+
+        this.registerResultCallback(queryId, callback);
       },
     };
   }
 
   private stopQuery(queryId) {
     delete this.selectionSetMap[queryId];
-    delete this.dataCallbacks[queryId];
-    delete this.errorCallbacks[queryId];
+    delete this.registerResultCallback[queryId];
   }
 
   private broadcastQueryChange(queryId: string, result: any) {
-    this.dataCallbacks[queryId].forEach((callback) => {
-      callback(result);
+    this.resultCallbacks[queryId].forEach((callback) => {
+      callback(null, result);
     });
   }
 
   private handleQueryErrorsAndStop(queryId: string, errors: GraphQLError[]) {
-    const errorCallbacks: QueryErrorCallback[] = this.errorCallbacks[queryId];
+    const errorCallbacks: QueryResultCallback[] = this.resultCallbacks[queryId];
 
     this.stopQuery(queryId);
 
@@ -204,21 +201,14 @@ export class QueryManager {
     }
   }
 
-  private registerDataCallback(queryId: string, callback: QueryResultCallback): void {
-    if (! this.dataCallbacks[queryId]) {
-      this.dataCallbacks[queryId] = [];
+  private registerResultCallback(queryId: string, callback: QueryResultCallback): void {
+    if (! this.resultCallbacks[queryId]) {
+      this.resultCallbacks[queryId] = [];
     }
 
-    this.dataCallbacks[queryId].push(callback);
+    this.resultCallbacks[queryId].push(callback);
   }
 
-  private registerErrorCallback(queryId: string, callback: QueryErrorCallback): void {
-    if (! this.errorCallbacks[queryId]) {
-      this.errorCallbacks[queryId] = [];
-    }
-
-    this.errorCallbacks[queryId].push(callback);
-  }
 }
 
 export interface SelectionSetWithRoot {
@@ -232,10 +222,7 @@ export interface WatchedQueryHandle {
   id: string;
   isStopped: () => boolean;
   stop();
-  onData(callback: QueryResultCallback);
-  onError(callback: QueryErrorCallback);
+  onResult(callback: QueryResultCallback);
 }
 
-export type QueryResultCallback = (result: any) => void;
-export type QueryErrorCallback = (errors: GraphQLError[]) => void;
-
+export type QueryResultCallback = (error: GraphQLError[], result?: any) => void;

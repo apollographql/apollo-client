@@ -162,10 +162,12 @@ describe('QueryManager', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query },
-      result: { data },
-    });
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query },
+        result: { data },
+      },
+    ]);
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -207,10 +209,12 @@ describe('QueryManager', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query, variables },
-      result: { data },
-    });
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query, variables },
+        result: { data },
+      },
+    ]);
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -239,17 +243,19 @@ describe('QueryManager', () => {
       }
     `;
 
-    const networkInterface = mockNetworkInterface({
-      request: { query },
-      result: {
-        errors: [
-          {
-            name: 'Name',
-            message: 'This is an error message.',
-          },
-        ],
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query },
+        result: {
+          errors: [
+            {
+              name: 'Name',
+              message: 'This is an error message.',
+            },
+          ],
+        },
       },
-    });
+    ]);
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -282,10 +288,12 @@ describe('QueryManager', () => {
       makeListPrivate: true,
     };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query: mutation },
-      result: { data },
-    });
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation },
+        result: { data },
+      },
+    ]);
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -318,10 +326,12 @@ describe('QueryManager', () => {
       makeListPrivate: true,
     };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query: mutation, variables },
-      result: { data },
-    });
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation, variables },
+        result: { data },
+      },
+    ]);
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -357,10 +367,12 @@ describe('QueryManager', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query: mutation },
-      result: { data },
-    });
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation },
+        result: { data },
+      },
+    ]);
 
     const store = createApolloStore();
 
@@ -384,16 +396,25 @@ describe('QueryManager', () => {
   });
 });
 
+// Pass in an array of requests and responses, so that you can test flows that end up making
+// multiple queries to the server
 function mockNetworkInterface(
-  requestResult: { request: Request, result: GraphQLResult, }
- ) {
+  requestResultArray: {
+    request: Request,
+    result: GraphQLResult,
+  }[]
+) {
   const requestToResultMap: any = {};
-  const { request, result } = requestResult;
-  requestToResultMap[JSON.stringify(request)] = result as GraphQLResult;
 
-  const queryMock = (requestData: Request) => {
+  // Populate set of mocked requests
+  requestResultArray.forEach(({ request, result }) => {
+    requestToResultMap[JSON.stringify(request)] = result as GraphQLResult;
+  });
+
+  // A mock for the query method
+  const queryMock = (request: Request) => {
     return new Promise((resolve, reject) => {
-      const resultData = requestToResultMap[JSON.stringify(requestData)];
+      const resultData = requestToResultMap[JSON.stringify(request)];
 
       if (! resultData) {
         throw new Error(`Passed request that wasn't mocked: ${JSON.stringify(request)}`);

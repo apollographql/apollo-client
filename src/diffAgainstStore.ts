@@ -111,7 +111,7 @@ export function diffSelectionSetAgainstStore({
 
   const missingSelections: Field[] = [];
 
-  const storeObj = store[rootId];
+  const storeObj = store[rootId] || {};
 
   selectionSet.selections.forEach((selection) => {
     if (selection.kind !== 'Field') {
@@ -186,6 +186,12 @@ export function diffSelectionSetAgainstStore({
   // If we weren't able to resolve some selections from the store, construct them into
   // a query we can fetch from the server
   if (missingSelections.length) {
+    const id = storeObj['id'];
+    if (typeof id !== 'string' && rootId !== 'ROOT_QUERY') {
+      throw new Error(
+        `Can't generate query to refetch object ${rootId}, since it doesn't have a string id.`);
+    }
+
     let typeName: string;
 
     if (rootId === 'ROOT_QUERY') {

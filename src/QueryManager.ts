@@ -242,18 +242,20 @@ export class QueryManager {
 
         if (errors && errors.length) {
           this.handleQueryErrorsAndStop(queryId, errors);
+        } else {
+          // XXX handle multiple GraphQLResults
+          // XXX handle partial responses where there was an error, right now we just bail out
+          // completely if there are any execution errors
+          const resultWithDataId = assign({
+            __data_id: 'ROOT_QUERY',
+          }, result.data);
+
+          this.store.dispatch(createQueryResultAction({
+            result: resultWithDataId,
+            variables: request.variables,
+            selectionSet,
+          }));
         }
-
-        // XXX handle multiple GraphQLResults
-        const resultWithDataId = assign({
-          __data_id: 'ROOT_QUERY',
-        }, result.data);
-
-        this.store.dispatch(createQueryResultAction({
-          result: resultWithDataId,
-          variables: request.variables,
-          selectionSet,
-        }));
       }).catch((errors: GraphQLError[]) => {
         this.handleQueryErrorsAndStop(queryId, errors);
       });

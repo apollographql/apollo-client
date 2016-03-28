@@ -54,9 +54,9 @@ export class QueryManager {
     networkInterface,
     store,
   }: {
-      networkInterface: NetworkInterface,
-      store: ReduxStore,
-    }) {
+    networkInterface: NetworkInterface,
+    store: ReduxStore,
+  }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
@@ -74,9 +74,9 @@ export class QueryManager {
     mutation,
     variables,
   }: {
-      mutation: string,
-      variables?: Object,
-    }): Promise<any> {
+    mutation: string,
+    variables?: Object,
+  }): Promise<any> {
     const mutationDef = parseMutation(mutation);
 
     const request = {

@@ -26,6 +26,7 @@ import {
   SelectionSet,
   GraphQLError,
   GraphQLResult,
+  OperationDefinition,
 } from 'graphql';
 
 import {
@@ -106,8 +107,12 @@ export class QueryManager {
     forceFetch = true,
     returnPartialData = false,
   }: WatchQueryOptions): WatchedQueryHandle {
+    // First, parse the query passed in -- this could also be done by a build plugin or tagged
+    // template string
     const queryDef = parseQuery(query);
 
+    // Set up a watch handle on the store using the parsed query, we need to do this first to
+    // generate a query ID
     const watchHandle = this.watchSelectionSet({
       selectionSet: queryDef.selectionSet,
       rootId: 'ROOT_QUERY',
@@ -115,62 +120,31 @@ export class QueryManager {
       variables,
     });
 
+    const queryId = watchHandle.id;
+
     let queryDefForRequest = queryDef;
+    let existingData;
     let request = {
       query: query,
       variables,
-    };
-
-    let existingData;
+    } as Request;
 
     if (!forceFetch) {
-      // Check if we already have the data to fulfill this query in the store
-      const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
-        variables,
-        selectionSet: queryDef.selectionSet,
-        rootId: 'ROOT_QUERY',
-        store: this.store.getState() as Store,
-        throwOnMissingField: false,
-      });
+      // If the developer has specified they want to use the existing data in the store for this
+      // query, use the query diff algorithm to get as much of a result as we can, and identify
+      // what data is missing from the store
+      const diffResult = this.diffRequestAgainstStore(request, queryDef.selectionSet);
 
-      if (missingSelectionSets.length) {
-        // XXX if the server doesn't follow the relay node spec, we need
-        // to refetch the whole query if there are any missing selection sets
-
-        // Replace the original query with a new set of queries which we think will fetch the
-        // missing data. The variables remain unchanged.
-        queryDefForRequest = queryDefinition(missingSelectionSets);
-        request.query = printQueryFromDefinition(queryDefForRequest);
-      } else {
-        // We already have all of the data, no need to contact the server at all!
-        request = null;
-      }
-
-      existingData = result;
+      // Overwrite the request we were going to make with a smaller one
+      queryDefForRequest = diffResult.minimalQueryDef;
+      existingData = diffResult.existingData;
+      request = diffResult.minimalRequest;
     }
 
+    // Now, we have figured out what request we actually want to make to the server
     if (request) {
-      this.networkInterface.query(request)
-        .then((result: GraphQLResult) => {
-          let errors: GraphQLError[] = result.errors;
-
-          if (errors && errors.length) {
-            this.handleQueryErrorsAndStop(watchHandle.id, errors);
-          }
-
-          // XXX handle multiple GraphQLResults
-          const resultWithDataId = assign({
-            __data_id: 'ROOT_QUERY',
-          }, result.data);
-
-          this.store.dispatch(createQueryResultAction({
-            result: resultWithDataId,
-            selectionSet: queryDefForRequest.selectionSet,
-            variables,
-          }));
-        }).catch((errors: GraphQLError[]) => {
-          this.handleQueryErrorsAndStop(watchHandle.id, errors);
-        });
+      // If we actually need to fetch anything over the network, do that
+      this.makeRequest(queryId, request, queryDefForRequest.selectionSet);
 
       if (returnPartialData) {
         // Needs to be async to allow component to register result callback, even though we have
@@ -180,9 +154,10 @@ export class QueryManager {
         }, 0);
       }
     } else {
-      // Async to give time to register a result callback after the handle is returned
+      // If we already had all of the data in the store to service the request, do it without
+      // making any network requests at all
       setTimeout(() => {
-        this.broadcastQueryChange(watchHandle.id, existingData);
+        this.broadcastQueryChange(queryId, existingData);
       }, 0);
     }
 
@@ -260,6 +235,62 @@ export class QueryManager {
     this.resultCallbacks[queryId].push(callback);
   }
 
+  private makeRequest(queryId: string, request: Request, selectionSet: SelectionSet) {
+    this.networkInterface.query(request)
+      .then((result: GraphQLResult) => {
+        let errors: GraphQLError[] = result.errors;
+
+        if (errors && errors.length) {
+          this.handleQueryErrorsAndStop(queryId, errors);
+        }
+
+        // XXX handle multiple GraphQLResults
+        const resultWithDataId = assign({
+          __data_id: 'ROOT_QUERY',
+        }, result.data);
+
+        this.store.dispatch(createQueryResultAction({
+          result: resultWithDataId,
+          variables: request.variables,
+          selectionSet,
+        }));
+      }).catch((errors: GraphQLError[]) => {
+        this.handleQueryErrorsAndStop(queryId, errors);
+      });
+  }
+
+  private diffRequestAgainstStore(request: Request, selectionSet: SelectionSet) {
+    let clonedRequest = assign({}, request) as Request;
+
+    // Check if we already have the data to fulfill this query in the store
+    const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
+      selectionSet,
+      variables: request.variables,
+      rootId: 'ROOT_QUERY',
+      store: this.store.getState() as Store,
+      throwOnMissingField: false,
+    });
+
+    let queryDefForRequest: OperationDefinition;
+    if (missingSelectionSets.length) {
+      // XXX if the server doesn't follow the relay node spec, we need
+      // to refetch the whole query if there are any missing selection sets
+
+      // Replace the original query with a new set of queries which we think will fetch the
+      // missing data. The variables remain unchanged.
+      queryDefForRequest = queryDefinition(missingSelectionSets);
+      clonedRequest.query = printQueryFromDefinition(queryDefForRequest);
+    } else {
+      // We already have all of the data, no need to contact the server at all!
+      clonedRequest = null;
+    }
+
+    return {
+      existingData: result,
+      minimalRequest: clonedRequest,
+      minimalQueryDef: queryDefForRequest,
+    };
+  }
 }
 
 export interface SelectionSetWithRoot {

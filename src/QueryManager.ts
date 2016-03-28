@@ -37,7 +37,8 @@ import {
 } from './diffAgainstStore';
 
 import {
-  printQueryForMissingData,
+  queryDefinition,
+  printQueryFromDefinition,
 } from './queryPrinting';
 
 export class QueryManager {
@@ -114,6 +115,7 @@ export class QueryManager {
       variables,
     });
 
+    let queryDefForRequest = queryDef;
     let request = {
       query: query,
       variables,
@@ -137,7 +139,8 @@ export class QueryManager {
 
         // Replace the original query with a new set of queries which we think will fetch the
         // missing data. The variables remain unchanged.
-        request.query = printQueryForMissingData(missingSelectionSets);
+        queryDefForRequest = queryDefinition(missingSelectionSets);
+        request.query = printQueryFromDefinition(queryDefForRequest);
       } else {
         // We already have all of the data, no need to contact the server at all!
         request = null;
@@ -162,7 +165,7 @@ export class QueryManager {
 
           this.store.dispatch(createQueryResultAction({
             result: resultWithDataId,
-            selectionSet: queryDef.selectionSet,
+            selectionSet: queryDefForRequest.selectionSet,
             variables,
           }));
         }).catch((errors: GraphQLError[]) => {
@@ -179,15 +182,7 @@ export class QueryManager {
     } else {
       // Async to give time to register a result callback after the handle is returned
       setTimeout(() => {
-        const resultWithDataId = assign({
-          __data_id: 'ROOT_QUERY',
-        }, existingData);
-
-        this.store.dispatch(createQueryResultAction({
-          result: resultWithDataId,
-          selectionSet: queryDef.selectionSet,
-          variables,
-        }));
+        this.broadcastQueryChange(watchHandle.id, existingData);
       }, 0);
     }
 

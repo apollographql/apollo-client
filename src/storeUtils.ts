@@ -24,7 +24,7 @@ function isVariable(value: Value): value is Variable {
 }
 
 export function storeKeyNameFromField(field: Field, variables?: Object): string {
-  if (field.arguments.length) {
+  if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
 
     field.arguments.forEach(({name, value}) => {

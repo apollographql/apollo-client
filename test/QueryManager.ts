@@ -28,7 +28,7 @@ import {
 } from 'graphql';
 
 import {
-  waterfall,
+  series,
 } from 'async';
 
 describe('QueryManager', () => {
@@ -446,13 +446,17 @@ describe('QueryManager', () => {
         `,
         diffedQuery: `
           {
-            people_one(id: "1") {
-              age
+            __node_0: node(id: "lukeId") {
+              id
+              ... on Person {
+                age
+              }
             }
           }
         `,
         diffedQueryResponse: {
-          people_one: {
+          __node_0: {
+            id: 'lukeId',
             age: 45,
           },
         },
@@ -555,17 +559,19 @@ function testDiffing(
       });
 
       handle.onResult((error, result) => {
-        if (error) {
-          console.log(error);
-        }
+        // if (error) {
+        //   // XXX error handling??
+        //   console.log(error);
+        // }
 
         assert.deepEqual(result, fullResponse);
         cb();
+        handle.stop();
       });
     };
   });
 
-  waterfall(steps, (err, res) => {
+  series(steps, (err, res) => {
     if (err) {
       throw err;
     }

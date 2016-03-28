@@ -1,6 +1,7 @@
 import {
   print,
   SelectionSet,
+  OperationDefinition,
 } from 'graphql';
 
 import {
@@ -8,14 +9,7 @@ import {
 } from './diffAgainstStore';
 
 export function printQueryForMissingData(missingSelectionSets: MissingSelectionSet[]) {
-  const queryDocumentAst = {
-    kind: 'Document',
-    definitions: [
-      queryDefinition(missingSelectionSets),
-    ],
-  };
-
-  return print(queryDocumentAst);
+  return printQueryFromDefinition(queryDefinition(missingSelectionSets));
 }
 
 const idField = {
@@ -27,7 +21,19 @@ const idField = {
   },
 };
 
-function queryDefinition(missingSelectionSets: MissingSelectionSet[]) {
+export function printQueryFromDefinition(queryDef: OperationDefinition) {
+  const queryDocumentAst = {
+    kind: 'Document',
+    definitions: [
+      queryDef,
+    ],
+  };
+
+  return print(queryDocumentAst);
+}
+
+export function queryDefinition(
+    missingSelectionSets: MissingSelectionSet[]): OperationDefinition {
   const selections = missingSelectionSets.map((missingSelectionSet: MissingSelectionSet, index) => {
     if (missingSelectionSet.id === 'ROOT_QUERY') {
       if (missingSelectionSet.selectionSet.selections.length > 1) {

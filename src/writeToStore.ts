@@ -21,8 +21,10 @@ import {
 import {
   OperationDefinition,
   SelectionSet,
+  Selection,
   FragmentDefinition,
   Field,
+  InlineFragment,
 } from 'graphql';
 
 import {
@@ -111,65 +113,92 @@ export function writeSelectionSetToStore({
     throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
   }
 
-  const resultDataId: string = result['__data_id'] || result.id;
-
-  const normalizedRootObj: StoreObject = {};
+  const dataId: string = result['__data_id'] || result.id;
 
   selectionSet.selections.forEach((selection) => {
-    const field = selection as Field;
+    if (isField(selection)) {
+      const resultFieldKey: string = resultKeyNameFromField(selection);
+      const value: any = result[resultFieldKey];
 
-    const storeFieldName: string = storeKeyNameFromField(field, variables);
-    const resultFieldKey: string = resultKeyNameFromField(field);
+      if (isUndefined(value)) {
+        throw new Error(`Can't find field ${resultFieldKey} on result object ${dataId}.`);
+      }
 
-    const value: any = result[resultFieldKey];
-
-    if (isUndefined(value)) {
-      throw new Error(`Can't find field ${resultFieldKey} on result object ${resultDataId}.`);
-    }
-
-    // If it's a scalar, just store it in the store
-    if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
-      normalizedRootObj[storeFieldName] = value;
-      return;
-    }
-
-    // If it's an array
-    if (isArray(value)) {
-      const thisIdList: Array<string> = [];
-
-      value.forEach((item, index) => {
-        const clonedItem: any = assign({}, item);
-
-        if (! isString(clonedItem.id)) {
-          clonedItem['__data_id'] = `${resultDataId}.${storeFieldName}.${index}`;
-        } else {
-          clonedItem['__data_id'] = clonedItem.id;
-        }
-
-        thisIdList.push(clonedItem['__data_id']);
-
-        writeSelectionSetToStore({
-          result: clonedItem,
-          store,
-          selectionSet: field.selectionSet,
-          variables,
-        });
+      writeFieldToStore({
+        dataId,
+        value,
+        variables,
+        store,
+        field: selection,
       });
-
-      normalizedRootObj[storeFieldName] = thisIdList;
-      return;
+    } else if (isInlineFragment(selection)) {
+      // XXX what to do if this tries to write the same fields? Also, type conditions...
+      writeSelectionSetToStore({
+        result,
+        selectionSet: selection.selectionSet,
+        store,
+        variables,
+      });
+    } else {
+      throw new Error('Non-inline fragments not supported.');
     }
+  });
 
+  return store;
+}
+
+function writeFieldToStore({
+  field,
+  value,
+  variables,
+  store,
+  dataId,
+}: {
+  field: Field,
+  value: any,
+  variables: {},
+  store: Store,
+  dataId: string,
+}) {
+  let storeValue;
+
+  const storeFieldName: string = storeKeyNameFromField(field, variables);
+
+  // If it's a scalar, just store it in the store
+  if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
+    storeValue = value;
+  } else if (isArray(value)) {
+    const thisIdList: Array<string> = [];
+
+    value.forEach((item, index) => {
+      const clonedItem: any = assign({}, item);
+
+      if (! isString(clonedItem.id)) {
+        clonedItem['__data_id'] = `${dataId}.${storeFieldName}.${index}`;
+      } else {
+        clonedItem['__data_id'] = clonedItem.id;
+      }
+
+      thisIdList.push(clonedItem['__data_id']);
+
+      writeSelectionSetToStore({
+        result: clonedItem,
+        store,
+        selectionSet: field.selectionSet,
+        variables,
+      });
+    });
+
+    storeValue = thisIdList;
+  } else {
     // It's an object
     const clonedValue: any = assign({}, value);
     if (! isString(clonedValue.id)) {
       // Object doesn't have an ID, so store it with its field name and parent ID
-      clonedValue['__data_id'] = `${resultDataId}.${storeFieldName}`;
+      clonedValue['__data_id'] = `${dataId}.${storeFieldName}`;
     } else {
       clonedValue['__data_id'] = clonedValue.id;
     }
-
-    normalizedRootObj[storeFieldName] = clonedValue['__data_id'];
 
     writeSelectionSetToStore({
       result: clonedValue,
@@ -177,16 +206,21 @@ export function writeSelectionSetToStore({
       selectionSet: field.selectionSet,
       variables,
     });
-  });
 
-  let newStoreObj = normalizedRootObj;
-  if (store[resultDataId]) {
-    // This object already exists in the store - extend it rather than overwriting the fields
-    newStoreObj = assign({}, store[resultDataId], normalizedRootObj) as StoreObject;
+    storeValue = clonedValue['__data_id'];
   }
 
-  // Weird that we are overwriting. ImmutableJS could come in handy here
-  store[resultDataId] = newStoreObj; // eslint-disable-line no-param-reassign
+  const newStoreObj = assign({}, store[dataId], {
+    [storeFieldName]: storeValue,
+  }) as StoreObject;
 
-  return store;
+  store[dataId] = newStoreObj;
+}
+
+function isField(selection: Selection): selection is Field {
+  return selection.kind === 'Field';
+}
+
+function isInlineFragment(selection: Selection): selection is InlineFragment {
+  return selection.kind === 'InlineFragment';
 }

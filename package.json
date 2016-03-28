@@ -5,14 +5,15 @@
   "main": "./lib/src/index.js",
   "scripts": {
     "pretest": "npm run compile",
-    "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace lib/test/tests.js",
-    "posttest": "npm run lint && npm run remaptestcov",
+    "test": "mocha --reporter spec --full-trace lib/test/tests.js",
+    "posttest": "npm run lint",
     "postinstall": "./node_modules/.bin/typings && typings i",
     "compile": "tsc",
     "watch": "tsc -w",
     "prepublish": "npm run compile",
     "lint": "tslint src/*.ts && tslint test/*.ts",
-    "remaptestcov": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info"
+    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
+    "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info"
   },
   "repository": {
     "type": "git",

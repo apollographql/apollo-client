@@ -3,7 +3,7 @@ import { assert } from 'chai';
 import { diffQueryAgainstStore } from '../src/diffAgainstStore';
 import { writeQueryToStore } from '../src/writeToStore';
 import { stripLoc } from '../src/debug';
-import { printNodeQuery } from '../src/queryPrinting';
+import { printQueryForMissingData } from '../src/queryPrinting';
 
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
@@ -125,12 +125,12 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    const diffedSelectionSet = diffQueryAgainstStore({
+    const { missingSelectionSets } = diffQueryAgainstStore({
       store,
       query: secondQuery,
-    }).missingSelectionSets[0];
+    });
 
-    assert.equal(printNodeQuery(diffedSelectionSet), `{
+    assert.equal(printQueryForMissingData(missingSelectionSets), `{
   node(id: "lukeId") {
     id
     ... on Person {

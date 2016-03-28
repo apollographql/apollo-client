@@ -3,12 +3,12 @@ node_js:
   - "5.1"
   - "4.2"
 install:
-  - npm install -g typings tsc codeclimate-test-reporter
+  - npm install -g typings tsc coveralls
   - npm install
 
 script:
   - npm test
-  - codeclimate-test-reporter < ./coverage/lcov.info
+  - coveralls < ./coverage/lcov.info
 
 # Allow Travis tests to run in containers.
 sudo: false

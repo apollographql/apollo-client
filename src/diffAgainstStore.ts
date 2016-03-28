@@ -17,7 +17,6 @@ import {
 
 import {
   Store,
-  StoreValue,
 } from './store';
 
 import {
@@ -25,13 +24,9 @@ import {
   Field,
 } from 'graphql';
 
-export interface DiffQueryStore {
-  result: DiffResult;
+export interface QueryDiffResult {
+  result: any;
   missingSelectionSets: MissingSelectionSet[];
-}
-
-export interface DiffResult {
-  [resultFieldKey: string]: StoreValue | DiffResult | DiffResult[];
 }
 
 export interface MissingSelectionSet {
@@ -48,7 +43,7 @@ export function diffQueryAgainstStore({
   store: Store,
   query: string
   variables?: Object,
-}): DiffQueryStore {
+}): QueryDiffResult {
   const queryDef = parseQuery(query);
 
   return diffSelectionSetAgainstStore({
@@ -70,7 +65,7 @@ export function diffFragmentAgainstStore({
   fragment: string,
   rootId: string,
   variables?: Object,
-}): DiffQueryStore {
+}): QueryDiffResult {
   const fragmentDef = parseFragment(fragment);
 
   return diffSelectionSetAgainstStore({
@@ -105,12 +100,12 @@ export function diffSelectionSetAgainstStore({
   rootId: string,
   throwOnMissingField: Boolean,
   variables: Object,
-}): DiffQueryStore {
+}): QueryDiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
 
-  const result: DiffResult = {};
+  const result = {};
 
   const missingSelectionSets: MissingSelectionSet[] = [];
 

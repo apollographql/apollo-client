@@ -32,12 +32,20 @@ import {
   readSelectionSetFromStore,
 } from './readFromStore';
 
+import {
+  diffSelectionSetAgainstStore,
+} from './diffAgainstStore';
+
+import {
+  printQueryForMissingData,
+} from './queryPrinting';
+
 export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ReduxStore;
   private selectionSetMap: { [queryId: number]: SelectionSetWithRoot };
 
-  private resultCallbacks: { [queryId: number]: QueryResultCallback[]};
+  private resultCallbacks: { [queryId: number]: QueryResultCallback[] };
 
   private idCounter = 0;
 
@@ -45,9 +53,9 @@ export class QueryManager {
     networkInterface,
     store,
   }: {
-    networkInterface: NetworkInterface,
-    store: ReduxStore,
-  }) {
+      networkInterface: NetworkInterface,
+      store: ReduxStore,
+    }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
@@ -65,9 +73,9 @@ export class QueryManager {
     mutation,
     variables,
   }: {
-    mutation: string,
-    variables?: Object,
-  }): Promise<any> {
+      mutation: string,
+      variables?: Object,
+    }): Promise<any> {
     const mutationDef = parseMutation(mutation);
 
     const request = {
@@ -92,10 +100,10 @@ export class QueryManager {
   }
 
   public watchQuery({
-     query,
-     variables,
-     forceFetch = true,
-     returnPartialData = false,
+    query,
+    variables,
+    forceFetch = true,
+    returnPartialData = false,
   }: WatchQueryOptions): WatchedQueryHandle {
     const queryDef = parseQuery(query);
 
@@ -111,37 +119,75 @@ export class QueryManager {
       variables,
     };
 
-    if (! forceFetch) {
-      throw new Error('query diffing not implemented');
+    let existingData;
+
+    if (!forceFetch) {
+      // Check if we already have the data to fulfill this query in the store
+      const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
+        variables,
+        selectionSet: queryDef.selectionSet,
+        rootId: 'ROOT_QUERY',
+        store: this.store.getState() as Store,
+        throwOnMissingField: false,
+      });
+
+      if (missingSelectionSets.length) {
+        // XXX if the server doesn't follow the relay node spec, we need
+        // to refetch the whole query if there are any missing selection sets
+
+        // Replace the original query with a new set of queries which we think will fetch the
+        // missing data. The variables remain unchanged.
+        request.query = printQueryForMissingData(missingSelectionSets);
+      } else {
+        // We already have all of the data, no need to contact the server at all!
+        request = null;
+      }
+
+      existingData = result;
     }
 
-    this.networkInterface.query(request)
-      .then((result: GraphQLResult) => {
-        let errors: GraphQLError[] = result.errors;
+    if (request) {
+      this.networkInterface.query(request)
+        .then((result: GraphQLResult) => {
+          let errors: GraphQLError[] = result.errors;
 
-        if (errors && errors.length) {
+          if (errors && errors.length) {
+            this.handleQueryErrorsAndStop(watchHandle.id, errors);
+          }
+
+          // XXX handle multiple GraphQLResults
+          const resultWithDataId = assign({
+            __data_id: 'ROOT_QUERY',
+          }, result.data);
+
+          this.store.dispatch(createQueryResultAction({
+            result: resultWithDataId,
+            selectionSet: queryDef.selectionSet,
+            variables,
+          }));
+        }).catch((errors: GraphQLError[]) => {
           this.handleQueryErrorsAndStop(watchHandle.id, errors);
-        }
+        });
 
-        // XXX handle multiple GraphQLResults
+      if (returnPartialData) {
+        // Needs to be async to allow component to register result callback, even though we have
+        // the data right away
+        setTimeout(() => {
+          throw new Error('partial result return not implemented');
+        }, 0);
+      }
+    } else {
+      // Async to give time to register a result callback after the handle is returned
+      setTimeout(() => {
         const resultWithDataId = assign({
           __data_id: 'ROOT_QUERY',
-        }, result.data);
+        }, existingData);
 
         this.store.dispatch(createQueryResultAction({
           result: resultWithDataId,
           selectionSet: queryDef.selectionSet,
           variables,
         }));
-      }).catch((errors: GraphQLError[]) => {
-        this.handleQueryErrorsAndStop(watchHandle.id, errors);
-      });
-
-    if (returnPartialData) {
-      // Needs to be async to allow component to register result callback, even though we have
-      // the data right away
-      setTimeout(() => {
-        throw new Error('partial result return not implemented');
       }, 0);
     }
 
@@ -168,7 +214,7 @@ export class QueryManager {
     this.selectionSetMap[queryId] = selectionSetWithRoot;
 
     const isStopped = () => {
-      return ! this.selectionSetMap[queryId];
+      return !this.selectionSetMap[queryId];
     };
 
     return {
@@ -212,7 +258,7 @@ export class QueryManager {
   }
 
   private registerResultCallback(queryId: string, callback: QueryResultCallback): void {
-    if (! this.resultCallbacks[queryId]) {
+    if (!this.resultCallbacks[queryId]) {
       this.resultCallbacks[queryId] = [];
     }
 

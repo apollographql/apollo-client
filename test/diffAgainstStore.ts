@@ -131,7 +131,7 @@ describe('diffing queries against the store', () => {
     });
 
     assert.equal(printQueryForMissingData(missingSelectionSets), `{
-  node(id: "lukeId") {
+  node_0: node(id: "lukeId") {
     id
     ... on Person {
       age

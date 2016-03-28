@@ -1,19 +1,21 @@
-import { print } from 'graphql';
+import {
+  print,
+  SelectionSet,
+} from 'graphql';
+
 import {
   MissingSelectionSet,
 } from './diffAgainstStore';
 
 export function printQueryForMissingData(missingSelectionSets: MissingSelectionSet[]) {
-  if (missingSelectionSets.length === 1) {
-    const queryDocumentAst = {
-      kind: 'Document',
-      definitions: [
-        nodeQueryDefinition(missingSelectionSets[0]),
-      ],
-    };
+  const queryDocumentAst = {
+    kind: 'Document',
+    definitions: [
+      nodeQueryDefinition(missingSelectionSets),
+    ],
+  };
 
-    return print(queryDocumentAst);
-  }
+  return print(queryDocumentAst);
 }
 
 const idField = {
@@ -25,11 +27,16 @@ const idField = {
   },
 };
 
-function nodeQueryDefinition({
-  id,
-  typeName,
-  selectionSet,
-}: MissingSelectionSet) {
+function nodeQueryDefinition(missingSelectionSets: MissingSelectionSet[]) {
+  const selections = missingSelectionSets.map((missingSelectionSet: MissingSelectionSet, index) => {
+    return nodeSelection({
+      alias: `node_${index}`,
+      id: missingSelectionSet.id,
+      typeName: missingSelectionSet.typeName,
+      selectionSet: missingSelectionSet.selectionSet,
+    });
+  });
+
   return {
     kind: 'OperationDefinition',
     operation: 'query',
@@ -38,13 +45,7 @@ function nodeQueryDefinition({
     directives: [],
     selectionSet: {
       kind: 'SelectionSet',
-      selections: [
-        nodeSelection({
-          id,
-          typeName,
-          selectionSet,
-        }),
-      ],
+      selections,
     },
   };
 }
@@ -53,10 +54,21 @@ function nodeSelection({
   id,
   typeName,
   selectionSet,
-}: MissingSelectionSet) {
+  alias,
+}: {
+  id: string,
+  typeName: string,
+  selectionSet: SelectionSet,
+  alias?: string,
+}) {
+  const aliasNode = alias ? {
+    kind: 'Name',
+    value: alias,
+  } : null;
+
   return {
     kind: 'Field',
-    alias: null,
+    alias: aliasNode,
     name: {
       kind: 'Name',
       value: 'node',

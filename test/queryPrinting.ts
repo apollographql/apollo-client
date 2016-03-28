@@ -30,7 +30,7 @@ describe('printing queries', () => {
         selectionSet,
       },
     ]), `{
-  node(id: "lukeId") {
+  node_0: node(id: "lukeId") {
     id
     ... on Person {
       age

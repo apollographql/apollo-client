@@ -23,7 +23,13 @@ import {
 
 import {
   GraphQLResult,
+  parse,
+  print,
 } from 'graphql';
+
+import {
+  series,
+} from 'async';
 
 describe('QueryManager', () => {
   it('works with one query', (done) => {
@@ -306,7 +312,6 @@ describe('QueryManager', () => {
       assert.deepEqual(resultData, data);
       done();
     }).catch((err) => {
-      console.error(err);
       throw err;
     });
   });
@@ -345,7 +350,6 @@ describe('QueryManager', () => {
       assert.deepEqual(resultData, data);
       done();
     }).catch((err) => {
-      console.error(err);
       throw err;
     });
   });
@@ -390,9 +394,102 @@ describe('QueryManager', () => {
       assert.deepEqual(store.getState()['5'], { id: '5', isPrivate: true });
       done();
     }).catch((err) => {
-      console.error(err);
       throw err;
     });
+  });
+
+  it('diffs queries', (done) => {
+    testDiffing([
+      {
+        query: `
+          {
+            people_one(id: "1") {
+              __typename,
+              id,
+              name
+            }
+          }
+        `,
+        diffedQuery: `
+          {
+            people_one(id: "1") {
+              __typename,
+              id,
+              name
+            }
+          }
+        `,
+        diffedQueryResponse: {
+          people_one: {
+            __typename: 'Person',
+            id: 'lukeId',
+            name: 'Luke Skywalker',
+          },
+        },
+        fullResponse: {
+          people_one: {
+            __typename: 'Person',
+            id: 'lukeId',
+            name: 'Luke Skywalker',
+          },
+        },
+        variables: {},
+      },
+      {
+        query: `
+          {
+            people_one(id: "1") {
+              name
+              age
+            }
+          }
+        `,
+        diffedQuery: `
+          {
+            __node_0: node(id: "lukeId") {
+              id
+              ... on Person {
+                age
+              }
+            }
+          }
+        `,
+        diffedQueryResponse: {
+          __node_0: {
+            id: 'lukeId',
+            age: 45,
+          },
+        },
+        fullResponse: {
+          people_one: {
+            name: 'Luke Skywalker',
+            age: 45,
+          },
+        },
+        variables: {},
+      },
+      {
+        query: `
+          {
+            people_one(id: "1") {
+              id
+              name
+              age
+            }
+          }
+        `,
+        diffedQuery: null,
+        diffedQueryResponse: null,
+        fullResponse: {
+          people_one: {
+            id: 'lukeId',
+            name: 'Luke Skywalker',
+            age: 45,
+          },
+        },
+        variables: {},
+      },
+    ], done);
   });
 });
 
@@ -408,27 +505,98 @@ function mockNetworkInterface(
 
   // Populate set of mocked requests
   requestResultArray.forEach(({ request, result }) => {
-    requestToResultMap[JSON.stringify(request)] = result as GraphQLResult;
+    requestToResultMap[requestToKey(request)] = result as GraphQLResult;
   });
 
   // A mock for the query method
   const queryMock = (request: Request) => {
     return new Promise((resolve, reject) => {
-      const resultData = requestToResultMap[JSON.stringify(request)];
+      const resultData = requestToResultMap[requestToKey(request)];
 
       if (! resultData) {
-        throw new Error(`Passed request that wasn't mocked: ${JSON.stringify(request)}`);
+        throw new Error(`Passed request that wasn't mocked: ${requestToKey(request)}`);
       }
 
-      if (resultData.data) {
-        resolve(resultData);
-      } else {
-        reject(resultData.errors);
-      }
+      resolve(resultData);
     });
   };
 
   return {
     query: queryMock,
   } as NetworkInterface;
+}
+
+function requestToKey(request: Request): string {
+  const query = request.query && print(parse(request.query));
+
+  return JSON.stringify({
+    variables: request.variables,
+    debugName: request.debugName,
+    query,
+  });
+}
+
+function testDiffing(
+  queryArray: {
+    // The query the UI asks for
+    query: string,
+
+    // The query that we expect to be sent to the server
+    diffedQuery: string,
+
+    // The response the server would return for the diffedQuery
+    diffedQueryResponse: any,
+
+    // The result the actual UI receives, after all data is fetched
+    fullResponse: any,
+
+    // Variables to use in all queries
+    variables?: Object,
+  }[],
+  done: () => void
+) {
+  const networkInterface = mockNetworkInterface(queryArray.map(({
+    diffedQuery,
+    diffedQueryResponse,
+    variables = {},
+  }) => {
+    return {
+      request: { query: diffedQuery, variables },
+      result: { data: diffedQueryResponse },
+    };
+  }));
+
+  const queryManager = new QueryManager({
+    networkInterface,
+    store: createApolloStore(),
+  });
+
+  const steps = queryArray.map(({ query, fullResponse, variables }) => {
+    return (cb) => {
+      const handle = queryManager.watchQuery({
+        query,
+        variables,
+        forceFetch: false,
+      });
+
+      handle.onResult((error, result) => {
+        // if (error) {
+        //   // XXX error handling??
+        //   console.log(error);
+        // }
+
+        assert.deepEqual(result, fullResponse);
+        cb();
+        handle.stop();
+      });
+    };
+  });
+
+  series(steps, (err, res) => {
+    if (err) {
+      throw err;
+    }
+
+    done();
+  });
 }

@@ -17,7 +17,6 @@ import {
 
 import {
   Store,
-  StoreValue,
 } from './store';
 
 import {
@@ -25,13 +24,9 @@ import {
   Field,
 } from 'graphql';
 
-export interface DiffQueryStore {
-  result: DiffResult;
+export interface QueryDiffResult {
+  result: any;
   missingSelectionSets: MissingSelectionSet[];
-}
-
-export interface DiffResult {
-  [resultFieldKey: string]: StoreValue | DiffResult | DiffResult[];
 }
 
 export interface MissingSelectionSet {
@@ -48,7 +43,7 @@ export function diffQueryAgainstStore({
   store: Store,
   query: string
   variables?: Object,
-}): DiffQueryStore {
+}): QueryDiffResult {
   const queryDef = parseQuery(query);
 
   return diffSelectionSetAgainstStore({
@@ -70,7 +65,7 @@ export function diffFragmentAgainstStore({
   fragment: string,
   rootId: string,
   variables?: Object,
-}): DiffQueryStore {
+}): QueryDiffResult {
   const fragmentDef = parseFragment(fragment);
 
   return diffSelectionSetAgainstStore({
@@ -105,18 +100,18 @@ export function diffSelectionSetAgainstStore({
   rootId: string,
   throwOnMissingField: Boolean,
   variables: Object,
-}): DiffQueryStore {
+}): QueryDiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
 
-  const result: DiffResult = {};
+  const result = {};
 
   const missingSelectionSets: MissingSelectionSet[] = [];
 
   const missingSelections: Field[] = [];
 
-  const storeObj = store[rootId];
+  const storeObj = store[rootId] || {};
 
   selectionSet.selections.forEach((selection) => {
     if (selection.kind !== 'Field') {
@@ -191,14 +186,27 @@ export function diffSelectionSetAgainstStore({
   // If we weren't able to resolve some selections from the store, construct them into
   // a query we can fetch from the server
   if (missingSelections.length) {
-    if (! storeObj.__typename) {
+    const id = storeObj['id'];
+    if (typeof id !== 'string' && rootId !== 'ROOT_QUERY') {
+      throw new Error(
+        `Can't generate query to refetch object ${rootId}, since it doesn't have a string id.`);
+    }
+
+    let typeName: string;
+
+    if (rootId === 'ROOT_QUERY') {
+      // We don't need to do anything interesting to fetch root queries, like have an ID
+      typeName = 'Query';
+    } else if (! storeObj.__typename) {
       throw new Error(
         `Can't generate query to refetch object ${rootId}, since __typename wasn't in the store.`);
+    } else {
+      typeName = storeObj.__typename;
     }
 
     missingSelectionSets.push({
       id: rootId,
-      typeName: storeObj.__typename,
+      typeName,
       selectionSet: {
         kind: 'SelectionSet',
         selections: missingSelections,

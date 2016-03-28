@@ -3,7 +3,7 @@ import { assert } from 'chai';
 import { diffQueryAgainstStore } from '../src/diffAgainstStore';
 import { writeQueryToStore } from '../src/writeToStore';
 import { stripLoc } from '../src/debug';
-import { printNodeQuery } from '../src/queryPrinting';
+import { printQueryForMissingData } from '../src/queryPrinting';
 
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
@@ -125,16 +125,74 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    const diffedSelectionSet = diffQueryAgainstStore({
+    const { missingSelectionSets } = diffQueryAgainstStore({
       store,
       query: secondQuery,
-    }).missingSelectionSets[0];
+    });
 
-    assert.equal(printNodeQuery(diffedSelectionSet), `{
-  node(id: "lukeId") {
+    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+  __node_0: node(id: "lukeId") {
+    id
     ... on Person {
       age
     }
+  }
+}
+`);
+  });
+
+  it('generates the right queries when the store is missing multiple nodes', () => {
+    const firstQuery = `
+      {
+        people_one(id: "1") {
+          __typename,
+          id,
+          name
+        }
+      }
+    `;
+
+    const result = {
+      people_one: {
+        __typename: 'Person',
+        id: 'lukeId',
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const store = writeQueryToStore({
+      result,
+      query: firstQuery,
+    });
+
+    const secondQuery = `
+      {
+        people_one(id: "1") {
+          name,
+          age
+        }
+        people_one(id: "4") {
+          name,
+          age
+        }
+      }
+    `;
+
+    const { missingSelectionSets } = diffQueryAgainstStore({
+      store,
+      query: secondQuery,
+    });
+
+    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+  __node_0: node(id: "lukeId") {
+    id
+    ... on Person {
+      age
+    }
+  }
+  people_one(id: "4") {
+    name
+    age
   }
 }
 `);

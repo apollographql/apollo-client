@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { printNodeQuery } from '../src/queryPrinting';
+import { printQueryForMissingData } from '../src/queryPrinting';
 
 describe('printing queries', () => {
   it('converts selection set to a query string', () => {
@@ -23,12 +23,15 @@ describe('printing queries', () => {
     };
 
     // Note - the indentation inside template strings is meaningful!
-    assert.equal(printNodeQuery({
-      id,
-      typeName,
-      selectionSet,
-    }), `{
-  node(id: "lukeId") {
+    assert.equal(printQueryForMissingData([
+      {
+        id,
+        typeName,
+        selectionSet,
+      },
+    ]), `{
+  __node_0: node(id: "lukeId") {
+    id
     ... on Person {
       age
     }

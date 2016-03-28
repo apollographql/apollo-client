@@ -5,7 +5,6 @@ node_js:
 install:
   - npm install -g typings tsc coveralls
   - npm install
-  - npm run coverage
 
 script:
   - npm test

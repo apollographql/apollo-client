@@ -468,6 +468,27 @@ describe('QueryManager', () => {
         },
         variables: {},
       },
+      {
+        query: `
+          {
+            people_one(id: "1") {
+              id
+              name
+              age
+            }
+          }
+        `,
+        diffedQuery: null,
+        diffedQueryResponse: null,
+        fullResponse: {
+          people_one: {
+            id: 'lukeId',
+            name: 'Luke Skywalker',
+            age: 45,
+          },
+        },
+        variables: {},
+      },
     ], done);
   });
 });
@@ -506,7 +527,7 @@ function mockNetworkInterface(
 }
 
 function requestToKey(request: Request): string {
-  const query = print(parse(request.query));
+  const query = request.query && print(parse(request.query));
 
   return JSON.stringify({
     variables: request.variables,

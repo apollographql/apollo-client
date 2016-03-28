@@ -191,14 +191,21 @@ export function diffSelectionSetAgainstStore({
   // If we weren't able to resolve some selections from the store, construct them into
   // a query we can fetch from the server
   if (missingSelections.length) {
-    if (! storeObj.__typename) {
+    let typeName: string;
+
+    if (rootId === 'ROOT_QUERY') {
+      // We don't need to do anything interesting to fetch root queries, like have an ID
+      typeName = 'Query';
+    } else if (! storeObj.__typename) {
       throw new Error(
         `Can't generate query to refetch object ${rootId}, since __typename wasn't in the store.`);
+    } else {
+      typeName = storeObj.__typename;
     }
 
     missingSelectionSets.push({
       id: rootId,
-      typeName: storeObj.__typename,
+      typeName,
       selectionSet: {
         kind: 'SelectionSet',
         selections: missingSelections,

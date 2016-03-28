@@ -131,11 +131,68 @@ describe('diffing queries against the store', () => {
     });
 
     assert.equal(printQueryForMissingData(missingSelectionSets), `{
-  node_0: node(id: "lukeId") {
+  __node_0: node(id: "lukeId") {
     id
     ... on Person {
       age
     }
+  }
+}
+`);
+  });
+
+  it('generates the right queries when the store is missing multiple nodes', () => {
+    const firstQuery = `
+      {
+        people_one(id: "1") {
+          __typename,
+          id,
+          name
+        }
+      }
+    `;
+
+    const result = {
+      people_one: {
+        __typename: 'Person',
+        id: 'lukeId',
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const store = writeQueryToStore({
+      result,
+      query: firstQuery,
+    });
+
+    const secondQuery = `
+      {
+        people_one(id: "1") {
+          name,
+          age
+        }
+        people_one(id: "4") {
+          name,
+          age
+        }
+      }
+    `;
+
+    const { missingSelectionSets } = diffQueryAgainstStore({
+      store,
+      query: secondQuery,
+    });
+
+    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+  __node_0: node(id: "lukeId") {
+    id
+    ... on Person {
+      age
+    }
+  }
+  people_one(id: "4") {
+    name
+    age
   }
 }
 `);

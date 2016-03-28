@@ -11,7 +11,7 @@ export function printQueryForMissingData(missingSelectionSets: MissingSelectionS
   const queryDocumentAst = {
     kind: 'Document',
     definitions: [
-      nodeQueryDefinition(missingSelectionSets),
+      queryDefinition(missingSelectionSets),
     ],
   };
 
@@ -27,10 +27,18 @@ const idField = {
   },
 };
 
-function nodeQueryDefinition(missingSelectionSets: MissingSelectionSet[]) {
+function queryDefinition(missingSelectionSets: MissingSelectionSet[]) {
   const selections = missingSelectionSets.map((missingSelectionSet: MissingSelectionSet, index) => {
+    if (missingSelectionSet.id === 'ROOT_QUERY') {
+      if (missingSelectionSet.selectionSet.selections.length > 1) {
+        throw new Error('Multiple root queries, cannot print that yet.');
+      }
+
+      return missingSelectionSet.selectionSet.selections[0];
+    }
+
     return nodeSelection({
-      alias: `node_${index}`,
+      alias: `__node_${index}`,
       id: missingSelectionSet.id,
       typeName: missingSelectionSet.typeName,
       selectionSet: missingSelectionSet.selectionSet,

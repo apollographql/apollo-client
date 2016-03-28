@@ -6,12 +6,13 @@
   "scripts": {
     "pretest": "npm run compile",
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace lib/test/tests.js",
-    "posttest": "npm run lint",
+    "posttest": "npm run lint && npm run remaptestcov",
     "postinstall": "./node_modules/.bin/typings && typings i",
     "compile": "tsc",
     "watch": "tsc -w",
     "prepublish": "npm run compile",
-    "lint": "tslint src/*.ts && tslint test/*.ts"
+    "lint": "tslint src/*.ts && tslint test/*.ts",
+    "remaptestcov": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info"
   },
   "repository": {
     "type": "git",
@@ -41,6 +42,7 @@
     "dataloader": "^1.1.0",
     "istanbul": "^0.4.2",
     "mocha": "^2.3.3",
+    "remap-istanbul": "^0.5.1",
     "request-promise": "^2.0.1",
     "source-map-support": "^0.4.0",
     "tslint": "^3.6.0",

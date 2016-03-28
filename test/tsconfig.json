@@ -6,14 +6,14 @@
     "sourceMap": true,
     "declaration": true,
     "noImplicitAny": false,
-    "rootDir": ".",
-    "outDir": "lib",
+    "rootDir": "..",
+    "outDir": "../lib",
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "removeComments": true
   },
   "files": [
-    "typings/main.d.ts",
-    "src/index.ts"
+    "../typings/main.d.ts",
+    "tests.ts"
    ]
 }

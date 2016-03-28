@@ -398,7 +398,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('diffs root queries', (done) => {
+  it('diffs queries', (done) => {
     testDiffing([
       {
         query: `

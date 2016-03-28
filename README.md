@@ -2,7 +2,7 @@
 
 [![Build status](https://travis-ci.org/apollostack/apollo-client.svg?branch=master)](https://travis-ci.org/apollostack/apollo-client)
 [![Build status](https://ci.appveyor.com/api/projects/status/ajdf70delshw2ire/branch/master?svg=true)](https://ci.appveyor.com/project/stubailo/apollo-client/branch/master)
-<a href="https://codeclimate.com/github/apollostack/apollo-client/coverage"><img src="https://codeclimate.com/github/apollostack/apollo-client/badges/coverage.svg" /></a>
+[![Coverage Status](https://coveralls.io/repos/github/apollostack/apollo-client/badge.svg?branch=master)](https://coveralls.io/github/apollostack/apollo-client?branch=master)
 
 
 A simple but functional GraphQL client with a great development experience.

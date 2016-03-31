@@ -21,6 +21,7 @@ import {
   WatchQueryOptions,
 } from './QueryManager';
 
+
 export class ApolloClient {
   public networkInterface: NetworkInterface;
   public apolloStore: Store;
@@ -61,7 +62,6 @@ export class ApolloClient {
         // remove the listeners
         handle.stop();
       });
-    })
-
+    });
   }
 }

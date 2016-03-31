@@ -10,3 +10,4 @@ import './queryPrinting';
 import './diffAgainstStore';
 import './networkInterface';
 import './QueryManager';
+import './client';

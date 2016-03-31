@@ -51,8 +51,7 @@ export class ApolloClient {
 
   public query(options: WatchQueryOptions): Promise<GraphQLError[] | any> {
     return new Promise((resolve, reject) => {
-      const handle = this.watchQuery(options);
-
+      const handle = this.queryManager.watchQuery(options);
       handle.onResult((err, result) => {
         if (err) {
           reject(err as GraphQLError[]);

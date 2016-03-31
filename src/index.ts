@@ -8,7 +8,7 @@ import {
 } from 'redux';
 
 import {
-  GraphQLError,
+  GraphQLResult,
 } from 'graphql';
 
 import {
@@ -49,18 +49,29 @@ export class ApolloClient {
     return this.queryManager.watchQuery(options);
   }
 
-  public query(options: WatchQueryOptions): Promise<GraphQLError[] | any> {
+  public query(options: WatchQueryOptions): Promise<GraphQLResult | Error> {
     return new Promise((resolve, reject) => {
-      const handle = this.queryManager.watchQuery(options);
-      handle.onResult((err, result) => {
-        if (err) {
-          reject(err as GraphQLError[]);
-        } else {
-          resolve(result as any);
-        }
-        // remove the listeners
-        handle.stop();
-      });
+      try {
+        const handle = this.queryManager.watchQuery(options);
+        handle.onResult((err, data) => {
+          let response: GraphQLResult = {};
+
+          if (err) {
+            response.errors = err;
+          }
+
+          if (data) {
+            response.data = data;
+          }
+
+          resolve(response);
+          // remove the listeners
+          handle.stop();
+        });
+      } catch (e) {
+        reject(e);
+      }
+
     });
   }
 }

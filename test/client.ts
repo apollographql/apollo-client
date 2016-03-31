@@ -60,7 +60,7 @@ describe('client', () => {
     assert.deepEqual(client.apolloStore.getState(), apolloStore.getState());
   });
 
-  it('should allow for a single query to take place', () => {
+  it('should allow for a single query to take place', (done) => {
 
     const query = `
       query people {
@@ -91,7 +91,11 @@ describe('client', () => {
       networkInterface,
     });
 
-    assert.eventually.deepEqual(client.query({ query }), data);
+    return client.query({ query })
+      .then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+       });
   });
 });
 

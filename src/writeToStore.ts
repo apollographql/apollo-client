@@ -168,28 +168,38 @@ function writeFieldToStore({
   if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
     storeValue = value;
   } else if (isArray(value)) {
-    const thisIdList: Array<string> = [];
 
-    value.forEach((item, index) => {
-      const clonedItem: any = assign({}, item);
+    // GraphQL lists should be of the same type.
+    // If it's an array of scalar values, don't normalize.
+    if (isNull(field.selectionSet)) {
+      storeValue = value;
+    } else {
 
-      if (! isString(clonedItem.id)) {
-        clonedItem['__data_id'] = `${dataId}.${storeFieldName}.${index}`;
-      } else {
-        clonedItem['__data_id'] = clonedItem.id;
-      }
+      const thisIdList: Array<string> = [];
 
-      thisIdList.push(clonedItem['__data_id']);
+      value.forEach((item, index) => {
+        const clonedItem: any = assign({}, item);
 
-      writeSelectionSetToStore({
-        result: clonedItem,
-        store,
-        selectionSet: field.selectionSet,
-        variables,
+        if (! isString(clonedItem.id)) {
+          clonedItem['__data_id'] = `${dataId}.${storeFieldName}.${index}`;
+        } else {
+          clonedItem['__data_id'] = clonedItem.id;
+        }
+
+        thisIdList.push(clonedItem['__data_id']);
+
+        writeSelectionSetToStore({
+          result: clonedItem,
+          store,
+          selectionSet: field.selectionSet,
+          variables,
+        });
       });
-    });
 
-    storeValue = thisIdList;
+      storeValue = thisIdList;
+
+    }
+
   } else {
     // It's an object
     const clonedValue: any = assign({}, value);

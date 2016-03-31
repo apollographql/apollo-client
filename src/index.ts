@@ -8,6 +8,10 @@ import {
 } from 'redux';
 
 import {
+  GraphQLError,
+} from 'graphql';
+
+import {
   createApolloStore,
 } from './store';
 
@@ -42,5 +46,22 @@ export class ApolloClient {
 
   public watchQuery(options: WatchQueryOptions): WatchedQueryHandle {
     return this.queryManager.watchQuery(options);
+  }
+
+  public query(options: WatchQueryOptions): Promise<GraphQLError[] | any> {
+    return new Promise((resolve, reject) => {
+      const handle = this.watchQuery(options);
+
+      handle.onResult((err, result) => {
+        if (err) {
+          reject(err as GraphQLError[]);
+        } else {
+          resolve(result as any);
+        }
+        // remove the listeners
+        handle.stop();
+      });
+    })
+
   }
 }

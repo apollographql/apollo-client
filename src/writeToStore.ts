@@ -5,9 +5,7 @@ import {
   isNull,
   isArray,
   isUndefined,
-  isObject,
   assign,
-  find,
 } from 'lodash';
 
 import {
@@ -171,13 +169,9 @@ function writeFieldToStore({
     storeValue = value;
   } else if (isArray(value)) {
 
-    const firstNonNullValue = find(value, (val) => {
-      return !isNull(val);
-    });
-
     // GraphQL lists should be of the same type.
     // If it's an array of scalar values, don't normalize.
-    if (! isObject(firstNonNullValue)) {
+    if (isNull(field.selectionSet)) {
       storeValue = value;
     } else {
 

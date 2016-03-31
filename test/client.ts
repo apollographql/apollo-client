@@ -104,8 +104,6 @@ function mockNetworkInterface(
   const requestToResultMap: any = {};
   const { request, result } = mockedRequest;
 
-  request.variables = request.variables ? request.variables : undefined;
-
   // Populate set of mocked requests
   requestToResultMap[requestToKey(request)] = result as GraphQLResult;
 

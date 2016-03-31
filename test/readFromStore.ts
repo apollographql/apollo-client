@@ -271,4 +271,70 @@ describe('reading from the store', () => {
       nestedObj: null,
     });
   });
+
+  it('runs an array of non-objects', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      simpleArray: ['one', 'two', 'three'],
+    };
+
+    const store = {
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: result.simpleArray }) as StoreObject,
+    } as Store;
+
+    const queryResult = readFragmentFromStore({
+      store,
+      fragment: `
+        fragment FragmentName on Item {
+          stringField,
+          numberField,
+          simpleArray
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: 'This is a string!',
+      numberField: 5,
+      simpleArray: ['one', 'two', 'three'],
+    });
+  });
+
+  it('runs an array of non-objects with null', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      simpleArray: [null, 'two', 'three'],
+    };
+
+    const store = {
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: result.simpleArray }) as StoreObject,
+    } as Store;
+
+    const queryResult = readFragmentFromStore({
+      store,
+      fragment: `
+        fragment FragmentName on Item {
+          stringField,
+          numberField,
+          simpleArray
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: 'This is a string!',
+      numberField: 5,
+      simpleArray: [null, 'two', 'three'],
+    });
+  });
 });

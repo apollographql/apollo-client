@@ -5,7 +5,9 @@ import {
   isNull,
   isArray,
   isUndefined,
+  isObject,
   assign,
+  find,
 } from 'lodash';
 
 import {
@@ -168,28 +170,42 @@ function writeFieldToStore({
   if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
     storeValue = value;
   } else if (isArray(value)) {
-    const thisIdList: Array<string> = [];
 
-    value.forEach((item, index) => {
-      const clonedItem: any = assign({}, item);
-
-      if (! isString(clonedItem.id)) {
-        clonedItem['__data_id'] = `${dataId}.${storeFieldName}.${index}`;
-      } else {
-        clonedItem['__data_id'] = clonedItem.id;
-      }
-
-      thisIdList.push(clonedItem['__data_id']);
-
-      writeSelectionSetToStore({
-        result: clonedItem,
-        store,
-        selectionSet: field.selectionSet,
-        variables,
-      });
+    const firstNonNullValue = find(value, (val) => {
+      return !isNull(val);
     });
 
-    storeValue = thisIdList;
+    // GraphQL lists should be of the same type.
+    // If it's an array of scalar values, don't normalize.
+    if (! isObject(firstNonNullValue)) {
+      storeValue = value;
+    } else {
+
+      const thisIdList: Array<string> = [];
+
+      value.forEach((item, index) => {
+        const clonedItem: any = assign({}, item);
+
+        if (! isString(clonedItem.id)) {
+          clonedItem['__data_id'] = `${dataId}.${storeFieldName}.${index}`;
+        } else {
+          clonedItem['__data_id'] = clonedItem.id;
+        }
+
+        thisIdList.push(clonedItem['__data_id']);
+
+        writeSelectionSetToStore({
+          result: clonedItem,
+          store,
+          selectionSet: field.selectionSet,
+          variables,
+        });
+      });
+
+      storeValue = thisIdList;
+
+    }
+
   } else {
     // It's an object
     const clonedValue: any = assign({}, value);

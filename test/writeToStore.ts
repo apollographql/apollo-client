@@ -353,6 +353,76 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes an array of non-objects', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        simpleArray
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      simpleArray: ['one', 'two', 'three'],
+    };
+
+    const normalized = writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    });
+
+    assertEqualSansDataId(normalized, {
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
+        simpleArray: [
+          result.simpleArray[0],
+          result.simpleArray[1],
+          result.simpleArray[2],
+        ],
+      }),
+    });
+  });
+
+  it('properly normalizes an array of non-objects with null', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        simpleArray
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      simpleArray: [null, 'two', 'three'],
+    };
+
+    const normalized = writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    });
+
+    assertEqualSansDataId(normalized, {
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
+        simpleArray: [
+          result.simpleArray[0],
+          result.simpleArray[1],
+          result.simpleArray[2],
+        ],
+      }),
+    });
+  });
+
   it('merges nodes', () => {
     const fragment = `
       fragment Item on ItemType {

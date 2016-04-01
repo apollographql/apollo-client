@@ -7,7 +7,6 @@
     "pretest": "npm run compile",
     "test": "mocha --reporter spec --full-trace lib/test/tests.js",
     "posttest": "npm run lint",
-    "postinstall": "./node_modules/.bin/typings && typings i",
     "compile": "tsc",
     "watch": "tsc -w",
     "prepublish": "npm run compile",

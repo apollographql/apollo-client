@@ -12,6 +12,7 @@ install:
   # install modules
   - npm install -g typings tsc
   - npm install
+  - typings install
 
 # Post-install test scripts.
 test_script:

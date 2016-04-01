@@ -212,6 +212,119 @@ describe('reading from the store', () => {
     });
   });
 
+  it('runs a nested fragment with an array without IDs and a null', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        null,
+        {
+          stringField: 'This is a string also!',
+          numberField: 7,
+          nullField: null,
+        },
+      ] as StoreObject[],
+    };
+
+    const store = {
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+        nestedArray: [
+          null,
+          'abcd.nestedArray.1',
+        ],
+      }) as StoreObject,
+      'abcd.nestedArray.1': result.nestedArray[1],
+    } as Store;
+
+    const queryResult = readFragmentFromStore({
+      store,
+      fragment: `
+        fragment FragmentName on Item {
+          stringField,
+          numberField,
+          nestedArray {
+            stringField,
+            numberField
+          }
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: 'This is a string!',
+      numberField: 5,
+      nestedArray: [
+        null,
+        {
+          stringField: 'This is a string also!',
+          numberField: 7,
+        },
+      ],
+    });
+  });
+
+  it('runs a nested fragment with an array with IDs and a null', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        null,
+        {
+          id: 'abcde',
+          stringField: 'This is a string also!',
+          numberField: 7,
+          nullField: null,
+        },
+      ] as StoreObject[],
+    };
+
+    const store = {
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+        nestedArray: [
+          null,
+          'abcde',
+        ],
+      }) as StoreObject,
+      'abcde': result.nestedArray[1],
+    } as Store;
+
+    const queryResult = readFragmentFromStore({
+      store,
+      fragment: `
+        fragment FragmentName on Item {
+          stringField,
+          numberField,
+          nestedArray {
+            id,
+            stringField,
+            numberField
+          }
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: 'This is a string!',
+      numberField: 5,
+      nestedArray: [
+        null,
+        {
+          id: 'abcde',
+          stringField: 'This is a string also!',
+          numberField: 7,
+        },
+      ],
+    });
+  });
+
   it('throws on a missing field', () => {
     const result = {
       id: 'abcd',

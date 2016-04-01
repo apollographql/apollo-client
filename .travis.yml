@@ -4,8 +4,8 @@ node_js:
   - "4.2"
 install:
   - npm install -g typings tsc coveralls
-  - npm install
   - typings install
+  - npm install
 
 script:
   - npm test

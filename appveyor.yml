@@ -11,8 +11,8 @@ install:
   - ps: Install-Product node $env:nodejs_version
   # install modules
   - npm install -g typings tsc
-  - npm install
   - typings install
+  - npm install
 
 # Post-install test scripts.
 test_script:

@@ -188,12 +188,19 @@ function writeFieldToStore({
 
         thisIdList.push(clonedItem['__data_id']);
 
-        writeSelectionSetToStore({
-          result: clonedItem,
-          store,
-          selectionSet: field.selectionSet,
-          variables,
-        });
+        if (isNull(item)) {
+          writeNullValueToStore({
+            dataId: clonedItem['__data_id'],
+            store,
+          });
+        } else {
+          writeSelectionSetToStore({
+            result: clonedItem,
+            store,
+            selectionSet: field.selectionSet,
+            variables,
+          });
+        }
       });
 
       storeValue = thisIdList;
@@ -225,6 +232,16 @@ function writeFieldToStore({
   }) as StoreObject;
 
   store[dataId] = newStoreObj;
+}
+
+function writeNullValueToStore({
+  store,
+  dataId,
+}: {
+  store: Store,
+  dataId: string,
+}) {
+  store[dataId] = null;
 }
 
 function isField(selection: Selection): selection is Field {

@@ -353,6 +353,53 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes a nested array without IDs and a null item', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedArray {
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        null,
+        {
+          stringField: 'This is a string also!',
+          numberField: 7,
+          nullField: null,
+        },
+      ],
+    };
+
+    const normalized = writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    });
+
+    assertEqualSansDataId(normalized, {
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+        nestedArray: [
+          `${result.id}.nestedArray.0`,
+          `${result.id}.nestedArray.1`,
+        ],
+      }),
+      [`${result.id}.nestedArray.0`]: result.nestedArray[0],
+      [`${result.id}.nestedArray.1`]: result.nestedArray[1],
+    });
+  });
+
   it('properly normalizes an array of non-objects', () => {
     const fragment = `
       fragment Item on ItemType {

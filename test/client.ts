@@ -7,6 +7,7 @@ import {
 
 import {
   GraphQLResult,
+  GraphQLError,
   parse,
   print,
 } from 'graphql';
@@ -97,6 +98,81 @@ describe('client', () => {
         done();
        });
   });
+
+  it('should return errors correctly for a single query', (done) => {
+
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const errors: GraphQLError[] = [
+      {
+        name: 'test',
+        message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
+      },
+    ];
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { errors },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    return client.query({ query })
+      .then((result) => {
+        assert.deepEqual(result, { errors });
+        done();
+       });
+  });
+
+  it('should allow for subscribing to a request', (done) => {
+
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+   const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    const handle = client.watchQuery({ query });
+
+    handle.onResult((error, result) => {
+      assert.deepEqual(result, data);
+      done();
+    });
+  });
+
 });
 
 function mockNetworkInterface(
@@ -115,7 +191,6 @@ function mockNetworkInterface(
   const queryMock = (req: Request) => {
     return new Promise((resolve, reject) => {
       const resultData = requestToResultMap[requestToKey(req)];
-
       if (!resultData) {
         throw new Error(`Passed request that wasn't mocked: ${requestToKey(req)}`);
       }

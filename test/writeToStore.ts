@@ -302,6 +302,52 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes a nested array with IDs and a null', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedArray {
+          id,
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        {
+          id: 'abcde',
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+        null,
+      ],
+    };
+
+    assertEqualSansDataId(writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    }), {
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+        nestedArray: [
+          result.nestedArray[0].id,
+          null,
+        ],
+      }),
+      [result.nestedArray[0].id]: result.nestedArray[0],
+    });
+  });
+
   it('properly normalizes a nested array without IDs', () => {
     const fragment = `
       fragment Item on ItemType {
@@ -349,6 +395,52 @@ describe('writing to the store', () => {
         ],
       }),
       [`${result.id}.nestedArray.0`]: result.nestedArray[0],
+      [`${result.id}.nestedArray.1`]: result.nestedArray[1],
+    });
+  });
+
+  it('properly normalizes a nested array without IDs and a null item', () => {
+    const fragment = `
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedArray {
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        null,
+        {
+          stringField: 'This is a string also!',
+          numberField: 7,
+          nullField: null,
+        },
+      ],
+    };
+
+    const normalized = writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    });
+
+    assertEqualSansDataId(normalized, {
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+        nestedArray: [
+          null,
+          `${result.id}.nestedArray.1`,
+        ],
+      }),
       [`${result.id}.nestedArray.1`]: result.nestedArray[1],
     });
   });

@@ -178,22 +178,26 @@ function writeFieldToStore({
       const thisIdList: Array<string> = [];
 
       value.forEach((item, index) => {
-        const clonedItem: any = assign({}, item);
-
-        if (! isString(clonedItem.id)) {
-          clonedItem['__data_id'] = `${dataId}.${storeFieldName}.${index}`;
+        if (isNull(item)) {
+          thisIdList.push(null);
         } else {
-          clonedItem['__data_id'] = clonedItem.id;
+          const clonedItem: any = assign({}, item);
+
+          if (! isString(clonedItem.id)) {
+            clonedItem['__data_id'] = `${dataId}.${storeFieldName}.${index}`;
+          } else {
+            clonedItem['__data_id'] = clonedItem.id;
+          }
+
+          thisIdList.push(clonedItem['__data_id']);
+
+          writeSelectionSetToStore({
+            result: clonedItem,
+            store,
+            selectionSet: field.selectionSet,
+            variables,
+          });
         }
-
-        thisIdList.push(clonedItem['__data_id']);
-
-        writeSelectionSetToStore({
-          result: clonedItem,
-          store,
-          selectionSet: field.selectionSet,
-          variables,
-        });
       });
 
       storeValue = thisIdList;

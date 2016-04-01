@@ -148,6 +148,11 @@ export function diffSelectionSetAgainstStore({
 
     if (isArray(storeValue)) {
       result[resultFieldKey] = storeValue.map((id) => {
+        // null value in array
+        if (isNull(id)) {
+          return null;
+        }
+
         const itemDiffResult = diffSelectionSetAgainstStore({
           store,
           throwOnMissingField,

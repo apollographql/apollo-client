@@ -1,8 +1,6 @@
 {
   "gitbook": ">=3.0.0-pre.0",
-  "structure": {
-    "root": "./docs"
-  },
+  "root": "./docs",
   "plugins": ["edit-link", "prism", "-highlight", "github"],
   "pluginsConfig": {
     "edit-link": {

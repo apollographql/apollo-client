@@ -27,3 +27,5 @@ This project uses TypeScript for static typing and TSLint for linting. You can g
 Should be moved into some kind of CONTRIBUTING.md soon...
 
 - [AST explorer](https://astexplorer.net/): you can use this to see what the GraphQL query AST looks like for different queries
+
+xxx

@@ -3,8 +3,7 @@ node_js:
   - "5.1"
   - "4.2"
 install:
-  - npm install -g typings tsc coveralls
-  - typings install
+  - npm install -g coveralls
   - npm install
 
 script:

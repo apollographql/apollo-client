@@ -8,7 +8,10 @@ chai.use(chaiAsPromised);
 
 const { assert } = chai;
 
-import { createNetworkInterface, NetworkInterface } from '../src/networkInterface';
+import {
+  createNetworkInterface,
+  NetworkInterface,
+} from '../src/networkInterface';
 
 describe('network interface', () => {
   describe('creating a network interface', () => {
@@ -46,6 +49,27 @@ describe('network interface', () => {
       delete customOpts.headers;
 
       assert.deepEqual(networkInterface._opts, originalOpts);
+    });
+  });
+
+  describe('middleware', () => {
+    it('should take a middleware and assign it', () => {
+      const testWare = new TestWare();
+
+      const networkInterface = createNetworkInterface('/graphql');
+      networkInterface.use([testWare]);
+
+      assert.equal(networkInterface._middlewares[0], testWare);
+    });
+
+    it('should take more than one middleware and assign it', () => {
+      const testWare1 = new TestWare();
+      const testWare2 = new TestWare();
+
+      const networkInterface = createNetworkInterface('/graphql');
+      networkInterface.use([testWare1, testWare2]);
+
+      assert.deepEqual(networkInterface._middlewares, [testWare1, testWare2]);
     });
   });
 
@@ -141,3 +165,7 @@ describe('network interface', () => {
     });
   });
 });
+
+function TestWare() {
+  // code
+}

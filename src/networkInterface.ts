@@ -18,10 +18,17 @@ export interface Request {
   variables?: Object;
 }
 
+export interface MiddlewareRequest {
+  request: Request;
+  options: RequestInit;
+}
+
 export interface NetworkInterface {
   _uri: string;
   _opts: RequestInit;
+  _middlewares: Array<Function>;
   query(request: Request): Promise<GraphQLResult>;
+  use(middlewares: Array<Function>);
 }
 
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): NetworkInterface {
@@ -35,6 +42,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
 
   const _uri: string = uri;
   const _opts: RequestInit = assign({}, opts);
+  const _middlewares: Array<Function> = [];
 
   function fetchFromRemoteEndpoint(request: Request): Promise<IResponse> {
     return fetch(uri, assign({}, _opts, {
@@ -61,9 +69,15 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
       });
   };
 
+  function use(middlewares: Array<Function>) {
+    _middlewares.push(...middlewares);
+  }
+
   return {
     _uri,
     _opts,
+    _middlewares,
     query,
+    use,
   };
 }

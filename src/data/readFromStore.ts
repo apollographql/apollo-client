@@ -1,7 +1,7 @@
 import {
   parseFragment,
   parseQuery,
-} from './parser';
+} from '../parser';
 
 import {
   diffSelectionSetAgainstStore,
@@ -13,7 +13,7 @@ import {
 
 import {
   NormalizedCache,
-} from './store';
+} from '../store';
 
 // import {
 //   printAST,

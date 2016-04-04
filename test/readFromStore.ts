@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 
 import {
   readFragmentFromStore,
-} from '../src/readFromStore';
+} from '../src/data/readFromStore';
 
 import {
   NormalizedCache,

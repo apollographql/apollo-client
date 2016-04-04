@@ -11,7 +11,7 @@ import {
 import {
   parseFragment,
   parseQuery,
-} from './parser';
+} from '../parser';
 
 import {
   storeKeyNameFromField,
@@ -30,7 +30,7 @@ import {
 import {
   NormalizedCache,
   StoreObject,
-} from './store';
+} from '../store';
 
 // import {
 //   printAST,

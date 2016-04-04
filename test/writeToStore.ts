@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 
 import {
   writeFragmentToStore,
-} from '../src/writeToStore';
+} from '../src/data/writeToStore';
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {

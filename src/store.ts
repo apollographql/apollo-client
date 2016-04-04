@@ -16,7 +16,7 @@ import {
 
 import {
   writeSelectionSetToStore,
-} from './writeToStore';
+} from './data/writeToStore';
 
 export interface Store {
   data: NormalizedCache;

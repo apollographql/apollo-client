@@ -1,8 +1,8 @@
 import { assert } from 'chai';
 
-import { diffQueryAgainstStore } from '../src/diffAgainstStore';
-import { writeQueryToStore } from '../src/writeToStore';
-import { stripLoc } from '../src/debug';
+import { diffQueryAgainstStore } from '../src/data/diffAgainstStore';
+import { writeQueryToStore } from '../src/data/writeToStore';
+import { stripLoc } from '../src/data/debug';
 import { printQueryForMissingData } from '../src/queryPrinting';
 
 describe('diffing queries against the store', () => {

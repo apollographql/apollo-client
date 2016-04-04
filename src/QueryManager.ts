@@ -32,11 +32,11 @@ import {
 
 import {
   readSelectionSetFromStore,
-} from './readFromStore';
+} from './data/readFromStore';
 
 import {
   diffSelectionSetAgainstStore,
-} from './diffAgainstStore';
+} from './data/diffAgainstStore';
 
 import {
   queryDefinition,

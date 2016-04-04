@@ -6,7 +6,7 @@ import {
 
 import {
   MissingSelectionSet,
-} from './diffAgainstStore';
+} from './data/diffAgainstStore';
 
 export function printQueryForMissingData(missingSelectionSets: MissingSelectionSet[]) {
   return printQueryFromDefinition(queryDefinition(missingSelectionSets));

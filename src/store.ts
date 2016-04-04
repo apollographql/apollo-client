@@ -1,59 +1,35 @@
 import {
-  SelectionSet,
-} from 'graphql';
-
-import {
   createStore,
   compose,
   applyMiddleware,
+  combineReducers,
 } from 'redux';
 
 import {
-  assign,
-} from 'lodash';
+  data,
+  NormalizedCache,
+} from './data/store';
 
 import {
-  writeSelectionSetToStore,
-} from './writeToStore';
+  queries,
+  QueryStore,
+} from './queries/store';
+
+import {
+  ApolloAction,
+} from './actions';
 
 export interface Store {
-  [dataId: string]: StoreObject;
+  data: NormalizedCache;
+  queries: QueryStore;
 }
 
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldKey: string]: StoreValue;
+// This is our interface on top of Redux to get types in our actions and store
+export interface ApolloStore {
+  dispatch: (action: ApolloAction) => void;
+  getState: () => Store;
+  subscribe: (listener: () => void) => void;
 }
-
-export type StoreValue = number | string | string[];
-
-export const QUERY_RESULT_ACTION = 'QUERY_RESULT';
-
-export function createQueryResultAction({
-  result,
-  selectionSet,
-  variables,
-}: {
-  result: any,
-  selectionSet: SelectionSet,
-  variables: Object
-}): QueryResultAction {
-  return {
-    type: QUERY_RESULT_ACTION,
-    result,
-    selectionSet,
-    variables,
-  };
-}
-
-export interface QueryResultAction {
-  type: string;
-  result: any;
-  selectionSet: SelectionSet;
-  variables: Object;
-}
-
-export type ApolloAction = QueryResultAction;
 
 const crashReporter = store => next => action => {
   try {
@@ -65,7 +41,12 @@ const crashReporter = store => next => action => {
   }
 };
 
-export function createApolloStore() {
+export const apolloReducer = combineReducers({
+  data,
+  queries,
+});
+
+export function createApolloStore(): ApolloStore {
   const enhancers = [];
 
   if (typeof window !== 'undefined') {
@@ -77,24 +58,5 @@ export function createApolloStore() {
 
   enhancers.push(applyMiddleware(crashReporter));
 
-  return createStore(resultCacheReducer, compose(...enhancers));
-}
-
-export function resultCacheReducer(previousState: Store = {}, action: ApolloAction): Store {
-  switch (action.type) {
-    case QUERY_RESULT_ACTION:
-      // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as Store;
-
-      const newState = writeSelectionSetToStore({
-        result: action.result,
-        selectionSet: action.selectionSet,
-        variables: action.variables,
-        store: clonedState,
-      });
-
-      return newState;
-    default:
-      return previousState;
-  }
+  return createStore(apolloReducer, compose(...enhancers));
 }

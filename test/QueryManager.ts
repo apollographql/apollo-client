@@ -9,9 +9,12 @@ import {
 
 import {
   Store,
-  StoreObject,
   createApolloStore,
 } from '../src/store';
+
+import {
+  StoreObject,
+} from '../src/data/store';
 
 import {
   parseFragment,
@@ -54,7 +57,7 @@ describe('QueryManager', () => {
       nullField: null,
     } as StoreObject;
 
-    const handle = queryManager.watchSelectionSet({
+    const handle = queryManager.watchSelectionSet('1', {
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragmentDef.selectionSet,
@@ -67,7 +70,10 @@ describe('QueryManager', () => {
     });
 
     const store = {
-      abcd: result,
+      data: {
+        abcd: result,
+      },
+      queries: {},
     } as Store;
 
     queryManager.broadcastNewStore(store);
@@ -95,14 +101,14 @@ describe('QueryManager', () => {
       }
     `);
 
-    const handle1 = queryManager.watchSelectionSet({
+    const handle1 = queryManager.watchSelectionSet('1', {
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragment1Def.selectionSet,
       variables: {},
     });
 
-    const handle2 = queryManager.watchSelectionSet({
+    const handle2 = queryManager.watchSelectionSet('2', {
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragment2Def.selectionSet,
@@ -136,12 +142,15 @@ describe('QueryManager', () => {
     });
 
     const store = {
-      abcd: {
-        id: 'abcd',
-        stringField: 'This is a string!',
-        numberField: 5,
-        nullField: null,
+      data: {
+        abcd: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
       },
+      queries: {},
     } as Store;
 
     queryManager.broadcastNewStore(store);
@@ -391,7 +400,7 @@ describe('QueryManager', () => {
       assert.deepEqual(resultData, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(store.getState()['5'], { id: '5', isPrivate: true });
+      assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
       done();
     }).catch((err) => {
       throw err;

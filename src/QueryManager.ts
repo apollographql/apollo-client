@@ -14,13 +14,13 @@ import {
 } from 'lodash';
 
 import {
-  createQueryResultAction,
   Store,
+  ApolloStore,
 } from './store';
 
 import {
-  Store as ReduxStore,
-} from 'redux';
+  NormalizedCache,
+} from './data/store';
 
 import {
   SelectionSet,
@@ -31,11 +31,11 @@ import {
 
 import {
   readSelectionSetFromStore,
-} from './readFromStore';
+} from './data/readFromStore';
 
 import {
   diffSelectionSetAgainstStore,
-} from './diffAgainstStore';
+} from './data/diffAgainstStore';
 
 import {
   queryDefinition,
@@ -44,7 +44,7 @@ import {
 
 export class QueryManager {
   private networkInterface: NetworkInterface;
-  private store: ReduxStore;
+  private store: ApolloStore;
   private selectionSetMap: { [queryId: number]: SelectionSetWithRoot };
 
   private resultCallbacks: { [queryId: number]: QueryResultCallback[] };
@@ -56,7 +56,7 @@ export class QueryManager {
     store,
   }: {
     networkInterface: NetworkInterface,
-    store: ReduxStore,
+    store: ApolloStore,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -91,11 +91,12 @@ export class QueryManager {
           __data_id: 'ROOT_MUTATION',
         }, result.data);
 
-        this.store.dispatch(createQueryResultAction({
+        this.store.dispatch({
+          type: 'QUERY_RESULT',
           result: resultWithDataId,
           selectionSet: mutationDef.selectionSet,
           variables,
-        }));
+        });
 
         return result.data;
       });
@@ -111,16 +112,18 @@ export class QueryManager {
     // template string
     const queryDef = parseQuery(query);
 
+    // Generate a query ID
+    const queryId = this.idCounter.toString();
+    this.idCounter++;
+
     // Set up a watch handle on the store using the parsed query, we need to do this first to
     // generate a query ID
-    const watchHandle = this.watchSelectionSet({
+    const watchHandle = this.watchSelectionSet(queryId, {
       selectionSet: queryDef.selectionSet,
       rootId: 'ROOT_QUERY',
       typeName: 'Query',
       variables,
     });
-
-    const queryId = watchHandle.id;
 
     let queryDefForRequest = queryDef;
     let existingData;
@@ -167,7 +170,7 @@ export class QueryManager {
   public broadcastNewStore(store: Store) {
     forOwn(this.selectionSetMap, (selectionSetWithRoot: SelectionSetWithRoot, queryId: string) => {
       const resultFromStore = readSelectionSetFromStore({
-        store,
+        store: store.data,
         rootId: selectionSetWithRoot.rootId,
         selectionSet: selectionSetWithRoot.selectionSet,
         variables: selectionSetWithRoot.variables,
@@ -177,10 +180,7 @@ export class QueryManager {
     });
   }
 
-  public watchSelectionSet(selectionSetWithRoot: SelectionSetWithRoot): WatchedQueryHandle {
-    const queryId = this.idCounter.toString();
-    this.idCounter++;
-
+  public watchSelectionSet(queryId: string, selectionSetWithRoot: SelectionSetWithRoot): WatchedQueryHandle {
     this.selectionSetMap[queryId] = selectionSetWithRoot;
 
     const isStopped = () => {
@@ -250,11 +250,12 @@ export class QueryManager {
             __data_id: 'ROOT_QUERY',
           }, result.data);
 
-          this.store.dispatch(createQueryResultAction({
+          this.store.dispatch({
+            type: 'QUERY_RESULT',
             result: resultWithDataId,
             variables: request.variables,
             selectionSet,
-          }));
+          });
         }
       }).catch((errors: GraphQLError[]) => {
         this.handleQueryErrorsAndStop(queryId, errors);
@@ -269,7 +270,7 @@ export class QueryManager {
       selectionSet,
       variables: request.variables,
       rootId: 'ROOT_QUERY',
-      store: this.store.getState() as Store,
+      store: this.store.getState().data as NormalizedCache,
       throwOnMissingField: false,
     });
 

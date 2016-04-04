@@ -4,15 +4,12 @@ import {
 } from './networkInterface';
 
 import {
-  Store,
-} from 'redux';
-
-import {
   GraphQLResult,
 } from 'graphql';
 
 import {
   createApolloStore,
+  ApolloStore,
 } from './store';
 
 import {
@@ -24,7 +21,7 @@ import {
 
 export class ApolloClient {
   public networkInterface: NetworkInterface;
-  public apolloStore: Store;
+  public apolloStore: ApolloStore;
   public queryManager: QueryManager;
 
   constructor({
@@ -32,7 +29,7 @@ export class ApolloClient {
     apolloStore,
   }: {
     networkInterface?: NetworkInterface,
-    apolloStore?: Store,
+    apolloStore?: ApolloStore,
   } = {}) {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');

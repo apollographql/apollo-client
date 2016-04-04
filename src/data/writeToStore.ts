@@ -11,7 +11,7 @@ import {
 import {
   parseFragment,
   parseQuery,
-} from './parser';
+} from '../parser';
 
 import {
   storeKeyNameFromField,
@@ -28,7 +28,7 @@ import {
 } from 'graphql';
 
 import {
-  Store,
+  NormalizedCache,
   StoreObject,
 } from './store';
 
@@ -49,14 +49,14 @@ import {
 export function writeFragmentToStore({
   result,
   fragment,
-  store = {} as Store,
+  store = {} as NormalizedCache,
   variables,
 }: {
   result: Object,
   fragment: string,
-  store?: Store,
+  store?: NormalizedCache,
   variables?: Object,
-}): Store {
+}): NormalizedCache {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
@@ -76,14 +76,14 @@ export function writeFragmentToStore({
 export function writeQueryToStore({
   result,
   query,
-  store = {} as Store,
+  store = {} as NormalizedCache,
   variables,
 }: {
   result: Object,
   query: string,
-  store?: Store,
+  store?: NormalizedCache,
   variables?: Object,
-}): Store {
+}): NormalizedCache {
   const queryDefinition: OperationDefinition = parseQuery(query);
 
   const resultWithDataId: Object = assign({
@@ -101,14 +101,14 @@ export function writeQueryToStore({
 export function writeSelectionSetToStore({
   result,
   selectionSet,
-  store = {} as Store,
+  store = {} as NormalizedCache,
   variables,
 }: {
   result: any,
   selectionSet: SelectionSet,
-  store?: Store,
+  store?: NormalizedCache,
   variables: Object,
-}): Store {
+}): NormalizedCache {
   if (! isString(result.id) && ! isString(result.__data_id)) {
     throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
   }
@@ -157,7 +157,7 @@ function writeFieldToStore({
   field: Field,
   value: any,
   variables: {},
-  store: Store,
+  store: NormalizedCache,
   dataId: string,
 }) {
   let storeValue;

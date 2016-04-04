@@ -1,8 +1,4 @@
 import {
-  OperationDefinition,
-} from 'graphql';
-
-import {
   createStore,
   compose,
   applyMiddleware,
@@ -15,37 +11,14 @@ import {
 } from './data/store';
 
 import {
-  ApolloAction,
-} from './actions';
+  queries,
+  QueryStore,
+} from './queries/store';
 
 export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
 }
-
-export interface QueryStore {
-  [queryId: string]: QueryStoreValue;
-}
-
-export interface QueryStoreValue {
-  queryString: string;
-  queryAst: OperationDefinition;
-  minimizedQueryString: string;
-  minimizedQueryAST: OperationDefinition;
-  variables: Object;
-  status: QueryStatus;
-  error: Error;
-}
-
-export type QueryStatus =
-  // Query has been sent to server, waiting for response
-  "LOADING" |
-
-  // Network error occurred, we didn't get any result
-  "ERROR" |
-
-  // We got a GraphQL result from the server, and it's in the store
-  "DONE";
 
 const crashReporter = store => next => action => {
   try {
@@ -75,11 +48,4 @@ export function createApolloStore() {
   enhancers.push(applyMiddleware(crashReporter));
 
   return createStore(apolloReducer, compose(...enhancers));
-}
-
-export function queries(
-  previousState: QueryStore = {},
-  action: ApolloAction
-): QueryStore {
-  return previousState;
 }

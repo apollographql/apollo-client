@@ -16,7 +16,7 @@ import {
 } from './storeUtils';
 
 import {
-  Store,
+  NormalizedCache,
 } from './store';
 
 import {
@@ -40,7 +40,7 @@ export function diffQueryAgainstStore({
   query,
   variables,
 }: {
-  store: Store,
+  store: NormalizedCache,
   query: string
   variables?: Object,
 }): QueryDiffResult {
@@ -61,7 +61,7 @@ export function diffFragmentAgainstStore({
   rootId,
   variables,
 }: {
-  store: Store,
+  store: NormalizedCache,
   fragment: string,
   rootId: string,
   variables?: Object,
@@ -96,7 +96,7 @@ export function diffSelectionSetAgainstStore({
   variables,
 }: {
   selectionSet: SelectionSet,
-  store: Store,
+  store: NormalizedCache,
   rootId: string,
   throwOnMissingField: Boolean,
   variables: Object,

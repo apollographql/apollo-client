@@ -1,11 +1,13 @@
 import {
   SelectionSet,
+  OperationDefinition,
 } from 'graphql';
 
 import {
   createStore,
   compose,
   applyMiddleware,
+  combineReducers,
 } from 'redux';
 
 import {
@@ -17,6 +19,11 @@ import {
 } from './writeToStore';
 
 export interface Store {
+  data: NormalizedCache;
+  queries: QueryStore;
+}
+
+export interface NormalizedCache {
   [dataId: string]: StoreObject;
 }
 
@@ -24,6 +31,30 @@ export interface StoreObject {
   __typename?: string;
   [storeFieldKey: string]: StoreValue;
 }
+
+export interface QueryStore {
+  [queryId: string]: QueryStoreValue;
+}
+
+export interface QueryStoreValue {
+  queryString: string;
+  queryAst: OperationDefinition;
+  minimizedQueryString: string;
+  minimizedQueryAST: OperationDefinition;
+  variables: Object;
+  status: QueryStatus;
+  error: Error;
+}
+
+export type QueryStatus =
+  // Query has been sent to server, waiting for response
+  "LOADING" |
+
+  // Network error occurred, we didn't get any result
+  "ERROR" |
+
+  // We got a GraphQL result from the server, and it's in the store
+  "DONE";
 
 export type StoreValue = number | string | string[];
 
@@ -65,6 +96,11 @@ const crashReporter = store => next => action => {
   }
 };
 
+export const apolloReducer = combineReducers({
+  data,
+  queries,
+});
+
 export function createApolloStore() {
   const enhancers = [];
 
@@ -77,14 +113,17 @@ export function createApolloStore() {
 
   enhancers.push(applyMiddleware(crashReporter));
 
-  return createStore(resultCacheReducer, compose(...enhancers));
+  return createStore(apolloReducer, compose(...enhancers));
 }
 
-export function resultCacheReducer(previousState: Store = {}, action: ApolloAction): Store {
+export function data(
+  previousState: NormalizedCache = {},
+  action: ApolloAction
+): NormalizedCache {
   switch (action.type) {
     case QUERY_RESULT_ACTION:
       // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as Store;
+      const clonedState = assign({}, previousState) as NormalizedCache;
 
       const newState = writeSelectionSetToStore({
         result: action.result,
@@ -97,4 +136,11 @@ export function resultCacheReducer(previousState: Store = {}, action: ApolloActi
     default:
       return previousState;
   }
+}
+
+export function queries(
+  previousState: QueryStore = {},
+  action: ApolloAction
+): QueryStore {
+  return previousState;
 }

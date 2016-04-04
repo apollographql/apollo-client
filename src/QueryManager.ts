@@ -16,6 +16,7 @@ import {
 import {
   createQueryResultAction,
   Store,
+  NormalizedCache,
 } from './store';
 
 import {
@@ -167,7 +168,7 @@ export class QueryManager {
   public broadcastNewStore(store: Store) {
     forOwn(this.selectionSetMap, (selectionSetWithRoot: SelectionSetWithRoot, queryId: string) => {
       const resultFromStore = readSelectionSetFromStore({
-        store,
+        store: store.data,
         rootId: selectionSetWithRoot.rootId,
         selectionSet: selectionSetWithRoot.selectionSet,
         variables: selectionSetWithRoot.variables,
@@ -269,7 +270,7 @@ export class QueryManager {
       selectionSet,
       variables: request.variables,
       rootId: 'ROOT_QUERY',
-      store: this.store.getState() as Store,
+      store: this.store.getState().data as NormalizedCache,
       throwOnMissingField: false,
     });
 

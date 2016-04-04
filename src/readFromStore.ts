@@ -12,7 +12,7 @@ import {
 } from 'graphql';
 
 import {
-  Store,
+  NormalizedCache,
 } from './store';
 
 // import {
@@ -24,7 +24,7 @@ export function readQueryFromStore({
   query,
   variables,
 }: {
-  store: Store,
+  store: NormalizedCache,
   query: string,
   variables?: Object,
 }): Object {
@@ -44,7 +44,7 @@ export function readFragmentFromStore({
   rootId,
   variables,
 }: {
-  store: Store,
+  store: NormalizedCache,
   fragment: string,
   rootId: string,
   variables?: Object,
@@ -65,7 +65,7 @@ export function readSelectionSetFromStore({
   selectionSet,
   variables,
 }: {
-  store: Store,
+  store: NormalizedCache,
   rootId: string,
   selectionSet: SelectionSet,
   variables: Object,

@@ -67,7 +67,10 @@ describe('QueryManager', () => {
     });
 
     const store = {
-      abcd: result,
+      data: {
+        abcd: result,
+      },
+      queries: {},
     } as Store;
 
     queryManager.broadcastNewStore(store);
@@ -136,12 +139,15 @@ describe('QueryManager', () => {
     });
 
     const store = {
-      abcd: {
-        id: 'abcd',
-        stringField: 'This is a string!',
-        numberField: 5,
-        nullField: null,
+      data: {
+        abcd: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
       },
+      queries: {},
     } as Store;
 
     queryManager.broadcastNewStore(store);
@@ -391,7 +397,7 @@ describe('QueryManager', () => {
       assert.deepEqual(resultData, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(store.getState()['5'], { id: '5', isPrivate: true });
+      assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
       done();
     }).catch((err) => {
       throw err;

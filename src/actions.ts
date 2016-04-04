@@ -12,6 +12,8 @@ export interface QueryResultAction {
 export interface QueryInitAction {
   type: 'QUERY_INIT';
   selectionSet: SelectionSet;
+  rootId: string;
+  typeName: string;
   variables: Object;
   forceFetch: boolean;
   returnPartialData: boolean;

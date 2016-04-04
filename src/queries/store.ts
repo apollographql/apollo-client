@@ -18,6 +18,7 @@ export interface QueryStoreValue {
   variables: Object;
   status: QueryStatus;
   error: Error;
+  result: any;
 }
 
 export type QueryStatus =

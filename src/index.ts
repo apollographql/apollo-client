@@ -72,4 +72,11 @@ export class ApolloClient {
       });
     });
   }
+
+  public mutate(options: {
+    mutation: string,
+    variables?: Object,
+  }): Promise<any> {
+    return this.queryManager.mutate(options);
+  }
 }

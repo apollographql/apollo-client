@@ -17,7 +17,7 @@ import {
 
 import {
   NormalizedCache,
-} from '../store';
+} from './store';
 
 import {
   SelectionSet,

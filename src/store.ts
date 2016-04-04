@@ -1,5 +1,4 @@
 import {
-  SelectionSet,
   OperationDefinition,
 } from 'graphql';
 
@@ -11,25 +10,17 @@ import {
 } from 'redux';
 
 import {
-  assign,
-} from 'lodash';
+  data,
+  NormalizedCache,
+} from './data/store';
 
 import {
-  writeSelectionSetToStore,
-} from './data/writeToStore';
+  ApolloAction,
+} from './actions';
 
 export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
-}
-
-export interface NormalizedCache {
-  [dataId: string]: StoreObject;
-}
-
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldKey: string]: StoreValue;
 }
 
 export interface QueryStore {
@@ -55,36 +46,6 @@ export type QueryStatus =
 
   // We got a GraphQL result from the server, and it's in the store
   "DONE";
-
-export type StoreValue = number | string | string[];
-
-export const QUERY_RESULT_ACTION = 'QUERY_RESULT';
-
-export function createQueryResultAction({
-  result,
-  selectionSet,
-  variables,
-}: {
-  result: any,
-  selectionSet: SelectionSet,
-  variables: Object
-}): QueryResultAction {
-  return {
-    type: QUERY_RESULT_ACTION,
-    result,
-    selectionSet,
-    variables,
-  };
-}
-
-export interface QueryResultAction {
-  type: string;
-  result: any;
-  selectionSet: SelectionSet;
-  variables: Object;
-}
-
-export type ApolloAction = QueryResultAction;
 
 const crashReporter = store => next => action => {
   try {
@@ -114,28 +75,6 @@ export function createApolloStore() {
   enhancers.push(applyMiddleware(crashReporter));
 
   return createStore(apolloReducer, compose(...enhancers));
-}
-
-export function data(
-  previousState: NormalizedCache = {},
-  action: ApolloAction
-): NormalizedCache {
-  switch (action.type) {
-    case QUERY_RESULT_ACTION:
-      // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as NormalizedCache;
-
-      const newState = writeSelectionSetToStore({
-        result: action.result,
-        selectionSet: action.selectionSet,
-        variables: action.variables,
-        store: clonedState,
-      });
-
-      return newState;
-    default:
-      return previousState;
-  }
 }
 
 export function queries(

@@ -9,9 +9,12 @@ import {
 
 import {
   Store,
-  StoreObject,
   createApolloStore,
 } from '../src/store';
+
+import {
+  StoreObject,
+} from '../src/data/store';
 
 import {
   parseFragment,

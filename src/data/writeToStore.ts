@@ -30,7 +30,7 @@ import {
 import {
   NormalizedCache,
   StoreObject,
-} from '../store';
+} from './store';
 
 // import {
 //   printAST,

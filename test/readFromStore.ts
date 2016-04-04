@@ -8,7 +8,7 @@ import {
 import {
   NormalizedCache,
   StoreObject,
-} from '../src/store';
+} from '../src/data/store';
 
 describe('reading from the store', () => {
   it('rejects malformed queries', () => {

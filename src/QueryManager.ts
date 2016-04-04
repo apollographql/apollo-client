@@ -14,10 +14,16 @@ import {
 } from 'lodash';
 
 import {
-  createQueryResultAction,
   Store,
-  NormalizedCache,
 } from './store';
+
+import {
+  NormalizedCache,
+} from './data/store';
+
+import {
+  createQueryResultAction,
+} from './actions';
 
 import {
   Store as ReduxStore,

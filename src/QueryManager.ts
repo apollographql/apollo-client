@@ -112,16 +112,18 @@ export class QueryManager {
     // template string
     const queryDef = parseQuery(query);
 
+    // Generate a query ID
+    const queryId = this.idCounter.toString();
+    this.idCounter++;
+
     // Set up a watch handle on the store using the parsed query, we need to do this first to
     // generate a query ID
-    const watchHandle = this.watchSelectionSet({
+    const watchHandle = this.watchSelectionSet(queryId, {
       selectionSet: queryDef.selectionSet,
       rootId: 'ROOT_QUERY',
       typeName: 'Query',
       variables,
     });
-
-    const queryId = watchHandle.id;
 
     let queryDefForRequest = queryDef;
     let existingData;
@@ -178,10 +180,7 @@ export class QueryManager {
     });
   }
 
-  public watchSelectionSet(selectionSetWithRoot: SelectionSetWithRoot): WatchedQueryHandle {
-    const queryId = this.idCounter.toString();
-    this.idCounter++;
-
+  public watchSelectionSet(queryId: string, selectionSetWithRoot: SelectionSetWithRoot): WatchedQueryHandle {
     this.selectionSetMap[queryId] = selectionSetWithRoot;
 
     const isStopped = () => {

@@ -57,7 +57,7 @@ describe('QueryManager', () => {
       nullField: null,
     } as StoreObject;
 
-    const handle = queryManager.watchSelectionSet({
+    const handle = queryManager.watchSelectionSet('1', {
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragmentDef.selectionSet,
@@ -101,14 +101,14 @@ describe('QueryManager', () => {
       }
     `);
 
-    const handle1 = queryManager.watchSelectionSet({
+    const handle1 = queryManager.watchSelectionSet('1', {
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragment1Def.selectionSet,
       variables: {},
     });
 
-    const handle2 = queryManager.watchSelectionSet({
+    const handle2 = queryManager.watchSelectionSet('2', {
       rootId: 'abcd',
       typeName: 'Person',
       selectionSet: fragment2Def.selectionSet,

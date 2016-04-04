@@ -44,6 +44,24 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
   const _opts: RequestInit = assign({}, opts);
   const _middlewares: Array<Function> = [];
 
+  function applyMiddlewares(request: Request): Promise<Request> {
+    return new Promise((resolve, reject) => {
+      const queue = (funcs, scope) => {
+        (function next() {
+          if (funcs.length > 0) {
+            const f = funcs.shift();
+            f.applyMiddleware.apply(scope, [{ request, options: _opts }, next]);
+          } else {
+            resolve(request);
+          }
+        })();
+      };
+
+      // iterate through middlewares using next callback
+      queue(_middlewares, this);
+    });
+  }
+
   function fetchFromRemoteEndpoint(request: Request): Promise<IResponse> {
     return fetch(uri, assign({}, _opts, {
       body: JSON.stringify(request),
@@ -56,16 +74,19 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
   };
 
   function query(request: Request): Promise<GraphQLResult> {
-    return fetchFromRemoteEndpoint(request)
-      .then(result => result.json())
-      .then((payload: GraphQLResult) => {
-        if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
-          throw new Error(
-            `Server response was missing for query '${request.debugName}'.`
-          );
-        } else {
-          return payload as GraphQLResult;
-        }
+    return applyMiddlewares(request)
+      .then((alteredRequest) => {
+        return fetchFromRemoteEndpoint(alteredRequest)
+          .then(result => result.json())
+          .then((payload: GraphQLResult) => {
+            if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
+              throw new Error(
+                `Server response was missing for query '${request.debugName}'.`
+              );
+            } else {
+              return payload as GraphQLResult;
+            }
+          });
       });
   };
 

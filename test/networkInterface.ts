@@ -11,6 +11,7 @@ const { assert } = chai;
 import {
   createNetworkInterface,
   NetworkInterface,
+  MiddlewareRequest,
 } from '../src/networkInterface';
 
 describe('network interface', () => {
@@ -70,6 +71,129 @@ describe('network interface', () => {
       networkInterface.use([testWare1, testWare2]);
 
       assert.deepEqual(networkInterface._middlewares, [testWare1, testWare2]);
+    });
+
+    it('should alter the request', () => {
+      const testWare1 = new TestWare([
+        { key: 'personNum', val: 1 },
+      ]);
+
+      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      swapi.use([testWare1]);
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: `
+          query people($personNum: Int!) {
+            allPeople(first: $personNum) {
+              people {
+                name
+              }
+            }
+          }
+        `,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        {
+          data: {
+            allPeople: {
+              people: [
+                {
+                  name: 'Luke Skywalker',
+                },
+              ],
+            },
+          },
+        }
+      );
+    });
+
+    it('should alter the options', () => {
+      const testWare1 = new TestWare([], [
+        { key: 'planet', val: 'mars' },
+      ]);
+
+      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      swapi.use([testWare1]);
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: `
+          query people {
+            allPeople(first: 1) {
+              people {
+                name
+              }
+            }
+          }
+        `,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return swapi.query(simpleRequest).then((data) => {
+        assert.deepEqual(swapi._opts, { planet: 'mars' });
+      });
+
+    });
+
+    it('handle multiple middlewares', () => {
+      const testWare1 = new TestWare([
+        { key: 'personNum', val: 1 },
+      ]);
+      const testWare2 = new TestWare([
+        { key: 'filmNum', val: 1 },
+      ]);
+
+      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      swapi.use([testWare1, testWare2]);
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: `
+          query people($personNum: Int!, $filmNum: Int!) {
+            allPeople(first: $personNum) {
+              people {
+                name
+                filmConnection(first: $filmNum) {
+                  edges {
+                    node {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        {
+          data: {
+            allPeople: {
+              people: [
+                {
+                  name: 'Luke Skywalker',
+                  filmConnection: {
+                    edges: [
+                      {
+                        node: {
+                          id: 'ZmlsbXM6MQ==',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        }
+      );
     });
   });
 
@@ -166,6 +290,22 @@ describe('network interface', () => {
   });
 });
 
-function TestWare() {
-  // code
+// simulate middleware by altering variables and options
+function TestWare(
+  variables: Array<{ key: string, val: any }> = [],
+  options: Array<{ key: string, val: any }> = []
+) {
+
+  this.applyMiddleware = (request: MiddlewareRequest, next: Function): void => {
+    variables.map((variable) => {
+      request.request.variables[variable.key] = variable.val;
+    });
+
+    options.map((variable) => {
+      request.options[variable.key] = variable.val;
+    });
+
+    next();
+  };
+
 }

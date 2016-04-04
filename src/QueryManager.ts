@@ -15,19 +15,12 @@ import {
 
 import {
   Store,
+  ApolloStore,
 } from './store';
 
 import {
   NormalizedCache,
 } from './data/store';
-
-import {
-  createQueryResultAction,
-} from './actions';
-
-import {
-  Store as ReduxStore,
-} from 'redux';
 
 import {
   SelectionSet,
@@ -51,7 +44,7 @@ import {
 
 export class QueryManager {
   private networkInterface: NetworkInterface;
-  private store: ReduxStore;
+  private store: ApolloStore;
   private selectionSetMap: { [queryId: number]: SelectionSetWithRoot };
 
   private resultCallbacks: { [queryId: number]: QueryResultCallback[] };
@@ -63,7 +56,7 @@ export class QueryManager {
     store,
   }: {
     networkInterface: NetworkInterface,
-    store: ReduxStore,
+    store: ApolloStore,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -98,11 +91,12 @@ export class QueryManager {
           __data_id: 'ROOT_MUTATION',
         }, result.data);
 
-        this.store.dispatch(createQueryResultAction({
+        this.store.dispatch({
+          type: 'QUERY_RESULT',
           result: resultWithDataId,
           selectionSet: mutationDef.selectionSet,
           variables,
-        }));
+        });
 
         return result.data;
       });
@@ -257,11 +251,12 @@ export class QueryManager {
             __data_id: 'ROOT_QUERY',
           }, result.data);
 
-          this.store.dispatch(createQueryResultAction({
+          this.store.dispatch({
+            type: 'QUERY_RESULT',
             result: resultWithDataId,
             variables: request.variables,
             selectionSet,
-          }));
+          });
         }
       }).catch((errors: GraphQLError[]) => {
         this.handleQueryErrorsAndStop(queryId, errors);

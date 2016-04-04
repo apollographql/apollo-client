@@ -2,30 +2,28 @@ import {
   SelectionSet,
 } from 'graphql';
 
-export const QUERY_RESULT_ACTION = 'QUERY_RESULT';
-
-export function createQueryResultAction({
-  result,
-  selectionSet,
-  variables,
-}: {
-  result: any,
-  selectionSet: SelectionSet,
-  variables: Object
-}): QueryResultAction {
-  return {
-    type: QUERY_RESULT_ACTION,
-    result,
-    selectionSet,
-    variables,
-  };
-}
-
 export interface QueryResultAction {
-  type: string;
+  type: 'QUERY_RESULT';
   result: any;
   selectionSet: SelectionSet;
   variables: Object;
 }
 
-export type ApolloAction = QueryResultAction;
+export interface QueryInitAction {
+  type: 'QUERY_INIT';
+  selectionSet: SelectionSet;
+  variables: Object;
+  forceFetch: boolean;
+  returnPartialData: boolean;
+  queryId: string;
+}
+
+export function isQueryResultAction(action: ApolloAction): action is QueryResultAction {
+  return action.type === 'QUERY_RESULT';
+}
+
+export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {
+  return action.type === 'QUERY_INIT';
+}
+
+export type ApolloAction = QueryResultAction | QueryInitAction;

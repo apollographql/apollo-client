@@ -1,6 +1,6 @@
 import {
   ApolloAction,
-  QUERY_RESULT_ACTION,
+  isQueryResultAction,
 } from '../actions';
 
 import {
@@ -26,20 +26,19 @@ export function data(
   previousState: NormalizedCache = {},
   action: ApolloAction
 ): NormalizedCache {
-  switch (action.type) {
-    case QUERY_RESULT_ACTION:
-      // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as NormalizedCache;
+  if (isQueryResultAction(action)) {
+    // XXX use immutablejs instead of cloning
+    const clonedState = assign({}, previousState) as NormalizedCache;
 
-      const newState = writeSelectionSetToStore({
-        result: action.result,
-        selectionSet: action.selectionSet,
-        variables: action.variables,
-        store: clonedState,
-      });
+    const newState = writeSelectionSetToStore({
+      result: action.result,
+      selectionSet: action.selectionSet,
+      variables: action.variables,
+      store: clonedState,
+    });
 
-      return newState;
-    default:
-      return previousState;
+    return newState;
+  } else {
+    return previousState;
   }
 }

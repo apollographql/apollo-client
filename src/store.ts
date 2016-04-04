@@ -15,9 +15,20 @@ import {
   QueryStore,
 } from './queries/store';
 
+import {
+  ApolloAction,
+} from './actions';
+
 export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
+}
+
+// This is our interface on top of Redux to get types in our actions and store
+export interface ApolloStore {
+  dispatch: (action: ApolloAction) => void;
+  getState: () => Store;
+  subscribe: (listener: () => void) => void;
 }
 
 const crashReporter = store => next => action => {
@@ -35,7 +46,7 @@ export const apolloReducer = combineReducers({
   queries,
 });
 
-export function createApolloStore() {
+export function createApolloStore(): ApolloStore {
   const enhancers = [];
 
   if (typeof window !== 'undefined') {

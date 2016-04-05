@@ -6,7 +6,7 @@ import { assign } from 'lodash';
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
-const { assert } = chai;
+const { assert, expect } = chai;
 
 import {
   createNetworkInterface,
@@ -57,6 +57,24 @@ describe('network interface', () => {
   });
 
   describe('middleware', () => {
+    it('should throw an error if you pass something bad', () => {
+      const malWare = function(){
+        // bad middleware
+      };
+      const networkInterface = createNetworkInterface('/graphql');
+
+      try {
+        networkInterface.use([malWare]);
+        expect.fail();
+      } catch (error) {
+        assert.equal(
+          error.message,
+          'Middleware must implement the applyMiddleware function'
+        );
+      }
+
+    });
+
     it('should take a middleware and assign it', () => {
       const testWare = new TestWare();
 

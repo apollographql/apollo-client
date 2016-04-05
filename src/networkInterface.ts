@@ -85,8 +85,14 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
       });
   };
 
-  function use(middlewares: Array<Function>) {
-    _middlewares.push(...middlewares);
+  function use(middlewares: Array<any>) {
+    middlewares.map((middleware) => {
+      if (typeof middleware.applyMiddleware === 'function') {
+        _middlewares.push(middleware);
+      } else {
+        throw new Error('Middleware must implement the applyMiddleware function');
+      }
+    });
   }
 
   return {

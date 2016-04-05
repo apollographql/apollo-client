@@ -23,7 +23,7 @@ export class AuthTokenHeaderMiddleware implements MiddlewareInterface {
 
   public applyMiddleware = (request: MiddlewareRequest, next: Function) => {
     if (!this._token) {
-      throw new Error('AuthTokenHeaderMiddleware error: no token found');
+      return;
     }
 
     if (!request.options.headers) {

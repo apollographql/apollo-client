@@ -6,7 +6,7 @@ import { cloneDeep } from 'lodash';
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
-const { assert, expect } = chai;
+const { assert } = chai;
 
 import {
   AuthTokenHeaderMiddleware,
@@ -100,7 +100,7 @@ describe('middleware', () => {
 
     });
 
-    it('should throw an error if no token', () => {
+    it('should not add the token if no token and no headers', () => {
       const authMiddleware = new AuthTokenHeaderMiddleware();
 
       // this is a stub for the end user client api
@@ -125,15 +125,45 @@ describe('middleware', () => {
         return;
       };
 
-      try {
-        authMiddleware.applyMiddleware(middlewareRequest, next);
-        expect.fail();
-      } catch (error) {
-        assert.equal(
-          error.message,
-          'AuthTokenHeaderMiddleware error: no token found'
-        );
-      }
+      authMiddleware.applyMiddleware(middlewareRequest, next);
+      assert.isUndefined(middlewareRequest.options.headers);
+    });
+
+    it('should not add the token if no token and existing headers', () => {
+      const authMiddleware = new AuthTokenHeaderMiddleware();
+
+      const existingHeaders = new Headers();
+      existingHeaders['Test'] = 'test';
+
+      // this is a stub for the end user client api
+      const middlewareRequest = {
+        request: {
+          query: `
+            query people($personNum: Int!) {
+              allPeople(first: $personNum) {
+                people {
+                  name
+                }
+              }
+            }
+          `,
+          variables: {},
+          debugName: 'People query',
+        },
+        options: {
+          headers: existingHeaders,
+        },
+      } as MiddlewareRequest;
+
+      const next = () => {
+        return;
+      };
+
+      authMiddleware.applyMiddleware(middlewareRequest, next);
+      assert.deepEqual(
+        middlewareRequest.options.headers,
+        existingHeaders
+      );
     });
 
     it('should allow setting a custom header', () => {

@@ -11,8 +11,11 @@ const { assert } = chai;
 import {
   createNetworkInterface,
   NetworkInterface,
-  MiddlewareRequest,
 } from '../src/networkInterface';
+
+import {
+  MiddlewareRequest,
+} from '../src/middleware';
 
 describe('network interface', () => {
   describe('creating a network interface', () => {

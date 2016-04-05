@@ -18,11 +18,6 @@ export interface Request {
   variables?: Object;
 }
 
-export interface MiddlewareRequest {
-  request: Request;
-  options: RequestInit;
-}
-
 export interface NetworkInterface {
   _uri: string;
   _opts: RequestInit;

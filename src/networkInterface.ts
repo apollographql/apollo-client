@@ -42,14 +42,15 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
   function applyMiddlewares(request: Request): Promise<Request> {
     return new Promise((resolve, reject) => {
       const queue = (funcs, scope) => {
-        (function next() {
+        const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();
             f.applyMiddleware.apply(scope, [{ request, options: _opts }, next]);
           } else {
             resolve(request);
           }
-        })();
+        };
+        next();
       };
 
       // iterate through middlewares using next callback

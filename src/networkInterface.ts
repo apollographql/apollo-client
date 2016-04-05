@@ -12,6 +12,8 @@ import {
 
 import { GraphQLResult } from 'graphql';
 
+import { MiddlewareInterface } from './middleware';
+
 export interface Request {
   debugName?: string;
   query?: string;
@@ -21,9 +23,9 @@ export interface Request {
 export interface NetworkInterface {
   _uri: string;
   _opts: RequestInit;
-  _middlewares: Array<Function>;
+  _middlewares: MiddlewareInterface[];
   query(request: Request): Promise<GraphQLResult>;
-  use(middlewares: Array<Function>);
+  use(middlewares: MiddlewareInterface[]);
 }
 
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): NetworkInterface {
@@ -37,7 +39,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
 
   const _uri: string = uri;
   const _opts: RequestInit = assign({}, opts);
-  const _middlewares: Array<Function> = [];
+  const _middlewares: MiddlewareInterface[] = [];
 
   function applyMiddlewares(request: Request): Promise<Request> {
     return new Promise((resolve, reject) => {
@@ -86,7 +88,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
       });
   };
 
-  function use(middlewares: Array<any>) {
+  function use(middlewares: MiddlewareInterface[]) {
     middlewares.map((middleware) => {
       if (typeof middleware.applyMiddleware === 'function') {
         _middlewares.push(middleware);

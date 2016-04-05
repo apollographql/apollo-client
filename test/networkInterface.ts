@@ -58,9 +58,8 @@ describe('network interface', () => {
 
   describe('middleware', () => {
     it('should throw an error if you pass something bad', () => {
-      const malWare = function(){
-        // bad middleware
-      };
+      const malWare = new TestWare();
+      delete malWare.applyMiddleware;
       const networkInterface = createNetworkInterface('/graphql');
 
       try {

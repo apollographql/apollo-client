@@ -398,8 +398,84 @@ describe('QueryManager', () => {
     ], done);
   });
 
-  it(`doesn't return data while query is loading`, () => {
-    assert.fail();
+  it(`doesn't return data while query is loading`, (done) => {
+    const query1 = `
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const query2 = `
+      {
+        people_one(id: 5) {
+          name
+        }
+      }
+    `;
+
+    const data2 = {
+      people_one: {
+        name: 'Darth Vader',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: query1 },
+        result: { data: data1 },
+        delay: 10,
+      },
+      {
+        request: { query: query2 },
+        result: { data: data2 },
+      },
+    ]);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
+
+    const handle1 = queryManager.watchQuery({
+      query: query1,
+    });
+
+    const handle2 = queryManager.watchQuery({
+      query: query2,
+    });
+
+    let handle1Count = 0;
+    let handle2Count = 0;
+
+    handle1.onResult((result) => {
+      handle1Count++;
+      checkDone();
+    });
+
+    handle2.onResult((result) => {
+      handle2Count++;
+      checkDone();
+    });
+
+    function checkDone() {
+      // If we make sure queries aren't called twice if the result didn't change, handle2Count
+      // should change to 1
+      if (handle1Count === 1 && handle2Count == 2) {
+        done();
+      }
+
+      if (handle1Count > 1) {
+        assert.fail();
+      }
+    }
   });
 
   it(`returns data while query is loading if returnPartialData is passed`, () => {
@@ -417,19 +493,23 @@ function mockNetworkInterface(
   requestResultArray: {
     request: Request,
     result: GraphQLResult,
+    delay?: number,
   }[]
 ) {
   const requestToResultMap: any = {};
+  const requestToDelayMap: any = {};
 
   // Populate set of mocked requests
-  requestResultArray.forEach(({ request, result }) => {
+  requestResultArray.forEach(({ request, result, delay }) => {
     requestToResultMap[requestToKey(request)] = result as GraphQLResult;
+    requestToDelayMap[requestToKey(request)] = delay;
   });
 
   // A mock for the query method
   const queryMock = (request: Request) => {
     return new Promise((resolve, reject) => {
       const resultData = requestToResultMap[requestToKey(request)];
+      const delay = requestToDelayMap[requestToKey(request)];
 
       if (! resultData) {
         throw new Error(`Passed request that wasn't mocked: ${requestToKey(request)}`);
@@ -437,7 +517,7 @@ function mockNetworkInterface(
 
       setTimeout(() => {
         resolve(resultData);
-      }, 0);
+      }, delay ? delay : 0);
     });
   };
 

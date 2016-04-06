@@ -6,9 +6,16 @@ import { assign } from 'lodash';
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
-const { assert } = chai;
+const { assert, expect } = chai;
 
-import { createNetworkInterface, NetworkInterface } from '../src/networkInterface';
+import {
+  createNetworkInterface,
+  NetworkInterface,
+} from '../src/networkInterface';
+
+import {
+  MiddlewareRequest,
+} from '../src/middleware';
 
 describe('network interface', () => {
   describe('creating a network interface', () => {
@@ -46,6 +53,167 @@ describe('network interface', () => {
       delete customOpts.headers;
 
       assert.deepEqual(networkInterface._opts, originalOpts);
+    });
+  });
+
+  describe('middleware', () => {
+    it('should throw an error if you pass something bad', () => {
+      const malWare = new TestWare();
+      delete malWare.applyMiddleware;
+      const networkInterface = createNetworkInterface('/graphql');
+
+      try {
+        networkInterface.use([malWare]);
+        expect.fail();
+      } catch (error) {
+        assert.equal(
+          error.message,
+          'Middleware must implement the applyMiddleware function'
+        );
+      }
+
+    });
+
+    it('should take a middleware and assign it', () => {
+      const testWare = new TestWare();
+
+      const networkInterface = createNetworkInterface('/graphql');
+      networkInterface.use([testWare]);
+
+      assert.equal(networkInterface._middlewares[0], testWare);
+    });
+
+    it('should take more than one middleware and assign it', () => {
+      const testWare1 = new TestWare();
+      const testWare2 = new TestWare();
+
+      const networkInterface = createNetworkInterface('/graphql');
+      networkInterface.use([testWare1, testWare2]);
+
+      assert.deepEqual(networkInterface._middlewares, [testWare1, testWare2]);
+    });
+
+    it('should alter the request', () => {
+      const testWare1 = new TestWare([
+        { key: 'personNum', val: 1 },
+      ]);
+
+      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      swapi.use([testWare1]);
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: `
+          query people($personNum: Int!) {
+            allPeople(first: $personNum) {
+              people {
+                name
+              }
+            }
+          }
+        `,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        {
+          data: {
+            allPeople: {
+              people: [
+                {
+                  name: 'Luke Skywalker',
+                },
+              ],
+            },
+          },
+        }
+      );
+    });
+
+    it('should alter the options', () => {
+      const testWare1 = new TestWare([], [
+        { key: 'planet', val: 'mars' },
+      ]);
+
+      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      swapi.use([testWare1]);
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: `
+          query people {
+            allPeople(first: 1) {
+              people {
+                name
+              }
+            }
+          }
+        `,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return swapi.query(simpleRequest).then((data) => {
+        assert.deepEqual(swapi._opts, { planet: 'mars' });
+      });
+
+    });
+
+    it('handle multiple middlewares', () => {
+      const testWare1 = new TestWare([
+        { key: 'personNum', val: 1 },
+      ]);
+      const testWare2 = new TestWare([
+        { key: 'filmNum', val: 1 },
+      ]);
+
+      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      swapi.use([testWare1, testWare2]);
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: `
+          query people($personNum: Int!, $filmNum: Int!) {
+            allPeople(first: $personNum) {
+              people {
+                name
+                filmConnection(first: $filmNum) {
+                  edges {
+                    node {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        {
+          data: {
+            allPeople: {
+              people: [
+                {
+                  name: 'Luke Skywalker',
+                  filmConnection: {
+                    edges: [
+                      {
+                        node: {
+                          id: 'ZmlsbXM6MQ==',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        }
+      );
     });
   });
 
@@ -141,3 +309,23 @@ describe('network interface', () => {
     });
   });
 });
+
+// simulate middleware by altering variables and options
+function TestWare(
+  variables: Array<{ key: string, val: any }> = [],
+  options: Array<{ key: string, val: any }> = []
+) {
+
+  this.applyMiddleware = (request: MiddlewareRequest, next: Function): void => {
+    variables.map((variable) => {
+      request.request.variables[variable.key] = variable.val;
+    });
+
+    options.map((variable) => {
+      request.options[variable.key] = variable.val;
+    });
+
+    next();
+  };
+
+}

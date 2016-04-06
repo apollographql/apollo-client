@@ -2,7 +2,6 @@ import {
   createStore,
   compose,
   applyMiddleware,
-  combineReducers,
 } from 'redux';
 
 import {
@@ -16,12 +15,18 @@ import {
 } from './queries/store';
 
 import {
+  mutations,
+  MutationStore,
+} from './mutations/store';
+
+import {
   ApolloAction,
 } from './actions';
 
 export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
+  mutations: MutationStore;
 }
 
 // This is our interface on top of Redux to get types in our actions and store
@@ -41,10 +46,18 @@ const crashReporter = store => next => action => {
   }
 };
 
-export const apolloReducer = combineReducers({
-  data,
-  queries,
-});
+export function apolloReducer(state = {} as Store, action: ApolloAction) {
+  const newState = {
+    queries: queries(state.queries, action),
+    mutations: mutations(state.mutations, action),
+
+    // Note that we are passing the queries into this, because it reads them to associate
+    // the query ID in the result with the actual query
+    data: data(state.data, action, state.queries, state.mutations),
+  };
+
+  return newState;
+}
 
 export function createApolloStore(): ApolloStore {
   const enhancers = [];

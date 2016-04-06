@@ -65,7 +65,12 @@ export function writeFragmentToStore({
   const parsedFragment: FragmentDefinition = parseFragment(fragment);
   const selectionSet: SelectionSet = parsedFragment.selectionSet;
 
+  if (!result['id']) {
+    throw new Error('Result must have id when writing fragment to store.');
+  }
+
   return writeSelectionSetToStore({
+    dataId: result['id'],
     result,
     selectionSet,
     store,
@@ -86,12 +91,9 @@ export function writeQueryToStore({
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = parseQuery(query);
 
-  const resultWithDataId: Object = assign({
-    __data_id: 'ROOT_QUERY',
-  }, result);
-
   return writeSelectionSetToStore({
-    result: resultWithDataId,
+    dataId: 'ROOT_QUERY',
+    result,
     selectionSet: queryDefinition.selectionSet,
     store,
     variables,
@@ -100,21 +102,17 @@ export function writeQueryToStore({
 
 export function writeSelectionSetToStore({
   result,
+  dataId,
   selectionSet,
   store = {} as NormalizedCache,
   variables,
 }: {
+  dataId: string,
   result: any,
   selectionSet: SelectionSet,
   store?: NormalizedCache,
   variables: Object,
 }): NormalizedCache {
-  if (! isString(result.id) && ! isString(result.__data_id)) {
-    throw new Error('Result passed to writeSelectionSetToStore must have a string ID');
-  }
-
-  const dataId: string = result['__data_id'] || result.id;
-
   selectionSet.selections.forEach((selection) => {
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
@@ -138,6 +136,7 @@ export function writeSelectionSetToStore({
         selectionSet: selection.selectionSet,
         store,
         variables,
+        dataId,
       });
     } else {
       throw new Error('Non-inline fragments not supported.');
@@ -181,18 +180,15 @@ function writeFieldToStore({
         if (isNull(item)) {
           thisIdList.push(null);
         } else {
-          const clonedItem: any = assign({}, item);
+          const itemDataId = isString(item.id) ?
+            item.id :
+            `${dataId}.${storeFieldName}.${index}`;
 
-          if (! isString(clonedItem.id)) {
-            clonedItem['__data_id'] = `${dataId}.${storeFieldName}.${index}`;
-          } else {
-            clonedItem['__data_id'] = clonedItem.id;
-          }
-
-          thisIdList.push(clonedItem['__data_id']);
+          thisIdList.push(itemDataId);
 
           writeSelectionSetToStore({
-            result: clonedItem,
+            dataId: itemDataId,
+            result: item,
             store,
             selectionSet: field.selectionSet,
             variables,
@@ -201,27 +197,22 @@ function writeFieldToStore({
       });
 
       storeValue = thisIdList;
-
     }
-
   } else {
     // It's an object
-    const clonedValue: any = assign({}, value);
-    if (! isString(clonedValue.id)) {
-      // Object doesn't have an ID, so store it with its field name and parent ID
-      clonedValue['__data_id'] = `${dataId}.${storeFieldName}`;
-    } else {
-      clonedValue['__data_id'] = clonedValue.id;
-    }
+    const valueDataId = isString(value.id) ?
+      value.id :
+      `${dataId}.${storeFieldName}`;
 
     writeSelectionSetToStore({
-      result: clonedValue,
+      dataId: valueDataId,
+      result: value,
       store,
       selectionSet: field.selectionSet,
       variables,
     });
 
-    storeValue = clonedValue['__data_id'];
+    storeValue = valueDataId;
   }
 
   const newStoreObj = assign({}, store[dataId], {

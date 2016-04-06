@@ -9,7 +9,6 @@ import {
 } from './parser';
 
 import {
-  assign,
   forOwn,
 } from 'lodash';
 
@@ -19,14 +18,12 @@ import {
 } from './store';
 
 import {
-  NormalizedCache,
-} from './data/store';
+  SelectionSetWithRoot,
+  QueryStoreValue,
+} from './queries/store';
 
 import {
-  SelectionSet,
-  GraphQLError,
   GraphQLResult,
-  OperationDefinition,
 } from 'graphql';
 
 import {
@@ -45,7 +42,6 @@ import {
 export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
-  private selectionSetMap: { [queryId: number]: SelectionSetWithRoot };
 
   private resultCallbacks: { [queryId: number]: QueryResultCallback[] };
 
@@ -63,7 +59,6 @@ export class QueryManager {
     this.networkInterface = networkInterface;
     this.store = store;
 
-    this.selectionSetMap = {};
     this.resultCallbacks = {};
 
     this.store.subscribe(() => {
@@ -77,7 +72,11 @@ export class QueryManager {
   }: {
     mutation: string,
     variables?: Object,
-  }): Promise<any> {
+  }): Promise<GraphQLResult> {
+    // Generate a query ID
+    const mutationId = this.idCounter.toString();
+    this.idCounter++;
+
     const mutationDef = parseMutation(mutation);
 
     const request = {
@@ -85,20 +84,27 @@ export class QueryManager {
       variables,
     } as Request;
 
+    this.store.dispatch({
+      type: 'MUTATION_INIT',
+      mutationString: mutation,
+      mutation: {
+        id: 'ROOT_MUTATION',
+        typeName: 'Mutation',
+        selectionSet: mutationDef.selectionSet,
+      },
+      variables,
+      mutationId,
+    });
+
     return this.networkInterface.query(request)
       .then((result) => {
-        const resultWithDataId = assign({
-          __data_id: 'ROOT_MUTATION',
-        }, result.data);
-
         this.store.dispatch({
-          type: 'QUERY_RESULT',
-          result: resultWithDataId,
-          selectionSet: mutationDef.selectionSet,
-          variables,
+          type: 'MUTATION_RESULT',
+          result,
+          mutationId,
         });
 
-        return result.data;
+        return result;
       });
   }
 
@@ -108,83 +114,139 @@ export class QueryManager {
     forceFetch = true,
     returnPartialData = false,
   }: WatchQueryOptions): WatchedQueryHandle {
-    // First, parse the query passed in -- this could also be done by a build plugin or tagged
-    // template string
-    const queryDef = parseQuery(query);
-
     // Generate a query ID
     const queryId = this.idCounter.toString();
     this.idCounter++;
 
-    // Set up a watch handle on the store using the parsed query, we need to do this first to
-    // generate a query ID
-    const watchHandle = this.watchSelectionSet(queryId, {
-      selectionSet: queryDef.selectionSet,
-      rootId: 'ROOT_QUERY',
-      typeName: 'Query',
-      variables,
-    });
 
-    let queryDefForRequest = queryDef;
-    let existingData;
-    let request = {
-      query: query,
-      variables,
-    } as Request;
+    this.resultCallbacks[queryId] = [];
+
+    const queryString = query;
+
+    // Parse the query passed in -- this could also be done by a build plugin or tagged
+    // template string
+    const querySS = {
+      id: 'ROOT_QUERY',
+      typeName: 'Query',
+      selectionSet: parseQuery(query).selectionSet,
+    } as SelectionSetWithRoot;
+
+    // If we don't use diffing, then these will be the same as the original query
+    let minimizedQueryString = query;
+    let minimizedQuery = querySS;
+
+    let initialResult;
 
     if (!forceFetch) {
       // If the developer has specified they want to use the existing data in the store for this
       // query, use the query diff algorithm to get as much of a result as we can, and identify
       // what data is missing from the store
-      const diffResult = this.diffRequestAgainstStore(request, queryDef.selectionSet);
+      const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
+        selectionSet: querySS.selectionSet,
+        store: this.store.getState().data,
+        throwOnMissingField: false,
+        rootId: querySS.id,
+        variables,
+      });
 
-      // Overwrite the request we were going to make with a smaller one
-      queryDefForRequest = diffResult.minimalQueryDef;
-      existingData = diffResult.existingData;
-      request = diffResult.minimalRequest;
+      initialResult = result;
+
+      if (missingSelectionSets.length) {
+        const diffedQueryDef = queryDefinition(missingSelectionSets);
+
+        minimizedQuery = {
+          id: 'ROOT_QUERY',
+          typeName: 'Query',
+          selectionSet: diffedQueryDef.selectionSet,
+        };
+
+        minimizedQueryString = printQueryFromDefinition(diffedQueryDef);
+      } else {
+        minimizedQuery = null;
+        minimizedQueryString = null;
+      }
     }
 
-    // Now, we have figured out what request we actually want to make to the server
-    if (request) {
-      // If we actually need to fetch anything over the network, do that
-      this.makeRequest(queryId, request, queryDefForRequest.selectionSet);
+    // Initialize query in store
+    this.store.dispatch({
+      type: 'QUERY_INIT',
+      queryString,
+      query: querySS,
+      minimizedQueryString,
+      minimizedQuery,
+      variables,
+      forceFetch,
+      returnPartialData,
+      queryId,
+    });
 
-      if (returnPartialData) {
-        // Needs to be async to allow component to register result callback, even though we have
-        // the data right away
-        setTimeout(() => {
-          throw new Error('partial result return not implemented');
-        }, 0);
-      }
-    } else {
-      // If we already had all of the data in the store to service the request, do it without
-      // making any network requests at all
+    if (minimizedQuery) {
+      const request: Request = {
+        query: minimizedQueryString,
+        variables,
+      };
+
+      this.networkInterface.query(request)
+        .then((result: GraphQLResult) => {
+          // XXX handle multiple GraphQLResults
+          this.store.dispatch({
+            type: 'QUERY_RESULT',
+            result,
+            queryId,
+          });
+        }).catch((error: Error) => {
+           // XXX handle errors
+        });
+    }
+
+    if (! minimizedQuery || returnPartialData) {
       setTimeout(() => {
-        this.broadcastQueryChange(queryId, existingData);
+        // Make this async so that we have time to add a callback
+        this.store.dispatch({
+          type: 'QUERY_RESULT_CLIENT',
+          result: {
+            data: initialResult,
+          },
+          variables,
+          query: querySS,
+          complete: !! minimizedQuery,
+          queryId,
+        });
       }, 0);
     }
 
-    return watchHandle;
+    return this.watchQueryInStore(queryId);
   }
 
   public broadcastNewStore(store: Store) {
-    forOwn(this.selectionSetMap, (selectionSetWithRoot: SelectionSetWithRoot, queryId: string) => {
-      const resultFromStore = readSelectionSetFromStore({
-        store: store.data,
-        rootId: selectionSetWithRoot.rootId,
-        selectionSet: selectionSetWithRoot.selectionSet,
-        variables: selectionSetWithRoot.variables,
-      });
+    forOwn(store.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
+      // XXX We also need to check for network errors and returnPartialData
+      if (!queryStoreValue.loading) {
+        // XXX Currently, returning errors and data is exclusive because we
+        // don't handle partial results
+        if (queryStoreValue.graphQLErrors) {
+          this.broadcastQueryChange(queryId, {
+            errors: queryStoreValue.graphQLErrors,
+          });
+        } else {
+          const resultFromStore = readSelectionSetFromStore({
+            store: store.data,
+            rootId: queryStoreValue.query.id,
+            selectionSet: queryStoreValue.query.selectionSet,
+            variables: queryStoreValue.variables,
+          });
 
-      this.broadcastQueryChange(queryId, resultFromStore);
+          this.broadcastQueryChange(queryId, {
+            data: resultFromStore,
+          });
+        }
+      }
     });
   }
 
-  public watchSelectionSet(queryId: string, selectionSetWithRoot: SelectionSetWithRoot): WatchedQueryHandle {
-    this.selectionSetMap[queryId] = selectionSetWithRoot;
-
+  public watchQueryInStore(queryId: string): WatchedQueryHandle {
     const isStopped = () => {
-      return !this.selectionSetMap[queryId];
+      return !this.store.getState().queries[queryId];
     };
 
     return {
@@ -202,105 +264,23 @@ export class QueryManager {
   }
 
   private stopQuery(queryId) {
-    delete this.selectionSetMap[queryId];
-    delete this.registerResultCallback[queryId];
-  }
-
-  private broadcastQueryChange(queryId: string, result: any) {
-    this.resultCallbacks[queryId].forEach((callback) => {
-      callback(null, result);
+    this.store.dispatch({
+      type: 'QUERY_STOP',
+      queryId,
     });
+
+    delete this.resultCallbacks[queryId];
   }
 
-  private handleQueryErrorsAndStop(queryId: string, errors: GraphQLError[]) {
-    const errorCallbacks: QueryResultCallback[] = this.resultCallbacks[queryId];
-
-    this.stopQuery(queryId);
-
-    if (errorCallbacks && errorCallbacks.length) {
-      errorCallbacks.forEach((callback) => {
-        callback(errors);
-      });
-    } else {
-      // XXX maybe provide some info here?
-      throw new Error('Uncaught query errors. Use onError on the query handle to get errors.');
-    }
+  private broadcastQueryChange(queryId: string, result: GraphQLResult) {
+    this.resultCallbacks[queryId].forEach((callback) => {
+      callback(result);
+    });
   }
 
   private registerResultCallback(queryId: string, callback: QueryResultCallback): void {
-    if (!this.resultCallbacks[queryId]) {
-      this.resultCallbacks[queryId] = [];
-    }
-
     this.resultCallbacks[queryId].push(callback);
   }
-
-  private makeRequest(queryId: string, request: Request, selectionSet: SelectionSet) {
-    this.networkInterface.query(request)
-      .then((result: GraphQLResult) => {
-        let errors: GraphQLError[] = result.errors;
-
-        if (errors && errors.length) {
-          this.handleQueryErrorsAndStop(queryId, errors);
-        } else {
-          // XXX handle multiple GraphQLResults
-          // XXX handle partial responses where there was an error, right now we just bail out
-          // completely if there are any execution errors
-          const resultWithDataId = assign({
-            __data_id: 'ROOT_QUERY',
-          }, result.data);
-
-          this.store.dispatch({
-            type: 'QUERY_RESULT',
-            result: resultWithDataId,
-            variables: request.variables,
-            selectionSet,
-          });
-        }
-      }).catch((errors: GraphQLError[]) => {
-        this.handleQueryErrorsAndStop(queryId, errors);
-      });
-  }
-
-  private diffRequestAgainstStore(request: Request, selectionSet: SelectionSet) {
-    let clonedRequest = assign({}, request) as Request;
-
-    // Check if we already have the data to fulfill this query in the store
-    const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
-      selectionSet,
-      variables: request.variables,
-      rootId: 'ROOT_QUERY',
-      store: this.store.getState().data as NormalizedCache,
-      throwOnMissingField: false,
-    });
-
-    let queryDefForRequest: OperationDefinition;
-    if (missingSelectionSets.length) {
-      // XXX if the server doesn't follow the relay node spec, we need
-      // to refetch the whole query if there are any missing selection sets
-
-      // Replace the original query with a new set of queries which we think will fetch the
-      // missing data. The variables remain unchanged.
-      queryDefForRequest = queryDefinition(missingSelectionSets);
-      clonedRequest.query = printQueryFromDefinition(queryDefForRequest);
-    } else {
-      // We already have all of the data, no need to contact the server at all!
-      clonedRequest = null;
-    }
-
-    return {
-      existingData: result,
-      minimalRequest: clonedRequest,
-      minimalQueryDef: queryDefForRequest,
-    };
-  }
-}
-
-export interface SelectionSetWithRoot {
-  rootId: string;
-  typeName: string;
-  selectionSet: SelectionSet;
-  variables: Object;
 }
 
 export interface WatchedQueryHandle {
@@ -310,7 +290,7 @@ export interface WatchedQueryHandle {
   onResult(callback: QueryResultCallback);
 }
 
-export type QueryResultCallback = (error: GraphQLError[], result?: any) => void;
+export type QueryResultCallback = (result: GraphQLResult) => void;
 
 export interface WatchQueryOptions {
   query: string;

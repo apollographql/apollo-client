@@ -1,6 +1,7 @@
 import {
   ApolloAction,
   isQueryResultAction,
+  isMutationResultAction,
 } from '../actions';
 
 import {
@@ -10,6 +11,14 @@ import {
 import {
   assign,
 } from 'lodash';
+
+import {
+  QueryStore,
+} from '../queries/store';
+
+import {
+  MutationStore,
+} from '../mutations/store';
 
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
@@ -24,21 +33,47 @@ export type StoreValue = number | string | string[];
 
 export function data(
   previousState: NormalizedCache = {},
-  action: ApolloAction
+  action: ApolloAction,
+  queries: QueryStore,
+  mutations: MutationStore
 ): NormalizedCache {
   if (isQueryResultAction(action)) {
-    // XXX use immutablejs instead of cloning
-    const clonedState = assign({}, previousState) as NormalizedCache;
+    // XXX handle partial result due to errors
+    if (!action.result.errors) {
+      const queryStoreValue = queries[action.queryId];
 
-    const newState = writeSelectionSetToStore({
-      result: action.result,
-      selectionSet: action.selectionSet,
-      variables: action.variables,
-      store: clonedState,
-    });
+      // XXX use immutablejs instead of cloning
+      const clonedState = assign({}, previousState) as NormalizedCache;
 
-    return newState;
-  } else {
-    return previousState;
+      const newState = writeSelectionSetToStore({
+        result: action.result.data,
+        dataId: queryStoreValue.minimizedQuery.id,
+        selectionSet: queryStoreValue.minimizedQuery.selectionSet,
+        variables: queryStoreValue.variables,
+        store: clonedState,
+      });
+
+      return newState;
+    }
+  } else if (isMutationResultAction(action)) {
+    // Incorporate the result from this mutation into the store
+    if (!action.result.errors) {
+      const queryStoreValue = mutations[action.mutationId];
+
+      // XXX use immutablejs instead of cloning
+      const clonedState = assign({}, previousState) as NormalizedCache;
+
+      const newState = writeSelectionSetToStore({
+        result: action.result.data,
+        dataId: queryStoreValue.mutation.id,
+        selectionSet: queryStoreValue.mutation.selectionSet,
+        variables: queryStoreValue.variables,
+        store: clonedState,
+      });
+
+      return newState;
+    }
   }
+
+  return previousState;
 }

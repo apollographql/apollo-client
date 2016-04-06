@@ -131,7 +131,7 @@ describe('client', () => {
       .then((result) => {
         assert.deepEqual(result, { errors });
         done();
-       });
+      });
   });
 
   it('should allow for subscribing to a request', (done) => {
@@ -167,8 +167,8 @@ describe('client', () => {
 
     const handle = client.watchQuery({ query });
 
-    handle.onResult((error, result) => {
-      assert.deepEqual(result, data);
+    handle.onResult((result) => {
+      assert.deepEqual(result.data, data);
       done();
     });
   });

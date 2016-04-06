@@ -1,20 +1,14 @@
 import {
-  SelectionSet,
+  GraphQLResult,
 } from 'graphql';
+
+import {
+  SelectionSetWithRoot,
+} from './queries/store';
 
 export interface QueryResultAction {
   type: 'QUERY_RESULT';
-  result: any;
-  selectionSet: SelectionSet;
-  variables: Object;
-}
-
-export interface QueryInitAction {
-  type: 'QUERY_INIT';
-  selectionSet: SelectionSet;
-  variables: Object;
-  forceFetch: boolean;
-  returnPartialData: boolean;
+  result: GraphQLResult;
   queryId: string;
 }
 
@@ -22,8 +16,68 @@ export function isQueryResultAction(action: ApolloAction): action is QueryResult
   return action.type === 'QUERY_RESULT';
 }
 
+export interface QueryInitAction {
+  type: 'QUERY_INIT';
+  queryString: string;
+  query: SelectionSetWithRoot;
+  minimizedQueryString: string;
+  minimizedQuery: SelectionSetWithRoot;
+  variables: Object;
+  forceFetch: boolean;
+  returnPartialData: boolean;
+  queryId: string;
+}
+
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {
   return action.type === 'QUERY_INIT';
 }
 
-export type ApolloAction = QueryResultAction | QueryInitAction;
+export interface QueryResultClientAction {
+  type: 'QUERY_RESULT_CLIENT';
+  result: GraphQLResult;
+  complete: boolean;
+  queryId: string;
+}
+
+export function isQueryResultClientAction(action: ApolloAction): action is QueryResultClientAction {
+  return action.type === 'QUERY_RESULT_CLIENT';
+}
+
+export interface QueryStopAction {
+  type: 'QUERY_STOP';
+  queryId: string;
+}
+
+export function isQueryStopAction(action: ApolloAction): action is QueryStopAction {
+  return action.type === 'QUERY_STOP';
+}
+
+export interface MutationInitAction {
+  type: 'MUTATION_INIT';
+  mutationString: string;
+  mutation: SelectionSetWithRoot;
+  variables: Object;
+  mutationId: string;
+}
+
+export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
+  return action.type === 'MUTATION_INIT';
+}
+
+export interface MutationResultAction {
+  type: 'MUTATION_RESULT';
+  result: GraphQLResult;
+  mutationId: string;
+}
+
+export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {
+  return action.type === 'MUTATION_RESULT';
+}
+
+export type ApolloAction =
+  QueryResultAction |
+  QueryInitAction |
+  QueryResultClientAction |
+  QueryStopAction |
+  MutationInitAction |
+  MutationResultAction;

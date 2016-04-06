@@ -8,17 +8,8 @@ import {
 } from '../src/networkInterface';
 
 import {
-  Store,
   createApolloStore,
 } from '../src/store';
-
-import {
-  StoreObject,
-} from '../src/data/store';
-
-import {
-  parseFragment,
-} from '../src/parser';
 
 import {
   assert,
@@ -35,127 +26,6 @@ import {
 } from 'async';
 
 describe('QueryManager', () => {
-  it('works with one query', (done) => {
-    const queryManager = new QueryManager({
-      networkInterface: {} as NetworkInterface,
-      store: createApolloStore(),
-    });
-
-    const fragmentDef = parseFragment(`
-      fragment FragmentName on Item {
-        id
-        stringField
-        numberField
-        nullField
-      }
-    `);
-
-    const result = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-    } as StoreObject;
-
-    const handle = queryManager.watchSelectionSet('1', {
-      rootId: 'abcd',
-      typeName: 'Person',
-      selectionSet: fragmentDef.selectionSet,
-      variables: {},
-    });
-
-    handle.onResult((error, res) => {
-      assert.deepEqual(res, result);
-      done();
-    });
-
-    const store = {
-      data: {
-        abcd: result,
-      },
-      queries: {},
-    } as Store;
-
-    queryManager.broadcastNewStore(store);
-  });
-
-  it('works with two queries', (done) => {
-    const queryManager = new QueryManager({
-      networkInterface: {} as NetworkInterface,
-      store: createApolloStore(),
-    });
-
-    const fragment1Def = parseFragment(`
-      fragment FragmentName on Item {
-        id
-        numberField
-        nullField
-      }
-    `);
-
-    const fragment2Def = parseFragment(`
-      fragment FragmentName on Item {
-        id
-        stringField
-        nullField
-      }
-    `);
-
-    const handle1 = queryManager.watchSelectionSet('1', {
-      rootId: 'abcd',
-      typeName: 'Person',
-      selectionSet: fragment1Def.selectionSet,
-      variables: {},
-    });
-
-    const handle2 = queryManager.watchSelectionSet('2', {
-      rootId: 'abcd',
-      typeName: 'Person',
-      selectionSet: fragment2Def.selectionSet,
-      variables: {},
-    });
-
-    let numDone = 0;
-
-    handle1.onResult((error, res) => {
-      assert.deepEqual(res, {
-        id: 'abcd',
-        numberField: 5,
-        nullField: null,
-      });
-      numDone++;
-      if (numDone === 2) {
-        done();
-      }
-    });
-
-    handle2.onResult((error, res) => {
-      assert.deepEqual(res, {
-        id: 'abcd',
-        stringField: 'This is a string!',
-        nullField: null,
-      });
-      numDone++;
-      if (numDone === 2) {
-        done();
-      }
-    });
-
-    const store = {
-      data: {
-        abcd: {
-          id: 'abcd',
-          stringField: 'This is a string!',
-          numberField: 5,
-          nullField: null,
-        },
-      },
-      queries: {},
-    } as Store;
-
-    queryManager.broadcastNewStore(store);
-  });
-
   it('properly roundtrips through a Redux store', (done) => {
     const query = `
       query people {
@@ -193,8 +63,8 @@ describe('QueryManager', () => {
       query,
     });
 
-    handle.onResult((error, result) => {
-      assert.deepEqual(result, data);
+    handle.onResult((result) => {
+      assert.deepEqual(result.data, data);
       done();
     });
   });
@@ -241,8 +111,8 @@ describe('QueryManager', () => {
       variables,
     });
 
-    handle.onResult((error, result) => {
-      assert.deepEqual(result, data);
+    handle.onResult((result) => {
+      assert.deepEqual(result.data, data);
       done();
     });
   });
@@ -281,18 +151,13 @@ describe('QueryManager', () => {
       query,
     });
 
-    handle.onResult((error) => {
-      assert.equal(error[0].message, 'This is an error message.');
-
-      assert.throws(() => {
-        handle.onResult((err) => null);
-      }, /Query was stopped. Please create a new one./);
-
+    handle.onResult((result) => {
+      assert.equal(result.errors[0].message, 'This is an error message.');
       done();
     });
   });
 
-  it('runs a mutation', (done) => {
+  it('runs a mutation', () => {
     const mutation = `
       mutation makeListPrivate {
         makeListPrivate(id: "5")
@@ -315,17 +180,14 @@ describe('QueryManager', () => {
       store: createApolloStore(),
     });
 
-    queryManager.mutate({
+    return queryManager.mutate({
       mutation,
-    }).then((resultData) => {
-      assert.deepEqual(resultData, data);
-      done();
-    }).catch((err) => {
-      throw err;
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
     });
   });
 
-  it('runs a mutation with variables', (done) => {
+  it('runs a mutation with variables', () => {
     const mutation = `
       mutation makeListPrivate($listId: ID!) {
         makeListPrivate(id: $listId)
@@ -352,18 +214,15 @@ describe('QueryManager', () => {
       store: createApolloStore(),
     });
 
-    queryManager.mutate({
+    return queryManager.mutate({
       mutation,
       variables,
-    }).then((resultData) => {
-      assert.deepEqual(resultData, data);
-      done();
-    }).catch((err) => {
-      throw err;
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
     });
   });
 
-  it('runs a mutation and puts the result in the store', (done) => {
+  it('runs a mutation and puts the result in the store', () => {
     const mutation = `
       mutation makeListPrivate {
         makeListPrivate(id: "5") {
@@ -394,16 +253,54 @@ describe('QueryManager', () => {
       store,
     });
 
-    queryManager.mutate({
+    return queryManager.mutate({
       mutation,
-    }).then((resultData) => {
-      assert.deepEqual(resultData, data);
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
       assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
-      done();
-    }).catch((err) => {
-      throw err;
+    });
+  });
+
+  it('runs a mutation and puts the result in the store', () => {
+    const mutation = `
+      mutation makeListPrivate {
+        makeListPrivate(id: "5") {
+          id,
+          isPrivate,
+        }
+      }
+    `;
+
+    const data = {
+      makeListPrivate: {
+        id: '5',
+        isPrivate: true,
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation },
+        result: { data },
+      },
+    ]);
+
+    const store = createApolloStore();
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+    });
+
+    return queryManager.mutate({
+      mutation,
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
+
+      // Make sure we updated the store with the new data
+      assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
     });
   });
 
@@ -500,6 +397,167 @@ describe('QueryManager', () => {
       },
     ], done);
   });
+
+  it(`doesn't return data while query is loading`, (done) => {
+    const query1 = `
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const query2 = `
+      {
+        people_one(id: 5) {
+          name
+        }
+      }
+    `;
+
+    const data2 = {
+      people_one: {
+        name: 'Darth Vader',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: query1 },
+        result: { data: data1 },
+        delay: 10,
+      },
+      {
+        request: { query: query2 },
+        result: { data: data2 },
+      },
+    ]);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
+
+    const handle1 = queryManager.watchQuery({
+      query: query1,
+    });
+
+    const handle2 = queryManager.watchQuery({
+      query: query2,
+    });
+
+    let handle1Count = 0;
+    let handle2Count = 0;
+
+    handle1.onResult((result) => {
+      handle1Count++;
+      checkDone();
+    });
+
+    handle2.onResult((result) => {
+      handle2Count++;
+      checkDone();
+    });
+
+    function checkDone() {
+      // If we make sure queries aren't called twice if the result didn't change, handle2Count
+      // should change to 1
+      if (handle1Count === 1 && handle2Count === 2) {
+        done();
+      }
+
+      if (handle1Count > 1) {
+        assert.fail();
+      }
+    }
+  });
+
+  it(`updates result of previous query if the result of a new query overlaps`, (done) => {
+    const query1 = `
+      {
+        people_one(id: 1) {
+          name
+          age
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+        age: 50,
+      },
+    };
+
+    const query2 = `
+      {
+        people_one(id: 1) {
+          name
+          username
+        }
+      }
+    `;
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+        username: 'luke',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: query1 },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query2 },
+        result: { data: data2 },
+        delay: 10,
+      },
+    ]);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
+
+    let handle1Count = 0;
+
+    const handle1 = queryManager.watchQuery({
+      query: query1,
+    });
+
+    handle1.onResult((result) => {
+      handle1Count++;
+
+      if (handle1Count === 1) {
+        assert.deepEqual(result.data, data1);
+
+        queryManager.watchQuery({
+          query: query2,
+        });
+      }
+
+      if (result.data['people_one'].name === 'Luke Skywalker has a new name') {
+        // 3 because the query init action for the second query causes a callback
+        assert.deepEqual(result.data, {
+          people_one: {
+            name: 'Luke Skywalker has a new name',
+            age: 50,
+          },
+        });
+
+        done();
+      }
+    });
+  });
 });
 
 // Pass in an array of requests and responses, so that you can test flows that end up making
@@ -508,25 +566,31 @@ function mockNetworkInterface(
   requestResultArray: {
     request: Request,
     result: GraphQLResult,
+    delay?: number,
   }[]
 ) {
   const requestToResultMap: any = {};
+  const requestToDelayMap: any = {};
 
   // Populate set of mocked requests
-  requestResultArray.forEach(({ request, result }) => {
+  requestResultArray.forEach(({ request, result, delay }) => {
     requestToResultMap[requestToKey(request)] = result as GraphQLResult;
+    requestToDelayMap[requestToKey(request)] = delay;
   });
 
   // A mock for the query method
   const queryMock = (request: Request) => {
     return new Promise((resolve, reject) => {
       const resultData = requestToResultMap[requestToKey(request)];
+      const delay = requestToDelayMap[requestToKey(request)];
 
       if (! resultData) {
         throw new Error(`Passed request that wasn't mocked: ${requestToKey(request)}`);
       }
 
-      resolve(resultData);
+      setTimeout(() => {
+        resolve(resultData);
+      }, delay ? delay : 0);
     });
   };
 
@@ -588,15 +652,10 @@ function testDiffing(
         forceFetch: false,
       });
 
-      handle.onResult((error, result) => {
-        // if (error) {
-        //   // XXX error handling??
-        //   console.log(error);
-        // }
-
-        assert.deepEqual(result, fullResponse);
-        cb();
+      handle.onResult((result) => {
+        assert.deepEqual(result.data, fullResponse);
         handle.stop();
+        cb();
       });
     };
   });

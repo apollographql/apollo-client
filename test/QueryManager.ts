@@ -397,6 +397,18 @@ describe('QueryManager', () => {
       },
     ], done);
   });
+
+  it(`doesn't return data while query is loading`, () => {
+    assert.fail();
+  });
+
+  it(`returns data while query is loading if returnPartialData is passed`, () => {
+    assert.fail();
+  });
+
+  it(`updates result of previous query if the result of a new query overlaps`, () => {
+    assert.fail();
+  });
 });
 
 // Pass in an array of requests and responses, so that you can test flows that end up making

@@ -221,6 +221,8 @@ export class QueryManager {
   public broadcastNewStore(store: Store) {
     forOwn(store.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
       if (!queryStoreValue.loading) {
+        // XXX Currently, returning errors and data is exclusive because we
+        // don't handle partial results
         if (queryStoreValue.graphQLErrors) {
           this.broadcastQueryChange(queryId, {
             errors: queryStoreValue.graphQLErrors,

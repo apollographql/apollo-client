@@ -222,17 +222,23 @@ export class QueryManager {
   public broadcastNewStore(store: Store) {
     forOwn(store.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
       if (!queryStoreValue.loading) {
-        const resultFromStore = readSelectionSetFromStore({
-          store: store.data,
-          rootId: queryStoreValue.query.id,
-          selectionSet: queryStoreValue.query.selectionSet,
-          variables: queryStoreValue.variables,
-        });
+        if (queryStoreValue.graphQLErrors) {
+          this.broadcastQueryChange(queryId, {
+            errors: queryStoreValue.graphQLErrors,
+          });
+        } else {
+          const resultFromStore = readSelectionSetFromStore({
+            store: store.data,
+            rootId: queryStoreValue.query.id,
+            selectionSet: queryStoreValue.query.selectionSet,
+            variables: queryStoreValue.variables,
+          });
 
-        // XXX check loading state, error, and returnPartialData
-        this.broadcastQueryChange(queryId, {
-          data: resultFromStore,
-        });
+          // XXX check loading state, error, and returnPartialData
+          this.broadcastQueryChange(queryId, {
+            data: resultFromStore,
+          });
+        }
       }
     });
   }

@@ -7,7 +7,7 @@ import {
 
 import {
   SelectionSet,
-  GraphQLResult,
+  GraphQLError,
 } from 'graphql';
 
 import {
@@ -25,7 +25,8 @@ export interface QueryStoreValue {
   minimizedQuery: SelectionSetWithRoot;
   variables: Object;
   loading: boolean;
-  error: Error;
+  networkError: Error;
+  graphQLErrors: GraphQLError[];
   forceFetch: boolean;
   returnPartialData: boolean;
 }
@@ -50,7 +51,8 @@ export function queries(
       minimizedQuery: action.minimizedQuery,
       variables: action.variables,
       loading: true,
-      error: null,
+      networkError: null,
+      graphQLErrors: null,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
     };
@@ -58,10 +60,12 @@ export function queries(
     return newState;
   } else if (isQueryResultAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
+    const resultHasGraphQLErrors = action.result.errors && action.result.errors.length;
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       loading: false,
-      error: null,
+      networkError: null,
+      graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
     }) as QueryStoreValue;
 
     return newState;
@@ -70,7 +74,7 @@ export function queries(
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       loading: action.complete,
-      error: null,
+      networkError: null,
     }) as QueryStoreValue;
 
     return newState;

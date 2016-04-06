@@ -11,6 +11,10 @@ import {
   assign,
 } from 'lodash';
 
+import {
+  QueryStore,
+} from '../queries/store';
+
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
 }
@@ -24,20 +28,29 @@ export type StoreValue = number | string | string[];
 
 export function data(
   previousState: NormalizedCache = {},
-  action: ApolloAction
+  action: ApolloAction,
+  queries: QueryStore
 ): NormalizedCache {
   if (isQueryResultAction(action)) {
-    // XXX use immutablejs instead of cloning
-    const clonedState = assign({}, previousState) as NormalizedCache;
+    // XXX handle partial result due to errors
+    if (!action.result.errors) {
+      const queryStoreValue = queries[action.queryId];
 
-    const newState = writeSelectionSetToStore({
-      result: action.result,
-      selectionSet: action.selectionSet,
-      variables: action.variables,
-      store: clonedState,
-    });
+      // XXX use immutablejs instead of cloning
+      const clonedState = assign({}, previousState) as NormalizedCache;
 
-    return newState;
+      const newState = writeSelectionSetToStore({
+        result: action.result.data,
+        dataId: queryStoreValue.query.id,
+        selectionSet: queryStoreValue.query.selectionSet,
+        variables: queryStoreValue.variables,
+        store: clonedState,
+      });
+
+      return newState;
+    }
+
+    return previousState;
   } else {
     return previousState;
   }

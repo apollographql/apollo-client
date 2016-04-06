@@ -20,19 +20,17 @@ import {
 } from './store';
 
 import {
+  SelectionSetWithRoot,
+} from '../queries/store';
+
+import {
   SelectionSet,
   Field,
 } from 'graphql';
 
 export interface QueryDiffResult {
   result: any;
-  missingSelectionSets: MissingSelectionSet[];
-}
-
-export interface MissingSelectionSet {
-  id: string;
-  typeName: string;
-  selectionSet: SelectionSet;
+  missingSelectionSets: SelectionSetWithRoot[];
 }
 
 export function diffQueryAgainstStore({
@@ -107,7 +105,7 @@ export function diffSelectionSetAgainstStore({
 
   const result = {};
 
-  const missingSelectionSets: MissingSelectionSet[] = [];
+  const missingSelectionSets: SelectionSetWithRoot[] = [];
 
   const missingSelections: Field[] = [];
 

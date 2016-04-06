@@ -2,7 +2,6 @@ import {
   createStore,
   compose,
   applyMiddleware,
-  combineReducers,
 } from 'redux';
 
 import {
@@ -41,10 +40,15 @@ const crashReporter = store => next => action => {
   }
 };
 
-export const apolloReducer = combineReducers({
-  data,
-  queries,
-});
+export function apolloReducer(state = {} as Store, action: ApolloAction) {
+  return {
+    queries: queries(state.queries, action),
+
+    // Note that we are passing the queries into this, because it reads them to associate
+    // the query ID in the result with the actual query
+    data: data(state.data, action, state.queries),
+  };
+}
 
 export function createApolloStore(): ApolloStore {
   const enhancers = [];

@@ -5,10 +5,10 @@ import {
 } from 'graphql';
 
 import {
-  MissingSelectionSet,
-} from './data/diffAgainstStore';
+  SelectionSetWithRoot,
+} from './queries/store';
 
-export function printQueryForMissingData(missingSelectionSets: MissingSelectionSet[]) {
+export function printQueryForMissingData(missingSelectionSets: SelectionSetWithRoot[]) {
   return printQueryFromDefinition(queryDefinition(missingSelectionSets));
 }
 
@@ -33,8 +33,8 @@ export function printQueryFromDefinition(queryDef: OperationDefinition) {
 }
 
 export function queryDefinition(
-    missingSelectionSets: MissingSelectionSet[]): OperationDefinition {
-  const selections = missingSelectionSets.map((missingSelectionSet: MissingSelectionSet, index) => {
+    missingSelectionSets: SelectionSetWithRoot[]): OperationDefinition {
+  const selections = missingSelectionSets.map((missingSelectionSet: SelectionSetWithRoot, ii) => {
     if (missingSelectionSet.id === 'ROOT_QUERY') {
       if (missingSelectionSet.selectionSet.selections.length > 1) {
         throw new Error('Multiple root queries, cannot print that yet.');
@@ -44,7 +44,7 @@ export function queryDefinition(
     }
 
     return nodeSelection({
-      alias: `__node_${index}`,
+      alias: `__node_${ii}`,
       id: missingSelectionSet.id,
       typeName: missingSelectionSet.typeName,
       selectionSet: missingSelectionSet.selectionSet,

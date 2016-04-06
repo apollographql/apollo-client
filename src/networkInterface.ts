@@ -73,18 +73,16 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
 
   function query(request: Request): Promise<GraphQLResult> {
     return applyMiddlewares(request)
-      .then((alteredRequest) => {
-        return fetchFromRemoteEndpoint(alteredRequest)
-          .then(result => result.json())
-          .then((payload: GraphQLResult) => {
-            if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
-              throw new Error(
-                `Server response was missing for query '${request.debugName}'.`
-              );
-            } else {
-              return payload as GraphQLResult;
-            }
-          });
+      .then(fetchFromRemoteEndpoint)
+      .then(result => result.json())
+      .then((payload: GraphQLResult) => {
+        if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
+          throw new Error(
+            `Server response was missing for query '${request.debugName}'.`
+          );
+        } else {
+          return payload as GraphQLResult;
+        }
       });
   };
 

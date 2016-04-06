@@ -468,7 +468,7 @@ describe('QueryManager', () => {
     function checkDone() {
       // If we make sure queries aren't called twice if the result didn't change, handle2Count
       // should change to 1
-      if (handle1Count === 1 && handle2Count == 2) {
+      if (handle1Count === 1 && handle2Count === 2) {
         done();
       }
 
@@ -478,12 +478,85 @@ describe('QueryManager', () => {
     }
   });
 
-  it(`returns data while query is loading if returnPartialData is passed`, () => {
-    assert.fail();
-  });
+  it(`updates result of previous query if the result of a new query overlaps`, (done) => {
+    const query1 = `
+      {
+        people_one(id: 1) {
+          name
+          age
+        }
+      }
+    `;
 
-  it(`updates result of previous query if the result of a new query overlaps`, () => {
-    assert.fail();
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+        age: 50,
+      },
+    };
+
+    const query2 = `
+      {
+        people_one(id: 1) {
+          name
+          username
+        }
+      }
+    `;
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+        username: 'luke',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: query1 },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query2 },
+        result: { data: data2 },
+        delay: 10,
+      },
+    ]);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+    });
+
+    let handle1Count = 0;
+
+    const handle1 = queryManager.watchQuery({
+      query: query1,
+    });
+
+    handle1.onResult((result) => {
+      handle1Count++;
+
+      if (handle1Count === 1) {
+        assert.deepEqual(result.data, data1);
+
+        queryManager.watchQuery({
+          query: query2,
+        });
+      }
+
+      if (result.data['people_one'].name === 'Luke Skywalker has a new name') {
+        // 3 because the query init action for the second query causes a callback
+        assert.deepEqual(result.data, {
+          people_one: {
+            name: 'Luke Skywalker has a new name',
+            age: 50,
+          },
+        });
+
+        done();
+      }
+    });
   });
 });
 

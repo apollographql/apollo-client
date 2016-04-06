@@ -8,17 +8,8 @@ import {
 } from '../src/networkInterface';
 
 import {
-  Store,
   createApolloStore,
 } from '../src/store';
-
-import {
-  StoreObject,
-} from '../src/data/store';
-
-import {
-  parseFragment,
-} from '../src/parser';
 
 import {
   assert,
@@ -287,7 +278,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('runs a mutation', (done) => {
+  it('runs a mutation', () => {
     const mutation = `
       mutation makeListPrivate {
         makeListPrivate(id: "5")
@@ -310,17 +301,14 @@ describe('QueryManager', () => {
       store: createApolloStore(),
     });
 
-    queryManager.mutate({
+    return queryManager.mutate({
       mutation,
-    }).then((resultData) => {
-      assert.deepEqual(resultData, data);
-      done();
-    }).catch((err) => {
-      throw err;
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
     });
   });
 
-  it('runs a mutation with variables', (done) => {
+  it('runs a mutation with variables', () => {
     const mutation = `
       mutation makeListPrivate($listId: ID!) {
         makeListPrivate(id: $listId)
@@ -347,18 +335,15 @@ describe('QueryManager', () => {
       store: createApolloStore(),
     });
 
-    queryManager.mutate({
+    return queryManager.mutate({
       mutation,
       variables,
-    }).then((resultData) => {
-      assert.deepEqual(resultData, data);
-      done();
-    }).catch((err) => {
-      throw err;
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
     });
   });
 
-  it('runs a mutation and puts the result in the store', (done) => {
+  it('runs a mutation and puts the result in the store', () => {
     const mutation = `
       mutation makeListPrivate {
         makeListPrivate(id: "5") {
@@ -396,9 +381,6 @@ describe('QueryManager', () => {
 
       // Make sure we updated the store with the new data
       assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
-      done();
-    }).catch((err) => {
-      throw err;
     });
   });
 

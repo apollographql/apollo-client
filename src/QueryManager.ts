@@ -9,7 +9,6 @@ import {
 } from './parser';
 
 import {
-  assign,
   forOwn,
 } from 'lodash';
 
@@ -24,13 +23,8 @@ import {
 } from './queries/store';
 
 import {
-  GraphQLError,
   GraphQLResult,
 } from 'graphql';
-
-import {
-  readSelectionSetFromStore,
-} from './data/readFromStore';
 
 import {
   diffSelectionSetAgainstStore,
@@ -75,24 +69,39 @@ export class QueryManager {
     mutation: string,
     variables?: Object,
   }): Promise<GraphQLResult> {
-    throw new Error('not implemented lol');
-    // const mutationDef = parseMutation(mutation);
+    // Generate a query ID
+    const mutationId = this.idCounter.toString();
+    this.idCounter++;
 
-    // const request = {
-    //   query: mutation,
-    //   variables,
-    // } as Request;
+    const mutationDef = parseMutation(mutation);
 
-    // return this.networkInterface.query(request)
-    //   .then((result) => {
-    //     this.store.dispatch({
-    //       type: 'QUERY_RESULT',
-    //       result,
-    //       variables,
-    //     });
+    const request = {
+      query: mutation,
+      variables,
+    } as Request;
 
-    //     return result;
-    //   });
+    this.store.dispatch({
+      type: 'MUTATION_INIT',
+      mutationString: mutation,
+      mutation: {
+        id: 'ROOT_MUTATION',
+        typeName: 'Mutation',
+        selectionSet: mutationDef.selectionSet,
+      },
+      variables,
+      mutationId,
+    });
+
+    return this.networkInterface.query(request)
+      .then((result) => {
+        this.store.dispatch({
+          type: 'MUTATION_RESULT',
+          result,
+          mutationId,
+        });
+
+        return result;
+      });
   }
 
   public watchQuery({

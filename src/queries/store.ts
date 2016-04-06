@@ -41,9 +41,9 @@ export function queries(
   previousState: QueryStore = {},
   action: ApolloAction
 ): QueryStore {
-  const newState = assign({}, previousState) as QueryStore;
-
   if (isQueryInitAction(action)) {
+    const newState = assign({}, previousState) as QueryStore;
+
     newState[action.queryId] = {
       queryString: action.queryString,
       query: action.query,
@@ -59,6 +59,8 @@ export function queries(
 
     return newState;
   } else if (isQueryResultAction(action)) {
+    const newState = assign({}, previousState) as QueryStore;
+
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       result: action.result,
       loading: false,
@@ -67,6 +69,8 @@ export function queries(
 
     return newState;
   } else if (isQueryResultClientAction(action)) {
+    const newState = assign({}, previousState) as QueryStore;
+
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       result: action.result,
       loading: action.complete,

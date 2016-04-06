@@ -43,4 +43,31 @@ export function isQueryResultClientAction(action: ApolloAction): action is Query
   return action.type === 'QUERY_RESULT_CLIENT';
 }
 
-export type ApolloAction = QueryResultAction | QueryInitAction | QueryResultClientAction;
+export interface MutationInitAction {
+  type: 'MUTATION_INIT';
+  mutationString: string;
+  mutation: SelectionSetWithRoot;
+  variables: Object;
+  mutationId: string;
+}
+
+export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
+  return action.type === 'MUTATION_INIT';
+}
+
+export interface MutationResultAction {
+  type: 'MUTATION_RESULT';
+  result: GraphQLResult;
+  mutationId: string;
+}
+
+export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {
+  return action.type === 'MUTATION_RESULT';
+}
+
+export type ApolloAction =
+  QueryResultAction |
+  QueryInitAction |
+  QueryResultClientAction |
+  MutationInitAction |
+  MutationResultAction;

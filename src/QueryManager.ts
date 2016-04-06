@@ -220,6 +220,7 @@ export class QueryManager {
 
   public broadcastNewStore(store: Store) {
     forOwn(store.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
+      // XXX We also need to check for network errors and returnPartialData
       if (!queryStoreValue.loading) {
         // XXX Currently, returning errors and data is exclusive because we
         // don't handle partial results
@@ -235,7 +236,6 @@ export class QueryManager {
             variables: queryStoreValue.variables,
           });
 
-          // XXX check loading state, error, and returnPartialData
           this.broadcastQueryChange(queryId, {
             data: resultFromStore,
           });

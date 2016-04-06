@@ -489,8 +489,8 @@ function testDiffing(
 
       handle.onResult((result) => {
         assert.deepEqual(result.data, fullResponse);
-        cb();
         handle.stop();
+        cb();
       });
     };
   });

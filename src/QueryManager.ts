@@ -209,7 +209,7 @@ export class QueryManager {
           },
           variables,
           query: querySS,
-          complete: ! minimizedQuery,
+          complete: !! minimizedQuery,
           queryId,
         });
       }, 0);

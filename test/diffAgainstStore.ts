@@ -197,4 +197,47 @@ describe('diffing queries against the store', () => {
 }
 `);
   });
+
+  it('caches root queries both under the ID of the node and the query name', () => {
+    const firstQuery = `
+      {
+        people_one(id: "1") {
+          __typename,
+          id,
+          name
+        }
+      }
+    `;
+
+    const result = {
+      people_one: {
+        __typename: 'Person',
+        id: '1',
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const store = writeQueryToStore({
+      result,
+      query: firstQuery,
+    });
+
+    const secondQuery = `
+      {
+        people_one(id: "1") {
+          __typename,
+          id,
+          name
+        }
+      }
+    `;
+
+    const { missingSelectionSets } = diffQueryAgainstStore({
+      store,
+      query: secondQuery,
+    });
+
+    assert.deepEqual(missingSelectionSets, []);
+    assert.deepEqual(store['1'], result.people_one);
+  });
 });

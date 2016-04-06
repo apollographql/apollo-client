@@ -47,7 +47,7 @@ const crashReporter = store => next => action => {
 };
 
 export function apolloReducer(state = {} as Store, action: ApolloAction) {
-  return {
+  const newState = {
     queries: queries(state.queries, action),
     mutations: mutations(state.mutations, action),
 
@@ -55,6 +55,8 @@ export function apolloReducer(state = {} as Store, action: ApolloAction) {
     // the query ID in the result with the actual query
     data: data(state.data, action, state.queries, state.mutations),
   };
+
+  return newState;
 }
 
 export function createApolloStore(): ApolloStore {

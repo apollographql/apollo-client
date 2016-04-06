@@ -27,6 +27,10 @@ import {
 } from 'graphql';
 
 import {
+  readSelectionSetFromStore,
+} from './data/readFromStore';
+
+import {
   diffSelectionSetAgainstStore,
 } from './data/diffAgainstStore';
 
@@ -217,8 +221,19 @@ export class QueryManager {
 
   public broadcastNewStore(store: Store) {
     forOwn(store.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
-      // XXX check loading state, error, and returnPartialData
-      this.broadcastQueryChange(queryId, queryStoreValue.result);
+      if (!queryStoreValue.loading) {
+        const resultFromStore = readSelectionSetFromStore({
+          store: store.data,
+          rootId: queryStoreValue.query.id,
+          selectionSet: queryStoreValue.query.selectionSet,
+          variables: queryStoreValue.variables,
+        });
+
+        // XXX check loading state, error, and returnPartialData
+        this.broadcastQueryChange(queryId, {
+          data: resultFromStore,
+        });
+      }
     });
   }
 

@@ -6,7 +6,6 @@ import {
 
 import {
   SelectionSet,
-  GraphQLResult,
 } from 'graphql';
 
 import {
@@ -23,7 +22,6 @@ export interface MutationStoreValue {
   variables: Object;
   loading: boolean;
   error: Error;
-  result: GraphQLResult;
 }
 
 export interface SelectionSetWithRoot {
@@ -45,7 +43,6 @@ export function mutations(
       variables: action.variables,
       loading: true,
       error: null,
-      result: null,
     };
 
     return newState;
@@ -53,7 +50,6 @@ export function mutations(
     const newState = assign({}, previousState) as MutationStore;
 
     newState[action.mutationId] = assign({}, previousState[action.mutationId], {
-      result: action.result,
       loading: false,
       error: null,
     }) as MutationStoreValue;

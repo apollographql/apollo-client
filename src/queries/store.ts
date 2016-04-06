@@ -28,7 +28,6 @@ export interface QueryStoreValue {
   error: Error;
   forceFetch: boolean;
   returnPartialData: boolean;
-  result: GraphQLResult;
 }
 
 export interface SelectionSetWithRoot {
@@ -54,7 +53,6 @@ export function queries(
       error: null,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
-      result: null,
     };
 
     return newState;
@@ -62,7 +60,6 @@ export function queries(
     const newState = assign({}, previousState) as QueryStore;
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {
-      result: action.result,
       loading: false,
       error: null,
     }) as QueryStoreValue;
@@ -72,8 +69,8 @@ export function queries(
     const newState = assign({}, previousState) as QueryStore;
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {
-      result: action.result,
       loading: action.complete,
+      error: null,
     }) as QueryStoreValue;
 
     return newState;

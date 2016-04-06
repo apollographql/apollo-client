@@ -3,6 +3,7 @@ import {
   isQueryInitAction,
   isQueryResultAction,
   isQueryResultClientAction,
+  isQueryStopAction,
 } from '../actions';
 
 import {
@@ -76,6 +77,12 @@ export function queries(
       loading: action.complete,
       networkError: null,
     }) as QueryStoreValue;
+
+    return newState;
+  } else if (isQueryStopAction(action)) {
+    const newState = assign({}, previousState) as QueryStore;
+
+    delete newState[action.queryId];
 
     return newState;
   }

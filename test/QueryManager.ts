@@ -374,10 +374,51 @@ describe('QueryManager', () => {
       store,
     });
 
-    queryManager.mutate({
+    return queryManager.mutate({
       mutation,
-    }).then((resultData) => {
-      assert.deepEqual(resultData, data);
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
+
+      // Make sure we updated the store with the new data
+      assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
+    });
+  });
+
+  it('runs a mutation and puts the result in the store', () => {
+    const mutation = `
+      mutation makeListPrivate {
+        makeListPrivate(id: "5") {
+          id,
+          isPrivate,
+        }
+      }
+    `;
+
+    const data = {
+      makeListPrivate: {
+        id: '5',
+        isPrivate: true,
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation },
+        result: { data },
+      },
+    ]);
+
+    const store = createApolloStore();
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+    });
+
+    return queryManager.mutate({
+      mutation,
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
       assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
@@ -503,7 +544,9 @@ function mockNetworkInterface(
         throw new Error(`Passed request that wasn't mocked: ${requestToKey(request)}`);
       }
 
-      resolve(resultData);
+      setTimeout(() => {
+        resolve(resultData);
+      }, 0);
     });
   };
 
@@ -566,11 +609,6 @@ function testDiffing(
       });
 
       handle.onResult((result) => {
-        // if (error) {
-        //   // XXX error handling??
-        //   console.log(error);
-        // }
-
         assert.deepEqual(result.data, fullResponse);
         cb();
         handle.stop();

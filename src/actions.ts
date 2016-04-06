@@ -43,6 +43,15 @@ export function isQueryResultClientAction(action: ApolloAction): action is Query
   return action.type === 'QUERY_RESULT_CLIENT';
 }
 
+export interface QueryStopAction {
+  type: 'QUERY_STOP';
+  queryId: string;
+}
+
+export function isQueryStopAction(action: ApolloAction): action is QueryStopAction {
+  return action.type === 'QUERY_STOP';
+}
+
 export interface MutationInitAction {
   type: 'MUTATION_INIT';
   mutationString: string;
@@ -69,5 +78,6 @@ export type ApolloAction =
   QueryResultAction |
   QueryInitAction |
   QueryResultClientAction |
+  QueryStopAction |
   MutationInitAction |
   MutationResultAction;

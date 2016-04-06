@@ -118,6 +118,7 @@ export class QueryManager {
     const queryId = this.idCounter.toString();
     this.idCounter++;
 
+
     this.resultCallbacks[queryId] = [];
 
     const queryString = query;
@@ -191,8 +192,6 @@ export class QueryManager {
           this.store.dispatch({
             type: 'QUERY_RESULT',
             result,
-            variables,
-            query: minimizedQuery,
             queryId,
           });
         }).catch((error: Error) => {
@@ -213,7 +212,7 @@ export class QueryManager {
           complete: ! minimizedQuery,
           queryId,
         });
-      });
+      }, 0);
     }
 
     return this.watchQueryInStore(queryId);
@@ -263,6 +262,11 @@ export class QueryManager {
   }
 
   private stopQuery(queryId) {
+    this.store.dispatch({
+      type: 'QUERY_STOP',
+      queryId,
+    });
+
     delete this.resultCallbacks[queryId];
   }
 

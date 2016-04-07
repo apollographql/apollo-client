@@ -50,7 +50,6 @@ This is the object you get when you call `watchQuery`. It has some helpful prope
 
 Running a single query and getting the result:
 
-
 ```js
 import ApolloClient from 'apollo-client';
 
@@ -69,7 +68,6 @@ client.query({
     categoryId: 5,
   },
   forceFetch: false,
-  returnPartialData: true,
 }).then((graphQLResult) => {
   const { errors, data } = graphQLResult;
 
@@ -83,4 +81,41 @@ client.query({
 }).catch((error) => {
   console.log('there was an error sending the query', error);
 });
+```
+
+Running a query and then watching the result:
+
+```js
+const handle = client.watchQuery({
+  query: `
+    query getCategory($categoryId: Int!) {
+      category(id: $categoryId) {
+        name
+        color
+      }
+    }
+  `,
+  variables: {
+    categoryId: 5,
+  },
+  forceFetch: false,
+  returnPartialData: true,
+});
+
+handle.onResult((graphQLResult) => {
+  const { errors, data } = graphQLResult;
+
+  if (data) {
+    console.log('got data', data);
+  }
+
+  if (errors) {
+    console.log('got some GraphQL execution errors', errors);
+  }
+});
+
+// XXX onError
+
+// Call when we're done watching this query
+handle.stop();
 ```

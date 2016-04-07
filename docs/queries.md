@@ -37,6 +37,15 @@ Run a GraphQL query and return a `WatchedQueryHandle` that is updated as the que
 - `forceFetch: boolean` (Optional, default is `true`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
 - `returnPartialData: boolean` (Optional, default is `false`) If false, wait until the query has finished the initial load from the server to return any data. If true, return any data we might happen to already have in the store immediately. If you pass true for this option, your UI should be ready to deal with the possibility that it will get a partial result at first.
 
+### WatchedQueryHandle
+
+This is the object you get when you call `watchQuery`. It has some helpful properties and functions you can use to read data from your query and manipulate it:
+
+- `onResult(callback)` Register a callback to be called whenever this query has new data.
+- `stop()` Tell the client we are no longer interested in results for this query, and that it can be cleaned up. Any callbacks previously registered with `onResult` will no longer be called. Note that if you don't call this function when you're done with the query, it will never be cleaned up, which could result in a memory leak. Any view layer integration should make sure to call this when UI components that asked for data are unrendered.
+- `isStopped(): boolean` Find out if this query has been stopped.
+- XXX onError, isLoading, getResult, getError should be added
+
 ## Examples
 
 Running a single query and getting the result:

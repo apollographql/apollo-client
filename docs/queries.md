@@ -64,5 +64,3 @@ client.query({
   console.log('there was an error sending the query', error);
 });
 ```
-
-Test making a change via GitBook

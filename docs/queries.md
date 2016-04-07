@@ -26,6 +26,7 @@ Run a GraphQL query and return a `WatchedQueryHandle` that is updated as the que
 - `returnPartialData: boolean` (Optional, default is `false`) If false, wait until the query has finished the initial load from the server to return any data. If true, return any data we might happen to already have in the store immediately. If you pass true for this option, your UI should be ready to deal with the possibility that it will get a partial result at first.
 
 
+
 ## Examples
 
 Running a single query and getting the result:

@@ -1,4 +1,4 @@
 ## Table of Contents
 
-- Usage
-  - [Queries](/queries.md)
+- [ApolloClient](client.md)
+  - [Queries](queries.md)

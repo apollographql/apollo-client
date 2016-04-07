@@ -8,7 +8,8 @@
 
 A simple but functional GraphQL client with a great development experience.
 
-[Read about our design principles.](design.md)
+- [Read about our design principles.](design.md)
+- [Check out our in-progress documentation on GitBook.](https://apollostack.gitbooks.io/apollo-client/content/)
 
 ---
 

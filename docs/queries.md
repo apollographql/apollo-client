@@ -6,7 +6,7 @@ The primary function of the Apollo Client is running GraphQL queries to retrieve
 
 If you want to fetch some data to perform a one-time operation, then `query` is the right way to go. If you are using the query result to render some UI, it's advantageous to use `watchQuery`, since that will automatically update whenever any of the following things happen:
 
-1. A different query updates the data in the store
+1. A different query or mutation updates the data in the store
 2. A mutation performs an optimistic update
 3. Data is re-fetched because of a reactive update
 
@@ -20,8 +20,6 @@ In the future, `watchQuery` will also have some extra options for reactivity, al
 
 Run a GraphQL query and return a promise that resolves to a `GraphQLResult`.
 
-#### Options
-
 - `query: string` A GraphQL query string to fetch.
 - `variables: Object` The variables to pass along with the query.
 - `forceFetch: boolean` (Optional, default is `true`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
@@ -29,8 +27,6 @@ Run a GraphQL query and return a promise that resolves to a `GraphQLResult`.
 ### ApolloClient#watchQuery(options)
 
 Run a GraphQL query and return a `WatchedQueryHandle` that is updated as the query result in the store changes.
-
-#### Options
 
 - `query: string` A GraphQL query string to fetch.
 - `variables: Object` The variables to pass along with the query.

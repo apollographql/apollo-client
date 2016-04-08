@@ -60,7 +60,7 @@ export class ApolloClient {
   public mutate(options: {
     mutation: string,
     variables?: Object,
-  }): Promise<any> {
+  }): Promise<GraphQLResult> {
     return this.queryManager.mutate(options);
   }
 }

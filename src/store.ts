@@ -60,7 +60,7 @@ export function apolloReducer(state = {} as Store, action: ApolloAction) {
   return newState;
 }
 
-export function createApolloStore(apolloRootKey: string = 'apollo'): ApolloStore {
+export function createApolloStore(reduxRootKey: string = 'apollo'): ApolloStore {
   const enhancers = [];
 
   if (typeof window !== 'undefined') {
@@ -73,7 +73,7 @@ export function createApolloStore(apolloRootKey: string = 'apollo'): ApolloStore
   enhancers.push(applyMiddleware(crashReporter));
 
   return createStore(
-    combineReducers({ [apolloRootKey]: apolloReducer }),
+    combineReducers({ [reduxRootKey]: apolloReducer }),
     compose(...enhancers)
   );
 }

@@ -25,40 +25,40 @@ import {
 
 export class ApolloClient {
   public networkInterface: NetworkInterface;
-  public apolloStore: ApolloStore;
-  public apolloRootKey: string;
+  public store: ApolloStore;
+  public reduxRootKey: string;
   public queryManager: QueryManager;
 
   constructor({
     networkInterface,
-    apolloStore,
-    apolloRootKey,
+    store,
+    reduxRootKey,
   }: {
     networkInterface?: NetworkInterface,
-    apolloStore?: ApolloStore,
-    apolloRootKey?: string,
+    store?: ApolloStore,
+    reduxRootKey?: string,
   } = {}) {
-    this.apolloRootKey = apolloRootKey ? apolloRootKey : 'apollo';
+    this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
 
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
 
     // ensure existing store has apolloReducer
-    if (apolloStore &&
-       isUndefined(apolloStore.getState()[this.apolloRootKey])) {
+    if (store &&
+       isUndefined(store.getState()[this.reduxRootKey])) {
       throw new Error(
-        `Existing store does not use apolloReducer for ${this.apolloRootKey}`
+        `Existing store does not use apolloReducer for ${this.reduxRootKey}`
       );
     }
 
-    this.apolloStore = apolloStore ?
-      apolloStore :
-      createApolloStore(this.apolloRootKey);
+    this.store = store ?
+      store :
+      createApolloStore(this.reduxRootKey);
 
     this.queryManager = new QueryManager({
       networkInterface: this.networkInterface,
-      store: this.apolloStore,
-      apolloRootKey: this.apolloRootKey,
+      store: this.store,
+      reduxRootKey: this.reduxRootKey,
     });
   }
 

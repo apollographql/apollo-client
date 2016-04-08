@@ -41,7 +41,7 @@ chai.use(chaiAsPromised);
 describe('client', () => {
   it('does not require any arugments', () => {
     const client = new ApolloClient();
-    assert.isDefined(client.apolloStore);
+    assert.isDefined(client.store);
   });
 
   it('can allow passing in a network interface', () => {
@@ -54,7 +54,7 @@ describe('client', () => {
   });
 
   it('can allow passing in a store', () => {
-    const apolloStore: ReduxStore = createStore(
+    const store: ReduxStore = createStore(
       combineReducers({
         todos: todosReducer,
         apollo: apolloReducer,
@@ -62,14 +62,14 @@ describe('client', () => {
     );
 
     const client = new ApolloClient({
-      apolloStore,
+      store,
     });
 
-    assert.deepEqual(client.apolloStore.getState(), apolloStore.getState());
+    assert.deepEqual(client.store.getState(), store.getState());
   });
 
   it('throws an error if you pass in a store without apolloReducer', () => {
-    const apolloStore: ReduxStore = createStore(
+    const store: ReduxStore = createStore(
       combineReducers({
         todos: todosReducer,
       })
@@ -78,7 +78,7 @@ describe('client', () => {
     try {
       /* tslint:disable */
       new ApolloClient({
-        apolloStore,
+        store,
       });
       /* tslint:enable */
       assert.fail();
@@ -95,7 +95,7 @@ describe('client', () => {
     const client = new ApolloClient();
 
     assert.deepEqual(
-      client.apolloStore.getState(),
+      client.store.getState(),
       {
         apollo: {
           queries: {},
@@ -107,15 +107,15 @@ describe('client', () => {
   });
 
   it('can allow passing in a top level key', () => {
-    const apolloRootKey = 'test';
+    const reduxRootKey = 'test';
     const client = new ApolloClient({
-      apolloRootKey,
+      reduxRootKey,
     });
 
     assert.deepEqual(
-      client.apolloStore.getState(),
+      client.store.getState(),
       {
-        [apolloRootKey]: {
+        [reduxRootKey]: {
           queries: {},
           mutations: {},
           data: {},
@@ -163,7 +163,7 @@ describe('client', () => {
   });
 
   it('should allow for a single query with existing store', (done) => {
-    const apolloStore: ReduxStore = createStore(
+    const store: ReduxStore = createStore(
       combineReducers({
         todos: todosReducer,
         apollo: apolloReducer,
@@ -196,7 +196,7 @@ describe('client', () => {
     });
 
     const client = new ApolloClient({
-      apolloStore,
+      store,
       networkInterface,
     });
 
@@ -234,10 +234,10 @@ describe('client', () => {
       result: { data },
     });
 
-    const apolloRootKey = 'test';
+    const reduxRootKey = 'test';
     const client = new ApolloClient({
       networkInterface,
-      apolloRootKey,
+      reduxRootKey,
     });
 
     return client.query({ query })
@@ -248,11 +248,11 @@ describe('client', () => {
   });
 
   it('allows for a single query with existing store and custom key', (done) => {
-    const apolloRootKey = 'test';
-    const apolloStore: ReduxStore = createStore(
+    const reduxRootKey = 'test';
+    const store: ReduxStore = createStore(
       combineReducers({
         todos: todosReducer,
-        [apolloRootKey]: apolloReducer,
+        [reduxRootKey]: apolloReducer,
       })
     );
 
@@ -282,8 +282,8 @@ describe('client', () => {
     });
 
     const client = new ApolloClient({
-      apolloStore,
-      apolloRootKey,
+      store,
+      reduxRootKey,
       networkInterface,
     });
 

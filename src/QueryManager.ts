@@ -42,7 +42,7 @@ import {
 export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
-  private apolloRootKey: string;
+  private reduxRootKey: string;
 
   private resultCallbacks: { [queryId: number]: QueryResultCallback[] };
 
@@ -51,22 +51,22 @@ export class QueryManager {
   constructor({
     networkInterface,
     store,
-    apolloRootKey,
+    reduxRootKey,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
-    apolloRootKey?: string,
+    reduxRootKey?: string,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
-    this.apolloRootKey = apolloRootKey ? apolloRootKey : 'apollo';
+    this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
 
     this.resultCallbacks = {};
 
     this.store.subscribe(() => {
-      this.broadcastNewStore(this.store.getState()[this.apolloRootKey]);
+      this.broadcastNewStore(this.store.getState()[this.reduxRootKey]);
     });
   }
 
@@ -147,7 +147,7 @@ export class QueryManager {
       // what data is missing from the store
       const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
         selectionSet: querySS.selectionSet,
-        store: this.store.getState()[this.apolloRootKey].data,
+        store: this.store.getState()[this.reduxRootKey].data,
         throwOnMissingField: false,
         rootId: querySS.id,
         variables,
@@ -250,7 +250,7 @@ export class QueryManager {
 
   public watchQueryInStore(queryId: string): WatchedQueryHandle {
     const isStopped = () => {
-      return !this.store.getState()[this.apolloRootKey].queries[queryId];
+      return !this.store.getState()[this.reduxRootKey].queries[queryId];
     };
 
     return {

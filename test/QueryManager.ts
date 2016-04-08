@@ -328,13 +328,13 @@ describe('QueryManager', () => {
       },
     ]);
 
-    const apolloRootKey = 'test';
-    const store = createApolloStore(apolloRootKey);
+    const reduxRootKey = 'test';
+    const store = createApolloStore(reduxRootKey);
 
     const queryManager = new QueryManager({
       networkInterface,
       store,
-      apolloRootKey,
+      reduxRootKey,
     });
 
     return queryManager.mutate({
@@ -343,7 +343,7 @@ describe('QueryManager', () => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(store.getState()[apolloRootKey].data['5'], { id: '5', isPrivate: true });
+      assert.deepEqual(store.getState()[reduxRootKey].data['5'], { id: '5', isPrivate: true });
     });
   });
 

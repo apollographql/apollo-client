@@ -57,6 +57,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     const handle = queryManager.watchQuery({
@@ -104,6 +105,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     const handle = queryManager.watchQuery({
@@ -145,6 +147,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     const handle = queryManager.watchQuery({
@@ -178,6 +181,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     return queryManager.mutate({
@@ -212,6 +216,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     return queryManager.mutate({
@@ -251,6 +256,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store,
+      reduxRootKey: 'apollo',
     });
 
     return queryManager.mutate({
@@ -292,6 +298,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store,
+      reduxRootKey: 'apollo',
     });
 
     return queryManager.mutate({
@@ -485,6 +492,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     const handle1 = queryManager.watchQuery({
@@ -569,6 +577,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     let handle1Count = 0;
@@ -685,6 +694,7 @@ function testDiffing(
   const queryManager = new QueryManager({
     networkInterface,
     store: createApolloStore(),
+    reduxRootKey: 'apollo',
   });
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {

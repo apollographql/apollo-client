@@ -55,13 +55,13 @@ export class QueryManager {
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
-    reduxRootKey?: string,
+    reduxRootKey: string,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
-    this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
+    this.reduxRootKey = reduxRootKey;
 
     this.resultCallbacks = {};
 

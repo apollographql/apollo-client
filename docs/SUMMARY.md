@@ -3,4 +3,5 @@
 - [ApolloClient](client.md)
 - [Queries](queries.md)
 - [Mutations](mutations.md)
-- [Advanced customization](advanced.md)
+- Advanced customization
+  - [Network interface](network-interface.md)

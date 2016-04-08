@@ -1,6 +1,12 @@
-# Advanced
+# Custom Network Interface
 
-There are many options for customizing the Apollo Client to behave in different ways. For example, you can define a custom network interface to send your queries in a different way.
+You can define a custom network interface and pass it to the Apollo Client to send your queries in a different way. You could use this for a variety of reasons:
+
+1. You want a custom transport that sends queries over Websockets instead of HTTP
+2. You want to modify the query or variables before they are sent
+3. You want to run your app against a mocked client-side schema and never send any network requests at all
+
+All you need to do is create a `NetworkInterface` and pass it to the `ApolloClient` constructor.
 
 ### NetworkInterface
 

@@ -18,27 +18,47 @@ import {
   WatchQueryOptions,
 } from './QueryManager';
 
+import {
+  isUndefined,
+} from 'lodash';
+
 
 export class ApolloClient {
   public networkInterface: NetworkInterface;
   public apolloStore: ApolloStore;
+  public apolloRootKey: string;
   public queryManager: QueryManager;
 
   constructor({
     networkInterface,
     apolloStore,
+    apolloRootKey,
   }: {
     networkInterface?: NetworkInterface,
     apolloStore?: ApolloStore,
+    apolloRootKey?: string,
   } = {}) {
+    this.apolloRootKey = apolloRootKey ? apolloRootKey : 'apollo';
+
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
 
-    this.apolloStore = apolloStore ? apolloStore : createApolloStore();
+    // ensure existing store has apolloReducer
+    if (apolloStore &&
+       isUndefined(apolloStore.getState()[this.apolloRootKey])) {
+      throw new Error(
+        `Existing store does not use apolloReducer for ${this.apolloRootKey}`
+      );
+    }
+
+    this.apolloStore = apolloStore ?
+      apolloStore :
+      createApolloStore(this.apolloRootKey);
 
     this.queryManager = new QueryManager({
       networkInterface: this.networkInterface,
       store: this.apolloStore,
+      apolloRootKey: this.apolloRootKey,
     });
   }
 

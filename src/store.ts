@@ -2,6 +2,7 @@ import {
   createStore,
   compose,
   applyMiddleware,
+  combineReducers,
 } from 'redux';
 
 import {
@@ -59,7 +60,7 @@ export function apolloReducer(state = {} as Store, action: ApolloAction) {
   return newState;
 }
 
-export function createApolloStore(): ApolloStore {
+export function createApolloStore(apolloRootKey: string = 'apollo'): ApolloStore {
   const enhancers = [];
 
   if (typeof window !== 'undefined') {
@@ -71,5 +72,8 @@ export function createApolloStore(): ApolloStore {
 
   enhancers.push(applyMiddleware(crashReporter));
 
-  return createStore(apolloReducer, compose(...enhancers));
+  return createStore(
+    combineReducers({ [apolloRootKey]: apolloReducer }),
+    compose(...enhancers)
+  );
 }

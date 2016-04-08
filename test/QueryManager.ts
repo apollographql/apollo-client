@@ -259,7 +259,7 @@ describe('QueryManager', () => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
+      assert.deepEqual(store.getState()['apollo'].data['5'], { id: '5', isPrivate: true });
     });
   });
 
@@ -300,7 +300,50 @@ describe('QueryManager', () => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
+      assert.deepEqual(store.getState()['apollo'].data['5'], { id: '5', isPrivate: true });
+    });
+  });
+
+  it('runs a mutation and puts the result in the store with root key', () => {
+    const mutation = `
+      mutation makeListPrivate {
+        makeListPrivate(id: "5") {
+          id,
+          isPrivate,
+        }
+      }
+    `;
+
+    const data = {
+      makeListPrivate: {
+        id: '5',
+        isPrivate: true,
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation },
+        result: { data },
+      },
+    ]);
+
+    const apolloRootKey = 'test';
+    const store = createApolloStore(apolloRootKey);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      apolloRootKey,
+    });
+
+    return queryManager.mutate({
+      mutation,
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
+
+      // Make sure we updated the store with the new data
+      assert.deepEqual(store.getState()[apolloRootKey].data['5'], { id: '5', isPrivate: true });
     });
   });
 

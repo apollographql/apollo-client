@@ -42,6 +42,7 @@ import {
 export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
+  private apolloRootKey: string;
 
   private resultCallbacks: { [queryId: number]: QueryResultCallback[] };
 
@@ -50,19 +51,22 @@ export class QueryManager {
   constructor({
     networkInterface,
     store,
+    apolloRootKey,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
+    apolloRootKey?: string,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
+    this.apolloRootKey = apolloRootKey ? apolloRootKey : 'apollo';
 
     this.resultCallbacks = {};
 
     this.store.subscribe(() => {
-      this.broadcastNewStore(this.store.getState());
+      this.broadcastNewStore(this.store.getState()[this.apolloRootKey]);
     });
   }
 
@@ -143,7 +147,7 @@ export class QueryManager {
       // what data is missing from the store
       const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
         selectionSet: querySS.selectionSet,
-        store: this.store.getState().data,
+        store: this.store.getState()[this.apolloRootKey].data,
         throwOnMissingField: false,
         rootId: querySS.id,
         variables,
@@ -246,7 +250,7 @@ export class QueryManager {
 
   public watchQueryInStore(queryId: string): WatchedQueryHandle {
     const isStopped = () => {
-      return !this.store.getState().queries[queryId];
+      return !this.store.getState()[this.apolloRootKey].queries[queryId];
     };
 
     return {

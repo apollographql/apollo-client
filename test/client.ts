@@ -13,16 +13,18 @@ import {
 } from 'graphql';
 
 import {
-  rootReducer,
+  rootReducer as todosReducer,
 } from './fixtures/redux-todomvc';
 
 import {
   Store,
+  apolloReducer,
 } from '../src/store';
 
 import {
   createStore,
   Store as ReduxStore,
+  combineReducers,
 } from 'redux';
 
 import {
@@ -52,13 +54,74 @@ describe('client', () => {
   });
 
   it('can allow passing in a store', () => {
-    const apolloStore: ReduxStore = createStore(rootReducer);
+    const apolloStore: ReduxStore = createStore(
+      combineReducers({
+        todos: todosReducer,
+        apollo: apolloReducer,
+      })
+    );
 
     const client = new ApolloClient({
       apolloStore,
     });
 
     assert.deepEqual(client.apolloStore.getState(), apolloStore.getState());
+  });
+
+  it('throws an error if you pass in a store without apolloReducer', () => {
+    const apolloStore: ReduxStore = createStore(
+      combineReducers({
+        todos: todosReducer,
+      })
+    );
+
+    try {
+      /* tslint:disable */
+      new ApolloClient({
+        apolloStore,
+      });
+      /* tslint:enable */
+      assert.fail();
+    } catch (error) {
+      assert.equal(
+        error.message,
+        'Existing store does not use apolloReducer for apollo'
+      );
+    }
+
+  });
+
+  it('has a top level key by default', () => {
+    const client = new ApolloClient();
+
+    assert.deepEqual(
+      client.apolloStore.getState(),
+      {
+        apollo: {
+          queries: {},
+          mutations: {},
+          data: {},
+        },
+      }
+    );
+  });
+
+  it('can allow passing in a top level key', () => {
+    const apolloRootKey = 'test';
+    const client = new ApolloClient({
+      apolloRootKey,
+    });
+
+    assert.deepEqual(
+      client.apolloStore.getState(),
+      {
+        [apolloRootKey]: {
+          queries: {},
+          mutations: {},
+          data: {},
+        },
+      }
+    );
   });
 
   it('should allow for a single query to take place', (done) => {
@@ -99,6 +162,137 @@ describe('client', () => {
        });
   });
 
+  it('should allow for a single query with existing store', (done) => {
+    const apolloStore: ReduxStore = createStore(
+      combineReducers({
+        todos: todosReducer,
+        apollo: apolloReducer,
+      })
+    );
+
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const client = new ApolloClient({
+      apolloStore,
+      networkInterface,
+    });
+
+    return client.query({ query })
+      .then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+       });
+  });
+
+  it('can allow a custom top level key', (done) => {
+
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const apolloRootKey = 'test';
+    const client = new ApolloClient({
+      networkInterface,
+      apolloRootKey,
+    });
+
+    return client.query({ query })
+      .then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+       });
+  });
+
+  it('allows for a single query with existing store and custom key', (done) => {
+    const apolloRootKey = 'test';
+    const apolloStore: ReduxStore = createStore(
+      combineReducers({
+        todos: todosReducer,
+        [apolloRootKey]: apolloReducer,
+      })
+    );
+
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const client = new ApolloClient({
+      apolloStore,
+      apolloRootKey,
+      networkInterface,
+    });
+
+    return client.query({ query })
+      .then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+       });
+  });
   it('should return errors correctly for a single query', (done) => {
 
     const query = `

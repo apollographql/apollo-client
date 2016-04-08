@@ -7,3 +7,5 @@
 - Advanced customization
   - [Redux integration](redux-integration.md)
   - [Network interface](network-interface.md)
+- How it works
+  - [Normalized store](store.md)

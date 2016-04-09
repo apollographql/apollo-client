@@ -23,7 +23,7 @@ import {
 } from 'lodash';
 
 
-export class ApolloClient {
+export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
   public reduxRootKey: string;

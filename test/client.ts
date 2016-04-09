@@ -1,9 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import {
-  ApolloClient,
-} from '../src';
+import ApolloClient from '../src';
 
 import {
   GraphQLResult,

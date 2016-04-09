@@ -12,3 +12,4 @@ import './networkInterface';
 import './QueryManager';
 import './client';
 import './middleware';
+import './store';

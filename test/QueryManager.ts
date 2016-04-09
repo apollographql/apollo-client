@@ -57,6 +57,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     const handle = queryManager.watchQuery({
@@ -104,6 +105,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     const handle = queryManager.watchQuery({
@@ -145,6 +147,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     const handle = queryManager.watchQuery({
@@ -178,6 +181,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     return queryManager.mutate({
@@ -212,6 +216,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     return queryManager.mutate({
@@ -251,6 +256,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store,
+      reduxRootKey: 'apollo',
     });
 
     return queryManager.mutate({
@@ -259,7 +265,7 @@ describe('QueryManager', () => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
+      assert.deepEqual(store.getState()['apollo'].data['5'], { id: '5', isPrivate: true });
     });
   });
 
@@ -292,6 +298,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store,
+      reduxRootKey: 'apollo',
     });
 
     return queryManager.mutate({
@@ -300,7 +307,50 @@ describe('QueryManager', () => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(store.getState().data['5'], { id: '5', isPrivate: true });
+      assert.deepEqual(store.getState()['apollo'].data['5'], { id: '5', isPrivate: true });
+    });
+  });
+
+  it('runs a mutation and puts the result in the store with root key', () => {
+    const mutation = `
+      mutation makeListPrivate {
+        makeListPrivate(id: "5") {
+          id,
+          isPrivate,
+        }
+      }
+    `;
+
+    const data = {
+      makeListPrivate: {
+        id: '5',
+        isPrivate: true,
+      },
+    };
+
+    const networkInterface = mockNetworkInterface([
+      {
+        request: { query: mutation },
+        result: { data },
+      },
+    ]);
+
+    const reduxRootKey = 'test';
+    const store = createApolloStore(reduxRootKey);
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      reduxRootKey,
+    });
+
+    return queryManager.mutate({
+      mutation,
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
+
+      // Make sure we updated the store with the new data
+      assert.deepEqual(store.getState()[reduxRootKey].data['5'], { id: '5', isPrivate: true });
     });
   });
 
@@ -442,6 +492,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     const handle1 = queryManager.watchQuery({
@@ -526,6 +577,7 @@ describe('QueryManager', () => {
     const queryManager = new QueryManager({
       networkInterface,
       store: createApolloStore(),
+      reduxRootKey: 'apollo',
     });
 
     let handle1Count = 0;
@@ -642,6 +694,7 @@ function testDiffing(
   const queryManager = new QueryManager({
     networkInterface,
     store: createApolloStore(),
+    reduxRootKey: 'apollo',
   });
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {

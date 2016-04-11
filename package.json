@@ -49,6 +49,7 @@
     "tslint": "^3.6.0",
     "typescript": "^1.8.9",
     "typescript-require": "^0.2.9-1",
-    "typings": "^0.7.9"
+    "typings": "^0.7.9",
+    "swapi-graphql": "^0.0.4"
   }
 }

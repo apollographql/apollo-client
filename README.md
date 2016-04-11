@@ -1,7 +1,7 @@
 # Apollo client
 
 [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
-[![Get on Slack](http://apolloslack.meteorapp.com/badge.svg)](http://apolloslack.meteorapp.com/)
+[![Get on Slack](http://slack.apollostack.com/badge.svg)](http://slack.apollostack.com/)
 <br />
 
 [![Build status](https://travis-ci.org/apollostack/apollo-client.svg?branch=master)](https://travis-ci.org/apollostack/apollo-client)

@@ -27,6 +27,11 @@ nav_links:
   Blog: https://medium.com/apollo-stack
   GitHub: https://github.com/apollostack
 
+# API keys
+apis:
+  ga: UA-74643563-2
+  marketo: 627-RVJ-941
+
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
 url: http://docs.apollostack.com/

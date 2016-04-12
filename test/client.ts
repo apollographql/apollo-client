@@ -4,10 +4,7 @@ const { assert } = chai;
 import ApolloClient from '../src';
 
 import {
-  GraphQLResult,
   GraphQLError,
-  parse,
-  print,
 } from 'graphql';
 
 import {
@@ -28,8 +25,9 @@ import {
 import {
   createNetworkInterface,
   NetworkInterface,
-  Request,
 } from '../src/networkInterface';
+
+import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
@@ -388,43 +386,4 @@ describe('client', () => {
       done();
     });
   });
-
 });
-
-function mockNetworkInterface(
-  mockedRequest: {
-    request: Request,
-    result: GraphQLResult,
-  }
-) {
-  const requestToResultMap: any = {};
-  const { request, result } = mockedRequest;
-
-  // Populate set of mocked requests
-  requestToResultMap[requestToKey(request)] = result as GraphQLResult;
-
-  // A mock for the query method
-  const queryMock = (req: Request) => {
-    return new Promise((resolve, reject) => {
-      const resultData = requestToResultMap[requestToKey(req)];
-      if (!resultData) {
-        throw new Error(`Passed request that wasn't mocked: ${requestToKey(req)}`);
-      }
-      resolve(resultData);
-    });
-  };
-
-  return {
-    query: queryMock,
-  } as NetworkInterface;
-}
-
-
-function requestToKey(request: Request): string {
-  const query = request.query && print(parse(request.query));
-
-  return JSON.stringify({
-    variables: request.variables,
-    query,
-  });
-}

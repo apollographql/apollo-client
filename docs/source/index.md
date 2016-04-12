@@ -1,8 +1,7 @@
 ---
 title: The Apollo Data Stack
 order: 0
-description: These are Apollo Docs!!
+description: Introduction to the Apollo Data Stack.
 ---
 
-
-Hi
+Hello world!

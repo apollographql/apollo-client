@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - "5"
+install:
+  - git submodule update --init
+  - npm install
+
+script:
+  - npm run deploy
+
+# Allow Travis tests to run in containers.
+sudo: false

@@ -6,7 +6,7 @@
   "scripts": {
     "pretest": "npm run compile",
     "test": "mocha --reporter spec --full-trace lib/test/tests.js",
-    "posttest": "npm run lint && gulp",
+    "posttest": "npm run lint && NODE_ENV=production gulp",
     "compile": "tsc",
     "watch": "tsc -w",
     "prepublish": "npm run compile",

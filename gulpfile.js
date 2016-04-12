@@ -7,7 +7,6 @@ gulp.task('default', function () {
   return gulp.src('./lib/src/index.js')
     .pipe(browserify({
       ignoreGlobals: true,
-      debug: !gulp.env.production
     }))
     .pipe(sizereport({
       gzip: true,

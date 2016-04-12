@@ -10,6 +10,7 @@ import {
 import {
   createApolloStore,
   ApolloStore,
+  apolloReducer,
 } from './store';
 
 import {
@@ -22,6 +23,11 @@ import {
   isUndefined,
 } from 'lodash';
 
+export {
+  createNetworkInterface,
+  createApolloStore,
+  apolloReducer,
+};
 
 export default class ApolloClient {
   public networkInterface: NetworkInterface;

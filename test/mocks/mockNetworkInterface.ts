@@ -17,7 +17,8 @@ export default function mockNetworkInterface(
 
 export interface MockedResponse {
   request: Request
-  result: GraphQLResult
+  result?: GraphQLResult
+  error?: Error
   delay?: number
 }
 
@@ -34,14 +35,18 @@ class MockNetworkInterface {
   query(request: Request) {
     return new Promise((resolve, reject) => {
       const key = requestToKey(request);
-      const { result, delay } = this.mockedResponsesByKey[key];
+      const { result, error, delay } = this.mockedResponsesByKey[key];
 
-      if (!result) {
-        throw new Error(`Passed request that wasn't mocked: ${key}`);
+      if (!result && !error) {
+        throw new Error(`Mocked response should contain either result or error: ${key}`);
       }
 
       setTimeout(() => {
-        resolve(result);
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
       }, delay ? delay : 0);
     });
   }

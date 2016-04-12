@@ -10,11 +10,13 @@ gulp.task('default', function () {
     }))
     .pipe(sizereport({
       gzip: true,
+      total: false,
       minifier: function (contents) {
         return UglifyJS.minify(contents, { fromString: true }).code;
       },
       '*': {
         'maxSize': 100000,
+        'maxGzippedSize': 2500,
         'maxMinifiedSize': 5500,
         'maxMinifiedGzippedSize': 2500
       },

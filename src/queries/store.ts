@@ -11,9 +11,7 @@ import {
   GraphQLError,
 } from 'graphql';
 
-import {
-  assign,
-} from 'lodash';
+import assign from 'lodash.assign';
 
 export interface QueryStore {
   [queryId: string]: QueryStoreValue;

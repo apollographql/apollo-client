@@ -1,14 +1,12 @@
 // ensure env has promise support
 // this should probably be moved elsewhere / should be part of the extra
 // deps for older environemnts
-import 'es6-promise';
+// import 'es6-promise';
+//
+// import 'isomorphic-fetch';
 
-import 'isomorphic-fetch';
-
-import {
-  isString,
-  assign,
-} from 'lodash';
+import isString from 'lodash.isstring';
+import assign from 'lodash.assign';
 
 import { GraphQLResult } from 'graphql';
 

@@ -8,9 +8,7 @@ import {
   Value,
 } from 'graphql';
 
-import {
-  includes,
-} from 'lodash';
+import includes from 'lodash.includes';
 
 type ScalarValue = IntValue | FloatValue | StringValue | BooleanValue;
 

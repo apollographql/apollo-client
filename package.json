@@ -6,7 +6,7 @@
   "scripts": {
     "pretest": "npm run compile",
     "test": "mocha --reporter spec --full-trace lib/test/tests.js",
-    "posttest": "npm run lint",
+    "posttest": "npm run lint && gulp",
     "compile": "tsc",
     "watch": "tsc -w",
     "prepublish": "npm run compile",
@@ -41,15 +41,19 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^5.2.0",
     "dataloader": "^1.1.0",
+    "gulp": "^3.9.1",
+    "gulp-browserify": "^0.5.1",
+    "gulp-filesize": "0.0.6",
+    "gulp-sizereport": "^1.1.3",
     "istanbul": "^0.4.2",
     "mocha": "^2.3.3",
     "remap-istanbul": "^0.5.1",
     "request-promise": "^2.0.1",
     "source-map-support": "^0.4.0",
+    "swapi-graphql": "^0.0.4",
     "tslint": "^3.6.0",
     "typescript": "^1.8.9",
     "typescript-require": "^0.2.9-1",
-    "typings": "^0.7.9",
-    "swapi-graphql": "^0.0.4"
+    "typings": "^0.7.9"
   }
 }

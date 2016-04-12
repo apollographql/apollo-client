@@ -1,9 +1,8 @@
-import { parse } from 'graphql';
-
 import {
   OperationDefinition,
   Document,
   FragmentDefinition,
+  parse,
 } from 'graphql';
 
 export function parseDocument(doc: string): Document {

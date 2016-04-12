@@ -22,6 +22,10 @@ content_root: source
 logo:
   desktop: /logo/large.png
   mobile: /logo/square.png
+nav_links:
+  apollostack.com: http://www.apollostack.com/
+  Blog: https://medium.com/apollo-stack
+  GitHub: https://github.com/apollostack
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'

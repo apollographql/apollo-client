@@ -22,28 +22,26 @@ export interface MockedResponse {
 }
 
 class MockNetworkInterface {
-  private requestToResultMap: any = {};
-  private requestToDelayMap: any = {};
+  private mockedResponsesByKey: { [key:string]: MockedResponse } = {};
 
   constructor(...mockedResponses: MockedResponse[]) {
-    // Populate set of mocked requests
-    mockedResponses.forEach(({ request, result, delay }) => {
-      this.requestToResultMap[requestToKey(request)] = result as GraphQLResult;
-      this.requestToDelayMap[requestToKey(request)] = delay;
+    mockedResponses.forEach((mockedResponse) => {
+      const key = requestToKey(mockedResponse.request);
+      this.mockedResponsesByKey[key] = mockedResponse;
     });
   }
 
   query(request: Request) {
     return new Promise((resolve, reject) => {
-      const resultData = this.requestToResultMap[requestToKey(request)];
-      const delay = this.requestToDelayMap[requestToKey(request)];
+      const key = requestToKey(request);
+      const { result, delay } = this.mockedResponsesByKey[key];
 
-      if (! resultData) {
-        throw new Error(`Passed request that wasn't mocked: ${requestToKey(request)}`);
+      if (!result) {
+        throw new Error(`Passed request that wasn't mocked: ${key}`);
       }
 
       setTimeout(() => {
-        resolve(resultData);
+        resolve(result);
       }, delay ? delay : 0);
     });
   }

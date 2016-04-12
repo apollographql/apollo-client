@@ -23,7 +23,8 @@ The Apollo Client class is the thing you import from this package, and should be
 Instantiate a new Apollo Client.
 
 - `networkInterface: NetworkInterface` (Optional, defaults to an interface that points to `/graphql`) The network interface to use when sending GraphQL queries to the server.
-- `XXX redux integration` (Optional, creates a new Redux store by default) A Redux store to in which to keep all state.
+- `store: ReduxStore` (Optional, creates a new Redux store by default) A Redux store to in which to keep all state. [Read more about integrating with Redux](customization.html#redux).
+- `reduxRootKey: string` (Optional, `apollo` by default) The key under which Apollo data will be stored in the Redux store. If you aren't integrating with an existing Redux store, don't worry about this.
 
 Here's how you would instantiate a default client that points to `/graphql`:
 

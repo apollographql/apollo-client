@@ -35,7 +35,7 @@ This represents a result that comes back from the GraphQL server.
 - `data: any` This is the actual data returned by the server.
 - `errors: Array` This is an array of errors returned by the server.
 
-## Redux integration
+<h2 id="redux">Redux integration</h2>
 
 By default, the Apollo Client creates its own internal Redux store to manage queries and their results. If you are already using Redux for the rest of your app, you can have the client integrate with your existing store instead. This will let you better track the different events that happen in your app, and how your client and server side data changes interleave.
 
@@ -43,9 +43,9 @@ By default, the Apollo Client creates its own internal Redux store to manage que
 
 To integrate with your existing Redux store:
 
-1. Use Redux's `combineReducers`([docs](http://redux.js.org/docs/api/combineReducers.html)) function to combine Apollo's reducer with your own. apollo-client uses the `apollo` redux key by default
-2. Pass the result to Redux's `createStore`([docs](http://redux.js.org/docs/api/createStore.html))
-3. Pass the store when instantiating `ApolloClient`
+1. Use [`combineReducers` from Redux](http://redux.js.org/docs/api/combineReducers.html) to combine Apollo's reducer with your own. `apollo-client` uses the `apollo` redux key by default.
+2. Pass the result to [Redux's `createStore`](http://redux.js.org/docs/api/createStore.html).
+3. Pass the store into the `ApolloClient` constructor.
 
 ```js
 import { createStore, combineReducers } from 'redux';
@@ -63,7 +63,8 @@ const store = createStore(
 const client = new ApolloClient({ store });
 
 client.store.getState();
-// sample state
+
+// Example initial state:
 // {
 //   todos: {},
 //   users: {},
@@ -73,10 +74,10 @@ client.store.getState();
 
 ### Custom store key
 
-To use a key other than the default (`apollo`):
+By default, the `ApolloClient` instance will assume that Apollo-related data lives under the `apollo` key in the store. To change the name of this key:
 
-1. Specify it in your combined reducer
-2. Use the `reduxRootKey` parameter when creating `ApolloClient`
+1. Specify the desired key when adding `apolloReducer`.
+2. Pass the `reduxRootKey` parameter to the `ApolloClient` constructor.
 
 ```js
 const store = createStore(
@@ -93,7 +94,8 @@ const client = new ApolloClient({
 });
 
 client.store.getState();
-// sample state
+
+// Example initial state:
 // {
 //   todos: {},
 //   users: {},

@@ -156,6 +156,45 @@ describe('QueryManager', () => {
     });
   });
 
+  it('handles network errors', (done) => {
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        error: new Error('Network error'),
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    handle.subscribe({
+      onResult: (result) => {
+        done(new Error('Should not deliver result'));
+      },
+      onError: (error) => {
+        assert.equal(error.message, 'Network error');
+        done();
+      },
+    });
+  });
+
   it('runs a mutation', () => {
     const mutation = `
       mutation makeListPrivate {

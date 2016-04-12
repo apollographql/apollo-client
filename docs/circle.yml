@@ -11,8 +11,7 @@ dependencies:
     - "site/node_modules"
   override:
     - npm install -g hexo-cli
-    - npm install:
-        pwd: site
+    - npm install
 
 test:
   override:
@@ -23,5 +22,4 @@ deployment:
   s3:
     branch: /^(master|version-.*)/
     commands:
-      - npm run deploy:
-          pwd: site
+      - npm run deploy

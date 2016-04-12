@@ -20,6 +20,7 @@
     "hexo-s3-deploy": "^1.0.1"
   },
   "scripts": {
+    "start": "hexo serve",
     "deploy": "hexo-s3-deploy"
   }
 }

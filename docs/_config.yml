@@ -17,8 +17,10 @@ sidebar_categories:
   Apollo Client:
     - apollo-client/index
     - apollo-client/customization
-  Apollo Server Tools:
+  Apollo Server:
     - apollo-server/index
+    - apollo-server/guide
+    - apollo-server/tools
 github_repo: apollostack/docs
 content_root: source
 logo:

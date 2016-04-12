@@ -17,7 +17,41 @@ import {
   MiddlewareRequest,
 } from '../src/middleware';
 
+import {
+  graphql,
+} from 'graphql';
+
+/* tslint:disable */
+const swapiSchema = require('swapi-graphql').schema;
+/* tslint:enable */
+
 describe('network interface', () => {
+  before(() => {
+    this.realFetch = global['fetch'];
+
+    global['fetch'] = ((url, opts) => {
+      if (url === 'http://does-not-exist.test/') {
+        return Promise.reject('Network error');
+      } else if (url === 'http://graphql-swapi.test/') {
+        return new Promise((resolve, reject) => {
+          const request = JSON.parse(opts.body);
+          graphql(swapiSchema, request.query, undefined, request.variables).then(result => {
+            const response = new global['Response'](JSON.stringify(result));
+            resolve(response);
+          }).catch(error => {
+            reject(error);
+          });
+        });
+      } else {
+        return this.realFetch(url, opts);
+      }
+    });
+  });
+
+  after(() => {
+    global['fetch'] = this.realFetch;
+  });
+
   describe('creating a network interface', () => {
     it('should throw without an endpoint', () => {
       assert.throws(() => {
@@ -98,7 +132,7 @@ describe('network interface', () => {
         { key: 'personNum', val: 1 },
       ]);
 
-      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      const swapi = createNetworkInterface('http://graphql-swapi.test/');
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -136,7 +170,7 @@ describe('network interface', () => {
         { key: 'planet', val: 'mars' },
       ]);
 
-      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      const swapi = createNetworkInterface('http://graphql-swapi.test/');
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -167,7 +201,7 @@ describe('network interface', () => {
         { key: 'filmNum', val: 1 },
       ]);
 
-      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      const swapi = createNetworkInterface('http://graphql-swapi.test/');
       swapi.use([testWare1, testWare2]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -219,7 +253,7 @@ describe('network interface', () => {
 
   describe('making a request', () => {
     it('should fetch remote data', () => {
-      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      const swapi = createNetworkInterface('http://graphql-swapi.test/');
 
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -253,7 +287,7 @@ describe('network interface', () => {
     });
 
     it('should return errors if the server responds with them', () => {
-      const swapi = createNetworkInterface('http://graphql-swapi.parseapp.com/');
+      const swapi = createNetworkInterface('http://graphql-swapi.test/');
 
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -275,12 +309,6 @@ describe('network interface', () => {
           errors: [
             {
               message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF\n\n7:           }\n8:         \n           ^\n',
-              locations: [
-                {
-                  line: 8,
-                  column: 9,
-                },
-              ],
             },
           ],
         }
@@ -288,7 +316,7 @@ describe('network interface', () => {
     });
 
     it('should throw on a network error', () => {
-      const nowhere = createNetworkInterface('http://does-not-exist.parseapp.com/');
+      const nowhere = createNetworkInterface('http://does-not-exist.test/');
 
       // this is a stub for the end user client api
       const doomedToFail = {

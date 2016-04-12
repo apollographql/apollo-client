@@ -2,21 +2,21 @@
 
 [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
 [![Get on Slack](http://slack.apollostack.com/badge.svg)](http://slack.apollostack.com/)
-<br />
+
+A simple but functional GraphQL client with a great development experience.
+
+- [Read about our design principles.](design.md)
+- [Check out our in-progress documentation.](http://docs.apollostack.com/apollo-client/)
+
+---
+
+### Development
 
 [![Build status](https://travis-ci.org/apollostack/apollo-client.svg?branch=master)](https://travis-ci.org/apollostack/apollo-client)
 [![Build status](https://ci.appveyor.com/api/projects/status/ajdf70delshw2ire/branch/master?svg=true)](https://ci.appveyor.com/project/stubailo/apollo-client/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/apollostack/apollo-client/badge.svg?branch=master)](https://coveralls.io/github/apollostack/apollo-client?branch=master)
 
-
-A simple but functional GraphQL client with a great development experience.
-
-- [Read about our design principles.](design.md)
-- [Check out our in-progress documentation on GitBook.](https://apollostack.gitbooks.io/apollo-client/content/)
-
----
-
-### Local development
+Running tests locally:
 
 ```
 # nvm use node

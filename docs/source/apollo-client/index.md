@@ -1,12 +1,12 @@
 ---
-title: Client API
+title: Introduction
 order: 101
 description: These are Apollo Docs!!
 ---
 
 The Apollo Client can easily be dropped into any JavaScript frontend where you want to use data from a GraphQL server.
 
-## Installing from npm
+## Installing
 
 ```txt
 npm install apollo-client

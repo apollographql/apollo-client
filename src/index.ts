@@ -62,7 +62,6 @@ export default class ApolloClient {
 
     this.initStore();
 
-
     return new Promise((resolve, reject) => {
       const handle = this.queryManager.watchQuery(options);
       handle.onResult((result) => {

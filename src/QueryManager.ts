@@ -65,9 +65,11 @@ export class QueryManager {
 
     this.resultCallbacks = {};
 
-    this.store.subscribe(() => {
-      this.broadcastNewStore(this.store.getState()[this.reduxRootKey]);
-    });
+    if (this.store['subscribe']) {
+      this.store['subscribe'](() => {
+        this.broadcastNewStore(this.store.getState());
+      });
+    }
   }
 
   public mutate({
@@ -98,6 +100,7 @@ export class QueryManager {
       },
       variables,
       mutationId,
+      isApolloAction: 'true',
     });
 
     return this.networkInterface.query(request)
@@ -106,6 +109,7 @@ export class QueryManager {
           type: 'MUTATION_RESULT',
           result,
           mutationId,
+          isApolloAction: 'true',
         });
 
         return result;
@@ -182,6 +186,7 @@ export class QueryManager {
       forceFetch,
       returnPartialData,
       queryId,
+      isApolloAction: 'true',
     });
 
     if (minimizedQuery) {
@@ -197,6 +202,7 @@ export class QueryManager {
             type: 'QUERY_RESULT',
             result,
             queryId,
+            isApolloAction: 'true',
           });
         }).catch((error: Error) => {
            // XXX handle errors
@@ -215,6 +221,7 @@ export class QueryManager {
           query: querySS,
           complete: !! minimizedQuery,
           queryId,
+          isApolloAction: 'true',
         });
       }, 0);
     }
@@ -222,8 +229,10 @@ export class QueryManager {
     return this.watchQueryInStore(queryId);
   }
 
-  public broadcastNewStore(store: Store) {
-    forOwn(store.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
+  public broadcastNewStore(store: any) {
+    const apolloStore: Store = store[this.reduxRootKey];
+
+    forOwn(apolloStore.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
       // XXX We also need to check for network errors and returnPartialData
       if (!queryStoreValue.loading) {
         // XXX Currently, returning errors and data is exclusive because we
@@ -234,7 +243,7 @@ export class QueryManager {
           });
         } else {
           const resultFromStore = readSelectionSetFromStore({
-            store: store.data,
+            store: apolloStore.data,
             rootId: queryStoreValue.query.id,
             selectionSet: queryStoreValue.query.selectionSet,
             variables: queryStoreValue.variables,
@@ -271,6 +280,7 @@ export class QueryManager {
     this.store.dispatch({
       type: 'QUERY_STOP',
       queryId,
+      isApolloAction: 'true',
     });
 
     delete this.resultCallbacks[queryId];

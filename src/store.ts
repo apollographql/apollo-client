@@ -32,10 +32,11 @@ export interface Store {
 
 // This is our interface on top of Redux to get types in our actions and store
 export interface ApolloStore {
-  dispatch: (action: ApolloAction) => void;
+  dispatch: ApolloDispatch;
   getState: () => Store;
-  subscribe: (listener: () => void) => void;
 }
+
+export type ApolloDispatch = (action: ApolloAction) => void;
 
 const crashReporter = store => next => action => {
   try {

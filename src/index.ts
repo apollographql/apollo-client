@@ -29,6 +29,8 @@ export {
   apolloReducer,
 };
 
+export * from './actions';
+
 export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
@@ -37,45 +39,31 @@ export default class ApolloClient {
 
   constructor({
     networkInterface,
-    store,
     reduxRootKey,
   }: {
     networkInterface?: NetworkInterface,
-    store?: ApolloStore,
     reduxRootKey?: string,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
 
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
-
-    // ensure existing store has apolloReducer
-    if (store &&
-       isUndefined(store.getState()[this.reduxRootKey])) {
-      throw new Error(
-        `Existing store does not use apolloReducer for ${this.reduxRootKey}`
-      );
-    }
-
-    this.store = store ?
-      store :
-      createApolloStore(this.reduxRootKey);
-
-    this.queryManager = new QueryManager({
-      networkInterface: this.networkInterface,
-      store: this.store,
-      reduxRootKey: this.reduxRootKey,
-    });
   }
 
   public watchQuery(options: WatchQueryOptions): WatchedQueryHandle {
+    this.initStore();
+
     return this.queryManager.watchQuery(options);
   }
 
   public query(options: WatchQueryOptions): Promise<GraphQLResult | Error> {
+
     if (options.returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
+
+    this.initStore();
+
 
     return new Promise((resolve, reject) => {
       const handle = this.queryManager.watchQuery(options);
@@ -91,6 +79,53 @@ export default class ApolloClient {
     mutation: string,
     variables?: Object,
   }): Promise<GraphQLResult> {
+    this.initStore();
     return this.queryManager.mutate(options);
+  }
+
+  public reducer() {
+    return apolloReducer;
+  }
+
+  public middleware() {
+    return (store: ApolloStore) => {
+      this.setStore(store);
+
+      // Pass through. Eventually we should use this instead of subscribe, and get rid of setStore
+      return next => (action) => {
+        if (action.isApolloAction) {
+          const returnValue = next(action);
+          this.queryManager.broadcastNewStore(store.getState());
+          return returnValue;
+        }
+
+        return next(action);
+      };
+    };
+  }
+
+  public initStore() {
+    if (this.store) {
+      // Don't do anything if we already have a store
+      return;
+    }
+
+    // If we don't have a store already, initialize a default one
+    this.setStore(createApolloStore(this.reduxRootKey));
+  }
+
+  private setStore(store: ApolloStore) {
+    // ensure existing store has apolloReducer
+    if (isUndefined(store.getState()[this.reduxRootKey])) {
+      throw new Error(`Existing store does not use apolloReducer for ${this.reduxRootKey}`);
+    }
+
+    this.store = store;
+
+    this.queryManager = new QueryManager({
+      networkInterface: this.networkInterface,
+      reduxRootKey: this.reduxRootKey,
+      store,
+    });
   }
 }

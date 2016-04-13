@@ -10,6 +10,7 @@ export interface QueryResultAction {
   type: 'QUERY_RESULT';
   result: GraphQLResult;
   queryId: string;
+  isApolloAction: 'true';
 }
 
 export function isQueryResultAction(action: ApolloAction): action is QueryResultAction {
@@ -26,6 +27,7 @@ export interface QueryInitAction {
   forceFetch: boolean;
   returnPartialData: boolean;
   queryId: string;
+  isApolloAction: 'true';
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {
@@ -37,6 +39,7 @@ export interface QueryResultClientAction {
   result: GraphQLResult;
   complete: boolean;
   queryId: string;
+  isApolloAction: 'true';
 }
 
 export function isQueryResultClientAction(action: ApolloAction): action is QueryResultClientAction {
@@ -46,6 +49,7 @@ export function isQueryResultClientAction(action: ApolloAction): action is Query
 export interface QueryStopAction {
   type: 'QUERY_STOP';
   queryId: string;
+  isApolloAction: 'true';
 }
 
 export function isQueryStopAction(action: ApolloAction): action is QueryStopAction {
@@ -58,6 +62,7 @@ export interface MutationInitAction {
   mutation: SelectionSetWithRoot;
   variables: Object;
   mutationId: string;
+  isApolloAction: 'true';
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
@@ -68,6 +73,7 @@ export interface MutationResultAction {
   type: 'MUTATION_RESULT';
   result: GraphQLResult;
   mutationId: string;
+  isApolloAction: 'true';
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

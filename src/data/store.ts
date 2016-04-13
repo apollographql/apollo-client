@@ -20,6 +20,10 @@ import {
   MutationStore,
 } from '../mutations/store';
 
+import {
+  ApolloReducerConfig,
+} from '../store';
+
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
 }
@@ -35,7 +39,8 @@ export function data(
   previousState: NormalizedCache = {},
   action: ApolloAction,
   queries: QueryStore,
-  mutations: MutationStore
+  mutations: MutationStore,
+  config: ApolloReducerConfig
 ): NormalizedCache {
   if (isQueryResultAction(action)) {
     // XXX handle partial result due to errors
@@ -51,6 +56,7 @@ export function data(
         selectionSet: queryStoreValue.minimizedQuery.selectionSet,
         variables: queryStoreValue.variables,
         store: clonedState,
+        dataIdFromObject: config.dataIdFromObject,
       });
 
       return newState;
@@ -69,6 +75,7 @@ export function data(
         selectionSet: queryStoreValue.mutation.selectionSet,
         variables: queryStoreValue.variables,
         store: clonedState,
+        dataIdFromObject: config.dataIdFromObject,
       });
 
       return newState;

@@ -12,6 +12,10 @@ import {
 } from '../src/store';
 
 import {
+  getIdField,
+} from '../src/data/extensions';
+
+import {
   assert,
 } from 'chai';
 
@@ -251,7 +255,9 @@ describe('QueryManager', () => {
       },
     ]);
 
-    const store = createApolloStore();
+    const store = createApolloStore({
+      config: { dataIdFromObject: getIdField },
+    });
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -293,7 +299,9 @@ describe('QueryManager', () => {
       },
     ]);
 
-    const store = createApolloStore();
+    const store = createApolloStore({
+      config: { dataIdFromObject: getIdField },
+    });
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -336,7 +344,10 @@ describe('QueryManager', () => {
     ]);
 
     const reduxRootKey = 'test';
-    const store = createApolloStore(reduxRootKey);
+    const store = createApolloStore({
+      reduxRootKey,
+      config: { dataIdFromObject: getIdField },
+    });
 
     const queryManager = new QueryManager({
       networkInterface,
@@ -693,7 +704,9 @@ function testDiffing(
 
   const queryManager = new QueryManager({
     networkInterface,
-    store: createApolloStore(),
+    store: createApolloStore({
+      config: { dataIdFromObject: getIdField },
+    }),
     reduxRootKey: 'apollo',
   });
 

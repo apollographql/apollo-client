@@ -3,7 +3,12 @@ import * as _ from 'lodash';
 
 import {
   writeFragmentToStore,
+  writeQueryToStore,
 } from '../src/data/writeToStore';
+
+import {
+  getIdField,
+} from '../src/data/extensions';
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {
@@ -23,7 +28,7 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    assertEqualSansDataId(writeFragmentToStore({
+    assert.deepEqual(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     }), {
@@ -53,7 +58,7 @@ describe('writing to the store', () => {
       fragment,
     });
 
-    assertEqualSansDataId(normalized, {
+    assert.deepEqual(normalized, {
       [result.id]: {
         id: 'abcd',
         stringField: 'This is a string!',
@@ -87,7 +92,7 @@ describe('writing to the store', () => {
       fragment,
     });
 
-    assertEqualSansDataId(normalized, {
+    assert.deepEqual(normalized, {
       [result.id]: {
         id: 'abcd',
         'stringField({"arg":"1"})': 'The arg was 1!',
@@ -127,7 +132,7 @@ describe('writing to the store', () => {
       variables,
     });
 
-    assertEqualSansDataId(normalized, {
+    assert.deepEqual(normalized, {
       [result.id]: {
         id: 'abcd',
         nullField: null,
@@ -166,9 +171,10 @@ describe('writing to the store', () => {
       },
     };
 
-    assertEqualSansDataId(writeFragmentToStore({
+    assert.deepEqual(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
+      dataIdFromObject: getIdField,
     }), {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
         nestedObj: result.nestedObj.id,
@@ -204,7 +210,7 @@ describe('writing to the store', () => {
       },
     };
 
-    assertEqualSansDataId(writeFragmentToStore({
+    assert.deepEqual(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     }), {
@@ -242,7 +248,7 @@ describe('writing to the store', () => {
       },
     };
 
-    assertEqualSansDataId(writeFragmentToStore({
+    assert.deepEqual(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     }), {
@@ -290,9 +296,10 @@ describe('writing to the store', () => {
       ],
     };
 
-    assertEqualSansDataId(writeFragmentToStore({
+    assert.deepEqual(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
+      dataIdFromObject: getIdField,
     }), {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: result.nestedArray.map(_.property('id')),
@@ -334,9 +341,10 @@ describe('writing to the store', () => {
       ],
     };
 
-    assertEqualSansDataId(writeFragmentToStore({
+    assert.deepEqual(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
+      dataIdFromObject: getIdField,
     }), {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
@@ -387,7 +395,7 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     });
 
-    assertEqualSansDataId(normalized, {
+    assert.deepEqual(normalized, {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
           `${result.id}.nestedArray.0`,
@@ -434,7 +442,7 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     });
 
-    assertEqualSansDataId(normalized, {
+    assert.deepEqual(normalized, {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
           null,
@@ -467,9 +475,10 @@ describe('writing to the store', () => {
     const normalized = writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
+      dataIdFromObject: getIdField,
     });
 
-    assertEqualSansDataId(normalized, {
+    assert.deepEqual(normalized, {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
         simpleArray: [
           result.simpleArray[0],
@@ -504,7 +513,7 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     });
 
-    assertEqualSansDataId(normalized, {
+    assert.deepEqual(normalized, {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
         simpleArray: [
           result.simpleArray[0],
@@ -533,6 +542,7 @@ describe('writing to the store', () => {
     const store = writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
+      dataIdFromObject: getIdField,
     });
 
     const fragment2 = `
@@ -553,6 +563,7 @@ describe('writing to the store', () => {
       store,
       fragment: fragment2,
       result: result2,
+      dataIdFromObject: getIdField,
     });
 
     assert.deepEqual(store2, {
@@ -584,7 +595,7 @@ describe('writing to the store', () => {
       nestedObj: null,
     };
 
-    assertEqualSansDataId(writeFragmentToStore({
+    assert.deepEqual(writeFragmentToStore({
       fragment,
       result: _.cloneDeep(result),
     }), {
@@ -593,23 +604,35 @@ describe('writing to the store', () => {
       }),
     });
   });
-});
 
-function assertEqualSansDataId(a, b) {
-  const filteredA = omitDataIdFields(a);
-  const filteredB = omitDataIdFields(b);
+  it('properly normalizes an object with an ID when no extension is passed', () => {
+    const query = `
+      {
+        people_one(id: "5") {
+          id
+          stringField
+        }
+      }
+    `;
 
-  assert.deepEqual(filteredA, filteredB);
-}
+    const result = {
+      people_one: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+      },
+    };
 
-function omitDataIdFields(obj) {
-  if (! _.isObject(obj)) {
-    return obj;
-  }
-
-  const omitted = _.omit(obj, ['__data_id']);
-
-  return _.mapValues(omitted, (value) => {
-    return omitDataIdFields(value);
+    assert.deepEqual(writeQueryToStore({
+      query,
+      result: _.cloneDeep(result),
+    }), {
+      'ROOT_QUERY': {
+        'people_one({"id":"5"})': 'ROOT_QUERY.people_one({"id":"5"})',
+      },
+      'ROOT_QUERY.people_one({"id":"5"})': {
+        'id': 'abcd',
+        'stringField': 'This is a string!',
+      },
+    });
   });
-}
+});

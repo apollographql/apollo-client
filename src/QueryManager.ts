@@ -65,6 +65,8 @@ export class QueryManager {
 
     this.resultCallbacks = {};
 
+    // this.store is usually the fake store we get from the Redux middleware API
+    // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
     if (this.store['subscribe']) {
       this.store['subscribe'](() => {
         this.broadcastNewStore(this.store.getState());

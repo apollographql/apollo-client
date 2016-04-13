@@ -40,8 +40,12 @@ describe('client', () => {
   it('does not require any arguments and creates store lazily', () => {
     const client = new ApolloClient();
 
-    // We only create the store on the first query
     assert.isUndefined(client.store);
+
+    // We only create the store on the first query
+    client.initStore();
+    assert.isDefined(client.store);
+    assert.isDefined(client.store.getState().apollo);
   });
 
   it('can allow passing in a network interface', () => {

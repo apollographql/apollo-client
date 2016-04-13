@@ -88,15 +88,16 @@ export default class ApolloClient {
     return (store: ApolloStore) => {
       this.setStore(store);
 
-      // Pass through. Eventually we should use this instead of subscribe, and get rid of setStore
-      return next => (action) => {
-        if (action.isApolloAction) {
-          const returnValue = next(action);
-          this.queryManager.broadcastNewStore(store.getState());
-          return returnValue;
-        }
+      return (next) => {
+        return (action) => {
+          if (action.isApolloAction) {
+            const returnValue = next(action);
+            this.queryManager.broadcastNewStore(store.getState());
+            return returnValue;
+          }
 
-        return next(action);
+          return next(action);
+        }
       };
     };
   }

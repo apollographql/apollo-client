@@ -5,6 +5,10 @@ import { writeQueryToStore } from '../src/data/writeToStore';
 import { stripLoc } from '../src/data/debug';
 import { printQueryForMissingData } from '../src/queryPrinting';
 
+import {
+  getIdField,
+} from '../src/data/extensions';
+
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
     const query = `
@@ -54,6 +58,7 @@ describe('diffing queries against the store', () => {
     const store = writeQueryToStore({
       result,
       query: firstQuery,
+      dataIdFromObject: getIdField,
     });
 
     const secondQuery = `
@@ -114,6 +119,7 @@ describe('diffing queries against the store', () => {
     const store = writeQueryToStore({
       result,
       query: firstQuery,
+      dataIdFromObject: getIdField,
     });
 
     const secondQuery = `
@@ -163,6 +169,7 @@ describe('diffing queries against the store', () => {
     const store = writeQueryToStore({
       result,
       query: firstQuery,
+      dataIdFromObject: getIdField,
     });
 
     const secondQuery = `
@@ -220,6 +227,7 @@ describe('diffing queries against the store', () => {
     const store = writeQueryToStore({
       result,
       query: firstQuery,
+      dataIdFromObject: getIdField,
     });
 
     const secondQuery = `

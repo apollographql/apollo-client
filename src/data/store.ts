@@ -51,6 +51,7 @@ export function data(
         selectionSet: queryStoreValue.minimizedQuery.selectionSet,
         variables: queryStoreValue.variables,
         store: clonedState,
+        dataIdFromObject: null,
       });
 
       return newState;
@@ -69,6 +70,7 @@ export function data(
         selectionSet: queryStoreValue.mutation.selectionSet,
         variables: queryStoreValue.variables,
         store: clonedState,
+        dataIdFromObject: null,
       });
 
       return newState;

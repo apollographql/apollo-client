@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 
 import {
   writeFragmentToStore,
+  writeQueryToStore,
 } from '../src/data/writeToStore';
 
 import {
@@ -601,6 +602,37 @@ describe('writing to the store', () => {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
         nestedObj: null,
       }),
+    });
+  });
+
+  it('properly normalizes an object with an ID when no extension is passed', () => {
+    const query = `
+      {
+        people_one(id: "5") {
+          id
+          stringField
+        }
+      }
+    `;
+
+    const result = {
+      people_one: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+      },
+    };
+
+    assert.deepEqual(writeQueryToStore({
+      query,
+      result: _.cloneDeep(result),
+    }), {
+      'ROOT_QUERY': {
+        'people_one({"id":"5"})': 'ROOT_QUERY.people_one({"id":"5"})',
+      },
+      'ROOT_QUERY.people_one({"id":"5"})': {
+        'id': 'abcd',
+        'stringField': 'This is a string!',
+      },
     });
   });
 });

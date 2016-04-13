@@ -100,7 +100,6 @@ export class QueryManager {
       },
       variables,
       mutationId,
-      isApolloAction: 'true',
     });
 
     return this.networkInterface.query(request)
@@ -109,7 +108,6 @@ export class QueryManager {
           type: 'MUTATION_RESULT',
           result,
           mutationId,
-          isApolloAction: 'true',
         });
 
         return result;
@@ -186,7 +184,6 @@ export class QueryManager {
       forceFetch,
       returnPartialData,
       queryId,
-      isApolloAction: 'true',
     });
 
     if (minimizedQuery) {
@@ -202,7 +199,6 @@ export class QueryManager {
             type: 'QUERY_RESULT',
             result,
             queryId,
-            isApolloAction: 'true',
           });
         }).catch((error: Error) => {
            // XXX handle errors
@@ -221,7 +217,6 @@ export class QueryManager {
           query: querySS,
           complete: !! minimizedQuery,
           queryId,
-          isApolloAction: 'true',
         });
       }, 0);
     }
@@ -280,7 +275,6 @@ export class QueryManager {
     this.store.dispatch({
       type: 'QUERY_STOP',
       queryId,
-      isApolloAction: 'true',
     });
 
     delete this.resultCallbacks[queryId];

@@ -43,7 +43,7 @@ Create a new HTTP network interface that points to a GraphQL server at a specifi
 Here's how you would instantiate a new client with a custom endpoint URL:
 
 ```js
-import ApolloClient from 'apollo-client';
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
 const networkInterface = createNetworkInterface('https://example.com/graphql');
 

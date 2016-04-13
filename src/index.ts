@@ -10,7 +10,7 @@ import {
 import {
   createApolloStore,
   ApolloStore,
-  apolloReducer,
+  createApolloReducer,
 } from './store';
 
 import {
@@ -26,7 +26,7 @@ import {
 export {
   createNetworkInterface,
   createApolloStore,
-  apolloReducer,
+  createApolloReducer,
 };
 
 export default class ApolloClient {
@@ -80,8 +80,8 @@ export default class ApolloClient {
     return this.queryManager.mutate(options);
   }
 
-  public reducer() {
-    return apolloReducer;
+  public reducer(): Function {
+    return createApolloReducer({});
   }
 
   public middleware() {
@@ -103,7 +103,9 @@ export default class ApolloClient {
     }
 
     // If we don't have a store already, initialize a default one
-    this.setStore(createApolloStore(this.reduxRootKey));
+    this.setStore(createApolloStore({
+      reduxRootKey: this.reduxRootKey,
+    }));
   }
 
   private setStore(store: ApolloStore) {

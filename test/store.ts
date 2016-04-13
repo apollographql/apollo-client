@@ -24,7 +24,10 @@ describe('createApolloStore', () => {
   });
 
   it('can take a custom root key', () => {
-    const store = createApolloStore('test');
+    const store = createApolloStore({
+      reduxRootKey: 'test',
+    });
+
     assert.deepEqual(
       store.getState()['test'],
       {

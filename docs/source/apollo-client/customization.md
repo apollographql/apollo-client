@@ -4,7 +4,7 @@ order: 102
 description: These are Apollo Docs!!
 ---
 
-## Custom network interface
+<h2 id="custom-network">Custom network interface</h2>
 
 You can define a custom network interface and pass it to the Apollo Client to send your queries in a different way. You could use this for a variety of reasons:
 
@@ -14,13 +14,13 @@ You can define a custom network interface and pass it to the Apollo Client to se
 
 All you need to do is create a `NetworkInterface` and pass it to the `ApolloClient` constructor.
 
-### NetworkInterface
+<h3 id="NetworkInterface">interface NetworkInterface</h3>
 
 This is an interface that an object should implement so that it can be used by the Apollo Client to make queries.
 
 - `query(request: GraphQLRequest): Promise<GraphQLResult>` This function on your network interface is pretty self-explanatory - it takes a GraphQL request object, and should return a promise for a GraphQL result. The promise should be rejected in the case of a network error.
 
-### GraphQLRequest
+<h3 id="GraphQLRequest">interface GraphQLRequest</h3>
 
 Represents a request passed to the network interface. Has the following properties:
 
@@ -28,7 +28,7 @@ Represents a request passed to the network interface. Has the following properti
 - `variables: Object` The variables to send with the query.
 - `debugName: string` An optional parameter that will be included in error messages about this query. XXX do we need this?
 
-### GraphQLResult
+<h3 id="GraphQLResult">interface GraphQLResult</h3>
 
 This represents a result that comes back from the GraphQL server.
 
@@ -44,7 +44,7 @@ By default, the Apollo Client creates its own internal Redux store to manage que
 To integrate with your existing Redux store:
 
 1. Create an `ApolloClient` instance.
-1. Use [`combineReducers` from Redux](http://redux.js.org/docs/api/combineReducers.html) to combine `client.reducer()` with your other reducers. By default, the reducer expects to be attached under the `apollo` key in the store.
+2. Use [`combineReducers` from Redux](http://redux.js.org/docs/api/combineReducers.html) to combine `client.reducer()` with your other reducers. By default, the reducer expects to be attached under the `apollo` key in the store.
 3. Pass your reducers to [Redux's `createStore`](http://redux.js.org/docs/api/createStore.html), and make sure to use `applyMiddleware` to add `client.middleware()` to your store.
 
 Here's what it looks like all together:

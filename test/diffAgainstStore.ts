@@ -248,4 +248,60 @@ describe('diffing queries against the store', () => {
     assert.deepEqual(missingSelectionSets, []);
     assert.deepEqual(store['1'], result.people_one);
   });
+
+  it('diffs root queries even when IDs are turned off', () => {
+    const firstQuery = `
+      {
+        people_one(id: "1") {
+          __typename,
+          id,
+          name
+        }
+      }
+    `;
+
+    const result = {
+      people_one: {
+        __typename: 'Person',
+        id: '1',
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const store = writeQueryToStore({
+      result,
+      query: firstQuery,
+      dataIdFromObject: getIdField,
+    });
+
+    const secondQuery = `
+      {
+        people_one(id: "1") {
+          __typename
+          id
+          name
+        }
+        people_one(id: "2") {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const { missingSelectionSets } = diffQueryAgainstStore({
+      store,
+      query: secondQuery,
+    });
+
+    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+  people_one(id: "2") {
+    __typename
+    id
+    name
+  }
+}
+`);
+    assert.deepEqual(store['1'], result.people_one);
+  });
 });

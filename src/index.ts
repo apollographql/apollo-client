@@ -29,8 +29,6 @@ export {
   apolloReducer,
 };
 
-export * from './actions';
-
 export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;

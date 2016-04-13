@@ -30,11 +30,13 @@ export interface Store {
   mutations: MutationStore;
 }
 
-// This is our interface on top of Redux to get types in our actions and store
+// This is our interface on top of Redux to get types in our actions
 export interface ApolloStore {
   dispatch: (action: ApolloAction) => void;
-  getState: () => Store;
-  subscribe: (listener: () => void) => void;
+
+  // We don't know what this will return because it could have any number of custom keys when
+  // integrating with an existing store
+  getState: () => any;
 }
 
 const crashReporter = store => next => action => {

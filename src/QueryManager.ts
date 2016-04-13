@@ -65,9 +65,13 @@ export class QueryManager {
 
     this.resultCallbacks = {};
 
-    this.store.subscribe(() => {
-      this.broadcastNewStore(this.store.getState()[this.reduxRootKey]);
-    });
+    // this.store is usually the fake store we get from the Redux middleware API
+    // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
+    if (this.store['subscribe']) {
+      this.store['subscribe'](() => {
+        this.broadcastNewStore(this.store.getState());
+      });
+    }
   }
 
   public mutate({
@@ -222,8 +226,10 @@ export class QueryManager {
     return this.watchQueryInStore(queryId);
   }
 
-  public broadcastNewStore(store: Store) {
-    forOwn(store.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
+  public broadcastNewStore(store: any) {
+    const apolloStore: Store = store[this.reduxRootKey];
+
+    forOwn(apolloStore.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
       // XXX We also need to check for network errors and returnPartialData
       if (!queryStoreValue.loading) {
         // XXX Currently, returning errors and data is exclusive because we
@@ -234,7 +240,7 @@ export class QueryManager {
           });
         } else {
           const resultFromStore = readSelectionSetFromStore({
-            store: store.data,
+            store: apolloStore.data,
             rootId: queryStoreValue.query.id,
             selectionSet: queryStoreValue.query.selectionSet,
             variables: queryStoreValue.variables,

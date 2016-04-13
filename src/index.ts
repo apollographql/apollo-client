@@ -88,16 +88,10 @@ export default class ApolloClient {
     return (store: ApolloStore) => {
       this.setStore(store);
 
-      return (next) => {
-        return (action) => {
-          if (action.isApolloAction) {
-            const returnValue = next(action);
-            this.queryManager.broadcastNewStore(store.getState());
-            return returnValue;
-          }
-
-          return next(action);
-        }
+      return (next) => (action) => {
+        const returnValue = next(action);
+        this.queryManager.broadcastNewStore(store.getState());
+        return returnValue;
       };
     };
   }

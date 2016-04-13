@@ -55,6 +55,7 @@ export default class ApolloClient {
   }
 
   public query(options: WatchQueryOptions): Promise<GraphQLResult | Error> {
+
     if (options.returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }

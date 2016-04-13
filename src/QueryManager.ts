@@ -119,7 +119,7 @@ export class QueryManager {
   public watchQuery({
     query,
     variables,
-    forceFetch = false,
+    forceFetch = true,
     returnPartialData = false,
   }: WatchQueryOptions): WatchedQueryHandle {
     // Generate a query ID

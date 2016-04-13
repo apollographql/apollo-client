@@ -43,26 +43,29 @@ By default, the Apollo Client creates its own internal Redux store to manage que
 
 To integrate with your existing Redux store:
 
-1. Use [`combineReducers` from Redux](http://redux.js.org/docs/api/combineReducers.html) to combine Apollo's reducer with your own. `apollo-client` uses the `apollo` redux key by default.
-2. Pass the result to [Redux's `createStore`](http://redux.js.org/docs/api/createStore.html).
-3. Pass the store into the `ApolloClient` constructor.
+1. Create an `ApolloClient` instance.
+1. Use [`combineReducers` from Redux](http://redux.js.org/docs/api/combineReducers.html) to combine `client.reducer()` with your other reducers. By default, the reducer expects to be attached under the `apollo` key in the store.
+3. Pass your reducers to [Redux's `createStore`](http://redux.js.org/docs/api/createStore.html), and make sure to use `applyMiddleware` to add `client.middleware()` to your store.
+
+Here's what it looks like all together:
 
 ```js
-import { createStore, combineReducers } from 'redux';
-import { ApolloClient, apolloReducer } from 'apollo-client';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { ApolloClient } from 'apollo-client';
 import { todoReducer, userReducer } from './reducers';
+
+const client = new ApolloClient();
 
 const store = createStore(
   combineReducers({
     todos: todoReducer,
     users: userReducer,
-    apollo: apolloReducer,
-  })
-});
+    apollo: client.reducer(),
+  }),
+  applyMiddleware(client.middleware())
+);
 
-const client = new ApolloClient({ store });
-
-client.store.getState();
+store.getState();
 
 // Example initial state:
 // {
@@ -76,24 +79,24 @@ client.store.getState();
 
 By default, the `ApolloClient` instance will assume that Apollo-related data lives under the `apollo` key in the store. To change the name of this key:
 
-1. Specify the desired key when adding `apolloReducer`.
+1. Specify the desired key when using `combineReducers` to attach `client.reducer()`.
 2. Pass the `reduxRootKey` parameter to the `ApolloClient` constructor.
 
 ```js
+const client = new ApolloClient({
+  reduxRootKey: 'myDifferentKey',
+});
+
 const store = createStore(
   combineReducers({
     todos: todoReducer,
     users: userReducer,
-    myDifferentKey: apolloReducer,
-  })
-});
+    myDifferentKey: client.reducer(),
+  }),
+  applyMiddleware(client.middleware())
+);
 
-const client = new ApolloClient({
-  store,
-  reduxRootKey: 'myDifferentKey',
-});
-
-client.store.getState();
+store.getState();
 
 // Example initial state:
 // {

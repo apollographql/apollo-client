@@ -243,6 +243,7 @@ describe('diffing queries against the store', () => {
     const { missingSelectionSets } = diffQueryAgainstStore({
       store,
       query: secondQuery,
+      dataIdFromObject: getIdField,
     });
 
     assert.equal(printQueryForMissingData({

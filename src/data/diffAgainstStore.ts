@@ -118,7 +118,7 @@ export function diffSelectionSetAgainstStore({
 
   const result = {};
   const missingSelectionSets: SelectionSetWithRoot[] = [];
-  const missingSelections: Field[] = [];
+  const missingFields: Field[] = [];
   const storeObj = store[rootId] || {};
 
   selectionSet.selections.forEach((selection) => {
@@ -133,9 +133,9 @@ export function diffSelectionSetAgainstStore({
 
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
-    function pushMissingField(field: Field) {
+    function pushMissingField(missingField: Field) {
       if (!missingFieldPushed) {
-        missingSelections.push(field);
+        missingFields.push(missingField);
         missingFieldPushed = true;
       }
     }
@@ -145,7 +145,7 @@ export function diffSelectionSetAgainstStore({
         throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
       }
 
-      missingSelections.push(field);
+      missingFields.push(field);
 
       return;
     }
@@ -223,7 +223,7 @@ export function diffSelectionSetAgainstStore({
 
   // If we weren't able to resolve some selections from the store, construct them into
   // a query we can fetch from the server
-  if (missingSelections.length) {
+  if (missingFields.length) {
     if (dataIdFromObject) {
       // We have a semantic understanding of IDs
       const id = dataIdFromObject(storeObj);
@@ -250,7 +250,7 @@ export function diffSelectionSetAgainstStore({
         typeName,
         selectionSet: {
           kind: 'SelectionSet',
-          selections: missingSelections,
+          selections: missingFields,
         },
       });
     } else if (rootId === 'ROOT_QUERY') {
@@ -261,7 +261,7 @@ export function diffSelectionSetAgainstStore({
         typeName,
         selectionSet: {
           kind: 'SelectionSet',
-          selections: missingSelections,
+          selections: missingFields,
         },
       });
     } else {
@@ -273,7 +273,7 @@ export function diffSelectionSetAgainstStore({
         typeName: 'CANNOT_REFETCH',
         selectionSet: {
           kind: 'SelectionSet',
-          selections: missingSelections,
+          selections: missingFields,
         },
       });
     }

@@ -39,10 +39,15 @@ import {
   printQueryFromDefinition,
 } from './queryPrinting';
 
+import {
+  IdGetter,
+} from './data/extensions';
+
 export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
+  private dataIdFromObject: IdGetter;
 
   private resultCallbacks: { [queryId: number]: QueryResultCallback[] };
 
@@ -52,16 +57,19 @@ export class QueryManager {
     networkInterface,
     store,
     reduxRootKey,
+    dataIdFromObject,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
+    dataIdFromObject?: IdGetter,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
     this.reduxRootKey = reduxRootKey;
+    this.dataIdFromObject = dataIdFromObject;
 
     this.resultCallbacks = {};
 
@@ -156,6 +164,7 @@ export class QueryManager {
         throwOnMissingField: false,
         rootId: querySS.id,
         variables,
+        dataIdFromObject: this.dataIdFromObject,
       });
 
       initialResult = result;

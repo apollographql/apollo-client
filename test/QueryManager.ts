@@ -708,6 +708,7 @@ function testDiffing(
       config: { dataIdFromObject: getIdField },
     }),
     reduxRootKey: 'apollo',
+    dataIdFromObject: getIdField,
   });
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {

@@ -119,7 +119,7 @@ export class QueryManager {
   public watchQuery({
     query,
     variables,
-    forceFetch = true,
+    forceFetch = false,
     returnPartialData = false,
   }: WatchQueryOptions): WatchedQueryHandle {
     // Generate a query ID
@@ -130,13 +130,14 @@ export class QueryManager {
     this.resultCallbacks[queryId] = [];
 
     const queryString = query;
+    const queryDef = parseQuery(query);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
     const querySS = {
       id: 'ROOT_QUERY',
       typeName: 'Query',
-      selectionSet: parseQuery(query).selectionSet,
+      selectionSet: queryDef.selectionSet,
     } as SelectionSetWithRoot;
 
     // If we don't use diffing, then these will be the same as the original query
@@ -160,7 +161,11 @@ export class QueryManager {
       initialResult = result;
 
       if (missingSelectionSets.length) {
-        const diffedQueryDef = queryDefinition(missingSelectionSets);
+        const diffedQueryDef = queryDefinition({
+          missingSelectionSets,
+          variableDefinitions: queryDef.variableDefinitions,
+          name: queryDef.name,
+        });
 
         minimizedQuery = {
           id: 'ROOT_QUERY',

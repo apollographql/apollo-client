@@ -136,7 +136,9 @@ describe('diffing queries against the store', () => {
       query: secondQuery,
     });
 
-    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+    assert.equal(printQueryForMissingData({
+      missingSelectionSets,
+    }), `{
   __node_0: node(id: "lukeId") {
     id
     ... on Person {
@@ -190,7 +192,9 @@ describe('diffing queries against the store', () => {
       query: secondQuery,
     });
 
-    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+    assert.equal(printQueryForMissingData({
+      missingSelectionSets,
+    }), `{
   __node_0: node(id: "lukeId") {
     id
     ... on Person {
@@ -294,7 +298,9 @@ describe('diffing queries against the store', () => {
       query: secondQuery,
     });
 
-    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+    assert.equal(printQueryForMissingData({
+      missingSelectionSets,
+    }), `{
   people_one(id: "2") {
     __typename
     id

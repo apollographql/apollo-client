@@ -12,6 +12,7 @@ import {
 } from '../src/store';
 
 import {
+  IdGetter,
   getIdField,
 } from '../src/data/extensions';
 
@@ -456,7 +457,97 @@ describe('QueryManager', () => {
         },
         variables: {},
       },
-    ], done);
+    ], {
+      dataIdFromObject: getIdField,
+    }, done);
+  });
+
+  it('diffs queries, preserving variable declarations', (done) => {
+    testDiffing([
+      {
+        query: `
+          {
+            people_one(id: "1") {
+              __typename,
+              id,
+              name
+            }
+          }
+        `,
+        diffedQuery: `
+          {
+            people_one(id: "1") {
+              __typename,
+              id,
+              name
+            }
+          }
+        `,
+        diffedQueryResponse: {
+          people_one: {
+            __typename: 'Person',
+            id: '1',
+            name: 'Luke Skywalker',
+          },
+        },
+        fullResponse: {
+          people_one: {
+            __typename: 'Person',
+            id: '1',
+            name: 'Luke Skywalker',
+          },
+        },
+        variables: {},
+      },
+      {
+        query: `
+          query getSeveralPeople($lukeId: String!, $vaderId: String!) {
+            luke: people_one(id: $lukeId) {
+              __typename
+              id
+              name
+            }
+            vader: people_one(id: $vaderId) {
+              __typename
+              id
+              name
+            }
+          }
+        `,
+        diffedQuery: `
+          query getSeveralPeople($lukeId: String!, $vaderId: String!) {
+            vader: people_one(id: $vaderId) {
+              __typename
+              id
+              name
+            }
+          }
+        `,
+        diffedQueryResponse: {
+          vader: {
+            __typename: 'Person',
+            id: '4',
+            name: 'Darth Vader',
+          },
+        },
+        fullResponse: {
+          luke: {
+            __typename: 'Person',
+            id: '1',
+            name: 'Luke Skywalker',
+          },
+          vader: {
+            __typename: 'Person',
+            id: '4',
+            name: 'Darth Vader',
+          },
+        },
+        variables: {
+          lukeId: '1',
+          vaderId: '4',
+        },
+      },
+    ], {}, done);
   });
 
   it(`doesn't return data while query is loading`, (done) => {
@@ -689,6 +780,9 @@ function testDiffing(
     // Variables to use in all queries
     variables?: Object,
   }[],
+  config: {
+    dataIdFromObject?: IdGetter,
+  },
   done: () => void
 ) {
   const networkInterface = mockNetworkInterface(queryArray.map(({
@@ -708,7 +802,7 @@ function testDiffing(
       config: { dataIdFromObject: getIdField },
     }),
     reduxRootKey: 'apollo',
-    dataIdFromObject: getIdField,
+    dataIdFromObject: config.dataIdFromObject,
   });
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {

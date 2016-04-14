@@ -175,15 +175,15 @@ describe('QueryManager', () => {
       reduxRootKey: 'apollo',
     });
 
-    const handle = queryManager.watchQuery({
+    const observableQuery = queryManager.watchQuery({
       query,
     });
 
-    handle.subscribe({
-      onResult: (result) => {
+    observableQuery.subscribe({
+      next(result) {
         done(new Error('Should not deliver result'));
       },
-      onError: (error) => {
+      error(error) {
         assert.equal(error.message, 'Network error');
         done();
       },
@@ -681,15 +681,12 @@ function testDiffing(
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {
     return (cb) => {
-      const handle = queryManager.watchQuery({
+      queryManager.query({
         query,
         variables,
         forceFetch: false,
-      });
-
-      handle.onResult((result) => {
+      }).then(result => {
         assert.deepEqual(result.data, fullResponse);
-        handle.stop();
         cb();
       });
     };

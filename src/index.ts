@@ -14,9 +14,10 @@ import {
 
 import {
   QueryManager,
-  WatchedQueryHandle,
   WatchQueryOptions,
 } from './QueryManager';
+
+import ObservableQuery from './queries/ObservableQuery';
 
 import {
   isUndefined,
@@ -62,23 +63,12 @@ export default class ApolloClient {
     });
   }
 
-  public watchQuery(options: WatchQueryOptions): WatchedQueryHandle {
+  public watchQuery(options: WatchQueryOptions): ObservableQuery {
     return this.queryManager.watchQuery(options);
   }
 
-  public query(options: WatchQueryOptions): Promise<GraphQLResult | Error> {
-    if (options.returnPartialData) {
-      throw new Error('returnPartialData option only supported on watchQuery.');
-    }
-
-    return new Promise((resolve, reject) => {
-      const handle = this.queryManager.watchQuery(options);
-      handle.onResult((result) => {
-        resolve(result);
-        // remove the listeners
-        handle.stop();
-      });
-    });
+  public query(options: WatchQueryOptions): Promise<GraphQLResult> {
+    return this.queryManager.query(options);
   }
 
   public mutate(options: {

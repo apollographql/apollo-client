@@ -45,6 +45,8 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
+      // XXX A query result will only be from minimizedQuery on the first fetch,
+      // but we'll want to fetch the complete query on a refetch
       const newState = writeSelectionSetToStore({
         result: action.result.data,
         dataId: queryStoreValue.minimizedQuery.id,

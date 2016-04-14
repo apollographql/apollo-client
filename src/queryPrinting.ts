@@ -40,6 +40,10 @@ export function queryDefinition({
     name = null,
 }: QueryDefinitionOptions): OperationDefinition {
   const selections = missingSelectionSets.map((missingSelectionSet: SelectionSetWithRoot, ii) => {
+    if (missingSelectionSet.id === 'CANNOT_REFETCH') {
+      throw new Error('diffAgainstStore did not merge selection sets correctly');
+    }
+
     if (missingSelectionSet.id === 'ROOT_QUERY') {
       if (missingSelectionSet.selectionSet.selections.length > 1) {
         throw new Error('Multiple root queries, cannot print that yet.');

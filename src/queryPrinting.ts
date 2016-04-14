@@ -1,8 +1,10 @@
 import {
-  print,
+  // print,
   SelectionSet,
   OperationDefinition,
 } from 'graphql';
+
+import { print } from 'graphql/language/printer';
 
 import {
   SelectionSetWithRoot,

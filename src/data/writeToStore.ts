@@ -1,12 +1,10 @@
-import {
-  isString,
-  isNumber,
-  isBoolean,
-  isNull,
-  isArray,
-  isUndefined,
-  assign,
-} from 'lodash';
+import isString from 'lodash.isstring';
+import isNumber from 'lodash.isnumber';
+import isBoolean from 'lodash.isboolean';
+import isNull from 'lodash.isnull';
+import isArray from 'lodash.isarray';
+import isUndefined from 'lodash.isundefined';
+import assign from 'lodash.assign';
 
 import {
   parseFragment,

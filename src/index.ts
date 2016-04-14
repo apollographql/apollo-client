@@ -19,9 +19,7 @@ import {
   WatchQueryOptions,
 } from './QueryManager';
 
-import {
-  isUndefined,
-} from 'lodash';
+import isUndefined from 'lodash.isundefined';
 
 export {
   createNetworkInterface,

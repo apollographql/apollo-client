@@ -1,10 +1,10 @@
-import { parse } from 'graphql';
-
 import {
   OperationDefinition,
   Document,
   FragmentDefinition,
 } from 'graphql';
+
+import { parse } from 'graphql/language/parser';
 
 export function parseDocument(doc: string): Document {
   const parsed = parse(doc);

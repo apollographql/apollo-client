@@ -8,9 +8,7 @@ import {
   parseMutation,
 } from './parser';
 
-import {
-  forOwn,
-} from 'lodash';
+import forOwn from 'lodash.forown';
 
 import {
   Store,

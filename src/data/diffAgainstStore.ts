@@ -1,9 +1,7 @@
-import {
-  isArray,
-  isNull,
-  isString,
-  has,
-} from 'lodash';
+import isArray from 'lodash.isarray';
+import isNull from 'lodash.isnull';
+import isString from 'lodash.isstring';
+import has from 'lodash.has';
 
 import {
   parseFragment,

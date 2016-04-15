@@ -33,6 +33,14 @@ import ApolloClient from 'apollo-client';
 const client = new ApolloClient();
 ```
 
+If you're not using ES2015, you can also load it with `require`:
+
+```js
+var ApolloClient = require('apollo-client').default;
+```
+
+The rest of the code snippets will use ES2015 import syntax.
+
 <h3 id="createNetworkInterface" title="createNetworkInterface">createNetworkInterface(url, options)</h3>
 
 Create a new HTTP network interface that points to a GraphQL server at a specific URI.

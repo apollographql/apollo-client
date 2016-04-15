@@ -1,6 +1,6 @@
 ---
 title: Network layer
-order: 102
+order: 140
 description: How to point your Apollo client to a different GraphQL server, or use a totally different protocol.
 ---
 

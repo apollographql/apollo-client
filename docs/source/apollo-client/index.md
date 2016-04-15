@@ -68,13 +68,69 @@ This means that using `watchQuery` will keep your UI consistent, so that every q
 
 In the future, `watchQuery` will also have some extra options for reactivity, allowing you to set a polling interval, connect to a source of invalidations for reactive re-fetching, or accept pushed data from the server for low-latency updates. Using it now will allow you to easily switch those options on when they become available.
 
+<h3 id="forceFetch">query diffing and forceFetch</h3>
+
+The Apollo Client doesn't just directly send your GraphQL queries to the server. It does a lot of pre-and-post processing of the data. One of the main things it does is _query diffing_, which means comparing a query you're about to fetch with the data the client fetched previously, and sending a new query that fetches only the necessary data.
+
+For example, let's say you do two queries, one after the other:
+
+```
+// First query fetched
+{
+  todoList(id: 5) {
+    title
+    createdAt
+    tasks {
+      name
+      completed
+    }
+  }
+}
+
+// Second query, after the user clicks a button
+{
+  todoList(id: 5) {
+    title
+    createdAt
+    tasks {
+      name
+      completed
+    }
+  }
+  user(id: 8) {
+    name
+    username
+  }
+}
+```
+
+The Apollo Client is smart enough to realize that it already has the data for part of the second query, and sends only the new part:
+
+```
+// Actual second query sent
+{
+  user(id: 8) {
+    name
+    username
+  }
+}
+```
+
+You can take advantage of this feature to reduce the amount of data your app is loading, without putting in any extra work. For example, if someone navigates to a different page of your app, then comes back immediately, if you try to load the same query again the Apollo Client will just use the existing data. This is the default behavior.
+
+We are always going to be improving the efficiency of the query diffing algorithm. Right now, it just does basic operations, but in the future it will be able to fetch single missing objects, and diff deeply nested queries. Follow along on the GitHub repository to find out when these features are coming.
+
+<h4 id="forceFetch">Using forceFetch</h4>
+
+Of course, you don't always want to use the existing data in the store - sometimes you want to get the new data directly from the server even though you already have it on the client. In this case, you should pass the `forceFetch` option to `query` or `watchQuery`, as documented below.
+
 <h3 id="query" title="ApolloClient#query">ApolloClient#query(options)</h3>
 
 Run a GraphQL query and return a promise that resolves to a `GraphQLResult`.
 
 - `query: string` A GraphQL query string to fetch.
 - `variables: Object` The variables to pass along with the query.
-- `forceFetch: boolean` (Optional, default is `true`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
+- `forceFetch: boolean` (Optional, default is `false`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
 
 Here's how you would run a single query and get the result:
 
@@ -117,7 +173,7 @@ Run a GraphQL query and return a `WatchedQueryHandle` that is updated as the que
 
 - `query: string` A GraphQL query string to fetch.
 - `variables: Object` The variables to pass along with the query.
-- `forceFetch: boolean` (Optional, default is `true`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
+- `forceFetch: boolean` (Optional, default is `false`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
 - `returnPartialData: boolean` (Optional, default is `false`) If false, wait until the query has finished the initial load from the server to return any data. If true, return any data we might happen to already have in the store immediately. If you pass true for this option, your UI should be ready to deal with the possibility that it will get a partial result at first.
 
 <h3 id="WatchedQueryHandle" title="WatchedQueryHandle">WatchedQueryHandle</h3>

@@ -1,45 +1,12 @@
 ---
-title: Customization
-order: 102
-description: These are Apollo Docs!!
+title: Redux integration
+order: 130
+description: How to integrate Apollo Client into your existing Redux store.
 ---
-
-<h2 id="custom-network">Custom network interface</h2>
-
-You can define a custom network interface and pass it to the Apollo Client to send your queries in a different way. You could use this for a variety of reasons:
-
-1. You want a custom transport that sends queries over Websockets instead of HTTP
-2. You want to modify the query or variables before they are sent
-3. You want to run your app against a mocked client-side schema and never send any network requests at all
-
-All you need to do is create a `NetworkInterface` and pass it to the `ApolloClient` constructor.
-
-<h3 id="NetworkInterface">interface NetworkInterface</h3>
-
-This is an interface that an object should implement so that it can be used by the Apollo Client to make queries.
-
-- `query(request: GraphQLRequest): Promise<GraphQLResult>` This function on your network interface is pretty self-explanatory - it takes a GraphQL request object, and should return a promise for a GraphQL result. The promise should be rejected in the case of a network error.
-
-<h3 id="GraphQLRequest">interface GraphQLRequest</h3>
-
-Represents a request passed to the network interface. Has the following properties:
-
-- `query: string` The query to send to the server.
-- `variables: Object` The variables to send with the query.
-- `debugName: string` An optional parameter that will be included in error messages about this query. XXX do we need this?
-
-<h3 id="GraphQLResult">interface GraphQLResult</h3>
-
-This represents a result that comes back from the GraphQL server.
-
-- `data: any` This is the actual data returned by the server.
-- `errors: Array` This is an array of errors returned by the server.
-
-<h2 id="redux">Redux integration</h2>
 
 By default, the Apollo Client creates its own internal Redux store to manage queries and their results. If you are already using Redux for the rest of your app, you can have the client integrate with your existing store instead. This will let you better track the different events that happen in your app, and how your client and server side data changes interleave.
 
-### Creating the store
+<h2 id="creating-store">Creating the store</h2>
 
 To integrate with your existing Redux store:
 
@@ -75,7 +42,7 @@ store.getState();
 // }
 ```
 
-### Custom store key
+<h2 id="custom-store-key">Custom store key</h2>
 
 By default, the `ApolloClient` instance will assume that Apollo-related data lives under the `apollo` key in the store. To change the name of this key:
 

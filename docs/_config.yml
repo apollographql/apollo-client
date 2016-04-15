@@ -32,6 +32,7 @@ nav_links:
   apollostack.com: http://www.apollostack.com/
   Blog: https://medium.com/apollo-stack
   GitHub: https://github.com/apollostack
+favicon: /logo/square.png
 
 # API keys
 apis:

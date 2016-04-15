@@ -24,6 +24,10 @@ import {
 } from '../queries/store';
 
 import {
+  IdGetter,
+} from './extensions';
+
+import {
   SelectionSet,
   Field,
 } from 'graphql';
@@ -31,16 +35,19 @@ import {
 export interface QueryDiffResult {
   result: any;
   missingSelectionSets: SelectionSetWithRoot[];
+  mergeUp: boolean;
 }
 
 export function diffQueryAgainstStore({
   store,
   query,
   variables,
+  dataIdFromObject,
 }: {
   store: NormalizedCache,
   query: string
   variables?: Object,
+  dataIdFromObject?: IdGetter,
 }): QueryDiffResult {
   const queryDef = parseQuery(query);
 
@@ -50,6 +57,7 @@ export function diffQueryAgainstStore({
     selectionSet: queryDef.selectionSet,
     throwOnMissingField: false,
     variables,
+    dataIdFromObject,
   });
 }
 
@@ -58,11 +66,13 @@ export function diffFragmentAgainstStore({
   fragment,
   rootId,
   variables,
+  dataIdFromObject,
 }: {
   store: NormalizedCache,
   fragment: string,
   rootId: string,
   variables?: Object,
+  dataIdFromObject?: IdGetter,
 }): QueryDiffResult {
   const fragmentDef = parseFragment(fragment);
 
@@ -72,6 +82,7 @@ export function diffFragmentAgainstStore({
     selectionSet: fragmentDef.selectionSet,
     throwOnMissingField: false,
     variables,
+    dataIdFromObject,
   });
 }
 
@@ -92,23 +103,22 @@ export function diffSelectionSetAgainstStore({
   rootId,
   throwOnMissingField = false,
   variables,
+  dataIdFromObject,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
   rootId: string,
   throwOnMissingField: Boolean,
   variables: Object,
+  dataIdFromObject?: IdGetter,
 }): QueryDiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
 
   const result = {};
-
   const missingSelectionSets: SelectionSetWithRoot[] = [];
-
-  const missingSelections: Field[] = [];
-
+  const missingFields: Field[] = [];
   const storeObj = store[rootId] || {};
 
   selectionSet.selections.forEach((selection) => {
@@ -121,12 +131,21 @@ export function diffSelectionSetAgainstStore({
     const storeFieldKey = storeKeyNameFromField(field, variables);
     const resultFieldKey = resultKeyNameFromField(field);
 
+    // Don't push more than one missing field per field in the query
+    let missingFieldPushed = false;
+    function pushMissingField(missingField: Field) {
+      if (!missingFieldPushed) {
+        missingFields.push(missingField);
+        missingFieldPushed = true;
+      }
+    }
+
     if (! has(storeObj, storeFieldKey)) {
       if (throwOnMissingField) {
         throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
       }
 
-      missingSelections.push(field);
+      missingFields.push(field);
 
       return;
     }
@@ -157,10 +176,17 @@ export function diffSelectionSetAgainstStore({
           rootId: id,
           selectionSet: field.selectionSet,
           variables,
+          dataIdFromObject,
         });
 
-        itemDiffResult.missingSelectionSets.forEach(
-          itemSelectionSet => missingSelectionSets.push(itemSelectionSet));
+        if (! itemDiffResult.mergeUp) {
+          itemDiffResult.missingSelectionSets.forEach(
+            itemSelectionSet => missingSelectionSets.push(itemSelectionSet));
+        } else {
+          // XXX merge all of the missing selections from the children to get a more minimal result
+          pushMissingField(field);
+        }
+
         return itemDiffResult.result;
       });
       return;
@@ -173,11 +199,16 @@ export function diffSelectionSetAgainstStore({
         rootId: storeValue,
         selectionSet: field.selectionSet,
         variables,
+        dataIdFromObject,
       });
 
-      // This is a nested query
-      subObjDiffResult.missingSelectionSets.forEach(
-        subObjSelectionSet => missingSelectionSets.push(subObjSelectionSet));
+      if (! subObjDiffResult.mergeUp) {
+        subObjDiffResult.missingSelectionSets.forEach(
+          subObjSelectionSet => missingSelectionSets.push(subObjSelectionSet));
+      } else {
+        // XXX merge all of the missing selections from the children to get a more minimal result
+        pushMissingField(field);
+      }
 
       result[resultFieldKey] = subObjDiffResult.result;
       return;
@@ -186,39 +217,71 @@ export function diffSelectionSetAgainstStore({
     throw new Error('Unexpected number value in the store where the query had a subselection.');
   });
 
+  // Set this to true if we don't have enough information at this level to generate a refetch
+  // query, so we need to merge the selection set with the parent, rather than appending
+  let mergeUp = false;
+
   // If we weren't able to resolve some selections from the store, construct them into
   // a query we can fetch from the server
-  if (missingSelections.length) {
-    const id = storeObj['id'];
-    if (typeof id !== 'string' && rootId !== 'ROOT_QUERY') {
-      throw new Error(
-        `Can't generate query to refetch object ${rootId}, since it doesn't have a string id.`);
-    }
+  if (missingFields.length) {
+    if (dataIdFromObject) {
+      // We have a semantic understanding of IDs
+      const id = dataIdFromObject(storeObj);
 
-    let typeName: string;
+      if (typeof id !== 'string' && rootId !== 'ROOT_QUERY') {
+        throw new Error(
+          `Can't generate query to refetch object ${rootId}, since it doesn't have a string id.`);
+      }
 
-    if (rootId === 'ROOT_QUERY') {
-      // We don't need to do anything interesting to fetch root queries, like have an ID
-      typeName = 'Query';
-    } else if (! storeObj.__typename) {
-      throw new Error(
-        `Can't generate query to refetch object ${rootId}, since __typename wasn't in the store.`);
+      let typeName: string;
+
+      if (rootId === 'ROOT_QUERY') {
+        // We don't need to do anything interesting to fetch root queries, like have an ID
+        typeName = 'Query';
+      } else if (! storeObj.__typename) {
+        throw new Error(
+          `Can't generate query to refetch object ${rootId}, since __typename wasn't in the store.`);
+      } else {
+        typeName = storeObj.__typename;
+      }
+
+      missingSelectionSets.push({
+        id: rootId,
+        typeName,
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: missingFields,
+        },
+      });
+    } else if (rootId === 'ROOT_QUERY') {
+      const typeName = 'Query';
+
+      missingSelectionSets.push({
+        id: rootId,
+        typeName,
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: missingFields,
+        },
+      });
     } else {
-      typeName = storeObj.__typename;
-    }
+      mergeUp = true;
 
-    missingSelectionSets.push({
-      id: rootId,
-      typeName,
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: missingSelections,
-      },
-    });
+      missingSelectionSets.push({
+        // Sentinel values, all we need is the selection set
+        id: 'CANNOT_REFETCH',
+        typeName: 'CANNOT_REFETCH',
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: missingFields,
+        },
+      });
+    }
   }
 
   return {
     result,
     missingSelectionSets,
+    mergeUp,
   };
 }

@@ -23,13 +23,15 @@ describe('printing queries', () => {
     };
 
     // Note - the indentation inside template strings is meaningful!
-    assert.equal(printQueryForMissingData([
-      {
-        id,
-        typeName,
-        selectionSet,
-      },
-    ]), `{
+    assert.equal(printQueryForMissingData({
+      missingSelectionSets: [
+        {
+          id,
+          typeName,
+          selectionSet,
+        },
+      ],
+    }), `{
   __node_0: node(id: "lukeId") {
     id
     ... on Person {

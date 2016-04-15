@@ -2,14 +2,16 @@ import {
   print,
   SelectionSet,
   OperationDefinition,
+  VariableDefinition,
+  Name,
 } from 'graphql';
 
 import {
   SelectionSetWithRoot,
 } from './queries/store';
 
-export function printQueryForMissingData(missingSelectionSets: SelectionSetWithRoot[]) {
-  return printQueryFromDefinition(queryDefinition(missingSelectionSets));
+export function printQueryForMissingData(options: QueryDefinitionOptions) {
+  return printQueryFromDefinition(queryDefinition(options));
 }
 
 const idField = {
@@ -32,9 +34,16 @@ export function printQueryFromDefinition(queryDef: OperationDefinition) {
   return print(queryDocumentAst);
 }
 
-export function queryDefinition(
-    missingSelectionSets: SelectionSetWithRoot[]): OperationDefinition {
+export function queryDefinition({
+    missingSelectionSets,
+    variableDefinitions = null,
+    name = null,
+}: QueryDefinitionOptions): OperationDefinition {
   const selections = missingSelectionSets.map((missingSelectionSet: SelectionSetWithRoot, ii) => {
+    if (missingSelectionSet.id === 'CANNOT_REFETCH') {
+      throw new Error('diffAgainstStore did not merge selection sets correctly');
+    }
+
     if (missingSelectionSet.id === 'ROOT_QUERY') {
       if (missingSelectionSet.selectionSet.selections.length > 1) {
         throw new Error('Multiple root queries, cannot print that yet.');
@@ -54,8 +63,8 @@ export function queryDefinition(
   return {
     kind: 'OperationDefinition',
     operation: 'query',
-    name: null,
-    variableDefinitions: null,
+    name,
+    variableDefinitions,
     directives: [],
     selectionSet: {
       kind: 'SelectionSet',
@@ -130,4 +139,10 @@ function inlineFragmentSelection({
     directives: [],
     selectionSet,
   };
+}
+
+export type QueryDefinitionOptions = {
+  missingSelectionSets: SelectionSetWithRoot[];
+  variableDefinitions?: VariableDefinition[];
+  name?: Name;
 }

@@ -36,7 +36,7 @@ describe('diffing queries against the store', () => {
     }).missingSelectionSets, []);
   });
 
-  it('returns correct selection set when the store is missing one field', () => {
+  it('when the store is missing one field and knows about IDs', () => {
     const firstQuery = `
       {
         people_one(id: "1") {
@@ -73,6 +73,7 @@ describe('diffing queries against the store', () => {
     assert.deepEqual(stripLoc(diffQueryAgainstStore({
       store,
       query: secondQuery,
+      dataIdFromObject: getIdField,
     }).missingSelectionSets), [
       {
         id: 'lukeId',
@@ -97,7 +98,7 @@ describe('diffing queries against the store', () => {
     ]);
   });
 
-  it('generates the right query when the store is missing one field', () => {
+  it('when the store is missing one field and knows about IDs', () => {
     const firstQuery = `
       {
         people_one(id: "1") {
@@ -134,9 +135,12 @@ describe('diffing queries against the store', () => {
     const { missingSelectionSets } = diffQueryAgainstStore({
       store,
       query: secondQuery,
+      dataIdFromObject: getIdField,
     });
 
-    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+    assert.equal(printQueryForMissingData({
+      missingSelectionSets,
+    }), `{
   __node_0: node(id: "lukeId") {
     id
     ... on Person {
@@ -147,7 +151,58 @@ describe('diffing queries against the store', () => {
 `);
   });
 
-  it('generates the right queries when the store is missing multiple nodes', () => {
+  it('when the store is missing one field and doesn\'t know IDs', () => {
+    const firstQuery = `
+      {
+        people_one(id: "1") {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const result = {
+      people_one: {
+        __typename: 'Person',
+        id: 'lukeId',
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const store = writeQueryToStore({
+      result,
+      query: firstQuery,
+    });
+
+    const secondQuery = `
+      {
+        people_one(id: "1") {
+          name
+          age
+        }
+      }
+    `;
+
+    const { missingSelectionSets } = diffQueryAgainstStore({
+      store,
+      query: secondQuery,
+    });
+
+    // XXX a more efficient diffing algorithm would actually only fetch `age` here. Something to
+    // implement next
+    assert.equal(printQueryForMissingData({
+      missingSelectionSets,
+    }), `{
+  people_one(id: "1") {
+    name
+    age
+  }
+}
+`);
+  });
+
+  it('when the store is missing multiple nodes', () => {
     const firstQuery = `
       {
         people_one(id: "1") {
@@ -188,9 +243,12 @@ describe('diffing queries against the store', () => {
     const { missingSelectionSets } = diffQueryAgainstStore({
       store,
       query: secondQuery,
+      dataIdFromObject: getIdField,
     });
 
-    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+    assert.equal(printQueryForMissingData({
+      missingSelectionSets,
+    }), `{
   __node_0: node(id: "lukeId") {
     id
     ... on Person {
@@ -294,7 +352,9 @@ describe('diffing queries against the store', () => {
       query: secondQuery,
     });
 
-    assert.equal(printQueryForMissingData(missingSelectionSets), `{
+    assert.equal(printQueryForMissingData({
+      missingSelectionSets,
+    }), `{
   people_one(id: "2") {
     __typename
     id

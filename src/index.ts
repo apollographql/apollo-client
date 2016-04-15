@@ -52,7 +52,7 @@ export default class ApolloClient {
     this.initStore();
 
     return this.queryManager.watchQuery(options);
-  }
+  };
 
   public query = (options: WatchQueryOptions): Promise<GraphQLResult | Error> => {
 
@@ -75,7 +75,7 @@ export default class ApolloClient {
         },
       });
     });
-  }
+  };
 
   public mutate = (options: {
     mutation: string,
@@ -83,7 +83,7 @@ export default class ApolloClient {
   }): Promise<GraphQLResult> => {
     this.initStore();
     return this.queryManager.mutate(options);
-  }
+  };
 
   public reducer(): Function {
     return createApolloReducer({});
@@ -99,7 +99,7 @@ export default class ApolloClient {
         return returnValue;
       };
     };
-  }
+  };
 
   public initStore() {
     if (this.store) {
@@ -111,9 +111,9 @@ export default class ApolloClient {
     this.setStore(createApolloStore({
       reduxRootKey: this.reduxRootKey,
     }));
-  }
+  };
 
-  private setStore(store: ApolloStore) {
+  private setStore = (store: ApolloStore) => {
     // ensure existing store has apolloReducer
     if (isUndefined(store.getState()[this.reduxRootKey])) {
       throw new Error(`Existing store does not use apolloReducer for ${this.reduxRootKey}`);
@@ -126,5 +126,5 @@ export default class ApolloClient {
       reduxRootKey: this.reduxRootKey,
       store,
     });
-  }
+  };
 }

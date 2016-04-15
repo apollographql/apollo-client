@@ -48,6 +48,22 @@ describe('client', () => {
     assert.isDefined(client.store.getState().apollo);
   });
 
+  it('can be loaded via require', () => {
+    /* tslint:disable */
+    const ApolloClientRequire = require('../src').default;
+    /* tslint:enable */
+
+    const client = new ApolloClientRequire();
+
+    assert.isUndefined(client.store);
+
+    // We only create the store on the first query
+    client.initStore();
+    assert.isDefined(client.store);
+    assert.isDefined(client.store.getState().apollo);
+  });
+
+
   it('can allow passing in a network interface', () => {
     const networkInterface: NetworkInterface = createNetworkInterface('swapi');
     const client = new ApolloClient({

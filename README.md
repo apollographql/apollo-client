@@ -32,4 +32,11 @@ Should be moved into some kind of CONTRIBUTING.md soon...
 
 - [AST explorer](https://astexplorer.net/): you can use this to see what the GraphQL query AST looks like for different queries
 
-xxx
+### Important discussions
+
+If you're getting booted up as a contributor, here are some discussions you should take a look at:
+
+1. [Static typing and why we went with TypeScript](https://github.com/apollostack/apollo-client/issues/6) also covered in [the Medium post](https://medium.com/apollo-stack/javascript-code-quality-with-free-tools-9a6d80e29f2d#.k32z401au)
+1. [Idea for pagination handling](https://github.com/apollostack/apollo-client/issues/26)
+1. [Discussion about interaction with Redux and domain vs. client state](https://github.com/apollostack/apollo-client/issues/98)
+1. [Long conversation about different client options, before this repo existed](https://github.com/apollostack/apollo/issues/1)

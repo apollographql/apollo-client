@@ -48,13 +48,13 @@ export default class ApolloClient {
       createNetworkInterface('/graphql');
   }
 
-  public watchQuery(options: WatchQueryOptions): WatchedQueryHandle {
+  public watchQuery = (options: WatchQueryOptions): WatchedQueryHandle => {
     this.initStore();
 
     return this.queryManager.watchQuery(options);
   }
 
-  public query(options: WatchQueryOptions): Promise<GraphQLResult | Error> {
+  public query = (options: WatchQueryOptions): Promise<GraphQLResult | Error> => {
 
     if (options.returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
@@ -77,10 +77,10 @@ export default class ApolloClient {
     });
   }
 
-  public mutate(options: {
+  public mutate = (options: {
     mutation: string,
     variables?: Object,
-  }): Promise<GraphQLResult> {
+  }): Promise<GraphQLResult> => {
     this.initStore();
     return this.queryManager.mutate(options);
   }
@@ -89,7 +89,7 @@ export default class ApolloClient {
     return createApolloReducer({});
   }
 
-  public middleware() {
+  public middleware = () => {
     return (store: ApolloStore) => {
       this.setStore(store);
 

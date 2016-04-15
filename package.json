@@ -3,6 +3,7 @@
   "version": "0.0.5",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
+  "typings": "./lib/src/index.d.ts",
   "scripts": {
     "pretest": "npm run compile",
     "test": "npm run testonly",

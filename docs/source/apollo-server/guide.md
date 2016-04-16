@@ -4,10 +4,10 @@ order: 202
 description: These are Apollo Docs!!
 ---
 
-This guide will walk you through building a GraphQL server using graphql-tools, a package we are actively developing for [Apollo](http://www.apollostack.com). There are of course many ways to build a GraphQL server for Node.js, but this is the way we recommend. It describes each step in detail, from defining a schema to writing your own resolve functions and loaders.
+This guide will walk you through building a GraphQL server for a simple Todos app. We'll be using a package called [graphql-tools](https://www.npmjs.com/package/graphql-tools), which is actively being developed for [Apollo](http://www.apollostack.com). There are of course many ways to build a GraphQL server for Node.js, but this is the way we recommend. It describes each step in detail, from defining a schema to writing your own resolve functions and loaders.
 
 ## Setup
-For this guide, we'll assume that you are familiar with using the command line of your operating system and already have Node 5 and npm set up for your environment.
+For the remainder of this guide, we'll assume that you are familiar with using the command line of your operating system and already have Node 5 and npm set up for your environment.
 If that's not the case, you should [do that first](https://nodejs.org/en/download/package-manager/) before you read the rest of this guide.
 
 To get started, you need to install a few packages and set up some boilerplate. To make this easier, we've created a barebones started kit which you can use:
@@ -32,6 +32,26 @@ If you already have an express server or a GraphQL server set up, then you can a
 
 
 ## Schema
+
+If you open the data folder in the project directory, you will see the file `schema.js` which defines the schema our server uses:
+```js
+const typeDefinitions = `
+type Query {
+  testString: String
+}
+
+schema {
+  query: Query
+}
+`;
+
+export default [typeDefinitions];
+```
+ApolloServer uses the GraphQL schema language notation, which it then compiles to a GraphQL-JS schema. With the current schema, our server provides exactly one entry point `testString`, which returns a String.
+
+The schema notation supports all GraphQL types. In this tutorial we are only going to use a few of them. You can learn about all the others in the [schema creation subsection of Tools](http://localhost:4000/apollo-server/tools.html#Schema-creation).
+
+
 
 ## Mocking
 

@@ -6,7 +6,7 @@ description: How to point your Apollo client to a different GraphQL server, or u
 
 <h2 id="custom-network-interface">Custom network interface</h2>
 
-You can define a custom network interface and pass it to the Apollo Client to send your queries in a different way. You could use this for a variety of reasons:
+You can define a custom network interface and pass it to the Apollo Client to send your queries in a different way. You might want to do this for a variety of reasons:
 
 1. You want a custom transport that sends queries over Websockets instead of HTTP
 2. You want to modify the query or variables before they are sent
@@ -16,7 +16,7 @@ All you need to do is create a `NetworkInterface` and pass it to the `ApolloClie
 
 <h3 id="NetworkInterface">interface NetworkInterface</h3>
 
-This is an interface that an object should implement so that it can be used by the Apollo Client to make queries.
+This is the interface that an object should implement so that it can be used by the Apollo Client to make queries.
 
 - `query(request: GraphQLRequest): Promise<GraphQLResult>` This function on your network interface is pretty self-explanatory - it takes a GraphQL request object, and should return a promise for a GraphQL result. The promise should be rejected in the case of a network error.
 

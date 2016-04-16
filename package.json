@@ -6,7 +6,7 @@
   "typings": "./lib/src/index.d.ts",
   "scripts": {
     "pretest": "npm run compile",
-    "test": "npm run testonly",
+    "test": "npm run testonly --",
     "posttest": "npm run lint",
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=30",
     "compile": "tsc",

@@ -735,12 +735,11 @@ describe('QueryManager', () => {
         if (handle1Count === 1) {
           assert.deepEqual(result.data, data1);
 
-          queryManager.watchQuery({
+          queryManager.query({
             query: query2,
           });
-        }
-
-        if (result.data['people_one'].name === 'Luke Skywalker has a new name') {
+        } else if (handle1Count === 3 &&
+            result.data['people_one'].name === 'Luke Skywalker has a new name') {
           // 3 because the query init action for the second query causes a callback
           assert.deepEqual(result.data, {
             people_one: {

@@ -152,6 +152,8 @@ const mocks = {
 ```
 Go ahead and give the server a try with the new mocks. If all went well, you should be able to run the following query and get a similar result.
 
+**TODO:** Screenshot here
+
 You can tell `apolloServer` to mock a scalar type, such as Int or String in a specific way. In this case, we told it to return an integer between 1 and 1000 every time an Int field is requested by the client.
 
 You can also tell `apolloSever` to use special mocks for a specific type. In the `mocks.js` file above, we're telling the server to use `casual.first_name` to mock the `firstName` field of `Author`. If we didn't tell it to do that, it would use the default mock for the `String` type instead. To mock lists of different length, you can use `new MockList([min, max])`, which will return a list of length between min and max (both inclusive).

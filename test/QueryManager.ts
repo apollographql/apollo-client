@@ -61,7 +61,7 @@ describe('QueryManager', () => {
     });
 
     handle.subscribe({
-      onResult(result) {
+      next(result) {
         assert.deepEqual(result.data, data);
         done();
       },
@@ -112,7 +112,7 @@ describe('QueryManager', () => {
     });
 
     handle.subscribe({
-      onResult(result) {
+      next(result) {
         assert.deepEqual(result.data, data);
         done();
       },
@@ -155,7 +155,7 @@ describe('QueryManager', () => {
     });
 
     handle.subscribe({
-      onResult(result) {
+      next(result) {
         assert.equal(result.errors[0].message, 'This is an error message.');
         done();
       },
@@ -191,10 +191,10 @@ describe('QueryManager', () => {
     });
 
     handle.subscribe({
-      onResult: (result) => {
+      next: (result) => {
         done(new Error('Should not deliver result'));
       },
-      onError: (error) => {
+      error: (error) => {
         assert.equal(error.message, 'Network error');
         done();
       },
@@ -645,14 +645,14 @@ describe('QueryManager', () => {
     let handle2Count = 0;
 
     handle1.subscribe({
-      onResult(result) {
+      next(result) {
         handle1Count++;
         checkDone();
       },
     });
 
     handle2.subscribe({
-      onResult(result) {
+      next(result) {
         handle2Count++;
         checkDone();
       },
@@ -729,7 +729,7 @@ describe('QueryManager', () => {
     });
 
     handle1.subscribe({
-      onResult(result) {
+      next(result) {
         handle1Count++;
 
         if (handle1Count === 1) {
@@ -807,10 +807,10 @@ function testDiffing(
         forceFetch: false,
       });
 
-      handle.subscribe({
-        onResult(result) {
+      const subscription = handle.subscribe({
+        next(result) {
           assert.deepEqual(result.data, fullResponse);
-          handle.stop();
+          subscription.unsubscribe();
           cb();
         },
       });

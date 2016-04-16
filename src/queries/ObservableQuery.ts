@@ -1,6 +1,5 @@
 import {
   GraphQLResult,
-  GraphQLError,
 } from 'graphql';
 
 import {
@@ -10,7 +9,7 @@ import {
 import {
   Observable,
   Observer,
-  Subscription
+  Subscription,
 } from './observable';
 
 import {
@@ -19,7 +18,7 @@ import {
 
 import {
   QueryManager,
-  WatchQueryOptions
+  WatchQueryOptions,
 } from '../QueryManager';
 
 export type QueryObserver = Observer<GraphQLResult>;
@@ -30,7 +29,7 @@ export default class ObservableQuery implements Observable<GraphQLResult> {
   public selectionSetWithRoot: SelectionSetWithRoot;
   public options: WatchQueryOptions;
   public isLoading: boolean = true;
-  public lastResult: GraphQLResult
+  public lastResult: GraphQLResult;
 
   private observers: QueryObserver[];
 
@@ -41,10 +40,10 @@ export default class ObservableQuery implements Observable<GraphQLResult> {
     this.observers = [];
   }
 
-  subscribe(observer: QueryObserver): Subscription {
+  public subscribe(observer: QueryObserver): Subscription {
     this.observers.push(observer);
 
-    if (this.observers.length == 1) {
+    if (this.observers.length === 1) {
       this.queryManager.registerObservedQuery(this);
     }
 
@@ -62,7 +61,7 @@ export default class ObservableQuery implements Observable<GraphQLResult> {
     };
   }
 
-  result(): Promise<GraphQLResult> {
+  public result(): Promise<GraphQLResult> {
     return new Promise((resolve, reject) => {
       const subscription = this.subscribe({
         next(result) {
@@ -78,17 +77,17 @@ export default class ObservableQuery implements Observable<GraphQLResult> {
     });
   }
 
-  refetch() {
+  public refetch() {
     this.queryManager.fetchQuery(this);
   }
 
-  didReceiveResult(result: GraphQLResult) {
+  public didReceiveResult(result: GraphQLResult) {
     this.observers.forEach((observer) => {
       observer.next(result);
     });
   }
 
-  didReceiveError(error: Error) {
+  public didReceiveError(error: Error) {
     this.observers.forEach((observer) => {
       observer.error(error);
     });

@@ -2,6 +2,7 @@ import {
   ApolloAction,
   isQueryInitAction,
   isQueryResultAction,
+  isQueryErrorAction,
   isQueryResultClientAction,
   isQueryStopAction,
 } from '../actions';
@@ -67,6 +68,15 @@ export function queries(
       loading: false,
       networkError: null,
       graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
+    }) as QueryStoreValue;
+
+    return newState;
+  } else if (isQueryErrorAction(action)) {
+    const newState = assign({}, previousState) as QueryStore;
+
+    newState[action.queryId] = assign({}, previousState[action.queryId], {
+      loading: false,
+      networkError: action.error,
     }) as QueryStoreValue;
 
     return newState;

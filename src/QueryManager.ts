@@ -217,7 +217,11 @@ export class QueryManager {
             queryId,
           });
         }).catch((error: Error) => {
-          this.broadcastQueryError(queryId, error);
+          this.store.dispatch({
+            type: 'QUERY_ERROR',
+            error,
+            queryId,
+          });
         });
     }
 
@@ -244,14 +248,16 @@ export class QueryManager {
     const apolloStore: Store = store[this.reduxRootKey];
 
     forOwn(apolloStore.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
-      // XXX We also need to check for network errors and returnPartialData
-      if (!queryStoreValue.loading) {
+      if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
         // XXX Currently, returning errors and data is exclusive because we
         // don't handle partial results
         if (queryStoreValue.graphQLErrors) {
           this.broadcastQueryChange(queryId, {
             errors: queryStoreValue.graphQLErrors,
           });
+        } else if (queryStoreValue.networkError) {
+          // XXX we might not want to re-broadcast the same error over and over if it didn't change
+          this.broadcastQueryError(queryId, queryStoreValue.networkError);
         } else {
           const resultFromStore = readSelectionSetFromStore({
             store: apolloStore.data,

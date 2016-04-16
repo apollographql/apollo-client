@@ -49,7 +49,7 @@ export class QueryManager {
   private reduxRootKey: string;
   private dataIdFromObject: IdGetter;
 
-  private resultCallbacks: { [queryId: number]: QueryResultCallback[] };
+  private observers: { [queryId: number]: QueryObserver[] };
 
   private idCounter = 0;
 
@@ -71,7 +71,7 @@ export class QueryManager {
     this.reduxRootKey = reduxRootKey;
     this.dataIdFromObject = dataIdFromObject;
 
-    this.resultCallbacks = {};
+    this.observers = {};
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
@@ -135,7 +135,7 @@ export class QueryManager {
     this.idCounter++;
 
 
-    this.resultCallbacks[queryId] = [];
+    this.observers[queryId] = [];
 
     const queryString = query;
     const queryDef = parseQuery(query);
@@ -217,7 +217,11 @@ export class QueryManager {
             queryId,
           });
         }).catch((error: Error) => {
-           // XXX handle errors
+          this.store.dispatch({
+            type: 'QUERY_ERROR',
+            error,
+            queryId,
+          });
         });
     }
 
@@ -244,14 +248,16 @@ export class QueryManager {
     const apolloStore: Store = store[this.reduxRootKey];
 
     forOwn(apolloStore.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
-      // XXX We also need to check for network errors and returnPartialData
-      if (!queryStoreValue.loading) {
+      if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
         // XXX Currently, returning errors and data is exclusive because we
         // don't handle partial results
         if (queryStoreValue.graphQLErrors) {
           this.broadcastQueryChange(queryId, {
             errors: queryStoreValue.graphQLErrors,
           });
+        } else if (queryStoreValue.networkError) {
+          // XXX we might not want to re-broadcast the same error over and over if it didn't change
+          this.broadcastQueryError(queryId, queryStoreValue.networkError);
         } else {
           const resultFromStore = readSelectionSetFromStore({
             store: apolloStore.data,
@@ -279,10 +285,10 @@ export class QueryManager {
       stop: () => {
         this.stopQuery(queryId);
       },
-      onResult: (callback) => {
+      subscribe: (observer: QueryObserver) => {
         if (isStopped()) { throw new Error('Query was stopped. Please create a new one.'); }
 
-        this.registerResultCallback(queryId, callback);
+        this.registerObserver(queryId, observer);
       },
     };
   }
@@ -293,17 +299,23 @@ export class QueryManager {
       queryId,
     });
 
-    delete this.resultCallbacks[queryId];
+    delete this.observers[queryId];
   }
 
   private broadcastQueryChange(queryId: string, result: GraphQLResult) {
-    this.resultCallbacks[queryId].forEach((callback) => {
-      callback(result);
+    this.observers[queryId].forEach((observer) => {
+      observer.onResult(result);
     });
   }
 
-  private registerResultCallback(queryId: string, callback: QueryResultCallback): void {
-    this.resultCallbacks[queryId].push(callback);
+  private broadcastQueryError(queryId: string, error: Error) {
+    this.observers[queryId].forEach((observer) => {
+      observer.onError(error);
+    });
+  }
+
+  private registerObserver(queryId: string, observer: QueryObserver): void {
+    this.observers[queryId].push(observer);
   }
 }
 
@@ -311,10 +323,16 @@ export interface WatchedQueryHandle {
   id: string;
   isStopped: () => boolean;
   stop();
-  onResult(callback: QueryResultCallback);
+  subscribe(observer: QueryObserver);
 }
 
 export type QueryResultCallback = (result: GraphQLResult) => void;
+
+export interface QueryObserver {
+  onResult: (result: GraphQLResult) => void;
+  onError?: (error: Error) => void;
+  onStop?: () => void;
+}
 
 export interface WatchQueryOptions {
   query: string;

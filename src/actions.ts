@@ -16,6 +16,16 @@ export function isQueryResultAction(action: ApolloAction): action is QueryResult
   return action.type === 'QUERY_RESULT';
 }
 
+export interface QueryErrorAction {
+  type: 'QUERY_ERROR';
+  error: Error;
+  queryId: string;
+}
+
+export function isQueryErrorAction(action: ApolloAction): action is QueryErrorAction {
+  return action.type === 'QUERY_ERROR';
+}
+
 export interface QueryInitAction {
   type: 'QUERY_INIT';
   queryString: string;
@@ -76,6 +86,7 @@ export function isMutationResultAction(action: ApolloAction): action is Mutation
 
 export type ApolloAction =
   QueryResultAction |
+  QueryErrorAction |
   QueryInitAction |
   QueryResultClientAction |
   QueryStopAction |

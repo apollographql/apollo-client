@@ -60,9 +60,11 @@ describe('QueryManager', () => {
       query,
     });
 
-    handle.onResult((result) => {
-      assert.deepEqual(result.data, data);
-      done();
+    handle.subscribe({
+      onResult(result) {
+        assert.deepEqual(result.data, data);
+        done();
+      },
     });
   });
 
@@ -109,9 +111,11 @@ describe('QueryManager', () => {
       variables,
     });
 
-    handle.onResult((result) => {
-      assert.deepEqual(result.data, data);
-      done();
+    handle.subscribe({
+      onResult(result) {
+        assert.deepEqual(result.data, data);
+        done();
+      },
     });
   });
 
@@ -150,9 +154,50 @@ describe('QueryManager', () => {
       query,
     });
 
-    handle.onResult((result) => {
-      assert.equal(result.errors[0].message, 'This is an error message.');
-      done();
+    handle.subscribe({
+      onResult(result) {
+        assert.equal(result.errors[0].message, 'This is an error message.');
+        done();
+      },
+    });
+  });
+
+  it('handles network errors', (done) => {
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        error: new Error('Network error'),
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    handle.subscribe({
+      onResult: (result) => {
+        done(new Error('Should not deliver result'));
+      },
+      onError: (error) => {
+        assert.equal(error.message, 'Network error');
+        done();
+      },
     });
   });
 
@@ -599,14 +644,18 @@ describe('QueryManager', () => {
     let handle1Count = 0;
     let handle2Count = 0;
 
-    handle1.onResult((result) => {
-      handle1Count++;
-      checkDone();
+    handle1.subscribe({
+      onResult(result) {
+        handle1Count++;
+        checkDone();
+      },
     });
 
-    handle2.onResult((result) => {
-      handle2Count++;
-      checkDone();
+    handle2.subscribe({
+      onResult(result) {
+        handle2Count++;
+        checkDone();
+      },
     });
 
     function checkDone() {
@@ -679,28 +728,30 @@ describe('QueryManager', () => {
       query: query1,
     });
 
-    handle1.onResult((result) => {
-      handle1Count++;
+    handle1.subscribe({
+      onResult(result) {
+        handle1Count++;
 
-      if (handle1Count === 1) {
-        assert.deepEqual(result.data, data1);
+        if (handle1Count === 1) {
+          assert.deepEqual(result.data, data1);
 
-        queryManager.watchQuery({
-          query: query2,
-        });
-      }
+          queryManager.watchQuery({
+            query: query2,
+          });
+        }
 
-      if (result.data['people_one'].name === 'Luke Skywalker has a new name') {
-        // 3 because the query init action for the second query causes a callback
-        assert.deepEqual(result.data, {
-          people_one: {
-            name: 'Luke Skywalker has a new name',
-            age: 50,
-          },
-        });
+        if (result.data['people_one'].name === 'Luke Skywalker has a new name') {
+          // 3 because the query init action for the second query causes a callback
+          assert.deepEqual(result.data, {
+            people_one: {
+              name: 'Luke Skywalker has a new name',
+              age: 50,
+            },
+          });
 
-        done();
-      }
+          done();
+        }
+      },
     });
   });
 });
@@ -756,10 +807,12 @@ function testDiffing(
         forceFetch: false,
       });
 
-      handle.onResult((result) => {
-        assert.deepEqual(result.data, fullResponse);
-        handle.stop();
-        cb();
+      handle.subscribe({
+        onResult(result) {
+          assert.deepEqual(result.data, fullResponse);
+          handle.stop();
+          cb();
+        },
       });
     };
   });

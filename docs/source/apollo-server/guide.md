@@ -121,7 +121,9 @@ const mocks = {
 export default mocks;
 ```
 
-That's right, the "It works!" that you saw earlier came from here. We're going to modify that to create more realistic mock data. In order to do that, we'll use a package called casual to generate fake data. You can install it by running `npm i --save-dev casual`.
+That's right, this is where the "It works!" that you saw earlier came from!
+
+We're going to modify that now to create more realistic mock data. In order to do that, we'll use a package called casual to generate fake data. You can install it by running `npm i --save-dev casual`.
 
 ```js
 import { MockList } from 'graphql-tools';
@@ -154,6 +156,8 @@ You can tell `apolloServer` to mock a scalar type, such as Int or String in a sp
 You can also tell `apolloSever` to use special mocks for a specific type. In the `mocks.js` file above, we're telling the server to use `casual.first_name` to mock the `firstName` field of `Author`. If we didn't tell it to do that, it would use the default mock for the `String` type instead.
 
 In the mock functions, you can also access the arguments passed to the field. In the file above, we're using that feature for the `author` field on `RootQuery`, to make sure that when the query asks for a user with a specific fist and/or last name, we either return a user with that first and/or last name, or we return null (to simulate an unsuccessful search in 20% of the cases).
+
+You can read more about mocking with graphql-tools in our [Medium Post on mocking with GraphQL](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd), which also includes more code snippets and a demo. 
 
 ## Resolve Functions
 

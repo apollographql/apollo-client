@@ -381,9 +381,11 @@ describe('client', () => {
 
     const handle = client.watchQuery({ query });
 
-    handle.onResult((result) => {
-      assert.deepEqual(result.data, data);
-      done();
+    handle.subscribe({
+      onResult(result) {
+        assert.deepEqual(result.data, data);
+        done();
+      },
     });
   });
 });

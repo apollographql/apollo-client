@@ -290,16 +290,6 @@ export class QueryManager {
 
         this.registerObserver(queryId, observer);
       },
-      onResult: (callback) => {
-        if (isStopped()) { throw new Error('Query was stopped. Please create a new one.'); }
-
-        const observer = {
-          onResult: callback,
-          onError: () => { return; },
-        };
-
-        this.registerObserver(queryId, observer);
-      },
     };
   }
 
@@ -334,14 +324,13 @@ export interface WatchedQueryHandle {
   isStopped: () => boolean;
   stop();
   subscribe(observer: QueryObserver);
-  onResult(callback: QueryResultCallback);
 }
 
 export type QueryResultCallback = (result: GraphQLResult) => void;
 
 export interface QueryObserver {
   onResult: (result: GraphQLResult) => void;
-  onError: (error: Error) => void;
+  onError?: (error: Error) => void;
   onStop?: () => void;
 }
 

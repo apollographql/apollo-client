@@ -64,10 +64,15 @@ export default class ApolloClient {
 
     return new Promise((resolve, reject) => {
       const handle = this.queryManager.watchQuery(options);
-      handle.onResult((result) => {
-        resolve(result);
-        // remove the listeners
-        handle.stop();
+      handle.subscribe({
+        onResult(result) {
+          resolve(result);
+          handle.stop();
+        },
+        onError(error) {
+          reject(error);
+          handle.stop();
+        },
       });
     });
   }

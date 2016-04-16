@@ -112,7 +112,7 @@ For example, let's say you do two queries, one after the other:
 }
 ```
 
-The Apollo Client is smart enough to realize that it already has the data for part of the second query, and sends only the new part:
+The Apollo Client is smart enough to realize that it already has the `todoList` data for the second query, and sends only the `user` part:
 
 ```
 // Actual second query sent

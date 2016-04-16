@@ -75,7 +75,7 @@ type Post {
 # the schema allows the following two queries:
 type RootQuery {
   author(firstName: String, lastName: String): User
-  posts(tags: [String]): [Post]
+  posts(tag: String): [Post]
 }
 
 # this schema allows the following two mutations:
@@ -162,6 +162,46 @@ You can read more about mocking with graphql-tools in our [Medium Post on mockin
 
 ## Resolve Functions
 
+Without resolve functions, our GraphQL server can only return mock data. To make it return real data and persist the effect of mutations, you have to define resolve functions. Resolve functions tell the server how to find and return the data for each field in the query.
+
+It's probably easiest to explain this with an example:
+```
+{
+  author(firstName: "Jonas"){
+    firstName
+    lastName
+  }
+}
+```
+To respond to this query, the server will first run the resolve function for the `author` field on the type `RootQuery`. Next, it will pass the return value of the `author` resolve function to both the `firstName` and `lastName` resolve functions of the `Author` type, because the schema says that `author` returns an Author, and the query asked for the fields `firstName` and `lastName` on `Author`. Both `firstName` and `lastName` return a String. String is a built-in scalar of GraphQL-JS. Scalar type is just a fancy way of saying that this type represents a leaf node in the graph. A leaf node cannot be expanded further, so its value is serialized and included in the response.
+
+Resolve functions are defined in the 'data/resolvers.js' file, and the format is quite straight-forward, defining a resolve function for each field.
+
+```js
+
+const resolveFunctions = {
+  RootQuery: {
+    author(_, { firstName, lastName }){
+      return Authors.findOne({ firstName: firstName, lastName: lastName });
+    },
+    posts(_, { tag }){
+      return Posts.where( tag in tags); // TODO TK
+    },
+  },
+  Author: {
+    posts(author){
+      return Author.get(author.id).getPosts();
+    },
+  },
+  Posts: {
+    author(post){
+      return Author.get(post.authorId);
+    }
+  }
+}
+```
+
+Not every field needs a resolve function. In the example above, `Author.firstName` doesn't have a resolve function, because the value is already on the Author object that the `RootQuery.author` resolve function returned: If the schema doesn't define a resolve function for a field, the server will try to apply the default resolve function, which looks for the property on the input value that has the same name as the field.
 
 
 ## Connectors

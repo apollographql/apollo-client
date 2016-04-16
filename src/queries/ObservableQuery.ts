@@ -26,13 +26,12 @@ export default class ObservableQuery implements Observable<GraphQLResult> {
   public isLoading: boolean = true;
   public lastResult: GraphQLResult;
 
-  private observers: QueryObserver[];
+  private observers: QueryObserver[] = [];
 
   constructor(queryManager: QueryManager, queryId: string, options: WatchQueryOptions) {
     this.queryManager = queryManager;
     this.queryId = queryId;
     this.options = options;
-    this.observers = [];
   }
 
   public subscribe(observer: QueryObserver): Subscription {
@@ -73,17 +72,27 @@ export default class ObservableQuery implements Observable<GraphQLResult> {
   }
 
   public refetch() {
-    // XXX this should pass the forceFetch option - otherwise you'll just get the same result again
+    this.isLoading = true;
+
+    // XXX this should pass the forceFetch option if it's not the first fetch - otherwise you'll
+    // just get the same result again
     this.queryManager.fetchQuery(this);
   }
 
   public didReceiveResult(result: GraphQLResult) {
+    if (this.lastResult === result) {
+      return;
+    }
+
+    this.lastResult = result;
+    this.isLoading = false;
     this.observers.forEach((observer) => {
       observer.next(result);
     });
   }
 
   public didReceiveError(error: Error) {
+    this.isLoading = false;
     this.observers.forEach((observer) => {
       observer.error(error);
     });

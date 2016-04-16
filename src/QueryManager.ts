@@ -164,8 +164,6 @@ export class QueryManager {
       selectionSet: queryDef.selectionSet,
     } as SelectionSetWithRoot;
 
-    query.selectionSetWithRoot = querySS;
-
     // If we don't use diffing, then these will be the same as the original query
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
@@ -258,8 +256,6 @@ export class QueryManager {
         });
       }, 0);
     }
-
-    return this.watchQueryInStore(queryId);
   }
 
   public registerObservedQuery(query: ObservableQuery) {
@@ -309,42 +305,10 @@ export class QueryManager {
     });
   }
 
-  public watchQueryInStore(queryId: string): WatchedQueryHandle {
-    const isStopped = () => {
-      return !this.store.getState()[this.reduxRootKey].queries[queryId];
-    };
-
-    return {
-      id: queryId,
-      isStopped,
-      stop: () => {
-        this.stopQuery(queryId);
-      },
-      subscribe: (observer: QueryObserver) => {
-        if (isStopped()) { throw new Error('Query was stopped. Please create a new one.'); }
-
-        this.registerObserver(queryId, observer);
-      },
-    };
-  }
-
   private generateQueryId() {
     const queryId = this.idCounter.toString();
     this.idCounter++;
     return queryId;
-  }
-
-  private stopQuery(queryId) {
-    this.store.dispatch({
-      type: 'QUERY_STOP',
-      queryId,
-    });
-
-    delete this.observedQueries[queryId];
-  }
-
-  private registerObserver(queryId: string, observer: QueryObserver): void {
-    this.observedQueries[queryId].push(observer);
   }
 }
 

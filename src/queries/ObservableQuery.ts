@@ -13,10 +13,6 @@ import {
 } from './observable';
 
 import {
-  SelectionSetWithRoot,
-} from './store';
-
-import {
   QueryManager,
   WatchQueryOptions,
 } from '../QueryManager';
@@ -26,7 +22,6 @@ export type QueryObserver = Observer<GraphQLResult>;
 export default class ObservableQuery implements Observable<GraphQLResult> {
   public queryManager: QueryManager;
   public queryId: string;
-  public selectionSetWithRoot: SelectionSetWithRoot;
   public options: WatchQueryOptions;
   public isLoading: boolean = true;
   public lastResult: GraphQLResult;
@@ -78,6 +73,7 @@ export default class ObservableQuery implements Observable<GraphQLResult> {
   }
 
   public refetch() {
+    // XXX this should pass the forceFetch option - otherwise you'll just get the same result again
     this.queryManager.fetchQuery(this);
   }
 

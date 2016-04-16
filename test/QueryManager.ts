@@ -801,18 +801,13 @@ function testDiffing(
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {
     return (cb) => {
-      const handle = queryManager.watchQuery({
+      queryManager.query({
         query,
         variables,
         forceFetch: false,
-      });
-
-      const subscription = handle.subscribe({
-        next(result) {
-          assert.deepEqual(result.data, fullResponse);
-          subscription.unsubscribe();
-          cb();
-        },
+      }).then((result) => {
+        assert.deepEqual(result.data, fullResponse);
+        cb();
       });
     };
   });

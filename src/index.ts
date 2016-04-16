@@ -20,6 +20,11 @@ import {
 } from './QueryManager';
 
 import {
+  readQueryFromStore,
+  readFragmentFromStore,
+} from './data/readFromStore';
+
+import {
   isUndefined,
 } from 'lodash';
 
@@ -27,6 +32,8 @@ export {
   createNetworkInterface,
   createApolloStore,
   createApolloReducer,
+  readQueryFromStore,
+  readFragmentFromStore,
 };
 
 export default class ApolloClient {

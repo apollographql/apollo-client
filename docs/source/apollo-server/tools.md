@@ -267,6 +267,10 @@ coming soon ...
 
 coming soon ...
 
+## Unit- and integration testing
+
+coming soon ...
+
 ## Connectors
 Connectors are the parts that connect the GraphQL server to various backends, such as MySQL servers, MongoDB, Redis, REST, etc. The stores may be on the same server or on a different server, and the same GraphQL server may access a variety of different backend stores to get the data for just one request.
 

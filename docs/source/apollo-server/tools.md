@@ -236,3 +236,4 @@ This function may be deprecated in the near future. Instead of using addErrorLog
 import { addErrorLoggingToSchema } from 'graphql-tools';
 const logger = { log: (e) => console.error(e.stack) };
 addErrorLoggingToSchema(mySchema, logger);
+```

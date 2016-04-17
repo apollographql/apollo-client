@@ -222,9 +222,9 @@ export default createSchema([SchemaDefinition, RootQuery, Author]);
 * Logger
 * addProfilingToSchema
 
-## Data Loaders
+## Connectors
 
-* attachLoadersToContext
+* attachConnectorsToContext
 
 ## Error handling
 

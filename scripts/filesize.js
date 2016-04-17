@@ -22,8 +22,10 @@ const rawGzippedSize = GzipSize.sync(Fs.readFileSync(filePath, 'utf8'));
 totalGzippedSize = PrettyBytes(rawGzippedSize);
 
 console.log('\n');
-console.log(`The total size of ${Path.basename(filePath)} is ${totalSize}.`);
-console.log(`The total gzipped size of ${Path.basename(filePath)} is ${totalGzippedSize}.`);
+console.log('=============================== FileSize summary ===============================');
+console.log(`The total size of ${Path.basename(filePath)} is ${Colors.green(totalSize)}.`);
+console.log(`The total gzipped size of ${Path.basename(filePath)} is ${Colors.green(totalGzippedSize)}.`);
+console.log('================================================================================');
 console.log('\n');
 
 if (Flags.max) {

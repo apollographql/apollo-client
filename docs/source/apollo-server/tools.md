@@ -244,9 +244,10 @@ const resolveFunctions = {
   },
 };
 ```
+Note that if the types were defined in shorthand schema notation, the `info` argument to `resolveType` must be used to get a reference to the actual type, eg. `return info.schema.getType("Person")`. This may be changed in the future to support returning just the name of the type, eg. `return "Person"`.
 
 ### addSchemaLevelResolver(schema, rootResolveFunction)
-Some operations, such as authentication, need to be done only once per query. Logically, these operations belong in a root resolve function, but unfortunately GraphQL-JS does not let you define one. `addSchemaLevelResolver` solves this by modifying the GraphQLSchema that is passed as the first argument. 
+Some operations, such as authentication, need to be done only once per query. Logically, these operations belong in a root resolve function, but unfortunately GraphQL-JS does not let you define one. `addSchemaLevelResolver` solves this by modifying the GraphQLSchema that is passed as the first argument.
 
 ## Mocking
 

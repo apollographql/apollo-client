@@ -39,6 +39,7 @@
     "lodash.assign": "^4.0.8",
     "lodash.forown": "^4.1.0",
     "lodash.has": "^4.3.1",
+    "lodash.includes": "^4.1.2",
     "lodash.isarray": "^4.0.0",
     "lodash.isboolean": "^3.0.3",
     "lodash.isnull": "^3.0.0",

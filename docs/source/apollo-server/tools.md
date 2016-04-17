@@ -8,7 +8,7 @@ While `apolloServer` can be used as an express middleware, graphql-tools exports
 
 ## Express middleware
 
-### apolloServer
+### apolloServer(schema, [...])
 
 `apolloServer` is a convenient function that generates an express-middleware. It combines all of the tools and has a straightforward interface:
 
@@ -21,7 +21,7 @@ app.use('/graphql', apolloServer({ schema: typeDefinitionArray, graphiql: true }
 ```
 
 
-Function signature:
+**Function signature**
 ```
 apolloServer({
   // options in common with graphqlHTTP from express-graphql
@@ -137,7 +137,75 @@ If execution should not continue, resolve functions should return `null` and not
 
 ## Schema creation
 
-* createSchema
+The graphql-tools package allows you to create a GraphQLSchema object from shorthand schema language by using the function `createSchema`.
+
+### createSchema(typeDefinitions)
+**Function signature**
+```
+import { createSchema } from 'graphql-tools';
+
+const jsSchema = createSchema(typeDefinitions);
+```
+
+`typeDefinitions` should be an array of shorthand schema strings or a function that takes no arguments and returns an array of shorthand schema strings. The order of the strings in the array is not important, but it must include a schema definition. The schema must define a query type, which means a minimal schema would look something like this:
+```js
+const typeDefinition = [`
+schema {
+  query: RootQuery
+}
+
+type RootQuery {
+  aNumber: Int
+}`];
+
+const jsSchema = createSchema(typeDefinition);
+```
+
+If your schema gets large, you may want to define parts of it in different files and import them to create the full schema. This is possible by including them in the array. If there are circular dependencies, the array should be wrapped in arrow function. `createSchema` will only include each type definition once, even if it is imported multiple times by different types.
+
+```js
+// in author.js -------------------
+import Book from './book';
+
+const Author = `
+  type Author {
+    name: String
+    books: [Book]
+  }
+`;
+
+export default () => [Author, Book];
+
+// in book.js -----------------------
+import Author from './author';
+
+const Book = `
+  type Book {
+    title: String
+    author: Author
+  }
+`;
+
+export default () => [Book, Author];
+
+// in schema.js ----------------------
+import Author from './author.js';
+
+const RootQuery = `
+  type RootQuery {
+    author(name: String): Author
+  }
+`;
+
+const SchemaDefinition = `
+  schema {
+    query: RootQuery
+  }
+`;
+
+export default createSchema([SchemaDefinition, RootQuery, Author]);
+```
+
 
 ## Resolve functions
 

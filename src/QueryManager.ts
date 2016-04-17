@@ -311,18 +311,3 @@ export class QueryManager {
     return queryId;
   }
 }
-
-export interface WatchedQueryHandle {
-  id: string;
-  isStopped: () => boolean;
-  stop();
-  subscribe(observer: QueryObserver);
-}
-
-export type QueryResultCallback = (result: GraphQLResult) => void;
-
-export interface QueryObserver {
-  onResult: (result: GraphQLResult) => void;
-  onError?: (error: Error) => void;
-  onStop?: () => void;
-}

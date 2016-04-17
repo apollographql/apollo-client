@@ -10,7 +10,7 @@ While `apolloServer` can be used as an express middleware, graphql-tools exports
 
 ### apolloServer(schema, [...])
 
-`apolloServer` is a convenient function that generates an express-middleware. It combines all of the tools and has a straightforward interface:
+`apolloServer` is a convenient function that generates an express middleware (it uses express-graphql under the hood). It combines all of the tools in graphql-tools and has a simple to use interface:
 
 ```
 import { apolloServer } from 'graphql-tools';

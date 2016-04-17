@@ -8,9 +8,7 @@ import {
   parseMutation,
 } from './parser';
 
-import {
-  forOwn,
-} from 'lodash';
+import forOwn = require('lodash.forown');
 
 import {
   Store,

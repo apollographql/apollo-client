@@ -12,6 +12,7 @@
     "mocha": "registry:dt/mocha#2.2.5+20160317120654",
     "node": "registry:dt/node#4.0.0+20160319033040",
     "promises-a-plus": "registry:dt/promises-a-plus#0.0.0+20160317120654",
-    "redux": "registry:dt/redux#1.0.0+20160317120654"
+    "redux": "registry:dt/redux#1.0.0+20160317120654",
+    "apollo-client": "file:./ambient.d.ts"
   }
 }

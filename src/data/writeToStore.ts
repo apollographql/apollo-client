@@ -1,12 +1,10 @@
-import {
-  isString,
-  isNumber,
-  isBoolean,
-  isNull,
-  isArray,
-  isUndefined,
-  assign,
-} from 'lodash';
+import isArray = require('lodash.isarray');
+import isNull = require('lodash.isnull');
+import isString = require('lodash.isstring');
+import isNumber = require('lodash.isnumber');
+import isBoolean = require('lodash.isboolean');
+import isUndefined = require('lodash.isundefined');
+import assign = require('lodash.assign');
 
 import {
   parseFragment,

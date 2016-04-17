@@ -1,9 +1,7 @@
-import {
-  isArray,
-  isNull,
-  isString,
-  has,
-} from 'lodash';
+import isArray = require('lodash.isarray');
+import isNull = require('lodash.isnull');
+import isString = require('lodash.isstring');
+import has = require('lodash.has');
 
 import {
   parseFragment,

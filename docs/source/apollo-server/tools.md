@@ -219,13 +219,20 @@ export default createSchema([SchemaDefinition, RootQuery, Author]);
 
 ## Logging and performance profiling
 
-* Logger
-* addProfilingToSchema
+coming soon ...
 
 ## Connectors
 
 * attachConnectorsToContext
 
-## Error handling
+## Error handling + error logging
 
-* forbidUndefinedResolve
+* forbidUndefinedInResolve
+### addErrorLoggingToSchema(logger)
+This function may be deprecated in the near future. Instead of using addErrorLoggingToSchema, the `formatError` option of `apolloServer` or `graphqlHTTP` should be used, which was recently added in graphql-js v0.5.0
+
+`addErorrLoggingToSchema` takes only one argument - `logger` - which must be an Object having a function as the property `log`. Every time an error occurs, `logger.log` will be called with that error.
+```js
+import { addErrorLoggingToSchema } from 'graphql-tools';
+const logger = { log: (e) => console.error(e.stack) };
+addErrorLoggingToSchema(mySchema, logger);

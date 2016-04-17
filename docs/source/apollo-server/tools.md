@@ -251,17 +251,60 @@ Some operations, such as authentication, need to be done only once per query. Lo
 
 ## Mocking
 
-### mockServer
+### mockServer(schema, mocks = {}, preserveResolvers = false)
 
-### addMocksToSchema
+For more information about how to use the `mockServer` function, see the [Medium Post about mocking](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd).
+
+### addMocksToSchema(schema, mocks = {}, preserveResolvers = false)
+
+`addMocksToSchema` is the function that `mockServer` uses under the hood. Given an instance of GraphQLSchema and a mock object, it modifies the schema in place to return mock data for any valid query that is sent to the server. If `mocks` is not passed, the defaults will be used for each of the scalar types. If `preserveResolvers` is set to `true`, existing resolve functions will not be overwritten to provide mock data. This can be used to mock some parts of the server and not others.
 
 ## Logging and performance profiling
 
 coming soon ...
 
-## Connectors
+## Authentication and authorization
 
-* attachConnectorsToContext
+coming soon ...
+
+## Connectors
+Connectors are the parts that connect the GraphQL server to various backends, such as MySQL servers, MongoDB, Redis, REST, etc. The stores may be on the same server or on a different server, and the same GraphQL server may access a variety of different backend stores to get the data for just one request.
+
+Resolve functions act as a sort of switchboard, defining which connector should be used for which GraphQL types, and what arguments should be passed to it. While resolve functions should be stateless, connectors need to be stateful in many cases, for example to store information about the currently logged in user, or manage connections with the backend store. Because the same connector may be used in many resolve function, it has to be attached to the context, where all the resolve functions easily have access to it.
+
+### attachConnectorsToContext(schema, connectors)
+`attachConnectorsToContext` takes two arguments: a GraphQLSchema and a `connectors` object that has connector classes as its named properties. The schema is modified in place such that for each query an instance of each connector will be constructed and attached to the context at the beginning of query execution, effectively making it a singleton that can keep state.
+
+```js
+// in connectors.js
+import { attachConnectorsToContext } from 'graphql-tools';
+
+class AuthorConnector{
+  constructor(){
+    this.store = new Map()
+    map.set(1, { id: 1, firstName: 'Bill', lastName: 'Nye' });
+  }
+
+  get(key){
+    return this.store.get(key);
+  }
+  set(key, value){
+    return this.store.set(key, value);
+  }
+}
+
+const connectors = {
+  Author: AuthorConnector,
+};
+
+attachConnectorsToContext(schema, connectors);
+
+
+// --- in a resolve function ---
+resolveAuthor(obj, args, context){
+  return context.connectors.Author.get(args.id);
+}
+```
 
 ## Error handling + error logging
 GraphQL servers can be tricky to debug. The following functions can help find error faster in many cases.

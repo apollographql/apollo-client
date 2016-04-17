@@ -227,11 +227,14 @@ coming soon ...
 
 ## Error handling + error logging
 
-* forbidUndefinedInResolve
-### addErrorLoggingToSchema(logger)
+### forbidUndefinedInResolve(schema)
+When
+
+
+### addErrorLoggingToSchema(schema, logger)
 This function may be deprecated in the near future. Instead of using addErrorLoggingToSchema, the `formatError` option of `apolloServer` or `graphqlHTTP` should be used, which was recently added in graphql-js v0.5.0
 
-`addErorrLoggingToSchema` takes only one argument - `logger` - which must be an Object having a function as the property `log`. Every time an error occurs, `logger.log` will be called with that error.
+`addErorrLoggingToSchema` takes two arguments: `schema` and `logger`. `schema` must be an instance of `GraphQLSchema`, `logger` must be an Object with a callable property `log`. Every time an error occurs, `logger.log(e)` will be called.
 ```js
 import { addErrorLoggingToSchema } from 'graphql-tools';
 const logger = { log: (e) => console.error(e.stack) };

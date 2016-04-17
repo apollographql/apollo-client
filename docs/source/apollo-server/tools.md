@@ -208,14 +208,51 @@ export default createSchema([SchemaDefinition, RootQuery, Author]);
 
 
 ## Resolve functions
+In order to respond to queries, a schema needs to have resolve functions. Resolve functions cannot be included in the shorthand schema notation, so they must be added separately.
 
-* addResolversToSchema
-* addSchemaLevelResolver
+### addResolveFunctionsToSchema(schema, resolveFunctions)
+
+`addResolveFunctionsToSchema` takes two arguments, a GraphQLSchema and an object defining resolve functions, and modifies the schema in place to. The `resolveFunctions` object should have one property for each type that has fields which need a resolve function. The following is an example of a valid resolveFunctions object:
+```js
+import { addResolveFunctionsToSchema } from 'graphql-tools';
+
+const resolveFunctions = {
+  RootQuery: {
+    author(root, { name }){
+      return Author.find({ name });
+    },
+  },
+};
+
+addResolveFunctionsToSchema(schema, resolveFunctions);
+```
+
+For types which need to define additional properties, such as `resolveType` for unions and interfaces, the property can be set by prefixing it with two underscores, eg. `__resolveType` for `resolveType`:
+
+```js
+const resolveFunctions = {
+  SomeUnionType: {
+    __resolveType(data, context, info){
+      if(data.wingspan){
+        return info.schema.getType('Airplane');
+      }
+      if(data.horsepower){
+        return info.schema.getType('Car');
+      }
+      return null;
+    },
+  },
+};
+```
+
+### addSchemaLevelResolver(schema, rootResolveFunction)
+Some operations, such as authentication, need to be done only once per query. Logically, these operations belong in a root resolve function, but unfortunately GraphQL-JS does not let you define one. `addSchemaLevelResolver` solves this by modifying the GraphQLSchema that is passed as the first argument. 
 
 ## Mocking
 
-* mockServer
-* addMocksToSchema
+### mockServer
+
+### addMocksToSchema
 
 ## Logging and performance profiling
 

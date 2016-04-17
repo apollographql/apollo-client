@@ -226,9 +226,15 @@ coming soon ...
 * attachConnectorsToContext
 
 ## Error handling + error logging
+GraphQL servers can be tricky to debug. The following functions can help find error faster in many cases.
 
 ### forbidUndefinedInResolve(schema)
-When
+ForbidUndefinedInResolve can be used during debugging to find mistakes in resolve functions faster. Usually, resolve functions only return undefined due to programmer error. `forbidUndefinedInResolve` takes a GraphQLSchema as input, and modifies it in place to throw an error when a resolve function returns undefined, telling you exactly which resolver returned undefined.
+```js
+import { forbidUndefinedInResolve } from 'graphql-tools';
+
+forbidUndefinedInResolve(schema);
+```
 
 
 ### addErrorLoggingToSchema(schema, logger)

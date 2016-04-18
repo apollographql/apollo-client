@@ -44,6 +44,9 @@ export function queries(
   if (isQueryInitAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
 
+    // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
+    // the store. We probably want a refetch action instead, because I suspect that if you refetch
+    // before the initial fetch is done, you'll get an error.
     newState[action.queryId] = {
       queryString: action.queryString,
       query: action.query,

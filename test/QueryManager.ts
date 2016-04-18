@@ -260,6 +260,109 @@ describe('QueryManager', () => {
     });
   });
 
+  it('doesn\'t explode if you refetch before first fetch is done with query diffing', (done) => {
+    const primeQuery = `
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const complexQuery = `
+      {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const diffedQuery = `
+      {
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      vader: {
+        name: 'Darth Vader',
+      },
+    };
+
+    const dataRefetch = {
+      luke: {
+        name: 'Luke has a new name',
+      },
+      vader: {
+        name: 'Vader has a new name',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: primeQuery },
+        result: { data: data1 },
+      },
+      {
+        request: { query: diffedQuery },
+        result: { data: data2 },
+        delay: 5,
+      },
+      {
+        request: { query: complexQuery },
+        result: { data: dataRefetch },
+        delay: 10,
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    // First, prime the store so that query diffing removes the query
+    queryManager.query({
+      query: primeQuery,
+    }).then(() => {
+      let handleCount = 0;
+
+      const handle = queryManager.watchQuery({
+        query: complexQuery,
+      });
+
+      const subscription = handle.subscribe({
+        next(result) {
+          handleCount++;
+          if (handleCount === 1) {
+            // We never get the first fetch in the observable, because we called refetch first,
+            // which means we just don't get the outdated result
+            assert.deepEqual(result.data, dataRefetch);
+            subscription.unsubscribe();
+            done();
+          }
+        },
+        error(error) {
+          done(error);
+        },
+      });
+
+      // Refetch before we get any data - maybe the network is slow, and the user clicked refresh?
+      subscription.refetch();
+    });
+  });
+
   it('runs a mutation', () => {
     const mutation = `
       mutation makeListPrivate {

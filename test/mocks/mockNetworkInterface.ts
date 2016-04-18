@@ -6,7 +6,7 @@ import {
 import {
   GraphQLResult,
   parse,
-  print
+  print,
 } from 'graphql';
 
 // Pass in multiple mocked responses, so that you can test flows that end up
@@ -16,10 +16,10 @@ export default function mockNetworkInterface(
 ): NetworkInterface { return new MockNetworkInterface(...mockedResponses) as any }
 
 export interface MockedResponse {
-  request: Request
-  result?: GraphQLResult
-  error?: Error
-  delay?: number
+  request: Request;
+  result?: GraphQLResult;
+  error?: Error;
+  delay?: number;
 }
 
 export class MockNetworkInterface {
@@ -31,7 +31,7 @@ export class MockNetworkInterface {
     });
   }
 
-  addMockedReponse(mockedResponse: MockedResponse) {
+  public addMockedReponse(mockedResponse: MockedResponse) {
     const key = requestToKey(mockedResponse.request);
     let mockedResponses = this.mockedResponsesByKey[key];
     if (!mockedResponses) {
@@ -41,9 +41,14 @@ export class MockNetworkInterface {
     mockedResponses.push(mockedResponse);
   }
 
-  query(request: Request) {
+  public query(request: Request) {
     return new Promise((resolve, reject) => {
       const key = requestToKey(request);
+
+      if (!this.mockedResponsesByKey[key]) {
+        throw new Error('No more mocked responses for the query: ' + request.query);
+      }
+
       const { result, error, delay } = this.mockedResponsesByKey[key].shift();
 
       if (!result && !error) {

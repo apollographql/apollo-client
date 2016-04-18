@@ -29,6 +29,7 @@ export interface QueryStoreValue {
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
   returnPartialData: boolean;
+  lastRequestId: number;
 }
 
 export interface SelectionSetWithRoot {
@@ -58,10 +59,16 @@ export function queries(
       graphQLErrors: null,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
+      lastRequestId: action.requestId,
     };
 
     return newState;
   } else if (isQueryResultAction(action)) {
+    // Ignore results from old requests
+    if (action.requestId < previousState[action.queryId].lastRequestId) {
+      return previousState;
+    }
+
     const newState = assign({}, previousState) as QueryStore;
     const resultHasGraphQLErrors = action.result.errors && action.result.errors.length;
 
@@ -73,6 +80,11 @@ export function queries(
 
     return newState;
   } else if (isQueryErrorAction(action)) {
+    // Ignore results from old requests
+    if (action.requestId < previousState[action.queryId].lastRequestId) {
+      return previousState;
+    }
+
     const newState = assign({}, previousState) as QueryStore;
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {

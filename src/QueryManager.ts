@@ -271,7 +271,9 @@ export class QueryManager {
       }
     }
 
-    // Initialize query in store
+    const requestId = this.generateRequestId();
+
+    // Initialize query in store with unique requestId
     this.store.dispatch({
       type: 'QUERY_INIT',
       queryString,
@@ -282,6 +284,7 @@ export class QueryManager {
       forceFetch,
       returnPartialData,
       queryId,
+      requestId,
     });
 
     if (minimizedQuery) {
@@ -297,12 +300,14 @@ export class QueryManager {
             type: 'QUERY_RESULT',
             result,
             queryId,
+            requestId,
           });
         }).catch((error: Error) => {
           this.store.dispatch({
             type: 'QUERY_ERROR',
             error,
             queryId,
+            requestId,
           });
         });
     }
@@ -353,5 +358,11 @@ export class QueryManager {
     const queryId = this.idCounter.toString();
     this.idCounter++;
     return queryId;
+  }
+
+  private generateRequestId() {
+    const requestId = this.idCounter;
+    this.idCounter++;
+    return requestId;
   }
 }

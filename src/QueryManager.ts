@@ -13,6 +13,7 @@ import assign = require('lodash.assign');
 
 import {
   ApolloStore,
+  Store,
 } from './store';
 
 import {
@@ -122,10 +123,6 @@ export class QueryManager {
     this.broadcastQueries();
   }
 
-  private get apolloStore() {
-    return this.store.getState()[this.reduxRootKey];
-  }
-
   public mutate({
     mutation,
     variables,
@@ -183,7 +180,7 @@ export class QueryManager {
             }
           } else {
             const resultFromStore = readSelectionSetFromStore({
-              store: this.apolloStore.data,
+              store: this.getApolloState().data,
               rootId: queryStoreValue.query.id,
               selectionSet: queryStoreValue.query.selectionSet,
               variables: queryStoreValue.variables,
@@ -324,6 +321,10 @@ export class QueryManager {
     }
   }
 
+  private getApolloState(): Store {
+    return this.store.getState()[this.reduxRootKey];
+  }
+
   private startQuery(options: WatchQueryOptions, listener: QueryListener) {
     const queryId = this.generateQueryId();
     this.queryListeners[queryId] = listener;
@@ -341,7 +342,7 @@ export class QueryManager {
   }
 
   private broadcastQueries() {
-    const queries = this.apolloStore.queries;
+    const queries = this.getApolloState().queries;
     forOwn(this.queryListeners, (listener: QueryListener, queryId: string) => {
       const queryStoreValue = queries[queryId];
       listener(queryStoreValue);

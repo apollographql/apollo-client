@@ -37,8 +37,7 @@ favicon: /logo/square.png
 
 # API keys
 apis:
-  ga: UA-74643563-2
-  marketo: 627-RVJ-941
+  segment: wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'

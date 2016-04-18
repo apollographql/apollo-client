@@ -164,10 +164,14 @@ export class QueryManager {
           // XXX Currently, returning errors and data is exclusive because we
           // don't handle partial results
           if (queryStoreValue.graphQLErrors) {
-            observer.next({ errors: queryStoreValue.graphQLErrors });
+            if (observer.next) {
+              observer.next({ errors: queryStoreValue.graphQLErrors });
+            }
           } else if (queryStoreValue.networkError) {
             // XXX we might not want to re-broadcast the same error over and over if it didn't change
-            observer.error(queryStoreValue.networkError);
+            if (observer.error) {
+              observer.error(queryStoreValue.networkError);
+            }
           } else {
             const resultFromStore = readSelectionSetFromStore({
               store: this.apolloStore.data,
@@ -176,7 +180,9 @@ export class QueryManager {
               variables: queryStoreValue.variables,
             });
 
-            observer.next({ data: resultFromStore });
+            if (observer.next) {
+              observer.next({ data: resultFromStore });
+            }
           }
         }
       });

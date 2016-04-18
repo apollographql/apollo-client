@@ -11,7 +11,6 @@ import {
 import forOwn = require('lodash.forown');
 
 import {
-  Store,
   ApolloStore,
 } from './store';
 
@@ -41,7 +40,25 @@ import {
   IdGetter,
 } from './data/extensions';
 
-import ObservableQuery from './queries/ObservableQuery';
+import { Observable } from './util/Observable';
+
+export class ObservableQuery extends Observable<GraphQLResult> {
+  public result(): Promise<GraphQLResult> {
+    return new Promise((resolve, reject) => {
+      const subscription = this.subscribe({
+        next(result) {
+          resolve(result);
+          setTimeout(() => {
+            subscription.unsubscribe();
+          }, 0);
+        },
+        error(error) {
+          reject(error);
+        },
+      });
+    });
+  }
+}
 
 export interface WatchQueryOptions {
   query: string;
@@ -50,13 +67,15 @@ export interface WatchQueryOptions {
   returnPartialData?: boolean;
 }
 
+type QueryListener = (queryStoreValue: QueryStoreValue) => void
+
 export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
   private dataIdFromObject: IdGetter;
 
-  private observedQueries: { [queryId: number]: ObservableQuery };
+  private queryListeners: { [queryId: string]: QueryListener };
 
   private idCounter = 0;
 
@@ -78,15 +97,24 @@ export class QueryManager {
     this.reduxRootKey = reduxRootKey;
     this.dataIdFromObject = dataIdFromObject;
 
-    this.observedQueries = {};
+    this.queryListeners = {};
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
     if (this.store['subscribe']) {
       this.store['subscribe'](() => {
-        this.broadcastNewStore(this.store.getState());
+        this.broadcastQueries();
       });
     }
+  }
+
+  // Called from middleware
+  public broadcastNewStore(store: any) {
+    this.broadcastQueries();
+  }
+
+  private get apolloStore() {
+    return this.store.getState()[this.reduxRootKey];
   }
 
   public mutate({
@@ -130,9 +158,35 @@ export class QueryManager {
   }
 
   public watchQuery(options: WatchQueryOptions): ObservableQuery {
-    const queryId = this.generateQueryId();
-    const observableQuery = new ObservableQuery(this, queryId, options);
-    return observableQuery;
+    const observable = new ObservableQuery((observer) => {
+      const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
+        if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
+          // XXX Currently, returning errors and data is exclusive because we
+          // don't handle partial results
+          if (queryStoreValue.graphQLErrors) {
+            observer.next({ errors: queryStoreValue.graphQLErrors });
+          } else if (queryStoreValue.networkError) {
+            // XXX we might not want to re-broadcast the same error over and over if it didn't change
+            observer.error(queryStoreValue.networkError);
+          } else {
+            const resultFromStore = readSelectionSetFromStore({
+              store: this.apolloStore.data,
+              rootId: queryStoreValue.query.id,
+              selectionSet: queryStoreValue.query.selectionSet,
+              variables: queryStoreValue.variables,
+            });
+
+            observer.next({ data: resultFromStore });
+          }
+        }
+      });
+
+      return _ => {
+        this.stopQuery(queryId);
+      };
+    });
+
+    return observable;
   }
 
   public query(options: WatchQueryOptions): Promise<GraphQLResult> {
@@ -143,14 +197,13 @@ export class QueryManager {
     return this.watchQuery(options).result();
   }
 
-  public fetchQuery(query: ObservableQuery) {
-    const queryId = query.queryId;
+  public fetchQuery(queryId: string, options: WatchQueryOptions) {
     const {
       query: queryString,
       variables,
       forceFetch = true,
       returnPartialData = false,
-    } = query.options;
+    } = options;
 
     const queryDef = parseQuery(queryString);
 
@@ -256,14 +309,15 @@ export class QueryManager {
     }
   }
 
-  public registerObservedQuery(query: ObservableQuery) {
-    this.observedQueries[query.queryId] = query;
+  private startQuery(options: WatchQueryOptions, listener: QueryListener) {
+    const queryId = this.generateQueryId();
+    this.queryListeners[queryId] = listener;
+    this.fetchQuery(queryId, options);
+    return queryId;
   }
 
-  public deregisterObservedQuery(query: ObservableQuery) {
-    const queryId = query.queryId;
-
-    delete this.observedQueries[queryId];
+  private stopQuery(queryId: string) {
+    delete this.queryListeners[queryId];
 
     this.store.dispatch({
       type: 'QUERY_STOP',
@@ -271,35 +325,11 @@ export class QueryManager {
     });
   }
 
-  public broadcastNewStore(store: any) {
-    const apolloStore: Store = store[this.reduxRootKey];
-
-    forOwn(apolloStore.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
-      const observableQuery: ObservableQuery = this.observedQueries[queryId];
-
-      if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
-        // XXX Currently, returning errors and data is exclusive because we
-        // don't handle partial results
-        if (queryStoreValue.graphQLErrors) {
-          observableQuery.didReceiveResult({
-            errors: queryStoreValue.graphQLErrors,
-          });
-        } else if (queryStoreValue.networkError) {
-          // XXX we might not want to re-broadcast the same error over and over if it didn't change
-          observableQuery.didReceiveError(queryStoreValue.networkError);
-        } else {
-          const resultFromStore = readSelectionSetFromStore({
-            store: apolloStore.data,
-            rootId: queryStoreValue.query.id,
-            selectionSet: queryStoreValue.query.selectionSet,
-            variables: queryStoreValue.variables,
-          });
-
-          observableQuery.didReceiveResult({
-            data: resultFromStore,
-          });
-        }
-      }
+  private broadcastQueries() {
+    const queries = this.apolloStore.queries;
+    forOwn(this.queryListeners, (listener: QueryListener, queryId: string) => {
+      const queryStoreValue = queries[queryId];
+      listener(queryStoreValue);
     });
   }
 

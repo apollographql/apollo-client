@@ -16,6 +16,7 @@ import {
 import {
   QueryManager,
   WatchQueryOptions,
+  ObservableQuery,
 } from './QueryManager';
 
 import {
@@ -24,8 +25,6 @@ import {
 } from './data/readFromStore';
 
 import isUndefined = require('lodash.isundefined');
-
-import ObservableQuery from './queries/ObservableQuery';
 
 export {
   createNetworkInterface,

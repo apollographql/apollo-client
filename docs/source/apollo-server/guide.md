@@ -35,7 +35,7 @@ If you already have an express server or a GraphQL server set up, then you can a
 
 ## Schema
 
-If you open the `data` folder in the project directory, you will see the file `schema.js` which defines the schema your server currently uses:
+If you open the `data` folder in the project directory, you will see the file `schema.js` which defines the schema your server currently uses in GraphQL schema language:
 ```js
 const typeDefinitions = `
 type Query {

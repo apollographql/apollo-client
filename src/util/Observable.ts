@@ -1,18 +1,27 @@
 // This simplified polyfill attempts to follow the ECMAScript Observable proposal.
 // See https://github.com/zenparsing/es-observable
 
-export type SubscriberFunction<T> = (observer: Observer<T>) => Function;
+export type CleanupFunction = () => void;
+export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | CleanupFunction);
+
+function isSubscription(subscription: Function | Subscription): subscription is Subscription {
+  return (<Subscription>subscription).unsubscribe !== undefined;
+}
 
 export class Observable<T> {
   constructor(private subscriberFunction: SubscriberFunction<T>) {
   }
 
-  subscribe(observer: Observer<T>) {
-    const tearDownFunction = this.subscriberFunction(observer);
+  subscribe(observer: Observer<T>): Subscription {
+    let subscriptionOrCleanupFunction = this.subscriberFunction(observer);
 
-    return {
-      unsubscribe: tearDownFunction,
-    };
+    if (isSubscription(subscriptionOrCleanupFunction)) {
+      return subscriptionOrCleanupFunction;
+    } else {
+      return {
+        unsubscribe: <CleanupFunction>subscriptionOrCleanupFunction,
+      };
+    }
   }
 }
 
@@ -23,5 +32,5 @@ export interface Observer<T> {
 }
 
 export interface Subscription {
-  unsubscribe: () => void
+  unsubscribe: CleanupFunction
 }

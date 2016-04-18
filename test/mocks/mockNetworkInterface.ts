@@ -22,20 +22,29 @@ export interface MockedResponse {
   delay?: number
 }
 
-class MockNetworkInterface {
-  private mockedResponsesByKey: { [key:string]: MockedResponse } = {};
+export class MockNetworkInterface {
+  private mockedResponsesByKey: { [key:string]: MockedResponse[] } = {};
 
   constructor(...mockedResponses: MockedResponse[]) {
     mockedResponses.forEach((mockedResponse) => {
-      const key = requestToKey(mockedResponse.request);
-      this.mockedResponsesByKey[key] = mockedResponse;
+      this.addMockedReponse(mockedResponse);
     });
+  }
+
+  addMockedReponse(mockedResponse: MockedResponse) {
+    const key = requestToKey(mockedResponse.request);
+    let mockedResponses = this.mockedResponsesByKey[key];
+    if (!mockedResponses) {
+      mockedResponses = [];
+      this.mockedResponsesByKey[key] = mockedResponses;
+    }
+    mockedResponses.push(mockedResponse);
   }
 
   query(request: Request) {
     return new Promise((resolve, reject) => {
       const key = requestToKey(request);
-      const { result, error, delay } = this.mockedResponsesByKey[key];
+      const { result, error, delay } = this.mockedResponsesByKey[key].shift();
 
       if (!result && !error) {
         throw new Error(`Mocked response should contain either result or error: ${key}`);

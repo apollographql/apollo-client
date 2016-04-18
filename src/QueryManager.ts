@@ -9,6 +9,7 @@ import {
 } from './parser';
 
 import forOwn = require('lodash.forown');
+import assign = require('lodash.assign');
 
 import {
   ApolloStore,
@@ -40,9 +41,15 @@ import {
   IdGetter,
 } from './data/extensions';
 
-import { Observable } from './util/Observable';
+import { Observable, Observer, Subscription } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
+  public queryId: string;
+
+  public subscribe(observer: Observer<GraphQLResult>): QuerySubscription {
+    return super.subscribe(observer) as QuerySubscription;
+  }
+
   public result(): Promise<GraphQLResult> {
     return new Promise((resolve, reject) => {
       const subscription = this.subscribe({
@@ -58,6 +65,10 @@ export class ObservableQuery extends Observable<GraphQLResult> {
       });
     });
   }
+}
+
+export interface QuerySubscription extends Subscription {
+  refetch();
 }
 
 export interface WatchQueryOptions {
@@ -158,7 +169,7 @@ export class QueryManager {
   }
 
   public watchQuery(options: WatchQueryOptions): ObservableQuery {
-    const observable = new ObservableQuery((observer) => {
+    return new ObservableQuery((observer) => {
       const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
         if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
           // XXX Currently, returning errors and data is exclusive because we
@@ -187,12 +198,15 @@ export class QueryManager {
         }
       });
 
-      return _ => {
-        this.stopQuery(queryId);
+      return {
+        unsubscribe: () => {
+          this.stopQuery(queryId);
+        },
+        refetch: () => {
+          this.fetchQuery(queryId, assign(options, { forceFetch: true }) as WatchQueryOptions);
+        },
       };
     });
-
-    return observable;
   }
 
   public query(options: WatchQueryOptions): Promise<GraphQLResult> {

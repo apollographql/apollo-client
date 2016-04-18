@@ -293,19 +293,16 @@ export class QueryManager {
     }
 
     if (! minimizedQuery || returnPartialData) {
-      setTimeout(() => {
-        // Make this async so that we have time to add a callback
-        this.store.dispatch({
-          type: 'QUERY_RESULT_CLIENT',
-          result: {
-            data: initialResult,
-          },
-          variables,
-          query: querySS,
-          complete: !! minimizedQuery,
-          queryId,
-        });
-      }, 0);
+      this.store.dispatch({
+        type: 'QUERY_RESULT_CLIENT',
+        result: {
+          data: initialResult,
+        },
+        variables,
+        query: querySS,
+        complete: !! minimizedQuery,
+        queryId,
+      });
     }
   }
 

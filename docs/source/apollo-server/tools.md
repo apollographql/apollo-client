@@ -45,10 +45,10 @@ apolloServer({
 The function `apolloServer` wraps the `graphqlHTTP` middleware from `express-graphql`. If you replace an existing call to `graphqlHTTP` with a call to `apolloServer`, the resulting express middleware will behave in exactly the same way. For the documentation of the graphqlHTTP arguments, refer to the express-graphql [documentation](https://github.com/graphql/express-graphql#options).
 
 **schema**
-In place of a GraphQLSchema, `apolloServer` also accepts an array of GraphQL shorthand type definitions as described in [Schema creation](#Schema-creation).
+In place of a GraphQLSchema, `apolloServer` also accepts an array of GraphQL schema language type definitions as described in [Schema creation](#Schema-creation).
 
 **resolvers**
-Resolvers is a required option if the schema provided to `apolloServer` is in shorthand GraphQL schema language. If defined, the option `resolvers` expects an Object that defines a resolve function for each non-scalar field of every type defined in the schema. Fields that take arguments also require a resolve function. A simple example defining a single resolve function for the `author` field of the `RootQuery` type is given below. A more detailed description is given in [Resolve functions](#Resolve-functions). Resolve functions should be stateless.
+Resolvers is a required option if the schema provided to `apolloServer` is in GraphQL schema language. If defined, the option `resolvers` expects an Object that defines a resolve function for each non-scalar field of every type defined in the schema. Fields that take arguments also require a resolve function. A simple example defining a single resolve function for the `author` field of the `RootQuery` type is given below. A more detailed description is given in [Resolve functions](#Resolve-functions). Resolve functions should be stateless.
 
 ```js
 const resolvers = {
@@ -137,7 +137,7 @@ If execution should not continue, resolve functions should return `null` and not
 
 ## Schema creation
 
-The graphql-tools package allows you to create a GraphQLSchema object from shorthand schema language by using the function `createSchema`.
+The graphql-tools package allows you to create a GraphQLSchema object from GraphQL schema language by using the function `createSchema`.
 
 ### createSchema(typeDefinitions)
 **Function signature**
@@ -147,7 +147,7 @@ import { createSchema } from 'graphql-tools';
 const jsSchema = createSchema(typeDefinitions);
 ```
 
-`typeDefinitions` should be an array of shorthand schema strings or a function that takes no arguments and returns an array of shorthand schema strings. The order of the strings in the array is not important, but it must include a schema definition. The schema must define a query type, which means a minimal schema would look something like this:
+`typeDefinitions` should be an array of GraphQL schema language strings or a function that takes no arguments and returns an array of GraphQL schema language strings. The order of the strings in the array is not important, but it must include a schema definition. The schema must define a query type, which means a minimal schema would look something like this:
 ```js
 const typeDefinition = [`
 schema {
@@ -208,7 +208,7 @@ export default createSchema([SchemaDefinition, RootQuery, Author]);
 
 
 ## Resolve functions
-In order to respond to queries, a schema needs to have resolve functions. Resolve functions cannot be included in the shorthand schema notation, so they must be added separately.
+In order to respond to queries, a schema needs to have resolve functions. Resolve functions cannot be included in the GraphQL schema language, so they must be added separately.
 
 ### addResolveFunctionsToSchema(schema, resolveFunctions)
 
@@ -244,7 +244,7 @@ const resolveFunctions = {
   },
 };
 ```
-Note that if the types were defined in shorthand schema notation, the `info` argument to `resolveType` must be used to get a reference to the actual type, eg. `return info.schema.getType("Person")`. This may be changed in the future to support returning just the name of the type, eg. `return "Person"`.
+Note that if the types were defined in GraphQL schema language, the `info` argument to `resolveType` must be used to get a reference to the actual type, eg. `return info.schema.getType("Person")`. This may be changed in the future to support returning just the name of the type, eg. `return "Person"`.
 
 ### addSchemaLevelResolver(schema, rootResolveFunction)
 Some operations, such as authentication, need to be done only once per query. Logically, these operations belong in a root resolve function, but unfortunately GraphQL-JS does not let you define one. `addSchemaLevelResolver` solves this by modifying the GraphQLSchema that is passed as the first argument.

@@ -1,5 +1,5 @@
 ---
-title: GraphQL server guide
+title: GraphQL server tutorial
 order: 202
 description: These are Apollo Docs!!
 ---

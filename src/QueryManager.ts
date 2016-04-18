@@ -96,9 +96,7 @@ export class QueryManager {
     mutation: string,
     variables?: Object,
   }): Promise<GraphQLResult> {
-    // Generate a query ID
-    const mutationId = this.idCounter.toString();
-    this.idCounter++;
+    const mutationId = this.generateQueryId();
 
     const mutationDef = parseMutation(mutation);
 

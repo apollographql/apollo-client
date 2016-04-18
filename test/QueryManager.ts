@@ -61,7 +61,7 @@ describe('QueryManager', () => {
     });
 
     handle.subscribe({
-      onResult(result) {
+      next(result) {
         assert.deepEqual(result.data, data);
         done();
       },
@@ -112,7 +112,7 @@ describe('QueryManager', () => {
     });
 
     handle.subscribe({
-      onResult(result) {
+      next(result) {
         assert.deepEqual(result.data, data);
         done();
       },
@@ -155,7 +155,7 @@ describe('QueryManager', () => {
     });
 
     handle.subscribe({
-      onResult(result) {
+      next(result) {
         assert.equal(result.errors[0].message, 'This is an error message.');
         done();
       },
@@ -191,13 +191,175 @@ describe('QueryManager', () => {
     });
 
     handle.subscribe({
-      onResult: (result) => {
+      next: (result) => {
         done(new Error('Should not deliver result'));
       },
-      onError: (error) => {
+      error: (error) => {
         assert.equal(error.message, 'Network error');
         done();
       },
+    });
+  });
+
+  it('allows you to refetch queries', (done) => {
+    const query = `
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: query },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    let handleCount = 0;
+
+    const handle = queryManager.watchQuery({
+      query: query,
+    });
+
+    const subscription = handle.subscribe({
+      next(result) {
+        handleCount++;
+
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          subscription.refetch();
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, data2);
+          done();
+        }
+      },
+    });
+  });
+
+  it('doesn\'t explode if you refetch before first fetch is done with query diffing', (done) => {
+    const primeQuery = `
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const complexQuery = `
+      {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const diffedQuery = `
+      {
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      vader: {
+        name: 'Darth Vader',
+      },
+    };
+
+    const dataRefetch = {
+      luke: {
+        name: 'Luke has a new name',
+      },
+      vader: {
+        name: 'Vader has a new name',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: primeQuery },
+        result: { data: data1 },
+      },
+      {
+        request: { query: diffedQuery },
+        result: { data: data2 },
+        delay: 5,
+      },
+      {
+        request: { query: complexQuery },
+        result: { data: dataRefetch },
+        delay: 10,
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    // First, prime the store so that query diffing removes the query
+    queryManager.query({
+      query: primeQuery,
+    }).then(() => {
+      let handleCount = 0;
+
+      const handle = queryManager.watchQuery({
+        query: complexQuery,
+      });
+
+      const subscription = handle.subscribe({
+        next(result) {
+          handleCount++;
+          if (handleCount === 1) {
+            // We never get the first fetch in the observable, because we called refetch first,
+            // which means we just don't get the outdated result
+            assert.deepEqual(result.data, dataRefetch);
+            subscription.unsubscribe();
+            done();
+          }
+        },
+        error(error) {
+          done(error);
+        },
+      });
+
+      // Refetch before we get any data - maybe the network is slow, and the user clicked refresh?
+      subscription.refetch();
     });
   });
 
@@ -645,14 +807,14 @@ describe('QueryManager', () => {
     let handle2Count = 0;
 
     handle1.subscribe({
-      onResult(result) {
+      next(result) {
         handle1Count++;
         checkDone();
       },
     });
 
     handle2.subscribe({
-      onResult(result) {
+      next(result) {
         handle2Count++;
         checkDone();
       },
@@ -729,18 +891,17 @@ describe('QueryManager', () => {
     });
 
     handle1.subscribe({
-      onResult(result) {
+      next(result) {
         handle1Count++;
 
         if (handle1Count === 1) {
           assert.deepEqual(result.data, data1);
 
-          queryManager.watchQuery({
+          queryManager.query({
             query: query2,
           });
-        }
-
-        if (result.data['people_one'].name === 'Luke Skywalker has a new name') {
+        } else if (handle1Count === 3 &&
+            result.data['people_one'].name === 'Luke Skywalker has a new name') {
           // 3 because the query init action for the second query causes a callback
           assert.deepEqual(result.data, {
             people_one: {
@@ -801,18 +962,12 @@ function testDiffing(
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {
     return (cb) => {
-      const handle = queryManager.watchQuery({
+      queryManager.query({
         query,
         variables,
-        forceFetch: false,
-      });
-
-      handle.subscribe({
-        onResult(result) {
-          assert.deepEqual(result.data, fullResponse);
-          handle.stop();
-          cb();
-        },
+      }).then((result) => {
+        assert.deepEqual(result.data, fullResponse);
+        cb();
       });
     };
   });

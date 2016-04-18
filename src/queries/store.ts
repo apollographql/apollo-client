@@ -29,6 +29,7 @@ export interface QueryStoreValue {
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
   returnPartialData: boolean;
+  lastRequestId: number;
 }
 
 export interface SelectionSetWithRoot {
@@ -44,6 +45,9 @@ export function queries(
   if (isQueryInitAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
 
+    // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
+    // the store. We probably want a refetch action instead, because I suspect that if you refetch
+    // before the initial fetch is done, you'll get an error.
     newState[action.queryId] = {
       queryString: action.queryString,
       query: action.query,
@@ -55,10 +59,16 @@ export function queries(
       graphQLErrors: null,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
+      lastRequestId: action.requestId,
     };
 
     return newState;
   } else if (isQueryResultAction(action)) {
+    // Ignore results from old requests
+    if (action.requestId < previousState[action.queryId].lastRequestId) {
+      return previousState;
+    }
+
     const newState = assign({}, previousState) as QueryStore;
     const resultHasGraphQLErrors = action.result.errors && action.result.errors.length;
 
@@ -70,6 +80,11 @@ export function queries(
 
     return newState;
   } else if (isQueryErrorAction(action)) {
+    // Ignore results from old requests
+    if (action.requestId < previousState[action.queryId].lastRequestId) {
+      return previousState;
+    }
+
     const newState = assign({}, previousState) as QueryStore;
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {

@@ -15,8 +15,8 @@ import {
 
 import {
   QueryManager,
-  WatchedQueryHandle,
   WatchQueryOptions,
+  ObservableQuery,
 } from './QueryManager';
 
 import {
@@ -53,33 +53,16 @@ export default class ApolloClient {
       createNetworkInterface('/graphql');
   }
 
-  public watchQuery = (options: WatchQueryOptions): WatchedQueryHandle => {
+  public watchQuery = (options: WatchQueryOptions): ObservableQuery => {
     this.initStore();
 
     return this.queryManager.watchQuery(options);
   };
 
-  public query = (options: WatchQueryOptions): Promise<GraphQLResult | Error> => {
-
-    if (options.returnPartialData) {
-      throw new Error('returnPartialData option only supported on watchQuery.');
-    }
-
+  public query = (options: WatchQueryOptions): Promise<GraphQLResult> => {
     this.initStore();
 
-    return new Promise((resolve, reject) => {
-      const handle = this.queryManager.watchQuery(options);
-      handle.subscribe({
-        onResult(result) {
-          resolve(result);
-          handle.stop();
-        },
-        onError(error) {
-          reject(error);
-          handle.stop();
-        },
-      });
-    });
+    return this.queryManager.query(options);
   };
 
   public mutate = (options: {

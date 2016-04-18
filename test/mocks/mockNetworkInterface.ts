@@ -6,7 +6,7 @@ import {
 import {
   GraphQLResult,
   parse,
-  print
+  print,
 } from 'graphql';
 
 // Pass in multiple mocked responses, so that you can test flows that end up
@@ -16,26 +16,40 @@ export default function mockNetworkInterface(
 ): NetworkInterface { return new MockNetworkInterface(...mockedResponses) as any }
 
 export interface MockedResponse {
-  request: Request
-  result?: GraphQLResult
-  error?: Error
-  delay?: number
+  request: Request;
+  result?: GraphQLResult;
+  error?: Error;
+  delay?: number;
 }
 
-class MockNetworkInterface {
-  private mockedResponsesByKey: { [key:string]: MockedResponse } = {};
+export class MockNetworkInterface {
+  private mockedResponsesByKey: { [key:string]: MockedResponse[] } = {};
 
   constructor(...mockedResponses: MockedResponse[]) {
     mockedResponses.forEach((mockedResponse) => {
-      const key = requestToKey(mockedResponse.request);
-      this.mockedResponsesByKey[key] = mockedResponse;
+      this.addMockedReponse(mockedResponse);
     });
   }
 
-  query(request: Request) {
+  public addMockedReponse(mockedResponse: MockedResponse) {
+    const key = requestToKey(mockedResponse.request);
+    let mockedResponses = this.mockedResponsesByKey[key];
+    if (!mockedResponses) {
+      mockedResponses = [];
+      this.mockedResponsesByKey[key] = mockedResponses;
+    }
+    mockedResponses.push(mockedResponse);
+  }
+
+  public query(request: Request) {
     return new Promise((resolve, reject) => {
       const key = requestToKey(request);
-      const { result, error, delay } = this.mockedResponsesByKey[key];
+
+      if (!this.mockedResponsesByKey[key]) {
+        throw new Error('No more mocked responses for the query: ' + request.query);
+      }
+
+      const { result, error, delay } = this.mockedResponsesByKey[key].shift();
 
       if (!result && !error) {
         throw new Error(`Mocked response should contain either result or error: ${key}`);

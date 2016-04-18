@@ -9,10 +9,11 @@ import {
 } from './parser';
 
 import forOwn = require('lodash.forown');
+import assign = require('lodash.assign');
 
 import {
-  Store,
   ApolloStore,
+  Store,
 } from './store';
 
 import {
@@ -41,13 +42,50 @@ import {
   IdGetter,
 } from './data/extensions';
 
+import { Observable, Observer, Subscription } from './util/Observable';
+
+export class ObservableQuery extends Observable<GraphQLResult> {
+  public subscribe(observer: Observer<GraphQLResult>): QuerySubscription {
+    return super.subscribe(observer) as QuerySubscription;
+  }
+
+  public result(): Promise<GraphQLResult> {
+    return new Promise((resolve, reject) => {
+      const subscription = this.subscribe({
+        next(result) {
+          resolve(result);
+          setTimeout(() => {
+            subscription.unsubscribe();
+          }, 0);
+        },
+        error(error) {
+          reject(error);
+        },
+      });
+    });
+  }
+}
+
+export interface QuerySubscription extends Subscription {
+  refetch();
+}
+
+export interface WatchQueryOptions {
+  query: string;
+  variables?: { [key: string]: any };
+  forceFetch?: boolean;
+  returnPartialData?: boolean;
+}
+
+type QueryListener = (queryStoreValue: QueryStoreValue) => void
+
 export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
   private dataIdFromObject: IdGetter;
 
-  private observers: { [queryId: number]: QueryObserver[] };
+  private queryListeners: { [queryId: string]: QueryListener };
 
   private idCounter = 0;
 
@@ -69,15 +107,20 @@ export class QueryManager {
     this.reduxRootKey = reduxRootKey;
     this.dataIdFromObject = dataIdFromObject;
 
-    this.observers = {};
+    this.queryListeners = {};
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
     if (this.store['subscribe']) {
       this.store['subscribe'](() => {
-        this.broadcastNewStore(this.store.getState());
+        this.broadcastQueries();
       });
     }
+  }
+
+  // Called from middleware
+  public broadcastNewStore(store: any) {
+    this.broadcastQueries();
   }
 
   public mutate({
@@ -87,9 +130,7 @@ export class QueryManager {
     mutation: string,
     variables?: Object,
   }): Promise<GraphQLResult> {
-    // Generate a query ID
-    const mutationId = this.idCounter.toString();
-    this.idCounter++;
+    const mutationId = this.generateQueryId();
 
     const mutationDef = parseMutation(mutation);
 
@@ -122,21 +163,64 @@ export class QueryManager {
       });
   }
 
-  public watchQuery({
-    query,
-    variables,
-    forceFetch = false,
-    returnPartialData = false,
-  }: WatchQueryOptions): WatchedQueryHandle {
-    // Generate a query ID
-    const queryId = this.idCounter.toString();
-    this.idCounter++;
+  public watchQuery(options: WatchQueryOptions): ObservableQuery {
+    return new ObservableQuery((observer) => {
+      const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
+        if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
+          // XXX Currently, returning errors and data is exclusive because we
+          // don't handle partial results
+          if (queryStoreValue.graphQLErrors) {
+            if (observer.next) {
+              observer.next({ errors: queryStoreValue.graphQLErrors });
+            }
+          } else if (queryStoreValue.networkError) {
+            // XXX we might not want to re-broadcast the same error over and over if it didn't change
+            if (observer.error) {
+              observer.error(queryStoreValue.networkError);
+            }
+          } else {
+            const resultFromStore = readSelectionSetFromStore({
+              store: this.getApolloState().data,
+              rootId: queryStoreValue.query.id,
+              selectionSet: queryStoreValue.query.selectionSet,
+              variables: queryStoreValue.variables,
+            });
 
+            if (observer.next) {
+              observer.next({ data: resultFromStore });
+            }
+          }
+        }
+      });
 
-    this.observers[queryId] = [];
+      return {
+        unsubscribe: () => {
+          this.stopQuery(queryId);
+        },
+        refetch: () => {
+          this.fetchQuery(queryId, assign(options, { forceFetch: true }) as WatchQueryOptions);
+        },
+      };
+    });
+  }
 
-    const queryString = query;
-    const queryDef = parseQuery(query);
+  public query(options: WatchQueryOptions): Promise<GraphQLResult> {
+    if (options.returnPartialData) {
+      throw new Error('returnPartialData option only supported on watchQuery.');
+    }
+
+    return this.watchQuery(options).result();
+  }
+
+  public fetchQuery(queryId: string, options: WatchQueryOptions) {
+    const {
+      query: queryString,
+      variables,
+      forceFetch = false,
+      returnPartialData = false,
+    } = options;
+
+    const queryDef = parseQuery(queryString);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -147,7 +231,7 @@ export class QueryManager {
     } as SelectionSetWithRoot;
 
     // If we don't use diffing, then these will be the same as the original query
-    let minimizedQueryString = query;
+    let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
 
     let initialResult;
@@ -187,7 +271,9 @@ export class QueryManager {
       }
     }
 
-    // Initialize query in store
+    const requestId = this.generateRequestId();
+
+    // Initialize query in store with unique requestId
     this.store.dispatch({
       type: 'QUERY_INIT',
       queryString,
@@ -198,6 +284,7 @@ export class QueryManager {
       forceFetch,
       returnPartialData,
       queryId,
+      requestId,
     });
 
     if (minimizedQuery) {
@@ -213,128 +300,69 @@ export class QueryManager {
             type: 'QUERY_RESULT',
             result,
             queryId,
+            requestId,
           });
         }).catch((error: Error) => {
           this.store.dispatch({
             type: 'QUERY_ERROR',
             error,
             queryId,
+            requestId,
           });
         });
     }
 
     if (! minimizedQuery || returnPartialData) {
-      setTimeout(() => {
-        // Make this async so that we have time to add a callback
-        this.store.dispatch({
-          type: 'QUERY_RESULT_CLIENT',
-          result: {
-            data: initialResult,
-          },
-          variables,
-          query: querySS,
-          complete: !! minimizedQuery,
-          queryId,
-        });
-      }, 0);
+      this.store.dispatch({
+        type: 'QUERY_RESULT_CLIENT',
+        result: {
+          data: initialResult,
+        },
+        variables,
+        query: querySS,
+        complete: !! minimizedQuery,
+        queryId,
+      });
     }
-
-    return this.watchQueryInStore(queryId);
   }
 
-  public broadcastNewStore(store: any) {
-    const apolloStore: Store = store[this.reduxRootKey];
-
-    forOwn(apolloStore.queries, (queryStoreValue: QueryStoreValue, queryId: string) => {
-      if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
-        // XXX Currently, returning errors and data is exclusive because we
-        // don't handle partial results
-        if (queryStoreValue.graphQLErrors) {
-          this.broadcastQueryChange(queryId, {
-            errors: queryStoreValue.graphQLErrors,
-          });
-        } else if (queryStoreValue.networkError) {
-          // XXX we might not want to re-broadcast the same error over and over if it didn't change
-          this.broadcastQueryError(queryId, queryStoreValue.networkError);
-        } else {
-          const resultFromStore = readSelectionSetFromStore({
-            store: apolloStore.data,
-            rootId: queryStoreValue.query.id,
-            selectionSet: queryStoreValue.query.selectionSet,
-            variables: queryStoreValue.variables,
-          });
-
-          this.broadcastQueryChange(queryId, {
-            data: resultFromStore,
-          });
-        }
-      }
-    });
+  private getApolloState(): Store {
+    return this.store.getState()[this.reduxRootKey];
   }
 
-  public watchQueryInStore(queryId: string): WatchedQueryHandle {
-    const isStopped = () => {
-      return !this.store.getState()[this.reduxRootKey].queries[queryId];
-    };
-
-    return {
-      id: queryId,
-      isStopped,
-      stop: () => {
-        this.stopQuery(queryId);
-      },
-      subscribe: (observer: QueryObserver) => {
-        if (isStopped()) { throw new Error('Query was stopped. Please create a new one.'); }
-
-        this.registerObserver(queryId, observer);
-      },
-    };
+  private startQuery(options: WatchQueryOptions, listener: QueryListener) {
+    const queryId = this.generateQueryId();
+    this.queryListeners[queryId] = listener;
+    this.fetchQuery(queryId, options);
+    return queryId;
   }
 
-  private stopQuery(queryId) {
+  private stopQuery(queryId: string) {
+    delete this.queryListeners[queryId];
+
     this.store.dispatch({
       type: 'QUERY_STOP',
       queryId,
     });
-
-    delete this.observers[queryId];
   }
 
-  private broadcastQueryChange(queryId: string, result: GraphQLResult) {
-    this.observers[queryId].forEach((observer) => {
-      observer.onResult(result);
+  private broadcastQueries() {
+    const queries = this.getApolloState().queries;
+    forOwn(this.queryListeners, (listener: QueryListener, queryId: string) => {
+      const queryStoreValue = queries[queryId];
+      listener(queryStoreValue);
     });
   }
 
-  private broadcastQueryError(queryId: string, error: Error) {
-    this.observers[queryId].forEach((observer) => {
-      observer.onError(error);
-    });
+  private generateQueryId() {
+    const queryId = this.idCounter.toString();
+    this.idCounter++;
+    return queryId;
   }
 
-  private registerObserver(queryId: string, observer: QueryObserver): void {
-    this.observers[queryId].push(observer);
+  private generateRequestId() {
+    const requestId = this.idCounter;
+    this.idCounter++;
+    return requestId;
   }
-}
-
-export interface WatchedQueryHandle {
-  id: string;
-  isStopped: () => boolean;
-  stop();
-  subscribe(observer: QueryObserver);
-}
-
-export type QueryResultCallback = (result: GraphQLResult) => void;
-
-export interface QueryObserver {
-  onResult: (result: GraphQLResult) => void;
-  onError?: (error: Error) => void;
-  onStop?: () => void;
-}
-
-export interface WatchQueryOptions {
-  query: string;
-  variables?: Object;
-  forceFetch?: boolean;
-  returnPartialData?: boolean;
 }

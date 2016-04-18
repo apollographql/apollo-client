@@ -6,7 +6,7 @@
   "typings": "./lib/src/index.d.ts",
   "scripts": {
     "pretest": "npm run compile",
-    "test": "npm run testonly",
+    "test": "npm run testonly --",
     "posttest": "npm run lint",
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=30",
     "compile": "tsc",
@@ -35,6 +35,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
+    "es6-promise": "^3.1.2",
     "graphql": "^0.4.18",
     "lodash.assign": "^4.0.8",
     "lodash.forown": "^4.1.0",

@@ -10,6 +10,7 @@ export interface QueryResultAction {
   type: 'QUERY_RESULT';
   result: GraphQLResult;
   queryId: string;
+  requestId: number;
 }
 
 export function isQueryResultAction(action: ApolloAction): action is QueryResultAction {
@@ -20,6 +21,7 @@ export interface QueryErrorAction {
   type: 'QUERY_ERROR';
   error: Error;
   queryId: string;
+  requestId: number;
 }
 
 export function isQueryErrorAction(action: ApolloAction): action is QueryErrorAction {
@@ -36,6 +38,7 @@ export interface QueryInitAction {
   forceFetch: boolean;
   returnPartialData: boolean;
   queryId: string;
+  requestId: number;
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {

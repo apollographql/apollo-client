@@ -137,7 +137,7 @@ If execution should not continue, resolve functions should return `null` and not
 
 ## Schema creation
 
-The graphql-tools package allows you to create a GraphQLSchema object from GraphQL schema language by using the function `createSchema`.
+The graphql-tools package allows you to create a GraphQLSchema instance from GraphQL schema language by using the function `createSchema`.
 
 ### createSchema(typeDefinitions)
 **Function signature**
@@ -205,6 +205,8 @@ const SchemaDefinition = `
 
 export default createSchema([SchemaDefinition, RootQuery, Author]);
 ```
+
+This [GraphQL schema language cheat sheet](https://raw.githubusercontent.com/sogko/graphql-shorthand-notation-cheat-sheet/master/graphql-shorthand-notation-cheat-sheet.png) by Hafiz Ismail is an excellent reference for all the features of the GraphQL schema language.
 
 
 ## Resolve functions

@@ -862,7 +862,6 @@ function testDiffing(
       queryManager.query({
         query,
         variables,
-        forceFetch: false,
       }).then((result) => {
         assert.deepEqual(result.data, fullResponse);
         cb();

@@ -216,7 +216,7 @@ export class QueryManager {
     const {
       query: queryString,
       variables,
-      forceFetch = true,
+      forceFetch = false,
       returnPartialData = false,
     } = options;
 

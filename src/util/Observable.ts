@@ -1,3 +1,6 @@
+// This simplified polyfill attempts to follow the ECMAScript Observable proposal.
+// See https://github.com/zenparsing/es-observable
+
 export type SubscriberFunction<T> = (observer: Observer<T>) => Function;
 
 export class Observable<T> {

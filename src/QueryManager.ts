@@ -44,8 +44,6 @@ import {
 import { Observable, Observer, Subscription } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
-  public queryId: string;
-
   public subscribe(observer: Observer<GraphQLResult>): QuerySubscription {
     return super.subscribe(observer) as QuerySubscription;
   }

@@ -1,18 +1,22 @@
 // For development only!
-import * as _ from 'lodash';
+import isArray = require('lodash.isarray');
+import isObject = require('lodash.isobject');
+import omit = require('lodash.omit');
+import mapValues = require('lodash.mapvalues');
+
 
 export function stripLoc(obj: Object) {
-  if (_.isArray(obj)) {
+  if (isArray(obj)) {
     return obj.map(stripLoc);
   }
 
-  if (! _.isObject(obj)) {
+  if (! isObject(obj)) {
     return obj;
   }
 
-  const omitted: Object = _.omit(obj, ['loc']);
+  const omitted: Object = omit(obj, ['loc']);
 
-  return _.mapValues(omitted, (value) => {
+  return mapValues(omitted, (value) => {
     return stripLoc(value);
   });
 }

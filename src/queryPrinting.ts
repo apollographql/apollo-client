@@ -1,10 +1,11 @@
 import {
-  print,
   SelectionSet,
   OperationDefinition,
   VariableDefinition,
   Name,
 } from 'graphql';
+
+import { print } from 'graphql/language/printer';
 
 import {
   SelectionSetWithRoot,

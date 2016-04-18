@@ -1,3 +1,4 @@
+/// <reference path="main/ambient/apollo-client/index.d.ts" />
 /// <reference path="main/ambient/async/index.d.ts" />
 /// <reference path="main/ambient/chai-as-promised/index.d.ts" />
 /// <reference path="main/ambient/chai/index.d.ts" />

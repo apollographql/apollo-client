@@ -24,9 +24,7 @@ import {
   readFragmentFromStore,
 } from './data/readFromStore';
 
-import {
-  isUndefined,
-} from 'lodash';
+import isUndefined = require('lodash.isundefined');
 
 export {
   createNetworkInterface,

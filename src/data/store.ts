@@ -8,9 +8,7 @@ import {
   writeSelectionSetToStore,
 } from './writeToStore';
 
-import {
-  assign,
-} from 'lodash';
+import assign = require('lodash.assign');
 
 import {
   QueryStore,

@@ -204,7 +204,7 @@ The object you pass into `QueryObservable#subscribe`. Includes optional callback
 The object returned from `QueryObservable#subscribe`. Includes two methods:
 
 - `refetch()` Refetch this query from the server. Think of it like a refresh button.
-- `unsubscribe()` Notify the client to no longer care about this query. After this is called, none of the callbacks on the observer will be fired anymore.
+- `unsubscribe()` Notify the client to no longer care about this query. After this is called, none of the callbacks on the observer will be fired anymore. It's very important to call this when you are done with the query, because that is what lets the client know that it can clean up the data associated with this subscription. The view integrations will do this for you.
 
 #### Code sample
 

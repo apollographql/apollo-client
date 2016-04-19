@@ -17,12 +17,12 @@ import {
   MiddlewareRequest,
 } from '../src/middleware';
 
-import {
-  graphql,
-} from 'graphql';
+// import {
+//   graphql,
+// } from 'graphql';
 
 /* tslint:disable */
-const swapiSchema = require('swapi-graphql').schema;
+// const swapiSchema = require('swapi-graphql').schema;
 /* tslint:enable */
 
 describe('network interface', () => {
@@ -33,19 +33,26 @@ describe('network interface', () => {
       this.lastFetchOpts = opts;
       if (url === 'http://does-not-exist.test/') {
         return Promise.reject('Network error');
-      } else if (url === 'http://graphql-swapi.test/') {
-        return new Promise((resolve, reject) => {
-          const request = JSON.parse(opts.body);
-          graphql(swapiSchema, request.query, undefined, request.variables).then(result => {
-            const response = new global['Response'](JSON.stringify(result));
-            resolve(response);
-          }).catch(error => {
-            reject(error);
-          });
-        });
-      } else {
-        return this.realFetch(url, opts);
       }
+
+      if (url === 'http://graphql-swapi.test/') {
+        url = 'http://graphql-swapi.parseapp.com/';
+      }
+
+      // XXX swapi graphql NPM package is broken now
+      // else if (url === 'http://graphql-swapi.test/') {
+      //   return new Promise((resolve, reject) => {
+      //     const request = JSON.parse(opts.body);
+      //     graphql(swapiSchema, request.query, undefined, request.variables).then(result => {
+      //       const response = new global['Response'](JSON.stringify(result));
+      //       resolve(response);
+      //     }).catch(error => {
+      //       reject(error);
+      //     });
+      //   });
+      // }
+
+      return this.realFetch(url, opts);
     });
   });
 
@@ -310,6 +317,12 @@ describe('network interface', () => {
           errors: [
             {
               message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF\n\n7:           }\n8:         \n           ^\n',
+              locations: [
+                {
+                  column: 9,
+                  line: 8,
+                },
+              ],
             },
           ],
         }

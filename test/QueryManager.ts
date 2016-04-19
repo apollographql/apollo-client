@@ -201,6 +201,47 @@ describe('QueryManager', () => {
     });
   });
 
+  it('handles an unsubscribe action that happens before data returns', (done) => {
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        delay: 1000,
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    const subscription = handle.subscribe({
+      next: (result) => {
+        done(new Error('Should not deliver result'));
+      },
+      error: (error) => {
+        done(new Error('Should not deliver result'));
+      },
+    });
+
+    assert.doesNotThrow(subscription.unsubscribe);
+    done();
+  });
+
   it('allows you to refetch queries', (done) => {
     const query = `
       {

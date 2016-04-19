@@ -64,6 +64,10 @@ export function queries(
 
     return newState;
   } else if (isQueryResultAction(action)) {
+    if (!previousState[action.queryId]) {
+      return previousState;
+    }
+
     // Ignore results from old requests
     if (action.requestId < previousState[action.queryId].lastRequestId) {
       return previousState;
@@ -80,6 +84,10 @@ export function queries(
 
     return newState;
   } else if (isQueryErrorAction(action)) {
+    if (!previousState[action.queryId]) {
+      return previousState;
+    }
+
     // Ignore results from old requests
     if (action.requestId < previousState[action.queryId].lastRequestId) {
       return previousState;
@@ -94,6 +102,10 @@ export function queries(
 
     return newState;
   } else if (isQueryResultClientAction(action)) {
+    if (!previousState[action.queryId]) {
+      return previousState;
+    }
+
     const newState = assign({}, previousState) as QueryStore;
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {

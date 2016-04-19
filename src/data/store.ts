@@ -41,6 +41,10 @@ export function data(
   config: ApolloReducerConfig
 ): NormalizedCache {
   if (isQueryResultAction(action)) {
+    if (!queries[action.queryId]) {
+      return previousState;
+    }
+
     // Ignore results from old requests
     // XXX this means that if you have a refetch interval which is shorter than your roundtrip time,
     // your query will be in the loading state forever!

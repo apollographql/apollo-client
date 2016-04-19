@@ -10,4 +10,4 @@ If you don't pass in an existing Redux store into the `ApolloClient` constructor
 
 <h2 id="demo">Inspecting the example app</h2>
 
-XXX add screenshots after we have example app
+To fill in later. TL;DR just open the Redux DevTools.

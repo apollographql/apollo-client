@@ -1,10 +1,12 @@
 ---
-title: Client overview
+title: Apollo Client
 order: 100
 description: Basic information on getting started with and using the Apollo Client.
 ---
 
 The Apollo Client can easily be dropped into any JavaScript frontend where you want to use data from a GraphQL server.
+
+[Follow apollostack/apollo-client on GitHub.](https://github.com/apollostack/apollo-client)
 
 ## Installing
 

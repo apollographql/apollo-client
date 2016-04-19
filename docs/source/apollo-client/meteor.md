@@ -1,10 +1,10 @@
 ---
 title: Meteor integration
-order: 111
-description: Specifics about using Apollo serve and fetch GraphQL data in your Meteor application.
+order: 112
+description: Specifics about using Apollo in your Meteor application.
 ---
 
-The Apollo client and server tools are published on NPM, which makes them available to all JavaScript applications, including those written with Meteor 1.3 and above. When using Meteor with Apollo, there are a few things to keep in mind to integrate the client and server.
+The Apollo client and server tools are published on NPM, which makes them available to all JavaScript applications, including those written with Meteor 1.3 and above. When using Meteor with Apollo, there are a few things to keep in mind to have a smooth integration between the client and server.
 
 You can see all of these in action in the [Apollo Meteor starter kit](https://github.com/apollostack/meteor-starter-kit).
 
@@ -46,7 +46,7 @@ const client = new ApolloClient({
 
 ## Server
 
-### Using Express
+### Using Express with WebApp
 
 The Apollo server, and the Express GraphQL package that it is based on, rely on the Express server-side API framework. To use it, you will need to initialize a new Express server and proxy it to your Meteor `WebApp` server.
 

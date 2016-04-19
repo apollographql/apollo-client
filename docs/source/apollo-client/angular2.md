@@ -1,6 +1,6 @@
 ---
 title: Angular 2.0 integration
-order: 112
+order: 111
 description: How to use the Apollo Client to fetch GraphQL data in your Angular 2.0 application.
 ---
 
@@ -9,6 +9,8 @@ description: How to use the Apollo Client to fetch GraphQL data in your Angular 
 ```bash
 npm install angular2-apollo --save
 ```
+
+[Follow apollostack/angular2-apollo on GitHub.](https://github.com/apollostack/angular2-apollo)
 
 <h2 id="bootstrap">Bootstrap</h2>
 

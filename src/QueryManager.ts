@@ -338,6 +338,8 @@ export class QueryManager {
   }
 
   private stopQuery(queryId: string) {
+    // XXX in the future if we should cancel the request
+    // so that it never tries to return data
     delete this.queryListeners[queryId];
 
     this.store.dispatch({

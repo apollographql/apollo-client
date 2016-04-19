@@ -118,7 +118,7 @@ function mapMutationsToProps({ ownProps, state }) {
 
         // Use an argument passed from the triggering of the mutation
         raw,
-      }
+      },
     }),
   };
 };
@@ -153,6 +153,31 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
 ```
 
 The `Category` component will also get a prop of `mutations` that will have a key of `postReply`. This key is the method that triggers the mutation and can take custom arguments (e.g. `this.props.mutations.postReply('Apollo and React are really great!')`). These arguments are passed to the method that creates the mutation.
+
+One typical pattern is wanting to refetch a query after a mutation has happened. In this example, `this.props.mutations.postReply`is a method that returns the mutation promise. Since queries pass a `refetch` prop, this can be accomplished like so:
+
+```js
+
+@connect({ mapMutationsToProps, mapQueriesToProps })
+class Container extends React.Component{
+  componentDidMount() {
+    // call the muation
+    this.props.mutations.makeListPrivate()
+      .then((err, data) => {
+        // if we have the data we want
+        if (data.id) {
+          // refetch the categories query
+          this.props.categories.refetch();
+        };
+      });
+  }
+
+  render() {
+    return <div />;
+  }
+};
+
+```
 
 ### Additional Props
 

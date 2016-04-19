@@ -30,6 +30,7 @@ describe('network interface', () => {
     this.realFetch = global['fetch'];
 
     global['fetch'] = ((url, opts) => {
+      this.lastFetchOpts = opts;
       if (url === 'http://does-not-exist.test/') {
         return Promise.reject('Network error');
       } else if (url === 'http://graphql-swapi.test/') {
@@ -165,7 +166,7 @@ describe('network interface', () => {
       );
     });
 
-    it('should alter the options', () => {
+    it('should alter the options but not overwrite defaults', () => {
       const testWare1 = new TestWare([], [
         { key: 'planet', val: 'mars' },
       ]);
@@ -188,9 +189,9 @@ describe('network interface', () => {
       };
 
       return swapi.query(simpleRequest).then((data) => {
-        assert.deepEqual(swapi._opts, { planet: 'mars' });
+        assert.equal(this.lastFetchOpts.planet, 'mars');
+        assert.notOk(swapi._opts['planet']);
       });
-
     });
 
     it('handle multiple middlewares', () => {

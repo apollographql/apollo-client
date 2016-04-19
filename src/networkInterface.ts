@@ -19,6 +19,11 @@ export interface NetworkInterface {
   use(middlewares: MiddlewareInterface[]);
 }
 
+export interface RequestAndOptions {
+  request: Request;
+  options: RequestInit;
+}
+
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): NetworkInterface {
   if (!uri) {
     throw new Error('A remote enpdoint is required for a network layer');
@@ -32,15 +37,21 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
   const _opts: RequestInit = assign({}, opts);
   const _middlewares: MiddlewareInterface[] = [];
 
-  function applyMiddlewares(request: Request): Promise<Request> {
+  function applyMiddlewares({
+    request,
+    options,
+  }: RequestAndOptions): Promise<RequestAndOptions> {
     return new Promise((resolve, reject) => {
       const queue = (funcs, scope) => {
         const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();
-            f.applyMiddleware.apply(scope, [{ request, options: _opts }, next]);
+            f.applyMiddleware.apply(scope, [{ request, options }, next]);
           } else {
-            resolve(request);
+            resolve({
+              request,
+              options,
+            });
           }
         };
         next();
@@ -51,10 +62,13 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
     });
   }
 
-  function fetchFromRemoteEndpoint(request: Request): Promise<IResponse> {
-    return fetch(uri, assign({}, _opts, {
+  function fetchFromRemoteEndpoint({
+    request,
+    options,
+  }: RequestAndOptions): Promise<IResponse> {
+    return fetch(uri, assign({}, _opts, options, {
       body: JSON.stringify(request),
-      headers: assign({}, _opts.headers, {
+      headers: assign({}, options.headers, {
         Accept: '*/*',
         'Content-Type': 'application/json',
       }),
@@ -63,8 +77,12 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
   };
 
   function query(request: Request): Promise<GraphQLResult> {
-    return applyMiddlewares(request)
-      .then(fetchFromRemoteEndpoint)
+    const options = assign({}, _opts);
+
+    return applyMiddlewares({
+      request,
+      options,
+    }).then(fetchFromRemoteEndpoint)
       .then(result => result.json())
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {

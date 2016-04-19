@@ -28,6 +28,7 @@ Instantiate a new Apollo Client.
 Here's how you would instantiate a default client that points to `/graphql`:
 
 ```js
+// In ES2015 or TypeScript
 import ApolloClient from 'apollo-client';
 
 const client = new ApolloClient();
@@ -36,6 +37,7 @@ const client = new ApolloClient();
 If you're not using ES2015, you can also load it with `require`:
 
 ```js
+// In plain JavaScript
 var ApolloClient = require('apollo-client').default;
 ```
 

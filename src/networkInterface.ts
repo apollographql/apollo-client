@@ -58,7 +58,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): Net
       };
 
       // iterate through middlewares using next callback
-      queue(_middlewares, this);
+      queue([..._middlewares], this);
     });
   }
 

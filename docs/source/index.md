@@ -12,3 +12,10 @@ To read more about Apollo in general, visit:
 
 - [Our website](http://www.apollostack.com/)
 - [Our Medium blog](https://medium.com/apollo-stack)
+
+## Example apps
+
+We have put together some basic example apps using various parts of Apollo; check them out to see how everything fits together. We're always looking for improvements and feedback on these apps, and they'll get better as Apollo becomes more production-ready!
+
+- [A full-stack app with a Material UI React frontend on top of Discourse](https://github.com/apollostack/apollo-demo)
+- [A bare-bones Meteor starter kit](https://github.com/apollostack/meteor-starter-kit)

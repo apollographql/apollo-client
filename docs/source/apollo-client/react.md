@@ -4,7 +4,7 @@ order: 110
 description: How to use the Apollo Client to fetch GraphQL data in your React application.
 ---
 
-### Provider
+<h2 id="provider">Provider</h2>
 
 Injects an ApolloClient instance into a React view tree. You can use it instead of the Redux `Provider`, if you want to. But you don't have to:
 
@@ -54,7 +54,8 @@ ReactDOM.render(
 
 The wrapper is called `Provider` because in the base case you can use it instead of the Redux provider or you can use it as an Apollo enhanced Redux Provider.
 
-### connect
+<h2 id="connect">Connect</h2>
+
 
 Works like Redux `connect`, but supports two more properties:
 
@@ -179,11 +180,13 @@ class Container extends React.Component{
 
 ```
 
-### Additional Props
+<h2 id="additional-props">Additional Props</h2>
+
 
 Redux's connect will pass `dispatch` as a prop unless action creators are passed using `mapDisptachToProps`. Likewise, the Apollo connect exposes part of the apollo-client api to props under the keys `query` and `mutate`. These correspond to the Apollo methods and can be used for custom needs outside of the ability of the wrapper component.
 
-### Using in concert with Redux
+<h2 id="using-with-redux">Using in concert with Redux</h2>
+
 
 ```js
 // ... same as above

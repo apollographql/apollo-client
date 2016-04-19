@@ -179,26 +179,39 @@ client.query({
 
 <h3 id="watchQuery" title="ApolloClient#watchQuery">ApolloClient#watchQuery(options)</h3>
 
-Run a GraphQL query and return a `WatchedQueryHandle` that is updated as the query result in the store changes.
+Run a GraphQL query and return a QueryObservable that is updated as the query result in the store changes.
 
 - `query: string` A GraphQL query string to fetch.
 - `variables: Object` The variables to pass along with the query.
 - `forceFetch: boolean` (Optional, default is `false`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
 - `returnPartialData: boolean` (Optional, default is `false`) If false, wait until the query has finished the initial load from the server to return any data. If true, return any data we might happen to already have in the store immediately. If you pass true for this option, your UI should be ready to deal with the possibility that it will get a partial result at first.
 
-<h3 id="WatchedQueryHandle" title="WatchedQueryHandle">WatchedQueryHandle</h3>
+<h4 id="QueryObservable" title="QueryObservable">QueryObservable</h4>
 
-This is the object you get when you call `watchQuery`. It has some helpful properties and functions you can use to read data from your query and manipulate it:
+This is the object you get when you call `watchQuery`. It has just one method, `subscribe`, to which you can pass a `QueryObserver` object:
 
-- `onResult(callback)` Register a callback to be called whenever this query has new data.
-- `stop()` Tell the client we are no longer interested in results for this query, and that it can be cleaned up. Any callbacks previously registered with `onResult` will no longer be called. Note that if you don't call this function when you're done with the query, it will never be cleaned up, which could result in a memory leak. Any view layer integration should make sure to call this when UI components that asked for data are unrendered.
-- `isStopped(): boolean` Find out if this query has been stopped.
-- XXX onError, isLoading, getResult, getError should be added
+- `subscribe(observer: QueryObserver)` Pass an observer object which gets called when there is new data. Returns a `QuerySubscription` object which you can use to unsubscribe or refetch.
 
-Here's how you could run a query and then watch the result:
+<h4 id="QueryObserver" title="QueryObserver">interface QueryObserver</h4>
+
+The object you pass into `QueryObservable#subscribe`. Includes optional callbacks to receive results:
+
+- `next(result: GraphQLResult)` Called when there is a new result for the query.
+- `error(error: Error)` Called when there is a network error for the query.
+
+<h4 id="QuerySubscription" title="QuerySubscription">QuerySubscription</h4>
+
+The object returned from `QueryObservable#subscribe`. Includes two methods:
+
+- `refetch()` Refetch this query from the server. Think of it like a refresh button.
+- `unsubscribe()` Notify the client to no longer care about this query. After this is called, none of the callbacks on the observer will be fired anymore.
+
+#### Code sample
+
+All of the concepts above seem a bit complicated, but it's not hard to use in practice. Here's how you could run a query and then watch the result:
 
 ```js
-const handle = client.watchQuery({
+const queryObservable = client.watchQuery({
   query: `
     query getCategory($categoryId: Int!) {
       category(id: $categoryId) {
@@ -214,22 +227,28 @@ const handle = client.watchQuery({
   returnPartialData: true,
 });
 
-handle.onResult((graphQLResult) => {
-  const { errors, data } = graphQLResult;
+const subscription = queryObservable.subscribe({
+  next: (graphQLResult) => {
+    const { errors, data } = graphQLResult;
 
-  if (data) {
-    console.log('got data', data);
-  }
+    if (data) {
+      console.log('got data', data);
+    }
 
-  if (errors) {
-    console.log('got some GraphQL execution errors', errors);
+    if (errors) {
+      console.log('got some GraphQL execution errors', errors);
+    }
+  },
+  error: (error) => {
+    console.log('there was an error sending the query', error);
   }
 });
 
-// XXX onError
+// Refetch the query if we want an updated result
+subscription.refetch();
 
 // Call when we're done watching this query
-handle.stop();
+subscription.unsubscribe();
 ```
 
 ## Mutations

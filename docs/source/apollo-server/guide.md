@@ -225,7 +225,7 @@ export default resolveFunctions;
 
 Not every field needs a resolve function. In the example above, `Author.firstName` doesn't have a resolve function, because the value is already on the Author object that the `RootQuery.author` resolve function returned. If the schema doesn't define a resolve function for a field, the server will try to apply the default resolve function, which looks for the property on the input value that has the same name as the field.
 
-Resolve functions should be kept as simple as possible, complicated logic should be encoded in the connectors, which is why the resolve functions on their own will not do anything useful.
+As a general rule of thumb, resolve functions should only use connectors and not depend on any external libraries. They should be kept as simple as possible, and any complicated logic should be moved into a connector, which is why the resolve functions on their own will not do anything without the corresponding connectors.
 
 In order for the server to use the resolve functions instead of the mocked schema, mocks has to be commented out from `server.js`:
 
@@ -321,4 +321,4 @@ const FortuneCookie = {
 export { Author, Post, View, FortuneCookie };
 ```
 
-In this example, we used the Sequelize and Mongoose ORMs for interacting with the SQL and MongoDB databases, but depending on the application this may not be necessary. 
+In this example, we used the Sequelize and Mongoose ORMs for interacting with the SQL and MongoDB databases, but using an ORM is not required. ORMs just happen to be useful here, because they offer a higher-level abstraction on top of the database technology, which makes them easier to use in resolve functions.

@@ -18,7 +18,7 @@ Here's what it looks like all together:
 
 ```js
 import { createStore, combineReducers, applyMiddleware } from 'redux';
-import { ApolloClient } from 'apollo-client';
+import ApolloClient from 'apollo-client';
 import { todoReducer, userReducer } from './reducers';
 
 const client = new ApolloClient();

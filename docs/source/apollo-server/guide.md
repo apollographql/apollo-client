@@ -74,7 +74,7 @@ type Post {
 
 # the schema allows the following two queries:
 type RootQuery {
-  author(firstName: String, lastName: String): User
+  author(firstName: String, lastName: String): Author
   posts(tag: String): [Post]
 }
 
@@ -127,6 +127,7 @@ We're going to modify that now to create more realistic mock data. In order to d
 
 ```js
 import { MockList } from 'graphql-tools';
+import casual from 'casual';
 
 const mocks = {
   Int: () => casual.integer(1,1000),
@@ -136,19 +137,21 @@ const mocks = {
     posts: () => new MockList([1,6]),
   }),
   Post: () => ({
-    tags: () => new MockList([1,3]),
+    tags: () => new MockList([1,3], () => casual.word),
     title: () => casual.title,
-    text: () => casual.sentences(4)
-  })
+    text: () => casual.sentences(4),
+  }),
   RootQuery: () => ({
     author: (o, args) => {
       if (casual.integer(1,10) > 8){
         return null;
       }
       return { ...args };
-    }
-  })
-}
+    },
+  }),
+};
+
+export default mocks;
 ```
 Go ahead and give the server a try with the new mocks. If all went well, you should be able to run the following query and get a similar result.
 
@@ -166,7 +169,7 @@ You can read more about mocking with graphql-tools in our [Medium Post on mockin
 
 Without resolve functions, our GraphQL server can only return mock data. To make it return real data and persist the effect of mutations, you have to define resolve functions. Resolve functions tell the server how to find and return the data for each field in the query.
 
-It's probably easiest to explain this with an example:
+It's probably easiest to explain this with an example query:
 ```
 {
   author(firstName: "Jonas"){

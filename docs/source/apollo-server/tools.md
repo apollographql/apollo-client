@@ -1,14 +1,14 @@
 ---
 title: Documentation for graphql-tools
 order: 203
-description: These are Apollo Docs!!
+description: API documentation for the Apollo GraphQL tools.
 ---
 
 While `apolloServer` can be used as an express middleware, graphql-tools exports all the functions that `apolloServer` uses internally, so they can be used separately with any GraphQL-JS schema. This section documents all the functions that graphql-tools exports, and explains how they can be used.
 
 ## Express middleware
 
-### apolloServer(schema, [...])
+<h3 id="apolloServer" title="apolloServer">apolloServer(schema, [...])</h3>
 
 `apolloServer` is a convenient function that generates an express middleware (it uses express-graphql under the hood). It combines all of the tools in graphql-tools and has a simple to use interface:
 
@@ -20,8 +20,8 @@ var app = express();
 app.use('/graphql', apolloServer({ schema: typeDefinitionArray, graphiql: true }));
 ```
 
-
 **Function signature**
+
 ```
 apolloServer({
   // options in common with graphqlHTTP from express-graphql
@@ -139,7 +139,8 @@ If execution should not continue, resolve functions should return `null` and not
 
 The graphql-tools package allows you to create a GraphQLSchema instance from GraphQL schema language by using the function `createSchema`.
 
-### createSchema(typeDefinitions)
+<h3 id="createSchema" title="createSchema">createSchema(typeDefinitions)</h3>
+
 **Function signature**
 ```
 import { createSchema } from 'graphql-tools';
@@ -212,7 +213,9 @@ This [GraphQL schema language cheat sheet](https://raw.githubusercontent.com/sog
 ## Resolve functions
 In order to respond to queries, a schema needs to have resolve functions. Resolve functions cannot be included in the GraphQL schema language, so they must be added separately.
 
-### addResolveFunctionsToSchema(schema, resolveFunctions)
+<h3 id="addResolveFunctionsToSchema" title="addResolveFunctionsToSchema">
+  addResolveFunctionsToSchema(schema, resolveFunctions)
+</h3>
 
 `addResolveFunctionsToSchema` takes two arguments, a GraphQLSchema and an object defining resolve functions, and modifies the schema in place to. The `resolveFunctions` object should have one property for each type that has fields which need a resolve function. The following is an example of a valid resolveFunctions object:
 ```js
@@ -248,16 +251,23 @@ const resolveFunctions = {
 ```
 Note that if the types were defined in GraphQL schema language, the `info` argument to `resolveType` must be used to get a reference to the actual type, eg. `return info.schema.getType("Person")`. This may be changed in the future to support returning just the name of the type, eg. `return "Person"`.
 
-### addSchemaLevelResolver(schema, rootResolveFunction)
+<h3 id="addSchemaLevelResolver" title="addSchemaLevelResolver">
+  addSchemaLevelResolver(schema, rootResolveFunction)
+</h3>
+
 Some operations, such as authentication, need to be done only once per query. Logically, these operations belong in a root resolve function, but unfortunately GraphQL-JS does not let you define one. `addSchemaLevelResolver` solves this by modifying the GraphQLSchema that is passed as the first argument.
 
 ## Mocking
 
-### mockServer(schema, mocks = {}, preserveResolvers = false)
+<h3 id="mockServer" title="mockServer">
+  mockServer(schema, mocks = {}, preserveResolvers = false)
+</h3>
 
 For more information about how to use the `mockServer` function, see the [Medium Post about mocking](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd).
 
-### addMocksToSchema(schema, mocks = {}, preserveResolvers = false)
+<h3 id="addMocksToSchema" title="addMocksToSchema">
+  addMocksToSchema(schema, mocks = {}, preserveResolvers = false)
+</h3>
 
 `addMocksToSchema` is the function that `mockServer` uses under the hood. Given an instance of GraphQLSchema and a mock object, it modifies the schema in place to return mock data for any valid query that is sent to the server. If `mocks` is not passed, the defaults will be used for each of the scalar types. If `preserveResolvers` is set to `true`, existing resolve functions will not be overwritten to provide mock data. This can be used to mock some parts of the server and not others.
 
@@ -278,7 +288,10 @@ Connectors are the parts that connect the GraphQL server to various backends, su
 
 Resolve functions act as a sort of switchboard, defining which connector should be used for which GraphQL types, and what arguments should be passed to it. While resolve functions should be stateless, connectors need to be stateful in many cases, for example to store information about the currently logged in user, or manage connections with the backend store. Because the same connector may be used in many resolve function, it has to be attached to the context, where all the resolve functions easily have access to it.
 
-### attachConnectorsToContext(schema, connectors)
+<h3 id="attachConnectorsToContext" title="attachConnectorsToContext">
+  attachConnectorsToContext(schema, connectors)
+</h3>
+
 `attachConnectorsToContext` takes two arguments: a GraphQLSchema and a `connectors` object that has connector classes as its named properties. The schema is modified in place such that for each query an instance of each connector will be constructed and attached to the context at the beginning of query execution, effectively making it a singleton that can keep state.
 
 ```js
@@ -315,7 +328,10 @@ resolveAuthor(obj, args, context){
 ## Error handling + error logging
 GraphQL servers can be tricky to debug. The following functions can help find error faster in many cases.
 
-### forbidUndefinedInResolve(schema)
+<h3 id="forbidUndefinedInResolve" title="forbidUndefinedInResolve">
+  forbidUndefinedInResolve(schema)
+</h3>
+
 ForbidUndefinedInResolve can be used during debugging to find mistakes in resolve functions faster. Usually, resolve functions only return undefined due to programmer error. `forbidUndefinedInResolve` takes a GraphQLSchema as input, and modifies it in place to throw an error when a resolve function returns undefined, telling you exactly which resolver returned undefined.
 ```js
 import { forbidUndefinedInResolve } from 'graphql-tools';
@@ -324,7 +340,10 @@ forbidUndefinedInResolve(schema);
 ```
 
 
-### addErrorLoggingToSchema(schema, logger)
+<h3 id="addErrorLoggingToSchema" title="addErrorLoggingToSchema">
+  addErrorLoggingToSchema(schema, logger)
+</h3>
+
 This function may be deprecated in the near future. Instead of using addErrorLoggingToSchema, the `formatError` option of `apolloServer` or `graphqlHTTP` should be used, which was recently added in graphql-js v0.5.0
 
 `addErorrLoggingToSchema` takes two arguments: `schema` and `logger`. `schema` must be an instance of `GraphQLSchema`, `logger` must be an Object with a callable property `log`. Every time an error occurs, `logger.log(e)` will be called.

@@ -1,7 +1,7 @@
 ---
 title: GraphQL server tutorial
 order: 202
-description: These are Apollo Docs!!
+description: A step-by-step guide for setting up a basic GraphQL server with Apollo.
 ---
 
 This guide will explain all the parts required for a simple GraphQL Blog server. If you're looking for a tutorial, check out this Medium post or our GraphQL server tutorial video on Youtube.

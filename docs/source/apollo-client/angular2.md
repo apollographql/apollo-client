@@ -67,13 +67,18 @@ class postsList {
 
 <h2 id="bind-to-query">Bind to query</h2>
 
+<h4 id="bind-to-query-using-service">Using Angular2Apollo service</h4>
+
 ```ts
 import {
-  Component, Injectable
+  Component,
+  Injectable
 } from 'angular2/core';
+
 import {
   Angular2Apollo
 } from 'angular2-apollo';
+
 import {
   Observable
 } from 'rxjs/Observable';
@@ -103,6 +108,59 @@ class postsList {
 }
 ```
 
+
+<h4 id="bind-to-query-using-decorator">Using Apollo decorator</h4>
+
+```ts
+import {
+  Component, Injectable
+} from 'angular2/core';
+
+import {
+  Apollo
+} from 'angular2-apollo';
+
+import ApolloClient, {
+  createNetworkInterface
+} from 'apollo-client';
+
+import {
+  Observable
+} from 'rxjs/Observable';
+
+const client = new ApolloClient({
+  networkInterface: createNetworkInterface('http://localhost:8080')
+});
+
+@Component({
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
+})
+@Injectable()
+@Apollo({
+  client,
+  queries(context) {
+    return {
+      posts: {
+        query: `
+          query getPosts($tag: String) {
+            posts(tag: $tag) {
+              title
+            }
+          }
+        `,
+        variables: {
+          tag: "1234"
+        }
+      }
+    };
+  }
+})
+class postsList {
+  posts: Observable<any[]>;
+}
+```
+
 <h2 id="apolloquerypipe">ApolloQueryPipe</h2>
 
 Apollo client exposes queries as observables, but each Apollo query can include few queries.
@@ -124,9 +182,12 @@ We are pondering about a solution that will return an observable per single quer
 
 <h2 id="mutations">Mutations</h2>
 
+<h4 id="mutations-using-service">Using Angular2Apollo service</h4>
+
 ```ts
 import {
-  Component, Injectable
+  Component,
+  Injectable
 } from 'angular2/core';
 
 import {
@@ -191,6 +252,97 @@ class postsList {
     }).catch((error) => {
       console.log('there was an error sending the query', error);
     });
+  }
+}
+```
+
+<h4 id="mutations-using-decorator">Using Apollo decorator</h4>
+
+```ts
+import {
+  Component,
+  Injectable
+} from 'angular2/core';
+
+import {
+  Apollo
+} from 'angular2-apollo';
+
+import {
+  graphQLResult
+} from 'graphql';
+
+import ApolloClient, {
+  createNetworkInterface
+} from 'apollo-client';
+
+const client = new ApolloClient({
+  networkInterface: createNetworkInterface('http://localhost:8080')
+});
+
+@Component({
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
+})
+@Injectable()
+@Apollo({
+  client,
+  mutations(context) {
+    return {
+      postReply: ({
+        token,
+        topicId,
+        categoryId,
+        raw
+      }) => ({
+        mutation: `
+          mutation postReply(
+            $token: String!
+            $topic_id: ID!
+            $category_id: ID!
+            $raw: String!
+          ) {
+            createPost(
+              token: $token
+              topic_id: $topic_id
+              category: $category_id
+              raw: $raw
+            ) {
+              id
+              cooked
+            }
+          }
+        `,
+        variables: {
+          token: token,
+          topic_id: topicId,
+          category_id: categoryId,
+          raw: raw,
+        }
+      })
+    };
+  }
+})
+class postsList {
+  constructor() {
+
+  }
+  
+  reply(reply) {
+    this.postReply(reply)
+      .then((graphQLResult) => {
+        const { errors, data } = graphQLResult;
+
+        if (data) {
+          console.log('got data', data);
+        }
+
+        if (errors) {
+          console.log('got some GraphQL execution errors', errors);
+        }
+      }).catch((error) => {
+        console.log('there was an error sending the query', error);
+      });
   }
 }
 ```

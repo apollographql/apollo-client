@@ -12,7 +12,7 @@ Basic Apollo version:
 
 ```js
 import ApolloClient from 'apollo-client';
-import { Provider } from 'apollo-react';
+import { Provider } from 'react-apollo';
 
 const client = new ApolloClient();
 
@@ -29,7 +29,7 @@ With an existing Redux store:
 ```js
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import ApolloClient from 'apollo-client';
-import { Provider } from 'apollo-react';
+import { Provider } from 'react-apollo';
 
 import { todoReducer, userReducer } from './reducers';
 
@@ -67,7 +67,7 @@ It also uses keyword arguments instead of positional arguments, since that lets 
 Basic Apollo version:
 
 ```js
-import { connect } from 'apollo-react';
+import { connect } from 'react-apollo';
 
 import Category from '../components/Category';
 

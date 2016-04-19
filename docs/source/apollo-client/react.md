@@ -137,7 +137,7 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
 ```js
 {
   loading: boolean,
-  error: Error,
+  errors: Error[],
   result: GraphQLResult,
   refetch: Function
 }
@@ -148,7 +148,7 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
 ```js
 {
   loading: boolean,
-  error: Error,
+  errors: Error[],
   result: GraphQLResult,
 }
 ```

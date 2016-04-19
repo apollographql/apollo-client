@@ -16,6 +16,7 @@ sidebar_categories:
     - index
   Apollo Client:
     - apollo-client/index
+    - apollo-client/core
     - apollo-client/react
     - apollo-client/redux
     - apollo-client/network

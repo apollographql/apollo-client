@@ -1,6 +1,6 @@
 ---
 title: Developer tools
-order: 141
+order: 142
 description: How to use extensions and developer tools to get insight into what your app is doing.
 ---
 

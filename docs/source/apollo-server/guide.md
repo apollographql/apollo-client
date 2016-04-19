@@ -75,7 +75,7 @@ type Post {
 # the schema allows the following two queries:
 type RootQuery {
   author(firstName: String, lastName: String): Author
-  posts(tag: String): [Post]
+  fortuneCookie: String
 }
 
 # this schema allows the following two mutations:
@@ -183,36 +183,142 @@ To respond to this query, the server will first run the resolve function for the
 Resolve functions are defined in the 'data/resolvers.js' file, and the format is quite straight-forward, defining a resolve function for each field.
 
 ```js
+import { Author, Post, View, FortuneCookie } from './connectors';
 
 const resolveFunctions = {
   RootQuery: {
     author(_, { firstName, lastName }){
-      return Authors.findOne({ firstName: firstName, lastName: lastName });
+      return Author.find({ where: { firstName, lastName } });
     },
-    posts(_, { tag }){
-      return Posts.where( tag in tags); // TODO TK
+    fortuneCookie(){
+      return FortuneCookie.getOne();
+    },
+  },
+  RootMutation: {
+    createAuthor: (root, args) => { return Author.create(args); },
+    createPost: (root, { authorId, tags, title, text }) => {
+      return Author.findOne({ where: { id: authorId } }).then( (author) => {
+        return author.createPost( { tags: tags.join(','), title, text });
+      });
     },
   },
   Author: {
     posts(author){
-      return Author.get(author.id).getPosts();
+      return author.getPosts();
     },
   },
-  Posts: {
+  Post: {
     author(post){
-      return Author.get(post.authorId);
+      return post.getAuthor();
+    },
+    tags(post){
+      return post.tags.split(',');
+    },
+    views(post){
+      return View.findOne({ postId: post.id }).then( (res) => res.views );
     }
   }
 }
+
+export default resolveFunctions;
 ```
 
-Not every field needs a resolve function. In the example above, `Author.firstName` doesn't have a resolve function, because the value is already on the Author object that the `RootQuery.author` resolve function returned: If the schema doesn't define a resolve function for a field, the server will try to apply the default resolve function, which looks for the property on the input value that has the same name as the field.
+Not every field needs a resolve function. In the example above, `Author.firstName` doesn't have a resolve function, because the value is already on the Author object that the `RootQuery.author` resolve function returned. If the schema doesn't define a resolve function for a field, the server will try to apply the default resolve function, which looks for the property on the input value that has the same name as the field.
+
+Resolve functions should be kept as simple as possible, complicated logic should be encoded in the connectors, which is why the resolve functions on their own will not do anything useful.
+
+In order for the server to use the resolve functions instead of the mocked schema, mocks has to be commented out from `server.js`:
+
+```js
+import express from 'express';
+import { apolloServer } from 'graphql-tools';
+import Schema from './data/schema';
+import Mocks from './data/mocks';
+import Resolvers from './data/resolvers';
+
+const GRAPHQL_PORT = 8080;
+
+var graphQLServer = express();
+graphQLServer.use('/', apolloServer({
+  graphiql: true,
+  pretty: true,
+  schema: Schema,
+  resolvers: Resolvers,
+  //mocks: Mocks,
+}));
+graphQLServer.listen(GRAPHQL_PORT, () => console.log(
+  `GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}`
+));
+```
 
 
 ## Connectors
+Connectors are used to connect the GraphQL resolve functions to a backend that stores the actual data. GraphQL doesn't have any opinion when it comes to how the data is actually stored, so it can be used with MySQL, Postgres, MongoDB, RethinkDB, HFS, S3, Redis, Memcache, REST services and pretty much anything that can communicate over the network or a socket. You can also store things in memory or on disk on your GraphQL server. Anything is possible.
 
-### SQL
+The example below uses three different connectors: Sequelize for SQL, Mongoose for MongoDB and a REST service. The GraphQL schema language file and resolve functions define how these connectors get integrated into a single schema.
 
-### MongoDB
+```js
+import Sequelize from 'sequelize';
+import Mongoose from 'mongoose';
+import casual from 'casual';
+import rp from 'request-promise';
 
-### REST / HTTP
+// SQL tables
+const db = new Sequelize('blog', null, null, {
+  dialect: 'sqlite',
+  storage: './blog.sqlite'
+});
+
+const AuthorModel = db.define('author', {
+  firstName: {
+    type: Sequelize.STRING,
+  },
+  lastName: {
+    type: Sequelize.STRING,
+  },
+});
+
+const PostModel = db.define('post', {
+  title: {
+    type: Sequelize.STRING,
+  },
+  text: {
+    type: Sequelize.STRING,
+  },
+  tags: {
+    type: Sequelize.STRING,
+  }
+});
+
+// foreign key relationships
+AuthorModel.hasMany(PostModel);
+PostModel.belongsTo(AuthorModel);
+
+const Author = db.models.author;
+const Post = db.models.post;
+
+// MongoDB table
+const mongo = Mongoose.connect('mongodb://localhost/views');
+
+const ViewSchema = Mongoose.Schema({
+  postId: Number,
+  views: Number,
+})
+
+const View = Mongoose.model('views', ViewSchema);
+
+// REST backend / service
+const FortuneCookie = {
+  getOne(){
+    return rp('http://fortunecookieapi.com/v1/cookie')
+      .then((res) => JSON.parse(res))
+      .then((res) => {
+        return res[0].fortune.message;
+      });
+  },
+};
+
+export { Author, Post, View, FortuneCookie };
+```
+
+In this example, we used the Sequelize and Mongoose ORMs for interacting with the SQL and MongoDB databases, but depending on the application this may not be necessary. 

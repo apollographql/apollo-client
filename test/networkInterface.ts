@@ -17,12 +17,8 @@ import {
   MiddlewareRequest,
 } from '../src/middleware';
 
-import {
-  graphql,
-} from 'graphql';
-
 /* tslint:disable */
-const swapiSchema = require('swapi-graphql').schema;
+const { schema: swapiSchema, graphql: swapiGraphql } = require('swapi-graphql');
 /* tslint:enable */
 
 describe('network interface', () => {
@@ -36,7 +32,7 @@ describe('network interface', () => {
       } else if (url === 'http://graphql-swapi.test/') {
         return new Promise((resolve, reject) => {
           const request = JSON.parse(opts.body);
-          graphql(swapiSchema, request.query, undefined, request.variables).then(result => {
+          swapiGraphql(swapiSchema, request.query, undefined, request.variables).then(result => {
             const response = new global['Response'](JSON.stringify(result));
             resolve(response);
           }).catch(error => {

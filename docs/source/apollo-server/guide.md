@@ -53,7 +53,7 @@ ApolloServer uses the GraphQL schema language notation, which it then compiles t
 
 The schema notation supports all GraphQL types. In this tutorial we are only going to use a few of them. You can learn about all the others in the [schema creation subsection of Tools](http://docs.apollostack.com//apollo-server/tools.html#Schema-creation).
 
-For the todos app, we're going to use a schema that has the following two types: Authors and Posts. For each type, the schema defines which fields it has, and how it relates to the other types. The fields of the RootQuery and RootMutation types are the client's entry points to the schema. Every query or mutation has to start there, but it can ask for as much or as little data as it wants by expanding the fields when necessary.
+For the blog app, we're going to use a schema that has the following two types: Authors and Posts. For each type, the schema defines which fields it has, and how it relates to the other types. The fields of the RootQuery and RootMutation types are the client's entry points to the schema. Every query or mutation has to start there, but it can ask for as much or as little data as it wants by expanding the fields when necessary.
 
 ````js
 const typeDefinitions = `

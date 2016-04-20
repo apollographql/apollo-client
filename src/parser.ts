@@ -1,8 +1,9 @@
 import { parse } from 'graphql/language/parser';
 
 import {
-  OperationDefinition,
   Document,
+  Definition,
+  OperationDefinition,
   FragmentDefinition,
 } from 'graphql';
 
@@ -13,35 +14,33 @@ export function parseDocument(doc: string): Document {
     throw new Error('Not a valid GraphQL document.');
   }
 
-  return parsed;
+  return parsed as Document;
+}
+
+function parseDefinition(definition: string): Definition {
+  const parsedDocument = parseDocument(definition);
+
+  if (parsedDocument.definitions.length !== 1) {
+    throw new Error('Must have exactly one definition in document.');
+  }
+
+  return parsedDocument.definitions[0];
 }
 
 export function parseFragment(fragment: string): FragmentDefinition {
-  const parsedFragment: Document = parseDocument(fragment);
+  const parsedFragment = parseDefinition(fragment);
 
-  if (parsedFragment.definitions.length !== 1) {
-    throw new Error('Must have exactly one definition in document.');
-  }
-
-  if (parsedFragment.definitions[0].kind !== 'FragmentDefinition') {
+  if (parsedFragment.kind !== 'FragmentDefinition') {
     throw new Error('Must be a fragment.');
   }
 
-  const fragmentDef: FragmentDefinition = parsedFragment.definitions[0] as FragmentDefinition;
-
-  return fragmentDef;
+  return parsedFragment as FragmentDefinition;
 }
 
 export function parseQuery(query: string): OperationDefinition {
-  const parsedQuery: Document = parseDocument(query);
+  const queryDefinition = parseDefinition(query) as OperationDefinition;
 
-  if (parsedQuery.kind !== 'Document' && parsedQuery.definitions.length !== 1) {
-    throw new Error('Must have exactly one definition in document.');
-  }
-
-  const queryDefinition: OperationDefinition = parsedQuery.definitions[0] as OperationDefinition;
-
-  if (queryDefinition.operation !== 'query') {
+  if (queryDefinition.kind !== 'OperationDefinition' && queryDefinition.operation !== 'query') {
     throw new Error('Definition must be a query.');
   }
 
@@ -49,16 +48,9 @@ export function parseQuery(query: string): OperationDefinition {
 }
 
 export function parseMutation(mutation: string): OperationDefinition {
-  const parsedMutation: Document = parseDocument(mutation);
+  const mutationDefinition = parseDefinition(mutation) as OperationDefinition;
 
-  if (parsedMutation.kind !== 'Document' && parsedMutation.definitions.length !== 1) {
-    throw new Error('Must have exactly one definition in document.');
-  }
-
-  const mutationDefinition: OperationDefinition =
-    parsedMutation.definitions[0] as OperationDefinition;
-
-  if (mutationDefinition.operation !== 'mutation') {
+  if (mutationDefinition.kind !== 'OperationDefinition' && mutationDefinition.operation !== 'mutation') {
     throw new Error('Definition must be a mutation.');
   }
 

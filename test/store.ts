@@ -37,4 +37,24 @@ describe('createApolloStore', () => {
       }
     );
   });
+
+  it('can be rehydrated from the server', () => {
+    const reduxHydration = {
+      apollo: {
+        queries: {
+          'test.0': true,
+        },
+        mutations: {},
+        data: {
+          'test.0': true,
+        },
+      },
+    };
+
+    const store = createApolloStore({
+      reduxHydration,
+    });
+
+    assert.deepEqual(store.getState(), reduxHydration);
+  });
 });

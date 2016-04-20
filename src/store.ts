@@ -70,9 +70,11 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
 
 export function createApolloStore({
   reduxRootKey = 'apollo',
+  reduxHydration,
   config = {},
 }: {
   reduxRootKey?: string,
+  reduxHydration?: any,
   config?: ApolloReducerConfig,
 } = {}): ApolloStore {
   const enhancers = [];
@@ -88,7 +90,8 @@ export function createApolloStore({
 
   return createStore(
     combineReducers({ [reduxRootKey]: createApolloReducer(config) }),
-    compose(...enhancers)
+    reduxHydration,
+    compose(...enhancers) as () => any // XXX see why this type fails
   );
 }
 

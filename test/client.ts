@@ -29,6 +29,10 @@ import {
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
+import {
+  parseQuery,
+} from '../src/parser';
+
 import * as chaiAsPromised from 'chai-as-promised';
 
 // make it easy to assert with promises
@@ -262,6 +266,82 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
+        done();
+       });
+  });
+
+  it('can allow the store to be rehydrated from the server', (done) => {
+
+    const query = `
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const reduxHydration = {
+      apollo: {
+        queries: {
+          '0': {
+            queryString: '\n      query people {\n        allPeople(first: 1) {\n          people {\n            name\n          }\n        }\n      }\n    ', /* tslint:disable */
+            query: {
+              id: 'ROOT_QUERY',
+              typeName: 'Query',
+              selectionSet: parseQuery(query).selectionSet,
+            },
+            minimizedQueryString: null,
+            minimizedQuery: null,
+            variables: undefined,
+            loading: false,
+            networkError: null,
+            graphQLErrors: null,
+            forceFetch: false,
+            returnPartialData: false,
+            lastRequestId: 1,
+          },
+        },
+        mutations: {},
+        data: {
+          'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
+            name: 'Luke Skywalker',
+          },
+          'ROOT_QUERY.allPeople({"first":"1"})': {
+            people: [ 'ROOT_QUERY.allPeople({"first":"1"}).people.0' ],
+          },
+          ROOT_QUERY: {
+            'allPeople({"first":"1"})': 'ROOT_QUERY.allPeople({"first":"1"})',
+          },
+        },
+      },
+    };
+
+    const client = new ApolloClient({
+      networkInterface,
+      reduxHydration,
+    });
+
+    return client.query({ query })
+      .then((result) => {
+        assert.deepEqual(result, { data });
+        assert.deepEqual(reduxHydration, client.store.getState());
         done();
        });
   });

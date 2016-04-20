@@ -38,17 +38,20 @@ export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
   public reduxRootKey: string;
+  public reduxHydration: any;
   public queryManager: QueryManager;
 
   constructor({
     networkInterface,
     reduxRootKey,
+    reduxHydration,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
+    reduxHydration?: any,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
-
+    this.reduxHydration = reduxHydration ? reduxHydration : {};
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
   }
@@ -98,6 +101,7 @@ export default class ApolloClient {
     // If we don't have a store already, initialize a default one
     this.setStore(createApolloStore({
       reduxRootKey: this.reduxRootKey,
+      reduxHydration: this.reduxHydration,
     }));
   };
 

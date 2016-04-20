@@ -167,7 +167,7 @@ Apollo client exposes queries as observables, but each Apollo query can include 
 
 So inside an Apollo observable the data comes in the following form: `obs.data.queryName`
 
-To handle that more easily we've created the `ApolloQueryPipe`. here is how it works:
+To handle that more easily we've created the `ApolloQueryPipe`. Here is how it works:
 
 template:
 ```html

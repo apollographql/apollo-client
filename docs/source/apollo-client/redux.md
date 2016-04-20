@@ -75,4 +75,4 @@ store.getState();
 
 <h2 id="react-redux">react-redux</h2>
 
-The `react-apollo` integration package is a drop-in replacement for `react-redux`, so if you are using Redux and Apollo together you don't need to have nested data containers. [Read the docs for `react-apollo` to see how to do this.](http://localhost:4000/apollo-client/react.html)
+The `react-apollo` integration package is a drop-in replacement for `react-redux`, so if you are using Redux and Apollo together you don't need to have nested data containers. [Read the docs for `react-apollo` to see how to do this.](http://docs.apollostack.com/apollo-client/react.html)

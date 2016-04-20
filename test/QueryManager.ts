@@ -301,6 +301,82 @@ describe('QueryManager', () => {
     });
   });
 
+  it('allows you to refetch queries with new variables', (done) => {
+    const query = `
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const variables = {
+      test: 'I am your father',
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: query },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query },
+        result: { data: data2 },
+      },
+      {
+        request: { query: query, variables },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    let handleCount = 0;
+
+    const handle = queryManager.watchQuery({
+      query: query,
+    });
+
+    const subscription = handle.subscribe({
+      next(result) {
+        handleCount++;
+
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          subscription.refetch();
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, data2);
+          subscription.refetch(variables);
+        } else if (handleCount === 3) {
+          assert.deepEqual(result.data, data3);
+          done();
+        }
+      },
+    });
+  });
+
   it('doesn\'t explode if you refetch before first fetch is done with query diffing', (done) => {
     const primeQuery = `
       {

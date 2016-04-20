@@ -67,7 +67,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 }
 
 export interface QuerySubscription extends Subscription {
-  refetch();
+  refetch(variables?: any): void;
 }
 
 export interface WatchQueryOptions {
@@ -197,8 +197,8 @@ export class QueryManager {
         unsubscribe: () => {
           this.stopQuery(queryId);
         },
-        refetch: () => {
-          this.fetchQuery(queryId, assign(options, { forceFetch: true }) as WatchQueryOptions);
+        refetch: (variables: any): void => {
+          this.fetchQuery(queryId, assign(options, { forceFetch: true, variables }) as WatchQueryOptions);
         },
       };
     });

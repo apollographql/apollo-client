@@ -297,7 +297,7 @@ describe('client', () => {
       result: { data },
     });
 
-    const reduxHydration = {
+    const initialState = {
       apollo: {
         queries: {
           '0': {
@@ -335,13 +335,13 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      reduxHydration,
+      initialState,
     });
 
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        assert.deepEqual(reduxHydration, client.store.getState());
+        assert.deepEqual(initialState, client.store.getState());
         done();
        });
   });

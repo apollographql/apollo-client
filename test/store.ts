@@ -39,7 +39,7 @@ describe('createApolloStore', () => {
   });
 
   it('can be rehydrated from the server', () => {
-    const reduxHydration = {
+    const initialState = {
       apollo: {
         queries: {
           'test.0': true,
@@ -52,9 +52,9 @@ describe('createApolloStore', () => {
     };
 
     const store = createApolloStore({
-      reduxHydration,
+      initialState,
     });
 
-    assert.deepEqual(store.getState(), reduxHydration);
+    assert.deepEqual(store.getState(), initialState);
   });
 });

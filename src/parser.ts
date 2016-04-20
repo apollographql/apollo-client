@@ -59,7 +59,7 @@ export function parseMutation(mutation: string): OperationDefinition {
     parsedMutation.definitions[0] as OperationDefinition;
 
   if (mutationDefinition.operation !== 'mutation') {
-    throw new Error('Definition must be a query.');
+    throw new Error('Definition must be a mutation.');
   }
 
   return mutationDefinition;

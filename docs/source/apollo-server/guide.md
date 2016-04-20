@@ -51,7 +51,7 @@ export default [typeDefinitions];
 ```
 ApolloServer uses the GraphQL schema language notation, which it then compiles to a GraphQL-JS schema. With the current schema, our server provides exactly one entry point `testString`, which returns a String.
 
-The schema notation supports all GraphQL types. In this tutorial we are only going to use a few of them. You can learn about all the others in the [schema creation subsection of Tools](http://localhost:4000/apollo-server/tools.html#Schema-creation).
+The schema notation supports all GraphQL types. In this tutorial we are only going to use a few of them. You can learn about all the others in the [schema creation subsection of Tools](http://docs.apollostack.com//apollo-server/tools.html#Schema-creation).
 
 For the todos app, we're going to use a schema that has the following two types: Authors and Posts. For each type, the schema defines which fields it has, and how it relates to the other types. The fields of the RootQuery and RootMutation types are the client's entry points to the schema. Every query or mutation has to start there, but it can ask for as much or as little data as it wants by expanding the fields when necessary.
 
@@ -103,7 +103,7 @@ schema {
 
 export default [typeDefinitions];
 ```
-For more information about GraphQL's type system and schema language, you can take a look at @sogko's [cheat sheet](https://raw.githubusercontent.com/sogko/graphql-shorthand-notation-cheat-sheet/master/graphql-shorthand-notation-cheat-sheet.png), read the [Schema definition subsection in the graphql-tools documentation chapter](http://localhost:4000/apollo-server/tools.html#Schema-creation) or refer to the [official GraphQL website](http://graphql.org/docs/typesystem/).
+For more information about GraphQL's type system and schema language, you can take a look at @sogko's [cheat sheet](https://raw.githubusercontent.com/sogko/graphql-shorthand-notation-cheat-sheet/master/graphql-shorthand-notation-cheat-sheet.png), read the [Schema definition subsection in the graphql-tools documentation chapter](http://docs.apollostack.com/apollo-server/tools.html#Schema-creation) or refer to the [official GraphQL website](http://graphql.org/docs/typesystem/).
 
 ## Mocking
 

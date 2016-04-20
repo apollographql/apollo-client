@@ -147,7 +147,7 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
   loading: boolean,
   errors: Error[],
   result: GraphQLResult,
-  refetch: Function
+  refetch: Function(variables)
 }
 ```
 
@@ -163,7 +163,9 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
 
 The `Category` component will also get a prop of `mutations` that will have a key of `postReply`. This key is the method that triggers the mutation and can take custom arguments (e.g. `this.props.mutations.postReply('Apollo and React are really great!')`). These arguments are passed to the method that creates the mutation.
 
-One typical pattern is wanting to refetch a query after a mutation has happened. In this example, `this.props.mutations.postReply`is a method that returns the mutation promise. Since queries pass a `refetch` prop, this can be accomplished like so:
+<h2 id="refetch">Refetch query (with new variables)</h2>
+
+One typical pattern is wanting to refetch a query after a mutation has happened. In this example, `this.props.mutations.postReply`is a method that returns the mutation promise. Since queries pass a `refetch()` prop, this can be accomplished like so:
 
 ```js
 
@@ -175,7 +177,8 @@ class Container extends React.Component{
       .then((err, data) => {
         // if we have the data we want
         if (data.id) {
-          // refetch the categories query
+          // refetch the categories query without variables, 
+          // just refresh client store
           this.props.categories.refetch();
         };
       });
@@ -188,8 +191,20 @@ class Container extends React.Component{
 
 ```
 
-<h2 id="additional-props">Additional Props</h2>
+`refetch(variables: optional)` also supports passing variables to refetch the same query with different set of variables. This would be handy for cases, when you just want to modify the variables to get new data. 
 
+**For example:**
+
+```js
+ this.props.categories.refetch({ id: 5 });
+ this.props.posts.refetch({ first: 20, page: 2 });
+```
+Example use cases: `Infinite scroll`, `Data filtering`
+
+*Note: If you just want to refresh the store with updated data, just `refetch()` without variables.*
+
+
+<h2 id="additional-props">Additional Props</h2>
 
 Redux's connect will pass `dispatch` as a prop unless action creators are passed using `mapDisptachToProps`. Likewise, the Apollo connect exposes part of the apollo-client api to props under the keys `query` and `mutate`. These correspond to the Apollo methods and can be used for custom needs outside of the ability of the wrapper component.
 

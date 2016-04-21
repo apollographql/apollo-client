@@ -13,7 +13,9 @@ import {
 // making multiple queries to the server
 export default function mockNetworkInterface(
   ...mockedResponses: MockedResponse[]
-): NetworkInterface { return new MockNetworkInterface(...mockedResponses) as any }
+): NetworkInterface {
+  return new MockNetworkInterface(...mockedResponses);
+}
 
 export interface MockedResponse {
   request: Request;
@@ -22,8 +24,8 @@ export interface MockedResponse {
   delay?: number;
 }
 
-export class MockNetworkInterface {
-  private mockedResponsesByKey: { [key:string]: MockedResponse[] } = {};
+export class MockNetworkInterface implements NetworkInterface {
+  private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(...mockedResponses: MockedResponse[]) {
     mockedResponses.forEach((mockedResponse) => {

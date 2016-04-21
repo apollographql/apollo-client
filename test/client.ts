@@ -24,7 +24,7 @@ import {
 
 import {
   createNetworkInterface,
-  NetworkInterface,
+  HTTPNetworkInterface,
 } from '../src/networkInterface';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
@@ -67,12 +67,12 @@ describe('client', () => {
 
 
   it('can allow passing in a network interface', () => {
-    const networkInterface: NetworkInterface = createNetworkInterface('swapi');
+    const networkInterface = createNetworkInterface('swapi');
     const client = new ApolloClient({
       networkInterface,
     });
 
-    assert.equal(client.networkInterface._uri, networkInterface._uri);
+    assert.equal((client.networkInterface as HTTPNetworkInterface)._uri, networkInterface._uri);
   });
 
   it('can allow passing in a store', () => {

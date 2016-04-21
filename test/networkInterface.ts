@@ -10,7 +10,6 @@ const { assert, expect } = chai;
 
 import {
   createNetworkInterface,
-  NetworkInterface,
 } from '../src/networkInterface';
 
 import {
@@ -68,7 +67,7 @@ describe('network interface', () => {
     });
 
     it('should create an instance with a given uri', () => {
-      const networkInterface: NetworkInterface = createNetworkInterface('/graphql');
+      const networkInterface = createNetworkInterface('/graphql');
       assert.equal(networkInterface._uri, '/graphql');
     });
 

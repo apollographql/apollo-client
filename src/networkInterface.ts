@@ -12,10 +12,13 @@ export interface Request {
 }
 
 export interface NetworkInterface {
+  query(request: Request): Promise<GraphQLResult>;
+}
+
+export interface HTTPNetworkInterface extends NetworkInterface {
   _uri: string;
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[];
-  query(request: Request): Promise<GraphQLResult>;
   use(middlewares: MiddlewareInterface[]);
 }
 
@@ -24,7 +27,7 @@ export interface RequestAndOptions {
   options: RequestInit;
 }
 
-export function createNetworkInterface(uri: string, opts: RequestInit = {}): NetworkInterface {
+export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {
   if (!uri) {
     throw new Error('A remote enpdoint is required for a network layer');
   }

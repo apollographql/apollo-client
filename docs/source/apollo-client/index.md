@@ -91,3 +91,25 @@ const networkInterface = createNetworkInterface('/graphql', {
   }
 });
 ```
+
+<h3 id="store-rehydration" title="Loading Intial Data from Server">Loading Intial Data from Server</h3>
+
+For applications that support server side rendering, or that can perform some queries on the server prior to rendering the client, ApolloClient allows for setting the intial state of data. This is sometimes called store rehydration for redux applications.
+
+> Note: if you are using redux externally to apollo, and already have store rehydration, this key isn't needed.
+
+```js
+// on server during render
+// after application has gotten all of the data it needs
+const initialState = client.store.getState()
+// inject into template
+<script>window.__APOLLO_STORE__ = initialState</script>
+
+// on client
+const client = new ApolloClient({
+  initialState: __APOLLO_STORE__,
+});
+```
+
+Then, when a client calls ApolloClient#query or ApolloClient#watchQuery, the data should be returned instantly because it is already in the store! This also makes full page server side rendering without a page rebuild (if using react for instance) possible because the server rendered template won't differ from the client)
+

@@ -244,12 +244,16 @@ describe('QueryManager', () => {
 
   it('allows you to refetch queries', (done) => {
     const query = `
-      {
-        people_one(id: 1) {
+      query fetchLuke($id: String) {
+        people_one(id: $id) {
           name
         }
       }
     `;
+
+    const variables = {
+      id: '1',
+    };
 
     const data1 = {
       people_one: {
@@ -265,11 +269,11 @@ describe('QueryManager', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query: query },
+        request: { query, variables },
         result: { data: data1 },
       },
       {
-        request: { query: query },
+        request: { query, variables },
         result: { data: data2 },
       }
     );
@@ -283,7 +287,8 @@ describe('QueryManager', () => {
     let handleCount = 0;
 
     const handle = queryManager.watchQuery({
-      query: query,
+      query,
+      variables,
     });
 
     const subscription = handle.subscribe({

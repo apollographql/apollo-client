@@ -86,10 +86,19 @@ Run a GraphQL query and return a promise that resolves to a `GraphQLResult`.
 - `variables: Object` The variables to pass along with the query.
 - `forceFetch: boolean` (Optional, default is `false`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
 
+<h4 id="polyfill" title="FetchPolyfill">Fetch Polyfill</h4>
+
+Apollo uses [fetch](https://fetch.spec.whatwg.org/) behind the scenes to make HTTP requests. Be aware that many browser versions now support the `window.fetch` function natively (check [caniuse.com](http://caniuse.com/#feat=fetch)), but Node, for example, doesn't (as of v5).
+
+Where it is not supported, you can use one of several popular polyfills, including [whatwg-fetch](https://github.com/github/fetch), [node-fetch](https://github.com/bitinn/node-fetch) or [isomorphic-fetch](https://github.com/matthew-andrews/isomorphic-fetch).
+
 Here's how you would run a single query and get the result:
 
 ```js
 import ApolloClient from 'apollo-client';
+
+// Polyfill fetch into the global namespace if required.
+import fetch from 'isomorphic-fetch';
 
 const client = new ApolloClient();
 

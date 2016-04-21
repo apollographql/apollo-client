@@ -137,15 +137,15 @@ If execution should not continue, resolve functions should return `null` and not
 
 ## Schema creation
 
-The graphql-tools package allows you to create a GraphQLSchema instance from GraphQL schema language by using the function `createSchema`.
+The graphql-tools package allows you to create a GraphQLSchema instance from GraphQL schema language by using the function `generateSchema`.
 
-<h3 id="createSchema" title="createSchema">createSchema(typeDefinitions)</h3>
+<h3 id="generateSchema" title="generateSchema">generateSchema(typeDefinitions)</h3>
 
 **Function signature**
 ```
-import { createSchema } from 'graphql-tools';
+import { generateSchema } from 'graphql-tools';
 
-const jsSchema = createSchema(typeDefinitions);
+const jsSchema = generateSchema(typeDefinitions);
 ```
 
 `typeDefinitions` should be an array of GraphQL schema language strings or a function that takes no arguments and returns an array of GraphQL schema language strings. The order of the strings in the array is not important, but it must include a schema definition. The schema must define a query type, which means a minimal schema would look something like this:
@@ -159,10 +159,10 @@ type RootQuery {
   aNumber: Int
 }`];
 
-const jsSchema = createSchema(typeDefinition);
+const jsSchema = generateSchema(typeDefinition);
 ```
 
-If your schema gets large, you may want to define parts of it in different files and import them to create the full schema. This is possible by including them in the array. If there are circular dependencies, the array should be wrapped in arrow function. `createSchema` will only include each type definition once, even if it is imported multiple times by different types.
+If your schema gets large, you may want to define parts of it in different files and import them to create the full schema. This is possible by including them in the array. If there are circular dependencies, the array should be wrapped in arrow function. `generateSchema` will only include each type definition once, even if it is imported multiple times by different types.
 
 ```js
 // in author.js -------------------
@@ -204,7 +204,7 @@ const SchemaDefinition = `
   }
 `;
 
-export default createSchema([SchemaDefinition, RootQuery, Author]);
+export default generateSchema([SchemaDefinition, RootQuery, Author]);
 ```
 
 This [GraphQL schema language cheat sheet](https://raw.githubusercontent.com/sogko/graphql-shorthand-notation-cheat-sheet/master/graphql-shorthand-notation-cheat-sheet.png) by Hafiz Ismail is an excellent reference for all the features of the GraphQL schema language.

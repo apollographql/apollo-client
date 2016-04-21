@@ -253,7 +253,7 @@ describe('QueryManager', () => {
 
     const variables = {
       id: '1',
-    }
+    };
 
     const data1 = {
       people_one: {
@@ -287,7 +287,8 @@ describe('QueryManager', () => {
     let handleCount = 0;
 
     const handle = queryManager.watchQuery({
-      query: query,
+      query,
+      variables,
     });
 
     const subscription = handle.subscribe({

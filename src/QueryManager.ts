@@ -198,7 +198,14 @@ export class QueryManager {
           this.stopQuery(queryId);
         },
         refetch: (variables: any): void => {
-          this.fetchQuery(queryId, assign(options, { forceFetch: true, variables }) as WatchQueryOptions);
+          // If no new variables passed, use existing variables
+          variables = variables || options.variables;
+
+          // Use the same options as before, but with new variables and forceFetch true
+          this.fetchQuery(queryId, assign(options, {
+            forceFetch: true,
+            variables,
+          }) as WatchQueryOptions);
         },
       };
     });

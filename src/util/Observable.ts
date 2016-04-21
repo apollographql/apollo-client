@@ -12,7 +12,7 @@ export class Observable<T> {
   constructor(private subscriberFunction: SubscriberFunction<T>) {
   }
 
-  subscribe(observer: Observer<T>): Subscription {
+  public subscribe(observer: Observer<T>): Subscription {
     let subscriptionOrCleanupFunction = this.subscriberFunction(observer);
 
     if (isSubscription(subscriptionOrCleanupFunction)) {

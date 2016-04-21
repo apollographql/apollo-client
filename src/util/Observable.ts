@@ -9,7 +9,10 @@ function isSubscription(subscription: Function | Subscription): subscription is 
 }
 
 export class Observable<T> {
-  constructor(private subscriberFunction: SubscriberFunction<T>) {
+  private subscriberFunction: SubscriberFunction<T>;
+
+  constructor(subscriberFunction: SubscriberFunction<T>) {
+    this.subscriberFunction = subscriberFunction;
   }
 
   public subscribe(observer: Observer<T>): Subscription {
@@ -19,7 +22,7 @@ export class Observable<T> {
       return subscriptionOrCleanupFunction;
     } else {
       return {
-        unsubscribe: <CleanupFunction>subscriptionOrCleanupFunction,
+        unsubscribe: subscriptionOrCleanupFunction,
       };
     }
   }
@@ -32,5 +35,5 @@ export interface Observer<T> {
 }
 
 export interface Subscription {
-  unsubscribe: CleanupFunction
+  unsubscribe: CleanupFunction;
 }

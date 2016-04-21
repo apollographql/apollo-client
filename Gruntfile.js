@@ -5,16 +5,17 @@ module.exports = function (grunt) {
     tslint: {
       options: {
         // can be a configuration object or a filepath to tslint.json
-        configuration: grunt.file.readJSON("tslint.json")
+        configuration: grunt.file.readJSON('tslint.json')
       },
       files: {
         src: [
-          "src/**/*.ts",
-          "test/**/*.ts"
+          'src/**/*.ts',
+          'test/**/*.ts',
+          '!test/fixtures/**/*.ts'
         ]
       }
     }
   })
 
-  grunt.loadNpmTasks("grunt-tslint");
+  grunt.loadNpmTasks('grunt-tslint');
 }

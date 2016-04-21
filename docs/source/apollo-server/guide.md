@@ -4,7 +4,7 @@ order: 202
 description: A step-by-step guide for setting up a basic GraphQL server with Apollo.
 ---
 
-This guide will explain all the parts required for a simple GraphQL Blog server. If you're looking for a tutorial, check out this Medium post or our GraphQL server tutorial video on Youtube.
+This guide will explain all the parts required for a simple GraphQL Blog server. If you're looking for a tutorial, check out this Medium post or our [GraphQL server tutorial video on Youtube](https://www.youtube.com/watch?v=PHabPhgRUuU).
 
 We'll be using a package called [graphql-tools](https://www.npmjs.com/package/graphql-tools), which is actively being developed for [Apollo](http://www.apollostack.com). There are of course many ways to build a GraphQL server for Node.js, but this is the way we recommend. It describes each step in detail, from defining a schema to writing your own resolve functions and loaders.
 

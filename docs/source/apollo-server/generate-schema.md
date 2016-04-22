@@ -6,15 +6,19 @@ description: Generate a GraphQL schema from the concise type definition language
 
 The graphql-tools package allows you to create a GraphQLSchema instance from GraphQL schema language by using the function `generateSchema`.
 
-<h3 id="generateSchema" title="generateSchema">generateSchema(typeDefinitions)</h3>
+<h3 id="generateSchema" title="generateSchema">generateSchema(typeDefinitions, resolveFunctions)</h3>
 
 ```
 import { generateSchema } from 'graphql-tools';
 
-const jsSchema = generateSchema(typeDefinitions);
+const jsSchema = generateSchema(typeDefinitions, resolveFunctions );
 ```
 
-`typeDefinitions` should be an array of GraphQL schema language strings or a function that takes no arguments and returns an array of GraphQL schema language strings. The order of the strings in the array is not important, but it must include a schema definition. The schema must define a query type, which means a minimal schema would look something like this:
+`typeDefinitions` should be an array of GraphQL schema language strings or a function that takes no arguments and returns an array of GraphQL schema language strings. The order of the strings in the array is not important, but it must include a schema definition.
+
+`resolveFunctions` should be an object that follows the pattern explained in the guide [section on resolvers](http://docs.apollostack.com/apollo-server/resolvers.html).
+
+The type definitions must define a query type, which means a minimal schema would look something like this:
 ```js
 const typeDefinition = [`
   schema {

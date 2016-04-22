@@ -1,5 +1,5 @@
 ---
-title: GraphQL server tutorial
+title: Tutorial
 order: 202
 description: A step-by-step guide for setting up a basic GraphQL server with Apollo.
 ---
@@ -9,6 +9,7 @@ This guide will explain all the parts required for a simple GraphQL Blog server.
 We'll be using a package called [graphql-tools](https://www.npmjs.com/package/graphql-tools), which is actively being developed for [Apollo](http://www.apollostack.com). There are of course many ways to build a GraphQL server for Node.js, but this is the way we recommend. It describes each step in detail, from defining a schema to writing your own resolve functions and loaders.
 
 ## Setup
+
 For the remainder of this guide, we'll assume that you are familiar with using the command line of your operating system and already have Node 5 and npm set up for your environment.
 If that's not the case, you should [do that first](https://nodejs.org/en/download/package-manager/) before you read the rest of this guide.
 
@@ -30,7 +31,8 @@ If all goes well, the server should now print out a message that it is listening
 ![Testing the server with GraphiQL](graphiql-test.png)
 
 **For advanced users:**
-If you already have an express server or a GraphQL server set up, then you can also simply install graphql-tools with the command `npm install graphql-tools` and jump to the [Tools](tools.html) section in this guide to learn about using the individual parts of the graphql-tools package.
+
+If you already have an express server or a GraphQL server set up, then you can also simply install graphql-tools with the command `npm install graphql-tools` and read the articles listed in the sidebar to learn about using the individual parts of the graphql-tools package.
 
 
 ## Schema
@@ -51,11 +53,11 @@ export default [typeDefinitions];
 ```
 ApolloServer uses the GraphQL schema language notation, which it then compiles to a GraphQL-JS schema. With the current schema, our server provides exactly one entry point `testString`, which returns a String.
 
-The schema notation supports all GraphQL types. In this tutorial we are only going to use a few of them. You can learn about all the others in the [schema creation subsection of Tools](http://docs.apollostack.com/apollo-server/tools.html#Schema-creation).
+The schema notation supports all GraphQL types. In this tutorial we are only going to use a few of them. You can learn about all the others in the [schema generation docs](generate-schema.html).
 
 For the blog app, we're going to use a schema that has the following two types: Authors and Posts. For each type, the schema defines which fields it has, and how it relates to the other types. The fields of the RootQuery and RootMutation types are the client's entry points to the schema. Every query or mutation has to start there, but it can ask for as much or as little data as it wants by expanding the fields when necessary.
 
-````js
+```js
 const typeDefinitions = `
 type Author {
   id: Int! # the ! means that every author object _must_ have an id
@@ -103,7 +105,8 @@ schema {
 
 export default [typeDefinitions];
 ```
-For more information about GraphQL's type system and schema language, you can take a look at @sogko's [cheat sheet](https://raw.githubusercontent.com/sogko/graphql-shorthand-notation-cheat-sheet/master/graphql-shorthand-notation-cheat-sheet.png), read the [Schema definition subsection in the graphql-tools documentation chapter](http://docs.apollostack.com/apollo-server/tools.html#Schema-creation) or refer to the [official GraphQL website](http://graphql.org/docs/typesystem/).
+
+For more information about GraphQL's type system and schema language, you can take a look at @sogko's [cheat sheet](https://raw.githubusercontent.com/sogko/graphql-shorthand-notation-cheat-sheet/master/graphql-shorthand-notation-cheat-sheet.png), read the [Schema definition subsection in the graphql-tools documentation chapter](schema-generation.html) or refer to the [official GraphQL website](http://graphql.org/docs/typesystem/).
 
 ## Mocking
 

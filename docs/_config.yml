@@ -27,6 +27,11 @@ sidebar_categories:
     - apollo-server/index
     - apollo-server/guide
     - apollo-server/tools
+    - apollo-server/generate-schema
+    - apollo-server/resolvers
+    - apollo-server/mocking
+    - apollo-server/connectors
+    - apollo-server/errors
 github_repo: apollostack/docs
 content_root: source
 logo:

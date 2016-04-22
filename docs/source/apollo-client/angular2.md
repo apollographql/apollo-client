@@ -75,7 +75,7 @@ class postsList {
 
 <h4 id="angular2apollo-queries">Queries</h4>
 
-To bind to query you can use `watchQuery` method with the same arguments as [`ApolloClient#watchQuery`](http://docs.apollostack.com/apollo-client/core.html#watchQuery). In this case as the result you will receive the [`QueryObservable`](http://docs.apollostack.com/apollo-client/core.html#watchQuery).
+To bind to query you can use `watchQuery` method with the same arguments as [`ApolloClient#watchQuery`](core.html#watchQuery). In this case as the result you will receive the [`QueryObservable`](core.html#watchQuery).
 
 Here's how you could run a query:
 
@@ -120,7 +120,7 @@ class postsList {
 
 <h4 id="apollo2angular-mutations">Mutations</h4>
 
-To call a mutation you can use `mutate` method with the same arguments as [`ApolloClient#mutate`](http://docs.apollostack.com/apollo-client/core.html#mutate). In this case as the result you will receive a promise that resolves to a GraphQLResult.
+To call a mutation you can use `mutate` method with the same arguments as [`ApolloClient#mutate`](core.html#mutate). In this case as the result you will receive a promise that resolves to a GraphQLResult.
 
 Here's how you would call a mutation and pass in arguments via variables:
 
@@ -206,7 +206,7 @@ It allows you to define queries and mutations and to make them reactive. You can
 
 <h4 id="apollo-queries">Queries</h4>
 
-Each key on the object returned by `queries` function should be made up of the same possible arguments as [`ApolloClient#watchQuery`](http://docs.apollostack.com/apollo-client/core.html#watchQuery).
+Each key on the object returned by `queries` function should be made up of the same possible arguments as [`ApolloClient#watchQuery`](core.html#watchQuery).
 
 Since `queries` function receives one argument which is a component's context you can use it to define variables.
 It is also reactive so your variables will be always up to date.
@@ -266,7 +266,7 @@ class postsList {
 
 <h4 id="apollo-mutations">Mutations</h4>
 
-`mutations` function returns an object made up of keys and values that are custom functions to call the mutation. The resulting function must return the same possible arguments as [`ApolloClient#mutate`](http://docs.apollostack.com/apollo-client/core.html#mutate)
+`mutations` function returns an object made up of keys and values that are custom functions to call the mutation. The resulting function must return the same possible arguments as [`ApolloClient#mutate`](core.html#mutate)
 
 Since `mutations` function receives one argument which is a component's context you can use it to inside variables.
 It is also reactive so your variables will be always up to date.

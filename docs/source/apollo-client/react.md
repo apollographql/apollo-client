@@ -7,7 +7,7 @@ description: How to use the Apollo Client to fetch GraphQL data in your React ap
 This package allows you to easily integrate your Apollo client and Redux store with your React components. It works almost exactly like [react-redux](https://github.com/reactjs/react-redux).
 
 ```txt
-npm install apollo-client
+npm install react-apollo --save
 ```
 
 [Follow apollostack/react-apollo on GitHub.](https://github.com/apollostack/react-apollo)

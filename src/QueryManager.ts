@@ -348,10 +348,10 @@ export class QueryManager {
     this.fetchQuery(queryId, options);
     if (options.pollInterval) {
       this.pollingTimer = setInterval(() => {
-        const copiedOptions = assign({}, options) as WatchQueryOptions;
+        const pollingOptions = assign({}, options) as WatchQueryOptions;
         // subsequent fetches from polling always reqeust new data
-        copiedOptions.forceFetch = true;
-        this.fetchQuery(queryId, copiedOptions);
+        pollingOptions.forceFetch = true;
+        this.fetchQuery(queryId, pollingOptions);
       }, options.pollInterval);
     }
     return queryId;

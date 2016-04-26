@@ -10,6 +10,7 @@ import {
 import {
   createApolloStore,
   ApolloStore,
+  ApolloReducerConfig,
   createApolloReducer,
 } from './store';
 
@@ -76,8 +77,8 @@ export default class ApolloClient {
     return this.queryManager.mutate(options);
   };
 
-  public reducer(): Function {
-    return createApolloReducer({});
+  public reducer(config: ApolloReducerConfig = {}): Function {
+    return createApolloReducer(config);
   }
 
   public middleware = () => {

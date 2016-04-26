@@ -174,7 +174,7 @@ export class QueryManager {
           if (queryStoreValue.graphQLErrors) {
             if (observer.next) {
               observer.next(
-                { errors: queryStoreValue.graphQLErrors},
+                { errors: queryStoreValue.graphQLErrors },
                 () => (this.stopQuery(queryId))
               );
             }

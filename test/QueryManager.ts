@@ -1085,10 +1085,10 @@ describe('QueryManager', () => {
     const handle = queryManager.watchQuery({
       query,
       variables,
-      pollInterval: 250,
+      pollInterval: 50,
     });
 
-    const subscription = handle.subscribe({
+    handle.subscribe({
       next(result, unsubscribe) {
         handleCount++;
 
@@ -1135,6 +1135,75 @@ describe('QueryManager', () => {
       {
         request: { query, variables },
         result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    let handleCount = 0;
+
+    const handle = queryManager.watchQuery({
+      query,
+      variables,
+      pollInterval: 50,
+    });
+
+    handle.subscribe({
+      next(result, unsubscribe) {
+        handleCount++;
+
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, data2);
+          unsubscribe();
+        }
+      },
+    });
+
+    setTimeout(() => {
+      assert.equal(handleCount, 2);
+      done();
+    }, 160);
+
+  });
+  it('allows you to unsubscribe from polled query errors', (done) => {
+    const query = `
+      query fetchLuke($id: String) {
+        people_one(id: $id) {
+          name
+        }
+      }
+    `;
+
+    const variables = {
+      id: '1',
+    };
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query, variables },
+        result: { data: data1 },
+      },
+      {
+        request: { query, variables },
+        error: new Error('Network error'),
       },
       {
         request: { query, variables },
@@ -1153,26 +1222,29 @@ describe('QueryManager', () => {
     const handle = queryManager.watchQuery({
       query,
       variables,
-      pollInterval: 250,
+      pollInterval: 50,
     });
 
-    const subscription = handle.subscribe({
-      next(result, unsubscribe) {
+    handle.subscribe({
+      next(result) {
         handleCount++;
 
         if (handleCount === 1) {
           assert.deepEqual(result.data, data1);
         } else if (handleCount === 2) {
-          assert.deepEqual(result.data, data2);
-          unsubscribe();
+          done(new Error('Should not deliver second result'));
         }
+      },
+      error: (error, unsubscribe) => {
+        assert.equal(error.message, 'Network error');
+        unsubscribe();
       },
     });
 
     setTimeout(() => {
-      assert.equal(handleCount, 2);
+      assert.equal(handleCount, 1);
       done();
-    }, 600);
+    }, 160);
 
   });
 });

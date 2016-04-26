@@ -29,8 +29,8 @@ export class Observable<T> {
 }
 
 export interface Observer<T> {
-  next?: (value: T, done: CleanupFunction) => void;
-  error?: (error: Error, done: CleanupFunction) => void;
+  next?: (value: T) => void;
+  error?: (error: Error) => void;
   complete?: () => void;
 }
 

@@ -1088,15 +1088,15 @@ describe('QueryManager', () => {
       pollInterval: 50,
     });
 
-    handle.subscribe({
-      next(result, unsubscribe) {
+    const subscription = handle.subscribe({
+      next(result) {
         handleCount++;
 
         if (handleCount === 1) {
           assert.deepEqual(result.data, data1);
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, data2);
-          unsubscribe();
+          subscription.unsubscribe();
           done();
         }
       },
@@ -1152,15 +1152,15 @@ describe('QueryManager', () => {
       pollInterval: 50,
     });
 
-    handle.subscribe({
-      next(result, unsubscribe) {
+    const subscription = handle.subscribe({
+      next(result) {
         handleCount++;
 
         if (handleCount === 1) {
           assert.deepEqual(result.data, data1);
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, data2);
-          unsubscribe();
+          subscription.unsubscribe();
         }
       },
     });
@@ -1225,7 +1225,7 @@ describe('QueryManager', () => {
       pollInterval: 50,
     });
 
-    handle.subscribe({
+    const subscription = handle.subscribe({
       next(result) {
         handleCount++;
 
@@ -1235,9 +1235,9 @@ describe('QueryManager', () => {
           done(new Error('Should not deliver second result'));
         }
       },
-      error: (error, unsubscribe) => {
+      error: (error) => {
         assert.equal(error.message, 'Network error');
-        unsubscribe();
+        subscription.unsubscribe();
       },
     });
 

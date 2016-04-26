@@ -75,6 +75,7 @@ export interface WatchQueryOptions {
   variables?: { [key: string]: any };
   forceFetch?: boolean;
   returnPartialData?: boolean;
+  pollInterval?: number;
 }
 
 type QueryListener = (queryStoreValue: QueryStoreValue) => void
@@ -84,6 +85,7 @@ export class QueryManager {
   private store: ApolloStore;
   private reduxRootKey: string;
   private dataIdFromObject: IdGetter;
+  private pollingTimer: NodeJS.Timer;
 
   private queryListeners: { [queryId: string]: QueryListener };
 
@@ -171,12 +173,15 @@ export class QueryManager {
           // don't handle partial results
           if (queryStoreValue.graphQLErrors) {
             if (observer.next) {
-              observer.next({ errors: queryStoreValue.graphQLErrors });
+              observer.next(
+                { errors: queryStoreValue.graphQLErrors},
+                () => (this.stopQuery(queryId))
+              );
             }
           } else if (queryStoreValue.networkError) {
             // XXX we might not want to re-broadcast the same error over and over if it didn't change
             if (observer.error) {
-              observer.error(queryStoreValue.networkError);
+              observer.error(queryStoreValue.networkError, () => (this.stopQuery(queryId)));
             }
           } else {
             const resultFromStore = readSelectionSetFromStore({
@@ -187,7 +192,7 @@ export class QueryManager {
             });
 
             if (observer.next) {
-              observer.next({ data: resultFromStore });
+              observer.next({ data: resultFromStore }, () => (this.stopQuery(queryId)));
             }
           }
         }
@@ -341,6 +346,14 @@ export class QueryManager {
     const queryId = this.generateQueryId();
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options);
+    if (options.pollInterval) {
+      this.pollingTimer = setInterval(() => {
+        const copiedOptions = assign({}, options) as WatchQueryOptions;
+        // subsequent fetches from polling always reqeust new data
+        copiedOptions.forceFetch = true;
+        this.fetchQuery(queryId, copiedOptions);
+      }, options.pollInterval);
+    }
     return queryId;
   }
 
@@ -348,6 +361,11 @@ export class QueryManager {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
     delete this.queryListeners[queryId];
+
+    // if we have a polling interval running, stop it
+    if (this.pollingTimer) {
+      clearInterval(this.pollingTimer);
+    }
 
     this.store.dispatch({
       type: 'QUERY_STOP',

@@ -98,18 +98,33 @@ For applications that support server side rendering, or that can perform some qu
 
 > Note: if you are using redux externally to apollo, and already have store rehydration, this key isn't needed.
 
-```js
-// on server during render
-// after application has gotten all of the data it needs
-const initialState = client.store.getState()
-// inject into template
-<script>window.__APOLLO_STORE__ = initialState</script>
+On the server during render and after the application has retrieved all of the data it needs, send the initial state context by assigning the serialized value of the state to somewhere which will be accessible to the client.
 
+For example, using React
+```jsx
+// on the server
+import { renderToStaticMarkup } from 'react-dom/server';
+
+// client is an instance of ApolloClient
+const initialState = client.store.getState();
+
+const Html = (props) => (
+  <html>
+  <body>
+    <script dangerouslySetInnerHTML={{__html: `window.__APOLLO_CONTEXT__ = ${JSON.stringify(props.initialState)};`}}></script>
+  </body>
+  </html>
+);
+
+const staticMarkup = renderToStaticMarkup(<Html initialState={initialState} />);
+// Now return the static markup to the client...
+```
+After using the above as the initial server-side rendered HTML, on the client you would will then rehydrate the client using the initial state passed from the server
+```js
 // on client
 const client = new ApolloClient({
-  initialState: __APOLLO_STORE__,
+  initialState: window.__APOLLO_CONTEXT__,
 });
 ```
 
 Then, when a client calls ApolloClient#query or ApolloClient#watchQuery, the data should be returned instantly because it is already in the store! This also makes full page server side rendering without a page rebuild (if using react for instance) possible because the server rendered template won't differ from the client)
-

@@ -91,7 +91,7 @@ Here's how you would run a single query and get the result:
 ```js
 import ApolloClient from 'apollo-client';
 
-// Polyfill fetch into the global namespace if required.
+// Polyfill fetch into the namespace if required.
 // import fetch from 'isomorphic-fetch';
 
 const client = new ApolloClient();
@@ -260,6 +260,6 @@ Right now, this is a bit verbose because you have to list the names of the varia
 
 <h3 id="fetch-polyfill" title="FetchPolyfill">Fetch Polyfill</h3>
 
-Apollo uses [fetch](https://fetch.spec.whatwg.org/) behind the scenes to make HTTP requests. Be aware that many browser versions now support the `window.fetch` function natively (check [caniuse.com](http://caniuse.com/#feat=fetch)), but Node, for example, doesn't (as of v5).
+Apollo uses [fetch](https://fetch.spec.whatwg.org/) behind the scenes to make HTTP requests. Be aware that many browser versions now support the `window.fetch` function natively (check [caniuse.com](http://caniuse.com/#feat=fetch)), but Node, for example, doesn't (as of v6).
 
 Where it is not supported, you can use one of several popular polyfills, including [whatwg-fetch](https://github.com/github/fetch), [node-fetch](https://github.com/bitinn/node-fetch) or [isomorphic-fetch](https://github.com/matthew-andrews/isomorphic-fetch).

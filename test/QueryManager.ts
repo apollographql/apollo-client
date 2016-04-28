@@ -1279,12 +1279,9 @@ describe('QueryManager', () => {
       },
       {
         request: { query, variables },
-        error: new Error('Network error'),
-      },
-      {
-        request: { query, variables },
         result: { data: data2 },
       }
+
     );
 
     const queryManager = new QueryManager({
@@ -1307,26 +1304,18 @@ describe('QueryManager', () => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, data1);
         } else if (handleCount === 2) {
-          done(new Error('Should not deliver second result'));
+          assert.deepEqual(result.data, data2);
+          done();
         }
-      },
-      error: (error) => {
-        assert.equal(error.message, 'Network error');
-        subscription.unsubscribe();
       },
     });
 
     subscription.startPolling(50);
 
-    setTimeout(() => {
-      assert.equal(handleCount, 1);
-      done();
-    }, 160);
-
   });
   it('exposes a way to stop a polling query', (done) => {
     const query = `
-      query fetchLuke($id: String) {
+      query fetchLeia($id: String) {
         people_one(id: $id) {
           name
         }
@@ -1334,18 +1323,18 @@ describe('QueryManager', () => {
     `;
 
     const variables = {
-      id: '1',
+      id: '2',
     };
 
     const data1 = {
       people_one: {
-        name: 'Luke Skywalker',
+        name: 'Leia Skywalker',
       },
     };
 
     const data2 = {
       people_one: {
-        name: 'Luke Skywalker has a new name',
+        name: 'Leia Skywalker has a new name',
       },
     };
 
@@ -1378,10 +1367,7 @@ describe('QueryManager', () => {
       next(result) {
         handleCount++;
 
-        if (handleCount === 1) {
-          assert.deepEqual(result.data, data1);
-        } else if (handleCount === 2) {
-          assert.deepEqual(result.data, data2);
+        if (handleCount === 2) {
           subscription.stopPolling();
         }
       },

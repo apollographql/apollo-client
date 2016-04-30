@@ -26,4 +26,4 @@ We have put together some basic example apps using various parts of Apollo; chec
 - [A full-stack app with a Material UI React frontend on top of Discourse](https://github.com/apollostack/apollo-demo)
 - [A GraphQL server example that uses SQL, MongoDB + REST](https://github.com/apollostack/apollo-server-tutorial)
 - [A bare-bones Meteor starter kit](https://github.com/apollostack/meteor-starter-kit)
-- [A Meteor Integration example that uses SQL, MonogDB + Rest](https://github.com/abhiaiyer91/sample-graphql-meteor-server)
+- [A Meteor Integration example that uses SQL, MongoDB + Rest](https://github.com/abhiaiyer91/sample-graphql-meteor-server)

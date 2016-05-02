@@ -68,6 +68,8 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 
 export interface QuerySubscription extends Subscription {
   refetch(variables?: any): void;
+  stopPolling(): void;
+  startPolling(pollInterval: number): void;
 }
 
 export interface WatchQueryOptions {
@@ -75,6 +77,7 @@ export interface WatchQueryOptions {
   variables?: { [key: string]: any };
   forceFetch?: boolean;
   returnPartialData?: boolean;
+  pollInterval?: number;
 }
 
 type QueryListener = (queryStoreValue: QueryStoreValue) => void
@@ -84,6 +87,7 @@ export class QueryManager {
   private store: ApolloStore;
   private reduxRootKey: string;
   private dataIdFromObject: IdGetter;
+  private pollingTimer: NodeJS.Timer | any; // oddity in typescript
 
   private queryListeners: { [queryId: string]: QueryListener };
 
@@ -198,6 +202,13 @@ export class QueryManager {
           this.stopQuery(queryId);
         },
         refetch: (variables: any): void => {
+          // if we are refetching, we clear out the polling interval
+          // if the new refetch passes pollInterval: false, it won't recreate
+          // the timer for subsequent refetches
+          if (this.pollingTimer) {
+            clearInterval(this.pollingTimer);
+          }
+
           // If no new variables passed, use existing variables
           variables = variables || options.variables;
 
@@ -206,6 +217,19 @@ export class QueryManager {
             forceFetch: true,
             variables,
           }) as WatchQueryOptions);
+        },
+        stopPolling: (): void => {
+          if (this.pollingTimer) {
+            clearInterval(this.pollingTimer);
+          }
+        },
+        startPolling: (pollInterval): void => {
+          this.pollingTimer = setInterval(() => {
+            const pollingOptions = assign({}, options) as WatchQueryOptions;
+            // subsequent fetches from polling always reqeust new data
+            pollingOptions.forceFetch = true;
+            this.fetchQuery(queryId, pollingOptions);
+          }, pollInterval);
         },
       };
     });
@@ -341,6 +365,14 @@ export class QueryManager {
     const queryId = this.generateQueryId();
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options);
+    if (options.pollInterval) {
+      this.pollingTimer = setInterval(() => {
+        const pollingOptions = assign({}, options) as WatchQueryOptions;
+        // subsequent fetches from polling always reqeust new data
+        pollingOptions.forceFetch = true;
+        this.fetchQuery(queryId, pollingOptions);
+      }, options.pollInterval);
+    }
     return queryId;
   }
 
@@ -348,6 +380,11 @@ export class QueryManager {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
     delete this.queryListeners[queryId];
+
+    // if we have a polling interval running, stop it
+    if (this.pollingTimer) {
+      clearInterval(this.pollingTimer);
+    }
 
     this.store.dispatch({
       type: 'QUERY_STOP',

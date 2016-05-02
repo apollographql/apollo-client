@@ -132,6 +132,7 @@ Run a GraphQL query and return a QueryObservable that is updated as the query re
 - `variables: Object` The variables to pass along with the query.
 - `forceFetch: boolean` (Optional, default is `false`) If true, send the query to the server directly without any pre-processing. If false, check if we have some of the data for the query on the client already, and send a minimized query to the server to refetch only the objects we don't have already.
 - `returnPartialData: boolean` (Optional, default is `false`) If false, wait until the query has finished the initial load from the server to return any data. If true, return any data we might happen to already have in the store immediately. If you pass true for this option, your UI should be ready to deal with the possibility that it will get a partial result at first.
+- `pollInterval: number` (Optional, default is no polling). Setting a polling interval (in ms) will refetch your query from the server (forceFetch) on the interval rate provided by the key.
 
 <h4 id="QueryObservable" title="QueryObservable">QueryObservable</h4>
 
@@ -148,10 +149,12 @@ The object you pass into `QueryObservable#subscribe`. Includes optional callback
 
 <h4 id="QuerySubscription" title="QuerySubscription">QuerySubscription</h4>
 
-The object returned from `QueryObservable#subscribe`. Includes two methods:
+The object returned from `QueryObservable#subscribe`. Includes four methods:
 
-- `refetch()` Refetch this query from the server. Think of it like a refresh button.
+- `refetch(variables: Object)` Refetch this query from the server. Think of it like a refresh button. This can take an object of new variables
 - `unsubscribe()` Notify the client to no longer care about this query. After this is called, none of the callbacks on the observer will be fired anymore. It's very important to call this when you are done with the query, because that is what lets the client know that it can clean up the data associated with this subscription. The view integrations will do this for you.
+- `stopPolling()` Stop an actively polling query.
+- `startPolling(pollInterval: number)` Start polling a query 
 
 #### Code sample
 
@@ -172,6 +175,7 @@ const queryObservable = client.watchQuery({
   },
   forceFetch: false,
   returnPartialData: true,
+  pollInterval: 50,
 });
 
 const subscription = queryObservable.subscribe({
@@ -193,6 +197,12 @@ const subscription = queryObservable.subscribe({
 
 // Refetch the query if we want an updated result
 subscription.refetch();
+
+// Stop polling this query
+subscription.stopPolling();
+
+// Start polling this query
+subscription.startPolling(100);
 
 // Call when we're done watching this query
 subscription.unsubscribe();

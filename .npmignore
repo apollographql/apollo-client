@@ -1,1 +1,14 @@
-example
+scripts
+src
+test
+typings
+.gitgnore
+.travis.yml
+ambient.d.ts
+appveyor.yml
+CHANGELOG.md
+design.md
+Gruntfile.js
+tsconfig.json
+tslint.json
+typings.json

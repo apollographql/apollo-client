@@ -31,5 +31,9 @@ export default function gql(literals, ...substitutions): Document {
 }
 
 export function registerGqlTag() {
-  global['gql'] = gql;
+  if (typeof window !== 'undefined') {
+    window['gql'] = gql;
+  } else if (typeof global !== 'undefined') {
+    global['gql'] = gql;
+  }
 }

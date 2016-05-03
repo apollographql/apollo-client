@@ -30,6 +30,6 @@ export default function gql(literals, ...substitutions): Document {
   return parseDocument(result);
 }
 
-export function register() {
+export function registerGqlTag() {
   global['gql'] = gql;
 }

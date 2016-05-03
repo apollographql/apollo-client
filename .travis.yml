@@ -23,3 +23,12 @@ sudo: false
 #
 after_success:
   - cd ./lib/src/ && cp -vr ./ ../../ && cd ../../ && ls
+
+deploy:
+  provider: npm
+  email: sashko@meteor.com
+  api_key:
+    secure: dq/GFyxWPibiUKWwUB+PLwcIesfp7Hjl807rApLoUtmCkQRFn7EqMoNEvvmFJaePCL5+2ppwOI0XVeKO/lIbWa5vKvdJMCO4vIcE1hjfhsMleJEiudmhdNnbWZ0TNT5J1dX+sQ3PwFg5vWm+sTzODQxDIVYXEctUSloZX4iDF40BwOtR5PerKOadvVVnDt+mG/5NOMPgZMOBp4mxZ35aRCTeUep4bdCAiBXGM0ueVn7VYvMC1U4UgVBsK5XcdzqMMuRtKaftnofUl3aDnBKvFXt903vyy1v/OWnJvRCudN0Xg05gZyFGitE6o9kKEOl/Q7EUYdK33pGvKkurCRvtnS9X1TDjHmFacjbPtI0UEho6McqdkHwCi9aryNmfnlJkhFi3pLa2f1s4Zr9kXxXMTWJPBRd3chRunsZ47zUBBFvwVObqMhVqrOITsm0AUXjngeqJdlqI5OLUJDL1BYp3ozmTfMdh7VyjfM1Wm7i05hXDnsPArijqKLSSFpfteck25rdQdni8Ki245JC59SMiS8KZV3Uue27ab5ysdB2jIYcoXP6dPRgqKPHCeEHkLlQdrV3ZQ6dTh5RK8VNfLkABOYLnqeqtZJwctHiPG+VzY2A+pHUp6RbgMC6dy4GwBybxsMROaemy5QgrJTcHSglndiNFGlJ9GVl1cXNkOfydD/o=
+  on:
+    tags: true
+    repo: apollostack/apollo-client

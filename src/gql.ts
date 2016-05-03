@@ -14,6 +14,7 @@ function parseDocument(doc: string): Document {
   return parsed as Document;
 }
 
+// XXX This should eventually disallow arbitrary string interpolation, like Relay does
 export default function gql(literals, ...substitutions): Document {
   let result = '';
 

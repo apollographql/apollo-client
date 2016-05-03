@@ -7,6 +7,8 @@
 #    var language = require('apollo-client/parser');
 #
 
+npm run compile
+
 rm -rf ./npm
 mkdir ./npm
 cd ./lib/src && cp -r ./ ../../npm/ && cd ../../

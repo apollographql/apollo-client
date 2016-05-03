@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- Add everything outside of `lib/src/` to `npmignore`. [PR #165](https://github.com/apollostack/apollo-client/pull/165)
+- Add everything that isn't a compiled file to `npmignore`. [PR #165](https://github.com/apollostack/apollo-client/pull/165)
 
 ### v0.2.0
 

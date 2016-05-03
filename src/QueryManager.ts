@@ -205,7 +205,7 @@ export class QueryManager {
         unsubscribe: () => {
           this.stopQuery(queryId);
         },
-        refetch: (variables: any): void => {
+        refetch: (variables: any): Promise<GraphQLResult> => {
           // if we are refetching, we clear out the polling interval
           // if the new refetch passes pollInterval: false, it won't recreate
           // the timer for subsequent refetches
@@ -217,7 +217,7 @@ export class QueryManager {
           variables = variables || options.variables;
 
           // Use the same options as before, but with new variables and forceFetch true
-          this.fetchQuery(queryId, assign(options, {
+          return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
             variables,
           }) as WatchQueryOptions);
@@ -247,7 +247,7 @@ export class QueryManager {
     return this.watchQuery(options).result();
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions) {
+  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
     const {
       query,
       variables,
@@ -328,7 +328,7 @@ export class QueryManager {
         variables,
       };
 
-      this.networkInterface.query(request)
+     return this.networkInterface.query(request)
         .then((result: GraphQLResult) => {
           // XXX handle multiple GraphQLResults
           this.store.dispatch({
@@ -337,6 +337,8 @@ export class QueryManager {
             queryId,
             requestId,
           });
+
+          return result;
         }).catch((error: Error) => {
           this.store.dispatch({
             type: 'APOLLO_QUERY_ERROR',
@@ -344,6 +346,8 @@ export class QueryManager {
             queryId,
             requestId,
           });
+
+          return error;
         });
     }
 
@@ -357,6 +361,11 @@ export class QueryManager {
         query: querySS,
         complete: !! minimizedQuery,
         queryId,
+      });
+
+      // return a chainable promise
+      return new Promise((resolve) => {
+        resolve();
       });
     }
   }

@@ -1,8 +1,7 @@
 scripts
-src
 test
 typings
-.gitgnore
+.gitignore
 .travis.yml
 ambient.d.ts
 appveyor.yml

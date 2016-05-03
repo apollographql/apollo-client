@@ -30,3 +30,4 @@ node_modules
 lib
 test-lib
 dist
+npm

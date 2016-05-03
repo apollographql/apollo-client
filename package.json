@@ -5,6 +5,7 @@
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
   "scripts": {
+    "deploy": "rm -rf ./lib && npm run compile && ./scripts/deploy.sh",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",

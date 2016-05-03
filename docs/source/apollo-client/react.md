@@ -61,7 +61,7 @@ ReactDOM.render(
 ```
 
 
-The wrapper is called `ApolloProvider` because in the base case you can use it instead of the Redux provider or you can use it as an Apollo enhanced Redux Provider.
+The wrapper is called `ApolloProvider` because in the base case you can use it instead of the Redux `Provider` or you can use it as an Apollo enhanced Redux `Provider`.
 
 <h2 id="connect">Connect</h2>
 

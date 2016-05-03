@@ -18,3 +18,4 @@ import './QueryManager';
 import './client';
 import './middleware';
 import './store';
+import './gql';

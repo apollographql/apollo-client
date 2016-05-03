@@ -4,11 +4,6 @@ import isString = require('lodash.isstring');
 import has = require('lodash.has');
 
 import {
-  parseFragment,
-  parseQuery,
-} from '../parser';
-
-import {
   storeKeyNameFromField,
   resultKeyNameFromField,
 } from './storeUtils';
@@ -28,7 +23,13 @@ import {
 import {
   SelectionSet,
   Field,
+  Document,
 } from 'graphql';
+
+import {
+  getQueryDefinition,
+  getFragmentDefinition,
+} from '../queries/getFromAST';
 
 export interface QueryDiffResult {
   result: any;
@@ -43,11 +44,11 @@ export function diffQueryAgainstStore({
   dataIdFromObject,
 }: {
   store: NormalizedCache,
-  query: string
+  query: Document,
   variables?: Object,
   dataIdFromObject?: IdGetter,
 }): QueryDiffResult {
-  const queryDef = parseQuery(query);
+  const queryDef = getQueryDefinition(query);
 
   return diffSelectionSetAgainstStore({
     store,
@@ -67,12 +68,12 @@ export function diffFragmentAgainstStore({
   dataIdFromObject,
 }: {
   store: NormalizedCache,
-  fragment: string,
+  fragment: Document,
   rootId: string,
   variables?: Object,
   dataIdFromObject?: IdGetter,
 }): QueryDiffResult {
-  const fragmentDef = parseFragment(fragment);
+  const fragmentDef = getFragmentDefinition(fragment);
 
   return diffSelectionSetAgainstStore({
     store,

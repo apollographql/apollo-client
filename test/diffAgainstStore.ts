@@ -9,9 +9,11 @@ import {
   getIdField,
 } from '../src/data/extensions';
 
+import gql from '../src/gql';
+
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
-    const query = `
+    const query = gql`
       {
         people_one(id: "1") {
           name
@@ -37,7 +39,7 @@ describe('diffing queries against the store', () => {
   });
 
   it('when the store is missing one field and knows about IDs', () => {
-    const firstQuery = `
+    const firstQuery = gql`
       {
         people_one(id: "1") {
           __typename
@@ -61,7 +63,7 @@ describe('diffing queries against the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    const secondQuery = `
+    const secondQuery = gql`
       {
         people_one(id: "1") {
           name,
@@ -99,7 +101,7 @@ describe('diffing queries against the store', () => {
   });
 
   it('when the store is missing one field and knows about IDs', () => {
-    const firstQuery = `
+    const firstQuery = gql`
       {
         people_one(id: "1") {
           __typename,
@@ -123,7 +125,7 @@ describe('diffing queries against the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    const secondQuery = `
+    const secondQuery = gql`
       {
         people_one(id: "1") {
           name,
@@ -152,7 +154,7 @@ describe('diffing queries against the store', () => {
   });
 
   it('when the store is missing one field and doesn\'t know IDs', () => {
-    const firstQuery = `
+    const firstQuery = gql`
       {
         people_one(id: "1") {
           __typename
@@ -175,7 +177,7 @@ describe('diffing queries against the store', () => {
       query: firstQuery,
     });
 
-    const secondQuery = `
+    const secondQuery = gql`
       {
         people_one(id: "1") {
           name
@@ -203,7 +205,7 @@ describe('diffing queries against the store', () => {
   });
 
   it('when the store is missing multiple nodes', () => {
-    const firstQuery = `
+    const firstQuery = gql`
       {
         people_one(id: "1") {
           __typename,
@@ -227,7 +229,7 @@ describe('diffing queries against the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    const secondQuery = `
+    const secondQuery = gql`
       {
         people_one(id: "1") {
           name,
@@ -264,7 +266,7 @@ describe('diffing queries against the store', () => {
   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
-    const firstQuery = `
+    const firstQuery = gql`
       {
         people_one(id: "1") {
           __typename,
@@ -288,7 +290,7 @@ describe('diffing queries against the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    const secondQuery = `
+    const secondQuery = gql`
       {
         people_one(id: "1") {
           __typename,
@@ -308,7 +310,7 @@ describe('diffing queries against the store', () => {
   });
 
   it('diffs root queries even when IDs are turned off', () => {
-    const firstQuery = `
+    const firstQuery = gql`
       {
         people_one(id: "1") {
           __typename,
@@ -332,7 +334,7 @@ describe('diffing queries against the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    const secondQuery = `
+    const secondQuery = gql`
       {
         people_one(id: "1") {
           __typename

@@ -3,11 +3,6 @@ import {
   Request,
 } from './networkInterface';
 
-import {
-  parseQuery,
-  parseMutation,
-} from './parser';
-
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
 
@@ -22,8 +17,16 @@ import {
 } from './queries/store';
 
 import {
+  getMutationDefinition,
+  getQueryDefinition,
+} from './queries/getFromAST';
+
+import {
   GraphQLResult,
+  Document,
 } from 'graphql';
+
+import { print } from 'graphql/language/printer';
 
 import {
   readSelectionSetFromStore,
@@ -73,7 +76,7 @@ export interface QuerySubscription extends Subscription {
 }
 
 export interface WatchQueryOptions {
-  query: string;
+  query: Document;
   variables?: { [key: string]: any };
   forceFetch?: boolean;
   returnPartialData?: boolean;
@@ -131,21 +134,22 @@ export class QueryManager {
     mutation,
     variables,
   }: {
-    mutation: string,
+    mutation: Document,
     variables?: Object,
   }): Promise<GraphQLResult> {
     const mutationId = this.generateQueryId();
 
-    const mutationDef = parseMutation(mutation);
+    const mutationDef = getMutationDefinition(mutation);
+    const mutationString = print(mutation);
 
     const request = {
-      query: mutation,
+      query: mutationString,
       variables,
     } as Request;
 
     this.store.dispatch({
       type: 'MUTATION_INIT',
-      mutationString: mutation,
+      mutationString,
       mutation: {
         id: 'ROOT_MUTATION',
         typeName: 'Mutation',
@@ -168,6 +172,9 @@ export class QueryManager {
   }
 
   public watchQuery(options: WatchQueryOptions): ObservableQuery {
+    // Call just to get errors synchronously
+    getQueryDefinition(options.query);
+
     return new ObservableQuery((observer) => {
       const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
         if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
@@ -245,13 +252,15 @@ export class QueryManager {
 
   public fetchQuery(queryId: string, options: WatchQueryOptions) {
     const {
-      query: queryString,
+      query,
       variables,
       forceFetch = false,
       returnPartialData = false,
     } = options;
 
-    const queryDef = parseQuery(queryString);
+    console.log('query', query);
+    const queryDef = getQueryDefinition(query);
+    const queryString = print(query);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string

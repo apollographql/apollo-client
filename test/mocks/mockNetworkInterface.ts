@@ -5,6 +5,7 @@ import {
 
 import {
   GraphQLResult,
+  Document,
   parse,
   print,
 } from 'graphql';
@@ -17,8 +18,14 @@ export default function mockNetworkInterface(
   return new MockNetworkInterface(...mockedResponses);
 }
 
+export interface ParsedRequest {
+  variables?: Object;
+  query?: Document;
+  debugName?: string;
+}
+
 export interface MockedResponse {
-  request: Request;
+  request: ParsedRequest;
   result?: GraphQLResult;
   error?: Error;
   delay?: number;
@@ -45,7 +52,13 @@ export class MockNetworkInterface implements NetworkInterface {
 
   public query(request: Request) {
     return new Promise((resolve, reject) => {
-      const key = requestToKey(request);
+      const parsedRequest: ParsedRequest = {
+        query: parse(request.query),
+        variables: request.variables,
+        debugName: request.debugName,
+      };
+
+      const key = requestToKey(parsedRequest);
 
       if (!this.mockedResponsesByKey[key]) {
         throw new Error('No more mocked responses for the query: ' + request.query);
@@ -68,12 +81,12 @@ export class MockNetworkInterface implements NetworkInterface {
   }
 }
 
-function requestToKey(request: Request): string {
-  const query = request.query && print(parse(request.query));
+function requestToKey(request: ParsedRequest): string {
+  const queryString = request.query && print(request.query);
 
   return JSON.stringify({
     variables: request.variables,
     debugName: request.debugName,
-    query,
+    query: queryString,
   });
 }

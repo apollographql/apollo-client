@@ -22,4 +22,4 @@ cp LICENSE npm/
 cp .npmignore npm/
 
 echo 'deploying to npm...'
-npm publish
+cd npm && npm publish

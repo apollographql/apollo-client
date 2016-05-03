@@ -6,6 +6,7 @@ import ApolloClient from '../src';
 import {
   GraphQLError,
   OperationDefinition,
+  print,
 } from 'graphql';
 
 import {
@@ -146,7 +147,7 @@ describe('client', () => {
     );
   });
 
-  it('should allow for a single query to take place', (done) => {
+  it('should allow for a single query to take place', () => {
 
     const query = gql`
       query people {
@@ -180,11 +181,10 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        done();
-       });
+      });
   });
 
-  it('should allow for a single query with existing store', (done) => {
+  it('should allow for a single query with existing store', () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -225,11 +225,10 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        done();
-       });
+      });
   });
 
-  it('can allow a custom top level key', (done) => {
+  it('can allow a custom top level key', () => {
 
     const query = gql`
       query people {
@@ -265,11 +264,10 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        done();
-       });
+      });
   });
 
-  it('can allow the store to be rehydrated from the server', (done) => {
+  it('can allow the store to be rehydrated from the server', () => {
 
     const query = gql`
       query people {
@@ -300,7 +298,7 @@ describe('client', () => {
       apollo: {
         queries: {
           '0': {
-            queryString: '\n      query people {\n        allPeople(first: 1) {\n          people {\n            name\n          }\n        }\n      }\n    ', /* tslint:disable */
+            queryString: print(query),
             query: {
               id: 'ROOT_QUERY',
               typeName: 'Query',
@@ -341,11 +339,10 @@ describe('client', () => {
       .then((result) => {
         assert.deepEqual(result, { data });
         assert.deepEqual(initialState, client.store.getState());
-        done();
-       });
+      });
   });
 
-  it('allows for a single query with existing store and custom key', (done) => {
+  it('allows for a single query with existing store and custom key', () => {
     const reduxRootKey = 'test';
 
     const query = gql`
@@ -389,10 +386,9 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        done();
-       });
+      });
   });
-  it('should return errors correctly for a single query', (done) => {
+  it('should return errors correctly for a single query', () => {
 
     const query = gql`
       query people {
@@ -423,7 +419,6 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { errors });
-        done();
       });
   });
 

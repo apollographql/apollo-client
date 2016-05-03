@@ -258,7 +258,6 @@ export class QueryManager {
       returnPartialData = false,
     } = options;
 
-    console.log('query', query);
     const queryDef = getQueryDefinition(query);
     const queryString = print(query);
 

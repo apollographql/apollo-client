@@ -24,7 +24,6 @@ export function getMutationDefinition(doc: Document): OperationDefinition {
 
 export function getQueryDefinition(doc: Document): OperationDefinition {
   if (doc.kind !== 'Document') {
-    console.log('you wot m8')
     throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag?');
   }
 

@@ -12,22 +12,22 @@ npm install react-apollo --save
 
 [Follow apollostack/react-apollo on GitHub.](https://github.com/apollostack/react-apollo)
 
-<h2 id="provider">Provider</h2>
+<h2 id="apollo-provider">ApolloProvider</h2>
 
-Injects an ApolloClient instance into a React view tree. You can use it instead of the Redux `Provider`, if you want to. But you don't have to:
+Injects an ApolloClient instance into a React view tree. 
 
 Basic Apollo version:
 
 ```js
 import ApolloClient from 'apollo-client';
-import { Provider } from 'react-apollo';
+import { ApolloProvider } from 'react-apollo';
 
 const client = new ApolloClient();
 
 ReactDOM.render(
-  <Provider client={client}>
+  <ApolloProvider client={client}>
     <MyRootComponent />
-  </Provider>,
+  </ApolloProvider>,
   rootEl
 )
 ```
@@ -37,7 +37,7 @@ With an existing Redux store:
 ```js
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import ApolloClient from 'apollo-client';
-import { Provider } from 'react-apollo';
+import { ApolloProvider } from 'react-apollo';
 
 import { todoReducer, userReducer } from './reducers';
 
@@ -53,14 +53,15 @@ const store = createStore(
 );
 
 ReactDOM.render(
-  <Provider store={store} client={client}>
+  <ApolloProvider store={store} client={client}>
     <MyRootComponent />
-  </Provider>,
+  </ApolloProvider>,
   rootEl
 )
 ```
 
-The wrapper is called `Provider` because in the base case you can use it instead of the Redux provider or you can use it as an Apollo enhanced Redux Provider.
+
+The wrapper is called `ApolloProvider` because in the base case you can use it instead of the Redux provider or you can use it as an Apollo enhanced Redux Provider.
 
 <h2 id="connect">Connect</h2>
 

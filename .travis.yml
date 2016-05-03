@@ -1,5 +1,6 @@
 language: node_js
 node_js:
+  - "6"
   - "5"
   - "4"
 install:
@@ -14,3 +15,11 @@ script:
 
 # Allow Travis tests to run in containers.
 sudo: false
+
+# When Travis CI publishes to NPM, the published files are available in the root
+# directory, which allows for a clean include or require of sub-modules.
+#
+#    var language = require('apollo-client/parser');
+#
+after_success:
+  - cd ./lib/src/ && cp -vr ./ ../../ && cd ../../ && ls

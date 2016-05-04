@@ -22,6 +22,10 @@ import {
   ApolloReducerConfig,
 } from '../store';
 
+import {
+  graphQLResultHasError,
+} from './resultUtils';
+
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
 }
@@ -53,7 +57,7 @@ export function data(
     }
 
     // XXX handle partial result due to errors
-    if (!action.result.errors) {
+    if (! graphQLResultHasError(action.result)) {
       const queryStoreValue = queries[action.queryId];
 
       // XXX use immutablejs instead of cloning

@@ -168,6 +168,102 @@ describe('QueryManager', () => {
     });
   });
 
+  it('handles GraphQL errors with data returned', (done) => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: {query },
+        result: {
+          data: {
+            allPeople: {
+              people: {
+                name: 'Ada Lovelace',
+              },
+            },
+          },
+          errors: [
+            {
+              name: 'Name',
+              message: 'This is an error message.',
+            },
+          ],
+        },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    handle.subscribe({
+      next(result) {
+        assert.equal(result.errors[0].message, 'This is an error message.');
+        done();
+      },
+    });
+  });
+
+  it('empty error array (handle non-spec-compliant server) #156', (done) => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: {query },
+        result: {
+          data: {
+            allPeople: {
+              people: {
+                name: 'Ada Lovelace',
+              },
+            },
+          },
+          errors: [],
+        },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    handle.subscribe({
+      next(result) {
+        assert.equal(result.data['allPeople'].people.name, 'Ada Lovelace');
+        assert.notProperty(result, 'errors');
+        done();
+      },
+    });
+  });
+
   it('handles network errors', (done) => {
     const query = gql`
       query people {

@@ -5,9 +5,10 @@ import {
   StringValue,
   BooleanValue,
   Variable,
+  InlineFragment,
   Value,
+  Selection,
 } from 'graphql';
-
 
 import includes = require('lodash.includes');
 
@@ -51,4 +52,12 @@ export function resultKeyNameFromField(field: Field): string {
   return field.alias ?
     field.alias.value :
     field.name.value;
+}
+
+export function isField(selection: Selection): selection is Field {
+  return selection.kind === 'Field';
+}
+
+export function isInlineFragment(selection: Selection): selection is InlineFragment {
+  return selection.kind === 'InlineFragment';
 }

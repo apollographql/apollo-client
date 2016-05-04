@@ -19,6 +19,4 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### v0.1.0
 
-Initial release, not out yet.
-
-We didn't track changes before this version.
+Initial release. We didn't track changes before this version.

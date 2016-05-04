@@ -8,7 +8,7 @@ Most of the time, when you use the Apollo Client, you'll do it through one of th
 
 <h2 id="gql">gql template literals</h2>
 
-When using Apollo Client, you will often write your queries using multiline template literals. These literals need to be tagged with the `gql` tag, like this:
+When using Apollo Client, you usually write your queries using multiline template literals. These literals need to be tagged with the `gql` tag, like this:
 
 ```js
 const query = gql`

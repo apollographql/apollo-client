@@ -5,6 +5,8 @@ import ApolloClient from '../src';
 
 import {
   GraphQLError,
+  OperationDefinition,
+  print,
 } from 'graphql';
 
 import {
@@ -14,6 +16,8 @@ import {
 import {
   Store,
 } from '../src/store';
+
+import gql from '../src/gql';
 
 import {
   createStore,
@@ -28,10 +32,6 @@ import {
 } from '../src/networkInterface';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-
-import {
-  parseQuery,
-} from '../src/parser';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
@@ -147,9 +147,9 @@ describe('client', () => {
     );
   });
 
-  it('should allow for a single query to take place', (done) => {
+  it('should allow for a single query to take place', () => {
 
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -181,12 +181,11 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        done();
-       });
+      });
   });
 
-  it('should allow for a single query with existing store', (done) => {
-    const query = `
+  it('should allow for a single query with existing store', () => {
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -226,13 +225,12 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        done();
-       });
+      });
   });
 
-  it('can allow a custom top level key', (done) => {
+  it('can allow a custom top level key', () => {
 
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -266,13 +264,12 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        done();
-       });
+      });
   });
 
-  it('can allow the store to be rehydrated from the server', (done) => {
+  it('can allow the store to be rehydrated from the server', () => {
 
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -301,11 +298,11 @@ describe('client', () => {
       apollo: {
         queries: {
           '0': {
-            queryString: '\n      query people {\n        allPeople(first: 1) {\n          people {\n            name\n          }\n        }\n      }\n    ', /* tslint:disable */
+            queryString: print(query),
             query: {
               id: 'ROOT_QUERY',
               typeName: 'Query',
-              selectionSet: parseQuery(query).selectionSet,
+              selectionSet: (query.definitions[0] as OperationDefinition).selectionSet,
             },
             minimizedQueryString: null,
             minimizedQuery: null,
@@ -342,14 +339,13 @@ describe('client', () => {
       .then((result) => {
         assert.deepEqual(result, { data });
         assert.deepEqual(initialState, client.store.getState());
-        done();
-       });
+      });
   });
 
-  it('allows for a single query with existing store and custom key', (done) => {
+  it('allows for a single query with existing store and custom key', () => {
     const reduxRootKey = 'test';
 
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -390,12 +386,11 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { data });
-        done();
-       });
+      });
   });
-  it('should return errors correctly for a single query', (done) => {
+  it('should return errors correctly for a single query', () => {
 
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -424,13 +419,12 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result, { errors });
-        done();
       });
   });
 
   it('should allow for subscribing to a request', (done) => {
 
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {

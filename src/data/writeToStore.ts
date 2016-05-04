@@ -7,9 +7,9 @@ import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
 
 import {
-  parseFragment,
-  parseQuery,
-} from '../parser';
+  getQueryDefinition,
+  getFragmentDefinition,
+} from '../queries/getFromAST';
 
 import {
   storeKeyNameFromField,
@@ -23,6 +23,7 @@ import {
   FragmentDefinition,
   Field,
   InlineFragment,
+  Document,
 } from 'graphql';
 
 import {
@@ -56,7 +57,7 @@ export function writeFragmentToStore({
   dataIdFromObject = null,
 }: {
   result: Object,
-  fragment: string,
+  fragment: Document,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
@@ -66,7 +67,7 @@ export function writeFragmentToStore({
     throw new Error('Must pass fragment.');
   }
 
-  const parsedFragment: FragmentDefinition = parseFragment(fragment);
+  const parsedFragment: FragmentDefinition = getFragmentDefinition(fragment);
   const selectionSet: SelectionSet = parsedFragment.selectionSet;
 
   if (!result['id']) {
@@ -91,12 +92,12 @@ export function writeQueryToStore({
   dataIdFromObject = null,
 }: {
   result: Object,
-  query: string,
+  query: Document,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
 }): NormalizedCache {
-  const queryDefinition: OperationDefinition = parseQuery(query);
+  const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
   return writeSelectionSetToStore({
     dataId: 'ROOT_QUERY',

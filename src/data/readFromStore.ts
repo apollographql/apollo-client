@@ -1,15 +1,16 @@
 import {
-  parseFragment,
-  parseQuery,
-} from '../parser';
-
-import {
   diffSelectionSetAgainstStore,
 } from './diffAgainstStore';
 
 import {
   SelectionSet,
+  Document,
 } from 'graphql';
+
+import {
+  getQueryDefinition,
+  getFragmentDefinition,
+} from '../queries/getFromAST';
 
 import {
   NormalizedCache,
@@ -25,10 +26,10 @@ export function readQueryFromStore({
   variables,
 }: {
   store: NormalizedCache,
-  query: string,
+  query: Document,
   variables?: Object,
 }): Object {
-  const queryDef = parseQuery(query);
+  const queryDef = getQueryDefinition(query);
 
   return readSelectionSetFromStore({
     store,
@@ -45,11 +46,11 @@ export function readFragmentFromStore({
   variables,
 }: {
   store: NormalizedCache,
-  fragment: string,
+  fragment: Document,
   rootId: string,
   variables?: Object,
 }): Object {
-  const fragmentDef = parseFragment(fragment);
+  const fragmentDef = getFragmentDefinition(fragment);
 
   return readSelectionSetFromStore({
     store,

@@ -11,6 +11,8 @@ import {
   getIdField,
 } from '../src/data/extensions';
 
+import gql from '../src/gql';
+
 import {
   assert,
 } from 'chai';
@@ -19,11 +21,15 @@ import {
   series,
 } from 'async';
 
+import {
+  Document,
+} from 'graphql';
+
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 describe('QueryManager', () => {
   it('properly roundtrips through a Redux store', (done) => {
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -69,7 +75,7 @@ describe('QueryManager', () => {
   });
 
   it('properly roundtrips through a Redux store with variables', (done) => {
-    const query = `
+    const query = gql`
       query people($firstArg: Int) {
         allPeople(first: $firstArg) {
           people {
@@ -120,7 +126,7 @@ describe('QueryManager', () => {
   });
 
   it('handles GraphQL errors', (done) => {
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -163,7 +169,7 @@ describe('QueryManager', () => {
   });
 
   it('handles network errors', (done) => {
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -202,7 +208,7 @@ describe('QueryManager', () => {
   });
 
   it('handles an unsubscribe action that happens before data returns', (done) => {
-    const query = `
+    const query = gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -243,7 +249,7 @@ describe('QueryManager', () => {
   });
 
   it('allows you to refetch queries', (done) => {
-    const query = `
+    const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
           name
@@ -307,7 +313,7 @@ describe('QueryManager', () => {
   });
 
   it('allows you to refetch queries with new variables', (done) => {
-    const query = `
+    const query = gql`
       {
         people_one(id: 1) {
           name
@@ -383,7 +389,7 @@ describe('QueryManager', () => {
   });
 
   it('doesn\'t explode if you refetch before first fetch is done with query diffing', (done) => {
-    const primeQuery = `
+    const primeQuery = gql`
       {
         people_one(id: 1) {
           name
@@ -391,7 +397,7 @@ describe('QueryManager', () => {
       }
     `;
 
-    const complexQuery = `
+    const complexQuery = gql`
       {
         luke: people_one(id: 1) {
           name
@@ -402,7 +408,7 @@ describe('QueryManager', () => {
       }
     `;
 
-    const diffedQuery = `
+    const diffedQuery = gql`
       {
         vader: people_one(id: 4) {
           name
@@ -486,7 +492,7 @@ describe('QueryManager', () => {
   });
 
   it('runs a mutation', () => {
-    const mutation = `
+    const mutation = gql`
       mutation makeListPrivate {
         makeListPrivate(id: "5")
       }
@@ -517,7 +523,7 @@ describe('QueryManager', () => {
   });
 
   it('runs a mutation with variables', () => {
-    const mutation = `
+    const mutation = gql`
       mutation makeListPrivate($listId: ID!) {
         makeListPrivate(id: $listId)
       }
@@ -553,7 +559,7 @@ describe('QueryManager', () => {
   });
 
   it('runs a mutation and puts the result in the store', () => {
-    const mutation = `
+    const mutation = gql`
       mutation makeListPrivate {
         makeListPrivate(id: "5") {
           id,
@@ -597,7 +603,7 @@ describe('QueryManager', () => {
   });
 
   it('runs a mutation and puts the result in the store', () => {
-    const mutation = `
+    const mutation = gql`
       mutation makeListPrivate {
         makeListPrivate(id: "5") {
           id,
@@ -641,7 +647,7 @@ describe('QueryManager', () => {
   });
 
   it('runs a mutation and puts the result in the store with root key', () => {
-    const mutation = `
+    const mutation = gql`
       mutation makeListPrivate {
         makeListPrivate(id: "5") {
           id,
@@ -689,7 +695,7 @@ describe('QueryManager', () => {
   it('diffs queries', (done) => {
     testDiffing([
       {
-        query: `
+        query: gql`
           {
             people_one(id: "1") {
               __typename,
@@ -698,7 +704,7 @@ describe('QueryManager', () => {
             }
           }
         `,
-        diffedQuery: `
+        diffedQuery: gql`
           {
             people_one(id: "1") {
               __typename,
@@ -724,7 +730,7 @@ describe('QueryManager', () => {
         variables: {},
       },
       {
-        query: `
+        query: gql`
           {
             people_one(id: "1") {
               name
@@ -732,7 +738,7 @@ describe('QueryManager', () => {
             }
           }
         `,
-        diffedQuery: `
+        diffedQuery: gql`
           {
             __node_0: node(id: "lukeId") {
               id
@@ -757,7 +763,7 @@ describe('QueryManager', () => {
         variables: {},
       },
       {
-        query: `
+        query: gql`
           {
             people_one(id: "1") {
               id
@@ -785,7 +791,7 @@ describe('QueryManager', () => {
   it('diffs queries, preserving variable declarations', (done) => {
     testDiffing([
       {
-        query: `
+        query: gql`
           {
             people_one(id: "1") {
               __typename,
@@ -794,7 +800,7 @@ describe('QueryManager', () => {
             }
           }
         `,
-        diffedQuery: `
+        diffedQuery: gql`
           {
             people_one(id: "1") {
               __typename,
@@ -820,7 +826,7 @@ describe('QueryManager', () => {
         variables: {},
       },
       {
-        query: `
+        query: gql`
           query getSeveralPeople($lukeId: String!, $vaderId: String!) {
             luke: people_one(id: $lukeId) {
               __typename
@@ -834,7 +840,7 @@ describe('QueryManager', () => {
             }
           }
         `,
-        diffedQuery: `
+        diffedQuery: gql`
           query getSeveralPeople($lukeId: String!, $vaderId: String!) {
             vader: people_one(id: $vaderId) {
               __typename
@@ -871,7 +877,7 @@ describe('QueryManager', () => {
   });
 
   it(`doesn't return data while query is loading`, (done) => {
-    const query1 = `
+    const query1 = gql`
       {
         people_one(id: 1) {
           name
@@ -885,7 +891,7 @@ describe('QueryManager', () => {
       },
     };
 
-    const query2 = `
+    const query2 = gql`
       {
         people_one(id: 5) {
           name
@@ -956,7 +962,7 @@ describe('QueryManager', () => {
   });
 
   it(`updates result of previous query if the result of a new query overlaps`, (done) => {
-    const query1 = `
+    const query1 = gql`
       {
         people_one(id: 1) {
           name
@@ -972,7 +978,7 @@ describe('QueryManager', () => {
       },
     };
 
-    const query2 = `
+    const query2 = gql`
       {
         people_one(id: 1) {
           name
@@ -1039,7 +1045,7 @@ describe('QueryManager', () => {
   });
 
   it('allows you to poll queries', (done) => {
-    const query = `
+    const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
           name
@@ -1103,7 +1109,7 @@ describe('QueryManager', () => {
     });
   });
   it('allows you to unsubscribe from polled queries', (done) => {
-    const query = `
+    const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
           name
@@ -1172,7 +1178,7 @@ describe('QueryManager', () => {
 
   });
   it('allows you to unsubscribe from polled query errors', (done) => {
-    const query = `
+    const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
           name
@@ -1248,7 +1254,7 @@ describe('QueryManager', () => {
 
   });
   it('exposes a way to start a polling query', (done) => {
-    const query = `
+    const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
           name
@@ -1314,7 +1320,7 @@ describe('QueryManager', () => {
 
   });
   it('exposes a way to stop a polling query', (done) => {
-    const query = `
+    const query = gql`
       query fetchLeia($id: String) {
         people_one(id: $id) {
           name
@@ -1379,15 +1385,44 @@ describe('QueryManager', () => {
     }, 160);
 
   });
+
+  it('warns if you forget the template literal tag', () => {
+    const queryManager = new QueryManager({
+      networkInterface: mockNetworkInterface(),
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    assert.throws(() => {
+      queryManager.query({
+        // Bamboozle TypeScript into letting us do this
+        query: 'string' as any as Document,
+      });
+    }, /wrap the query string in a "gql" tag/);
+
+    assert.throws(() => {
+      queryManager.mutate({
+        // Bamboozle TypeScript into letting us do this
+        mutation: 'string' as any as Document,
+      });
+    }, /wrap the query string in a "gql" tag/);
+
+    assert.throws(() => {
+      queryManager.watchQuery({
+        // Bamboozle TypeScript into letting us do this
+        query: 'string' as any as Document,
+      });
+    }, /wrap the query string in a "gql" tag/);
+  });
 });
 
 function testDiffing(
   queryArray: {
     // The query the UI asks for
-    query: string,
+    query: Document,
 
     // The query that we expect to be sent to the server
-    diffedQuery: string,
+    diffedQuery: Document,
 
     // The response the server would return for the diffedQuery
     diffedQueryResponse: any,

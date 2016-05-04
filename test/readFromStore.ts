@@ -10,12 +10,14 @@ import {
   StoreObject,
 } from '../src/data/store';
 
+import gql from '../src/gql';
+
 describe('reading from the store', () => {
   it('rejects malformed queries', () => {
     assert.throws(() => {
       readFragmentFromStore({
         store: {},
-        fragment: `
+        fragment: gql`
           fragment X on Y { name }
           fragment W on Y { address }
         `,
@@ -26,7 +28,7 @@ describe('reading from the store', () => {
     assert.throws(() => {
       readFragmentFromStore({
         store: {},
-        fragment: `
+        fragment: gql`
           { name }
         `,
         rootId: 'asdf',
@@ -48,7 +50,7 @@ describe('reading from the store', () => {
 
     const queryResult = readFragmentFromStore({
       store,
-      fragment: `
+      fragment: gql`
         fragment FragmentName on Item {
           stringField,
           numberField
@@ -65,7 +67,7 @@ describe('reading from the store', () => {
   });
 
   it('runs a basic fragment with arguments', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField(arg: $stringArg),
@@ -125,7 +127,7 @@ describe('reading from the store', () => {
 
     const queryResult = readFragmentFromStore({
       store,
-      fragment: `
+      fragment: gql`
         fragment FragmentName on Item {
           stringField,
           numberField,
@@ -182,7 +184,7 @@ describe('reading from the store', () => {
 
     const queryResult = readFragmentFromStore({
       store,
-      fragment: `
+      fragment: gql`
         fragment FragmentName on Item {
           stringField,
           numberField,
@@ -240,7 +242,7 @@ describe('reading from the store', () => {
 
     const queryResult = readFragmentFromStore({
       store,
-      fragment: `
+      fragment: gql`
         fragment FragmentName on Item {
           stringField,
           numberField,
@@ -296,7 +298,7 @@ describe('reading from the store', () => {
 
     const queryResult = readFragmentFromStore({
       store,
-      fragment: `
+      fragment: gql`
         fragment FragmentName on Item {
           stringField,
           numberField,
@@ -338,7 +340,7 @@ describe('reading from the store', () => {
     assert.throws(() => {
       readFragmentFromStore({
         store,
-        fragment: `
+        fragment: gql`
           fragment FragmentName on Item {
             stringField,
             missingField
@@ -364,7 +366,7 @@ describe('reading from the store', () => {
 
     const queryResult = readFragmentFromStore({
       store,
-      fragment: `
+      fragment: gql`
         fragment FragmentName on Item {
           stringField,
           numberField,
@@ -400,7 +402,7 @@ describe('reading from the store', () => {
 
     const queryResult = readFragmentFromStore({
       store,
-      fragment: `
+      fragment: gql`
         fragment FragmentName on Item {
           stringField,
           numberField,
@@ -433,7 +435,7 @@ describe('reading from the store', () => {
 
     const queryResult = readFragmentFromStore({
       store,
-      fragment: `
+      fragment: gql`
         fragment FragmentName on Item {
           stringField,
           numberField,

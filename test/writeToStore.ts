@@ -10,9 +10,11 @@ import {
   getIdField,
 } from '../src/data/extensions';
 
+import gql from '../src/gql';
+
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -37,7 +39,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes an aliased field', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         aliasedField: stringField,
@@ -69,7 +71,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a aliased fields with arguments', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         aliasedField1: stringField(arg: 1),
@@ -104,7 +106,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a fragment with variables', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField(arg: $stringArg),
@@ -143,7 +145,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a nested object with an ID', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -184,7 +186,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a nested object without an ID', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -222,7 +224,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a nested object with arguments but without an ID', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -260,7 +262,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a nested array with IDs', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -310,7 +312,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a nested array with IDs and a null', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -357,7 +359,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a nested array without IDs', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -408,7 +410,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a nested array without IDs and a null item', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -454,7 +456,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes an array of non-objects', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -490,7 +492,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes an array of non-objects with null', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -525,7 +527,7 @@ describe('writing to the store', () => {
   });
 
   it('merges nodes', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         numberField,
@@ -545,7 +547,7 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    const fragment2 = `
+    const fragment2 = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -572,7 +574,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes a nested object that returns null', () => {
-    const fragment = `
+    const fragment = gql`
       fragment Item on ItemType {
         id,
         stringField,
@@ -606,7 +608,7 @@ describe('writing to the store', () => {
   });
 
   it('properly normalizes an object with an ID when no extension is passed', () => {
-    const query = `
+    const query = gql`
       {
         people_one(id: "5") {
           id

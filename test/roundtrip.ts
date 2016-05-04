@@ -3,9 +3,15 @@ import { assert } from 'chai';
 import { writeQueryToStore } from '../src/data/writeToStore';
 import { readQueryFromStore } from '../src/data/readFromStore';
 
+import {
+  Document,
+} from 'graphql';
+
+import gql from '../src/gql';
+
 describe('roundtrip', () => {
   it('real graphql result', () => {
-    storeRoundtrip(`
+    storeRoundtrip(gql`
       {
         people_one(id: "1") {
           name
@@ -19,7 +25,7 @@ describe('roundtrip', () => {
   });
 
   it('with an alias', () => {
-    storeRoundtrip(`
+    storeRoundtrip(gql`
       {
         luke: people_one(id: "1") {
           name,
@@ -39,7 +45,7 @@ describe('roundtrip', () => {
   });
 
   it('with variables', () => {
-    storeRoundtrip(`
+    storeRoundtrip(gql`
       {
         luke: people_one(id: $lukeId) {
           name,
@@ -62,7 +68,7 @@ describe('roundtrip', () => {
   });
 });
 
-function storeRoundtrip(query, result, variables = {}) {
+function storeRoundtrip(query: Document, result, variables = {}) {
   const store = writeQueryToStore({
     result,
     query,

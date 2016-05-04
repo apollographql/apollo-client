@@ -5,6 +5,7 @@ import {
 
 import {
   GraphQLResult,
+  Document,
 } from 'graphql';
 
 import {
@@ -69,7 +70,7 @@ export default class ApolloClient {
   };
 
   public mutate = (options: {
-    mutation: string,
+    mutation: Document,
     variables?: Object,
   }): Promise<GraphQLResult> => {
     this.initStore();

@@ -8,6 +8,10 @@ import {
 } from '../actions';
 
 import {
+  graphQLResultHasError,
+} from '../data/resultUtils';
+
+import {
   SelectionSet,
   GraphQLError,
 } from 'graphql';
@@ -74,7 +78,7 @@ export function queries(
     }
 
     const newState = assign({}, previousState) as QueryStore;
-    const resultHasGraphQLErrors = action.result.errors && action.result.errors.length;
+    const resultHasGraphQLErrors = graphQLResultHasError(action.result);
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       loading: false,

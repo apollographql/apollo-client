@@ -8,6 +8,7 @@ import {
   InlineFragment,
   Value,
   Selection,
+  GraphQLResult,
 } from 'graphql';
 
 import includes = require('lodash.includes');
@@ -60,4 +61,8 @@ export function isField(selection: Selection): selection is Field {
 
 export function isInlineFragment(selection: Selection): selection is InlineFragment {
   return selection.kind === 'InlineFragment';
+}
+
+export function graphQLResultHasError(result: GraphQLResult) {
+  return result.errors && result.errors.length;
 }

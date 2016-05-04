@@ -14,7 +14,7 @@ npm install react-apollo --save
 
 <h2 id="apollo-provider">ApolloProvider</h2>
 
-Injects an ApolloClient instance into a React view tree. 
+Injects an ApolloClient instance into a React view tree.
 
 Basic Apollo version:
 
@@ -83,7 +83,7 @@ import Category from '../components/Category';
 function mapQueriesToProps({ ownProps, state }) {
   return {
     category: {
-      query: `
+      query: gql`
         query getCategory($categoryId: Int!) {
           category(id: $categoryId) {
             name
@@ -103,7 +103,7 @@ function mapQueriesToProps({ ownProps, state }) {
 function mapMutationsToProps({ ownProps, state }) {
   return {
     postReply: (raw) => ({
-      mutation: `
+      mutation: gql`
         mutation postReply(
           $topic_id: ID!
           $category_id: ID!

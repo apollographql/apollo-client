@@ -32,126 +32,126 @@ describe('diffing queries against the store', () => {
       query,
     });
 
-    assert.deepEqual(diffQueryAgainstStore({
+    assert.isUndefined(diffQueryAgainstStore({
       store,
       query,
-    }).missingSelectionSets, []);
+    }).missingSelectionSets);
   });
 
-  it('when the store is missing one field and knows about IDs', () => {
-    const firstQuery = gql`
-      {
-        people_one(id: "1") {
-          __typename
-          id
-          name
-        }
-      }
-    `;
+//   it('when the store is missing one field and knows about IDs', () => {
+//     const firstQuery = gql`
+//       {
+//         people_one(id: "1") {
+//           __typename
+//           id
+//           name
+//         }
+//       }
+//     `;
 
-    const result = {
-      people_one: {
-        __typename: 'Person',
-        id: 'lukeId',
-        name: 'Luke Skywalker',
-      },
-    };
+//     const result = {
+//       people_one: {
+//         __typename: 'Person',
+//         id: 'lukeId',
+//         name: 'Luke Skywalker',
+//       },
+//     };
 
-    const store = writeQueryToStore({
-      result,
-      query: firstQuery,
-      dataIdFromObject: getIdField,
-    });
+//     const store = writeQueryToStore({
+//       result,
+//       query: firstQuery,
+//       dataIdFromObject: getIdField,
+//     });
 
-    const secondQuery = gql`
-      {
-        people_one(id: "1") {
-          name,
-          age
-        }
-      }
-    `;
+//     const secondQuery = gql`
+//       {
+//         people_one(id: "1") {
+//           name,
+//           age
+//         }
+//       }
+//     `;
 
-    assert.deepEqual(stripLoc(diffQueryAgainstStore({
-      store,
-      query: secondQuery,
-      dataIdFromObject: getIdField,
-    }).missingSelectionSets), [
-      {
-        id: 'lukeId',
-        typeName: 'Person',
-        selectionSet: {
-          kind: 'SelectionSet',
-          selections: [
-            {
-              'kind': 'Field',
-              'alias': null,
-              'arguments': [],
-              'directives': [],
-              'name': {
-                'kind': 'Name',
-                'value': 'age',
-              },
-              'selectionSet': null,
-            },
-          ],
-        },
-      },
-    ]);
-  });
+//     assert.deepEqual(stripLoc(diffQueryAgainstStore({
+//       store,
+//       query: secondQuery,
+//       dataIdFromObject: getIdField,
+//     }).missingSelectionSets), [
+//       {
+//         id: 'lukeId',
+//         typeName: 'Person',
+//         selectionSet: {
+//           kind: 'SelectionSet',
+//           selections: [
+//             {
+//               'kind': 'Field',
+//               'alias': null,
+//               'arguments': [],
+//               'directives': [],
+//               'name': {
+//                 'kind': 'Name',
+//                 'value': 'age',
+//               },
+//               'selectionSet': null,
+//             },
+//           ],
+//         },
+//       },
+//     ]);
+//   });
 
-  it('when the store is missing one field and knows about IDs', () => {
-    const firstQuery = gql`
-      {
-        people_one(id: "1") {
-          __typename,
-          id,
-          name
-        }
-      }
-    `;
+//   it('when the store is missing one field and knows about IDs', () => {
+//     const firstQuery = gql`
+//       {
+//         people_one(id: "1") {
+//           __typename,
+//           id,
+//           name
+//         }
+//       }
+//     `;
 
-    const result = {
-      people_one: {
-        __typename: 'Person',
-        id: 'lukeId',
-        name: 'Luke Skywalker',
-      },
-    };
+//     const result = {
+//       people_one: {
+//         __typename: 'Person',
+//         id: 'lukeId',
+//         name: 'Luke Skywalker',
+//       },
+//     };
 
-    const store = writeQueryToStore({
-      result,
-      query: firstQuery,
-      dataIdFromObject: getIdField,
-    });
+//     const store = writeQueryToStore({
+//       result,
+//       query: firstQuery,
+//       dataIdFromObject: getIdField,
+//     });
 
-    const secondQuery = gql`
-      {
-        people_one(id: "1") {
-          name,
-          age
-        }
-      }
-    `;
+//     const secondQuery = gql`
+//       {
+//         people_one(id: "1") {
+//           name,
+//           age
+//         }
+//       }
+//     `;
 
-    const { missingSelectionSets } = diffQueryAgainstStore({
-      store,
-      query: secondQuery,
-      dataIdFromObject: getIdField,
-    });
+//     const { missingSelectionSets } = diffQueryAgainstStore({
+//       store,
+//       query: secondQuery,
+//       dataIdFromObject: getIdField,
+//     });
 
-    assert.equal(printQueryForMissingData({
-      missingSelectionSets,
-    }), `{
-  __node_0: node(id: "lukeId") {
-    id
-    ... on Person {
-      age
-    }
-  }
-}
-`);
-  });
+//     assert.equal(printQueryForMissingData({
+//       missingSelectionSets,
+//     }), `{
+//   __node_0: node(id: "lukeId") {
+//     id
+//     ... on Person {
+//       age
+//     }
+//   }
+// }
+// `);
+//   });
 
   it('when the store is missing one field and doesn\'t know IDs', () => {
     const firstQuery = gql`
@@ -204,66 +204,66 @@ describe('diffing queries against the store', () => {
 `);
   });
 
-  it('when the store is missing multiple nodes', () => {
-    const firstQuery = gql`
-      {
-        people_one(id: "1") {
-          __typename,
-          id,
-          name
-        }
-      }
-    `;
+//   it('when the store is missing multiple nodes', () => {
+//     const firstQuery = gql`
+//       {
+//         people_one(id: "1") {
+//           __typename,
+//           id,
+//           name
+//         }
+//       }
+//     `;
 
-    const result = {
-      people_one: {
-        __typename: 'Person',
-        id: 'lukeId',
-        name: 'Luke Skywalker',
-      },
-    };
+//     const result = {
+//       people_one: {
+//         __typename: 'Person',
+//         id: 'lukeId',
+//         name: 'Luke Skywalker',
+//       },
+//     };
 
-    const store = writeQueryToStore({
-      result,
-      query: firstQuery,
-      dataIdFromObject: getIdField,
-    });
+//     const store = writeQueryToStore({
+//       result,
+//       query: firstQuery,
+//       dataIdFromObject: getIdField,
+//     });
 
-    const secondQuery = gql`
-      {
-        people_one(id: "1") {
-          name,
-          age
-        }
-        people_one(id: "4") {
-          name,
-          age
-        }
-      }
-    `;
+//     const secondQuery = gql`
+//       {
+//         people_one(id: "1") {
+//           name,
+//           age
+//         }
+//         people_one(id: "4") {
+//           name,
+//           age
+//         }
+//       }
+//     `;
 
-    const { missingSelectionSets } = diffQueryAgainstStore({
-      store,
-      query: secondQuery,
-      dataIdFromObject: getIdField,
-    });
+//     const { missingSelectionSets } = diffQueryAgainstStore({
+//       store,
+//       query: secondQuery,
+//       dataIdFromObject: getIdField,
+//     });
 
-    assert.equal(printQueryForMissingData({
-      missingSelectionSets,
-    }), `{
-  __node_0: node(id: "lukeId") {
-    id
-    ... on Person {
-      age
-    }
-  }
-  people_one(id: "4") {
-    name
-    age
-  }
-}
-`);
-  });
+//     assert.equal(printQueryForMissingData({
+//       missingSelectionSets,
+//     }), `{
+//   __node_0: node(id: "lukeId") {
+//     id
+//     ... on Person {
+//       age
+//     }
+//   }
+//   people_one(id: "4") {
+//     name
+//     age
+//   }
+// }
+// `);
+//   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
     const firstQuery = gql`
@@ -305,7 +305,7 @@ describe('diffing queries against the store', () => {
       query: secondQuery,
     });
 
-    assert.deepEqual(missingSelectionSets, []);
+    assert.isUndefined(missingSelectionSets);
     assert.deepEqual(store['1'], result.people_one);
   });
 

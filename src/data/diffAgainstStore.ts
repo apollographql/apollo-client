@@ -6,6 +6,8 @@ import has = require('lodash.has');
 import {
   storeKeyNameFromField,
   resultKeyNameFromField,
+  isField,
+  isInlineFragment,
 } from './storeUtils';
 
 import {
@@ -31,10 +33,10 @@ import {
   getFragmentDefinition,
 } from '../queries/getFromAST';
 
-export interface QueryDiffResult {
+export interface DiffResult {
   result: any;
-  missingSelectionSets: SelectionSetWithRoot[];
-  mergeUp: boolean;
+  isMissing?: 'true';
+  missingSelectionSets?: SelectionSetWithRoot[];
 }
 
 export function diffQueryAgainstStore({
@@ -47,7 +49,7 @@ export function diffQueryAgainstStore({
   query: Document,
   variables?: Object,
   dataIdFromObject?: IdGetter,
-}): QueryDiffResult {
+}): DiffResult {
   const queryDef = getQueryDefinition(query);
 
   return diffSelectionSetAgainstStore({
@@ -72,7 +74,7 @@ export function diffFragmentAgainstStore({
   rootId: string,
   variables?: Object,
   dataIdFromObject?: IdGetter,
-}): QueryDiffResult {
+}): DiffResult {
   const fragmentDef = getFragmentDefinition(fragment);
 
   return diffSelectionSetAgainstStore({
@@ -107,180 +109,180 @@ export function diffSelectionSetAgainstStore({
   selectionSet: SelectionSet,
   store: NormalizedCache,
   rootId: string,
-  throwOnMissingField: Boolean,
+  throwOnMissingField: boolean,
   variables: Object,
   dataIdFromObject?: IdGetter,
-}): QueryDiffResult {
+}): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
   }
 
   const result = {};
-  const missingSelectionSets: SelectionSetWithRoot[] = [];
   const missingFields: Field[] = [];
-  const storeObj = store[rootId] || {};
+
+  // Don't push more than one missing field per field in the query
+  let missingFieldPushed = false;
+  function pushMissingField(missingField: Field) {
+    if (!missingFieldPushed) {
+      missingFields.push(missingField);
+      missingFieldPushed = true;
+    }
+  }
 
   selectionSet.selections.forEach((selection) => {
-    if (selection.kind !== 'Field') {
-       throw new Error('Only fields supported so far, not fragments.');
-    }
-
-    const field = selection as Field;
-
-    const storeFieldKey = storeKeyNameFromField(field, variables);
-    const resultFieldKey = resultKeyNameFromField(field);
-
-    // Don't push more than one missing field per field in the query
-    let missingFieldPushed = false;
-    function pushMissingField(missingField: Field) {
-      if (!missingFieldPushed) {
-        missingFields.push(missingField);
-        missingFieldPushed = true;
-      }
-    }
-
-    if (! has(storeObj, storeFieldKey)) {
-      if (throwOnMissingField) {
-        throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
-      }
-
-      missingFields.push(field);
-
-      return;
-    }
-
-    const storeValue = storeObj[storeFieldKey];
-
-    if (! field.selectionSet) {
-      result[resultFieldKey] = storeValue;
-      return;
-    }
-
-    if (isNull(storeValue)) {
-      // Basically any field in a GraphQL response can be null
-      result[resultFieldKey] = null;
-      return;
-    }
-
-    if (isArray(storeValue)) {
-      result[resultFieldKey] = storeValue.map((id) => {
-        // null value in array
-        if (isNull(id)) {
-          return null;
-        }
-
-        const itemDiffResult = diffSelectionSetAgainstStore({
-          store,
-          throwOnMissingField,
-          rootId: id,
-          selectionSet: field.selectionSet,
-          variables,
-          dataIdFromObject,
-        });
-
-        if (! itemDiffResult.mergeUp) {
-          itemDiffResult.missingSelectionSets.forEach(
-            itemSelectionSet => missingSelectionSets.push(itemSelectionSet));
-        } else {
-          // XXX merge all of the missing selections from the children to get a more minimal result
-          pushMissingField(field);
-        }
-
-        return itemDiffResult.result;
-      });
-      return;
-    }
-
-    if (isString(storeValue)) {
-      const subObjDiffResult = diffSelectionSetAgainstStore({
-        store,
+    if (isField(selection)) {
+      const {
+        result: fieldResult,
+        isMissing: fieldIsMissing,
+      } = diffFieldAgainstStore({
+        field: selection as any as Field,
         throwOnMissingField,
-        rootId: storeValue,
-        selectionSet: field.selectionSet,
         variables,
+        dataId: rootId,
+        store,
         dataIdFromObject,
       });
 
-      if (! subObjDiffResult.mergeUp) {
-        subObjDiffResult.missingSelectionSets.forEach(
-          subObjSelectionSet => missingSelectionSets.push(subObjSelectionSet));
+      if (fieldIsMissing) {
+        pushMissingField(selection);
       } else {
-        // XXX merge all of the missing selections from the children to get a more minimal result
-        pushMissingField(field);
+        const resultFieldKey = resultKeyNameFromField(selection);
+
+        result[resultFieldKey] = fieldResult;
       }
-
-      result[resultFieldKey] = subObjDiffResult.result;
-      return;
+    } else if (isInlineFragment(selection)) {
+      throw new Error('Inline fragments not yet supported.');
+    } else {
+      throw new Error('Named fragments not yet supported.');
     }
-
-    throw new Error('Unexpected number value in the store where the query had a subselection.');
   });
 
   // Set this to true if we don't have enough information at this level to generate a refetch
   // query, so we need to merge the selection set with the parent, rather than appending
-  let mergeUp = false;
+  let isMissing;
+  let missingSelectionSets;
 
   // If we weren't able to resolve some selections from the store, construct them into
   // a query we can fetch from the server
   if (missingFields.length) {
-    if (dataIdFromObject) {
-      // We have a semantic understanding of IDs
-      const id = dataIdFromObject(storeObj);
-
-      if (typeof id !== 'string' && rootId !== 'ROOT_QUERY') {
-        throw new Error(
-          `Can't generate query to refetch object ${rootId}, since it doesn't have a string id.`);
-      }
-
-      let typeName: string;
-
-      if (rootId === 'ROOT_QUERY') {
-        // We don't need to do anything interesting to fetch root queries, like have an ID
-        typeName = 'Query';
-      } else if (! storeObj.__typename) {
-        throw new Error(
-          `Can't generate query to refetch object ${rootId}, since __typename wasn't in the store.`);
-      } else {
-        typeName = storeObj.__typename;
-      }
-
-      missingSelectionSets.push({
-        id: rootId,
-        typeName,
-        selectionSet: {
-          kind: 'SelectionSet',
-          selections: missingFields,
-        },
-      });
-    } else if (rootId === 'ROOT_QUERY') {
+    if (rootId === 'ROOT_QUERY') {
       const typeName = 'Query';
 
-      missingSelectionSets.push({
-        id: rootId,
-        typeName,
-        selectionSet: {
-          kind: 'SelectionSet',
-          selections: missingFields,
+      missingSelectionSets = [
+        {
+          id: rootId,
+          typeName,
+          selectionSet: {
+            kind: 'SelectionSet',
+            selections: missingFields,
+          },
         },
-      });
+      ];
     } else {
-      mergeUp = true;
-
-      missingSelectionSets.push({
-        // Sentinel values, all we need is the selection set
-        id: 'CANNOT_REFETCH',
-        typeName: 'CANNOT_REFETCH',
-        selectionSet: {
-          kind: 'SelectionSet',
-          selections: missingFields,
-        },
-      });
+      isMissing = 'true';
     }
   }
 
   return {
     result,
+    isMissing,
     missingSelectionSets,
-    mergeUp,
   };
+}
+
+function diffFieldAgainstStore({
+  field,
+  throwOnMissingField,
+  variables,
+  dataId,
+  store,
+  dataIdFromObject,
+}: {
+  field: Field,
+  throwOnMissingField: boolean,
+  variables: Object,
+  dataId: string,
+  store: NormalizedCache,
+  dataIdFromObject: IdGetter,
+}): FieldDiffResult {
+  const storeObj = store[dataId] || {};
+  const storeFieldKey = storeKeyNameFromField(field, variables);
+
+  if (! has(storeObj, storeFieldKey)) {
+    if (throwOnMissingField) {
+      throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
+    }
+
+    return {
+      isMissing: 'true',
+    };
+  }
+
+  const storeValue = storeObj[storeFieldKey];
+
+  // Handle all scalar types here
+  if (! field.selectionSet) {
+    return {
+      result: storeValue,
+    };
+  }
+
+  // From here down, the field has a selection set, which means it's trying to
+  // query a GraphQLObjectType
+  if (isNull(storeValue)) {
+    // Basically any field in a GraphQL response can be null
+    return {
+      result: null,
+    };
+  }
+
+  if (isArray(storeValue)) {
+    let isMissing;
+
+    const result = storeValue.map((id) => {
+      // null value in array
+      if (isNull(id)) {
+        return null;
+      }
+
+      const itemDiffResult = diffSelectionSetAgainstStore({
+        store,
+        throwOnMissingField,
+        rootId: id,
+        selectionSet: field.selectionSet,
+        variables,
+        dataIdFromObject,
+      });
+
+      if (itemDiffResult.isMissing) {
+        // XXX merge all of the missing selections from the children to get a more minimal result
+        isMissing = 'true';
+      }
+
+      return itemDiffResult.result;
+    });
+
+    return {
+      result,
+      isMissing,
+    };
+  }
+
+  if (isString(storeValue)) {
+    return diffSelectionSetAgainstStore({
+      store,
+      throwOnMissingField,
+      rootId: storeValue,
+      selectionSet: field.selectionSet,
+      variables,
+      dataIdFromObject,
+    });
+  }
+
+  throw new Error('Unexpected number value in the store where the query had a subselection.');
+}
+
+interface FieldDiffResult {
+  result?: any;
+  isMissing?: 'true';
 }

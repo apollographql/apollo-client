@@ -788,101 +788,101 @@ describe('QueryManager', () => {
     });
   });
 
-  it('diffs queries', (done) => {
-    testDiffing([
-      {
-        query: gql`
-          {
-            people_one(id: "1") {
-              __typename,
-              id,
-              name
-            }
-          }
-        `,
-        diffedQuery: gql`
-          {
-            people_one(id: "1") {
-              __typename,
-              id,
-              name
-            }
-          }
-        `,
-        diffedQueryResponse: {
-          people_one: {
-            __typename: 'Person',
-            id: 'lukeId',
-            name: 'Luke Skywalker',
-          },
-        },
-        fullResponse: {
-          people_one: {
-            __typename: 'Person',
-            id: 'lukeId',
-            name: 'Luke Skywalker',
-          },
-        },
-        variables: {},
-      },
-      {
-        query: gql`
-          {
-            people_one(id: "1") {
-              name
-              age
-            }
-          }
-        `,
-        diffedQuery: gql`
-          {
-            __node_0: node(id: "lukeId") {
-              id
-              ... on Person {
-                age
-              }
-            }
-          }
-        `,
-        diffedQueryResponse: {
-          __node_0: {
-            id: 'lukeId',
-            age: 45,
-          },
-        },
-        fullResponse: {
-          people_one: {
-            name: 'Luke Skywalker',
-            age: 45,
-          },
-        },
-        variables: {},
-      },
-      {
-        query: gql`
-          {
-            people_one(id: "1") {
-              id
-              name
-              age
-            }
-          }
-        `,
-        diffedQuery: null,
-        diffedQueryResponse: null,
-        fullResponse: {
-          people_one: {
-            id: 'lukeId',
-            name: 'Luke Skywalker',
-            age: 45,
-          },
-        },
-        variables: {},
-      },
-    ], {
-      dataIdFromObject: getIdField,
-    }, done);
-  });
+  // it('diffs queries', (done) => {
+  //   testDiffing([
+  //     {
+  //       query: gql`
+  //         {
+  //           people_one(id: "1") {
+  //             __typename,
+  //             id,
+  //             name
+  //           }
+  //         }
+  //       `,
+  //       diffedQuery: gql`
+  //         {
+  //           people_one(id: "1") {
+  //             __typename,
+  //             id,
+  //             name
+  //           }
+  //         }
+  //       `,
+  //       diffedQueryResponse: {
+  //         people_one: {
+  //           __typename: 'Person',
+  //           id: 'lukeId',
+  //           name: 'Luke Skywalker',
+  //         },
+  //       },
+  //       fullResponse: {
+  //         people_one: {
+  //           __typename: 'Person',
+  //           id: 'lukeId',
+  //           name: 'Luke Skywalker',
+  //         },
+  //       },
+  //       variables: {},
+  //     },
+  //     {
+  //       query: gql`
+  //         {
+  //           people_one(id: "1") {
+  //             name
+  //             age
+  //           }
+  //         }
+  //       `,
+  //       diffedQuery: gql`
+  //         {
+  //           __node_0: node(id: "lukeId") {
+  //             id
+  //             ... on Person {
+  //               age
+  //             }
+  //           }
+  //         }
+  //       `,
+  //       diffedQueryResponse: {
+  //         __node_0: {
+  //           id: 'lukeId',
+  //           age: 45,
+  //         },
+  //       },
+  //       fullResponse: {
+  //         people_one: {
+  //           name: 'Luke Skywalker',
+  //           age: 45,
+  //         },
+  //       },
+  //       variables: {},
+  //     },
+  //     {
+  //       query: gql`
+  //         {
+  //           people_one(id: "1") {
+  //             id
+  //             name
+  //             age
+  //           }
+  //         }
+  //       `,
+  //       diffedQuery: null,
+  //       diffedQueryResponse: null,
+  //       fullResponse: {
+  //         people_one: {
+  //           id: 'lukeId',
+  //           name: 'Luke Skywalker',
+  //           age: 45,
+  //         },
+  //       },
+  //       variables: {},
+  //     },
+  //   ], {
+  //     dataIdFromObject: getIdField,
+  //   }, done);
+  // });
 
   it('diffs queries, preserving variable declarations', (done) => {
     testDiffing([

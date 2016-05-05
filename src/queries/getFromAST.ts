@@ -27,11 +27,17 @@ export function getQueryDefinition(doc: Document): OperationDefinition {
     throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag?');
   }
 
-  if (doc.definitions.length > 1) {
-    throw new Error('Query must have exactly one operation definition.');
-  }
+  let queryDef;
 
-  const queryDef = doc.definitions[0] as OperationDefinition;
+  doc.definitions.forEach((definition) => {
+    if (definition.kind === 'OperationDefinition') {
+      if (queryDef) {
+        throw new Error('Query must have exactly one operation definition.');
+      }
+
+      queryDef = definition;
+    }
+  });
 
   if (queryDef.kind !== 'OperationDefinition' || queryDef.operation !== 'query') {
     throw new Error('Must be a query definition.');

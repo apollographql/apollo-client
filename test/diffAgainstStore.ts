@@ -223,14 +223,14 @@ describe('diffing queries against the store', () => {
         people_one(id: "1") {
           __typename
           ... on Person {
-            id,
+            id
             name
           }
         }
         people_one(id: "2") {
           __typename
           ... on Person {
-            id,
+            id
             name
           }
         }
@@ -248,7 +248,7 @@ describe('diffing queries against the store', () => {
   people_one(id: "2") {
     __typename
     ... on Person {
-      id,
+      id
       name
     }
   }

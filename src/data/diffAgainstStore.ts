@@ -2,6 +2,7 @@ import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isString = require('lodash.isstring');
 import has = require('lodash.has');
+import assign = require('lodash.assign');
 
 import {
   storeKeyNameFromField,
@@ -26,6 +27,7 @@ import {
   SelectionSet,
   Field,
   Document,
+  Selection,
 } from 'graphql';
 
 import {
@@ -118,11 +120,11 @@ export function diffSelectionSetAgainstStore({
   }
 
   const result = {};
-  const missingFields: Field[] = [];
+  const missingFields: Selection[] = [];
 
   // Don't push more than one missing field per field in the query
   let missingFieldPushed = false;
-  function pushMissingField(missingField: Field) {
+  function pushMissingField(missingField: Selection) {
     if (!missingFieldPushed) {
       missingFields.push(missingField);
       missingFieldPushed = true;
@@ -135,10 +137,10 @@ export function diffSelectionSetAgainstStore({
         result: fieldResult,
         isMissing: fieldIsMissing,
       } = diffFieldAgainstStore({
-        field: selection as any as Field,
+        field: selection,
         throwOnMissingField,
         variables,
-        dataId: rootId,
+        rootId,
         store,
         dataIdFromObject,
       });
@@ -151,7 +153,23 @@ export function diffSelectionSetAgainstStore({
         result[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {
-      throw new Error('Inline fragments not yet supported.');
+      const {
+        result: fieldResult,
+        isMissing: fieldIsMissing,
+      } = diffSelectionSetAgainstStore({
+        selectionSet: selection.selectionSet,
+        throwOnMissingField,
+        variables,
+        rootId,
+        store,
+        dataIdFromObject,
+      });
+
+      if (fieldIsMissing) {
+        pushMissingField(selection);
+      } else {
+        assign(result, fieldResult);
+      }
     } else {
       throw new Error('Named fragments not yet supported.');
     }
@@ -194,18 +212,18 @@ function diffFieldAgainstStore({
   field,
   throwOnMissingField,
   variables,
-  dataId,
+  rootId,
   store,
   dataIdFromObject,
 }: {
   field: Field,
   throwOnMissingField: boolean,
   variables: Object,
-  dataId: string,
+  rootId: string,
   store: NormalizedCache,
   dataIdFromObject: IdGetter,
 }): FieldDiffResult {
-  const storeObj = store[dataId] || {};
+  const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
 
   if (! has(storeObj, storeFieldKey)) {

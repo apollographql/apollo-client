@@ -66,7 +66,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 }
 
 export interface QuerySubscription extends Subscription {
-  refetch(variables?: any): void;
+  refetch(variables?: any): Promise<GraphQLResult>;
   stopPolling(): void;
   startPolling(pollInterval: number): void;
 }
@@ -365,7 +365,7 @@ export class QueryManager {
 
       // return a chainable promise
       return new Promise((resolve) => {
-        resolve();
+        resolve({ data: initialResult });
       });
     }
   }

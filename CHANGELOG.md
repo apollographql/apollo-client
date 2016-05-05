@@ -4,6 +4,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- ...
+
+### v0.3.2
+
 - Added support for inline fragments. [Issue #147](https://github.com/apollostack/apollo-client/issues/147) [PR #175](https://github.com/apollostack/apollo-client/pull/175)
 - Removed vestigial code that partially implemented refetching via the Relay Node interface, but was not possible to use through the public API.
 

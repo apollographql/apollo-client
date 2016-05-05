@@ -66,6 +66,54 @@ describe('roundtrip', () => {
       vaderId: '4',
     });
   });
+
+  it('with inline fragments', () => {
+    storeRoundtrip(gql`
+      {
+        luke: people_one(id: "1") {
+          ... on Person {
+            name
+          }
+        },
+        vader: people_one(id: "4") {
+          ... on Person {
+            name
+          }
+        }
+      }
+    `, {
+      luke: {
+        name: 'Luke Skywalker',
+      },
+      vader: {
+        name: 'Darth Vader',
+      },
+    });
+  });
+
+  it('with named fragments', () => {
+    storeRoundtrip(gql`
+      {
+        luke: people_one(id: "1") {
+          ...name
+        },
+        vader: people_one(id: "4") {
+          ...name
+        }
+      }
+
+      fragment name on Person {
+        name,
+      }
+    `, {
+      luke: {
+        name: 'Luke Skywalker',
+      },
+      vader: {
+        name: 'Darth Vader',
+      },
+    });
+  });
 });
 
 function storeRoundtrip(query: Document, result, variables = {}) {

@@ -557,6 +557,56 @@ describe('QueryManager', () => {
     });
   });
 
+  it('allows you to refetch queries with promises', (done) => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data: data1 },
+      },
+      {
+        request: { query },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    const subscription = handle.subscribe({});
+
+    subscription.refetch().then((result) => {
+      assert.deepEqual(result.data, data2);
+      done();
+    });
+  });
+
   it('allows you to refetch queries with new variables', (done) => {
     const query = gql`
       {

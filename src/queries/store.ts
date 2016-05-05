@@ -9,7 +9,7 @@ import {
 
 import {
   graphQLResultHasError,
-} from '../data/resultUtils';
+} from '../data/storeUtils';
 
 import {
   SelectionSet,

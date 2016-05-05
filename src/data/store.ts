@@ -24,7 +24,7 @@ import {
 
 import {
   graphQLResultHasError,
-} from './resultUtils';
+} from './storeUtils';
 
 export interface NormalizedCache {
   [dataId: string]: StoreObject;

@@ -14,15 +14,15 @@ import {
 import {
   storeKeyNameFromField,
   resultKeyNameFromField,
+  isField,
+  isInlineFragment,
 } from './storeUtils';
 
 import {
   OperationDefinition,
   SelectionSet,
-  Selection,
   FragmentDefinition,
   Field,
-  InlineFragment,
   Document,
 } from 'graphql';
 
@@ -249,12 +249,4 @@ function writeFieldToStore({
   }) as StoreObject;
 
   store[dataId] = newStoreObj;
-}
-
-function isField(selection: Selection): selection is Field {
-  return selection.kind === 'Field';
-}
-
-function isInlineFragment(selection: Selection): selection is InlineFragment {
-  return selection.kind === 'InlineFragment';
 }

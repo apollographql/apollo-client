@@ -290,7 +290,7 @@ export class QueryManager {
 
       initialResult = result;
 
-      if (missingSelectionSets.length) {
+      if (missingSelectionSets && missingSelectionSets.length) {
         const diffedQueryDef = queryDefinition({
           missingSelectionSets,
           variableDefinitions: queryDef.variableDefinitions,

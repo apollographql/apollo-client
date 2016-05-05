@@ -2,7 +2,6 @@ import { assert } from 'chai';
 
 import { diffQueryAgainstStore } from '../src/data/diffAgainstStore';
 import { writeQueryToStore } from '../src/data/writeToStore';
-import { stripLoc } from '../src/data/debug';
 import { printQueryForMissingData } from '../src/queryPrinting';
 
 import {

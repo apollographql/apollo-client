@@ -6,7 +6,7 @@ import {
 
 export function getMutationDefinition(doc: Document): OperationDefinition {
   if (doc.kind !== 'Document') {
-    throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag?');
+    throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
   }
 
   if (doc.definitions.length > 1) {
@@ -24,7 +24,7 @@ export function getMutationDefinition(doc: Document): OperationDefinition {
 
 export function getQueryDefinition(doc: Document): OperationDefinition {
   if (doc.kind !== 'Document') {
-    throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag?');
+    throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
   }
 
   if (doc.definitions.length > 1) {
@@ -42,7 +42,7 @@ export function getQueryDefinition(doc: Document): OperationDefinition {
 
 export function getFragmentDefinition(doc: Document): FragmentDefinition {
   if (doc.kind !== 'Document') {
-    throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag?');
+    throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
   }
 
   if (doc.definitions.length > 1) {

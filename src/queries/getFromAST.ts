@@ -2,6 +2,7 @@ import {
   Document,
   OperationDefinition,
   FragmentDefinition,
+  SelectionSet,
 } from 'graphql';
 
 export function getMutationDefinition(doc: Document): OperationDefinition {
@@ -62,4 +63,19 @@ export function getFragmentDefinition(doc: Document): FragmentDefinition {
   }
 
   return fragmentDef as FragmentDefinition;
+}
+
+export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
+  if (doc.kind !== 'Document') {
+    throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag?');
+  }
+
+  return doc.definitions.filter((definition) => {
+    return definition.kind === 'FragmentDefinition';
+  }) as FragmentDefinition[];
+}
+
+// XXX move this into `gql`
+export function inlineFragments(selectionSet: SelectionSet, fragments: FragmentDefinition[]) {
+
 }

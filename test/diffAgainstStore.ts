@@ -8,6 +8,10 @@ import {
   getIdField,
 } from '../src/data/extensions';
 
+import {
+  NormalizedCache,
+} from '../src/data/store';
+
 import gql from '../src/gql';
 
 describe('diffing queries against the store', () => {
@@ -35,6 +39,26 @@ describe('diffing queries against the store', () => {
       store,
       query,
     }).missingSelectionSets);
+  });
+
+  it('works with multiple root queries', () => {
+    const query = gql`
+      {
+        people_one(id: "1") {
+          name
+        }
+        otherQuery
+      }
+    `;
+
+
+    const store = {} as NormalizedCache;
+
+    // Should return two root query selections
+    assert.equal(diffQueryAgainstStore({
+      store,
+      query,
+    }).missingSelectionSets[0].selectionSet.selections.length, 2);
   });
 
   it('when the store is missing one field and doesn\'t know IDs', () => {

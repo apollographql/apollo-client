@@ -12,6 +12,7 @@
     "test-lib": true,
     "lib": true,
     "dist": true,
-    "coverage": true
+    "coverage": true,
+    "npm": true
   }
 }

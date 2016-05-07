@@ -74,6 +74,53 @@ describe('QueryManager', () => {
     });
   });
 
+  it('runs multiple root queries', () => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+        person(id: "1") {
+          name
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+      person: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    return queryManager.query({
+      query,
+    }).then((result) => {
+      assert.deepEqual(result.data, data);
+    });
+  });
+
   it('properly roundtrips through a Redux store with variables', (done) => {
     const query = gql`
       query people($firstArg: Int) {

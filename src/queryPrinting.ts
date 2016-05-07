@@ -30,22 +30,22 @@ export function queryDefinition({
     variableDefinitions = null,
     name = null,
 }: QueryDefinitionOptions): OperationDefinition {
-  const selections = missingSelectionSets.map((missingSelectionSet: SelectionSetWithRoot, ii) => {
+  const selections = [];
+
+  missingSelectionSets.forEach((missingSelectionSet: SelectionSetWithRoot, ii) => {
     if (missingSelectionSet.id === 'CANNOT_REFETCH') {
       throw new Error('diffAgainstStore did not merge selection sets correctly');
     }
 
-    if (missingSelectionSet.id === 'ROOT_QUERY') {
-      if (missingSelectionSet.selectionSet.selections.length > 1) {
-        throw new Error('Multiple root queries, cannot print that yet.');
-      }
-
-      return missingSelectionSet.selectionSet.selections[0];
+    if (missingSelectionSet.id !== 'ROOT_QUERY') {
+      // At some point, put back support for the node interface. Look in the git history for
+      // the code that printed node queries here.
+      throw new Error('Only root query selections supported.');
     }
 
-    // At some point, put back support for the node interface. Look in the git history for the code
-    // that printed node queries here.
-    throw new Error('Only root query selections supported.');
+    missingSelectionSet.selectionSet.selections.forEach((selection) => {
+      selections.push(selection);
+    });
   });
 
   return {

@@ -122,16 +122,16 @@ export function diffSelectionSetAgainstStore({
   const result = {};
   const missingFields: Selection[] = [];
 
-  // Don't push more than one missing field per field in the query
-  let missingFieldPushed = false;
-  function pushMissingField(missingField: Selection) {
-    if (!missingFieldPushed) {
-      missingFields.push(missingField);
-      missingFieldPushed = true;
-    }
-  }
-
   selectionSet.selections.forEach((selection) => {
+    // Don't push more than one missing field per field in the query
+    let missingFieldPushed = false;
+    function pushMissingField(missingField: Selection) {
+      if (!missingFieldPushed) {
+        missingFields.push(missingField);
+        missingFieldPushed = true;
+      }
+    }
+
     if (isField(selection)) {
       const {
         result: fieldResult,

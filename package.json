@@ -14,7 +14,7 @@
     "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/src/index.js -o=./dist/index.js && npm run minify:browser",
     "minify:browser": "uglifyjs --compress --mangle --screw-ie8 -o=./dist/index.min.js -- ./dist/index.js",
     "watch": "tsc -w",
-    "prepublish": "npm run compile",
+    "prepublish": "npm run deploy",
     "lint": "grunt tslint",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",

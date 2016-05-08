@@ -6,6 +6,11 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+
+### v0.3.4
+
+- Fix improperly published package that broke submodule paths. [Issue #186](https://github.com/apollostack/apollo-client/issues/186)
+
 ### v0.3.3
 
 - Fix regression from 0.3.2 that broke root query diffing

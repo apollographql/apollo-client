@@ -20,8 +20,8 @@ import { attachConnectorsToContext } from 'graphql-tools';
 
 class AuthorConnector{
   constructor(){
-    this.store = new Map()
-    map.set(1, { id: 1, firstName: 'Bill', lastName: 'Nye' });
+    this.store = new Map();
+    this.store.set(1, { id: 1, firstName: 'Bill', lastName: 'Nye' });
   }
 
   get(key){

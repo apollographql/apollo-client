@@ -1,3 +1,5 @@
+import 'whatwg-fetch';
+
 import isString = require('lodash.isstring');
 import assign = require('lodash.assign');
 

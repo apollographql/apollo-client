@@ -36,7 +36,6 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "es6-promise": "^3.1.2",
     "graphql": "^0.4.18 || ^0.5.0",
     "lodash.assign": "^4.0.8",
     "lodash.forown": "^4.1.0",
@@ -49,7 +48,8 @@
     "lodash.isobject": "^3.0.2",
     "lodash.isstring": "^4.0.1",
     "lodash.isundefined": "^3.0.1",
-    "redux": "^3.3.1"
+    "redux": "^3.3.1",
+    "whatwg-fetch": "^0.11.0"
   },
   "devDependencies": {
     "async": "^1.5.2",

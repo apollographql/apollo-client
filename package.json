@@ -75,7 +75,7 @@
     "request-promise": "^2.0.1",
     "source-map-support": "^0.4.0",
     "swapi-graphql": "^0.0.4",
-    "tslint": "3.6.0",
+    "tslint": "3.7.3",
     "typescript": "^1.8.9",
     "typings": "^0.7.9",
     "uglify-js": "^2.6.2",

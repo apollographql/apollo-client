@@ -25,6 +25,10 @@ import {
   Document,
 } from 'graphql';
 
+import * as Rx from 'rxjs';
+
+import assign = require('lodash.assign');
+
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 describe('QueryManager', () => {
@@ -389,6 +393,57 @@ describe('QueryManager', () => {
 
     assert.doesNotThrow(subscription.unsubscribe);
     done();
+  });
+
+  it('supports interoperability with other Observable implementations like RxJS', (done) => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    const observable = Rx.Observable.from(handle);
+
+    observable
+      .map(result => (assign({ fromRx: true }, result)))
+      .subscribe({
+      next(result) {
+        const expectedResult = assign({ fromRx: true }, result);
+        assert.deepEqual(result, expectedResult);
+        done();
+      },
+    });
   });
 
   it('allows you to refetch queries', (done) => {

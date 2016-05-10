@@ -1,7 +1,7 @@
 // This simplified polyfill attempts to follow the ECMAScript Observable proposal.
 // See https://github.com/zenparsing/es-observable
 
-import * as $$observable from 'symbol-observable'
+import * as $$observable from 'symbol-observable';
 
 export type CleanupFunction = () => void;
 export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | CleanupFunction);
@@ -18,7 +18,7 @@ export class Observable<T> {
   }
 
   public [$$observable]() {
-    return this
+    return this;
   }
 
   public subscribe(observer: Observer<T>): Subscription {

@@ -189,7 +189,9 @@ export class QueryManager {
             if (observer.error) {
               observer.error(queryStoreValue.networkError);
             } else {
-              console.error('Unhandled network error', queryStoreValue.networkError);
+              console.error('Unhandled network error',
+                queryStoreValue.networkError,
+                queryStoreValue.networkError.stack);
             }
           } else {
             const resultFromStore = readSelectionSetFromStore({

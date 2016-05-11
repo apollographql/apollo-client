@@ -398,7 +398,7 @@ describe('QueryManager', () => {
       assert.match(printed[0], /error/);
       console.error = oldError;
       done();
-    });
+    }, 10);
   });
 
   it('handles an unsubscribe action that happens before data returns', (done) => {
@@ -1510,7 +1510,6 @@ describe('QueryManager', () => {
         request: { query, variables },
         result: { data: data2 },
       }
-
     );
 
     const queryManager = new QueryManager({
@@ -1534,13 +1533,13 @@ describe('QueryManager', () => {
           assert.deepEqual(result.data, data1);
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, data2);
+          subscription.unsubscribe();
           done();
         }
       },
     });
 
     subscription.startPolling(50);
-
   });
   it('exposes a way to stop a polling query', (done) => {
     const query = gql`

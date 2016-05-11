@@ -386,12 +386,12 @@ describe('QueryManager', () => {
     let printed;
     console.error = (...args) => {
       printed = args;
-    }
+    };
 
     handle.subscribe({
       next: (result) => {
         done(new Error('Should not deliver result'));
-      }
+      },
     });
 
     setTimeout(() => {

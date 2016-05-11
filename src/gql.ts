@@ -4,12 +4,20 @@ import {
   Document,
 } from 'graphql';
 
+const cache: {[queryString: string]: Document} = {};
+
 function parseDocument(doc: string): Document {
+  if (cache[doc]) {
+    return cache[doc];
+  }
+
   const parsed = parse(doc);
 
   if (!parsed || parsed.kind !== 'Document') {
     throw new Error('Not a valid GraphQL document.');
   }
+
+  cache[doc] = parsed;
 
   return parsed as Document;
 }

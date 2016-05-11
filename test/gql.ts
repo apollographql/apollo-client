@@ -9,5 +9,5 @@ describe('gql', () => {
 
   it('returns the same object for the same query', () => {
     assert.isTrue(gql`{ sameQuery }` === gql`{ sameQuery }`);
-  })
+  });
 });

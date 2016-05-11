@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 - Improve error message when a dev forgets `gql` to link to docs. [PR #181](https://github.com/apollostack/apollo-client/pull/181)
+- Memoize results from `gql`, so that we save time on parsing, and we can use `===` to compare queries for performance.
 - ...
 
 

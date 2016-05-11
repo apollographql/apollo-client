@@ -188,6 +188,10 @@ export class QueryManager {
             // XXX we might not want to re-broadcast the same error over and over if it didn't change
             if (observer.error) {
               observer.error(queryStoreValue.networkError);
+            } else {
+              console.error('Unhandled network error',
+                queryStoreValue.networkError,
+                queryStoreValue.networkError.stack);
             }
           } else {
             const resultFromStore = readSelectionSetFromStore({

@@ -689,9 +689,9 @@ describe('QueryManager', () => {
     });
   });
 
-  it('supports returnPartialData #193', (done) => {
+  it('supports returnPartialData #193', () => {
     const primeQuery = gql`
-      {
+      query primeQuery {
         people_one(id: 1) {
           name
         }
@@ -699,7 +699,7 @@ describe('QueryManager', () => {
     `;
 
     const complexQuery = gql`
-      {
+      query complexQuery {
         luke: people_one(id: 1) {
           name
         }
@@ -710,7 +710,7 @@ describe('QueryManager', () => {
     `;
 
     const diffedQuery = gql`
-      {
+      query complexQuery {
         vader: people_one(id: 4) {
           name
         }
@@ -751,24 +751,15 @@ describe('QueryManager', () => {
     queryManager.query({
       query: primeQuery,
     }).then(() => {
-      let handleCount = 0;
-
       const handle = queryManager.watchQuery({
         query: complexQuery,
         returnPartialData: true,
       });
 
-      const subscription = handle.subscribe({
-        next(result) {
-          console.log(result);
-        },
-        error(error) {
-          done(error);
-        },
+      return handle.result().then((result) => {
+        assert.equal(result.data['luke'].name, 'Luke Skywalker');
+        assert.notProperty(result.data, 'vader');
       });
-
-      // Refetch before we get any data - maybe the network is slow, and the user clicked refresh?
-      subscription.refetch();
     });
   });
 

@@ -354,6 +354,53 @@ describe('QueryManager', () => {
     });
   });
 
+  it('uses console.error to log unhandled errors', (done) => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        error: new Error('Network error'),
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    const oldError = console.error;
+    let printed;
+    console.error = (...args) => {
+      printed = args;
+    }
+
+    handle.subscribe({
+      next: (result) => {
+        done(new Error('Should not deliver result'));
+      }
+    });
+
+    setTimeout(() => {
+      assert.match(printed[0], /error/);
+      console.error = oldError;
+      done();
+    });
+  });
+
   it('handles an unsubscribe action that happens before data returns', (done) => {
     const query = gql`
       query people {

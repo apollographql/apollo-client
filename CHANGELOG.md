@@ -4,11 +4,13 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- ...
+
+### v0.3.5
+
 - Improve error message when a dev forgets `gql` to link to docs. [PR #181](https://github.com/apollostack/apollo-client/pull/181)
 - Memoize results from `gql`, so that we save time on parsing, and we can use `===` to compare queries for performance. [Issue #199](https://github.com/apollostack/apollo-client/issues/199) [PR #200](https://github.com/apollostack/apollo-client/pull/200)
 - Fix error when using `returnPartialData`. [Issue #193](https://github.com/apollostack/apollo-client/issues/193) [PR #201](https://github.com/apollostack/apollo-client/pull/201)
-- ...
-
 
 ### v0.3.4
 

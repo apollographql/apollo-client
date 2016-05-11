@@ -65,11 +65,13 @@ export function readSelectionSetFromStore({
   rootId,
   selectionSet,
   variables,
+  returnPartialData = false,
 }: {
   store: NormalizedCache,
   rootId: string,
   selectionSet: SelectionSet,
   variables: Object,
+  returnPartialData?: boolean,
 }): Object {
   const {
     result,
@@ -77,7 +79,7 @@ export function readSelectionSetFromStore({
     selectionSet,
     rootId,
     store,
-    throwOnMissingField: true,
+    throwOnMissingField: !returnPartialData,
     variables,
   });
 

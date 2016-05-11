@@ -195,6 +195,7 @@ export class QueryManager {
               rootId: queryStoreValue.query.id,
               selectionSet: queryStoreValue.query.selectionSet,
               variables: queryStoreValue.variables,
+              returnPartialData: options.returnPartialData,
             });
 
             if (observer.next) {

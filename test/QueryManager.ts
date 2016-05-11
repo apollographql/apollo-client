@@ -689,6 +689,80 @@ describe('QueryManager', () => {
     });
   });
 
+  it('supports returnPartialData #193', () => {
+    const primeQuery = gql`
+      query primeQuery {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const complexQuery = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const diffedQuery = gql`
+      query complexQuery {
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      vader: {
+        name: 'Darth Vader',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: primeQuery },
+        result: { data: data1 },
+      },
+      {
+        request: { query: diffedQuery },
+        result: { data: data2 },
+        delay: 5,
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    // First, prime the store so that query diffing removes the query
+    queryManager.query({
+      query: primeQuery,
+    }).then(() => {
+      const handle = queryManager.watchQuery({
+        query: complexQuery,
+        returnPartialData: true,
+      });
+
+      return handle.result().then((result) => {
+        assert.equal(result.data['luke'].name, 'Luke Skywalker');
+        assert.notProperty(result.data, 'vader');
+      });
+    });
+  });
+
   it('runs a mutation', () => {
     const mutation = gql`
       mutation makeListPrivate {

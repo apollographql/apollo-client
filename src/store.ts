@@ -53,11 +53,9 @@ const crashReporter = store => next => action => {
   }
 };
 
-const RESET_ACTION_TYPE = 'RESET_STATE';
-
 export function createApolloReducer(config: ApolloReducerConfig): Function {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
-    if (action.type === RESET_ACTION_TYPE) {
+    if (action.type === 'RESET_STATE') {
       return {
         queries: {},
         mutations: {},

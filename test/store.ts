@@ -57,4 +57,30 @@ describe('createApolloStore', () => {
 
     assert.deepEqual(store.getState(), initialState);
   });
+
+  it('can reset its state when RESET_STATE action types are dispatched', () => {
+    const initialState = {
+      apollo: {
+        queries: {
+          'test.0': true,
+        },
+        mutations: {},
+        data: {
+          'test.0': true,
+        },
+      },
+    };
+    const store = createApolloStore({initialState});
+    store.dispatch({
+      type: 'RESET_STATE',
+    });
+    assert.deepEqual(store.getState().apollo, {
+      queries: {},
+      mutations: {},
+      data: {},
+    });
+  });
+
 });
+
+

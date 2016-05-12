@@ -81,7 +81,7 @@ export function createApolloStore({
   reduxRootKey = 'apollo',
   initialState,
   config = {},
-  }: {
+}: {
   reduxRootKey?: string,
   initialState?: any,
   config?: ApolloReducerConfig,

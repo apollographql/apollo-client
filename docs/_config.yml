@@ -23,6 +23,7 @@ sidebar_categories:
     - apollo-client/redux
     - apollo-client/network
     - apollo-client/devtools
+    - apollo-client/how-it-works
   Apollo Server:
     - apollo-server/index
     - apollo-server/guide

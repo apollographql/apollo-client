@@ -54,6 +54,7 @@ The Apollo server, and the Express GraphQL package that it is based on, rely on 
 import { apolloServer } from 'graphql-tools';
 import express from 'express';
 import proxyMiddleware from 'http-proxy-middleware';
+import { WebApp } from 'meteor/webapp';
 
 import { schema, resolvers } from '/imports/api/schema';
 

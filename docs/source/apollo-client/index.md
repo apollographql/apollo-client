@@ -64,33 +64,9 @@ const client = new ApolloClient({
 });
 ```
 
-To automatically send cookies for the current domain (same server-client environment), the credentials option must be provided,
+<h4 id="corsSupport" title="cors support">CORS support</h3>
 
-```js
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
-
-const networkInterface = createNetworkInterface('/graphql', {
-  credentials: 'same-origin',
-  headers: {
-    'X-CSRF-Token': "xyz", // Rails or Phoenix framework
-    token: 'supersecret' // Custom auth token
-  }
-});
-
-const client = new ApolloClient({ networkInterface });
-```
-
-Use the include value to send cookies in a cross-origin resource sharing (CORS) request.
-
-```js
-const networkInterface = createNetworkInterface('/graphql', {
-  credentials: 'include',
-  headers: {
-    'X-CSRF-Token': "xyz",
-    token: 'supersecret'
-  }
-});
-```
+When attempting to setup an apollo-server and client application running on different instances, you will find http-405 errors thrown by the client. This happens when recieving the response from the server which is denying the request because of CORS. The client is working as designed. CORS support should be enabled in the apollo-server instance. Howto can be found in the [apollo-server/tools.md](/source/apollo-server/tools.md). This was encountered using the meteor-stater-kit and was confirmed from others running the apollo-server with express in node.
 
 <h3 id="store-rehydration" title="Loading Intial Data from Server">Loading Intial Data from Server</h3>
 

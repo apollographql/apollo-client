@@ -74,7 +74,7 @@ export interface MutationInitAction {
 }
 
 export interface ResetAction {
-  type: 'RESET_STATE';
+  type: 'RESET_APOLLO_STATE';
 }
 
 export function isResetAction(action: ApolloAction): action is ResetAction {

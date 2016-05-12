@@ -73,10 +73,6 @@ export interface MutationInitAction {
   mutationId: string;
 }
 
-export interface ResetAction {
-  type: 'RESET_STATE';
-}
-
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
   return action.type === 'MUTATION_INIT';
 }
@@ -98,5 +94,4 @@ export type ApolloAction =
   QueryResultClientAction |
   QueryStopAction |
   MutationInitAction |
-  MutationResultAction |
-  ResetAction;
+  MutationResultAction;

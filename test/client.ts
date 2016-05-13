@@ -462,4 +462,82 @@ describe('client', () => {
       },
     });
   });
+
+  describe('accepts dataIdFromObject option', () => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            id
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            id: '1',
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    it('for internal store', () => {
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data },
+      });
+
+      const client = new ApolloClient({
+        networkInterface,
+        dataIdFromObject: (obj: { id: any }) => obj.id,
+      });
+
+      return client.query({ query })
+        .then((result) => {
+          assert.deepEqual(result, { data });
+          assert.deepEqual(client.store.getState()['apollo'].data['1'],
+            {
+              id: '1',
+              name: 'Luke Skywalker',
+            }
+          );
+        });
+    });
+
+    it('for existing store', () => {
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data },
+      });
+
+      const client = new ApolloClient({
+        networkInterface,
+        dataIdFromObject: (obj: { id: any }) => obj.id,
+      });
+
+      const store = createStore(
+        combineReducers({
+          apollo: client.reducer(),
+        }),
+        applyMiddleware(client.middleware())
+      );
+
+
+      return client.query({ query })
+        .then((result) => {
+          assert.deepEqual(result, { data });
+          assert.deepEqual(store.getState()['apollo'].data['1'],
+            {
+              id: '1',
+              name: 'Luke Skywalker',
+            }
+          );
+        });
+    });
+  });
 });

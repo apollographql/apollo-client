@@ -115,6 +115,7 @@ export default class ApolloClient {
     this.setStore(createApolloStore({
       reduxRootKey: this.reduxRootKey,
       initialState: this.initialState,
+      config: this.reducerConfig,
     }));
   };
 

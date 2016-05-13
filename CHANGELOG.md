@@ -4,9 +4,12 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- ...
+
+### v0.3.6
+
 - Use `console.error` to log unhandled network errors. [Issue #189](https://github.com/apollostack/apollo-client/issues/189) [PR #203](https://github.com/apollostack/apollo-client/pull/203)
 - Suggest using variables instead of inline arguments for non-scalar types. [Issue #202](https://github.com/apollostack/apollo-client/issues/202) [PR #211](https://github.com/apollostack/apollo-client/pull/211)
-- ...
 
 ### v0.3.5
 

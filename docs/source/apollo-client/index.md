@@ -20,12 +20,13 @@ To use this client in a web browser or mobile app, you'll need a build system ca
 
 The Apollo Client class is the thing you import from this package, and should be instantiated to communicate with your server. You can instantiate as many clients as you want, but most apps will have exactly one of these. If you want to talk to multiple backends, the right place to do that is in your GraphQL server.
 
-<h3 id="ApolloClient" title="ApolloClient">new ApolloClient(options)</h3>
+<h3 id="ApolloClient" title="ApolloClient constructor">new ApolloClient(options)</h3>
 
 Instantiate a new Apollo Client.
 
-- `networkInterface: NetworkInterface` (Optional, defaults to an interface that points to `/graphql`) The network interface to use when sending GraphQL queries to the server.
-- `reduxRootKey: string` (Optional, `apollo` by default) The key under which Apollo data will be stored in the Redux store. [Read more about integrating with Redux](redux.html). If you aren't integrating with an existing Redux store, don't worry about this.
+- `networkInterface` (Optional, defaults to an HTTP interface that points to `/graphql`) The network interface to use when sending GraphQL queries to the server. Create this using [createNetworkInterface](#createNetworkInterface), or make a [totally custom one](network.html).
+- `dataIdFromObject` (Optional) A function to use during result normalization to determine the IDs of result objects. Function signature should be `(result: Object) => string`. [Learn more about normalization.](how-it-works.html#normalize)
+- `reduxRootKey` (Optional, `'apollo'` by default) The key under which Apollo data will be stored in the Redux store. [Read more about integrating with Redux](redux.html). If you aren't integrating with an existing Redux store, don't worry about this.
 
 Here's how you would instantiate a default client that points to `/graphql`:
 
@@ -66,7 +67,7 @@ const client = new ApolloClient({
 
 <h4 id="corsSupport" title="cors support">CORS support</h4>
 
-When attempting to setup an apollo-server and client application running on different instances, you will find http-405 errors thrown by the client. This happens when recieving the response from the server which is denying the request because of CORS. The client is working as designed. CORS support should be enabled in the apollo-server instance. Howto can be found in the [apollo-server/tools.md](/source/apollo-server/tools.md). This was encountered using the meteor-stater-kit and was confirmed from others running the apollo-server with express in node.
+If your GraphQL server and client application are running on different origins, you will get HTTP 405 errors thrown by the client. This happens when recieving the response from the server which is denying the request because of CORS. The client is working as designed. CORS support should be enabled in the apollo-server instance. Howto can be found in the [apollo-server/tools.md](/source/apollo-server/tools.md). This was encountered using the meteor-stater-kit and was confirmed from others running the apollo-server with express in node.
 
 <h3 id="store-rehydration" title="Loading Intial Data from Server">Loading Intial Data from Server</h3>
 

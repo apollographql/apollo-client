@@ -1,8 +1,5 @@
 import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
-import isString = require('lodash.isstring');
-import isNumber = require('lodash.isnumber');
-import isBoolean = require('lodash.isboolean');
 import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
 
@@ -179,47 +176,40 @@ function writeFieldToStore({
   const storeFieldName: string = storeKeyNameFromField(field, variables);
 
   // If it's a scalar, just store it in the store
-  if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
+  if (!field.selectionSet || isNull(value)) {
     storeValue = value;
   } else if (isArray(value)) {
+    // this is an array with sub-objects
+    const thisIdList: Array<string> = [];
 
-    // GraphQL lists should be of the same type.
-    // If it's an array of scalar values, don't normalize.
-    if (isNull(field.selectionSet)) {
-      storeValue = value;
-    } else {
+    value.forEach((item, index) => {
+      if (isNull(item)) {
+        thisIdList.push(null);
+      } else {
+        let itemDataId = `${dataId}.${storeFieldName}.${index}`;
 
-      const thisIdList: Array<string> = [];
+        if (dataIdFromObject) {
+          const semanticId = dataIdFromObject(item);
 
-      value.forEach((item, index) => {
-        if (isNull(item)) {
-          thisIdList.push(null);
-        } else {
-          let itemDataId = `${dataId}.${storeFieldName}.${index}`;
-
-          if (dataIdFromObject) {
-            const semanticId = dataIdFromObject(item);
-
-            if (semanticId) {
-              itemDataId = semanticId;
-            }
+          if (semanticId) {
+            itemDataId = semanticId;
           }
-
-          thisIdList.push(itemDataId);
-
-          writeSelectionSetToStore({
-            dataId: itemDataId,
-            result: item,
-            store,
-            selectionSet: field.selectionSet,
-            variables,
-            dataIdFromObject,
-          });
         }
-      });
 
-      storeValue = thisIdList;
-    }
+        thisIdList.push(itemDataId);
+
+        writeSelectionSetToStore({
+          dataId: itemDataId,
+          result: item,
+          store,
+          selectionSet: field.selectionSet,
+          variables,
+          dataIdFromObject,
+        });
+      }
+    });
+
+    storeValue = thisIdList;
   } else {
     // It's an object
     let valueDataId = `${dataId}.${storeFieldName}`;

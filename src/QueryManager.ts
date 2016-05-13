@@ -41,10 +41,6 @@ import {
   printQueryFromDefinition,
 } from './queryPrinting';
 
-import {
-  IdGetter,
-} from './data/extensions';
-
 import { Observable, Observer, Subscription } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
@@ -89,7 +85,6 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
-  private dataIdFromObject: IdGetter;
   private pollingTimer: NodeJS.Timer | any; // oddity in typescript
 
   private queryListeners: { [queryId: string]: QueryListener };
@@ -100,19 +95,16 @@ export class QueryManager {
     networkInterface,
     store,
     reduxRootKey,
-    dataIdFromObject,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
-    dataIdFromObject?: IdGetter,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
     this.reduxRootKey = reduxRootKey;
-    this.dataIdFromObject = dataIdFromObject;
 
     this.queryListeners = {};
 
@@ -290,7 +282,6 @@ export class QueryManager {
         throwOnMissingField: false,
         rootId: querySS.id,
         variables,
-        dataIdFromObject: this.dataIdFromObject,
       });
 
       initialResult = result;

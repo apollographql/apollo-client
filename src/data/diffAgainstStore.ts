@@ -20,10 +20,6 @@ import {
 } from '../queries/store';
 
 import {
-  IdGetter,
-} from './extensions';
-
-import {
   SelectionSet,
   Field,
   Document,
@@ -45,12 +41,10 @@ export function diffQueryAgainstStore({
   store,
   query,
   variables,
-  dataIdFromObject,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
-  dataIdFromObject?: IdGetter,
 }): DiffResult {
   const queryDef = getQueryDefinition(query);
 
@@ -60,7 +54,6 @@ export function diffQueryAgainstStore({
     selectionSet: queryDef.selectionSet,
     throwOnMissingField: false,
     variables,
-    dataIdFromObject,
   });
 }
 
@@ -69,13 +62,11 @@ export function diffFragmentAgainstStore({
   fragment,
   rootId,
   variables,
-  dataIdFromObject,
 }: {
   store: NormalizedCache,
   fragment: Document,
   rootId: string,
   variables?: Object,
-  dataIdFromObject?: IdGetter,
 }): DiffResult {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -85,7 +76,6 @@ export function diffFragmentAgainstStore({
     selectionSet: fragmentDef.selectionSet,
     throwOnMissingField: false,
     variables,
-    dataIdFromObject,
   });
 }
 
@@ -106,14 +96,12 @@ export function diffSelectionSetAgainstStore({
   rootId,
   throwOnMissingField = false,
   variables,
-  dataIdFromObject,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
   rootId: string,
   throwOnMissingField: boolean,
   variables: Object,
-  dataIdFromObject?: IdGetter,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -142,7 +130,6 @@ export function diffSelectionSetAgainstStore({
         variables,
         rootId,
         store,
-        dataIdFromObject,
       });
 
       if (fieldIsMissing) {
@@ -162,7 +149,6 @@ export function diffSelectionSetAgainstStore({
         variables,
         rootId,
         store,
-        dataIdFromObject,
       });
 
       if (fieldIsMissing) {
@@ -214,14 +200,12 @@ function diffFieldAgainstStore({
   variables,
   rootId,
   store,
-  dataIdFromObject,
 }: {
   field: Field,
   throwOnMissingField: boolean,
   variables: Object,
   rootId: string,
   store: NormalizedCache,
-  dataIdFromObject: IdGetter,
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
@@ -269,7 +253,6 @@ function diffFieldAgainstStore({
         rootId: id,
         selectionSet: field.selectionSet,
         variables,
-        dataIdFromObject,
       });
 
       if (itemDiffResult.isMissing) {
@@ -293,7 +276,6 @@ function diffFieldAgainstStore({
       rootId: storeValue,
       selectionSet: field.selectionSet,
       variables,
-      dataIdFromObject,
     });
   }
 

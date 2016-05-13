@@ -3,10 +3,17 @@
 [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
 [![Get on Slack](http://slack.apollostack.com/badge.svg)](http://slack.apollostack.com/)
 
-A simple but functional GraphQL client with a great development experience.
+The Apollo Client can easily be dropped into any JavaScript frontend where you want to use data from a GraphQL server.
 
-- [Read about our design principles.](design.md)
-- [Check out our in-progress documentation.](http://docs.apollostack.com/apollo-client/)
+## Installing
+
+```txt
+npm install apollo-client
+```
+
+To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3. Move on to the next article to see how to import and initialize the client.
+
+[Read the docs.](http://docs.apollostack.com/apollo-client/index.html)
 
 ---
 

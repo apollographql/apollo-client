@@ -6,12 +6,16 @@ if node -e "process.exit(($npm_config_argv).original[0].indexOf('pu') === 0)"; t
   exit 0;
 fi
 
+
+if node -e "process.exit(process.platform.indexOf('win32') === 0)"; then
+  exit 0;
+fi
+
 # When we publish to npm, the published files are available in the root
 # directory, which allows for a clean include or require of sub-modules.
 #
 #    var language = require('apollo-client/parser');
 #
-
 npm run compile
 
 rm -rf ./npm

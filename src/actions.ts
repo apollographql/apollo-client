@@ -74,11 +74,11 @@ export interface MutationInitAction {
 }
 
 export interface ResetAction {
-  type: 'RESET_APOLLO_STATE';
+  type: 'APOLLO_RESET';
 }
 
 export function isResetAction(action: ApolloAction): action is ResetAction {
-  return action.type === 'RESET_APOLLO_STATE';
+  return action.type === 'APOLLO_RESET';
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {

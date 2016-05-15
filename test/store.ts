@@ -72,7 +72,7 @@ describe('createApolloStore', () => {
     };
     const store = createApolloStore({initialState});
     store.dispatch({
-      type: 'RESET_APOLLO_STATE',
+      type: 'APOLLO_RESET',
     });
     assert.deepEqual(store.getState().apollo, {
       queries: {},

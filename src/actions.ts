@@ -7,29 +7,29 @@ import {
 } from './queries/store';
 
 export interface QueryResultAction {
-  type: 'QUERY_RESULT';
+  type: 'APOLLO_QUERY_RESULT';
   result: GraphQLResult;
   queryId: string;
   requestId: number;
 }
 
 export function isQueryResultAction(action: ApolloAction): action is QueryResultAction {
-  return action.type === 'QUERY_RESULT';
+  return action.type === 'APOLLO_QUERY_RESULT';
 }
 
 export interface QueryErrorAction {
-  type: 'QUERY_ERROR';
+  type: 'APOLLO_QUERY_ERROR';
   error: Error;
   queryId: string;
   requestId: number;
 }
 
 export function isQueryErrorAction(action: ApolloAction): action is QueryErrorAction {
-  return action.type === 'QUERY_ERROR';
+  return action.type === 'APOLLO_QUERY_ERROR';
 }
 
 export interface QueryInitAction {
-  type: 'QUERY_INIT';
+  type: 'APOLLO_QUERY_INIT';
   queryString: string;
   query: SelectionSetWithRoot;
   minimizedQueryString: string;
@@ -42,31 +42,31 @@ export interface QueryInitAction {
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {
-  return action.type === 'QUERY_INIT';
+  return action.type === 'APOLLO_QUERY_INIT';
 }
 
 export interface QueryResultClientAction {
-  type: 'QUERY_RESULT_CLIENT';
+  type: 'APOLLO_QUERY_RESULT_CLIENT';
   result: GraphQLResult;
   complete: boolean;
   queryId: string;
 }
 
 export function isQueryResultClientAction(action: ApolloAction): action is QueryResultClientAction {
-  return action.type === 'QUERY_RESULT_CLIENT';
+  return action.type === 'APOLLO_QUERY_RESULT_CLIENT';
 }
 
 export interface QueryStopAction {
-  type: 'QUERY_STOP';
+  type: 'APOLLO_QUERY_STOP';
   queryId: string;
 }
 
 export function isQueryStopAction(action: ApolloAction): action is QueryStopAction {
-  return action.type === 'QUERY_STOP';
+  return action.type === 'APOLLO_QUERY_STOP';
 }
 
 export interface MutationInitAction {
-  type: 'MUTATION_INIT';
+  type: 'APOLLO_MUTATION_INIT';
   mutationString: string;
   mutation: SelectionSetWithRoot;
   variables: Object;
@@ -74,17 +74,17 @@ export interface MutationInitAction {
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
-  return action.type === 'MUTATION_INIT';
+  return action.type === 'APOLLO_MUTATION_INIT';
 }
 
 export interface MutationResultAction {
-  type: 'MUTATION_RESULT';
+  type: 'APOLLO_MUTATION_RESULT';
   result: GraphQLResult;
   mutationId: string;
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {
-  return action.type === 'MUTATION_RESULT';
+  return action.type === 'APOLLO_MUTATION_RESULT';
 }
 
 export type ApolloAction =

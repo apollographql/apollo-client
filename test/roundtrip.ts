@@ -66,6 +66,31 @@ describe('roundtrip', () => {
       vaderId: '4',
     });
   });
+
+  it('with GraphQLJSON scalar type', () => {
+    storeRoundtrip(gql`
+      {
+        updateClub {
+          uid,
+          name,
+          settings
+        }
+      }
+    `, {
+      updateClub: {
+        uid: '1d7f836018fc11e68d809dfee940f657',
+        name: 'Eple',
+        settings: {
+          name: 'eple',
+          currency: 'AFN',
+          calendarStretch: 2,
+          defaultPreAllocationPeriod: 1,
+          confirmationEmailCopy: null,
+          emailDomains: null,
+        },
+      },
+    });
+  });
 });
 
 function storeRoundtrip(query: Document, result, variables = {}) {

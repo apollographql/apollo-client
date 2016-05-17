@@ -352,7 +352,7 @@ export class QueryManager {
           });
 
           return result;
-        }).then((result: GraphQLResult) => {
+        }).then(() => {
 
           let resultFromStore;
           try {

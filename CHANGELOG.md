@@ -4,7 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- Namespace Apollo action types to prevent collision with user's own Redux action types. [Issue #210](https://github.com/apollostack/apollo-client/issues/210) [PR #222](https://github.com/apollostack/apollo-client/pull/222) 
+### v0.3.9
+
+- Namespace Apollo action types to prevent collision with user's own Redux action types. [Issue #210](https://github.com/apollostack/apollo-client/issues/210) [PR #222](https://github.com/apollostack/apollo-client/pull/222)
 - Queries on refetch return promises. [PR #178](https://github.com/apollostack/apollo-client/pull/178)
 
 ### v0.3.8

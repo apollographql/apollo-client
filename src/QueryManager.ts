@@ -324,7 +324,7 @@ export class QueryManager {
 
     if (! minimizedQuery || returnPartialData) {
       this.store.dispatch({
-        type: 'QUERY_RESULT_CLIENT',
+        type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: {
           data: initialResult,
         },

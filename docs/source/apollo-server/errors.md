@@ -1,6 +1,6 @@
 ---
 title: Error handling and logging
-order: 204
+order: 208
 description: Add better error logging to your GraphQL schema.
 ---
 

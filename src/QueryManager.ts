@@ -383,12 +383,11 @@ export class QueryManager {
 
           return error;
         });
-    } else {
-      // return a chainable promise
-      return new Promise((resolve) => {
-        resolve({ data: initialResult });
-      });
     }
+    // return a chainable promise
+    return new Promise((resolve) => {
+      resolve({ data: initialResult });
+    });
   }
 
   private getApolloState(): Store {

@@ -140,7 +140,7 @@ export class QueryManager {
     } as Request;
 
     this.store.dispatch({
-      type: 'MUTATION_INIT',
+      type: 'APOLLO_MUTATION_INIT',
       mutationString,
       mutation: {
         id: 'ROOT_MUTATION',
@@ -154,7 +154,7 @@ export class QueryManager {
     return this.networkInterface.query(request)
       .then((result) => {
         this.store.dispatch({
-          type: 'MUTATION_RESULT',
+          type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
         });
@@ -310,7 +310,7 @@ export class QueryManager {
 
     // Initialize query in store with unique requestId
     this.store.dispatch({
-      type: 'QUERY_INIT',
+      type: 'APOLLO_QUERY_INIT',
       queryString,
       query: querySS,
       minimizedQueryString,
@@ -332,14 +332,14 @@ export class QueryManager {
         .then((result: GraphQLResult) => {
           // XXX handle multiple GraphQLResults
           this.store.dispatch({
-            type: 'QUERY_RESULT',
+            type: 'APOLLO_QUERY_RESULT',
             result,
             queryId,
             requestId,
           });
         }).catch((error: Error) => {
           this.store.dispatch({
-            type: 'QUERY_ERROR',
+            type: 'APOLLO_QUERY_ERROR',
             error,
             queryId,
             requestId,
@@ -349,7 +349,7 @@ export class QueryManager {
 
     if (! minimizedQuery || returnPartialData) {
       this.store.dispatch({
-        type: 'QUERY_RESULT_CLIENT',
+        type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: {
           data: initialResult,
         },
@@ -391,7 +391,7 @@ export class QueryManager {
     }
 
     this.store.dispatch({
-      type: 'QUERY_STOP',
+      type: 'APOLLO_QUERY_STOP',
       queryId,
     });
   }

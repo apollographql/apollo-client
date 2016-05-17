@@ -66,7 +66,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 }
 
 export interface QuerySubscription extends Subscription {
-  refetch(variables?: any): void;
+  refetch(variables?: any): Promise<GraphQLResult>;
   stopPolling(): void;
   startPolling(pollInterval: number): void;
 }
@@ -205,7 +205,7 @@ export class QueryManager {
         unsubscribe: () => {
           this.stopQuery(queryId);
         },
-        refetch: (variables: any): void => {
+        refetch: (variables: any): Promise<GraphQLResult> => {
           // if we are refetching, we clear out the polling interval
           // if the new refetch passes pollInterval: false, it won't recreate
           // the timer for subsequent refetches
@@ -217,7 +217,7 @@ export class QueryManager {
           variables = variables || options.variables;
 
           // Use the same options as before, but with new variables and forceFetch true
-          this.fetchQuery(queryId, assign(options, {
+          return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
             variables,
           }) as WatchQueryOptions);
@@ -247,7 +247,7 @@ export class QueryManager {
     return this.watchQuery(options).result();
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions) {
+  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
     const {
       query,
       variables,
@@ -322,31 +322,6 @@ export class QueryManager {
       requestId,
     });
 
-    if (minimizedQuery) {
-      const request: Request = {
-        query: minimizedQueryString,
-        variables,
-      };
-
-      this.networkInterface.query(request)
-        .then((result: GraphQLResult) => {
-          // XXX handle multiple GraphQLResults
-          this.store.dispatch({
-            type: 'APOLLO_QUERY_RESULT',
-            result,
-            queryId,
-            requestId,
-          });
-        }).catch((error: Error) => {
-          this.store.dispatch({
-            type: 'APOLLO_QUERY_ERROR',
-            error,
-            queryId,
-            requestId,
-          });
-        });
-    }
-
     if (! minimizedQuery || returnPartialData) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
@@ -359,6 +334,60 @@ export class QueryManager {
         queryId,
       });
     }
+
+    if (minimizedQuery) {
+      const request: Request = {
+        query: minimizedQueryString,
+        variables,
+      };
+
+      return this.networkInterface.query(request)
+        .then((result: GraphQLResult) => {
+          // XXX handle multiple GraphQLResults
+          this.store.dispatch({
+            type: 'APOLLO_QUERY_RESULT',
+            result,
+            queryId,
+            requestId,
+          });
+
+          return result;
+        }).then(() => {
+
+          let resultFromStore;
+          try {
+            // ensure result is combined with data already in store
+            resultFromStore = readSelectionSetFromStore({
+              store: this.getApolloState().data,
+              rootId: querySS.id,
+              selectionSet: querySS.selectionSet,
+              variables,
+              returnPartialData: returnPartialData,
+            });
+          // ensure multiple errors don't get thrown
+          /* tslint:disable */
+          } catch (e) {}
+          /* tslint:enable */
+
+          // return a chainable promise
+          return new Promise((resolve) => {
+            resolve({ data: resultFromStore });
+          });
+        }).catch((error: Error) => {
+          this.store.dispatch({
+            type: 'APOLLO_QUERY_ERROR',
+            error,
+            queryId,
+            requestId,
+          });
+
+          return error;
+        });
+    }
+    // return a chainable promise
+    return new Promise((resolve) => {
+      resolve({ data: initialResult });
+    });
   }
 
   private getApolloState(): Store {

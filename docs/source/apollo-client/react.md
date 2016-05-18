@@ -141,7 +141,7 @@ const CategoryWithData = connect({
 export default CategoryWithData;
 ```
 
-Each key on the object returned by mapQueriesToProps should be made up of the same possible arguments as [`ApolloClient#watchQuery`](index.html#watchQuery). In this case, the `Category` component will get a prop called `category`, which has the following keys:
+Each key on the object returned by mapQueriesToProps should be made up of the same possible arguments as [`ApolloClient#watchQuery`](core.html#watchQuery). In this case, the `Category` component will get a prop called `category`, which has the following keys:
 
 ```js
 {
@@ -152,7 +152,7 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
 }
 ```
 
-`mapMutationsToProps` returns an object made up of keys and values that are custom functions to call the mutation. These can be used in children components (for instance, on a event handler) to trigger the mutation. The resulting function must return the same possible arguents as [`ApolloClient#mutate`](index.html#mutate). In this case, the `Category` component will get a prop called `postReply`, which has the following keys:
+`mapMutationsToProps` returns an object made up of keys and values that are custom functions to call the mutation. These can be used in children components (for instance, on a event handler) to trigger the mutation. The resulting function must return the same possible arguents as [`ApolloClient#mutate`](core.html#mutate). In this case, the `Category` component will get a prop called `postReply`, which has the following keys:
 
 ```js
 {

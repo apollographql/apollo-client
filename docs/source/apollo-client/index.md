@@ -16,6 +16,8 @@ npm install apollo-client
 
 To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3. Move on to the next article to see how to import and initialize the client.
 
+The most convenient way to use Apollo Client in your app is through [react-apollo](react.html) or [angular2-apollo](angular2.html), so once you've initialized the client following the directions below head over there to see how to connect the data to your UI.
+
 ## Initializing
 
 The Apollo Client class is the thing you import from this package, and should be instantiated to communicate with your server. You can instantiate as many clients as you want, but most apps will have exactly one of these. If you want to talk to multiple backends, the right place to do that is in your GraphQL server.

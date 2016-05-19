@@ -31,3 +31,6 @@ lib
 test-lib
 dist
 npm
+
+# webstorm
+.idea/

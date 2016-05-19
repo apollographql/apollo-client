@@ -168,9 +168,9 @@ Ensure you have npm installed cors. The * value allows access from any third-par
 
 The information contained in the apolloClient re: CORS configuration did not effect on the server.
 
-<h2 id="corsSupport">Authentication Tokens</h2>
+<h2 id="auth-tokens">Authentication Tokens</h2>
 
-Authentication tokens sent from the client can be retrieved, processed and then passed into context to be accessed by resolvers like so:
+Authentication tokens sent from the client can be retrieved, processed, and then passed into context to be accessed by resolvers like so:
 ```javascript
 app.use('/graphql', apolloServer(async (req) => {
   // Retrieve token from authorization header and lookup user in DB
@@ -178,7 +178,7 @@ app.use('/graphql', apolloServer(async (req) => {
 
   return {
     context: {
-      // Attach users data to context
+      // Attach user data to context
       user,
       models,
       ...

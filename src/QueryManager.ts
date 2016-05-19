@@ -3,6 +3,7 @@ import {
   Request,
 } from './networkInterface';
 
+
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
 
@@ -47,6 +48,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
   public subscribe(observer: Observer<GraphQLResult>): QuerySubscription {
     return super.subscribe(observer) as QuerySubscription;
   }
+
 
   public result(): Promise<GraphQLResult> {
     return new Promise((resolve, reject) => {

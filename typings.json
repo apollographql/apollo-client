@@ -14,5 +14,9 @@
     "promises-a-plus": "registry:dt/promises-a-plus#0.0.0+20160317120654",
     "redux": "registry:dt/redux#1.0.0+20160317120654",
     "apollo-client": "file:./ambient.d.ts"
+  },
+  "resolution": {
+    "main": "typings/main",
+    "browser": "typings/browser"
   }
 }

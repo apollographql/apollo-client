@@ -113,11 +113,13 @@ export class QueryManager {
      if (this.store['subscribe']) {
       let currentStoreData;
       this.store['subscribe'](() => {
-        let previousStoreData = currentStoreData;
-        currentStoreData = this.getApolloState().data;
-        if (previousStoreData !== currentStoreData) {
-          this.broadcastQueries();
+        let previousStoreData = currentStoreData || {};
+        currentStoreData = this.getApolloState();
+        const previousStoreHasData = Object.keys(previousStoreData).length;
+        if ((previousStoreData === currentStoreData) && previousStoreHasData) {
+         return;
         }
+        this.broadcastQueries();
       });
     }
   }

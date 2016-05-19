@@ -115,7 +115,7 @@ export class QueryManager {
       this.store['subscribe'](() => {
         let previousStoreData = currentStoreData || {};
         const previousStoreHasData = Object.keys(previousStoreData).length;
-        currentStoreData = this.getApolloState();
+        currentStoreData = this.getApolloState().data;
         if ((previousStoreData === currentStoreData) && previousStoreHasData) {
           return;
         }

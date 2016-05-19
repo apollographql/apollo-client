@@ -5,6 +5,7 @@ import {
 
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
+import isEqual = require('lodash.isequal');
 
 import {
   ApolloStore,
@@ -115,8 +116,8 @@ export class QueryManager {
       this.store['subscribe'](() => {
         let previousStoreData = currentStoreData || {};
         const previousStoreHasData = Object.keys(previousStoreData).length;
-        currentStoreData = this.getApolloState().data;
-        if ((previousStoreData === currentStoreData) && previousStoreHasData) {
+        currentStoreData = this.getApolloState();
+        if (isEqual(previousStoreData, currentStoreData) && previousStoreHasData) {
           return;
         }
         this.broadcastQueries();

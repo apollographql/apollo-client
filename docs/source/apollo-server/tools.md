@@ -157,7 +157,7 @@ If execution should not continue, resolve functions should return `null` and not
 An issue was discovered re: CORS when using the apolloClient to connect to an apolloServer running on a different instance. 
 To account for this CORS support must be configured in the express app. [CORS](https://github.com/expressjs/cors) is a node.js package for providing a Connect/Express middleware that can be used to enable CORS with various options. 
 
-```
+```javascript
 import { apolloServer } from 'graphql-tools';
 import cors from 'cors';
 
@@ -167,4 +167,20 @@ var app = express().use('*', cors());;
 Ensure you have npm installed cors. The * value allows access from any third-party site. It should probably be updated to reflect your specific environment. Simple usage details to [Enable All CORS Requests](https://github.com/expressjs/cors#simple-usage-enable-all-cors-requests) More complex configuration options are available including the ability to [Enable CORS for a Single Route](https://github.com/expressjs/cors#enable-cors-for-a-single-route).
 
 The information contained in the apolloClient re: CORS configuration did not effect on the server.
+
+<h2 id="corsSupport">Authentication Tokens</h2>
+
+Authentication tokens sent from the client can be retrieved, processed and then passed into context to be accessed by resolvers like so:
+```javascript
+app.use('/graphql', apolloServer(async (req) => {
+  // Retrieve token from authorization header and lookup user in DB
+  const user = await models.mongoose.users.fromToken(req.headers.authorization);
+
+  return {
+    context: {
+      // Attach users data to context
+      user,
+      models,
+      ...
+```
 

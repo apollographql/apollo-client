@@ -28,7 +28,7 @@ We have put together some basic example apps using various parts of Apollo; chec
 - [A simple counter example](https://github.com/abhiaiyer91/meteor-apollo-counter)
 - [Instagram Recent Search](https://github.com/abhiaiyer91/meteor-instagram-apollo)
 - [Shopping Cart](https://github.com/abhiaiyer91/meteor-pg-apollo-shopping-cart)
-- [A Meteor Integration example that uses SQL, MonogDB + Rest](https://github.com/abhiaiyer91/sample-graphql-meteor-server)
+- [A Meteor Integration example that uses SQL, MongoDB + Rest](https://github.com/abhiaiyer91/sample-graphql-meteor-server)
 
 ### General JS Examples
 - [A full-stack app with a Material UI React frontend on top of Discourse](https://github.com/apollostack/apollo-demo)

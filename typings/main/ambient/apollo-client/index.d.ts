@@ -75,6 +75,11 @@ declare module 'lodash.mapvalues' {
   export = main.mapValues;
 }
 
+declare module 'lodash.clonedeep' {
+  import main = require('~lodash/index');
+  export = main.cloneDeep
+}
+
 /*
 
   GRAPHQL

@@ -142,7 +142,7 @@ export class QueryManager {
     const mutationId = this.generateQueryId();
 
     let mutationDef = getMutationDefinition(mutation);
-    if (this.queryTransformer != null) {
+    if (this.queryTransformer) {
       mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
     }
     const mutationString = print(mutationDef);
@@ -271,7 +271,7 @@ export class QueryManager {
 
     let queryDef = getQueryDefinition(query);
     // Apply the query transformer if one has been provided.
-    if (this.queryTransformer != null) {
+    if (this.queryTransformer) {
       queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
     }
     const queryString = print(query);

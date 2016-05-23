@@ -51,8 +51,7 @@
     "lodash.isstring": "^4.0.1",
     "lodash.isundefined": "^3.0.1",
     "redux": "^3.3.1",
-    "symbol-observable": "^0.2.4",
-    "to-iso-string": "0.0.2"
+    "symbol-observable": "^0.2.4"
   },
   "devDependencies": {
     "async": "^1.5.2",

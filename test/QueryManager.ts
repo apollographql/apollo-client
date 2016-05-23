@@ -1748,6 +1748,61 @@ describe('QueryManager', () => {
       done();
     });
   });
+
+  it('should transform mutations correctly when given a MutationTransformer', (done) => {
+    const mutation = gql`
+      mutation {
+        createAuthor(firstName: "John", lastName: "Smith") {
+          firstName
+          lastName
+        }
+      }`;
+    const transformedMutation = gql`
+      mutation {
+        createAuthor(firstName: "John", lastName: "Smith") {
+          firstName
+          lastName
+          __typename
+        }
+        __typename
+      }`;
+    const unmodifiedMutationResult = {
+      'createAuthor': {
+        'firstName': 'It works!',
+        'lastName': 'It works!',
+      },
+    };
+    const transformedMutationResult = {
+      'createAuthor': {
+        'firstName': 'It works!',
+        'lastName': 'It works!',
+        '__typename': 'Author',
+      },
+      '__typename': 'RootMutation',
+    };
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: {query: mutation},
+      result: {data: unmodifiedMutationResult},
+    },
+    {
+      request: {query: transformedMutation},
+      result: {data: transformedMutationResult},
+    });
+
+    const queryManagerWithTransformer = new QueryManager({
+      networkInterface: networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+      mutationTransformer: addTypenameToSelectionSet,
+    });
+
+    queryManagerWithTransformer.mutate({mutation: mutation}).then((result) => {
+      assert.deepEqual(result.data, transformedMutationResult);
+      done();
+    });
+  });
 });
 
 function testDiffing(

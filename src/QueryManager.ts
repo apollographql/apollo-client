@@ -267,8 +267,7 @@ export class QueryManager {
 
     let queryDef = getQueryDefinition(query);
     // Apply the query transformer if one has been provided.
-    // TODO make sure this is the right way to check if a nullable variable is present.
-    if (this.queryTransformer) {
+    if (this.queryTransformer != null) {
       queryDef = applyTransformerToQuery(queryDef, this.queryTransformer);
     }
     const queryString = print(query);

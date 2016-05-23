@@ -31,6 +31,8 @@ import {
   HTTPNetworkInterface,
 } from '../src/networkInterface';
 
+import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
+
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 import * as chaiAsPromised from 'chai-as-promised';
@@ -460,6 +462,60 @@ describe('client', () => {
         assert.deepEqual(result.data, data);
         done();
       },
+    });
+  });
+
+  it('should be able to transform queries', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const transformedQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+          __typename
+        }
+        __typename
+      }`;
+
+    const result = {
+      'author': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+      },
+    };
+    const transformedResult = {
+      'author': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+        '__typename': 'Author',
+      },
+      '__typename': 'RootQuery',
+    };
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: { query },
+      result: { data: result },
+    },
+    {
+      request: { query: transformedQuery },
+      result: { data: transformedResult },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      queryTransformer: addTypenameToSelectionSet,
+    });
+
+    client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, transformedResult);
+      done();
     });
   });
 

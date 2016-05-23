@@ -1749,7 +1749,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('should transform mutations correctly when given a MutationTransformer', (done) => {
+  it('should transform mutations correctly', (done) => {
     const mutation = gql`
       mutation {
         createAuthor(firstName: "John", lastName: "Smith") {
@@ -1795,7 +1795,7 @@ describe('QueryManager', () => {
       networkInterface: networkInterface,
       store: createApolloStore(),
       reduxRootKey: 'apollo',
-      mutationTransformer: addTypenameToSelectionSet,
+      queryTransformer: addTypenameToSelectionSet,
     });
 
     queryManagerWithTransformer.mutate({mutation: mutation}).then((result) => {

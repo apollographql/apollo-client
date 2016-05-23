@@ -24,7 +24,6 @@ import {
 
 import {
   QueryTransformer,
-  MutationTransformer,
   applyTransformerToOperation,
 } from './queries/queryTransform';
 
@@ -95,7 +94,6 @@ export class QueryManager {
   private reduxRootKey: string;
   private pollingTimer: NodeJS.Timer | any; // oddity in typescript
   private queryTransformer: QueryTransformer;
-  private mutationTransformer: MutationTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
   private idCounter = 0;
@@ -105,13 +103,11 @@ export class QueryManager {
     store,
     reduxRootKey,
     queryTransformer,
-    mutationTransformer,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
-    mutationTransformer?: MutationTransformer,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -119,7 +115,6 @@ export class QueryManager {
     this.store = store;
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
-    this.mutationTransformer = mutationTransformer;
 
     this.queryListeners = {};
 
@@ -147,8 +142,8 @@ export class QueryManager {
     const mutationId = this.generateQueryId();
 
     let mutationDef = getMutationDefinition(mutation);
-    if (this.mutationTransformer != null) {
-      mutationDef = applyTransformerToOperation(mutationDef, this.mutationTransformer);
+    if (this.queryTransformer != null) {
+      mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
     }
     const mutationString = print(mutationDef);
 
@@ -178,6 +173,7 @@ export class QueryManager {
         });
 
         return result;
+
       });
   }
 

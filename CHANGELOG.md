@@ -4,6 +4,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- ...
+
+### v0.3.11
+
 - Add support for basic query transformation before submitting to the server by passing an option to `ApolloClient` constructor. (e.g. adding `__typename` to each SelectionSet) [Issue #230](https://github.com/apollostack/apollo-client/issues/230) [PR #233](https://github.com/apollostack/apollo-client/pull/233)
 
 ### v0.3.10

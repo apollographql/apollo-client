@@ -7,6 +7,10 @@ import {
 
 import cloneDeep = require('lodash.clonedeep');
 
+// A QueryTransformer takes a SelectionSet and transforms it in someway (in place) and
+// then returns the same SelectionSet.
+export type QueryTransformer = (queryPiece: SelectionSet) => SelectionSet
+
 // Adds typename fields to every node in the AST recursively. Returns a copy of the entire
 // AST with the typename fields added.
 // Note: This muates the AST passed in.
@@ -43,4 +47,13 @@ export function addTypenameToQuery(queryDef: OperationDefinition): OperationDefi
   const queryClone = cloneDeep(queryDef);
   this.addTypenameToSelectionSet(queryClone.selectionSet);
   return queryClone;
+}
+
+// Apply a QueryTranformer to an OperationDefinition (extracted from a query)
+// Returns a new query tree.
+export function applyTransformerToQuery(queryDef: OperationDefinition,
+  queryTransformer: QueryTransformer): OperationDefinition {
+    const queryClone = cloneDeep(queryDef);
+    queryTransformer(queryClone.selectionSet);
+    return queryClone;
 }

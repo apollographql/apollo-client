@@ -11,8 +11,7 @@ import cloneDeep = require('lodash.clonedeep');
 // then returns the same SelectionSet.
 export type QueryTransformer = (queryPiece: SelectionSet) => SelectionSet
 
-// Adds typename fields to every node in the AST recursively. Returns a copy of the entire
-// AST with the typename fields added.
+// Adds typename fields to every node in the AST recursively.
 // Note: This muates the AST passed in.
 export function addTypenameToSelectionSet(queryPiece: SelectionSet) {
   if (queryPiece == null || queryPiece.selections == null) {

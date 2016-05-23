@@ -431,6 +431,7 @@ export class QueryManager {
     const queries = this.getApolloState().queries;
     forOwn(this.queryListeners, (listener: QueryListener, queryId: string) => {
       // it's possible for the listener to be undefined if the query is being stopped
+      // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
       if (listener) {
         const queryStoreValue = queries[queryId];
         listener(queryStoreValue);

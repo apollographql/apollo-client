@@ -23,6 +23,11 @@ import {
 } from './queries/getFromAST';
 
 import {
+  QueryTransformer,
+  applyTransformerToOperation,
+} from './queries/queryTransform';
+
+import {
   GraphQLResult,
   Document,
 } from 'graphql';
@@ -88,7 +93,7 @@ export class QueryManager {
   private store: ApolloStore;
   private reduxRootKey: string;
   private pollingTimer: NodeJS.Timer | any; // oddity in typescript
-
+  private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
   private idCounter = 0;
@@ -97,16 +102,19 @@ export class QueryManager {
     networkInterface,
     store,
     reduxRootKey,
+    queryTransformer,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
+    queryTransformer?: QueryTransformer,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
     this.reduxRootKey = reduxRootKey;
+    this.queryTransformer = queryTransformer;
 
     this.queryListeners = {};
 
@@ -133,8 +141,11 @@ export class QueryManager {
   }): Promise<GraphQLResult> {
     const mutationId = this.generateQueryId();
 
-    const mutationDef = getMutationDefinition(mutation);
-    const mutationString = print(mutation);
+    let mutationDef = getMutationDefinition(mutation);
+    if (this.queryTransformer) {
+      mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
+    }
+    const mutationString = print(mutationDef);
 
     const request = {
       query: mutationString,
@@ -162,6 +173,7 @@ export class QueryManager {
         });
 
         return result;
+
       });
   }
 
@@ -257,7 +269,11 @@ export class QueryManager {
       returnPartialData = false,
     } = options;
 
-    const queryDef = getQueryDefinition(query);
+    let queryDef = getQueryDefinition(query);
+    // Apply the query transformer if one has been provided.
+    if (this.queryTransformer) {
+      queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
+    }
     const queryString = print(query);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged

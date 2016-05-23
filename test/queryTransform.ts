@@ -1,9 +1,12 @@
 import {
   addTypenameToSelectionSet,
   addTypenameToQuery,
-  applyTransformerToQuery,
+  applyTransformerToOperation,
 } from '../src/queries/queryTransform';
-import { getQueryDefinition } from '../src/queries/getFromAST';
+import {
+  getQueryDefinition,
+  getMutationDefinition,
+} from '../src/queries/getFromAST';
 import { print } from 'graphql/language/printer';
 import gql from '../src/gql';
 import { assert } from 'chai';
@@ -117,8 +120,29 @@ describe('query transforms', () => {
     }
     `);
 
-    const modifiedQuery = applyTransformerToQuery(testQuery, addTypenameToSelectionSet);
+    const modifiedQuery = applyTransformerToOperation(testQuery, addTypenameToSelectionSet);
     assert.equal(print(expectedQuery), print(modifiedQuery));
   });
 
+  it('should be able to apply a MutationTransformer correctly', () => {
+    const testQuery = getMutationDefinition(gql`
+      mutation {
+        createAuthor(firstName: "John", lastName: "Smith") {
+          firstName
+          lastName
+        }
+      }`);
+    const expectedQuery = getMutationDefinition(gql`
+      mutation {
+        createAuthor(firstName: "John", lastName: "Smith") {
+          firstName
+          lastName
+          __typename
+        }
+        __typename
+      }`);
+    const modifiedQuery = applyTransformerToOperation(testQuery, addTypenameToSelectionSet);
+    assert.equal(print(expectedQuery), print(modifiedQuery));
+
+  });
 });

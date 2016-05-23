@@ -24,7 +24,8 @@ import {
 
 import {
   QueryTransformer,
-  applyTransformerToQuery,
+  MutationTransformer,
+  applyTransformerToOperation,
 } from './queries/queryTransform';
 
 import {
@@ -94,6 +95,7 @@ export class QueryManager {
   private reduxRootKey: string;
   private pollingTimer: NodeJS.Timer | any; // oddity in typescript
   private queryTransformer: QueryTransformer;
+  private mutationTransformer: MutationTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
   private idCounter = 0;
@@ -103,11 +105,13 @@ export class QueryManager {
     store,
     reduxRootKey,
     queryTransformer,
+    mutationTransformer,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
+    mutationTransformer?: MutationTransformer,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -115,6 +119,7 @@ export class QueryManager {
     this.store = store;
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
+    this.mutationTransformer = mutationTransformer;
 
     this.queryListeners = {};
 
@@ -141,8 +146,11 @@ export class QueryManager {
   }): Promise<GraphQLResult> {
     const mutationId = this.generateQueryId();
 
-    const mutationDef = getMutationDefinition(mutation);
-    const mutationString = print(mutation);
+    let mutationDef = getMutationDefinition(mutation);
+    if (this.mutationTransformer != null) {
+      mutationDef = applyTransformerToOperation(mutationDef, this.mutationTransformer);
+    }
+    const mutationString = print(mutationDef);
 
     const request = {
       query: mutationString,
@@ -268,7 +276,7 @@ export class QueryManager {
     let queryDef = getQueryDefinition(query);
     // Apply the query transformer if one has been provided.
     if (this.queryTransformer != null) {
-      queryDef = applyTransformerToQuery(queryDef, this.queryTransformer);
+      queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
     }
     const queryString = print(query);
 

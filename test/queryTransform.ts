@@ -1,6 +1,7 @@
 import {
   addTypenameToSelectionSet,
   addTypenameToQuery,
+  applyTransformerToQuery,
 } from '../src/queries/queryTransform';
 import { getQueryDefinition } from '../src/queries/getFromAST';
 import { print } from 'graphql/language/printer';
@@ -93,6 +94,30 @@ describe('query transforms', () => {
       __typename
     }`);
     const modifiedQuery = addTypenameToQuery(testQuery);
+    assert.equal(print(expectedQuery), print(modifiedQuery));
+  });
+
+  it('should be able to apply a QueryTransformer correctly', () => {
+    const testQuery = getQueryDefinition(gql`
+    query {
+      author {
+        firstName
+        lastName
+      }
+    }`);
+
+    const expectedQuery = getQueryDefinition(gql`
+    query {
+      author {
+        firstName
+        lastName
+        __typename
+      }
+      __typename
+    }
+    `);
+
+    const modifiedQuery = applyTransformerToQuery(testQuery, addTypenameToSelectionSet);
     assert.equal(print(expectedQuery), print(modifiedQuery));
   });
 

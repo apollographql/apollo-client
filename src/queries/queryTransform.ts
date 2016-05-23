@@ -7,13 +7,12 @@ import {
 
 import cloneDeep = require('lodash.clonedeep');
 
-// A QueryTransformer takes a SelectionSet and transforms it in someway (in place) and
-// then returns the same SelectionSet.
-export type QueryTransformer = (queryPiece: SelectionSet) => SelectionSet
+// A QueryTransformer takes a SelectionSet and transforms it in someway (in place).
+export type QueryTransformer = (queryPiece: SelectionSet) => void
 
-// Adds typename fields to every node in the AST recursively.
-// Note: This muates the AST passed in.
-export function addTypenameToSelectionSet(queryPiece: SelectionSet) {
+// Adds a field with a given name to every node in the AST recursively.
+// Note: this mutates the AST passed in.
+export function addFieldToSelectionSet(fieldName: string, queryPiece: SelectionSet) {
   if (queryPiece == null || queryPiece.selections == null) {
     return queryPiece;
   }
@@ -23,7 +22,7 @@ export function addTypenameToSelectionSet(queryPiece: SelectionSet) {
     alias: null,
     name: {
       kind: 'Name',
-      value: '__typename',
+      value: fieldName,
     },
   };
 
@@ -38,6 +37,12 @@ export function addTypenameToSelectionSet(queryPiece: SelectionSet) {
   // Add the typename to this particular node's children
   queryPiece.selections.push(typenameFieldAST);
   return queryPiece;
+}
+
+// Adds typename fields to every node in the AST recursively.
+// Note: This muates the AST passed in.
+export function addTypenameToSelectionSet(queryPiece: SelectionSet) {
+  return addFieldToSelectionSet('__typename', queryPiece);
 }
 
 // Add typename field to the root query node (i.e. OperationDefinition). Returns a new

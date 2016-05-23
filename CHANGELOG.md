@@ -5,6 +5,10 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Add support for transforming queries before submitting to the server (e.g. adding "__typename" to each SelectionSet)
 
+### v0.3.10
+
+- Resolve a race condition between `QueryManager` `stopQuery()` and `broadcastQueries()`, which would result in an error `listener is not a function`. [Issue #231](https://github.com/apollostack/apollo-client/issues/231) [PR #232](https://github.com/apollostack/apollo-client/pull/232)
+
 ### v0.3.9
 
 - Namespace Apollo action types to prevent collision with user's own Redux action types. [Issue #210](https://github.com/apollostack/apollo-client/issues/210) [PR #222](https://github.com/apollostack/apollo-client/pull/222)

@@ -4,7 +4,7 @@ order: 202
 description: A step-by-step guide for setting up a basic GraphQL server with Apollo.
 ---
 
-This guide will explain all the parts required for a simple GraphQL Blog server. If you're looking for a tutorial, check out this Medium post or our [GraphQL server tutorial video on Youtube](https://www.youtube.com/watch?v=PHabPhgRUuU).
+This guide will explain all the parts required for a simple GraphQL Blog server. If you're looking for a tutorial, check out [this Medium post](https://medium.com/apollo-stack/tutorial-building-a-graphql-server-cddaa023c035) or our [GraphQL server tutorial video on Youtube](https://www.youtube.com/watch?v=PHabPhgRUuU).
 
 We'll be using a package called [graphql-tools](https://www.npmjs.com/package/graphql-tools), which is actively being developed for [Apollo](http://www.apollostack.com). There are of course many ways to build a GraphQL server for Node.js, but this is the way we recommend. It describes each step in detail, from defining a schema to writing your own resolve functions and loaders.
 
@@ -164,7 +164,7 @@ You can tell `apolloServer` to mock a scalar type, such as Int or String in a sp
 
 You can also tell `apolloSever` to use special mocks for a specific type. In the `mocks.js` file above, we're telling the server to use `casual.first_name` to mock the `firstName` field of `Author`. If we didn't tell it to do that, it would use the default mock for the `String` type instead. To mock lists of different length, you can use `new MockList([min, max])`, which will return a list of length between min and max (both inclusive).
 
-In the mock functions, you can also access the arguments passed to the field. In the file above, we're using that feature for the `author` field on `RootQuery`, to make sure that when the query asks for a user with a specific fist and/or last name, we either return a user with that first and/or last name, or we return null (to simulate an unsuccessful search in 20% of the cases).
+In the mock functions, you can also access the arguments passed to the field. In the file above, we're using that feature for the `author` field on `RootQuery`, to make sure that when the query asks for a user with a specific first and/or last name, we either return a user with that first and/or last name, or we return null (to simulate an unsuccessful search in 20% of the cases).
 
 You can read more about mocking with graphql-tools in our [Medium Post on mocking with GraphQL](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd), which also includes more code snippets and a demo.
 

@@ -4,7 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- ...
+### v0.3.12
+
+- Fix query transformation for queries called with `forceFetch`. [PR #240](https://github.com/apollostack/apollo-client/pull/240)
 
 ### v0.3.11
 

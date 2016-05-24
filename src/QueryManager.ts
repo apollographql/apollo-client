@@ -274,7 +274,7 @@ export class QueryManager {
     if (this.queryTransformer) {
       queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
     }
-    const queryString = print(query);
+    const queryString = print(queryDef);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string

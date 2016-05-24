@@ -145,4 +145,76 @@ describe('query transforms', () => {
     assert.equal(print(expectedQuery), print(modifiedQuery));
 
   });
+
+  it('should add typename fields correctly on this one query' , () => {
+    const testQuery = getQueryDefinition(gql`
+        query Feed($type: FeedType!) {
+          # Eventually move this into a no fetch query right on the entry
+          # since we literally just need this info to determine whether to
+          # show upvote/downvote buttons
+          currentUser {
+            login
+          }
+          feed(type: $type) {
+            createdAt
+            score
+            commentCount
+            id
+            postedBy {
+              login
+              html_url
+            }
+
+            repository {
+              name
+              full_name
+              description
+              html_url
+              stargazers_count
+              open_issues_count
+              created_at
+              owner {
+                avatar_url
+              }
+            }
+          }
+        }`);
+    const expectedQuery = getQueryDefinition(gql`
+      query Feed($type: FeedType!) {
+          currentUser {
+            login
+            __typename
+          }
+          feed(type: $type) {
+            createdAt
+            score
+            commentCount
+            id
+            postedBy {
+              login
+              html_url
+              __typename
+            }
+
+            repository {
+              name
+              full_name
+              description
+              html_url
+              stargazers_count
+              open_issues_count
+              created_at
+              owner {
+                avatar_url
+                __typename
+              }
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }`);
+    const modifiedQuery = applyTransformerToOperation(testQuery, addTypenameToSelectionSet);
+    assert.equal(print(expectedQuery), print(modifiedQuery));
+  });
 });

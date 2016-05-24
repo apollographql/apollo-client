@@ -1,0 +1,8 @@
+{
+  "resolution": "browser",
+  "tree": {
+    "src": "/Users/dhaivatpandya/dev/apollo-client/ambient.d.ts",
+    "raw": "file:./ambient.d.ts",
+    "typings": "/Users/dhaivatpandya/dev/apollo-client/ambient.d.ts"
+  }
+}

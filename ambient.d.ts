@@ -75,7 +75,17 @@ declare module 'lodash.mapvalues' {
 
 declare module 'lodash.clonedeep' {
   import main = require('~lodash/index');
-  export = main.cloneDeep
+  export = main.cloneDeep;
+}
+
+declare module 'lodash.countby' {
+  import main = require('~lodash/index');
+  export = main.countBy;
+}
+
+declare module 'lodash.identity' {
+  import main = require('~lodash/index');
+  export = main.identity;
 }
 
 /*

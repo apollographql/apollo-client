@@ -8,19 +8,18 @@ import countBy = require('lodash.countby');
 import identity = require('lodash.identity');
 
 export function getMutationDefinition(doc: Document): OperationDefinition {
-  if (doc.kind !== 'Document') {
-    throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
-string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
-  }
+  checkDocument(doc);
 
-  if (doc.definitions.length > 1) {
-    throw new Error('Mutation query must have exactly one operation definition.');
-  }
+  let mutationDef: OperationDefinition = null;
+  doc.definitions.map((definition) => {
+    if (definition.kind === 'OperationDefinition'
+        && (definition as OperationDefinition).operation === 'mutation') {
+      mutationDef = definition as OperationDefinition;
+    }
+  });
 
-  const mutationDef = doc.definitions[0] as OperationDefinition;
-
-  if (mutationDef.kind !== 'OperationDefinition' || mutationDef.operation !== 'mutation') {
-    throw new Error('Must be a mutation definition.');
+  if (mutationDef === null) {
+    throw new Error('Must contain a mutation definition.');
   }
 
   return mutationDef;
@@ -44,16 +43,36 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   }
 }
 
+// Returns the FragmentDefinitions from a particular document as an array
+export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
+  checkDocument(doc);
+  let fragmentDefinitions: FragmentDefinition[] = [];
+
+  doc.definitions.map((definition) => {
+    if (definition.kind === 'FragmentDefinition') {
+      fragmentDefinitions.push(definition as FragmentDefinition);
+    }
+  });
+
+  return fragmentDefinitions;
+}
+
 export function getQueryDefinition(doc: Document): OperationDefinition {
   checkDocument(doc);
 
-  const queryDef = doc.definitions[0] as OperationDefinition;
+  let queryDef: OperationDefinition = null;
+  doc.definitions.map((definition) => {
+    if(definition.kind === 'OperationDefinition'
+       && (definition as OperationDefinition).operation === 'query') {
+      queryDef = definition as OperationDefinition;
+    }
+  });
 
-  if (queryDef.kind !== 'OperationDefinition' || queryDef.operation !== 'query') {
-    throw new Error('Must be a query definition.');
+  if (queryDef === null) {
+    throw new Error('Must contain a query definition.');
   }
 
-  return queryDef as OperationDefinition;
+  return queryDef;
 }
 
 export function getFragmentDefinition(doc: Document): FragmentDefinition {

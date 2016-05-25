@@ -19,6 +19,10 @@ To read more about Apollo in general, visit:
 - [Our website](http://www.apollostack.com/)
 - [Our Medium blog](https://medium.com/apollo-stack)
 
+## New to GraphQL?
+
+Just getting started with GraphQL? Check out the [official documentation](http://graphql.org/), as well as [our blog post](https://medium.com/apollo-stack/the-basics-of-graphql-in-5-links-9e1dc4cac055) that can help you to get started quickly.
+
 ## Example apps
 
 We have put together some basic example apps using various parts of Apollo; check them out to see how everything fits together. We're always looking for improvements and feedback on these apps, and they'll get better as Apollo becomes more production-ready!

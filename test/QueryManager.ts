@@ -1238,7 +1238,7 @@ describe('QueryManager', () => {
     });
 
   });
-  
+
   it(`doesn't return data while query is loading`, (done) => {
     const query1 = gql`
       {

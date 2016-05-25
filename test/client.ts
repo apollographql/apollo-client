@@ -597,8 +597,6 @@ describe('client', () => {
     });
     const client = new ApolloClient({networkInterface: networkInterface});
     client.query({ query }).then((actualResult) => {
-      console.log("Actual result: ");
-      console.log(actualResult);
       assert.deepEqual(actualResult.data, result);
       done();
     });

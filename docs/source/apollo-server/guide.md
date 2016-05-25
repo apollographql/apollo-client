@@ -106,7 +106,7 @@ schema {
 export default [typeDefinitions];
 ```
 
-For more information about GraphQL's type system and schema language, you can take a look at @sogko's [cheat sheet](https://raw.githubusercontent.com/sogko/graphql-shorthand-notation-cheat-sheet/master/graphql-shorthand-notation-cheat-sheet.png), read the [Schema definition subsection in the graphql-tools documentation chapter](schema-generation.html) or refer to the [official GraphQL website](http://graphql.org/docs/typesystem/).
+For more information about GraphQL's type system and schema language, you can take a look at @sogko's [cheat sheet](https://raw.githubusercontent.com/sogko/graphql-shorthand-notation-cheat-sheet/master/graphql-shorthand-notation-cheat-sheet.png), read the [Schema definition subsection in the graphql-tools documentation chapter](generate-schema.html) or refer to the [official GraphQL website](http://graphql.org/docs/typesystem/).
 
 ## Mocking
 

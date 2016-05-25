@@ -30,6 +30,10 @@ import {
   IdGetter,
 } from './data/extensions';
 
+import {
+  QueryTransformer,
+} from './queries/queryTransform';
+
 import isUndefined = require('lodash.isundefined');
 
 export {
@@ -47,22 +51,26 @@ export default class ApolloClient {
   public initialState: any;
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
+  public queryTransformer: QueryTransformer;
 
   constructor({
     networkInterface,
     reduxRootKey,
     initialState,
     dataIdFromObject,
+    queryTransformer,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
     initialState?: any,
     dataIdFromObject?: IdGetter,
+    queryTransformer?: QueryTransformer,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
+    this.queryTransformer = queryTransformer;
 
     this.reducerConfig = {
       dataIdFromObject,
@@ -131,6 +139,7 @@ export default class ApolloClient {
       networkInterface: this.networkInterface,
       reduxRootKey: this.reduxRootKey,
       store,
+      queryTransformer: this.queryTransformer,
     });
   };
 }

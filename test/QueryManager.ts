@@ -11,6 +11,10 @@ import {
   getIdField,
 } from '../src/data/extensions';
 
+import {
+  addTypenameToSelectionSet,
+} from '../src/queries/queryTransform';
+
 import gql from '../src/gql';
 
 import {
@@ -554,6 +558,56 @@ describe('QueryManager', () => {
           done();
         }
       },
+    });
+  });
+
+  it('allows you to refetch queries with promises', (done) => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data: data1 },
+      },
+      {
+        request: { query },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    const subscription = handle.subscribe({});
+
+    subscription.refetch().then((result) => {
+      assert.deepEqual(result.data, data2);
+      done();
     });
   });
 
@@ -1635,6 +1689,119 @@ describe('QueryManager', () => {
         query: 'string' as any as Document,
       });
     }, /wrap the query string in a "gql" tag/);
+  });
+
+  it('should transform queries correctly when given a QueryTransformer', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const transformedQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+          __typename
+        }
+        __typename
+      }`;
+    const unmodifiedQueryResult = {
+      'author': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+      },
+    };
+    const transformedQueryResult = {
+      'author': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+        '__typename': 'Author',
+      },
+      '__typename': 'RootQuery',
+    };
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: {query},
+      result: {data: unmodifiedQueryResult},
+    },
+    {
+      request: {query: transformedQuery},
+      result: {data: transformedQueryResult},
+    });
+
+    //make sure that the query is transformed within the query
+    //manager
+    const queryManagerWithTransformer = new QueryManager({
+      networkInterface: networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+      queryTransformer: addTypenameToSelectionSet,
+    });
+
+
+    queryManagerWithTransformer.query({query: query}).then((result) => {
+      assert.deepEqual(result.data, transformedQueryResult);
+      done();
+    });
+  });
+
+  it('should transform mutations correctly', (done) => {
+    const mutation = gql`
+      mutation {
+        createAuthor(firstName: "John", lastName: "Smith") {
+          firstName
+          lastName
+        }
+      }`;
+    const transformedMutation = gql`
+      mutation {
+        createAuthor(firstName: "John", lastName: "Smith") {
+          firstName
+          lastName
+          __typename
+        }
+        __typename
+      }`;
+    const unmodifiedMutationResult = {
+      'createAuthor': {
+        'firstName': 'It works!',
+        'lastName': 'It works!',
+      },
+    };
+    const transformedMutationResult = {
+      'createAuthor': {
+        'firstName': 'It works!',
+        'lastName': 'It works!',
+        '__typename': 'Author',
+      },
+      '__typename': 'RootMutation',
+    };
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: {query: mutation},
+      result: {data: unmodifiedMutationResult},
+    },
+    {
+      request: {query: transformedMutation},
+      result: {data: transformedMutationResult},
+    });
+
+    const queryManagerWithTransformer = new QueryManager({
+      networkInterface: networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+      queryTransformer: addTypenameToSelectionSet,
+    });
+
+    queryManagerWithTransformer.mutate({mutation: mutation}).then((result) => {
+      assert.deepEqual(result.data, transformedMutationResult);
+      done();
+    });
   });
 });
 

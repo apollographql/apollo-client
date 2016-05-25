@@ -3,6 +3,7 @@ import {
   Request,
 } from './networkInterface';
 
+
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
 
@@ -20,6 +21,11 @@ import {
   getMutationDefinition,
   getQueryDefinition,
 } from './queries/getFromAST';
+
+import {
+  QueryTransformer,
+  applyTransformerToOperation,
+} from './queries/queryTransform';
 
 import {
   GraphQLResult,
@@ -48,6 +54,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
     return super.subscribe(observer) as QuerySubscription;
   }
 
+
   public result(): Promise<GraphQLResult> {
     return new Promise((resolve, reject) => {
       const subscription = this.subscribe({
@@ -66,7 +73,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 }
 
 export interface QuerySubscription extends Subscription {
-  refetch(variables?: any): void;
+  refetch(variables?: any): Promise<GraphQLResult>;
   stopPolling(): void;
   startPolling(pollInterval: number): void;
 }
@@ -86,7 +93,7 @@ export class QueryManager {
   private store: ApolloStore;
   private reduxRootKey: string;
   private pollingTimer: NodeJS.Timer | any; // oddity in typescript
-
+  private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
   private idCounter = 0;
@@ -95,16 +102,19 @@ export class QueryManager {
     networkInterface,
     store,
     reduxRootKey,
+    queryTransformer,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
+    queryTransformer?: QueryTransformer,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
     this.reduxRootKey = reduxRootKey;
+    this.queryTransformer = queryTransformer;
 
     this.queryListeners = {};
 
@@ -131,8 +141,11 @@ export class QueryManager {
   }): Promise<GraphQLResult> {
     const mutationId = this.generateQueryId();
 
-    const mutationDef = getMutationDefinition(mutation);
-    const mutationString = print(mutation);
+    let mutationDef = getMutationDefinition(mutation);
+    if (this.queryTransformer) {
+      mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
+    }
+    const mutationString = print(mutationDef);
 
     const request = {
       query: mutationString,
@@ -140,7 +153,7 @@ export class QueryManager {
     } as Request;
 
     this.store.dispatch({
-      type: 'MUTATION_INIT',
+      type: 'APOLLO_MUTATION_INIT',
       mutationString,
       mutation: {
         id: 'ROOT_MUTATION',
@@ -154,12 +167,13 @@ export class QueryManager {
     return this.networkInterface.query(request)
       .then((result) => {
         this.store.dispatch({
-          type: 'MUTATION_RESULT',
+          type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
         });
 
         return result;
+
       });
   }
 
@@ -205,7 +219,7 @@ export class QueryManager {
         unsubscribe: () => {
           this.stopQuery(queryId);
         },
-        refetch: (variables: any): void => {
+        refetch: (variables: any): Promise<GraphQLResult> => {
           // if we are refetching, we clear out the polling interval
           // if the new refetch passes pollInterval: false, it won't recreate
           // the timer for subsequent refetches
@@ -217,7 +231,7 @@ export class QueryManager {
           variables = variables || options.variables;
 
           // Use the same options as before, but with new variables and forceFetch true
-          this.fetchQuery(queryId, assign(options, {
+          return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
             variables,
           }) as WatchQueryOptions);
@@ -247,7 +261,7 @@ export class QueryManager {
     return this.watchQuery(options).result();
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions) {
+  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
     const {
       query,
       variables,
@@ -255,8 +269,12 @@ export class QueryManager {
       returnPartialData = false,
     } = options;
 
-    const queryDef = getQueryDefinition(query);
-    const queryString = print(query);
+    let queryDef = getQueryDefinition(query);
+    // Apply the query transformer if one has been provided.
+    if (this.queryTransformer) {
+      queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
+    }
+    const queryString = print(queryDef);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -310,7 +328,7 @@ export class QueryManager {
 
     // Initialize query in store with unique requestId
     this.store.dispatch({
-      type: 'QUERY_INIT',
+      type: 'APOLLO_QUERY_INIT',
       queryString,
       query: querySS,
       minimizedQueryString,
@@ -322,34 +340,9 @@ export class QueryManager {
       requestId,
     });
 
-    if (minimizedQuery) {
-      const request: Request = {
-        query: minimizedQueryString,
-        variables,
-      };
-
-      this.networkInterface.query(request)
-        .then((result: GraphQLResult) => {
-          // XXX handle multiple GraphQLResults
-          this.store.dispatch({
-            type: 'QUERY_RESULT',
-            result,
-            queryId,
-            requestId,
-          });
-        }).catch((error: Error) => {
-          this.store.dispatch({
-            type: 'QUERY_ERROR',
-            error,
-            queryId,
-            requestId,
-          });
-        });
-    }
-
     if (! minimizedQuery || returnPartialData) {
       this.store.dispatch({
-        type: 'QUERY_RESULT_CLIENT',
+        type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: {
           data: initialResult,
         },
@@ -359,6 +352,60 @@ export class QueryManager {
         queryId,
       });
     }
+
+    if (minimizedQuery) {
+      const request: Request = {
+        query: minimizedQueryString,
+        variables,
+      };
+
+      return this.networkInterface.query(request)
+        .then((result: GraphQLResult) => {
+          // XXX handle multiple GraphQLResults
+          this.store.dispatch({
+            type: 'APOLLO_QUERY_RESULT',
+            result,
+            queryId,
+            requestId,
+          });
+
+          return result;
+        }).then(() => {
+
+          let resultFromStore;
+          try {
+            // ensure result is combined with data already in store
+            resultFromStore = readSelectionSetFromStore({
+              store: this.getApolloState().data,
+              rootId: querySS.id,
+              selectionSet: querySS.selectionSet,
+              variables,
+              returnPartialData: returnPartialData,
+            });
+          // ensure multiple errors don't get thrown
+          /* tslint:disable */
+          } catch (e) {}
+          /* tslint:enable */
+
+          // return a chainable promise
+          return new Promise((resolve) => {
+            resolve({ data: resultFromStore });
+          });
+        }).catch((error: Error) => {
+          this.store.dispatch({
+            type: 'APOLLO_QUERY_ERROR',
+            error,
+            queryId,
+            requestId,
+          });
+
+          return error;
+        });
+    }
+    // return a chainable promise
+    return new Promise((resolve) => {
+      resolve({ data: initialResult });
+    });
   }
 
   private getApolloState(): Store {
@@ -391,7 +438,7 @@ export class QueryManager {
     }
 
     this.store.dispatch({
-      type: 'QUERY_STOP',
+      type: 'APOLLO_QUERY_STOP',
       queryId,
     });
   }
@@ -399,8 +446,12 @@ export class QueryManager {
   private broadcastQueries() {
     const queries = this.getApolloState().queries;
     forOwn(this.queryListeners, (listener: QueryListener, queryId: string) => {
-      const queryStoreValue = queries[queryId];
-      listener(queryStoreValue);
+      // it's possible for the listener to be undefined if the query is being stopped
+      // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
+      if (listener) {
+        const queryStoreValue = queries[queryId];
+        listener(queryStoreValue);
+      }
     });
   }
 

@@ -26,7 +26,7 @@ Once the installation is finished, you can launch the server with this command:
 ```bash
 npm start
 ```
-If all goes well, the server should now print out a message that it is listening on port 8080. If you open [localhost:8080](http://localhost:8080/?query=%7B%0A%20%20testString%0A%7D) in your browser, you should now see the GraphiQL GUI for GraphQL, ready to query the server:
+If all goes well, the server should now print out a message that it is listening on port 8080. If you open [localhost:8080/graphql](http://localhost:8080/graphql?query=%7B%0A%20%20testString%0A%7D) in your browser, you should now see the GraphiQL GUI for GraphQL, ready to query the server:
 
 ![Testing the server with GraphiQL](graphiql-test.png)
 

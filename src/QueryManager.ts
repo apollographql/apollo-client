@@ -3,6 +3,7 @@ import {
   Request,
 } from './networkInterface';
 
+
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
@@ -21,6 +22,11 @@ import {
   getMutationDefinition,
   getQueryDefinition,
 } from './queries/getFromAST';
+
+import {
+  QueryTransformer,
+  applyTransformerToOperation,
+} from './queries/queryTransform';
 
 import {
   GraphQLResult,
@@ -48,6 +54,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
   public subscribe(observer: Observer<GraphQLResult>): QuerySubscription {
     return super.subscribe(observer) as QuerySubscription;
   }
+
 
   public result(): Promise<GraphQLResult> {
     return new Promise((resolve, reject) => {
@@ -87,7 +94,7 @@ export class QueryManager {
   private store: ApolloStore;
   private reduxRootKey: string;
   private pollingTimer: NodeJS.Timer | any; // oddity in typescript
-
+  private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
   private idCounter = 0;
@@ -96,16 +103,19 @@ export class QueryManager {
     networkInterface,
     store,
     reduxRootKey,
+    queryTransformer,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
+    queryTransformer?: QueryTransformer,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
     this.reduxRootKey = reduxRootKey;
+    this.queryTransformer = queryTransformer;
 
     this.queryListeners = {};
 
@@ -139,8 +149,11 @@ export class QueryManager {
   }): Promise<GraphQLResult> {
     const mutationId = this.generateQueryId();
 
-    const mutationDef = getMutationDefinition(mutation);
-    const mutationString = print(mutation);
+    let mutationDef = getMutationDefinition(mutation);
+    if (this.queryTransformer) {
+      mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
+    }
+    const mutationString = print(mutationDef);
 
     const request = {
       query: mutationString,
@@ -168,6 +181,7 @@ export class QueryManager {
         });
 
         return result;
+
       });
   }
 
@@ -263,8 +277,12 @@ export class QueryManager {
       returnPartialData = false,
     } = options;
 
-    const queryDef = getQueryDefinition(query);
-    const queryString = print(query);
+    let queryDef = getQueryDefinition(query);
+    // Apply the query transformer if one has been provided.
+    if (this.queryTransformer) {
+      queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
+    }
+    const queryString = print(queryDef);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -436,8 +454,12 @@ export class QueryManager {
   private broadcastQueries() {
     const queries = this.getApolloState().queries;
     forOwn(this.queryListeners, (listener: QueryListener, queryId: string) => {
-      const queryStoreValue = queries[queryId];
-      listener(queryStoreValue);
+      // it's possible for the listener to be undefined if the query is being stopped
+      // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
+      if (listener) {
+        const queryStoreValue = queries[queryId];
+        listener(queryStoreValue);
+      }
     });
   }
 

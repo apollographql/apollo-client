@@ -13,7 +13,7 @@
     "removeComments": true
   },
   "files": [
-    "typings/main.d.ts",
+    "typings/main/index.d.ts",
     "src/index.ts",
     "test/tests.ts"
    ]

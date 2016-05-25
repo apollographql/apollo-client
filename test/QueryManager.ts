@@ -29,6 +29,10 @@ import {
   Document,
 } from 'graphql';
 
+import ApolloClient from '../src/index';
+
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+
 import * as Rx from 'rxjs';
 
 import assign = require('lodash.assign');
@@ -1151,6 +1155,88 @@ describe('QueryManager', () => {
         },
       },
     ], {}, done);
+  });
+
+  it('does not broadcast queries when non-apollo actions are dispatched', (done) => {
+    const query = gql`
+      query fetchLuke($id: String) {
+        people_one(id: $id) {
+          name
+        }
+      }
+    `;
+
+    const variables = {
+      id: '1',
+    };
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query, variables },
+        result: { data: data1 },
+      },
+      {
+        request: { query, variables },
+        result: { data: data2 },
+      }
+    );
+
+    function testReducer (state = false, action) {
+      if (action.type === 'TOGGLE') {
+        return true;
+      }
+      return state;
+    }
+    const client = new ApolloClient();
+    const store = createStore(
+      combineReducers({
+        test: testReducer,
+        apollo: client.reducer(),
+      }),
+      applyMiddleware(client.middleware())
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: store,
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+      variables,
+    });
+
+    let handleCount = 0;
+    const subscription = handle.subscribe({
+      next(result) {
+        handleCount++;
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          return subscription.refetch();
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, data2);
+          store.dispatch({
+            type: 'TOGGLE',
+          });
+        }
+        assert.equal(handleCount, 2);
+        done();
+      },
+    });
+
   });
 
   it(`doesn't return data while query is loading`, (done) => {

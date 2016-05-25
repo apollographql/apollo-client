@@ -62,7 +62,7 @@ export function getQueryDefinition(doc: Document): OperationDefinition {
 
   let queryDef: OperationDefinition = null;
   doc.definitions.map((definition) => {
-    if(definition.kind === 'OperationDefinition'
+    if (definition.kind === 'OperationDefinition'
        && (definition as OperationDefinition).operation === 'query') {
       queryDef = definition as OperationDefinition;
     }

@@ -6,6 +6,7 @@ import {
 
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
+import isEqual = require('lodash.isequal');
 
 import {
   ApolloStore,
@@ -121,7 +122,14 @@ export class QueryManager {
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
     if (this.store['subscribe']) {
+      let currentStoreData;
       this.store['subscribe'](() => {
+        let previousStoreData = currentStoreData || {};
+        const previousStoreHasData = Object.keys(previousStoreData).length;
+        currentStoreData = this.getApolloState();
+        if (isEqual(previousStoreData, currentStoreData) && previousStoreHasData) {
+          return;
+        }
         this.broadcastQueries();
       });
     }

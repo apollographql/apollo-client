@@ -574,20 +574,6 @@ describe('client', () => {
 
   });
 
-    const networkInterface = mockNetworkInterface(
-    {
-      request: { query },
-      result: { data: result },
-    });
-    const client = new ApolloClient({
-      networkInterface,
-    });
-    client.query({ query }).then((actualResult) => {
-      assert.deepEqual(actualResult.data, result);
-      done();
-    });
-  });
-
   describe('accepts dataIdFromObject option', () => {
     const query = gql`
       query people {

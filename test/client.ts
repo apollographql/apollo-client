@@ -574,55 +574,6 @@ describe('client', () => {
 
   });
 
-  it('should be able to handle named fragments on forced fetches', (done) => {
-    const query = gql`
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
-      query {
-        author {
-          ...authorDetails
-        }
-      }`;
-    const result = {
-      'author': {
-        'firstName': 'John',
-        'lastName': 'Smith',
-      }
-    };
-    const networkInterface = mockNetworkInterface(
-    {
-      request: { query },
-      result: { data: result },
-    });
-    const client = new ApolloClient({
-      networkInterface,
-    });
-    client.query({ forceFetch: true, query }).then((actualResult) => {
-      assert.deepEqual(actualResult.data, result);
-      done();
-    });
-  });
-
-  it('should be able to handle named fragments', (done) => {
-    const query = gql`
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
-      query {
-        author {
-          ...authorDetails
-        }
-      }`;
-    const result = {
-      'author' : {
-        'firstName': 'John',
-        'lastName': 'Smith'
-      },
-    };
-
     const networkInterface = mockNetworkInterface(
     {
       request: { query },

@@ -3,6 +3,7 @@ import {
   getFragmentDefinitions,
   getQueryDefinition,
   getMutationDefinition,
+  replaceOperationDefinition
 } from '../src/queries/getFromAST';
 
 import {
@@ -164,4 +165,42 @@ describe('AST utility functions', () => {
     assert.equal(print(actualResult), print(expectedResult));
   });
 
+  it('should replace the operation definition correctly', () => {
+    const queryWithFragments = gql`
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }
+      query {
+        author {
+          ...authorDetails
+        }
+      }`;
+    const newQueryDef = getQueryDefinition(gql`
+      query {
+        author {
+          ...authorDetails
+          __typename
+        }
+        __typename
+      }`);
+    const expectedNewQuery = gql`
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }
+
+      query {
+        author {
+          ...authorDetails
+          __typename
+        }
+        __typename
+      }`;
+    console.log("New query def: ");
+    console.log(print(newQueryDef));
+    replaceOperationDefinition(queryWithFragments, newQueryDef);
+
+    assert.equal(print(queryWithFragments), print(expectedNewQuery));
+  });
 });

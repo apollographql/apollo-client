@@ -93,3 +93,18 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
 
   return fragmentDef as FragmentDefinition;
 }
+
+// Modifies a document in place in order to replace the operation definition with another
+// operation definition.
+export function replaceOperationDefinition(doc: Document,
+  newOpDef: OperationDefinition) {
+  checkDocument(doc);
+
+  doc.definitions = doc.definitions.map((definition) => {
+    if (definition.kind == 'OperationDefinition') {
+      return newOpDef;
+    } else {
+      return definition;
+    }
+  });
+}

@@ -105,7 +105,7 @@ export function replaceOperationDefinition(doc: Document,
   const docCopy = cloneDeep(doc);
 
   docCopy.definitions = doc.definitions.map((definition) => {
-    if (definition.kind == 'OperationDefinition') {
+    if (definition.kind === 'OperationDefinition') {
       return newOpDef;
     } else {
       return definition;

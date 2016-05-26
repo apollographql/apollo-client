@@ -197,10 +197,7 @@ describe('AST utility functions', () => {
         }
         __typename
       }`;
-    console.log("New query def: ");
-    console.log(print(newQueryDef));
-    replaceOperationDefinition(queryWithFragments, newQueryDef);
-
-    assert.equal(print(queryWithFragments), print(expectedNewQuery));
+    const newDoc = replaceOperationDefinition(queryWithFragments, newQueryDef);
+    assert.equal(print(newDoc), print(expectedNewQuery));
   });
 });

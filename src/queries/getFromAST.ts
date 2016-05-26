@@ -6,19 +6,20 @@ import {
 
 import countBy = require('lodash.countby');
 import identity = require('lodash.identity');
+import cloneDeep = require('lodash.clonedeep');
 
 export function getMutationDefinition(doc: Document): OperationDefinition {
   checkDocument(doc);
 
   let mutationDef: OperationDefinition = null;
-  doc.definitions.map((definition) => {
+  doc.definitions.forEach((definition) => {
     if (definition.kind === 'OperationDefinition'
         && (definition as OperationDefinition).operation === 'mutation') {
       mutationDef = definition as OperationDefinition;
     }
   });
 
-  if (mutationDef === null) {
+  if (!mutationDef) {
     throw new Error('Must contain a mutation definition.');
   }
 
@@ -46,13 +47,12 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
 // Returns the FragmentDefinitions from a particular document as an array
 export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
   checkDocument(doc);
-  let fragmentDefinitions: FragmentDefinition[] = [];
 
-  doc.definitions.map((definition) => {
+  let fragmentDefinitions: FragmentDefinition[] = doc.definitions.filter((definition) => {
     if (definition.kind === 'FragmentDefinition') {
-      fragmentDefinitions.push(definition as FragmentDefinition);
+      return true;
     }
-  });
+  }) as FragmentDefinition[];
 
   return fragmentDefinitions;
 }
@@ -68,7 +68,7 @@ export function getQueryDefinition(doc: Document): OperationDefinition {
     }
   });
 
-  if (queryDef === null) {
+  if (!queryDef) {
     throw new Error('Must contain a query definition.');
   }
 
@@ -94,17 +94,21 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   return fragmentDef as FragmentDefinition;
 }
 
-// Modifies a document in place in order to replace the operation definition with another
-// operation definition.
+// Modifies a document in order to replace the operation definition with another
+// operation definition. Returns a new copy of the document.
 export function replaceOperationDefinition(doc: Document,
-  newOpDef: OperationDefinition) {
+  newOpDef: OperationDefinition): Document {
   checkDocument(doc);
 
-  doc.definitions = doc.definitions.map((definition) => {
+  const docCopy = cloneDeep(doc);
+
+  docCopy.definitions = doc.definitions.map((definition) => {
     if (definition.kind == 'OperationDefinition') {
       return newOpDef;
     } else {
       return definition;
     }
   });
+
+  return docCopy;
 }

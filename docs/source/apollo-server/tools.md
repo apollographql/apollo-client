@@ -114,7 +114,7 @@ const resolvers = {
 
 <h3 id="mocks">mocks</h3>
 
-If provided, `mocks` will mock the results of the GraphQL query, overriding any resolve functions defined on the schema. `mocks` expects an object with one function per type that should be mocked. If no function is provided for a type, the default mock will be used, which means that you can call `apolloServer` with `mocks: {}` to get started quickly.
+If provided, `mocks` will mock the results of the GraphQL query for any resolve functions not defined on the schema. `mocks` expects an object with one function per type that should be mocked. If no function is provided for a type, the default mock will be used, which means that you can call `apolloServer` with `mocks: {}` to get started quickly.
 
 Mocks for scalar types, such as Int and Boolean will be used everywhere, unless they are overridden by a more specific mock defined in a non-scalar type. Mocks for non-scalar types must be a function that returns an object with the desired properties.
 

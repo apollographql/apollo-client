@@ -31,8 +31,6 @@ import {
   HTTPNetworkInterface,
 } from '../src/networkInterface';
 
-import { getQueryDefinition } from '../src/queries/getFromAST';
-
 import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
@@ -567,7 +565,6 @@ describe('client', () => {
       queryTransformer: addTypenameToSelectionSet,
     });
     client.query({ forceFetch: true, query }).then((actualResult) => {
-      console.log(actualResult);
       assert.deepEqual(actualResult.data, transformedResult);
       done();
     });

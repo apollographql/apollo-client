@@ -3,7 +3,7 @@ import {
   getFragmentDefinitions,
   getQueryDefinition,
   getMutationDefinition,
-  replaceOperationDefinition
+  replaceOperationDefinition,
 } from '../src/queries/getFromAST';
 
 import {

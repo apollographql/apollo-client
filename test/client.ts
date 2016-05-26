@@ -302,7 +302,7 @@ describe('client', () => {
       apollo: {
         queries: {
           '0': {
-            queryString: print(getQueryDefinition(query)),
+            queryString: print(query),
             query: {
               id: 'ROOT_QUERY',
               typeName: 'Query',
@@ -567,10 +567,74 @@ describe('client', () => {
       queryTransformer: addTypenameToSelectionSet,
     });
     client.query({ forceFetch: true, query }).then((actualResult) => {
+      console.log(actualResult);
       assert.deepEqual(actualResult.data, transformedResult);
       done();
     });
 
+  });
+
+  it('should be able to handle named fragments on forced fetches', (done) => {
+    const query = gql`
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }
+      query {
+        author {
+          ...authorDetails
+        }
+      }`;
+    const result = {
+      'author': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+      }
+    };
+    const networkInterface = mockNetworkInterface(
+    {
+      request: { query },
+      result: { data: result },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+    });
+    client.query({ forceFetch: true, query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+      done();
+    });
+  });
+
+  it('should be able to handle named fragments', (done) => {
+    const query = gql`
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }
+      query {
+        author {
+          ...authorDetails
+        }
+      }`;
+    const result = {
+      'author' : {
+        'firstName': 'John',
+        'lastName': 'Smith'
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: { query },
+      result: { data: result },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+    });
+    client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+      done();
+    });
   });
 
   describe('accepts dataIdFromObject option', () => {

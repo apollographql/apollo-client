@@ -51,6 +51,8 @@ export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
   let fragmentDefinitions: FragmentDefinition[] = doc.definitions.filter((definition) => {
     if (definition.kind === 'FragmentDefinition') {
       return true;
+    } else {
+      return false;
     }
   }) as FragmentDefinition[];
 

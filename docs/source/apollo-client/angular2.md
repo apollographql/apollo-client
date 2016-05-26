@@ -19,7 +19,7 @@ If you want to define the default *ApolloClient* to be used by `Angular2Apollo` 
 ```ts
 import {
   bootstrap
-} from 'angular2/platform/browser';
+} from '@angular/platform-browser-dynamic';
 
 import {
   defaultApolloClient,
@@ -56,7 +56,7 @@ Since you previously used `APOLLO_PROVIDERS` to bootstrap you app, it is possibl
 import {
   Component,
   Injectable
-} from 'angular2/core';
+} from '@angular/core';
 
 import {
   Angular2Apollo
@@ -83,7 +83,7 @@ Here's how you could run a query:
 import {
   Component,
   Injectable
-} from 'angular2/core';
+} from '@angular/core';
 
 import {
   Angular2Apollo
@@ -92,6 +92,8 @@ import {
 import {
   Observable
 } from 'rxjs/Observable';
+
+import gql from 'apollo-client/gql';
 
 @Component({
   selector: 'postsList',
@@ -103,7 +105,7 @@ class postsList {
 
   constructor(private angularApollo : Angular2Apollo) {
     this.posts = angularApollo.watchQuery({
-      query: `
+      query: gql`
         query getPosts($tag: String) {
           posts(tag: $tag) {
             title
@@ -128,11 +130,13 @@ Here's how you would call a mutation and pass in arguments via variables:
 import {
   Component,
   Injectable
-} from 'angular2/core';
+} from '@angular/core';
 
 import {
   Angular2Apollo
 } from 'angular2-apollo';
+
+import gql from 'apollo-client/gql';
 
 import {
   graphQLResult
@@ -155,7 +159,7 @@ class postsList {
     raw
   }) {
     angularApollo.mutate({
-      mutation: `
+      mutation: gql`
         mutation postReply(
           $token: String!
           $topic_id: ID!
@@ -216,7 +220,7 @@ Here's how you could run a query:
 ```ts
 import {
   Component, Injectable
-} from 'angular2/core';
+} from '@angular/core';
 
 import {
   Apollo
@@ -225,6 +229,8 @@ import {
 import ApolloClient, {
   createNetworkInterface
 } from 'apollo-client';
+
+import gql from 'apollo-client/gql';
 
 import {
   Observable
@@ -244,7 +250,7 @@ const client = new ApolloClient({
   queries(context) {
     return {
       posts: {
-        query: `
+        query: gql`
           query getPosts($tag: String) {
             posts(tag: $tag) {
               title
@@ -277,7 +283,7 @@ Here's how you could run a mutation:
 import {
   Component,
   Injectable
-} from 'angular2/core';
+} from '@angular/core';
 
 import {
   Apollo
@@ -290,6 +296,8 @@ import {
 import ApolloClient, {
   createNetworkInterface
 } from 'apollo-client';
+
+import gql from 'apollo-client/gql';
 
 const client = new ApolloClient({
   networkInterface: createNetworkInterface('http://localhost:8080')
@@ -310,7 +318,7 @@ const client = new ApolloClient({
         categoryId,
         raw
       }) => ({
-        mutation: `
+        mutation: gql`
           mutation postReply(
             $token: String!
             $topic_id: ID!
@@ -375,7 +383,7 @@ To handle that more easily we've created the `ApolloQueryPipe`. Here is how it w
 template:
 ```html
 <ul>
-  <li *ngFor="#post of posts | async | apolloQuery:'posts'">
+  <li *ngFor="let post of posts | async | apolloQuery:'posts'">
       {{ post.title }}
   </li>
 </ul>

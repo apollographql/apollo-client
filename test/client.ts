@@ -573,35 +573,6 @@ describe('client', () => {
 
   });
 
-  it('should be able to process a named fragment', (done) => {
-    const query = gql`
-      query {
-        author {
-          ...authorDetails
-        }
-      }
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }`;
-    const result = {
-      'author': {
-        'firstName': 'John',
-        'lastName': 'Smith',
-      },
-    };
-    const networkInterface = mockNetworkInterface(
-    {
-      request: { query },
-      result: { data: result },
-    });
-    const client = new ApolloClient({networkInterface: networkInterface});
-    client.query({ query }).then((actualResult) => {
-      assert.deepEqual(actualResult.data, result);
-      done();
-    });
-  });
-
   describe('accepts dataIdFromObject option', () => {
     const query = gql`
       query people {

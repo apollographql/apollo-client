@@ -4,42 +4,77 @@ import {
   FragmentDefinition,
 } from 'graphql';
 
+import countBy = require('lodash.countby');
+import identity = require('lodash.identity');
+import cloneDeep = require('lodash.clonedeep');
+
 export function getMutationDefinition(doc: Document): OperationDefinition {
-  if (doc.kind !== 'Document') {
-    throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
-string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
-  }
+  checkDocument(doc);
 
-  if (doc.definitions.length > 1) {
-    throw new Error('Mutation query must have exactly one operation definition.');
-  }
+  let mutationDef: OperationDefinition = null;
+  doc.definitions.forEach((definition) => {
+    if (definition.kind === 'OperationDefinition'
+        && (definition as OperationDefinition).operation === 'mutation') {
+      mutationDef = definition as OperationDefinition;
+    }
+  });
 
-  const mutationDef = doc.definitions[0] as OperationDefinition;
-
-  if (mutationDef.kind !== 'OperationDefinition' || mutationDef.operation !== 'mutation') {
-    throw new Error('Must be a mutation definition.');
+  if (!mutationDef) {
+    throw new Error('Must contain a mutation definition.');
   }
 
   return mutationDef;
 }
 
-export function getQueryDefinition(doc: Document): OperationDefinition {
+// Checks the document for errors and throws an exception if there is an error.
+export function checkDocument(doc: Document) {
   if (doc.kind !== 'Document') {
     throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
   }
 
-  if (doc.definitions.length > 1) {
-    throw new Error('Query must have exactly one operation definition.');
+  const definitionTypes = doc.definitions.map((definition) => {
+    return definition.kind;
+  });
+  const typeCounts = countBy(definitionTypes, identity);
+
+  // can't have more than one operation definition per query
+  if (typeCounts['OperationDefinition'] > 1) {
+    throw new Error('Queries must have exactly one operation definition.');
+  }
+}
+
+// Returns the FragmentDefinitions from a particular document as an array
+export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
+  checkDocument(doc);
+
+  let fragmentDefinitions: FragmentDefinition[] = doc.definitions.filter((definition) => {
+    if (definition.kind === 'FragmentDefinition') {
+      return true;
+    } else {
+      return false;
+    }
+  }) as FragmentDefinition[];
+
+  return fragmentDefinitions;
+}
+
+export function getQueryDefinition(doc: Document): OperationDefinition {
+  checkDocument(doc);
+
+  let queryDef: OperationDefinition = null;
+  doc.definitions.map((definition) => {
+    if (definition.kind === 'OperationDefinition'
+       && (definition as OperationDefinition).operation === 'query') {
+      queryDef = definition as OperationDefinition;
+    }
+  });
+
+  if (!queryDef) {
+    throw new Error('Must contain a query definition.');
   }
 
-  const queryDef = doc.definitions[0] as OperationDefinition;
-
-  if (queryDef.kind !== 'OperationDefinition' || queryDef.operation !== 'query') {
-    throw new Error('Must be a query definition.');
-  }
-
-  return queryDef as OperationDefinition;
+  return queryDef;
 }
 
 export function getFragmentDefinition(doc: Document): FragmentDefinition {
@@ -59,4 +94,23 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   }
 
   return fragmentDef as FragmentDefinition;
+}
+
+// Modifies a document in order to replace the operation definition with another
+// operation definition. Returns a new copy of the document.
+export function replaceOperationDefinition(doc: Document,
+  newOpDef: OperationDefinition): Document {
+  checkDocument(doc);
+
+  const docCopy = cloneDeep(doc);
+
+  docCopy.definitions = doc.definitions.map((definition) => {
+    if (definition.kind === 'OperationDefinition') {
+      return newOpDef;
+    } else {
+      return definition;
+    }
+  });
+
+  return docCopy;
 }

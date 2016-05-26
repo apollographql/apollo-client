@@ -21,6 +21,7 @@ import {
 import {
   getMutationDefinition,
   getQueryDefinition,
+  replaceOperationDefinition,
 } from './queries/getFromAST';
 
 import {
@@ -282,7 +283,8 @@ export class QueryManager {
     if (this.queryTransformer) {
       queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
     }
-    const queryString = print(queryDef);
+    const transformedQuery = replaceOperationDefinition(query, queryDef);
+    const queryString = print(transformedQuery);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -292,7 +294,8 @@ export class QueryManager {
       selectionSet: queryDef.selectionSet,
     } as SelectionSetWithRoot;
 
-    // If we don't use diffing, then these will be the same as the original query
+    // If we don't use diffing, then these will be the same as the original query, other than
+    // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
 

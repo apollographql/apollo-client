@@ -31,8 +31,6 @@ import {
   HTTPNetworkInterface,
 } from '../src/networkInterface';
 
-import { getQueryDefinition } from '../src/queries/getFromAST';
-
 import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
@@ -302,7 +300,7 @@ describe('client', () => {
       apollo: {
         queries: {
           '0': {
-            queryString: print(getQueryDefinition(query)),
+            queryString: print(query),
             query: {
               id: 'ROOT_QUERY',
               typeName: 'Query',

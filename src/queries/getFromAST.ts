@@ -114,3 +114,18 @@ export function replaceOperationDefinition(doc: Document,
 
   return docCopy;
 }
+
+export interface FragmentSymTable {
+  [fragmentName: string]: FragmentDefinition;
+}
+
+// Utility function that takes a list of fragment definitions and makes a hash out of them
+// that maps the name of the fragment to the fragment definition.
+export function createFragmentSymTable(fragments: FragmentDefinition[]): FragmentSymTable {
+  const symTable: FragmentSymTable = {};
+  fragments.forEach((fragment) => {
+    symTable[fragment.name.value] = fragment;
+  });
+
+  return symTable;
+}

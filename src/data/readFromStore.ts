@@ -10,6 +10,7 @@ import {
 import {
   getQueryDefinition,
   getFragmentDefinition,
+  FragmentSymTable,
 } from '../queries/getFromAST';
 
 import {
@@ -66,12 +67,14 @@ export function readSelectionSetFromStore({
   selectionSet,
   variables,
   returnPartialData = false,
+  fragmentSymTable,
 }: {
   store: NormalizedCache,
   rootId: string,
   selectionSet: SelectionSet,
   variables: Object,
   returnPartialData?: boolean,
+  fragmentSymTable?: FragmentSymTable,
 }): Object {
   const {
     result,
@@ -81,6 +84,7 @@ export function readSelectionSetFromStore({
     store,
     throwOnMissingField: !returnPartialData,
     variables,
+    fragmentSymTable,
   });
 
   return result;

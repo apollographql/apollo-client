@@ -22,6 +22,8 @@ import {
   getMutationDefinition,
   getQueryDefinition,
   replaceOperationDefinition,
+  getFragmentDefinitions,
+  createFragmentSymTable,
 } from './queries/getFromAST';
 
 import {
@@ -209,12 +211,16 @@ export class QueryManager {
                 queryStoreValue.networkError.stack);
             }
           } else {
+            console.log("Fragment sym tale inside watchQuery()");
+            console.log(queryStoreValue.fragmentSymTable);
+
             const resultFromStore = readSelectionSetFromStore({
               store: this.getApolloState().data,
               rootId: queryStoreValue.query.id,
               selectionSet: queryStoreValue.query.selectionSet,
               variables: queryStoreValue.variables,
               returnPartialData: options.returnPartialData,
+              fragmentSymTable: queryStoreValue.fragmentSymTable,
             });
 
             if (observer.next) {
@@ -285,6 +291,7 @@ export class QueryManager {
     }
     const transformedQuery = replaceOperationDefinition(query, queryDef);
     const queryString = print(transformedQuery);
+    const queryFragmentSymTable = createFragmentSymTable(getFragmentDefinitions(transformedQuery));
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -311,6 +318,7 @@ export class QueryManager {
         throwOnMissingField: false,
         rootId: querySS.id,
         variables,
+        fragmentSymTable: queryFragmentSymTable,
       });
 
       initialResult = result;
@@ -349,6 +357,7 @@ export class QueryManager {
       returnPartialData,
       queryId,
       requestId,
+      fragmentSymTable: queryFragmentSymTable,
     });
 
     if (! minimizedQuery || returnPartialData) {
@@ -382,6 +391,7 @@ export class QueryManager {
 
           return result;
         }).then(() => {
+          console.log("LOL HERE");
 
           let resultFromStore;
           try {
@@ -392,6 +402,7 @@ export class QueryManager {
               selectionSet: querySS.selectionSet,
               variables,
               returnPartialData: returnPartialData,
+              fragmentSymTable: queryFragmentSymTable,
             });
           // ensure multiple errors don't get thrown
           /* tslint:disable */

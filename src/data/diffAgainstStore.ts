@@ -29,6 +29,7 @@ import {
 import {
   getQueryDefinition,
   getFragmentDefinition,
+  FragmentSymTable,
 } from '../queries/getFromAST';
 
 export interface DiffResult {
@@ -96,15 +97,24 @@ export function diffSelectionSetAgainstStore({
   rootId,
   throwOnMissingField = false,
   variables,
+  fragmentSymTable,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
   rootId: string,
   throwOnMissingField: boolean,
   variables: Object,
+  fragmentSymTable?: FragmentSymTable,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
+  }
+
+  console.log("Fragment sym table in diff before: ");
+  console.log(fragmentSymTable);
+
+  if(!fragmentSymTable) {
+    fragmentSymTable = {};
   }
 
   const result = {};
@@ -130,6 +140,7 @@ export function diffSelectionSetAgainstStore({
         variables,
         rootId,
         store,
+        fragmentSymTable,
       });
 
       if (fieldIsMissing) {
@@ -149,6 +160,7 @@ export function diffSelectionSetAgainstStore({
         variables,
         rootId,
         store,
+        fragmentSymTable,
       });
 
       if (fieldIsMissing) {
@@ -157,7 +169,34 @@ export function diffSelectionSetAgainstStore({
         assign(result, fieldResult);
       }
     } else {
-      throw new Error('Named fragments not yet supported.');
+      const fragment = fragmentSymTable[selection.name.value];
+      if(!fragment){
+        console.log("Named fragment.");
+        console.log("Fragment sym table (inside diff): ");
+        console.log(fragmentSymTable);
+        const fragment = fragmentSymTable[selection.name.value];
+        if(!fragment ) {
+          throw new Error(`No fragment named ${selection.name.value}`);
+        }
+      }
+
+      const {
+        result: fieldResult,
+        isMissing: fieldIsMissing,
+      } = diffSelectionSetAgainstStore({
+        selectionSet: fragment.selectionSet,
+        throwOnMissingField,
+        variables,
+        rootId,
+        store,
+        fragmentSymTable,
+      });
+
+      if (fieldIsMissing) {
+        pushMissingField(selection);
+      } else {
+        assign(result, fieldResult);
+      }
     }
   });
 
@@ -200,12 +239,14 @@ function diffFieldAgainstStore({
   variables,
   rootId,
   store,
+  fragmentSymTable,
 }: {
   field: Field,
   throwOnMissingField: boolean,
   variables: Object,
   rootId: string,
   store: NormalizedCache,
+  fragmentSymTable?: FragmentSymTable,
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
@@ -253,6 +294,7 @@ function diffFieldAgainstStore({
         rootId: id,
         selectionSet: field.selectionSet,
         variables,
+        fragmentSymTable,
       });
 
       if (itemDiffResult.isMissing) {
@@ -276,6 +318,7 @@ function diffFieldAgainstStore({
       rootId: storeValue,
       selectionSet: field.selectionSet,
       variables,
+      fragmentSymTable,
     });
   }
 

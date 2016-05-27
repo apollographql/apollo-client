@@ -6,6 +6,7 @@ import assign = require('lodash.assign');
 import {
   getQueryDefinition,
   getFragmentDefinition,
+  FragmentSymTable,
 } from '../queries/getFromAST';
 
 import {
@@ -113,6 +114,7 @@ export function writeSelectionSetToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject,
+  fragmentSymTable,
 }: {
   dataId: string,
   result: any,
@@ -120,9 +122,19 @@ export function writeSelectionSetToStore({
   store?: NormalizedCache,
   variables: Object,
   dataIdFromObject: IdGetter,
+  fragmentSymTable?: FragmentSymTable,
 }): NormalizedCache {
+  console.log("Fragment sym table: ");
+  console.log(fragmentSymTable);
+
+  if(!fragmentSymTable) {
+    //we have an empty sym table if there's no sym table given
+    //to us for the fragments.
+    fragmentSymTable = {};
+  }
   selectionSet.selections.forEach((selection) => {
     if (isField(selection)) {
+      console.log("Field");
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
 
@@ -137,8 +149,10 @@ export function writeSelectionSetToStore({
         store,
         field: selection,
         dataIdFromObject,
+        fragmentSymTable,
       });
     } else if (isInlineFragment(selection)) {
+      console.log("Inline fragment");
       // XXX what to do if this tries to write the same fields? Also, type conditions...
       writeSelectionSetToStore({
         result,
@@ -147,9 +161,27 @@ export function writeSelectionSetToStore({
         variables,
         dataId,
         dataIdFromObject,
+        fragmentSymTable,
       });
     } else {
-      throw new Error('Non-inline fragments not supported.');
+      console.log("Named fragment");
+      //look up the fragment referred to in the selection
+      const fragment = fragmentSymTable[selection.name.value];
+      if(!fragment) {
+        throw new Error(`No fragment named ${selection.name.value}.`);
+      }
+
+      writeSelectionSetToStore({
+        result,
+        selectionSet: fragment.selectionSet,
+        store,
+        variables,
+        dataId,
+        dataIdFromObject,
+        fragmentSymTable,
+      });
+
+      //throw new Error('Non-inline fragments not supported.');
     }
   });
 
@@ -163,6 +195,7 @@ function writeFieldToStore({
   store,
   dataId,
   dataIdFromObject,
+  fragmentSymTable,
 }: {
   field: Field,
   value: any,
@@ -170,6 +203,7 @@ function writeFieldToStore({
   store: NormalizedCache,
   dataId: string,
   dataIdFromObject: IdGetter,
+  fragmentSymTable?: FragmentSymTable,
 }) {
   let storeValue;
 
@@ -205,6 +239,7 @@ function writeFieldToStore({
           selectionSet: field.selectionSet,
           variables,
           dataIdFromObject,
+          fragmentSymTable,
         });
       }
     });
@@ -229,6 +264,7 @@ function writeFieldToStore({
       selectionSet: field.selectionSet,
       variables,
       dataIdFromObject,
+      fragmentSymTable,
     });
 
     storeValue = valueDataId;

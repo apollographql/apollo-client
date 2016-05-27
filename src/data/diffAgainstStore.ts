@@ -110,9 +110,6 @@ export function diffSelectionSetAgainstStore({
     throw new Error('Must be a selection set.');
   }
 
-  console.log("Fragment sym table in diff before: ");
-  console.log(fragmentSymTable);
-
   if(!fragmentSymTable) {
     fragmentSymTable = {};
   }
@@ -170,14 +167,8 @@ export function diffSelectionSetAgainstStore({
       }
     } else {
       const fragment = fragmentSymTable[selection.name.value];
-      if(!fragment){
-        console.log("Named fragment.");
-        console.log("Fragment sym table (inside diff): ");
-        console.log(fragmentSymTable);
-        const fragment = fragmentSymTable[selection.name.value];
-        if(!fragment ) {
-          throw new Error(`No fragment named ${selection.name.value}`);
-        }
+      if (!fragment){
+        throw new Error(`No fragment named ${selection.name.value}`);
       }
 
       const {

@@ -49,6 +49,7 @@ import {
 import {
   queryDefinition,
   printQueryFromDefinition,
+  queryDocument,
 } from './queryPrinting';
 
 import { Observable, Observer, Subscription } from './util/Observable';
@@ -211,9 +212,6 @@ export class QueryManager {
                 queryStoreValue.networkError.stack);
             }
           } else {
-            console.log("Fragment sym tale inside watchQuery()");
-            console.log(queryStoreValue.fragmentSymTable);
-
             const resultFromStore = readSelectionSetFromStore({
               store: this.getApolloState().data,
               rootId: queryStoreValue.query.id,
@@ -324,11 +322,13 @@ export class QueryManager {
       initialResult = result;
 
       if (missingSelectionSets && missingSelectionSets.length) {
-        const diffedQueryDef = queryDefinition({
+        const diffedQuery = queryDocument({
           missingSelectionSets,
           variableDefinitions: queryDef.variableDefinitions,
           name: queryDef.name,
+          fragmentSymTable: queryFragmentSymTable,
         });
+        const diffedQueryDef = getQueryDefinition(diffedQuery);
 
         minimizedQuery = {
           id: 'ROOT_QUERY',
@@ -336,7 +336,8 @@ export class QueryManager {
           selectionSet: diffedQueryDef.selectionSet,
         };
 
-        minimizedQueryString = printQueryFromDefinition(diffedQueryDef);
+        minimizedQueryString = print(diffedQuery);
+        console.log("Minimized query string: ", minimizedQueryString);
       } else {
         minimizedQuery = null;
         minimizedQueryString = null;
@@ -391,7 +392,6 @@ export class QueryManager {
 
           return result;
         }).then(() => {
-          console.log("LOL HERE");
 
           let resultFromStore;
           try {

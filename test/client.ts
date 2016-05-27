@@ -607,14 +607,14 @@ describe('client', () => {
 
   it('should be able to handle named fragments', (done) => {
     const query = gql`
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
       query {
         author {
           ...authorDetails
         }
+      }
+      fragment authorDetails on Author {
+        firstName
+        lastName
       }`;
     const result = {
       'author' : {
@@ -632,6 +632,8 @@ describe('client', () => {
       networkInterface,
     });
     client.query({ query }).then((actualResult) => {
+      console.log("query completed.");
+      console.log(actualResult);
       assert.deepEqual(actualResult.data, result);
       done();
     });

@@ -2,13 +2,18 @@ import {
   OperationDefinition,
   VariableDefinition,
   Name,
+  Document,
 } from 'graphql';
+
+import gql from './gql';
 
 import { print } from 'graphql/language/printer';
 
 import {
   SelectionSetWithRoot,
 } from './queries/store';
+
+import { FragmentSymTable } from './queries/getFromAST';
 
 export function printQueryForMissingData(options: QueryDefinitionOptions) {
   return printQueryFromDefinition(queryDefinition(options));
@@ -23,6 +28,38 @@ export function printQueryFromDefinition(queryDef: OperationDefinition) {
   };
 
   return print(queryDocumentAst);
+}
+
+// Creates a query document out of the missing selection sets, named fragments, etc.
+// in order to print.
+export function queryDocument({
+  missingSelectionSets,
+  variableDefinitions = null,
+  name = null,
+  fragmentSymTable
+}: QueryDocumentOptions): Document {
+  console.log("constructing query document...");
+
+  const doc: Document = {
+    kind: 'Document',
+    definitions: [],
+  };
+  console.log("Made some document.");
+
+  const opDefinition = queryDefinition({
+    missingSelectionSets,
+    variableDefinitions,
+    name
+  });
+  console.log("Constructued query definition.");
+
+  // add fragments to the query document
+  doc.definitions = [opDefinition];
+  Object.keys(fragmentSymTable).forEach((key) => {
+    doc.definitions.push(fragmentSymTable[key]);
+  });
+
+  return doc;
 }
 
 export function queryDefinition({
@@ -59,6 +96,13 @@ export function queryDefinition({
       selections,
     },
   };
+}
+
+export type QueryDocumentOptions = {
+  missingSelectionSets: SelectionSetWithRoot[];
+  variableDefinitions?: VariableDefinition[];
+  name?: Name;
+  fragmentSymTable: FragmentSymTable;
 }
 
 export type QueryDefinitionOptions = {

@@ -124,8 +124,6 @@ export function writeSelectionSetToStore({
   dataIdFromObject: IdGetter,
   fragmentSymTable?: FragmentSymTable,
 }): NormalizedCache {
-  console.log("Fragment sym table: ");
-  console.log(fragmentSymTable);
 
   if(!fragmentSymTable) {
     //we have an empty sym table if there's no sym table given
@@ -134,7 +132,6 @@ export function writeSelectionSetToStore({
   }
   selectionSet.selections.forEach((selection) => {
     if (isField(selection)) {
-      console.log("Field");
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
 
@@ -152,7 +149,6 @@ export function writeSelectionSetToStore({
         fragmentSymTable,
       });
     } else if (isInlineFragment(selection)) {
-      console.log("Inline fragment");
       // XXX what to do if this tries to write the same fields? Also, type conditions...
       writeSelectionSetToStore({
         result,
@@ -164,7 +160,6 @@ export function writeSelectionSetToStore({
         fragmentSymTable,
       });
     } else {
-      console.log("Named fragment");
       //look up the fragment referred to in the selection
       const fragment = fragmentSymTable[selection.name.value];
       if(!fragment) {

@@ -110,7 +110,7 @@ export function diffSelectionSetAgainstStore({
     throw new Error('Must be a selection set.');
   }
 
-  if(!fragmentSymTable) {
+  if (!fragmentSymTable) {
     fragmentSymTable = {};
   }
 
@@ -167,7 +167,7 @@ export function diffSelectionSetAgainstStore({
       }
     } else {
       const fragment = fragmentSymTable[selection.name.value];
-      if (!fragment){
+      if (!fragment) {
         throw new Error(`No fragment named ${selection.name.value}`);
       }
 

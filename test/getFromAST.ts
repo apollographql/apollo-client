@@ -214,8 +214,8 @@ describe('AST utility functions', () => {
       }`);
     const fragmentSymTable = createFragmentSymTable(fragments);
     const expectedTable: FragmentSymTable = {
-      "authorDetails": fragments[0],
-      "moreAuthorDetails": fragments[1],
+      'authorDetails': fragments[0],
+      'moreAuthorDetails': fragments[1],
     };
     assert.deepEqual(fragmentSymTable, expectedTable);
   });

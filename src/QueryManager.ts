@@ -47,8 +47,6 @@ import {
 } from './data/diffAgainstStore';
 
 import {
-  queryDefinition,
-  printQueryFromDefinition,
   queryDocument,
 } from './queryPrinting';
 
@@ -337,7 +335,6 @@ export class QueryManager {
         };
 
         minimizedQueryString = print(diffedQuery);
-        console.log("Minimized query string: ", minimizedQueryString);
       } else {
         minimizedQuery = null;
         minimizedQueryString = null;

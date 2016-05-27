@@ -8,7 +8,7 @@ import {
 } from '../actions';
 
 import {
-  FragmentSymTable
+  FragmentSymTable,
 } from '../queries/getFromAST';
 
 import {

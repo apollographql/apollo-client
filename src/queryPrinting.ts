@@ -5,8 +5,6 @@ import {
   Document,
 } from 'graphql';
 
-import gql from './gql';
-
 import { print } from 'graphql/language/printer';
 
 import {
@@ -36,22 +34,19 @@ export function queryDocument({
   missingSelectionSets,
   variableDefinitions = null,
   name = null,
-  fragmentSymTable
+  fragmentSymTable,
 }: QueryDocumentOptions): Document {
-  console.log("constructing query document...");
 
   const doc: Document = {
     kind: 'Document',
     definitions: [],
   };
-  console.log("Made some document.");
 
   const opDefinition = queryDefinition({
     missingSelectionSets,
     variableDefinitions,
-    name
+    name,
   });
-  console.log("Constructued query definition.");
 
   // add fragments to the query document
   doc.definitions = [opDefinition];

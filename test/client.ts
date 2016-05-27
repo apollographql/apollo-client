@@ -31,8 +31,6 @@ import {
   HTTPNetworkInterface,
 } from '../src/networkInterface';
 
-import { getQueryDefinition } from '../src/queries/getFromAST';
-
 import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
@@ -315,6 +313,7 @@ describe('client', () => {
             networkError: null,
             graphQLErrors: null,
             forceFetch: false,
+            fragmentSymTable: {},
             returnPartialData: false,
             lastRequestId: 1,
           },
@@ -567,7 +566,6 @@ describe('client', () => {
       queryTransformer: addTypenameToSelectionSet,
     });
     client.query({ forceFetch: true, query }).then((actualResult) => {
-      console.log(actualResult);
       assert.deepEqual(actualResult.data, transformedResult);
       done();
     });
@@ -589,7 +587,7 @@ describe('client', () => {
       'author': {
         'firstName': 'John',
         'lastName': 'Smith',
-      }
+      },
     };
     const networkInterface = mockNetworkInterface(
     {
@@ -619,7 +617,7 @@ describe('client', () => {
     const result = {
       'author' : {
         'firstName': 'John',
-        'lastName': 'Smith'
+        'lastName': 'Smith',
       },
     };
 
@@ -632,8 +630,6 @@ describe('client', () => {
       networkInterface,
     });
     client.query({ query }).then((actualResult) => {
-      console.log("query completed.");
-      console.log(actualResult);
       assert.deepEqual(actualResult.data, result);
       done();
     });

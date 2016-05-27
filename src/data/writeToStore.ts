@@ -125,7 +125,7 @@ export function writeSelectionSetToStore({
   fragmentSymTable?: FragmentSymTable,
 }): NormalizedCache {
 
-  if(!fragmentSymTable) {
+  if (!fragmentSymTable) {
     //we have an empty sym table if there's no sym table given
     //to us for the fragments.
     fragmentSymTable = {};
@@ -162,7 +162,7 @@ export function writeSelectionSetToStore({
     } else {
       //look up the fragment referred to in the selection
       const fragment = fragmentSymTable[selection.name.value];
-      if(!fragment) {
+      if (!fragment) {
         throw new Error(`No fragment named ${selection.name.value}.`);
       }
 

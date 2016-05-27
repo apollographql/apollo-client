@@ -35,6 +35,7 @@ We have put together some basic example apps using various parts of Apollo; chec
 - [A Meteor Integration example that uses SQL, MongoDB + Rest](https://github.com/abhiaiyer91/sample-graphql-meteor-server)
 
 ### General JS Examples
+- [A full-stack Apollo Client and Server example app that uses React, Webpack, Babel, and Redux](https://github.com/apollostack/GitHunt)
 - [A full-stack app with a Material UI React frontend on top of Discourse](https://github.com/apollostack/apollo-demo)
 - [A GraphQL server example that uses SQL, MongoDB + REST](https://github.com/apollostack/apollo-server-tutorial)
 - [A simple GraphQL blog that uses Feathersjs for managing database services](https://github.com/swarthout/feathers-apollo)

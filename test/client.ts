@@ -603,6 +603,43 @@ describe('client', () => {
     });
   });
 
+  it('should be able to handle named fragments with multiple fragments', (done) => {
+    const query = gql`
+      query {
+        author {
+          ...authorDetails
+          ...moreDetails
+        }
+      }
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }
+      fragment moreDetails on Author {
+        address
+      }`;
+    const result = {
+      'author' : {
+        'firstName': 'John',
+        'lastName': 'Smith',
+        'address': '1337 10th St.',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: { query },
+      result: { data: result },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+    });
+    client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+      done();
+    });
+  });
+
   it('should be able to handle named fragments', (done) => {
     const query = gql`
       query {

@@ -1009,10 +1009,10 @@ describe('QueryManager', () => {
     });
   });
 
-  it('runs a mutation and puts the result in the store', () => {
+  it('runs a mutation with object parameters and puts the result in the store', () => {
     const mutation = gql`
       mutation makeListPrivate {
-        makeListPrivate(id: "5") {
+        makeListPrivate(input: {id: "5"}) {
           id,
           isPrivate,
         }

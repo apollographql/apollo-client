@@ -936,4 +936,7 @@ declare module "graphql" {
         directives?: Array<GraphQLDirective>;
     }
 
+// utilities/valueFromAST.js
+
+    function valueFromAST(valueAST: Value, type: GraphQLInputType, variables?: Object): any
 }

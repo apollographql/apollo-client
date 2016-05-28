@@ -323,11 +323,11 @@ describe('client', () => {
           'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
             name: 'Luke Skywalker',
           },
-          'ROOT_QUERY.allPeople({"first":"1"})': {
+          'ROOT_QUERY.allPeople({"first":1})': {
             people: [ 'ROOT_QUERY.allPeople({"first":"1"}).people.0' ],
           },
           ROOT_QUERY: {
-            'allPeople({"first":"1"})': 'ROOT_QUERY.allPeople({"first":"1"})',
+            'allPeople({"first":1})': 'ROOT_QUERY.allPeople({"first":1})',
           },
         },
       },

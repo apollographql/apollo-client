@@ -15,7 +15,6 @@ import './diffAgainstStore';
 import './networkInterface';
 import './QueryManager';
 import './client';
-import './middleware';
 import './store';
 import './gql';
 import './queryTransform';

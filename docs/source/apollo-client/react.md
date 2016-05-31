@@ -215,7 +215,7 @@ Redux's connect will pass `dispatch` as a prop unless action creators are passed
 ```js
 // ... same as above
 
-function mapStateToProps({ state, ownProps }) {
+function mapStateToProps(state, ownProps) {
   return {
     selectedCategory: state.selectedCategory,
   }

@@ -162,7 +162,7 @@ Go ahead and give the server a try with the new mocks. If all went well, you sho
 
 You can tell `apolloServer` to mock a scalar type, such as Int or String in a specific way. In this case, we told it to return an integer between 1 and 1000 every time an Int field is requested by the client.
 
-You can also tell `apolloSever` to use special mocks for a specific type. In the `mocks.js` file above, we're telling the server to use `casual.first_name` to mock the `firstName` field of `Author`. If we didn't tell it to do that, it would use the default mock for the `String` type instead. To mock lists of different length, you can use `new MockList([min, max])`, which will return a list of length between min and max (both inclusive).
+You can also tell `apolloServer` to use special mocks for a specific type. In the `mocks.js` file above, we're telling the server to use `casual.first_name` to mock the `firstName` field of `Author`. If we didn't tell it to do that, it would use the default mock for the `String` type instead. To mock lists of different length, you can use `new MockList([min, max])`, which will return a list of length between min and max (both inclusive).
 
 In the mock functions, you can also access the arguments passed to the field. In the file above, we're using that feature for the `author` field on `RootQuery`, to make sure that when the query asks for a user with a specific first and/or last name, we either return a user with that first and/or last name, or we return null (to simulate an unsuccessful search in 20% of the cases).
 

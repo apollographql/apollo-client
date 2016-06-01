@@ -121,5 +121,62 @@ describe('QueryScheduler', () => {
         });
       });
     });
+
+    it('should add requests to the in-flight queue before completing the request', () => {
+      const myScheduler = new QueryScheduler({
+        shouldBatch: true,
+        queryManager: new QueryManager({
+          networkInterface: mockNetworkInterface(),
+          store: createApolloStore(),
+          reduxRootKey: 'apollo',
+        }),
+      });
+      const request2 = {
+        options: { query },
+        queryId: 'not-a-real-id2',
+      };
+
+      myScheduler.queueRequest(request);
+      myScheduler.queueRequest(request2);
+      myScheduler.consumeQueue();
+      assert.equal(Object.keys(scheduler.inFlightRequests).length, 2);
+    });
+
+    it('should be able to remove requests from the in-flight queue once the server responds', (done) => {
+      scheduler.queueRequest(request);
+      scheduler.consumeQueue().forEach((promise) => {
+        promise.then((result) => {
+          assert.equal(Object.keys(scheduler.inFlightRequests).length, 0);
+          done();
+        });
+      });
+    });
+  });
+
+  it('should be able to stop polling', () => {
+    const scheduler = new QueryScheduler({
+      shouldBatch: true,
+      queryManager: queryManager,
+    });
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const request = {
+      options: { query },
+      queryId: 'not-a-real-id',
+    };
+
+    scheduler.queueRequest(request);
+    scheduler.queueRequest(request);
+
+    //poll with a really big interval so that the queue
+    //won't actually be consumed by the time we stop.
+    scheduler.start(1000000);
+    scheduler.stop();
+    assert.equal(scheduler.fetchRequests.length, 2);
   });
 });

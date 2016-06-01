@@ -16,8 +16,10 @@ export interface QueryFetchRequest {
 // for new fetch requests. If there are multiple requests in the queue at a time, it will batch
 // them together into one query. Batching can be toggled with the shouldBatch option.
 export class QueryScheduler {
-  // Queue on which the QueryScheduler will operate on a per-tick basis
+  // Queue on which the QueryScheduler will operate on a per-tick basis.
   public fetchRequests: QueryFetchRequest[];
+  // Table (from query id to QueryFetchRequest) which contains requests that are currently in-flight.
+  public inFlightRequests: { [queryId: string]: QueryFetchRequest };
 
   private shouldBatch: Boolean;
   private pollInterval: Number;
@@ -36,11 +38,22 @@ export class QueryScheduler {
   }) {
     this.shouldBatch = shouldBatch;
     this.fetchRequests = [];
+    this.inFlightRequests = {};
     this.queryManager = queryManager;
   }
 
   public queueRequest(request: QueryFetchRequest) {
     this.fetchRequests.push(request);
+  }
+
+  // Called when we receive a response from the server for a particular QueryFetchRequest.
+  // Responsible for evicting that QueryFetchRequest from the inFlightRequests table.
+  public handleResult(queryId: string, result: GraphQLResult): GraphQLResult {
+    if (this.inFlightRequests[queryId]) {
+      delete this.inFlightRequests[queryId];
+    }
+
+    return result;
   }
 
   // Consumes the queue. Called on a polling interval, exposed publicly
@@ -52,7 +65,11 @@ export class QueryScheduler {
     }
 
     const res: Promise<GraphQLResult>[] = this.fetchRequests.map((fetchRequest) => {
-      return this.queryManager.fetchQuery(fetchRequest.queryId, fetchRequest.options);
+      this.inFlightRequests[fetchRequest.queryId] = fetchRequest;
+      return this.queryManager.fetchQuery(fetchRequest.queryId, fetchRequest.options)
+        .then((result) => {
+          return this.handleResult(fetchRequest.queryId, result);
+        });
     });
     this.fetchRequests = [];
     return res;
@@ -69,6 +86,3 @@ export class QueryScheduler {
     }
   }
 }
-
-
-

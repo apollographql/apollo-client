@@ -67,6 +67,80 @@ const client = new ApolloClient({
 });
 ```
 
+<h4 id="networkInterfaceMiddleware" title="Middleware">Middleware</h4>
+
+It is possible to use middleware with the network interface created via `createNetworkInterface`.  In order to do so, you must pass an object into the interface created with `createNetworkInterface()`.  This object must contain an `applyMiddleware` method with the following parameters:
+
+- `req: object` The HTTP request being processed by the middleware.
+- `next: function` This function pushes the HTTP request onward through the middleware.
+
+This example shows how you'd create a middleware.  It can be done either by providing the requried object directly to `.use()` or by creating a function/object and passing it (or an array) to `.use()`.
+
+In both examples, we'll show how you would add an authentication token to the HTTP header of the requests being sent by the client.
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+
+const networkInterface = createNetworkInterface('/graphql');
+
+networkInterface.use({
+  applyMiddleWare(req, next) => {
+    if (!req.options.header) {
+      req.options.header = {};  // Create the header object if needed.
+    }
+    req.options.header.authorization = localStorage.getItem('token') ? localStorage.getItem('token') : null;
+    next();
+  }
+});
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+The above example shows use of a single middleware passed directly to .use().  It checks to see if we have a token (JWT, for example) and pass that token in the HTTP header of the request, so we can authenticate interactions with GraphQL performed through our network interface.
+
+The following example shows use of multiple middlewares passed as an array:
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+
+const networkInterface = createNetworkInterface('/graphql');
+const token = 'first-token-value';
+const token2 = 'second-token-value';
+
+function exampleWare1 () {
+  applyMiddleware(req, next) => {
+    if (!req.options.header) {
+      req.options.header = {};  // Create the header object if needed.
+    }
+    req.options.header.authorization = token;
+    next();
+  }
+}
+
+function exampleWare2 () {
+  applyMiddleware(req, next) => {
+    if (!req.options.header) {
+      req.options.header = {};  // Create the header object if needed.
+    }
+    req.options.header.authorization = token2;
+    next();
+  }
+}
+
+const exWare1 = new exampleWare1();
+const exWare2 = new exampleWare2();
+
+networkInterface.use([exWare1, exWare2]);
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+Given the above code, the header's `Authorization` value will be that of `token2`.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware, passed to `.use()` as an array.
+
 <h4 id="corsSupport" title="cors support">CORS support</h4>
 
 If your GraphQL server and client application are running on different origins, you will get HTTP 405 errors thrown by the client. This happens when recieving the response from the server which is denying the request because of CORS. The client is working as designed. CORS support should be enabled in the apollo-server instance. Howto can be found in the [apollo-server/tools.md](/source/apollo-server/tools.md). This was encountered using the meteor-stater-kit and was confirmed from others running the apollo-server with express in node.

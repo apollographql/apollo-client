@@ -36,15 +36,8 @@ import {
 
 import isUndefined = require('lodash.isundefined');
 
-export {
-  createNetworkInterface,
-  createApolloStore,
-  createApolloReducer,
-  readQueryFromStore,
-  readFragmentFromStore,
-};
 
-export default class ApolloClient {
+export class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
   public reduxRootKey: string;
@@ -143,3 +136,12 @@ export default class ApolloClient {
     });
   };
 }
+
+export {
+  createNetworkInterface,
+  createApolloStore,
+  createApolloReducer,
+  readQueryFromStore,
+  readFragmentFromStore,
+  ApolloClient
+};

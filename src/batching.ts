@@ -15,6 +15,8 @@ export interface QueryFetchRequest {
 // QueryScheduler takes a operates on a queue  of QueryFetchRequests. It polls and checks this queue
 // for new fetch requests. If there are multiple requests in the queue at a time, it will batch
 // them together into one query. Batching can be toggled with the shouldBatch option.
+// Conditions this tries to guarantee:
+// - For polling queries, there should be only one query in flight at a time.
 export class QueryScheduler {
   // Queue on which the QueryScheduler will operate on a per-tick basis.
   public fetchRequests: QueryFetchRequest[];
@@ -55,21 +57,18 @@ export class QueryScheduler {
     }
 
     const res: Promise<GraphQLResult>[] = [];
-    this.fetchRequests = this.fetchRequests.filter((fetchRequest) => {
-      if (this.checkInFlight(fetchRequest)) {
-        //if a query is in flight, we don't want to send out another one
-        //so, we keep this one in the queue.
-        return true;
-      } else {
-        this.addInFlight(fetchRequest);
-      }
+    const { toLeaveInQueue, toFetch } =
+      this.splitFetchRequests(this.fetchRequests);
 
-      const promise = this.queryManager.fetchQuery(fetchRequest.queryId, fetchRequest.options)
+    this.fetchRequests = toLeaveInQueue;
+    toFetch.forEach((fetchRequest) => {
+      this.addInFlight(fetchRequest);
+      const promise = this.queryManager.fetchQuery(fetchRequest.queryId,
+                                                   fetchRequest.options)
         .then((result) => {
           return this.handleResult(fetchRequest.queryId, result);
         });
       res.push(promise);
-      return false;
     });
 
     return res;
@@ -84,6 +83,28 @@ export class QueryScheduler {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
     }
+  }
+
+  // Takes the queue of QueryFetchRequests and returns two pieces
+  // of it. The first piece is the stuff that we have to leave in the queue
+  // due to some condition (e.g. in flight polling queries) and the second
+  // piece is the stuff we want to actually send to the server.
+  private splitFetchRequests(
+    fetchRequests: QueryFetchRequest[]): {toLeaveInQueue: QueryFetchRequest[],
+                                          toFetch: QueryFetchRequest[]} {
+    const toLeaveInQueue: QueryFetchRequest[] = [];
+    const toFetch = fetchRequests.filter((fetchRequest) => {
+      if (this.checkInFlight(fetchRequest)) {
+        //if a query is in flight, we don't want to send out another one
+        //so, we keep this one in the queue.
+        toLeaveInQueue.push(fetchRequest);
+        return false;
+      } else {
+        return true;
+      }
+    });
+
+    return {toLeaveInQueue, toFetch};
   }
 
   private addInFlight(fetchRequest: QueryFetchRequest): void {

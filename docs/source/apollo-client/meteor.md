@@ -53,12 +53,10 @@ The Apollo server, and the Express GraphQL package that it is based on, rely on 
 ```js
 import { apolloServer } from 'graphql-tools';
 import express from 'express';
-import proxyMiddleware from 'http-proxy-middleware';
+import { Meteor } from 'meteor/meteor';
 import { WebApp } from 'meteor/webapp';
 
 import { schema, resolvers } from '/imports/api/schema';
-
-const GRAPHQL_PORT = 4000;
 
 const graphQLServer = express();
 
@@ -69,12 +67,8 @@ graphQLServer.use('/graphql', apolloServer({
   resolvers,
 }));
 
-graphQLServer.listen(GRAPHQL_PORT, () => console.log(
-  `GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}`
-));
-
 // This redirects all requests to /graphql to our Express GraphQL server
-WebApp.rawConnectHandlers.use(proxyMiddleware(`http://localhost:${GRAPHQL_PORT}/graphql`));
+WebApp.rawConnectHandlers.use(Meteor.bindEnvironment(graphQLServer));
 ```
 
 ### Getting the current user

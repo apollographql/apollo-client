@@ -96,7 +96,8 @@ describe('QueryScheduler', () => {
       queryId: 'not-a-real-id',
     };
 
-    it('should be able to consume from a queue containing a single query', (done) => {
+    it('should be able to consume from a queue containing a single query',
+       (done) => {
       scheduler.queueRequest(request);
       const promises: Promise<GraphQLResult>[] = scheduler.consumeQueue();
       assert.equal(scheduler.fetchRequests.length, 0);
@@ -107,9 +108,15 @@ describe('QueryScheduler', () => {
       });
     });
 
-    it('should be able to consume from a queue containing multiple queries', (done) => {
+    it('should be able to consume from a queue containing multiple queries',
+       (done) => {
+      const request2 = {
+        options: { query },
+        queryId: 'another-fake-id',
+      };
+
       scheduler.queueRequest(request);
-      scheduler.queueRequest(request);
+      scheduler.queueRequest(request2);
       const promises: Promise<GraphQLResult>[] = scheduler.consumeQueue();
       assert.equal(scheduler.fetchRequests.length, 0);
       assert.equal(promises.length, 2);
@@ -122,7 +129,7 @@ describe('QueryScheduler', () => {
       });
     });
 
-    it('should add requests to the in-flight queue before completing the request', () => {
+    it('should add requests to the in-flight queue before the request', () => {
       const myScheduler = new QueryScheduler({
         shouldBatch: true,
         queryManager: new QueryManager({
@@ -139,10 +146,12 @@ describe('QueryScheduler', () => {
       myScheduler.queueRequest(request);
       myScheduler.queueRequest(request2);
       myScheduler.consumeQueue();
-      assert.equal(Object.keys(scheduler.inFlightRequests).length, 2);
+
+      assert.equal(Object.keys(myScheduler.inFlightRequests).length, 2);
     });
 
-    it('should be able to remove requests from the in-flight queue once the server responds', (done) => {
+    it(`should be able to remove requests from the in-flight queue once the
+    server responds`, (done) => {
       scheduler.queueRequest(request);
       scheduler.consumeQueue().forEach((promise) => {
         promise.then((result) => {
@@ -150,6 +159,69 @@ describe('QueryScheduler', () => {
           done();
         });
       });
+    });
+
+    it(`should not fetch a query while a query with the same id is
+    in flight`, () => {
+      //this network interface will not respond to the query in the duration of
+      //this test, leaving the query in flight.
+      const myNetworkInterface = mockNetworkInterface(
+        {
+          request: { query },
+          delay: 2000,
+        }
+      );
+      const myScheduler = new QueryScheduler({
+        shouldBatch: true,
+        queryManager: new QueryManager({
+          networkInterface: myNetworkInterface,
+          store: createApolloStore(),
+          reduxRootKey: 'apollo',
+        }),
+      });
+      myScheduler.queueRequest(request);
+      const request2 = {
+        options: { query },
+        queryId: 'not-a-real-id',
+      };
+      myScheduler.consumeQueue();
+      myScheduler.queueRequest(request2);
+      myScheduler.consumeQueue();
+      assert.equal(myScheduler.fetchRequests.length, 1);
+    });
+
+    it(`should fetch both if one query is queued and one with a diff. id
+    is in flight`, () => {
+      const myNetworkInterface = mockNetworkInterface(
+        {
+          request: { query },
+          delay: 20000,
+        },
+        {
+          request: { query },
+          delay: 20000,
+        }
+      );
+      const myScheduler = new QueryScheduler({
+        shouldBatch: true,
+        queryManager: new QueryManager({
+          networkInterface: myNetworkInterface,
+          store: createApolloStore(),
+          reduxRootKey: 'apollo',
+        }),
+      });
+      const request2 = {
+        options: { query },
+        queryId: 'totally-diff-id',
+      };
+
+      myScheduler.queueRequest(request);
+      myScheduler.consumeQueue();
+      assert.equal(myScheduler.fetchRequests.length, 0);
+      myScheduler.queueRequest(request2);
+      myScheduler.consumeQueue();
+      assert.equal(myScheduler.fetchRequests.length, 0);
+      assert.equal(Object.keys(myScheduler.inFlightRequests).length, 2);
     });
   });
 
@@ -173,9 +245,9 @@ describe('QueryScheduler', () => {
     scheduler.queueRequest(request);
     scheduler.queueRequest(request);
 
-    //poll with a really big interval so that the queue
+    //poll with a big interval so that the queue
     //won't actually be consumed by the time we stop.
-    scheduler.start(1000000);
+    scheduler.start(1000);
     scheduler.stop();
     assert.equal(scheduler.fetchRequests.length, 2);
   });

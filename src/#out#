@@ -1,0 +1,85 @@
+
+> apollo-client@0.3.12 pretest /Users/dhaivatpandya/dev/apollo-client
+> npm run compile
+
+
+> apollo-client@0.3.12 compile /Users/dhaivatpandya/dev/apollo-client
+> tsc
+
+
+> apollo-client@0.3.12 test /Users/dhaivatpandya/dev/apollo-client
+> npm run testonly -- "--grep" "should let you handle multiple polled queries"
+
+
+> apollo-client@0.3.12 testonly /Users/dhaivatpandya/dev/apollo-client
+> mocha --reporter spec --full-trace lib/test/tests.js "--grep" "should let you handle multiple polled queries"
+
+
+
+  QueryManager
+Handle 1
+Handle 1
+Handle 2
+Stopping query...
+Polling timer: 
+Timeout {
+  _called: false,
+  _idleTimeout: 500,
+  _idlePrev: 
+   TimersList {
+     _idleNext: [Circular],
+     _idlePrev: [Circular],
+     _timer: Timer { '0': [Function: listOnTimeout], _list: [Circular] },
+     _unrefed: false,
+     msecs: 500 },
+  _idleNext: 
+   TimersList {
+     _idleNext: [Circular],
+     _idlePrev: [Circular],
+     _timer: Timer { '0': [Function: listOnTimeout], _list: [Circular] },
+     _unrefed: false,
+     msecs: 500 },
+  _idleStart: 968,
+  _onTimeout: [Function: wrapper],
+  _repeat: [Function] }
+Handle 2
+Stopping query...
+Polling timer: 
+Timeout {
+  '0': null,
+  _called: false,
+  _idleTimeout: -1,
+  _idlePrev: null,
+  _idleNext: null,
+  _idleStart: 968,
+  _onTimeout: null,
+  _repeat: null }
+Handle 2
+Handle 2
+    ✓ should let you handle multiple polled queries and unsubscribe from one of them (1819ms)
+
+
+  1 passing (2s)
+
+
+> apollo-client@0.3.12 posttest /Users/dhaivatpandya/dev/apollo-client
+> npm run lint
+
+
+> apollo-client@0.3.12 lint /Users/dhaivatpandya/dev/apollo-client
+> grunt tslint
+
+Running "tslint:files" (tslint) task
+>> src/QueryManager.ts[446, 5]: function invocation disallowed: console.log
+>> src/QueryManager.ts[450, 7]: function invocation disallowed: console.log
+>> src/QueryManager.ts[451, 7]: function invocation disallowed: console.log
+>> src/QueryManager.ts[446, 17]: " should be '
+>> src/QueryManager.ts[450, 19]: " should be '
+>> test/QueryManager.ts[1567, 9]: function invocation disallowed: console.log
+>> test/QueryManager.ts[1574, 9]: function invocation disallowed: console.log
+>> test/QueryManager.ts[1567, 21]: " should be '
+>> test/QueryManager.ts[1574, 21]: " should be '
+>> 9 errors in 33 files
+Warning: Task "tslint:files" failed. Use --force to continue.
+
+Aborted due to warnings.

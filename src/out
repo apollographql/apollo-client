@@ -1,0 +1,8 @@
+
+> apollo-client@0.3.12 pretest /Users/dhaivatpandya/dev/apollo-client
+> npm run compile
+
+
+> apollo-client@0.3.12 compile /Users/dhaivatpandya/dev/apollo-client
+> tsc
+

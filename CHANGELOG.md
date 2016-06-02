@@ -6,6 +6,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Removed AuthTokenHeaderMiddleware code and related tests from apollo-client [Issue #247](https://github.com/apollostack/apollo-client/issues/247)
 - Fixed the getFromAST functions so that they work with queries that have named fragments (i.e. working toward named fragment support)
 - Added basic guards to our Redux Store `subscribe` to prevent `broadcastQueries` from being called unnecessarily
+- Fixed polling leak issue that occured with multiple polling queries (https://github.com/apollostack/apollo-client/issues/248)
 
 ### v0.3.12
 

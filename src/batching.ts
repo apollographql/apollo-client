@@ -46,16 +46,6 @@ export class QueryScheduler {
     this.fetchRequests.push(request);
   }
 
-  // Called when we receive a response from the server for a particular QueryFetchRequest.
-  // Responsible for evicting that QueryFetchRequest from the inFlightRequests table.
-  public handleResult(queryId: string, result: GraphQLResult): GraphQLResult {
-    if (this.inFlightRequests[queryId]) {
-      delete this.inFlightRequests[queryId];
-    }
-
-    return result;
-  }
-
   // Consumes the queue. Called on a polling interval, exposed publicly
   // in order to unit test. Returns a list of promises for each of the queries
   // fetched primarily for unit testing purposes.
@@ -64,14 +54,24 @@ export class QueryScheduler {
       return;
     }
 
-    const res: Promise<GraphQLResult>[] = this.fetchRequests.map((fetchRequest) => {
-      this.inFlightRequests[fetchRequest.queryId] = fetchRequest;
-      return this.queryManager.fetchQuery(fetchRequest.queryId, fetchRequest.options)
+    const res: Promise<GraphQLResult>[] = [];
+    this.fetchRequests = this.fetchRequests.filter((fetchRequest) => {
+      if (this.checkInFlight(fetchRequest)) {
+        //if a query is in flight, we don't want to send out another one
+        //so, we keep this one in the queue.
+        return true;
+      } else {
+        this.addInFlight(fetchRequest);
+      }
+
+      const promise = this.queryManager.fetchQuery(fetchRequest.queryId, fetchRequest.options)
         .then((result) => {
           return this.handleResult(fetchRequest.queryId, result);
         });
+      res.push(promise);
+      return false;
     });
-    this.fetchRequests = [];
+
     return res;
   }
 
@@ -84,5 +84,27 @@ export class QueryScheduler {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
     }
+  }
+
+  private addInFlight(fetchRequest: QueryFetchRequest): void {
+    this.inFlightRequests[fetchRequest.queryId] = fetchRequest;
+  }
+
+  private checkInFlight(fetchRequest: QueryFetchRequest): Boolean {
+    if (this.inFlightRequests[fetchRequest.queryId]) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  // Called when we receive a response from the server for a particular QueryFetchRequest.
+  // Responsible for evicting that QueryFetchRequest from the inFlightRequests table.
+  private handleResult(queryId: string, result: GraphQLResult): GraphQLResult {
+    if (this.inFlightRequests[queryId]) {
+      delete this.inFlightRequests[queryId];
+    }
+
+    return result;
   }
 }

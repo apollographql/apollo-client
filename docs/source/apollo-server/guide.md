@@ -6,7 +6,7 @@ description: A step-by-step guide for setting up a basic GraphQL server with Apo
 
 This guide will explain all the parts required for a simple GraphQL Blog server. If you're looking for a tutorial, check out [this Medium post](https://medium.com/apollo-stack/tutorial-building-a-graphql-server-cddaa023c035) or our [GraphQL server tutorial video on Youtube](https://www.youtube.com/watch?v=PHabPhgRUuU).
 
-We'll be using a package called [graphql-tools](https://www.npmjs.com/package/graphql-tools), which is actively being developed for [Apollo](http://www.apollostack.com). There are of course many ways to build a GraphQL server for Node.js, but this is the way we recommend. It describes each step in detail, from defining a schema to writing your own resolve functions and loaders.
+We'll be using a package called [apollo-server](https://www.npmjs.com/package/apollo-server), which is actively being developed for [Apollo](http://www.apollostack.com). There are of course many ways to build a GraphQL server for Node.js, but this is the way we recommend. It describes each step in detail, from defining a schema to writing your own resolve functions and loaders.
 
 ## Setup
 
@@ -32,7 +32,7 @@ If all goes well, the server should now print out a message that it is listening
 
 **For advanced users:**
 
-If you already have an express server or a GraphQL server set up, then you can also simply install graphql-tools with the command `npm install graphql-tools` and read the articles listed in the sidebar to learn about using the individual parts of the graphql-tools package.
+If you already have an express server or a GraphQL server set up, then you can also simply install graphql-tools with the command `npm install graphql-tools` and read the articles listed in the sidebar to learn about using the individual parts of the graphql-tools package in your project. Alternatively, you can switch out express-graphql for Apollo Server, with only minimal changes to your code.
 
 
 ## Schema
@@ -234,7 +234,7 @@ In order for the server to use the resolve functions instead of the mocked schem
 
 ```js
 import express from 'express';
-import { apolloServer } from 'graphql-tools';
+import { apolloServer } from 'apollo-server';
 import Schema from './data/schema';
 import Mocks from './data/mocks';
 import Resolvers from './data/resolvers';

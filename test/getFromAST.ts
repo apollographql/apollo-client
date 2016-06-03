@@ -203,7 +203,7 @@ describe('AST utility functions', () => {
     assert.equal(print(newDoc), print(expectedNewQuery));
   });
 
-  it('should create the fragment sym table correctly', () => {
+  it('should create the fragment map correctly', () => {
     const fragments = getFragmentDefinitions(gql`
       fragment authorDetails on Author {
         firstName

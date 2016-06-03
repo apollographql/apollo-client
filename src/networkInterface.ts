@@ -12,6 +12,13 @@ export interface Request {
   variables?: Object;
 }
 
+// Consists of a list of requests rather than a single request.
+export interface BatchedRequests {
+  debugName?: string;
+  queries?: string[];
+  variables?: Object[];
+}
+
 export interface NetworkInterface {
   query(request: Request): Promise<GraphQLResult>;
 }

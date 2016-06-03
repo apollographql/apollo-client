@@ -1553,7 +1553,7 @@ describe('QueryManager', () => {
     });
     const handle1 = queryManager.watchQuery({
       query: query1,
-      pollInterval: 800,
+      pollInterval: 150,
     });
     const handle2 = queryManager.watchQuery({
       query: query2,
@@ -1583,7 +1583,7 @@ describe('QueryManager', () => {
     setTimeout(() => {
       assert.equal(handleCount, 4);
       done();
-    }, 1600);
+    }, 400);
   });
 
   it('allows you to unsubscribe from polled queries', (done) => {

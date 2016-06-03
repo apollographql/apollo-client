@@ -51,6 +51,10 @@ import {
   queryDocument,
 } from './queryPrinting';
 
+import {
+  QueryFetchRequest,
+} from './batching';
+
 import { Observable, Observer, Subscription } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
@@ -273,6 +277,51 @@ export class QueryManager {
     }
 
     return this.watchQuery(options).result();
+  }
+
+  // Sends several queries batched together into one fetch over the transport.
+  public fetchBatchedQueries(fetchRequests: QueryFetchRequest[]): Promise<GraphQLResult[]> {
+    const queryPromises: Promise<GraphQLResult>[] = [];
+    const queryResults: GraphQLResult[] = [];
+
+    // We hold two promises: the fill promise and the batch fetch promise.
+    // The fill promise makes sure that queryPromises contains promises
+    // from fetchQueryFromInterface for each of the queries and the batch
+    // fetch promise makes sure that each of these queries have been fetched
+    // from the server.
+    const fillPromise = new Promise((fillResolve, fillReject) => {
+      const batchingNetworkInterface: NetworkInterface = {
+        query(request: Request) {
+          const queryPromise = new Promise((resolve, reject) => {});
+          queryPromises.push(queryPromise);
+
+          if (queryPromises.length == fetchRequests.length) {
+            fillResolve();
+          }
+
+          return fillPromise.then(() => {
+            return queryPromise;
+          });
+        }
+      }
+
+      const resultPromises = Promise<GraphQLResult>[] = [];
+      fetchRequests.forEach((fetchRequest) => {
+        const resultPromise = this.fetchQueryOverInterface(fetchRequest.queryId,
+                                                           fetchRequest.options,
+                                                           batchingNetworkInterface);
+        resultPromises.push(resultPromise);
+      });
+
+      // wait until all of the queryPromise values have been added to queryPromises
+      fillPromise.then(() => {
+
+        queryPromises.forEach((queryPromise) => {
+
+        });
+      });
+
+    });
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {

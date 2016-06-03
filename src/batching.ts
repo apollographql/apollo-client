@@ -46,6 +46,12 @@ export class QueryScheduler {
 
   public queueRequest(request: QueryFetchRequest) {
     this.fetchRequests.push(request);
+
+    // if we aren't batching queries, then it doesn't make any
+    // sense to let the queries wait around on the queue.
+    if (!this.shouldBatch) {
+      this.consumeQueue();
+    }
   }
 
   // Consumes the queue. Called on a polling interval, exposed publicly

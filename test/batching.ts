@@ -251,4 +251,26 @@ describe('QueryScheduler', () => {
     scheduler.stop();
     assert.equal(scheduler.fetchRequests.length, 2);
   });
+
+  it('should consume the queue immediately if batching is not enabled', () => {
+    const scheduler = new QueryScheduler({
+      shouldBatch: false,
+      queryManager: queryManager,
+    });
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const request = {
+      options: { query },
+      queryId: 'really-fake-id',
+    };
+
+    scheduler.queueRequest(request);
+    assert.equal(scheduler.fetchRequests.length, 0);
+    assert.equal(Object.keys(scheduler.inFlightRequests).length, 1);
+  });
 });

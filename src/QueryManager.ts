@@ -1,6 +1,7 @@
 import {
   NetworkInterface,
   Request,
+  BatchedNetworkInterface,
 } from './networkInterface';
 
 
@@ -281,47 +282,74 @@ export class QueryManager {
 
   // Sends several queries batched together into one fetch over the transport.
   public fetchBatchedQueries(fetchRequests: QueryFetchRequest[]): Promise<GraphQLResult[]> {
+    // There are three types of promises used here.
+    // - fillPromise: resolved once we have transformed each of the queries in
+    // fetchRequests have been transformed by fetchQueryOverInterface().
+    // - queryPromise: fetchQueryOverInterface() will write the results returned
+    // by the server for a particular query after this promise is resolved.
+    // - resultPromise: This is a promise returned by fetchQueryOverInterface().
+    // It is resolved once the query results have been written to store (i.e.
+    // the whole fetch procedure has been completed).
     const queryPromises: Promise<GraphQLResult>[] = [];
-    const queryResults: GraphQLResult[] = [];
+    const queryResolvers = [];
+    const queryRejecters = [];
 
-    // We hold two promises: the fill promise and the batch fetch promise.
-    // The fill promise makes sure that queryPromises contains promises
-    // from fetchQueryFromInterface for each of the queries and the batch
-    // fetch promise makes sure that each of these queries have been fetched
-    // from the server.
+    const transformedRequests: Request[] = [];
+    const resultPromises: Promise<GraphQLResult>[] = [];
+
     const fillPromise = new Promise((fillResolve, fillReject) => {
       const batchingNetworkInterface: NetworkInterface = {
         query(request: Request) {
-          const queryPromise = new Promise((resolve, reject) => {});
+          transformedRequests.push(request);
+          const queryPromise = new Promise((resolve, reject) => {
+            queryResolvers.push(resolve);
+            queryRejecters.push(reject);
+          });
           queryPromises.push(queryPromise);
 
-          if (queryPromises.length == fetchRequests.length) {
+          const retPromise = fillPromise.then(() => {
+            return queryPromise;
+          });
+
+          if (queryPromises.length === fetchRequests.length) {
             fillResolve();
           }
 
-          return fillPromise.then(() => {
-            return queryPromise;
-          });
-        }
-      }
+          return retPromise;
+        },
+      };
 
-      const resultPromises = Promise<GraphQLResult>[] = [];
       fetchRequests.forEach((fetchRequest) => {
         const resultPromise = this.fetchQueryOverInterface(fetchRequest.queryId,
                                                            fetchRequest.options,
                                                            batchingNetworkInterface);
         resultPromises.push(resultPromise);
       });
+    });
 
-      // wait until all of the queryPromise values have been added to queryPromises
-      fillPromise.then(() => {
+    // wait until all of the queryPromise values have been added to queryPromises
+    fillPromise.then(() => {
+      // TODO shouldn't need to do this JSON.parse if fetchQueryOverInterface
+      // exposed a way to get the JSON object. Needs a significant refactor.
+      const requestObjects = transformedRequests.map((request) => {
+        request.query = JSON.parse(request.query);
+      });
+      const batchedRequest: Request = {
+        debugName: '__batchedRequest',
+        query: JSON.stringify(requestObjects),
+      };
 
-        queryPromises.forEach((queryPromise) => {
-
+      (this.networkInterface as BatchedNetworkInterface)
+        .batchQuery(batchedRequest).then((results) => {
+        // Note: the server has to guarantee that the results will have the same
+        // ordering as the queries that they correspond to.
+        results.forEach((result, index) => {
+          queryResolvers[index](result);
         });
       });
-
     });
+
+    return Promise.all(resultPromises);
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {

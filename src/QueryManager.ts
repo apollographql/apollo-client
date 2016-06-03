@@ -276,6 +276,12 @@ export class QueryManager {
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
+    return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
+  }
+
+  private fetchQueryOverInterface(queryId: string,
+                                  options: WatchQueryOptions,
+                                  network: NetworkInterface): Promise<GraphQLResult> {
     const {
       query,
       variables,

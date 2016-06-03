@@ -11,7 +11,7 @@ import {
   SelectionSetWithRoot,
 } from './queries/store';
 
-import { FragmentSymTable } from './queries/getFromAST';
+import { FragmentMap } from './queries/getFromAST';
 
 export function printQueryForMissingData(options: QueryDefinitionOptions) {
   return printQueryFromDefinition(queryDefinition(options));
@@ -34,7 +34,7 @@ export function queryDocument({
   missingSelectionSets,
   variableDefinitions = null,
   name = null,
-  fragmentSymTable,
+  fragmentMap,
 }: QueryDocumentOptions): Document {
 
   const doc: Document = {
@@ -50,8 +50,8 @@ export function queryDocument({
 
   // add fragments to the query document
   doc.definitions = [opDefinition];
-  Object.keys(fragmentSymTable).forEach((key) => {
-    doc.definitions.push(fragmentSymTable[key]);
+  Object.keys(fragmentMap).forEach((key) => {
+    doc.definitions.push(fragmentMap[key]);
   });
 
   return doc;
@@ -97,7 +97,7 @@ export type QueryDocumentOptions = {
   missingSelectionSets: SelectionSetWithRoot[];
   variableDefinitions?: VariableDefinition[];
   name?: Name;
-  fragmentSymTable: FragmentSymTable;
+  fragmentMap: FragmentMap;
 }
 
 export type QueryDefinitionOptions = {

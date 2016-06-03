@@ -23,7 +23,7 @@ import {
   getQueryDefinition,
   replaceOperationDefinition,
   getFragmentDefinitions,
-  createFragmentSymTable,
+  createFragmentMap,
 } from './queries/getFromAST';
 
 import {
@@ -216,7 +216,7 @@ export class QueryManager {
               selectionSet: queryStoreValue.query.selectionSet,
               variables: queryStoreValue.variables,
               returnPartialData: options.returnPartialData,
-              fragmentSymTable: queryStoreValue.fragmentSymTable,
+              fragmentMap: queryStoreValue.fragmentMap,
             });
 
             if (observer.next) {
@@ -287,7 +287,7 @@ export class QueryManager {
     }
     const transformedQuery = replaceOperationDefinition(query, queryDef);
     const queryString = print(transformedQuery);
-    const queryFragmentSymTable = createFragmentSymTable(getFragmentDefinitions(transformedQuery));
+    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(transformedQuery));
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -314,7 +314,7 @@ export class QueryManager {
         throwOnMissingField: false,
         rootId: querySS.id,
         variables,
-        fragmentSymTable: queryFragmentSymTable,
+        fragmentMap: queryFragmentMap,
       });
 
       initialResult = result;
@@ -324,7 +324,7 @@ export class QueryManager {
           missingSelectionSets,
           variableDefinitions: queryDef.variableDefinitions,
           name: queryDef.name,
-          fragmentSymTable: queryFragmentSymTable,
+          fragmentMap: queryFragmentMap,
         });
         const diffedQueryDef = getQueryDefinition(diffedQuery);
 
@@ -355,7 +355,7 @@ export class QueryManager {
       returnPartialData,
       queryId,
       requestId,
-      fragmentSymTable: queryFragmentSymTable,
+      fragmentMap: queryFragmentMap,
     });
 
     if (! minimizedQuery || returnPartialData) {
@@ -399,7 +399,7 @@ export class QueryManager {
               selectionSet: querySS.selectionSet,
               variables,
               returnPartialData: returnPartialData,
-              fragmentSymTable: queryFragmentSymTable,
+              fragmentMap: queryFragmentMap,
             });
           // ensure multiple errors don't get thrown
           /* tslint:disable */

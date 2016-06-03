@@ -6,7 +6,7 @@ import {
   SelectionSetWithRoot,
 } from './queries/store';
 
-import { FragmentSymTable } from './queries/getFromAST';
+import { FragmentMap } from './queries/getFromAST';
 
 export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
@@ -41,7 +41,7 @@ export interface QueryInitAction {
   returnPartialData: boolean;
   queryId: string;
   requestId: number;
-  fragmentSymTable: FragmentSymTable;
+  fragmentMap: FragmentMap;
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {

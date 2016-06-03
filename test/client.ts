@@ -313,7 +313,7 @@ describe('client', () => {
             networkError: null,
             graphQLErrors: null,
             forceFetch: false,
-            fragmentSymTable: {},
+            fragmentMap: {},
             returnPartialData: false,
             lastRequestId: 1,
           },

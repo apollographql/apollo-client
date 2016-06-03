@@ -4,8 +4,8 @@ import {
   getQueryDefinition,
   getMutationDefinition,
   replaceOperationDefinition,
-  createFragmentSymTable,
-  FragmentSymTable,
+  createFragmentMap,
+  FragmentMap,
 } from '../src/queries/getFromAST';
 
 import {
@@ -212,12 +212,12 @@ describe('AST utility functions', () => {
       fragment moreAuthorDetails on Author {
         address
       }`);
-    const fragmentSymTable = createFragmentSymTable(fragments);
-    const expectedTable: FragmentSymTable = {
+    const fragmentMap = createFragmentMap(fragments);
+    const expectedTable: FragmentMap = {
       'authorDetails': fragments[0],
       'moreAuthorDetails': fragments[1],
     };
-    assert.deepEqual(fragmentSymTable, expectedTable);
+    assert.deepEqual(fragmentMap, expectedTable);
   });
 
 });

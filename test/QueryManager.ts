@@ -1471,6 +1471,121 @@ describe('QueryManager', () => {
       },
     });
   });
+
+  it('should let you handle multiple polled queries and unsubscribe from one of them', (done) => {
+    const query1 = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const query2 = gql`
+      query {
+        person {
+          name
+        }
+      }`;
+    const data11 = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const data12 = {
+      author: {
+        firstName: 'Jack',
+        lastName: 'Smith',
+      },
+    };
+    const data13 = {
+      author: {
+        firstName: 'Jolly',
+        lastName: 'Smith',
+      },
+    };
+    const data14 = {
+      author: {
+        firstName: 'Jared',
+        lastName: 'Smith',
+      },
+    };
+    const data21 = {
+      person: {
+        name: 'Jane Smith',
+      },
+    };
+    const data22 = {
+      person: {
+        name: 'Josey Smith',
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: query1 },
+        result: { data: data11 },
+      },
+      {
+        request: { query: query1 },
+        result: { data: data12 },
+      },
+      {
+        request: { query: query1 },
+        result: { data: data13},
+      },
+      {
+        request: {query: query1 },
+        result: { data: data14 },
+      },
+      {
+        request: { query: query2 },
+        result: { data: data21 },
+      },
+      {
+        request: { query: query2 },
+        result: { data: data22 },
+      }
+    );
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const handle1 = queryManager.watchQuery({
+      query: query1,
+      pollInterval: 150,
+    });
+    const handle2 = queryManager.watchQuery({
+      query: query2,
+      pollInterval: 2000,
+    });
+    let handle1Count = 0;
+    let handleCount = 0;
+    let setMilestone = false;
+
+    const subscription1 = handle1.subscribe({
+      next(result) {
+        handle1Count++;
+        handleCount++;
+        if (handle1Count > 1 && !setMilestone) {
+          subscription1.unsubscribe();
+          setMilestone = true;
+        }
+      },
+    });
+
+    handle2.subscribe({
+      next(result) {
+        handleCount++;
+      },
+    });
+
+    setTimeout(() => {
+      assert.equal(handleCount, 4);
+      done();
+    }, 400);
+  });
+
   it('allows you to unsubscribe from polled queries', (done) => {
     const query = gql`
       query fetchLuke($id: String) {

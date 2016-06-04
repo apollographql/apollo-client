@@ -94,7 +94,7 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
-  private pollingTimer: NodeJS.Timer | any; // oddity in typescript
+  private pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
@@ -117,6 +117,7 @@ export class QueryManager {
     this.store = store;
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
+    this.pollingTimers = {};
 
     this.queryListeners = {};
 
@@ -224,6 +225,10 @@ export class QueryManager {
         }
       });
 
+      // get the polling timer reference associated with this
+      // particular query.
+      const pollingTimer = this.pollingTimers[queryId];
+
       return {
         unsubscribe: () => {
           this.stopQuery(queryId);
@@ -232,8 +237,8 @@ export class QueryManager {
           // if we are refetching, we clear out the polling interval
           // if the new refetch passes pollInterval: false, it won't recreate
           // the timer for subsequent refetches
-          if (this.pollingTimer) {
-            clearInterval(this.pollingTimer);
+          if (pollingTimer) {
+            clearInterval(pollingTimer);
           }
 
           // If no new variables passed, use existing variables
@@ -246,12 +251,12 @@ export class QueryManager {
           }) as WatchQueryOptions);
         },
         stopPolling: (): void => {
-          if (this.pollingTimer) {
-            clearInterval(this.pollingTimer);
+          if (pollingTimer) {
+            clearInterval(pollingTimer);
           }
         },
         startPolling: (pollInterval): void => {
-          this.pollingTimer = setInterval(() => {
+          this.pollingTimers[queryId] = setInterval(() => {
             const pollingOptions = assign({}, options) as WatchQueryOptions;
             // subsequent fetches from polling always reqeust new data
             pollingOptions.forceFetch = true;
@@ -427,14 +432,16 @@ export class QueryManager {
     const queryId = this.generateQueryId();
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options);
+
     if (options.pollInterval) {
-      this.pollingTimer = setInterval(() => {
+      this.pollingTimers[queryId] = setInterval(() => {
         const pollingOptions = assign({}, options) as WatchQueryOptions;
         // subsequent fetches from polling always reqeust new data
         pollingOptions.forceFetch = true;
         this.fetchQuery(queryId, pollingOptions);
       }, options.pollInterval);
     }
+
     return queryId;
   }
 
@@ -444,8 +451,8 @@ export class QueryManager {
     delete this.queryListeners[queryId];
 
     // if we have a polling interval running, stop it
-    if (this.pollingTimer) {
-      clearInterval(this.pollingTimer);
+    if (this.pollingTimers[queryId]) {
+      clearInterval(this.pollingTimers[queryId]);
     }
 
     this.store.dispatch({

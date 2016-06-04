@@ -1,5 +1,6 @@
 import isString = require('lodash.isstring');
 import assign = require('lodash.assign');
+import 'whatwg-fetch';
 
 import { GraphQLResult } from 'graphql';
 

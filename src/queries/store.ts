@@ -8,6 +8,10 @@ import {
 } from '../actions';
 
 import {
+  FragmentMap,
+} from '../queries/getFromAST';
+
+import {
   graphQLResultHasError,
 } from '../data/storeUtils';
 
@@ -34,6 +38,7 @@ export interface QueryStoreValue {
   forceFetch: boolean;
   returnPartialData: boolean;
   lastRequestId: number;
+  fragmentMap: FragmentMap;
 }
 
 export interface SelectionSetWithRoot {
@@ -64,6 +69,7 @@ export function queries(
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,
+      fragmentMap: action.fragmentMap,
     };
 
     return newState;

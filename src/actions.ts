@@ -6,6 +6,8 @@ import {
   SelectionSetWithRoot,
 } from './queries/store';
 
+import { FragmentMap } from './queries/getFromAST';
+
 export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
   result: GraphQLResult;
@@ -39,6 +41,7 @@ export interface QueryInitAction {
   returnPartialData: boolean;
   queryId: string;
   requestId: number;
+  fragmentMap: FragmentMap;
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {

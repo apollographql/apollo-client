@@ -22,6 +22,8 @@ import {
   getMutationDefinition,
   getQueryDefinition,
   replaceOperationDefinition,
+  getFragmentDefinitions,
+  createFragmentMap,
 } from './queries/getFromAST';
 
 import {
@@ -45,8 +47,7 @@ import {
 } from './data/diffAgainstStore';
 
 import {
-  queryDefinition,
-  printQueryFromDefinition,
+  queryDocument,
 } from './queryPrinting';
 
 import { Observable, Observer, Subscription } from './util/Observable';
@@ -216,6 +217,7 @@ export class QueryManager {
               selectionSet: queryStoreValue.query.selectionSet,
               variables: queryStoreValue.variables,
               returnPartialData: options.returnPartialData,
+              fragmentMap: queryStoreValue.fragmentMap,
             });
 
             if (observer.next) {
@@ -290,6 +292,7 @@ export class QueryManager {
     }
     const transformedQuery = replaceOperationDefinition(query, queryDef);
     const queryString = print(transformedQuery);
+    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(transformedQuery));
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -316,16 +319,19 @@ export class QueryManager {
         throwOnMissingField: false,
         rootId: querySS.id,
         variables,
+        fragmentMap: queryFragmentMap,
       });
 
       initialResult = result;
 
       if (missingSelectionSets && missingSelectionSets.length) {
-        const diffedQueryDef = queryDefinition({
+        const diffedQuery = queryDocument({
           missingSelectionSets,
           variableDefinitions: queryDef.variableDefinitions,
           name: queryDef.name,
+          fragmentMap: queryFragmentMap,
         });
+        const diffedQueryDef = getQueryDefinition(diffedQuery);
 
         minimizedQuery = {
           id: 'ROOT_QUERY',
@@ -333,7 +339,7 @@ export class QueryManager {
           selectionSet: diffedQueryDef.selectionSet,
         };
 
-        minimizedQueryString = printQueryFromDefinition(diffedQueryDef);
+        minimizedQueryString = print(diffedQuery);
       } else {
         minimizedQuery = null;
         minimizedQueryString = null;
@@ -354,6 +360,7 @@ export class QueryManager {
       returnPartialData,
       queryId,
       requestId,
+      fragmentMap: queryFragmentMap,
     });
 
     if (! minimizedQuery || returnPartialData) {
@@ -397,6 +404,7 @@ export class QueryManager {
               selectionSet: querySS.selectionSet,
               variables,
               returnPartialData: returnPartialData,
+              fragmentMap: queryFragmentMap,
             });
           // ensure multiple errors don't get thrown
           /* tslint:disable */

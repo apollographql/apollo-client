@@ -6,6 +6,7 @@ import assign = require('lodash.assign');
 import {
   getQueryDefinition,
   getFragmentDefinition,
+  FragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -113,6 +114,7 @@ export function writeSelectionSetToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject,
+  fragmentMap,
 }: {
   dataId: string,
   result: any,
@@ -120,7 +122,14 @@ export function writeSelectionSetToStore({
   store?: NormalizedCache,
   variables: Object,
   dataIdFromObject: IdGetter,
+  fragmentMap?: FragmentMap,
 }): NormalizedCache {
+
+  if (!fragmentMap) {
+    //we have an empty sym table if there's no sym table given
+    //to us for the fragments.
+    fragmentMap = {};
+  }
   selectionSet.selections.forEach((selection) => {
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
@@ -137,6 +146,7 @@ export function writeSelectionSetToStore({
         store,
         field: selection,
         dataIdFromObject,
+        fragmentMap,
       });
     } else if (isInlineFragment(selection)) {
       // XXX what to do if this tries to write the same fields? Also, type conditions...
@@ -147,9 +157,26 @@ export function writeSelectionSetToStore({
         variables,
         dataId,
         dataIdFromObject,
+        fragmentMap,
       });
     } else {
-      throw new Error('Non-inline fragments not supported.');
+      //look up the fragment referred to in the selection
+      const fragment = fragmentMap[selection.name.value];
+      if (!fragment) {
+        throw new Error(`No fragment named ${selection.name.value}.`);
+      }
+
+      writeSelectionSetToStore({
+        result,
+        selectionSet: fragment.selectionSet,
+        store,
+        variables,
+        dataId,
+        dataIdFromObject,
+        fragmentMap,
+      });
+
+      //throw new Error('Non-inline fragments not supported.');
     }
   });
 
@@ -163,6 +190,7 @@ function writeFieldToStore({
   store,
   dataId,
   dataIdFromObject,
+  fragmentMap,
 }: {
   field: Field,
   value: any,
@@ -170,6 +198,7 @@ function writeFieldToStore({
   store: NormalizedCache,
   dataId: string,
   dataIdFromObject: IdGetter,
+  fragmentMap?: FragmentMap,
 }) {
   let storeValue;
 
@@ -205,6 +234,7 @@ function writeFieldToStore({
           selectionSet: field.selectionSet,
           variables,
           dataIdFromObject,
+          fragmentMap,
         });
       }
     });
@@ -229,6 +259,7 @@ function writeFieldToStore({
       selectionSet: field.selectionSet,
       variables,
       dataIdFromObject,
+      fragmentMap,
     });
 
     storeValue = valueDataId;

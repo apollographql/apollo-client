@@ -29,6 +29,7 @@ import {
 import {
   getQueryDefinition,
   getFragmentDefinition,
+  FragmentMap,
 } from '../queries/getFromAST';
 
 export interface DiffResult {
@@ -96,15 +97,21 @@ export function diffSelectionSetAgainstStore({
   rootId,
   throwOnMissingField = false,
   variables,
+  fragmentMap,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
   rootId: string,
   throwOnMissingField: boolean,
   variables: Object,
+  fragmentMap?: FragmentMap,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
+  }
+
+  if (!fragmentMap) {
+    fragmentMap = {};
   }
 
   const result = {};
@@ -130,6 +137,7 @@ export function diffSelectionSetAgainstStore({
         variables,
         rootId,
         store,
+        fragmentMap,
       });
 
       if (fieldIsMissing) {
@@ -149,6 +157,7 @@ export function diffSelectionSetAgainstStore({
         variables,
         rootId,
         store,
+        fragmentMap,
       });
 
       if (fieldIsMissing) {
@@ -157,7 +166,28 @@ export function diffSelectionSetAgainstStore({
         assign(result, fieldResult);
       }
     } else {
-      throw new Error('Named fragments not yet supported.');
+      const fragment = fragmentMap[selection.name.value];
+      if (!fragment) {
+        throw new Error(`No fragment named ${selection.name.value}`);
+      }
+
+      const {
+        result: fieldResult,
+        isMissing: fieldIsMissing,
+      } = diffSelectionSetAgainstStore({
+        selectionSet: fragment.selectionSet,
+        throwOnMissingField,
+        variables,
+        rootId,
+        store,
+        fragmentMap,
+      });
+
+      if (fieldIsMissing) {
+        pushMissingField(selection);
+      } else {
+        assign(result, fieldResult);
+      }
     }
   });
 
@@ -200,12 +230,14 @@ function diffFieldAgainstStore({
   variables,
   rootId,
   store,
+  fragmentMap,
 }: {
   field: Field,
   throwOnMissingField: boolean,
   variables: Object,
   rootId: string,
   store: NormalizedCache,
+  fragmentMap?: FragmentMap,
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
@@ -253,6 +285,7 @@ function diffFieldAgainstStore({
         rootId: id,
         selectionSet: field.selectionSet,
         variables,
+        fragmentMap,
       });
 
       if (itemDiffResult.isMissing) {
@@ -276,6 +309,7 @@ function diffFieldAgainstStore({
       rootId: storeValue,
       selectionSet: field.selectionSet,
       variables,
+      fragmentMap,
     });
   }
 

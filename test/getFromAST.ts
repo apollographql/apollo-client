@@ -4,6 +4,8 @@ import {
   getQueryDefinition,
   getMutationDefinition,
   replaceOperationDefinition,
+  createFragmentMap,
+  FragmentMap,
 } from '../src/queries/getFromAST';
 
 import {
@@ -200,4 +202,22 @@ describe('AST utility functions', () => {
     const newDoc = replaceOperationDefinition(queryWithFragments, newQueryDef);
     assert.equal(print(newDoc), print(expectedNewQuery));
   });
+
+  it('should create the fragment map correctly', () => {
+    const fragments = getFragmentDefinitions(gql`
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }
+      fragment moreAuthorDetails on Author {
+        address
+      }`);
+    const fragmentMap = createFragmentMap(fragments);
+    const expectedTable: FragmentMap = {
+      'authorDetails': fragments[0],
+      'moreAuthorDetails': fragments[1],
+    };
+    assert.deepEqual(fragmentMap, expectedTable);
+  });
+
 });

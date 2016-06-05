@@ -54,7 +54,8 @@
     "lodash.isundefined": "^3.0.1",
     "lodash.isequal": "^4.2.0",
     "redux": "^3.3.1",
-    "symbol-observable": "^0.2.4"
+    "symbol-observable": "^0.2.4",
+    "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {
     "async": "^1.5.2",

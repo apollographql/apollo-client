@@ -292,4 +292,126 @@ describe('Query merging', () => {
     const mergedQuery = mergeQueries(queries);
     assert.equal(print(mergedQuery), print(exp));
   });
+
+  it('should be able to merge queries that have fragments with the same name', () => {
+    const query1 = gql`
+      query authorInfo {
+        ...authorDetails
+      }
+      fragment authorDetails on Author {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const query2 = gql`
+      query authors {
+        ...authorDetails
+      }
+      fragment authorDetails on Author {
+        author
+      }`;
+    const exp = gql`
+      query __composed {
+        ...__authorInfo__queryIndex_0__authorDetails
+        ...__authors__queryIndex_1__authorDetails
+      }
+      fragment __authorInfo__queryIndex_0__authorDetails on Author {
+        __authorInfo__queryIndex_0__fieldIndex_1: author {
+          firstName
+          lastName
+        }
+      }
+      fragment __authors__queryIndex_1__authorDetails on Author {
+        __authors__queryIndex_1__fieldIndex_1: author
+      }`;
+    const mergedQuery = mergeQueries([query1, query2]);
+    assert.equal(print(mergedQuery), print(exp));
+  });
+
+  it('should be able to merge queries with variables correctly', () => {
+    const query1 = gql`
+      query authorInfo($id: Int) {
+        author(id: $id)
+      }`;
+    const query2 = gql`
+      query personInfo($id: Int) {
+        person(id: $id)
+      }`;
+    const exp = gql`
+      query __composed($__authorInfo__queryIndex_0__id: Int, $__personInfo__queryIndex_1__id: Int) {
+        __authorInfo__queryIndex_0__fieldIndex_0: author(id: $__authorInfo__queryIndex_0__id)
+        __personInfo__queryIndex_1__fieldIndex_0: person(id: $__personInfo__queryIndex_1__id)
+      }`;
+    const mergedQuery = mergeQueries([query1, query2]);
+    assert.equal(print(mergedQuery), print(exp));
+  });
+
+  it('should be able to merge queries with inline fragments', () => {
+    const query1 = gql`
+      query nameOfQuery {
+        ... on RootQuery {
+          user
+        }
+      }`;
+    const query2 = gql`
+      query otherQuery {
+        ... on RootQuery {
+          author
+        }
+      }`;
+    const exp = gql`
+      query __composed {
+        ... on RootQuery {
+          __nameOfQuery__queryIndex_0__fieldIndex_0: user
+        }
+        ... on RootQuery {
+          __otherQuery__queryIndex_1__fieldIndex_0: author
+        }
+      }`;
+    const mergedQuery = mergeQueries([query1, query2]);
+    assert.equal(print(mergedQuery), print(exp));
+  });
+
+  it('should be able to handle multiple fragments when merging queries', () => {
+    const query1 = gql`
+      query authorInfo {
+        author {
+          ...authorDetails
+        }
+      }
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }`;
+    const query2 = gql`
+      query personInfo {
+        person {
+          ...personDetails
+        }
+      }
+      fragment personDetails on Person {
+        name
+      }`;
+    const exp = gql`
+      query __composed {
+        __authorInfo__queryIndex_0__fieldIndex_0: author {
+          ...__authorInfo__queryIndex_0__authorDetails
+        }
+        __personInfo__queryIndex_1__fieldIndex_0: person {
+          ...__personInfo__queryIndex_1__personDetails
+        }
+      }
+      fragment __authorInfo__queryIndex_0__authorDetails on Author {
+        __authorInfo__queryIndex_0__fieldIndex_1: firstName
+        __authorInfo__queryIndex_0__fieldIndex_2: lastName
+      }
+      fragment __personInfo__queryIndex_1__personDetails on Person {
+        __personInfo__queryIndex_1__fieldIndex_1: name
+      }`;
+
+    const queries = [query1, query2];
+    const mergedQuery = mergeQueries(queries);
+    assert.equal(print(mergedQuery), print(exp));
+  });
 });

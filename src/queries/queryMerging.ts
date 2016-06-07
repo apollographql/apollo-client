@@ -1,5 +1,7 @@
 // Implements a style of query merging in which two queries are merged together
-// under one root query and given aliases.
+// under one root query and given aliases. It doesn't do deep merging, i.e. queries
+// are merged at top level into one bigger query - we don't eliminate fields based on
+// whether or not they are present in both queries.
 
 import {
   OperationDefinition,
@@ -14,17 +16,65 @@ import {
   Argument,
 } from 'graphql';
 
+import {
+  getQueryDefinition,
+  getFragmentDefinitions,
+} from './getFromAST';
+
+// Merges multiple queries into a single document. Starts out with an empty root
+// query.
+export function mergeQueries(childQueries: Document[]): Document {
+  let rootQuery: Document = createEmptyRootQuery();
+
+  childQueries.forEach((childQuery, childQueryIndex) => {
+    rootQuery = addQueryToRoot(rootQuery, childQuery, childQueryIndex);
+  });
+
+  return rootQuery;
+}
+
 // Takes a query to add to a root query and aliases the child query's top-level
 // field names.
-export function addQueryToRoot(rootQuery: OperationDefinition,
-                               childQuery: OperationDefinition,
+export function addQueryToRoot(rootQuery: Document,
+                               childQuery: Document,
                                childQueryIndex: number)
-: OperationDefinition {
-  const childAliasName = getQueryAliasName(childQuery, childQueryIndex);
-  const aliasedChildQuery = applyAliasNameToQuery(childQuery, childAliasName, 0);
-  rootQuery.selectionSet.selections =
-    rootQuery.selectionSet.selections.concat(aliasedChildQuery.selectionSet.selections);
+: Document {
+  const aliasName = getQueryAliasName(getQueryDefinition(childQuery), childQueryIndex);
+  const aliasedChild = applyAliasNameToDocument(childQuery, aliasName);
+  const aliasedChildQueryDef = getQueryDefinition(aliasedChild);
+  const aliasedChildFragmentDefs = getFragmentDefinitions(aliasedChild);
+  const rootQueryDef = getQueryDefinition(rootQuery);
+
+  rootQuery.definitions = rootQuery.definitions.concat(aliasedChildFragmentDefs);
+  rootQueryDef.selectionSet.selections =
+    rootQueryDef.selectionSet.selections.concat(aliasedChildQueryDef.selectionSet.selections);
+
   return rootQuery;
+}
+
+export function createEmptyRootQuery(rootQuery?: string): Document {
+  if (!rootQuery) {
+    rootQuery = '__composed';
+  }
+  return {
+    kind: 'Document',
+    definitions: [
+      {
+        kind: 'OperationDefinition',
+        operation: 'query',
+        name: {
+          kind: 'Name',
+          value: rootQuery,
+        },
+        variableDefinitions: [],
+        directives: [],
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: [],
+        },
+      },
+    ],
+  };
 }
 
 // Recursively steps through the query tree and renames the query fragment spreads to
@@ -85,8 +135,8 @@ export function applyAliasNameToDocument(document: Document, aliasName: string):
   document.definitions = document.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition' || definition.kind === 'FragmentDefinition') {
       const qDef = definition as (OperationDefinition | FragmentDefinition);
-      qDef.selectionSet = this.renameFragmentSpreads(qDef.selectionSet, aliasName);
-      qDef.selectionSet = this.renameVariables(qDef.selectionSet, aliasName);
+      qDef.selectionSet = renameFragmentSpreads(qDef.selectionSet, aliasName);
+      qDef.selectionSet = renameVariables(qDef.selectionSet, aliasName);
       return qDef;
     } else {
       return definition;

@@ -219,5 +219,4 @@ describe('AST utility functions', () => {
     };
     assert.deepEqual(fragmentMap, expectedTable);
   });
-
 });

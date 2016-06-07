@@ -3,12 +3,16 @@ import {
   addPrefixToQuery,
   aliasField,
   getQueryAliasName,
-  applyAliasName,
+  applyAliasNameToQuery,
   addQueryToRoot,
+  applyAliasNameToFragment,
+  applyAliasNameToDocument,
+  renameFragmentSpreads,
 } from '../src/queries/queryMerging';
 
 import {
   getQueryDefinition,
+  getFragmentDefinitions,
 } from '../src/queries/getFromAST';
 
 import {
@@ -110,7 +114,7 @@ describe('Query merging', () => {
     const queryDef = getQueryDefinition(query);
     const expQueryDef = getQueryDefinition(expQuery);
     const aliasName = getQueryAliasName(queryDef, 3);
-    const aliasedQuery = applyAliasName(queryDef, aliasName);
+    const aliasedQuery = applyAliasNameToQuery(queryDef, aliasName, 0);
     assert.equal(print(aliasedQuery), print(expQueryDef));
   });
 
@@ -140,5 +144,75 @@ describe('Query merging', () => {
     const modifiedRootQueryDef = addQueryToRoot(rootQueryDef, childQueryDef, 3);
     const expRootQueryDef = getQueryDefinition(expRootQuery);
     assert.equal(print(modifiedRootQueryDef), print(expRootQueryDef));
+  });
+
+  it('should be able to alias named fragments', () => {
+    const query = gql`
+      query authorStuff {
+        author {
+          ...authorDetails
+        }
+      }
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }`;
+    const queryDefinition = getQueryDefinition(query);
+    const fragmentDefinition = getFragmentDefinitions(query)[0];
+    const aliasName = getQueryAliasName(queryDefinition, 2);
+    const exp = getFragmentDefinitions(gql`
+      fragment __authorStuff__queryIndex_2__authorDetails on Author {
+        __authorStuff__queryIndex_2__fieldIndex_0: firstName
+        __authorStuff__queryIndex_2__fieldIndex_1: lastName
+      }`)[0];
+    const res = applyAliasNameToFragment(fragmentDefinition, aliasName, 0);
+    assert.equal(print(res), print(exp));
+  });
+
+  it('should be able to rename fragment spreads to their aliased names', () => {
+    const doc = gql`
+      query authorStuff {
+        author {
+          ...authorDetails
+        }
+     }`;
+    const exp = gql`
+      query {
+        author {
+          ...__authorStuff__queryIndex_2__authorDetails
+        }
+      }`;
+    const queryDef = getQueryDefinition(doc);
+    const expDef = getQueryDefinition(exp);
+    const res = renameFragmentSpreads(queryDef.selectionSet,
+                                      '__authorStuff__queryIndex_2');
+    assert.equal(print(res), print(expDef.selectionSet));
+  });
+
+  it('should be able to alias a document containing a query and a named fragment', () => {
+    const doc = gql`
+      query authorStuff {
+        author {
+           ...authorDetails
+        }
+      }
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }`;
+    const exp = gql`
+      query authorStuff {
+        __authorStuff__queryIndex_2__fieldIndex_0: author {
+          ...__authorStuff__queryIndex_2__authorDetails
+        }
+      }
+      fragment __authorStuff__queryIndex_2__authorDetails on Author {
+        __authorStuff__queryIndex_2__fieldIndex_1: firstName
+        __authorStuff__queryIndex_2__fieldIndex_2: lastName
+      }
+      `;
+    const aliasName = getQueryAliasName(getQueryDefinition(doc), 2);
+    const aliasedDoc = applyAliasNameToDocument(doc, aliasName);
+    assert.equal(print(aliasedDoc), print(exp));
   });
 });

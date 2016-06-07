@@ -48,6 +48,8 @@ export function addQueryToRoot(rootQuery: Document,
   rootQuery.definitions = rootQuery.definitions.concat(aliasedChildFragmentDefs);
   rootQueryDef.selectionSet.selections =
     rootQueryDef.selectionSet.selections.concat(aliasedChildQueryDef.selectionSet.selections);
+  rootQueryDef.variableDefinitions =
+    rootQueryDef.variableDefinitions.concat(aliasedChildQueryDef.variableDefinitions);
 
   return rootQuery;
 }
@@ -245,6 +247,13 @@ function applyAliasNameToSelections(selections: (Field | FragmentSpread | Inline
     if (selection.kind === 'Field') {
       return aliasField(selection as Field,
                         `${aliasName}__fieldIndex_${selectionIndex + startIndex}`);
+    } else if (selection.kind === 'InlineFragment') {
+      const inlineFragment = selection as InlineFragment;
+      inlineFragment.selectionSet.selections  =
+        applyAliasNameToSelections(inlineFragment.selectionSet.selections,
+                                   aliasName,
+                                   selectionIndex + startIndex);
+      return inlineFragment;
     } else {
       return selection;
     }

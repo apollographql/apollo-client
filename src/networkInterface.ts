@@ -16,6 +16,10 @@ export interface NetworkInterface {
   query(request: Request): Promise<GraphQLResult>;
 }
 
+export interface BatchedNetworkInterface extends NetworkInterface {
+  batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
+}
+
 export interface HTTPNetworkInterface extends NetworkInterface {
   _uri: string;
   _opts: RequestInit;
@@ -26,6 +30,26 @@ export interface HTTPNetworkInterface extends NetworkInterface {
 export interface RequestAndOptions {
   request: Request;
   options: RequestInit;
+}
+
+// Takes a standard network interface (i.e. not necessarily a BatchedNetworkInterface) and turns
+// it into a network interface that supports batching by composing/merging queries in to one
+// query.
+export function addQueryComposition(networkInterface: NetworkInterface): BatchedNetworkInterface {
+  return {
+    query(request: Request): Promise<GraphQLResult> {
+      return networkInterface.query(request);
+    },
+
+    batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+      //TODO make this acutally use composition.
+      const promises: Promise<GraphQLResult>[] = [];
+      requests.forEach((request) => {
+        promises.push(networkInterface.query(request));
+      });
+      return Promise.all(promises);
+    },
+  };
 }
 
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {

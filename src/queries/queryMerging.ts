@@ -9,6 +9,9 @@ import {
   InlineFragment,
   Document,
   SelectionSet,
+  VariableDefinition,
+  Variable,
+  Argument,
 } from 'graphql';
 
 // Takes a query to add to a root query and aliases the child query's top-level
@@ -43,27 +46,65 @@ export function renameFragmentSpreads(selSet: SelectionSet, aliasName: string): 
   return selSet;
 }
 
-export function applyAliasNameToDocument(document: Document,
-                                         aliasName: string)
-: Document {
+export function renameVariables(selSet: SelectionSet, aliasName: string): SelectionSet {
+  if (selSet && selSet.selections) {
+    selSet.selections = selSet.selections.map((selection) => {
+      if (selection.kind === 'Field') {
+        const field = selection as Field;
+        if (field.arguments) {
+          field.arguments = field.arguments.map((argument) => {
+            if (argument.kind === 'Argument' &&
+               (argument as Argument).value.kind === 'Variable') {
+              const varx = argument.value as Variable;
+              (argument.value as Variable).name.value = getVarAliasName(varx, aliasName);
+            }
+            return argument;
+          });
+        }
+        field.selectionSet = renameVariables(field.selectionSet, aliasName);
+        return field;
+      } else if (selection.kind === 'InlineFragment') {
+        const inlineFragment = selection as InlineFragment;
+        inlineFragment.selectionSet = renameVariables(inlineFragment.selectionSet, aliasName);
+        return inlineFragment;
+      }
+      return selection;
+    });
+  }
+  return selSet;
+}
 
-  // replace the definitions within the document with the aliased versions
-  // of those definitions.
+export function applyAliasNameToVarDef(vDef: VariableDefinition, aliasName: string)
+: VariableDefinition {
+  vDef.variable.name.value = getVarAliasName(vDef.variable, aliasName);
+  return vDef;
+}
+
+export function applyAliasNameToDocument(document: Document, aliasName: string): Document {
+  //replace the fragment spread names
   document.definitions = document.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition' || definition.kind === 'FragmentDefinition') {
       const qDef = definition as (OperationDefinition | FragmentDefinition);
       qDef.selectionSet = this.renameFragmentSpreads(qDef.selectionSet, aliasName);
+      qDef.selectionSet = this.renameVariables(qDef.selectionSet, aliasName);
       return qDef;
     } else {
       return definition;
     }
   });
 
+  // replace the definitions within the document with the aliased versions
+  // of those definitions.
   let currStartIndex = 0;
   document.definitions = document.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition' &&
         (definition as OperationDefinition).operation === 'query') {
       const queryDef = definition as OperationDefinition;
+      if (queryDef.variableDefinitions) {
+        queryDef.variableDefinitions = queryDef.variableDefinitions.map((vDef) => {
+          return applyAliasNameToVarDef(vDef, aliasName);
+        });
+      }
       const retDef = applyAliasNameToQuery(queryDef, aliasName, currStartIndex);
       currStartIndex += queryDef.selectionSet.selections.length;
       return retDef;
@@ -97,6 +138,10 @@ export function applyAliasNameToQuery(childQuery: OperationDefinition,
   childQuery.selectionSet.selections =
     applyAliasNameToSelections(childQuery.selectionSet.selections, aliasName, startIndex);
   return childQuery;
+}
+
+export function getVarAliasName(varx: Variable, aliasName: string): string {
+  return `${aliasName}__${varx.name.value}`;
 }
 
 export function getFragmentAliasName(fragment: FragmentDefinition | FragmentSpread,

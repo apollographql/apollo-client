@@ -215,4 +215,24 @@ describe('Query merging', () => {
     const aliasedDoc = applyAliasNameToDocument(doc, aliasName);
     assert.equal(print(aliasedDoc), print(exp));
   });
+
+  it('should be able to rename variables to their aliased names', () => {
+    const doc = gql`
+      query getUser($id: Int) {
+        user(id: $id) {
+          firstName
+          lastName
+        }
+      }`;
+    const exp = gql`
+      query getUser($__getUser__queryIndex_2__id: Int) {
+        __getUser__queryIndex_2__fieldIndex_0: user(id: $__getUser__queryIndex_2__id) {
+          firstName
+          lastName
+        }
+      }`;
+    const aliasName = getQueryAliasName(getQueryDefinition(doc), 2);
+    const aliasedDoc = applyAliasNameToDocument(doc, aliasName);
+    assert.equal(print(aliasedDoc), print(exp));
+  });
 });

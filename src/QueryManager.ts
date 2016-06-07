@@ -333,16 +333,13 @@ export class QueryManager {
     fillPromise.then(() => {
       // TODO shouldn't need to do this JSON.parse if fetchQueryOverInterface
       // exposed a way to get the JSON object. Needs a significant refactor.
-      const requestObjects = transformedRequests.map((request) => {
+      const requestObjects: Request[] = transformedRequests.map((request) => {
         request.query = JSON.parse(request.query);
+        return request;
       });
-      const batchedRequest: Request = {
-        debugName: '__batchedRequest',
-        query: JSON.stringify(requestObjects),
-      };
 
       (this.networkInterface as BatchedNetworkInterface)
-        .batchQuery(batchedRequest).then((results) => {
+        .batchQuery(requestObjects).then((results) => {
         // Note: the server has to guarantee that the results will have the same
         // ordering as the queries that they correspond to.
         results.forEach((result, index) => {

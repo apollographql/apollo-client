@@ -8,6 +8,7 @@ import {
   applyAliasNameToFragment,
   applyAliasNameToDocument,
   renameFragmentSpreads,
+  mergeQueries,
 } from '../src/queries/queryMerging';
 
 import {
@@ -18,6 +19,7 @@ import {
 import {
   print,
   Field,
+  OperationDefinition,
 } from 'graphql';
 
 import gql from '../src/gql';
@@ -127,23 +129,22 @@ describe('Query merging', () => {
       }
       __typename
     }`;
-    const childQueryDef = getQueryDefinition(childQuery);
-    const rootQueryDef = getQueryDefinition(gql`query{ author }`);
-    //this is a way to get our selection set to consist of nothing without
-    //violating the GraphQL syntax
-    rootQueryDef.selectionSet.selections = [];
+    const rootQuery = gql`
+      query __composed {
+        author
+      }`;
+    (rootQuery.definitions[0] as OperationDefinition).selectionSet.selections = [];
 
     const expRootQuery = gql`
-      query {
+      query __composed {
         __listOfAuthors__queryIndex_3__fieldIndex_0: author {
           firstName
           lastName
         }
         __listOfAuthors__queryIndex_3__fieldIndex_1: __typename
       }`;
-    const modifiedRootQueryDef = addQueryToRoot(rootQueryDef, childQueryDef, 3);
-    const expRootQueryDef = getQueryDefinition(expRootQuery);
-    assert.equal(print(modifiedRootQueryDef), print(expRootQueryDef));
+    const modifiedRootQuery = addQueryToRoot(rootQuery, childQuery, 3);
+    assert.equal(print(modifiedRootQuery), print(expRootQuery));
   });
 
   it('should be able to alias named fragments', () => {
@@ -234,5 +235,61 @@ describe('Query merging', () => {
     const aliasName = getQueryAliasName(getQueryDefinition(doc), 2);
     const aliasedDoc = applyAliasNameToDocument(doc, aliasName);
     assert.equal(print(aliasedDoc), print(exp));
+  });
+
+  it('should be able to add a query to a root query', () => {
+    const doc = gql`
+      query authorStuff {
+        author {
+          firstName
+          lastName
+          ...moreAuthorDetails
+        }
+      }
+      fragment moreAuthorDetails on Author {
+        address
+      }`;
+    const exp = gql`
+      query __composed {
+        __authorStuff__queryIndex_0__fieldIndex_0: author {
+          firstName
+          lastName
+          ...__authorStuff__queryIndex_0__moreAuthorDetails
+        }
+      }
+      fragment __authorStuff__queryIndex_0__moreAuthorDetails on Author {
+        __authorStuff__queryIndex_0__fieldIndex_1: address
+      } `;
+    const mergedQuery = mergeQueries([doc]);
+    assert.equal(print(mergedQuery), print(exp));
+  });
+
+  it('should stack multiple queries on an empty root query correctly', () => {
+    const query1 = gql`
+      query authorInfo {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const query2 = gql`
+      query personAddress {
+        person {
+          address
+        }
+      }`;
+    const exp = gql`
+      query __composed {
+        __authorInfo__queryIndex_0__fieldIndex_0: author {
+          firstName
+          lastName
+        }
+        __personAddress__queryIndex_1__fieldIndex_0: person {
+          address
+        }
+      }`;
+    const queries = [query1, query2];
+    const mergedQuery = mergeQueries(queries);
+    assert.equal(print(mergedQuery), print(exp));
   });
 });

@@ -10,6 +10,11 @@ import {
 
 import { MiddlewareInterface } from './middleware';
 
+import {
+  mergeRequests,
+  unpackMergedResult,
+} from './queries/queryMerging';
+
 export interface Request {
   debugName?: string;
   query?: Document;
@@ -54,12 +59,10 @@ export function addQueryComposition(networkInterface: NetworkInterface): Batched
     },
 
     batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
-      //TODO make this acutally use composition.
-      const promises: Promise<GraphQLResult>[] = [];
-      requests.forEach((request) => {
-        promises.push(networkInterface.query(request));
+      const composedRequest = mergeRequests(requests);
+      return this.query(composedRequest).then((composedResult) => {
+        return unpackMergedResult(composedResult, requests);
       });
-      return Promise.all(promises);
     },
   };
 }

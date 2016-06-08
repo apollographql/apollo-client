@@ -10,6 +10,7 @@ import {
   renameFragmentSpreads,
   mergeQueries,
   mergeRequests,
+  parseKey,
 } from '../src/queries/queryMerging';
 
 import {
@@ -462,5 +463,37 @@ describe('Query merging', () => {
     assert.equal(print(mergedRequest.query), print(exp));
     assert.deepEqual(mergedRequest.variables, expVariables);
     assert.equal(mergedRequest.debugName, '__composed');
+  });
+  it('should not screw up the field index numbers given an inline fragment', () => {
+    const query = gql`
+      query authorStuff {
+        ... on RootQuery {
+          firstName
+          lastName
+        }
+        address
+      }`;
+    const exp = gql`
+      query __composed {
+        ... on RootQuery {
+          __authorStuff__queryIndex_0__fieldIndex_0: firstName
+          __authorStuff__queryIndex_0__fieldIndex_1: lastName
+        }
+        __authorStuff__queryIndex_0__fieldIndex_2: address
+      }`;
+    const mergedQuery = mergeQueries([query]);
+    assert.equal(print(mergedQuery), print(exp));
+  });
+
+  describe('merged query unpacking', () => {
+    it('should split data keys correctly', () => {
+      const dataKey = '__queryName__queryIndex_0__fieldIndex_1';
+      const parsedInfo = parseKey(dataKey);
+      const exp = {
+        queryIndex: 0,
+        fieldIndex: 1,
+      };
+      assert.deepEqual(parsedInfo, exp);
+    });
   });
 });

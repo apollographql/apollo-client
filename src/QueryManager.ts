@@ -160,11 +160,11 @@ export class QueryManager {
     let mutationDef = getMutationDefinition(mutation);
     if (this.queryTransformer) {
       mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
+      mutation = replaceOperationDefinition(mutation, mutationDef);
     }
     const mutationString = print(mutationDef);
-
     const request = {
-      query: mutationString,
+      query: mutation,
       variables,
     } as Request;
 
@@ -331,13 +331,7 @@ export class QueryManager {
 
     // wait until all of the queryPromise values have been added to queryPromises
     fillPromise.then(() => {
-      // TODO shouldn't need to do this JSON.parse if fetchQueryOverInterface
-      // exposed a way to get the JSON object. Needs a significant refactor.
-      const requestObjects: Request[] = transformedRequests.map((request) => {
-        request.query = JSON.parse(request.query);
-        return request;
-      });
-
+      const requestObjects: Request[] = transformedRequests;
       (this.networkInterface as BatchedNetworkInterface)
         .batchQuery(requestObjects).then((results) => {
         // Note: the server has to guarantee that the results will have the same
@@ -386,7 +380,7 @@ export class QueryManager {
     // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
-
+    let minimizedQueryDoc = transformedQuery;
     let initialResult;
 
     if (!forceFetch) {
@@ -420,9 +414,11 @@ export class QueryManager {
         };
 
         minimizedQueryString = print(diffedQuery);
+        minimizedQueryDoc = diffedQuery;
       } else {
         minimizedQuery = null;
         minimizedQueryString = null;
+        minimizedQueryDoc = null;
       }
     }
 
@@ -458,7 +454,7 @@ export class QueryManager {
 
     if (minimizedQuery) {
       const request: Request = {
-        query: minimizedQueryString,
+        query: minimizedQueryDoc,
         variables,
       };
 

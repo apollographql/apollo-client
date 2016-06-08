@@ -7,7 +7,6 @@ import {
 import {
   GraphQLResult,
   Document,
-  parse,
   print,
 } from 'graphql';
 
@@ -60,7 +59,7 @@ export class MockNetworkInterface implements NetworkInterface {
   public query(request: Request) {
     return new Promise((resolve, reject) => {
       const parsedRequest: ParsedRequest = {
-        query: parse(request.query),
+        query: request.query,
         variables: request.variables,
         debugName: request.debugName,
       };

@@ -11,6 +11,7 @@ import {
   mergeQueries,
   mergeRequests,
   parseKey,
+  unpackMergedResult,
 } from '../src/queries/queryMerging';
 
 import {
@@ -494,6 +495,143 @@ describe('Query merging', () => {
         fieldIndex: 1,
       };
       assert.deepEqual(parsedInfo, exp);
+    });
+
+    it('should unpack the merged result correctly for a single query', () => {
+      const query = gql`
+        query authorStuff {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const request = { query };
+      const result = {
+        data: {
+          __authorStuff__queryIndex_0__fieldIndex_0: {
+            'firstName': 'John',
+            'lastName': 'Smith',
+          },
+        },
+      };
+      const expResult = {
+        'data': {
+          'author': {
+            'firstName': 'John',
+            'lastName': 'Smith',
+          },
+        },
+      };
+      const results = unpackMergedResult(result, [ request ]);
+      assert.equal(results.length, 1);
+      assert.deepEqual(results[0], expResult);
+    });
+
+    it('should unpack queries with fragment spreads', () => {
+      const query1 = gql`
+        query authorStuff {
+          ...authorInfo
+        }
+        fragment authorInfo on RootQuery {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const query2 = gql`
+        query otherStuff {
+          ...authorInfo
+        }
+        fragment authorInfo on RootQuery {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const requests = [ { query: query1 }, { query: query2 }];
+      const result = {
+        data: {
+          __authorStuff__queryIndex_0__fieldIndex_0: {
+            firstName: 'John',
+            lastName: 'Smith',
+          },
+          __otherStuff__queryIndex_1__fieldIndex_0: {
+            firstName: 'Jane',
+            lastName: 'Smith',
+          },
+        },
+      };
+      const expUnpackedResults = [
+        {
+          data: {
+            author: {
+              'firstName': 'John',
+              'lastName': 'Smith',
+            },
+          },
+        },
+        {
+          data: {
+            author: {
+              'firstName': 'Jane',
+              'lastName': 'Smith',
+            },
+          },
+        },
+      ];
+
+      const unpackedResults = unpackMergedResult(result, requests);
+      assert.deepEqual(unpackedResults, expUnpackedResults);
+    });
+
+    it('should be able to unpack queries with inlined fragments', () => {
+      const query1 = gql`
+        query authorStuff {
+          ... on RootQuery {
+            author {
+              firstName
+            }
+          }
+        }`;
+      const query2 = gql`
+        query otherStuff {
+          ... on RootQuery {
+            author {
+              lastName
+            }
+          }
+        }`;
+      const result = {
+        data: {
+          __authorStuff__queryIndex_0__itemIndex_0: {
+            firstName: 'John',
+          },
+          __otherStuff__queryIndex_1__itemIndex_0: {
+            lastName: 'Smith',
+          },
+        },
+      };
+      const expUnpackedResults = [
+        {
+          data: {
+            'author': {
+              'firstName': 'John',
+            },
+          },
+        },
+        {
+          data: {
+            'author': {
+              'lastName': 'Smith',
+            },
+          },
+        },
+      ];
+      const request1 = { query: query1 };
+      const request2 = { query: query2 };
+      const requests = [request1, request2];
+      const unpackedResults = unpackMergedResult(result, requests);
+      assert.deepEqual(unpackedResults, expUnpackedResults);
     });
   });
 });

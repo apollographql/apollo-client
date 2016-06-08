@@ -14,6 +14,7 @@ import {
   VariableDefinition,
   Variable,
   Argument,
+  GraphQLResult,
 } from 'graphql';
 
 import {
@@ -46,6 +47,57 @@ export function mergeRequests(childRequests: Request[]): Request {
   };
 
   return rootRequest;
+}
+
+export function unpackMergedResult(result: GraphQLResult, childRequests: Request[])
+: GraphQLResult[] {
+
+  const resultData = result.data;
+  const resultMap: {[index: number]: GraphQLResult} = {};
+  const resultArray: GraphQLResult[] = [];
+
+  Object.keys(resultData).forEach((dataKey) => {
+    const data: { [key: string]: any } = {};
+    const queryInfo = parseKey(dataKey);
+    const childRequest = childRequests[queryInfo.queryIndex];
+    const childQueryDef = getQueryDefinition(childRequest.query);
+  });
+
+  Object.keys(resultMap).sort().forEach((resultIndex) => {
+    resultArray.push(resultMap[resultIndex]);
+  });
+  return resultArray;
+}
+
+/*
+// Returns a map that goes from a field index to a particular selection within a
+// request. We need this thing because inline fragments make it so that we
+// can't just index into the SelectionSet.selections array given the field index.
+export function createFieldMap(childRequest: Request, startIndex?: number):
+{ [ index: number ]: Field } {
+  if (!startIndex) {
+    startIndex = 0;
+  }
+  const result = {};
+  const childRequestDef = getQueryDefinition(childRequest);
+  childRequestDef.selectionSet.selections.forEach((selection, currentIndex) => {
+    if (selection.kind == 'Field') {
+      result[
+    }
+  });
+} */
+
+// Takes a key that looks like this: __queryName__queryIndex_0__fieldIndex_1: __typename
+// And turns it into information like this { queryIndex: 0, fieldIndex: 1 }
+export function parseKey(key: string): { queryIndex: number, fieldIndex: number } {
+  const pieces = key.split('__');
+  const queryIndexPiece = pieces[2].split('_');
+  const fieldIndexPiece = pieces[3].split('_');
+
+  return {
+    queryIndex: parseInt(queryIndexPiece[1], 10),
+    fieldIndex: parseInt(fieldIndexPiece[1], 10),
+  }
 }
 
 // Merges multiple queries into a single document. Starts out with an empty root
@@ -279,22 +331,39 @@ export function addPrefixToVariables(prefix: string,
   return newVariables;
 }
 
-function applyAliasNameToSelections(selections: (Field | FragmentSpread | InlineFragment)[],
-                                    aliasName: string, startIndex: number)
-: (Field | FragmentSpread | InlineFragment)[] {
-  return selections.map((selection, selectionIndex) => {
+function _applyAliasNameToSelections(selections: (Field | FragmentSpread | InlineFragment)[],
+                                     aliasName: string, startIndex: number)
+: { res: (Field | FragmentSpread | InlineFragment)[], newIndex: number } {
+
+  let currIndex = startIndex;
+  const res = selections.map((selection) => {
     if (selection.kind === 'Field') {
-      return aliasField(selection as Field,
-                        `${aliasName}__fieldIndex_${selectionIndex + startIndex}`);
+      const aliasedField = aliasField(selection as Field,
+                        `${aliasName}__fieldIndex_${currIndex}`);
+      currIndex += 1;
+      return aliasedField;
     } else if (selection.kind === 'InlineFragment') {
       const inlineFragment = selection as InlineFragment;
-      inlineFragment.selectionSet.selections  =
-        applyAliasNameToSelections(inlineFragment.selectionSet.selections,
-                                   aliasName,
-                                   selectionIndex + startIndex);
+      const ret = _applyAliasNameToSelections(inlineFragment.selectionSet.selections,
+                                              aliasName,
+                                              currIndex);
+      inlineFragment.selectionSet.selections = ret.res;
+      currIndex = ret.newIndex;
       return inlineFragment;
     } else {
       return selection;
     }
   });
+
+  return {
+    res,
+    newIndex: currIndex,
+  };
+}
+
+function applyAliasNameToSelections(selections: (Field | FragmentSpread | InlineFragment)[],
+                                    aliasName: string, startIndex: number)
+: (Field | FragmentSpread | InlineFragment)[] {
+  const ret = _applyAliasNameToSelections(selections, aliasName, startIndex);
+  return ret.res;
 }

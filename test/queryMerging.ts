@@ -9,6 +9,7 @@ import {
   applyAliasNameToDocument,
   renameFragmentSpreads,
   mergeQueries,
+  mergeRequests,
 } from '../src/queries/queryMerging';
 
 import {
@@ -413,5 +414,53 @@ describe('Query merging', () => {
     const queries = [query1, query2];
     const mergedQuery = mergeQueries(queries);
     assert.equal(print(mergedQuery), print(exp));
+  });
+
+  it('should put together entire requests, i.e. with queries and variables', () => {
+    const query1 = gql`
+      query authorStuff($id: Int) {
+        author(id: $id) {
+          name
+        }
+      }`;
+    const query2 = gql`
+      query personStuff($name: String) {
+        person(name: $name) {
+          id
+        }
+      }`;
+    const exp = gql`
+      query __composed($__authorStuff__queryIndex_0__id: Int, $__personStuff__queryIndex_1__name: String) {
+        __authorStuff__queryIndex_0__fieldIndex_0: author(id: $__authorStuff__queryIndex_0__id) {
+          name
+        }
+        __personStuff__queryIndex_1__fieldIndex_0: person(name: $__personStuff__queryIndex_1__name) {
+          id
+        }
+      }`;
+    const variables1 = {
+      id: 18,
+    };
+    const variables2 = {
+      name: 'John',
+    };
+    const expVariables = {
+      __authorStuff__queryIndex_0__id: 18,
+      __personStuff__queryIndex_1__name: 'John',
+    };
+    const request1 = {
+      query: query1,
+      variables: variables1,
+    };
+    const request2 = {
+      query: query2,
+      variables: variables2,
+    };
+    const requests = [request1, request2];
+    const mergedRequest = mergeRequests(requests);
+
+    assert.equal(print(mergedRequest.query), print(exp));
+    assert.deepEqual(mergedRequest.variables, expVariables);
+    assert.equal(mergedRequest.debugName, '__composed');
   });
 });

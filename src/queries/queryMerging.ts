@@ -21,6 +21,33 @@ import {
   getFragmentDefinitions,
 } from './getFromAST';
 
+import {
+  Request,
+} from '../networkInterface';
+
+import assign = require('lodash.assign');
+
+export function mergeRequests(childRequests: Request[]): Request {
+  let rootQuery: Document = createEmptyRootQuery();
+  let rootVariables: { [key: string]: any };
+
+  childRequests.forEach((childRequest, childRequestIndex) => {
+    rootQuery = addQueryToRoot(rootQuery, childRequest.query, childRequestIndex);
+    rootVariables = addVariablesToRoot(rootVariables,
+                                       childRequest.variables,
+                                       childRequest.query,
+                                       childRequestIndex);
+  });
+
+  let rootRequest: Request = {
+    debugName: '__composed',
+    query: rootQuery,
+    variables: rootVariables,
+  };
+
+  return rootRequest;
+}
+
 // Merges multiple queries into a single document. Starts out with an empty root
 // query.
 export function mergeQueries(childQueries: Document[]): Document {
@@ -31,6 +58,18 @@ export function mergeQueries(childQueries: Document[]): Document {
   });
 
   return rootQuery;
+}
+
+// Adds a variable object to an existing variable object by aliasing names to
+// prevent conflicts.
+export function addVariablesToRoot(rootVariables: { [key: string]: any },
+                         childVariables: { [key: string]: any },
+                         childQuery: Document,
+                         childQueryIndex: number)
+: { [key: string]: any } {
+  const aliasName = getQueryAliasName(getQueryDefinition(childQuery), childQueryIndex);
+  const aliasedChildVariables = addPrefixToVariables(aliasName + '__', childVariables);
+  return assign({}, rootVariables, aliasedChildVariables);
 }
 
 // Takes a query to add to a root query and aliases the child query's top-level

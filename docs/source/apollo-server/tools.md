@@ -154,8 +154,7 @@ If execution should not continue, resolve functions should return `null` and not
 
 <h2 id="corsSupport">CORS support</h2>
 
-An issue was discovered re: CORS when using the apolloClient to connect to an apolloServer running on a different instance. 
-To account for this CORS support must be configured in the express app. [CORS](https://github.com/expressjs/cors) is a node.js package for providing a Connect/Express middleware that can be used to enable CORS with various options. 
+If apollo server runs under a different origin than the frontend app, then CORS support must be configured on the server. For example, if apollo server is running under `graphql.example.com` and the website is served from `www.example.com`, CORS needs to be configured in the express app. [CORS](https://github.com/expressjs/cors) is a node.js package for providing a Connect/Express middleware that can be used to enable CORS with various options. 
 
 ```javascript
 import { apolloServer } from 'apollo-server';

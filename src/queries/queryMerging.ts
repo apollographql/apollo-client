@@ -34,10 +34,12 @@ export function mergeRequests(childRequests: Request[]): Request {
 
   childRequests.forEach((childRequest, childRequestIndex) => {
     rootQuery = addQueryToRoot(rootQuery, childRequest.query, childRequestIndex);
-    rootVariables = addVariablesToRoot(rootVariables,
-                                       childRequest.variables,
-                                       childRequest.query,
-                                       childRequestIndex);
+    if (childRequest.variables) {
+      rootVariables = addVariablesToRoot(rootVariables,
+                                         childRequest.variables,
+                                         childRequest.query,
+                                         childRequestIndex);
+    }
   });
 
   let rootRequest: Request = {
@@ -53,39 +55,68 @@ export function unpackMergedResult(result: GraphQLResult, childRequests: Request
 : GraphQLResult[] {
 
   const resultData = result.data;
-  const resultMap: {[index: number]: GraphQLResult} = {};
-  const resultArray: GraphQLResult[] = [];
+  const resultArray: GraphQLResult[] = new Array(childRequests.length);
+  const fieldMaps = createFieldMapsForRequests(childRequests);
 
   Object.keys(resultData).forEach((dataKey) => {
     const data: { [key: string]: any } = {};
     const queryInfo = parseKey(dataKey);
-    const childRequest = childRequests[queryInfo.queryIndex];
-    const childQueryDef = getQueryDefinition(childRequest.query);
+    const childRequestIndex = queryInfo.queryIndex;
+    const fieldMap = fieldMaps[childRequestIndex];
+    const field = fieldMap[queryInfo.fieldIndex];
+    data[field.name.value] = resultData[dataKey];
+    resultArray[childRequestIndex] = { data };
   });
 
-  Object.keys(resultMap).sort().forEach((resultIndex) => {
-    resultArray.push(resultMap[resultIndex]);
-  });
   return resultArray;
 }
 
-/*
+export function createFieldMapsForRequests(requests: Request[])
+: { [ index: number ]: Field }[] {
+  const res = new Array(requests.length);
+  requests.forEach((request, requestIndex) => {
+    const queryDef = getQueryDefinition(request.query);
+    const fragmentDefs = getFragmentDefinitions(request.query);
+    const fieldMap = {};
+    [queryDef, ...fragmentDefs].forEach((def) => {
+      assign(fieldMap, createFieldMap(def.selectionSet.selections).fieldMap);
+    });
+    res[requestIndex] = fieldMap;
+  });
+  return res;
+}
+
 // Returns a map that goes from a field index to a particular selection within a
 // request. We need this thing because inline fragments make it so that we
 // can't just index into the SelectionSet.selections array given the field index.
-export function createFieldMap(childRequest: Request, startIndex?: number):
-{ [ index: number ]: Field } {
+// Also returns the next index to be used (this is used internally since the function
+// is recursive).
+export function createFieldMap(selections: (Field | InlineFragment | FragmentSpread)[],
+                               startIndex?: number)
+: { fieldMap: { [ index: number ]: Field }, newIndex: number } {
+
   if (!startIndex) {
     startIndex = 0;
   }
-  const result = {};
-  const childRequestDef = getQueryDefinition(childRequest);
-  childRequestDef.selectionSet.selections.forEach((selection, currentIndex) => {
-    if (selection.kind == 'Field') {
-      result[
+  let fieldMap: { [ index: number ]: Field } = {};
+  let currIndex = startIndex;
+  selections.forEach((selection) => {
+    if (selection.kind === 'Field') {
+      fieldMap[currIndex] = (selection as Field);
+      currIndex += 1;
+    } else if (selection.kind === 'InlineFragment') {
+      const inlineFragment = selection as InlineFragment;
+      const ret = createFieldMap(inlineFragment.selectionSet.selections, currIndex);
+      assign(fieldMap, ret.fieldMap);
+      currIndex = ret.newIndex;
     }
   });
-} */
+
+  return {
+    fieldMap,
+    newIndex: currIndex,
+  };
+}
 
 // Takes a key that looks like this: __queryName__queryIndex_0__fieldIndex_1: __typename
 // And turns it into information like this { queryIndex: 0, fieldIndex: 1 }
@@ -97,7 +128,7 @@ export function parseKey(key: string): { queryIndex: number, fieldIndex: number 
   return {
     queryIndex: parseInt(queryIndexPiece[1], 10),
     fieldIndex: parseInt(fieldIndexPiece[1], 10),
-  }
+  };
 }
 
 // Merges multiple queries into a single document. Starts out with an empty root

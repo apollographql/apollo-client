@@ -16,6 +16,8 @@ import {
   MiddlewareRequest,
 } from '../src/middleware';
 
+import gql from '../src/gql';
+
 // import {
 //   graphql,
 // } from 'graphql';
@@ -143,7 +145,7 @@ describe('network interface', () => {
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
-        query: `
+        query: gql`
           query people($personNum: Int!) {
             allPeople(first: $personNum) {
               people {
@@ -181,7 +183,7 @@ describe('network interface', () => {
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
-        query: `
+        query: gql`
           query people {
             allPeople(first: 1) {
               people {
@@ -212,7 +214,7 @@ describe('network interface', () => {
       swapi.use([testWare1, testWare2]);
       // this is a stub for the end user client api
       const simpleRequest = {
-        query: `
+        query: gql`
           query people($personNum: Int!, $filmNum: Int!) {
             allPeople(first: $personNum) {
               people {
@@ -264,7 +266,7 @@ describe('network interface', () => {
 
       // this is a stub for the end user client api
       const simpleRequest = {
-        query: `
+        query: gql`
           query people {
             allPeople(first: 1) {
               people {
@@ -293,47 +295,12 @@ describe('network interface', () => {
       );
     });
 
-    it('should return errors if the server responds with them', () => {
-      const swapi = createNetworkInterface('http://graphql-swapi.test/');
-
-      // this is a stub for the end user client api
-      const simpleRequest = {
-        query: `
-          query people {
-            allPeople(first: 1) {
-              people {
-                name
-              }
-          }
-        `,
-        variables: {},
-        debugName: 'People query',
-      };
-
-      return assert.eventually.deepEqual(
-        swapi.query(simpleRequest),
-        {
-          errors: [
-            {
-              message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF\n\n7:           }\n8:         \n           ^\n',
-              locations: [
-                {
-                  column: 9,
-                  line: 8,
-                },
-              ],
-            },
-          ],
-        }
-      );
-    });
-
     it('should throw on a network error', () => {
       const nowhere = createNetworkInterface('http://does-not-exist.test/');
 
       // this is a stub for the end user client api
       const doomedToFail = {
-        query: `
+        query: gql`
           query people {
             allPeople(first: 1) {
               people {

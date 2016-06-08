@@ -19,3 +19,5 @@ import './store';
 import './gql';
 import './queryTransform';
 import './getFromAST';
+import './batching';
+import './queryMerging';

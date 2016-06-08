@@ -1,6 +1,7 @@
 import {
   NetworkInterface,
   Request,
+  BatchedNetworkInterface,
 } from './networkInterface';
 
 
@@ -49,6 +50,10 @@ import {
 import {
   queryDocument,
 } from './queryPrinting';
+
+import {
+  QueryFetchRequest,
+} from './batching';
 
 import { Observable, Observer, Subscription } from './util/Observable';
 
@@ -155,11 +160,11 @@ export class QueryManager {
     let mutationDef = getMutationDefinition(mutation);
     if (this.queryTransformer) {
       mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
+      mutation = replaceOperationDefinition(mutation, mutationDef);
     }
     const mutationString = print(mutationDef);
-
     const request = {
-      query: mutationString,
+      query: mutation,
       variables,
     } as Request;
 
@@ -277,7 +282,88 @@ export class QueryManager {
     return this.watchQuery(options).result();
   }
 
+  // Sends several queries batched together into one fetch over the transport.
+  public fetchManyQueries(fetchRequests: QueryFetchRequest[]): Promise<GraphQLResult[]> {
+    // There are three types of promises used here.
+    // - fillPromise: resolved once we have transformed each of the queries in
+    // fetchRequests have been transformed by fetchQueryOverInterface().
+    // - queryPromise: fetchQueryOverInterface() will write the results returned
+    // by the server for a particular query after this promise is resolved.
+    // - resultPromise: This is a promise returned by fetchQueryOverInterface().
+    // It is resolved once the query results have been written to store (i.e.
+    // the whole fetch procedure has been completed).
+    const queryPromises: Promise<GraphQLResult>[] = [];
+    const queryResolvers = [];
+    const queryRejecters = [];
+
+    const transformedRequests: Request[] = [];
+    const resultPromises: Promise<GraphQLResult>[] = [];
+    let fillResolve = null;
+    let fillReject = null;
+
+    const fillPromise = new Promise((resolve, reject) => {
+      fillResolve = resolve;
+      fillReject = reject;
+    });
+
+
+    const batchingNetworkInterface: NetworkInterface = {
+      query(request: Request) {
+        transformedRequests.push(request);
+        const queryPromise = new Promise((resolve, reject) => {
+          queryResolvers.push(resolve);
+          queryRejecters.push(reject);
+        });
+        queryPromises.push(queryPromise);
+
+        const retPromise = new Promise((resolve, reject) => {
+          fillPromise.then(() => {
+            queryPromise.then((result) => {
+              resolve(result);
+            });
+          });
+        });
+
+        if (queryPromises.length === fetchRequests.length) {
+          fillResolve();
+        }
+
+        return retPromise;
+      },
+    };
+
+    fetchRequests.forEach((fetchRequest) => {
+      const resultPromise = this.fetchQueryOverInterface(fetchRequest.queryId,
+                                                         fetchRequest.options,
+                                                         batchingNetworkInterface);
+      resultPromises.push(resultPromise);
+    });
+
+
+    // wait until all of the queryPromise values have been added to queryPromises
+    fillPromise.then(() => {
+      const requestObjects: Request[] = transformedRequests;
+
+      (this.networkInterface as BatchedNetworkInterface)
+        .batchQuery(requestObjects).then((results) => {
+        // Note: the server has to guarantee that the results will have the same
+        // ordering as the queries that they correspond to.
+        results.forEach((result, index) => {
+          queryResolvers[index](result);
+        });
+      });
+    });
+
+    return Promise.all(resultPromises);
+  }
+
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
+    return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
+  }
+
+  private fetchQueryOverInterface(queryId: string,
+                                  options: WatchQueryOptions,
+                                  networkInterface: NetworkInterface): Promise<GraphQLResult> {
     const {
       query,
       variables,
@@ -306,7 +392,7 @@ export class QueryManager {
     // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
-
+    let minimizedQueryDoc = transformedQuery;
     let initialResult;
 
     if (!forceFetch) {
@@ -340,9 +426,11 @@ export class QueryManager {
         };
 
         minimizedQueryString = print(diffedQuery);
+        minimizedQueryDoc = diffedQuery;
       } else {
         minimizedQuery = null;
         minimizedQueryString = null;
+        minimizedQueryDoc = null;
       }
     }
 
@@ -378,11 +466,11 @@ export class QueryManager {
 
     if (minimizedQuery) {
       const request: Request = {
-        query: minimizedQueryString,
+        query: minimizedQueryDoc,
         variables,
       };
 
-      return this.networkInterface.query(request)
+      return networkInterface.query(request)
         .then((result: GraphQLResult) => {
           // XXX handle multiple GraphQLResults
           this.store.dispatch({

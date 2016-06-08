@@ -155,13 +155,13 @@ export class QueryManager {
     let mutationDef = getMutationDefinition(mutation);
     if (this.queryTransformer) {
       mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
+      mutation = replaceOperationDefinition(mutation, mutationDef);
     }
     mutation = replaceOperationDefinition(mutation, mutationDef);
     const mutationString = print(mutation);
     const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
-
     const request = {
-      query: mutationString,
+      query: mutation,
       variables,
     } as Request;
 
@@ -273,6 +273,72 @@ export class QueryManager {
     return this.watchQuery(options).result();
   }
 
+<<<<<<< HEAD
+=======
+  // Sends several queries batched together into one fetch over the transport.
+  public fetchBatchedQueries(fetchRequests: QueryFetchRequest[]): Promise<GraphQLResult[]> {
+    // There are three types of promises used here.
+    // - fillPromise: resolved once we have transformed each of the queries in
+    // fetchRequests have been transformed by fetchQueryOverInterface().
+    // - queryPromise: fetchQueryOverInterface() will write the results returned
+    // by the server for a particular query after this promise is resolved.
+    // - resultPromise: This is a promise returned by fetchQueryOverInterface().
+    // It is resolved once the query results have been written to store (i.e.
+    // the whole fetch procedure has been completed).
+    const queryPromises: Promise<GraphQLResult>[] = [];
+    const queryResolvers = [];
+    const queryRejecters = [];
+
+    const transformedRequests: Request[] = [];
+    const resultPromises: Promise<GraphQLResult>[] = [];
+
+    const fillPromise = new Promise((fillResolve, fillReject) => {
+      const batchingNetworkInterface: NetworkInterface = {
+        query(request: Request) {
+          transformedRequests.push(request);
+          const queryPromise = new Promise((resolve, reject) => {
+            queryResolvers.push(resolve);
+            queryRejecters.push(reject);
+          });
+          queryPromises.push(queryPromise);
+
+          const retPromise = fillPromise.then(() => {
+            return queryPromise;
+          });
+
+          if (queryPromises.length === fetchRequests.length) {
+            fillResolve();
+          }
+
+          return retPromise;
+        },
+      };
+
+      fetchRequests.forEach((fetchRequest) => {
+        const resultPromise = this.fetchQueryOverInterface(fetchRequest.queryId,
+                                                           fetchRequest.options,
+                                                           batchingNetworkInterface);
+        resultPromises.push(resultPromise);
+      });
+    });
+
+    // wait until all of the queryPromise values have been added to queryPromises
+    fillPromise.then(() => {
+      const requestObjects: Request[] = transformedRequests;
+      (this.networkInterface as BatchedNetworkInterface)
+        .batchQuery(requestObjects).then((results) => {
+        // Note: the server has to guarantee that the results will have the same
+        // ordering as the queries that they correspond to.
+        results.forEach((result, index) => {
+          queryResolvers[index](result);
+        });
+      });
+    });
+
+    return Promise.all(resultPromises);
+  }
+
+>>>>>>> moved the Request object to use a Document structure rather than the serialized string structure
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
     const {
       query,
@@ -302,7 +368,7 @@ export class QueryManager {
     // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
-
+    let minimizedQueryDoc = transformedQuery;
     let initialResult;
 
     if (!forceFetch) {
@@ -336,9 +402,11 @@ export class QueryManager {
         };
 
         minimizedQueryString = print(diffedQuery);
+        minimizedQueryDoc = diffedQuery;
       } else {
         minimizedQuery = null;
         minimizedQueryString = null;
+        minimizedQueryDoc = null;
       }
     }
 
@@ -374,7 +442,7 @@ export class QueryManager {
 
     if (minimizedQuery) {
       const request: Request = {
-        query: minimizedQueryString,
+        query: minimizedQueryDoc,
         variables,
       };
 

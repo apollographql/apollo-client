@@ -2,11 +2,23 @@ import isString = require('lodash.isstring');
 import assign = require('lodash.assign');
 import 'whatwg-fetch';
 
-import { GraphQLResult } from 'graphql';
+import {
+  GraphQLResult,
+  Document,
+  print,
+} from 'graphql';
 
 import { MiddlewareInterface } from './middleware';
 
 export interface Request {
+  debugName?: string;
+  query?: Document;
+  variables?: Object;
+}
+
+// The request representation just before it is converted to JSON
+// and sent over the transport.
+export interface PrintedRequest {
   debugName?: string;
   query?: string;
   variables?: Object;
@@ -52,6 +64,15 @@ export function addQueryComposition(networkInterface: NetworkInterface): Batched
   };
 }
 
+export function printRequest(request: Request): PrintedRequest {
+  const printedRequest = {
+    debugName: request.debugName,
+    query: print(request.query),
+    variables: request.variables,
+  };
+  return printedRequest;
+}
+
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {
   if (!uri) {
     throw new Error('A remote enpdoint is required for a network layer');
@@ -95,7 +116,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     options,
   }: RequestAndOptions): Promise<IResponse> {
     return fetch(uri, assign({}, _opts, options, {
-      body: JSON.stringify(request),
+      body: JSON.stringify(printRequest(request)),
       headers: assign({}, options.headers, {
         Accept: '*/*',
         'Content-Type': 'application/json',

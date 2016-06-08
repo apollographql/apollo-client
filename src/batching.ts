@@ -1,6 +1,5 @@
 import {
   WatchQueryOptions,
-  QueryManager,
 } from './QueryManager';
 
 import {
@@ -44,16 +43,11 @@ export class QueryBatcher {
   }) {
     this.shouldBatch = shouldBatch;
     this.fetchRequests = [];
+    this.networkInterface = networkInterface;
   }
 
   public queueRequest(request: QueryFetchRequest) {
     this.fetchRequests.push(request);
-
-    // if we aren't batching queries, then it doesn't make any
-    // sense to let the queries wait around on the queue.
-    if (!this.shouldBatch) {
-      this.consumeQueue();
-    }
   }
 
   // Consumes the queue. Called on a polling interval, exposed publicly
@@ -73,16 +67,31 @@ export class QueryBatcher {
 
     if (this.shouldBatch) {
       this.fetchRequests = [];
-      return (this.networkInterface as BatchedNetworkInterface).batchQuery(requests);
+      const promises: Promise<GraphQLResult>[] = [];
+      const resolvers = [];
+      requests.forEach(() => {
+        const promise = new Promise((resolve) => {
+          resolvers.push(resolve);
+        });
+        promises.push(promise);
+      });
+
+      const batchedPromise =
+        (this.networkInterface as BatchedNetworkInterface).batchQuery(requests);
+      batchedPromise.then((results) => {
+        results.forEach((result, index) => {
+          resolvers[index](result);
+        });
+      });
+      return promises;
     } else {
       const res: Promise<GraphQLResult>[] = [];
-      this.requests.forEach((request) => {
+      requests.forEach((request) => {
         const promise = this.networkInterface.query(request);
         res.push(promise);
       });
+      return res;
     }
-
-    return res;
   }
 
   public start(pollInterval: Number) {

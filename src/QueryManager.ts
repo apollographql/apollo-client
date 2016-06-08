@@ -136,7 +136,8 @@ export class QueryManager {
     this.queryTransformer = queryTransformer;
     this.pollingTimers = {};
 
-    const isBatchingInterface = this.networkInterface.kind == 'BatchedNetworkInterface';
+    const isBatchingInterface =
+      (this.networkInterface as BatchedNetworkInterface).batchQuery === undefined;
     this.queryListeners = {};
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -144,6 +145,7 @@ export class QueryManager {
     this.batcher = new QueryBatcher({
       //we batch if the network interface supports batching if user has not specified
       shouldBatch: shouldBatch || isBatchingInterface,
+      networkInterface: this.networkInterface,
     });
 
     // this.store is usually the fake store we get from the Redux middleware API
@@ -386,18 +388,9 @@ export class QueryManager {
 
     // wait until all of the queryPromise values have been added to queryPromises
     fillPromise.then(() => {
-      // TODO shouldn't need to do this JSON.parse if fetchQueryOverInterface
-      // exposed a way to get the JSON object. Needs a significant refactor.
-      const requestObjects = transformedRequests.map((request) => {
-        request.query = JSON.parse(request.query);
-      });
-      const batchedRequest: Request = {
-        debugName: '__batchedRequest',
-        query: JSON.stringify(requestObjects),
-      };
-
+      const requestObjects: Request[] = transformedRequests;
       (this.networkInterface as BatchedNetworkInterface)
-        .batchQuery(batchedRequest).then((results) => {
+        .batchQuery(requestObjects).then((results) => {
         // Note: the server has to guarantee that the results will have the same
         // ordering as the queries that they correspond to.
         results.forEach((result, index) => {

@@ -2,9 +2,9 @@ import { QueryBatcher,
          QueryFetchRequest,
        } from '../src/batching';
 import { assert } from 'chai';
-import mockNetworkInterface from './mocks/mockNetworkInterface';
-import { createApolloStore } from '../src/store';
-import { QueryManager } from '../src/QueryManager';
+import mockNetworkInterface, {
+  mockBatchedNetworkInterface,
+} from './mocks/mockNetworkInterface';
 import gql from '../src/gql';
 import { GraphQLResult } from 'graphql';
 
@@ -72,7 +72,11 @@ describe('QueryBatcher', () => {
         'lastName': 'Smith',
       },
     };
-    const myNetworkInterface = mockNetworkInterface(
+    const myNetworkInterface = mockBatchedNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      },
       {
         request: { query },
         result: { data },
@@ -99,16 +103,27 @@ describe('QueryBatcher', () => {
       });
     });
 
-    it('should be able to consume from a queue containing multiple queries',
-       (done) => {
+    it('should be able to consume from a queue containing multiple queries', (done) => {
       const request2 = {
         options: { query },
         queryId: 'another-fake-id',
       };
-
-      scheduler.queueRequest(request);
-      scheduler.queueRequest(request2);
-      const promises: Promise<GraphQLResult>[] = scheduler.consumeQueue();
+      const myBatcher = new QueryBatcher({
+        shouldBatch: true,
+        networkInterface: mockBatchedNetworkInterface(
+          {
+            request: { query },
+            result: {data },
+          },
+          {
+            request: { query },
+            result: { data },
+          }
+        ),
+      });
+      myBatcher.queueRequest(request);
+      myBatcher.queueRequest(request2);
+      const promises: Promise<GraphQLResult>[] = myBatcher.consumeQueue();
       assert.equal(scheduler.fetchRequests.length, 0);
       assert.equal(promises.length, 2);
       promises[0].then((resultObj1) => {
@@ -138,6 +153,9 @@ describe('QueryBatcher', () => {
       queryId: 'not-a-real-id',
     };
 
+    scheduler.queueRequest(request);
+    scheduler.queueRequest(request);
+
     //poll with a big interval so that the queue
     //won't actually be consumed by the time we stop.
     scheduler.start(1000);
@@ -145,24 +163,4 @@ describe('QueryBatcher', () => {
     assert.equal(scheduler.fetchRequests.length, 2);
   });
 
-  it('should consume the queue immediately if batching is not enabled', () => {
-    const scheduler = new QueryBatcher({
-      shouldBatch: false,
-      networkInterface,
-    });
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-    const request = {
-      options: { query },
-      queryId: 'really-fake-id',
-    };
-
-    scheduler.queueRequest(request);
-    assert.equal(scheduler.fetchRequests.length, 0);
-  });
 });

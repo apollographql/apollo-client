@@ -15,6 +15,10 @@ import {
   addTypenameToSelectionSet,
 } from '../src/queries/queryTransform';
 
+import {
+  addQueryComposition,
+} from '../src/networkInterface';
+
 import gql from '../src/gql';
 
 import {
@@ -2059,7 +2063,82 @@ describe('QueryManager', () => {
         reduxRootKey: 'apollo',
       });
 
-      queryManager.fetchBatchedQueries([
+      queryManager.fetchManyQueries([
+        fetchRequest1,
+        fetchRequest2,
+      ]).then((results) => {
+        assert.equal(results.length, 2);
+        assert.deepEqual(results[0].data, data1);
+        assert.deepEqual(results[1].data, data2);
+        done();
+      });
+    });
+
+    it('should send a composed query by constructing a composing network interface', (done) => {
+      const query1 = gql`
+        query authorStuff {
+          author {
+            firstName
+          }
+        }`;
+      const query2 = gql`
+        query otherStuff {
+          author {
+            lastName
+          }
+        }`;
+      const fetchRequest1 = {
+        options: {
+          query: query1,
+        },
+        queryId: 'not-a-real-id',
+      };
+      const fetchRequest2 = {
+        options: {
+          query: query2,
+        },
+        queryId: 'really-fake-id',
+      };
+      const composedQuery = gql`
+        query __composed {
+          __authorStuff__queryIndex_0__fieldIndex_0: author {
+            firstName
+          }
+          __otherStuff__queryIndex_1__fieldIndex_0: author {
+            lastName
+          }
+       }`;
+      const composedResult = {
+        __authorStuff__queryIndex_0__fieldIndex_0: {
+          firstName: 'John',
+        },
+        __otherStuff__queryIndex_1__fieldIndex_0: {
+          lastName: 'Smith',
+        },
+      };
+      const data1 = {
+        author: {
+          firstName: 'John',
+        },
+      };
+      const data2 = {
+        author: {
+          lastName: 'Smith',
+        },
+      };
+      const networkInterface = mockNetworkInterface(
+        {
+          request: { query: composedQuery, debugName: '__composed' },
+          result: { data: composedResult },
+        }
+      );
+      const composingNetworkInterface = addQueryComposition(networkInterface);
+      const queryManager = new QueryManager({
+        networkInterface: composingNetworkInterface,
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.fetchManyQueries([
         fetchRequest1,
         fetchRequest2,
       ]).then((results) => {

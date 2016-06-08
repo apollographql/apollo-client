@@ -27,8 +27,14 @@ import {
 } from '../networkInterface';
 
 import assign = require('lodash.assign');
+import cloneDeep = require('lodash.clonedeep');
 
+// Merges requests together.
+// NOTE: This is pretty much the only function from this file that should be
+// called from a network interface. It guarantees that the requests you pass in
+// will remain unchanged.
 export function mergeRequests(childRequests: Request[]): Request {
+  childRequests = cloneDeep(childRequests);
   let rootQuery: Document = createEmptyRootQuery();
   let rootVariables: { [key: string]: any };
 

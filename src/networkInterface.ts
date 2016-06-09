@@ -5,8 +5,9 @@ import 'whatwg-fetch';
 import {
   GraphQLResult,
   Document,
-  print,
 } from 'graphql';
+
+import { print } from 'graphql/language/printer';
 
 import { MiddlewareInterface } from './middleware';
 

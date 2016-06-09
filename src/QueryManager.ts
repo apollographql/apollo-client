@@ -156,7 +156,9 @@ export class QueryManager {
     if (this.queryTransformer) {
       mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
     }
-    const mutationString = print(mutationDef);
+    mutation = replaceOperationDefinition(mutation, mutationDef);
+    const mutationString = print(mutation);
+    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
 
     const request = {
       query: mutationString,
@@ -173,6 +175,7 @@ export class QueryManager {
       },
       variables,
       mutationId,
+      fragmentMap: queryFragmentMap,
     });
 
     return this.networkInterface.query(request)

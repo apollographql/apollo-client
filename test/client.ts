@@ -572,6 +572,41 @@ describe('client', () => {
 
   });
 
+  it('should handle named fragments on mutations', (done) => {
+    const mutation = gql`
+      mutation {
+        starAuthor(id: 12) {
+          author {
+            ...authorDetails
+          }
+        }
+      }
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }`;
+    const result = {
+      'starAuthor': {
+        'author': {
+          'firstName': 'John',
+          'lastName': 'Smith',
+        },
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: mutation },
+        result: { data: result },
+      });
+    const client = new ApolloClient({
+      networkInterface,
+    });
+    client.mutate({ mutation }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+      done();
+    });
+  });
+
   it('should be able to handle named fragments on forced fetches', (done) => {
     const query = gql`
       fragment authorDetails on Author {

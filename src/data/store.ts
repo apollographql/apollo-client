@@ -90,6 +90,7 @@ export function data(
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
+        fragmentMap: queryStoreValue.fragmentMap,
       });
 
       return newState;

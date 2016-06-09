@@ -74,6 +74,7 @@ export interface MutationInitAction {
   mutation: SelectionSetWithRoot;
   variables: Object;
   mutationId: string;
+  fragmentMap: FragmentMap;
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {

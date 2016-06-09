@@ -8,6 +8,10 @@ import {
   SelectionSet,
 } from 'graphql';
 
+import {
+  FragmentMap,
+} from '../queries/getFromAST';
+
 import assign = require('lodash.assign');
 
 export interface MutationStore {
@@ -20,6 +24,7 @@ export interface MutationStoreValue {
   variables: Object;
   loading: boolean;
   error: Error;
+  fragmentMap: FragmentMap;
 }
 
 export interface SelectionSetWithRoot {
@@ -41,6 +46,7 @@ export function mutations(
       variables: action.variables,
       loading: true,
       error: null,
+      fragmentMap: action.fragmentMap,
     };
 
     return newState;

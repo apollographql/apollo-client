@@ -69,12 +69,12 @@ const client = new ApolloClient({
 
 <h4 id="networkInterfaceMiddleware" title="Middleware">Middleware</h4>
 
-It is possible to use middleware with the network interface created via `createNetworkInterface`.  In order to do so, you must pass an object into the interface created with `createNetworkInterface()`.  This object must contain an `applyMiddleware` method with the following parameters:
+It is possible to use middleware with the network interface created via `createNetworkInterface`.  In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.  Each object must contain an `applyMiddleware` method with the following parameters:
 
 - `req: object` The HTTP request being processed by the middleware.
 - `next: function` This function pushes the HTTP request onward through the middleware.
 
-This example shows how you'd create a middleware.  It can be done either by providing the requried object directly to `.use()` or by creating a function/object and passing it (or an array) to `.use()`.
+This example shows how you'd create a middleware.  It can be done either by providing the required object directly to `.use()` or by creating an object and passing it to `.use()`. In both cases all middleware objects have to be wrapped inside an array.
 
 In both examples, we'll show how you would add an authentication token to the HTTP header of the requests being sent by the client.
 
@@ -83,24 +83,24 @@ import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
 const networkInterface = createNetworkInterface('/graphql');
 
-networkInterface.use({
-  applyMiddleWare(req, next) => {
-    if (!req.options.header) {
-      req.options.header = {};  // Create the header object if needed.
+networkInterface.use([{
+  applyMiddleWare(req, next) {
+    if (!req.options.headers) {
+      req.options.headers = {};  // Create the header object if needed.
     }
-    req.options.header.authorization = localStorage.getItem('token') ? localStorage.getItem('token') : null;
+    req.options.headers.authorization = localStorage.getItem('token') ? localStorage.getItem('token') : null;
     next();
   }
-});
+}]);
 
 const client = new ApolloClient({
   networkInterface,
 });
 ```
 
-The above example shows use of a single middleware passed directly to .use().  It checks to see if we have a token (JWT, for example) and pass that token in the HTTP header of the request, so we can authenticate interactions with GraphQL performed through our network interface.
+The above example shows the use of a single middleware passed directly to .use(). It checks to see if we have a token (JWT, for example) and passes that token into the HTTP header of the request, so we can authenticate interactions with GraphQL performed through our network interface.
 
-The following example shows use of multiple middlewares passed as an array:
+The following example shows the use of multiple middlewares passed as an array:
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
@@ -109,30 +109,27 @@ const networkInterface = createNetworkInterface('/graphql');
 const token = 'first-token-value';
 const token2 = 'second-token-value';
 
-function exampleWare1 () {
-  applyMiddleware(req, next) => {
-    if (!req.options.header) {
-      req.options.header = {};  // Create the header object if needed.
+const exampleWare1 = {
+  applyMiddleware(req, next) {
+    if (!req.options.headers) {
+      req.options.headers = {};  // Create the headers object if needed.
     }
-    req.options.header.authorization = token;
+    req.options.headers.authorization = token;
     next();
   }
 }
 
-function exampleWare2 () {
-  applyMiddleware(req, next) => {
-    if (!req.options.header) {
-      req.options.header = {};  // Create the header object if needed.
+const exampleWare2 = {
+  applyMiddleware(req, next) {
+    if (!req.options.headers) {
+      req.options.headers = {};  // Create the headers object if needed.
     }
-    req.options.header.authorization = token2;
+    req.options.headers.authorization = token2;
     next();
   }
 }
 
-const exWare1 = new exampleWare1();
-const exWare2 = new exampleWare2();
-
-networkInterface.use([exWare1, exWare2]);
+networkInterface.use([exampleWare1, exampleWare2]);
 
 const client = new ApolloClient({
   networkInterface,

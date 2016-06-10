@@ -3,6 +3,7 @@ const { assert } = chai;
 
 import {
   applySkipResolver,
+  applyIncludeResolver,
   applyDirectives,
   skipDirectiveResolver,
   includeDirectiveResolver,
@@ -172,6 +173,31 @@ describe('query directives', () => {
     assert.equal(print(newQuery), print(expQuery));
   });
 
+  it('should not include a field if the include is false', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName @include(if: $shouldInclude)
+        }
+      }`;
+    const variables = {
+      shouldInclude: false,
+    };
+    const expQuery = gql`
+      query {
+        author {
+          firstName
+        }
+      }`;
+    const newQuery = applyDirectives(query, variables, {
+      'skip': skipDirectiveResolver,
+      'include': includeDirectiveResolver,
+    });
+
+    assert.equal(print(newQuery), print(expQuery));
+  });
+
   it('should not remove the field when skip and include are both true', () => {
     const query = gql`
       query {
@@ -219,6 +245,31 @@ describe('query directives', () => {
       'skip': skipDirectiveResolver,
       'include': includeDirectiveResolver,
     });
+    assert.equal(print(newQuery), print(expQuery));
+  });
+
+  it('should correctly apply include inside inline fragments', () => {
+    const query = gql`
+      query {
+        ... on RootQuery {
+          author {
+            firstName
+            lastName @include(if: $shouldInclude)
+          }
+        }
+      }`;
+    const variables = {
+      shouldInclude: false,
+    };
+    const expQuery = gql`
+      query {
+        ... on RootQuery {
+          author {
+            firstName
+          }
+        }
+      }`;
+    const newQuery = applyIncludeResolver(query, variables);
     assert.equal(print(newQuery), print(expQuery));
   });
 

@@ -74,7 +74,7 @@ export function applyDirectivesToSelectionSet(selSet: SelectionSet,
         newSelection = directiveResolver(currSelection, variables, directive);
 
         // add handling for the case where we have both a skip and an include
-        // on the same field.
+        // on the same field (see note here: http://facebook.github.io/graphql/#sec--include).
         if (directive.name.value === 'skip' || directive.name.value === 'include') {
           if (newSelection === undefined && toBeRemoved === null) {
             toBeRemoved = true;
@@ -171,5 +171,12 @@ export function applySkipResolver(doc: Document, variables?: { [name: string]: a
 : Document {
   return applyDirectives(doc, variables, {
     'skip': skipDirectiveResolver,
+  });
+}
+
+export function applyIncludeResolver(doc: Document, variables?: { [name: string]: any })
+: Document {
+  return applyDirectives(doc, variables, {
+    'include': includeDirectiveResolver,
   });
 }

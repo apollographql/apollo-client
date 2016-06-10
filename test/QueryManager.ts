@@ -750,7 +750,10 @@ describe('QueryManager', () => {
       next(result) {
         resultCount++;
         // Perform refetch on first result from watchQuery
-        if (resultCount === 1) sub.refetch();
+        if (resultCount === 1) {
+          sub.refetch();
+        };
+
         // Wait for a result count of 3
         if (resultCount === 3) {
           // Stop polling

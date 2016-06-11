@@ -53,7 +53,7 @@ export interface RequestAndOptions {
 // Takes a standard network interface (i.e. not necessarily a BatchedNetworkInterface) and turns
 // it into a network interface that supports batching by composing/merging queries in to one
 // query.
-export function addQueryComposition(networkInterface: NetworkInterface): BatchedNetworkInterface {
+export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetworkInterface {
   return {
     query(request: Request): Promise<GraphQLResult> {
       return networkInterface.query(request);

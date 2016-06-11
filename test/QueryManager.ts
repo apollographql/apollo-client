@@ -15,10 +15,6 @@ import {
   addTypenameToSelectionSet,
 } from '../src/queries/queryTransform';
 
-import {
-  addQueryComposition,
-} from '../src/networkInterface';
-
 import gql from '../src/gql';
 
 import {

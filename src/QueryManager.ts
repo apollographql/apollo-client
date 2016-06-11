@@ -380,7 +380,7 @@ export class QueryManager {
         variables,
       };
 
-      return networkInterface.query(request)
+      return this.networkInterface.query(request)
         .then((result: GraphQLResult) => {
           // XXX handle multiple GraphQLResults
           this.store.dispatch({

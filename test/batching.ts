@@ -1,4 +1,4 @@
-import { QueryScheduler,
+import { QueryBatcher,
          QueryFetchRequest,
        } from '../src/batching';
 import { assert } from 'chai';
@@ -14,10 +14,10 @@ const queryManager = new QueryManager({
   reduxRootKey: 'apollo',
 });
 
-describe('QueryScheduler', () => {
+describe('QueryBatcher', () => {
   it('should construct', () => {
     assert.doesNotThrow(() => {
-      const querySched = new QueryScheduler({
+      const querySched = new QueryBatcher({
         shouldBatch: true,
         queryManager: queryManager,
       });
@@ -26,7 +26,7 @@ describe('QueryScheduler', () => {
   });
 
   it('should not do anything when faced with an empty queue', () => {
-    const scheduler = new QueryScheduler({
+    const scheduler = new QueryBatcher({
       shouldBatch: true,
       queryManager: queryManager,
     });
@@ -37,7 +37,7 @@ describe('QueryScheduler', () => {
   });
 
   it('should be able to add to the queue', () => {
-    const scheduler = new QueryScheduler({
+    const scheduler = new QueryBatcher({
       shouldBatch: true,
       queryManager: queryManager,
     });
@@ -87,7 +87,7 @@ describe('QueryScheduler', () => {
       store: createApolloStore(),
       reduxRootKey: 'apollo',
     });
-    const scheduler = new QueryScheduler({
+    const scheduler = new QueryBatcher({
       shouldBatch: true,
       queryManager: myQueryManager,
     });
@@ -128,105 +128,10 @@ describe('QueryScheduler', () => {
         });
       });
     });
-
-    it('should add requests to the in-flight queue before the request', () => {
-      const myScheduler = new QueryScheduler({
-        shouldBatch: true,
-        queryManager: new QueryManager({
-          networkInterface: mockNetworkInterface(),
-          store: createApolloStore(),
-          reduxRootKey: 'apollo',
-        }),
-      });
-      const request2 = {
-        options: { query },
-        queryId: 'not-a-real-id2',
-      };
-
-      myScheduler.queueRequest(request);
-      myScheduler.queueRequest(request2);
-      myScheduler.consumeQueue();
-
-      assert.equal(Object.keys(myScheduler.inFlightRequests).length, 2);
-    });
-
-    it(`should be able to remove requests from the in-flight queue once the
-    server responds`, (done) => {
-      scheduler.queueRequest(request);
-      scheduler.consumeQueue().forEach((promise) => {
-        promise.then((result) => {
-          assert.equal(Object.keys(scheduler.inFlightRequests).length, 0);
-          done();
-        });
-      });
-    });
-
-    it(`should not fetch a query while a query with the same id is
-    in flight`, () => {
-      //this network interface will not respond to the query in the duration of
-      //this test, leaving the query in flight.
-      const myNetworkInterface = mockNetworkInterface(
-        {
-          request: { query },
-          delay: 2000,
-        }
-      );
-      const myScheduler = new QueryScheduler({
-        shouldBatch: true,
-        queryManager: new QueryManager({
-          networkInterface: myNetworkInterface,
-          store: createApolloStore(),
-          reduxRootKey: 'apollo',
-        }),
-      });
-      myScheduler.queueRequest(request);
-      const request2 = {
-        options: { query },
-        queryId: 'not-a-real-id',
-      };
-      myScheduler.consumeQueue();
-      myScheduler.queueRequest(request2);
-      myScheduler.consumeQueue();
-      assert.equal(myScheduler.fetchRequests.length, 1);
-    });
-
-    it(`should fetch both if one query is queued and one with a diff. id
-    is in flight`, () => {
-      const myNetworkInterface = mockNetworkInterface(
-        {
-          request: { query },
-          delay: 20000,
-        },
-        {
-          request: { query },
-          delay: 20000,
-        }
-      );
-      const myScheduler = new QueryScheduler({
-        shouldBatch: true,
-        queryManager: new QueryManager({
-          networkInterface: myNetworkInterface,
-          store: createApolloStore(),
-          reduxRootKey: 'apollo',
-        }),
-      });
-      const request2 = {
-        options: { query },
-        queryId: 'totally-diff-id',
-      };
-
-      myScheduler.queueRequest(request);
-      myScheduler.consumeQueue();
-      assert.equal(myScheduler.fetchRequests.length, 0);
-      myScheduler.queueRequest(request2);
-      myScheduler.consumeQueue();
-      assert.equal(myScheduler.fetchRequests.length, 0);
-      assert.equal(Object.keys(myScheduler.inFlightRequests).length, 2);
-    });
   });
 
   it('should be able to stop polling', () => {
-    const scheduler = new QueryScheduler({
+    const scheduler = new QueryBatcher({
       shouldBatch: true,
       queryManager: queryManager,
     });
@@ -253,7 +158,7 @@ describe('QueryScheduler', () => {
   });
 
   it('should consume the queue immediately if batching is not enabled', () => {
-    const scheduler = new QueryScheduler({
+    const scheduler = new QueryBatcher({
       shouldBatch: false,
       queryManager: queryManager,
     });
@@ -271,6 +176,5 @@ describe('QueryScheduler', () => {
 
     scheduler.queueRequest(request);
     assert.equal(scheduler.fetchRequests.length, 0);
-    assert.equal(Object.keys(scheduler.inFlightRequests).length, 1);
   });
 });

@@ -27,6 +27,7 @@ import {
 
 import {
   Document,
+  GraphQLResult,
 } from 'graphql';
 
 import ApolloClient from '../src/index';
@@ -39,6 +40,8 @@ import assign = require('lodash.assign');
 
 import mockNetworkInterface,
 { mockBatchedNetworkInterface} from './mocks/mockNetworkInterface';
+
+import { BatchedNetworkInterface }from '../src/networkInterface';
 
 describe('QueryManager', () => {
   it('properly roundtrips through a Redux store', (done) => {
@@ -2080,6 +2083,81 @@ describe('QueryManager', () => {
     });
   });
   describe('batched queries', () => {
+    it('should batch together two queries fired in the same tick', (done) => {
+      const query1 = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const query2 = gql`
+        query {
+          person {
+            name
+          }
+        }`;
+      const batchedNI: BatchedNetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          //this should never be called.
+          return null;
+        },
+
+        batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+          assert.equal(requests.length, 2);
+          done();
+          return null;
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: batchedNI,
+        shouldBatch: true,
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.fetchQuery('fake-id', { query: query1 });
+      queryManager.fetchQuery('even-more-fake-id', { query: query2 });
+    });
+
+    it('should not batch together queries that are on different ticks', (done) => {
+      const query1 = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const query2 = gql`
+        query {
+          person {
+            name
+          }
+        }`;
+      const batchedNI: BatchedNetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          return null;
+        },
+
+        batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+          assert.equal(requests.length, 1);
+          return new Promise((resolve, reject) => {
+            // never resolve the promise.
+          });
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: batchedNI,
+        shouldBatch: true,
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.fetchQuery('super-fake-id', { query: query1 });
+      setTimeout(() => {
+        queryManager.fetchQuery('very-fake-id', { query: query2 });
+        done();
+      }, 100);
+    });
+
     it('should able to batch two queries together on a batching transport', (done) => {
       const query1 = gql`
         query {

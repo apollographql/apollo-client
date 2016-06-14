@@ -90,9 +90,14 @@ export class QueryBatcher {
       this.fetchRequests = [];
       const batchedPromise =
         (this.networkInterface as BatchedNetworkInterface).batchQuery(requests);
+
       batchedPromise.then((results) => {
         results.forEach((result, index) => {
           resolvers[index](result);
+        });
+      }).catch((error) => {
+        rejecters.forEach((rejecter, index) => {
+          rejecters[index](error);
         });
       });
       return promises;

@@ -218,7 +218,38 @@ describe('QueryBatcher', () => {
     });
   });
 
-  it('should reject the promise if there is a network error', (done) => {
+  it('should reject the promise if there is a network error with batch:true', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const request = {
+      options: { query },
+      queryId: 'very-real-id',
+    };
+    const error = new Error('Network error');
+    const myNetworkInterface = mockBatchedNetworkInterface(
+      {
+        request: { query },
+        error,
+      }
+    );
+    const batcher = new QueryBatcher({
+      shouldBatch: true,
+      networkInterface: myNetworkInterface,
+    });
+    const promise = batcher.queueRequest(request);
+    batcher.consumeQueue();
+    promise.catch((resError: Error) => {
+      assert.equal(resError.message, 'Network error');
+      done();
+    });
+  });
+
+  it('should reject the promise if there is a network error with batch:false', (done) => {
     const query = gql`
       query {
         author {

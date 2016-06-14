@@ -114,6 +114,7 @@ export class QueryManager {
 
   private scheduler: QueryScheduler;
   private batcher: QueryBatcher;
+  private batcherPollInterval = 100;
 
   constructor({
     networkInterface,
@@ -137,7 +138,7 @@ export class QueryManager {
     this.pollingTimers = {};
 
     const isBatchingInterface =
-      (this.networkInterface as BatchedNetworkInterface).batchQuery === undefined;
+      (this.networkInterface as BatchedNetworkInterface).batchQuery !== undefined;
     this.queryListeners = {};
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -147,6 +148,7 @@ export class QueryManager {
       shouldBatch: shouldBatch || isBatchingInterface,
       networkInterface: this.networkInterface,
     });
+    this.batcher.start(this.batcherPollInterval);
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
@@ -539,9 +541,14 @@ export class QueryManager {
         query: minimizedQueryDoc,
         variables,
         operationName: getOperationName(minimizedQueryDoc),
+      }
+
+      const fetchRequest: QueryFetchRequest = {
+        options: { query: minimizedQueryDoc, variables },
+        queryId: queryId,
       };
 
-      return this.networkInterface.query(request)
+      return this.batcher.queueRequest(fetchRequest)
         .then((result: GraphQLResult) => {
           // XXX handle multiple GraphQLResults
           this.store.dispatch({

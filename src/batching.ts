@@ -15,6 +15,13 @@ import {
 export interface QueryFetchRequest {
   options: WatchQueryOptions;
   queryId: string;
+
+  // promise is created when the query fetch request is
+  // added to the queue and is resolved once the result is back
+  // from the server.
+  promise?: Promise<GraphQLResult>;
+  resolve?: (result: GraphQLResult) => void;
+  reject?: (error: Error) => void;
 };
 
 // QueryScheduler takes a operates on a queue  of QueryFetchRequests. It polls and checks this queue
@@ -24,7 +31,7 @@ export interface QueryFetchRequest {
 // - For polling queries, there should be only one query in flight at a time.
 export class QueryBatcher {
   // Queue on which the QueryScheduler will operate on a per-tick basis.
-  public fetchRequests: QueryFetchRequest[];
+  public fetchRequests: QueryFetchRequest[] = [];
 
   private shouldBatch: Boolean;
   private pollInterval: Number;
@@ -46,8 +53,13 @@ export class QueryBatcher {
     this.networkInterface = networkInterface;
   }
 
-  public queueRequest(request: QueryFetchRequest) {
+  public queueRequest(request: QueryFetchRequest): Promise<GraphQLResult> {
     this.fetchRequests.push(request);
+    request.promise = new Promise((resolve, reject) => {
+      request.resolve = resolve;
+      request.reject = reject;
+    });
+    return request.promise;
   }
 
   // Consumes the queue. Called on a polling interval, exposed publicly
@@ -65,17 +77,17 @@ export class QueryBatcher {
       };
     });
 
+    const promises: Promise<GraphQLResult>[] = [];
+    const resolvers = [];
+    const rejecters = [];
+    this.fetchRequests.forEach((fetchRequest, index) => {
+      promises.push(fetchRequest.promise);
+      resolvers.push(fetchRequest.resolve);
+      rejecters.push(fetchRequest.reject);
+    });
+
     if (this.shouldBatch) {
       this.fetchRequests = [];
-      const promises: Promise<GraphQLResult>[] = [];
-      const resolvers = [];
-      requests.forEach(() => {
-        const promise = new Promise((resolve) => {
-          resolvers.push(resolve);
-        });
-        promises.push(promise);
-      });
-
       const batchedPromise =
         (this.networkInterface as BatchedNetworkInterface).batchQuery(requests);
       batchedPromise.then((results) => {
@@ -85,18 +97,23 @@ export class QueryBatcher {
       });
       return promises;
     } else {
-      const res: Promise<GraphQLResult>[] = [];
-      requests.forEach((request) => {
-        const promise = this.networkInterface.query(request);
-        res.push(promise);
+      this.fetchRequests.forEach((fetchRequest, index) => {
+        this.networkInterface.query(requests[index]).then((result) => {
+          resolvers[index](result);
+        }).catch((reason) => {
+          rejecters[index](reason);
+        });
       });
-      return res;
+      this.fetchRequests = [];
+      return promises;
     }
   }
 
   public start(pollInterval: Number) {
     this.pollInterval = pollInterval;
-    this.pollTimer = setInterval(this.consumeQueue);
+    this.pollTimer = setInterval(() => {
+      this.consumeQueue();
+    });
   }
 
   public stop() {

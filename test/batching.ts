@@ -95,9 +95,9 @@ describe('QueryBatcher', () => {
        (done) => {
       scheduler.queueRequest(request);
       const promises: Promise<GraphQLResult>[] = scheduler.consumeQueue();
-      assert.equal(scheduler.fetchRequests.length, 0);
       assert.equal(promises.length, 1);
       promises[0].then((resultObj) => {
+        assert.equal(scheduler.fetchRequests.length, 0);
         assert.deepEqual(resultObj, { data } );
         done();
       });
@@ -134,6 +134,24 @@ describe('QueryBatcher', () => {
         });
       });
     });
+
+    it('should return a promise when we enqueue a request and resolve it with a result', (done) => {
+      const myBatcher = new QueryBatcher({
+        shouldBatch: true,
+        networkInterface: mockBatchedNetworkInterface(
+          {
+            request: { query },
+            result: { data },
+          }
+        ),
+      });
+      const promise = myBatcher.queueRequest(request);
+      myBatcher.consumeQueue();
+      promise.then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+      });
+    });
   });
 
   it('should be able to stop polling', () => {
@@ -163,4 +181,71 @@ describe('QueryBatcher', () => {
     assert.equal(scheduler.fetchRequests.length, 2);
   });
 
+  it('should resolve the promise returned when we enqueue with shouldBatch: false', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const request = {
+      options: { query },
+      queryId: 'not-a-real-id',
+    };
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const myNetworkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      }
+    );
+    const batcher = new QueryBatcher({
+      shouldBatch: false,
+      networkInterface: myNetworkInterface,
+    });
+    const promise = batcher.queueRequest(request);
+    batcher.consumeQueue();
+    promise.then((result) => {
+      assert.deepEqual(result, { data });
+      done();
+    });
+  });
+
+  it('should reject the promise if there is a network error', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const request = {
+      options: { query },
+      queryId: 'super-real-id',
+    };
+    const error = new Error('Network error');
+    const myNetworkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        error,
+      }
+    );
+    const batcher = new QueryBatcher({
+      shouldBatch: false,
+      networkInterface: myNetworkInterface,
+    });
+    const promise = batcher.queueRequest(request);
+    batcher.consumeQueue();
+    promise.catch((resError: Error) => {
+      assert.equal(resError.message, 'Network error');
+      done();
+    });
+  });
 });

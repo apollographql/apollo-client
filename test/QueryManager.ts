@@ -38,8 +38,7 @@ import * as Rx from 'rxjs';
 
 import assign = require('lodash.assign');
 
-import mockNetworkInterface,
-{ mockBatchedNetworkInterface} from './mocks/mockNetworkInterface';
+import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 import { BatchedNetworkInterface }from '../src/networkInterface';
 
@@ -2083,7 +2082,7 @@ describe('QueryManager', () => {
     });
   });
   describe('batched queries', () => {
-    it('should batch together two queries fired in the same tick', (done) => {
+    it('should batch together two queries fired in the same batcher tick', (done) => {
       const query1 = gql`
         query {
           author {
@@ -2119,7 +2118,7 @@ describe('QueryManager', () => {
       queryManager.fetchQuery('even-more-fake-id', { query: query2 });
     });
 
-    it('should not batch together queries that are on different ticks', (done) => {
+    it('should not batch together queries that are on different batcher ticks', (done) => {
       const query1 = gql`
         query {
           author {
@@ -2156,70 +2155,6 @@ describe('QueryManager', () => {
         queryManager.fetchQuery('very-fake-id', { query: query2 });
         done();
       }, 100);
-    });
-
-    it('should able to batch two queries together on a batching transport', (done) => {
-      const query1 = gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }`;
-      const data1 = {
-        author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      };
-      const query2 = gql`
-        query {
-          person {
-            name
-          }
-        }`;
-      const data2 = {
-        person: {
-          name: 'John Smith',
-        },
-      };
-      const fetchRequest1 = {
-        options: {
-          query: query1,
-        },
-        queryId: 'totally-fake-id',
-      };
-      const fetchRequest2 = {
-        options: {
-          query: query2,
-        },
-        queryId: 'another-fake-id',
-      };
-      const networkInterface = mockBatchedNetworkInterface(
-        {
-          request: { query: query1 },
-          result: { data: data1 },
-        },
-        {
-          request: { query: query2 },
-          result: { data: data2 },
-        }
-      );
-      const queryManager = new QueryManager({
-        networkInterface,
-        store: createApolloStore(),
-        reduxRootKey: 'apollo',
-      });
-
-      queryManager.fetchBatchedQueries([
-        fetchRequest1,
-        fetchRequest2,
-      ]).then((results) => {
-        assert.equal(results.length, 2);
-        assert.deepEqual(results[0].data, data1);
-        assert.deepEqual(results[1].data, data2);
-        done();
-      });
     });
   });
 });

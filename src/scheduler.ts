@@ -43,7 +43,20 @@ export class QueryScheduler {
   }
 
   public checkInFlight(queryId: string) {
-    return !(this.inFlightQueries[queryId] === undefined);
+    return (this.inFlightQueries[queryId] !== undefined);
+  }
+
+  public fetchQuery(queryId: string, options: WatchQueryOptions) {
+    return new Promise((resolve, reject) => {
+      this.queryManager.fetchQuery(queryId, options).then((result) => {
+        this.removeInFlight(queryId);
+        resolve(result);
+      }).catch((error) => {
+        this.removeInFlight(queryId);
+        reject(error);
+      });
+      this.addInFlight(queryId, options);
+    });
   }
 
   public startPollingQuery(options: WatchQueryOptions, listener: QueryListener): string {
@@ -51,8 +64,7 @@ export class QueryScheduler {
     this.queryManager.addQueryListener(queryId, listener);
 
     // Fire an initial fetch before we start the polling query.
-    this.queryManager.fetchQuery(queryId, options);
-    this.addInFlight(queryId, options);
+    this.fetchQuery(queryId, options);
 
     this.pollingTimers[queryId] = setInterval(() => {
       const pollingOptions = assign({}, options) as WatchQueryOptions;
@@ -61,8 +73,7 @@ export class QueryScheduler {
       // We only fire the query if another instance of this same polling query isn't
       // already in flight. See top of this file for the reasoning as to why we do this.
       if (!this.checkInFlight(queryId)) {
-        this.queryManager.fetchQuery(queryId, pollingOptions);
-        this.addInFlight(queryId, options);
+        this.fetchQuery(queryId, pollingOptions);
       }
     }, options.pollInterval);
 
@@ -100,7 +111,7 @@ export class QueryScheduler {
 
         refetch: (variables: any): Promise<GraphQLResult> => {
           variables = variables || options.variables;
-          return this.queryManager.fetchQuery(queryId, assign(options, {
+          return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
             variables,
           }) as WatchQueryOptions);
@@ -110,8 +121,14 @@ export class QueryScheduler {
           this.pollingTimers[queryId] = setInterval(() => {
             const pollingOptions = assign({}, options) as WatchQueryOptions;
             pollingOptions.forceFetch = true;
-            this.queryManager.fetchQuery(queryId, pollingOptions);
+            this.fetchQuery(queryId, pollingOptions).then(() => {
+              this.removeInFlight(queryId);
+            });
           }, pollInterval);
+        },
+
+        stopPolling: (): void => {
+          this.stopPollingQuery(queryId);
         },
       };
     });
@@ -119,5 +136,9 @@ export class QueryScheduler {
 
   private addInFlight(queryId: string, options: WatchQueryOptions) {
     this.inFlightQueries[queryId] = options;
+  }
+
+  private removeInFlight(queryId: string) {
+    delete this.inFlightQueries[queryId];
   }
 }

@@ -12,7 +12,7 @@ script:
   - npm test
   - npm run coverage
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error
-  - cat ./coverage/lcov.info | codecov
+  - cat ./coverage/lcov.info | codecov # test out codecov for a while to see if it's better than coveralls
   - npm run filesize
 
 # Allow Travis tests to run in containers.

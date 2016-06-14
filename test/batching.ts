@@ -22,18 +22,18 @@ describe('QueryBatcher', () => {
   });
 
   it('should not do anything when faced with an empty queue', () => {
-    const scheduler = new QueryBatcher({
+    const batcher = new QueryBatcher({
       shouldBatch: true,
       networkInterface,
     });
 
-    assert.equal(scheduler.fetchRequests.length, 0);
-    scheduler.consumeQueue();
-    assert.equal(scheduler.fetchRequests.length, 0);
+    assert.equal(batcher.fetchRequests.length, 0);
+    batcher.consumeQueue();
+    assert.equal(batcher.fetchRequests.length, 0);
   });
 
   it('should be able to add to the queue', () => {
-    const scheduler = new QueryBatcher({
+    const batcher = new QueryBatcher({
       shouldBatch: true,
       networkInterface,
     });
@@ -51,11 +51,11 @@ describe('QueryBatcher', () => {
       queryId: 'not-a-real-id',
     };
 
-    assert.equal(scheduler.fetchRequests.length, 0);
-    scheduler.queueRequest(request);
-    assert.equal(scheduler.fetchRequests.length, 1);
-    scheduler.queueRequest(request);
-    assert.equal(scheduler.fetchRequests.length, 2);
+    assert.equal(batcher.fetchRequests.length, 0);
+    batcher.queueRequest(request);
+    assert.equal(batcher.fetchRequests.length, 1);
+    batcher.queueRequest(request);
+    assert.equal(batcher.fetchRequests.length, 2);
   });
 
   describe('request queue', () => {
@@ -82,7 +82,7 @@ describe('QueryBatcher', () => {
         result: { data },
       }
     );
-    const scheduler = new QueryBatcher({
+    const batcher = new QueryBatcher({
       shouldBatch: true,
       networkInterface: myNetworkInterface,
     });
@@ -93,11 +93,11 @@ describe('QueryBatcher', () => {
 
     it('should be able to consume from a queue containing a single query',
        (done) => {
-      scheduler.queueRequest(request);
-      const promises: Promise<GraphQLResult>[] = scheduler.consumeQueue();
+      batcher.queueRequest(request);
+      const promises: Promise<GraphQLResult>[] = batcher.consumeQueue();
       assert.equal(promises.length, 1);
       promises[0].then((resultObj) => {
-        assert.equal(scheduler.fetchRequests.length, 0);
+        assert.equal(batcher.fetchRequests.length, 0);
         assert.deepEqual(resultObj, { data } );
         done();
       });
@@ -124,7 +124,7 @@ describe('QueryBatcher', () => {
       myBatcher.queueRequest(request);
       myBatcher.queueRequest(request2);
       const promises: Promise<GraphQLResult>[] = myBatcher.consumeQueue();
-      assert.equal(scheduler.fetchRequests.length, 0);
+      assert.equal(batcher.fetchRequests.length, 0);
       assert.equal(promises.length, 2);
       promises[0].then((resultObj1) => {
         assert.deepEqual(resultObj1, { data });
@@ -155,7 +155,7 @@ describe('QueryBatcher', () => {
   });
 
   it('should be able to stop polling', () => {
-    const scheduler = new QueryBatcher({
+    const batcher = new QueryBatcher({
       shouldBatch: true,
       networkInterface,
     });
@@ -171,14 +171,14 @@ describe('QueryBatcher', () => {
       queryId: 'not-a-real-id',
     };
 
-    scheduler.queueRequest(request);
-    scheduler.queueRequest(request);
+    batcher.queueRequest(request);
+    batcher.queueRequest(request);
 
     //poll with a big interval so that the queue
     //won't actually be consumed by the time we stop.
-    scheduler.start(1000);
-    scheduler.stop();
-    assert.equal(scheduler.fetchRequests.length, 2);
+    batcher.start(1000);
+    batcher.stop();
+    assert.equal(batcher.fetchRequests.length, 2);
   });
 
   it('should resolve the promise returned when we enqueue with shouldBatch: false', (done) => {

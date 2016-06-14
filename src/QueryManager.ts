@@ -54,7 +54,12 @@ import {
 
 import {
   QueryFetchRequest,
+  QueryBatcher,
 } from './batching';
+
+import {
+  QueryScheduler,
+} from './scheduler';
 
 import { Observable, Observer, Subscription } from './util/Observable';
 
@@ -107,16 +112,21 @@ export class QueryManager {
 
   private idCounter = 0;
 
+  private scheduler: QueryScheduler;
+  private batcher: QueryBatcher;
+
   constructor({
     networkInterface,
     store,
     reduxRootKey,
     queryTransformer,
+    shouldBatch,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
+    shouldBatch?: Boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -126,7 +136,15 @@ export class QueryManager {
     this.queryTransformer = queryTransformer;
     this.pollingTimers = {};
 
+    const isBatchingInterface = this.networkInterface.kind == 'BatchedNetworkInterface';
     this.queryListeners = {};
+    this.scheduler = new QueryScheduler({
+      queryManager: this,
+    });
+    this.batcher = new QueryBatcher({
+      //we batch if the network interface supports batching if user has not specified
+      shouldBatch: shouldBatch || isBatchingInterface,
+    });
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager

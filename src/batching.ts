@@ -4,6 +4,12 @@ import {
 } from './QueryManager';
 
 import {
+  NetworkInterface,
+  Request,
+  BatchedNetworkInterface,
+} from './networkInterface';
+
+import {
   GraphQLResult,
 } from 'graphql';
 
@@ -25,20 +31,19 @@ export class QueryBatcher {
   private pollInterval: Number;
   private pollTimer: NodeJS.Timer | any; //oddity in Typescript
 
-  //This instance is used to call fetchQuery() and send the queries in the
+  //This instance is used to call batchQuery() and send the queries in the
   //queue to the server.
-  private queryManager: QueryManager;
+  private networkInterface: NetworkInterface;
 
   constructor({
     shouldBatch,
-    queryManager,
+    networkInterface,
   }: {
     shouldBatch: Boolean,
-    queryManager: QueryManager,
+    networkInterface: NetworkInterface,
   }) {
     this.shouldBatch = shouldBatch;
     this.fetchRequests = [];
-    this.queryManager = queryManager;
   }
 
   public queueRequest(request: QueryFetchRequest) {
@@ -59,13 +64,23 @@ export class QueryBatcher {
       return;
     }
 
-    const res: Promise<GraphQLResult>[] = [];
-    this.fetchRequests.forEach((fetchRequest) => {
-      const promise = this.queryManager.fetchQuery(fetchRequest.queryId,
-                                                   fetchRequest.options);
-      res.push(promise);
+    const requests: Request[] = this.fetchRequests.map((fetchRequests) => {
+      return {
+        query: fetchRequests.options.query,
+        variables: fetchRequests.options.variables,
+      };
     });
-    this.fetchRequests = [];
+
+    if (this.shouldBatch) {
+      this.fetchRequests = [];
+      return (this.networkInterface as BatchedNetworkInterface).batchQuery(requests);
+    } else {
+      const res: Promise<GraphQLResult>[] = [];
+      this.requests.forEach((request) => {
+        const promise = this.networkInterface.query(request);
+        res.push(promise);
+      });
+    }
 
     return res;
   }

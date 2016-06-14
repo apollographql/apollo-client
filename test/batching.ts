@@ -8,18 +8,14 @@ import { QueryManager } from '../src/QueryManager';
 import gql from '../src/gql';
 import { GraphQLResult } from 'graphql';
 
-const queryManager = new QueryManager({
-  networkInterface: mockNetworkInterface(),
-  store: createApolloStore(),
-  reduxRootKey: 'apollo',
-});
+const networkInterface = mockNetworkInterface();
 
 describe('QueryBatcher', () => {
   it('should construct', () => {
     assert.doesNotThrow(() => {
       const querySched = new QueryBatcher({
         shouldBatch: true,
-        queryManager: queryManager,
+        networkInterface,
       });
       querySched.consumeQueue();
     });
@@ -28,7 +24,7 @@ describe('QueryBatcher', () => {
   it('should not do anything when faced with an empty queue', () => {
     const scheduler = new QueryBatcher({
       shouldBatch: true,
-      queryManager: queryManager,
+      networkInterface,
     });
 
     assert.equal(scheduler.fetchRequests.length, 0);
@@ -39,7 +35,7 @@ describe('QueryBatcher', () => {
   it('should be able to add to the queue', () => {
     const scheduler = new QueryBatcher({
       shouldBatch: true,
-      queryManager: queryManager,
+      networkInterface,
     });
 
     const query = gql`
@@ -76,20 +72,15 @@ describe('QueryBatcher', () => {
         'lastName': 'Smith',
       },
     };
-    const networkInterface = mockNetworkInterface(
+    const myNetworkInterface = mockNetworkInterface(
       {
         request: { query },
         result: { data },
       }
     );
-    const myQueryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
     const scheduler = new QueryBatcher({
       shouldBatch: true,
-      queryManager: myQueryManager,
+      networkInterface: myNetworkInterface,
     });
     const request: QueryFetchRequest = {
       options: { query },
@@ -133,7 +124,7 @@ describe('QueryBatcher', () => {
   it('should be able to stop polling', () => {
     const scheduler = new QueryBatcher({
       shouldBatch: true,
-      queryManager: queryManager,
+      networkInterface,
     });
     const query = gql`
       query {
@@ -147,9 +138,6 @@ describe('QueryBatcher', () => {
       queryId: 'not-a-real-id',
     };
 
-    scheduler.queueRequest(request);
-    scheduler.queueRequest(request);
-
     //poll with a big interval so that the queue
     //won't actually be consumed by the time we stop.
     scheduler.start(1000);
@@ -160,7 +148,7 @@ describe('QueryBatcher', () => {
   it('should consume the queue immediately if batching is not enabled', () => {
     const scheduler = new QueryBatcher({
       shouldBatch: false,
-      queryManager: queryManager,
+      networkInterface,
     });
     const query = gql`
       query {

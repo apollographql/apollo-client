@@ -25,21 +25,18 @@ export class QueryScheduler {
   // Map going from queryIds to query options that are in flight.
   public inFlightQueries: { [queryId: string]: WatchQueryOptions };
 
-  //The interval on which the QueryBatcher batches together queries (in ms).
-  private tickTime: Number;
+  // We use this instance to actually fire queries (i.e. send them to the batching
+  // mechanism).
   private queryManager: QueryManager;
 
   // Map going from queryIds to polling timers.
   private pollingTimers: { [queryId: string]: NodeJS.Timer | any }; // oddity in Typescript
 
   constructor({
-    tickTime,
     queryManager,
   }: {
-    tickTime: Number;
     queryManager: QueryManager;
   }) {
-    this.tickTime = tickTime;
     this.queryManager = queryManager;
     this.pollingTimers = {};
     this.inFlightQueries = {};

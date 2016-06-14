@@ -120,7 +120,7 @@ describe('QueryScheduler', () => {
     });
 
     setTimeout(() => {
-      assert.equal(timesFired, 2);
+      assert.equal(timesFired, 1);
       done();
     }, 170);
   });

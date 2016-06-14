@@ -269,43 +269,9 @@ export class QueryManager {
     }
 
     return new ObservableQuery((observer) => {
-      const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
-        if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
-          // XXX Currently, returning errors and data is exclusive because we
-          // don't handle partial results
-          if (queryStoreValue.graphQLErrors) {
-            if (observer.next) {
-              observer.next({ errors: queryStoreValue.graphQLErrors });
-            }
-          } else if (queryStoreValue.networkError) {
-            // XXX we might not want to re-broadcast the same error over and over if it didn't change
-            if (observer.error) {
-              observer.error(queryStoreValue.networkError);
-            } else {
-              console.error('Unhandled network error',
-                queryStoreValue.networkError,
-                queryStoreValue.networkError.stack);
-            }
-          } else {
-            const resultFromStore = readSelectionSetFromStore({
-              store: this.getApolloState().data,
-              rootId: queryStoreValue.query.id,
-              selectionSet: queryStoreValue.query.selectionSet,
-              variables: queryStoreValue.variables,
-              returnPartialData: options.returnPartialData,
-              fragmentMap: queryStoreValue.fragmentMap,
-            });
-
-            if (observer.next) {
-              observer.next({ data: resultFromStore });
-            }
-          }
-        }
-      });
-
-      // get the polling timer reference associated with this
-      // particular query.
-      const pollingTimer = this.pollingTimers[queryId];
+      const listener = this.queryListenerForObserver(options, observer);
+      const queryId = this.startQuery(options, listener);
+      // const queryId = this.generateQueryId();
 
       return {
         unsubscribe: () => {
@@ -322,17 +288,12 @@ export class QueryManager {
           }) as WatchQueryOptions);
         },
         stopPolling: (): void => {
-          if (pollingTimer) {
-            clearInterval(pollingTimer);
-          }
+          this.scheduler.stopPollingQuery(queryId);
         },
         startPolling: (pollInterval): void => {
-          this.pollingTimers[queryId] = setInterval(() => {
-            const pollingOptions = assign({}, options) as WatchQueryOptions;
-            // subsequent fetches from polling always reqeust new data
-            pollingOptions.forceFetch = true;
-            this.fetchQuery(queryId, pollingOptions);
-          }, pollInterval);
+          this.scheduler.startPollingQuery(assign(options, {
+            pollInterval,
+          }) as WatchQueryOptions, listener, queryId);
         },
       };
     });
@@ -542,15 +503,8 @@ export class QueryManager {
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options);
 
-    if (options.pollInterval) {
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, options.pollInterval);
-    }
-
+    // Note: this method should never be called with a query that starts out as polling - those
+    // are all handled by the QueryScheduler.
     return queryId;
   }
 

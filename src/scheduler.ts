@@ -59,12 +59,14 @@ export class QueryScheduler {
     });
   }
 
-  public startPollingQuery(options: WatchQueryOptions, listener: QueryListener): string {
-    const queryId = this.queryManager.generateQueryId();
+  public startPollingQuery(options: WatchQueryOptions, listener: QueryListener,
+                           queryId?: string): string {
+    if (!queryId) {
+      queryId = this.queryManager.generateQueryId();
+      // Fire an initial fetch before we start the polling query
+      this.fetchQuery(queryId, options);
+    }
     this.queryManager.addQueryListener(queryId, listener);
-
-    // Fire an initial fetch before we start the polling query.
-    this.fetchQuery(queryId, options);
 
     this.pollingTimers[queryId] = setInterval(() => {
       const pollingOptions = assign({}, options) as WatchQueryOptions;
@@ -103,6 +105,7 @@ export class QueryScheduler {
       // "Fire" (i.e. add to the QueryBatcher queue)
       const queryListener = this.queryManager.queryListenerForObserver(options, observer);
       const queryId = this.startPollingQuery(options, queryListener);
+
 
       return {
         unsubscribe: () => {

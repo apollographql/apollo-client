@@ -57,8 +57,8 @@ export function mergeRequests(childRequests: Request[]): Request {
   return rootRequest;
 }
 
-export function unpackMergedResult(result: GraphQLResult, childRequests: Request[])
-: GraphQLResult[] {
+export function unpackMergedResult(result: GraphQLResult,
+  childRequests: Request[]): GraphQLResult[] {
 
   const resultData = result.data;
   const resultArray: GraphQLResult[] = new Array(childRequests.length);
@@ -77,8 +77,7 @@ export function unpackMergedResult(result: GraphQLResult, childRequests: Request
   return resultArray;
 }
 
-export function createFieldMapsForRequests(requests: Request[])
-: { [ index: number ]: Field }[] {
+export function createFieldMapsForRequests(requests: Request[]): { [ index: number ]: Field }[] {
   const res = new Array(requests.length);
   requests.forEach((request, requestIndex) => {
     const queryDef = getQueryDefinition(request.query);
@@ -98,8 +97,7 @@ export function createFieldMapsForRequests(requests: Request[])
 // Also returns the next index to be used (this is used internally since the function
 // is recursive).
 export function createFieldMap(selections: (Field | InlineFragment | FragmentSpread)[],
-                               startIndex?: number)
-: { fieldMap: { [ index: number ]: Field }, newIndex: number } {
+  startIndex?: number): { fieldMap: { [ index: number ]: Field }, newIndex: number } {
 
   if (!startIndex) {
     startIndex = 0;
@@ -152,10 +150,9 @@ export function mergeQueries(childQueries: Document[]): Document {
 // Adds a variable object to an existing variable object by aliasing names to
 // prevent conflicts.
 export function addVariablesToRoot(rootVariables: { [key: string]: any },
-                         childVariables: { [key: string]: any },
-                         childQuery: Document,
-                         childQueryIndex: number)
-: { [key: string]: any } {
+  childVariables: { [key: string]: any },
+  childQuery: Document,
+  childQueryIndex: number) : { [key: string]: any } {
   const aliasName = getQueryAliasName(getQueryDefinition(childQuery), childQueryIndex);
   const aliasedChildVariables = addPrefixToVariables(aliasName + '__', childVariables);
   return assign({}, rootVariables, aliasedChildVariables);
@@ -164,9 +161,8 @@ export function addVariablesToRoot(rootVariables: { [key: string]: any },
 // Takes a query to add to a root query and aliases the child query's top-level
 // field names.
 export function addQueryToRoot(rootQuery: Document,
-                               childQuery: Document,
-                               childQueryIndex: number)
-: Document {
+  childQuery: Document,
+  childQueryIndex: number): Document {
   const aliasName = getQueryAliasName(getQueryDefinition(childQuery), childQueryIndex);
   const aliasedChild = applyAliasNameToDocument(childQuery, aliasName);
   const aliasedChildQueryDef = getQueryDefinition(aliasedChild);
@@ -300,10 +296,8 @@ export function applyAliasNameToDocument(document: Document, aliasName: string):
   return document;
 }
 
-export function applyAliasNameToFragment(fragment: FragmentDefinition,
-                                         aliasName: string,
-                                         startIndex: number)
-: FragmentDefinition {
+export function applyAliasNameToFragment(fragment: FragmentDefinition, aliasName: string,
+  startIndex: number): FragmentDefinition {
   fragment.name.value = getFragmentAliasName(fragment, aliasName);
   fragment.selectionSet.selections =
     applyAliasNameToSelections(fragment.selectionSet.selections, aliasName, startIndex);
@@ -311,10 +305,8 @@ export function applyAliasNameToFragment(fragment: FragmentDefinition,
 }
 
 // Applies the alias name to the top level fields of a query.
-export function applyAliasNameToQuery(childQuery: OperationDefinition,
-                                      aliasName: string,
-                                      startIndex: number)
-: OperationDefinition {
+export function applyAliasNameToQuery(childQuery: OperationDefinition, aliasName: string,
+  startIndex: number): OperationDefinition {
   childQuery.selectionSet.selections =
     applyAliasNameToSelections(childQuery.selectionSet.selections, aliasName, startIndex);
   return childQuery;
@@ -325,7 +317,7 @@ export function getVarAliasName(varx: Variable, aliasName: string): string {
 }
 
 export function getFragmentAliasName(fragment: FragmentDefinition | FragmentSpread,
-                                     queryAliasName: string): string {
+  queryAliasName: string): string {
   return `${queryAliasName}__${fragment.name.value}`;
 }
 
@@ -333,8 +325,7 @@ export function getFragmentAliasName(fragment: FragmentDefinition | FragmentSpre
 // within a list of queries and the query object. For example, if a
 // query's name is "listOfAuthors" and has index "3", the name will
 // be "__listOfAuthors__queryIndex_3".
-export function getQueryAliasName(childQuery: OperationDefinition,
-                                  childQueryIndex: number) {
+export function getQueryAliasName(childQuery: OperationDefinition, childQueryIndex: number) {
   let childQueryName = '';
   if (childQuery.name) {
     childQueryName = childQuery.name.value;
@@ -369,9 +360,10 @@ export function addPrefixToVariables(prefix: string,
 }
 
 function _applyAliasNameToSelections(selections: (Field | FragmentSpread | InlineFragment)[],
-                                     aliasName: string, startIndex: number)
-: { res: (Field | FragmentSpread | InlineFragment)[], newIndex: number } {
-
+  aliasName: string, startIndex: number): {
+    res: (Field | FragmentSpread | InlineFragment)[],
+    newIndex: number
+  } {
   let currIndex = startIndex;
   const res = selections.map((selection) => {
     if (selection.kind === 'Field') {
@@ -399,8 +391,7 @@ function _applyAliasNameToSelections(selections: (Field | FragmentSpread | Inlin
 }
 
 function applyAliasNameToSelections(selections: (Field | FragmentSpread | InlineFragment)[],
-                                    aliasName: string, startIndex: number)
-: (Field | FragmentSpread | InlineFragment)[] {
+  aliasName: string, startIndex: number): (Field | FragmentSpread | InlineFragment)[] {
   const ret = _applyAliasNameToSelections(selections, aliasName, startIndex);
   return ret.res;
 }

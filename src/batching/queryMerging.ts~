@@ -152,7 +152,7 @@ export function mergeQueries(childQueries: Document[]): Document {
 export function addVariablesToRoot(rootVariables: { [key: string]: any },
   childVariables: { [key: string]: any },
   childQuery: Document,
-  childQueryIndex: number) : { [key: string]: any } {
+  childQueryIndex: number): { [key: string]: any } {
   const aliasName = getQueryAliasName(getQueryDefinition(childQuery), childQueryIndex);
   const aliasedChildVariables = addPrefixToVariables(aliasName + '__', childVariables);
   return assign({}, rootVariables, aliasedChildVariables);
@@ -300,7 +300,7 @@ export function applyAliasNameToFragment(fragment: FragmentDefinition, aliasName
   startIndex: number): FragmentDefinition {
   fragment.name.value = getFragmentAliasName(fragment, aliasName);
   fragment.selectionSet.selections =
-    applyAliasNameToSelections(fragment.selectionSet.selections, aliasName, startIndex);
+    applyAliasNameToSelections(fragment.selectionSet.selections, aliasName, startIndex).res;
   return fragment;
 }
 
@@ -308,7 +308,7 @@ export function applyAliasNameToFragment(fragment: FragmentDefinition, aliasName
 export function applyAliasNameToQuery(childQuery: OperationDefinition, aliasName: string,
   startIndex: number): OperationDefinition {
   childQuery.selectionSet.selections =
-    applyAliasNameToSelections(childQuery.selectionSet.selections, aliasName, startIndex);
+    applyAliasNameToSelections(childQuery.selectionSet.selections, aliasName, startIndex).res;
   return childQuery;
 }
 
@@ -359,7 +359,7 @@ export function addPrefixToVariables(prefix: string,
   return newVariables;
 }
 
-function _applyAliasNameToSelections(selections: (Field | FragmentSpread | InlineFragment)[],
+function applyAliasNameToSelections(selections: (Field | FragmentSpread | InlineFragment)[],
   aliasName: string, startIndex: number): {
     res: (Field | FragmentSpread | InlineFragment)[],
     newIndex: number
@@ -373,9 +373,12 @@ function _applyAliasNameToSelections(selections: (Field | FragmentSpread | Inlin
       return aliasedField;
     } else if (selection.kind === 'InlineFragment') {
       const inlineFragment = selection as InlineFragment;
-      const ret = _applyAliasNameToSelections(inlineFragment.selectionSet.selections,
-                                              aliasName,
-                                              currIndex);
+      const ret =
+        applyAliasNameToSelections(
+          inlineFragment.selectionSet.selections,
+          aliasName,
+          currIndex
+        );
       inlineFragment.selectionSet.selections = ret.res;
       currIndex = ret.newIndex;
       return inlineFragment;
@@ -388,10 +391,4 @@ function _applyAliasNameToSelections(selections: (Field | FragmentSpread | Inlin
     res,
     newIndex: currIndex,
   };
-}
-
-function applyAliasNameToSelections(selections: (Field | FragmentSpread | InlineFragment)[],
-  aliasName: string, startIndex: number): (Field | FragmentSpread | InlineFragment)[] {
-  const ret = _applyAliasNameToSelections(selections, aliasName, startIndex);
-  return ret.res;
 }

@@ -14,7 +14,7 @@ import { MiddlewareInterface } from './middleware';
 import {
   mergeRequests,
   unpackMergedResult,
-} from './queries/queryMerging';
+} from './batching/queryMerging';
 
 export interface Request {
   debugName?: string;

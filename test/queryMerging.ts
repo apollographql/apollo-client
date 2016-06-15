@@ -12,7 +12,7 @@ import {
   mergeRequests,
   parseKey,
   unpackMergedResult,
-} from '../src/queries/queryMerging';
+} from '../src/batching/queryMerging';
 
 import {
   getQueryDefinition,

@@ -36,11 +36,11 @@ describe('Query merging', () => {
     };
 
     const expResult = {
-      '__feed:offset': 15,
-      '__feed:not_offset': 'lol',
+      '___feed:offset': 15,
+      '___feed:not_offset': 'lol',
     };
 
-    const result = addPrefixToVariables('__feed:', variables);
+    const result = addPrefixToVariables('___feed:', variables);
     assert.deepEqual(result, expResult);
   });
 
@@ -51,7 +51,7 @@ describe('Query merging', () => {
         lastName
       }`;
     const expQuery = gql`
-      query __composed__author {
+      query ___composed___author {
         firstName
         lastName
       }`;
@@ -59,7 +59,7 @@ describe('Query merging', () => {
     const queryDef = getQueryDefinition(query);
     const expQueryDefinition = getQueryDefinition(expQuery);
 
-    const resultQueryDefinition = addPrefixToQuery('__composed__', queryDef);
+    const resultQueryDefinition = addPrefixToQuery('___composed___', queryDef);
     assert.deepEqual(print(resultQueryDefinition), print(expQueryDefinition));
   });
 
@@ -94,7 +94,7 @@ describe('Query merging', () => {
           lastName
         }
       }`;
-    const expAliasName = '__listOfAuthors__requestIndex_3';
+    const expAliasName = '___listOfAuthors___requestIndex_3';
     const resAliasName = getOperationDefinitionName(getQueryDefinition(query), 3);
     assert.equal(resAliasName, expAliasName);
   });
@@ -110,11 +110,11 @@ describe('Query merging', () => {
       }`;
     const expQuery = gql`
       query listOfAuthors {
-        __listOfAuthors__requestIndex_3__fieldIndex_0: author {
+        ___listOfAuthors___requestIndex_3___fieldIndex_0: author {
           firstName
           lastName
         }
-        __listOfAuthors__requestIndex_3__fieldIndex_1: __typename
+        ___listOfAuthors___requestIndex_3___fieldIndex_1: __typename
       }`;
     const queryDef = getQueryDefinition(query);
     const expQueryDef = getQueryDefinition(expQuery);
@@ -133,18 +133,18 @@ describe('Query merging', () => {
       __typename
     }`;
     const rootQuery = gql`
-      query __composed {
+      query ___composed {
         author
       }`;
     (rootQuery.definitions[0] as OperationDefinition).selectionSet.selections = [];
 
     const expRootQuery = gql`
-      query __composed {
-        __listOfAuthors__requestIndex_3__fieldIndex_0: author {
+      query ___composed {
+        ___listOfAuthors___requestIndex_3___fieldIndex_0: author {
           firstName
           lastName
         }
-        __listOfAuthors__requestIndex_3__fieldIndex_1: __typename
+        ___listOfAuthors___requestIndex_3___fieldIndex_1: __typename
       }`;
     const modifiedRootQuery = addQueryToRoot(rootQuery, childQuery, 3);
     assert.equal(print(modifiedRootQuery), print(expRootQuery));
@@ -165,9 +165,9 @@ describe('Query merging', () => {
     const fragmentDefinition = getFragmentDefinitions(query)[0];
     const aliasName = getOperationDefinitionName(queryDef, 2);
     const exp = getFragmentDefinitions(gql`
-      fragment __authorStuff__requestIndex_2__authorDetails on Author {
-        __authorStuff__requestIndex_2__fieldIndex_0: firstName
-        __authorStuff__requestIndex_2__fieldIndex_1: lastName
+      fragment ___authorStuff___requestIndex_2___authorDetails on Author {
+        ___authorStuff___requestIndex_2___fieldIndex_0: firstName
+        ___authorStuff___requestIndex_2___fieldIndex_1: lastName
       }`)[0];
     const res = applyAliasNameToFragment(fragmentDefinition, aliasName, 0);
     assert.equal(print(res), print(exp));
@@ -183,13 +183,13 @@ describe('Query merging', () => {
     const exp = gql`
       query {
         author {
-          ...__authorStuff__requestIndex_2__authorDetails
+          ...___authorStuff___requestIndex_2___authorDetails
         }
       }`;
     const queryDef = getQueryDefinition(doc);
     const expDef = getQueryDefinition(exp);
     const res = renameFragmentSpreads(queryDef.selectionSet,
-                                      '__authorStuff__requestIndex_2');
+                                      '___authorStuff___requestIndex_2');
     assert.equal(print(res), print(expDef.selectionSet));
   });
 
@@ -206,13 +206,13 @@ describe('Query merging', () => {
       }`;
     const exp = gql`
       query authorStuff {
-        __authorStuff__requestIndex_2__fieldIndex_0: author {
-          ...__authorStuff__requestIndex_2__authorDetails
+        ___authorStuff___requestIndex_2___fieldIndex_0: author {
+          ...___authorStuff___requestIndex_2___authorDetails
         }
       }
-      fragment __authorStuff__requestIndex_2__authorDetails on Author {
-        __authorStuff__requestIndex_2__fieldIndex_1: firstName
-        __authorStuff__requestIndex_2__fieldIndex_2: lastName
+      fragment ___authorStuff___requestIndex_2___authorDetails on Author {
+        ___authorStuff___requestIndex_2___fieldIndex_1: firstName
+        ___authorStuff___requestIndex_2___fieldIndex_2: lastName
       }
       `;
     const aliasName = getOperationDefinitionName(getQueryDefinition(doc), 2);
@@ -229,8 +229,8 @@ describe('Query merging', () => {
         }
       }`;
     const exp = gql`
-      query getUser($__getUser__requestIndex_2__id: Int) {
-        __getUser__requestIndex_2__fieldIndex_0: user(id: $__getUser__requestIndex_2__id) {
+      query getUser($___getUser___requestIndex_2___id: Int) {
+        ___getUser___requestIndex_2___fieldIndex_0: user(id: $___getUser___requestIndex_2___id) {
           firstName
           lastName
         }
@@ -253,15 +253,15 @@ describe('Query merging', () => {
         address
       }`;
     const exp = gql`
-      query __composed {
-        __authorStuff__requestIndex_0__fieldIndex_0: author {
+      query ___composed {
+        ___authorStuff___requestIndex_0___fieldIndex_0: author {
           firstName
           lastName
-          ...__authorStuff__requestIndex_0__moreAuthorDetails
+          ...___authorStuff___requestIndex_0___moreAuthorDetails
         }
       }
-      fragment __authorStuff__requestIndex_0__moreAuthorDetails on Author {
-        __authorStuff__requestIndex_0__fieldIndex_1: address
+      fragment ___authorStuff___requestIndex_0___moreAuthorDetails on Author {
+        ___authorStuff___requestIndex_0___fieldIndex_1: address
       } `;
     const mergedQuery = mergeQueryDocuments([doc]);
     assert.equal(print(mergedQuery), print(exp));
@@ -282,12 +282,12 @@ describe('Query merging', () => {
         }
       }`;
     const exp = gql`
-      query __composed {
-        __authorInfo__requestIndex_0__fieldIndex_0: author {
+      query ___composed {
+        ___authorInfo___requestIndex_0___fieldIndex_0: author {
           firstName
           lastName
         }
-        __personAddress__requestIndex_1__fieldIndex_0: person {
+        ___personAddress___requestIndex_1___fieldIndex_0: person {
           address
         }
       }`;
@@ -315,18 +315,18 @@ describe('Query merging', () => {
         author
       }`;
     const exp = gql`
-      query __composed {
-        ...__authorInfo__requestIndex_0__authorDetails
-        ...__authors__requestIndex_1__authorDetails
+      query ___composed {
+        ...___authorInfo___requestIndex_0___authorDetails
+        ...___authors___requestIndex_1___authorDetails
       }
-      fragment __authorInfo__requestIndex_0__authorDetails on Author {
-        __authorInfo__requestIndex_0__fieldIndex_1: author {
+      fragment ___authorInfo___requestIndex_0___authorDetails on Author {
+        ___authorInfo___requestIndex_0___fieldIndex_1: author {
           firstName
           lastName
         }
       }
-      fragment __authors__requestIndex_1__authorDetails on Author {
-        __authors__requestIndex_1__fieldIndex_1: author
+      fragment ___authors___requestIndex_1___authorDetails on Author {
+        ___authors___requestIndex_1___fieldIndex_1: author
       }`;
     const mergedQuery = mergeQueryDocuments([query1, query2]);
     assert.equal(print(mergedQuery), print(exp));
@@ -342,9 +342,9 @@ describe('Query merging', () => {
         person(id: $id)
       }`;
     const exp = gql`
-      query __composed($__authorInfo__requestIndex_0__id: Int, $__personInfo__requestIndex_1__id: Int) {
-        __authorInfo__requestIndex_0__fieldIndex_0: author(id: $__authorInfo__requestIndex_0__id)
-        __personInfo__requestIndex_1__fieldIndex_0: person(id: $__personInfo__requestIndex_1__id)
+      query ___composed($___authorInfo___requestIndex_0___id: Int, $___personInfo___requestIndex_1___id: Int) {
+        ___authorInfo___requestIndex_0___fieldIndex_0: author(id: $___authorInfo___requestIndex_0___id)
+        ___personInfo___requestIndex_1___fieldIndex_0: person(id: $___personInfo___requestIndex_1___id)
       }`;
     const mergedQuery = mergeQueryDocuments([query1, query2]);
     assert.equal(print(mergedQuery), print(exp));
@@ -364,12 +364,12 @@ describe('Query merging', () => {
         }
       }`;
     const exp = gql`
-      query __composed {
+      query ___composed {
         ... on RootQuery {
-          __nameOfQuery__requestIndex_0__fieldIndex_0: user
+          ___nameOfQuery___requestIndex_0___fieldIndex_0: user
         }
         ... on RootQuery {
-          __otherQuery__requestIndex_1__fieldIndex_0: author
+          ___otherQuery___requestIndex_1___fieldIndex_0: author
         }
       }`;
     const mergedQuery = mergeQueryDocuments([query1, query2]);
@@ -397,20 +397,20 @@ describe('Query merging', () => {
         name
       }`;
     const exp = gql`
-      query __composed {
-        __authorInfo__requestIndex_0__fieldIndex_0: author {
-          ...__authorInfo__requestIndex_0__authorDetails
+      query ___composed {
+        ___authorInfo___requestIndex_0___fieldIndex_0: author {
+          ...___authorInfo___requestIndex_0___authorDetails
         }
-        __personInfo__requestIndex_1__fieldIndex_0: person {
-          ...__personInfo__requestIndex_1__personDetails
+        ___personInfo___requestIndex_1___fieldIndex_0: person {
+          ...___personInfo___requestIndex_1___personDetails
         }
       }
-      fragment __authorInfo__requestIndex_0__authorDetails on Author {
-        __authorInfo__requestIndex_0__fieldIndex_1: firstName
-        __authorInfo__requestIndex_0__fieldIndex_2: lastName
+      fragment ___authorInfo___requestIndex_0___authorDetails on Author {
+        ___authorInfo___requestIndex_0___fieldIndex_1: firstName
+        ___authorInfo___requestIndex_0___fieldIndex_2: lastName
       }
-      fragment __personInfo__requestIndex_1__personDetails on Person {
-        __personInfo__requestIndex_1__fieldIndex_1: name
+      fragment ___personInfo___requestIndex_1___personDetails on Person {
+        ___personInfo___requestIndex_1___fieldIndex_1: name
       }`;
 
     const queries = [query1, query2];
@@ -432,11 +432,11 @@ describe('Query merging', () => {
         }
       }`;
     const exp = gql`
-      query __composed($__authorStuff__requestIndex_0__id: Int, $__personStuff__requestIndex_1__name: String) {
-        __authorStuff__requestIndex_0__fieldIndex_0: author(id: $__authorStuff__requestIndex_0__id) {
+      query ___composed($___authorStuff___requestIndex_0___id: Int, $___personStuff___requestIndex_1___name: String) {
+        ___authorStuff___requestIndex_0___fieldIndex_0: author(id: $___authorStuff___requestIndex_0___id) {
           name
         }
-        __personStuff__requestIndex_1__fieldIndex_0: person(name: $__personStuff__requestIndex_1__name) {
+        ___personStuff___requestIndex_1___fieldIndex_0: person(name: $___personStuff___requestIndex_1___name) {
           id
         }
       }`;
@@ -447,8 +447,8 @@ describe('Query merging', () => {
       name: 'John',
     };
     const expVariables = {
-      __authorStuff__requestIndex_0__id: 18,
-      __personStuff__requestIndex_1__name: 'John',
+      ___authorStuff___requestIndex_0___id: 18,
+      ___personStuff___requestIndex_1___name: 'John',
     };
     const request1 = {
       query: query1,
@@ -463,7 +463,7 @@ describe('Query merging', () => {
 
     assert.equal(print(mergedRequest.query), print(exp));
     assert.deepEqual(mergedRequest.variables, expVariables);
-    assert.equal(mergedRequest.debugName, '__composed');
+    assert.equal(mergedRequest.debugName, '___composed');
   });
   it('should not incorrectly order the field index numbers given an inline fragment', () => {
     const query = gql`
@@ -475,20 +475,78 @@ describe('Query merging', () => {
         address
       }`;
     const exp = gql`
-      query __composed {
+      query ___composed {
         ... on RootQuery {
-          __authorStuff__requestIndex_0__fieldIndex_0: firstName
-          __authorStuff__requestIndex_0__fieldIndex_1: lastName
+          ___authorStuff___requestIndex_0___fieldIndex_0: firstName
+          ___authorStuff___requestIndex_0___fieldIndex_1: lastName
         }
-        __authorStuff__requestIndex_0__fieldIndex_2: address
+        ___authorStuff___requestIndex_0___fieldIndex_2: address
       }`;
     const mergedQuery = mergeQueryDocuments([query]);
     assert.equal(print(mergedQuery), print(exp));
   });
 
+  it('should throw an error if there is a ___ in the name of a variable', () => {
+    const query = gql`
+      query author($___id: Int) {
+        fortuneCookie
+      }`;
+    assert.throws(() => {
+      mergeQueryDocuments([query]);
+    });
+  });
+
+  it('should throw an error if there is a ___ in the name of a fragment', () => {
+    const query = gql`
+      query {
+        ...___details
+      }
+      fragment ___details on RootQuery {
+        fortuneCookie
+      }`;
+    assert.throws(() => {
+      mergeQueryDocuments([query]);
+    });
+  });
+
+  it('should throw an error if there is a ___ in the name of a top-level field', () => {
+    const query = gql`
+      query {
+        ___fortuneCookie
+      }`;
+    assert.throws(() => {
+      mergeQueryDocuments([query]);
+    });
+  });
+
+  it('should throw if there is a ___ in the name of a top-level field within a fragment', () => {
+    const query = gql`
+      query {
+        ...details
+      }
+      fragment details on RootQuery {
+        ___fortuneCookie
+      }`;
+    assert.throws(() => {
+      mergeQueryDocuments([query]);
+    });
+  });
+
+  it('should not throw an error if there is a ___ in the name of a non-top-level field', () => {
+    const query = gql`
+      query {
+        author {
+          ___name
+        }
+      }`;
+    assert.doesNotThrow(() => {
+      mergeQueryDocuments([query]);
+    });
+  });
+
   describe('merged query unpacking', () => {
     it('should split data keys correctly', () => {
-      const dataKey = '__queryName__requestIndex_0__fieldIndex_1';
+      const dataKey = '___queryName___requestIndex_0___fieldIndex_1';
       const parsedInfo = parseMergedKey(dataKey);
       const exp = {
         requestIndex: 0,
@@ -508,7 +566,7 @@ describe('Query merging', () => {
       const request = { query };
       const result = {
         data: {
-          __authorStuff__requestIndex_0__fieldIndex_0: {
+          ___authorStuff___requestIndex_0___fieldIndex_0: {
             'firstName': 'John',
             'lastName': 'Smith',
           },
@@ -551,11 +609,11 @@ describe('Query merging', () => {
       const requests = [ { query: query1 }, { query: query2 }];
       const result = {
         data: {
-          __authorStuff__requestIndex_0__fieldIndex_0: {
+          ___authorStuff___requestIndex_0___fieldIndex_0: {
             firstName: 'John',
             lastName: 'Smith',
           },
-          __otherStuff__requestIndex_1__fieldIndex_0: {
+          ___otherStuff___requestIndex_1___fieldIndex_0: {
             firstName: 'Jane',
             lastName: 'Smith',
           },
@@ -603,10 +661,10 @@ describe('Query merging', () => {
         }`;
       const result = {
         data: {
-          __authorStuff__requestIndex_0__itemIndex_0: {
+          ___authorStuff___requestIndex_0___itemIndex_0: {
             firstName: 'John',
           },
-          __otherStuff__requestIndex_1__itemIndex_0: {
+          ___otherStuff___requestIndex_1___itemIndex_0: {
             lastName: 'Smith',
           },
         },

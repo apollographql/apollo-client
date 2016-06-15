@@ -6,21 +6,21 @@
 // How merging GraphQL documents works (at a high level):
 //
 // We determine an alias name for the whole query using getOperationDefinitionName. This looks
-// like this: "__queryName__requestIndex_0" where 0 represents the index of the request
+// like this: "___queryName___requestIndex_0" where 0 represents the index of the request
 // a list of requests.
 //
 // Then, this alias name is prepended to top-level field names and each field is given
 // a field index. For example "author" might turn into
-// "__queryName__requestIndex_0__fieldIndex_0__author".
+// "___queryName___requestIndex_0___fieldIndex_0___author".
 //
 // We apply essentially the same procedure for fields within fragments. We also rename
 // fragments in order to prevent fragment collisions once the query documents are merged.
 // For example, a fragment named "authorDetails" might turn into
-// "__queryName__requestIndex_0__authorDetails". Since fragments are renamed, fragment spreads
+// "___queryName___requestIndex_0___authorDetails". Since fragments are renamed, fragment spreads
 // must also be renamed within the query.
 //
 // Variables are also renamed. We simply prepend the query alias name to the variable name, i.e.
-// "__queryName__requestIndex_0__variableName".
+// "___queryName___requestIndex_0___variableName".
 //
 // Finally, we take these queries with aliased names and put them under the same RootQuery.
 // We also expose unpackMergedResult which allows us to take a result returned for a merged
@@ -76,7 +76,7 @@ export function mergeRequests(requests: Request[]): Request {
   });
 
   let rootRequest: Request = {
-    debugName: '__composed',
+    debugName: '___composed',
     query: rootQueryDoc,
     variables: rootVariables,
   };
@@ -148,10 +148,10 @@ export function createFieldMap(selections: (Field | InlineFragment | FragmentSpr
   };
 }
 
-// Takes a key that looks like this: __queryName__requestIndex_0__fieldIndex_1: __typename
+// Takes a key that looks like this: ___queryName___requestIndex_0___fieldIndex_1: __typename
 // And turns it into information like this { requestIndex: 0, fieldIndex: 1 }
 export function parseMergedKey(key: string): { requestIndex: number, fieldIndex: number } {
-  const pieces = key.split('__');
+  const pieces = key.split('___');
   const requestIndexPiece = pieces[2].split('_');
   const fieldIndexPiece = pieces[3].split('_');
 
@@ -180,7 +180,7 @@ export function addVariablesToRoot(rootVariables: { [key: string]: any },
   childQueryDoc: Document,
   childQueryDocIndex: number): { [key: string]: any } {
   const aliasName = getOperationDefinitionName(getQueryDefinition(childQueryDoc), childQueryDocIndex);
-  const aliasedChildVariables = addPrefixToVariables(aliasName + '__', childVariables);
+  const aliasedChildVariables = addPrefixToVariables(aliasName + '___', childVariables);
   return assign({}, rootVariables, aliasedChildVariables);
 }
 
@@ -206,7 +206,7 @@ export function addQueryToRoot(rootQueryDoc: Document,
 
 export function createEmptyRootQueryDoc(rootQueryName?: string): Document {
   if (!rootQueryName) {
-    rootQueryName = '__composed';
+    rootQueryName = '___composed';
   }
   return {
     kind: 'Document',
@@ -278,6 +278,10 @@ export function renameVariables(selSet: SelectionSet, aliasName: string): Select
 
 export function applyAliasNameToVariableDefinition(vDef: VariableDefinition, aliasName: string)
 : VariableDefinition {
+  if (containsMarker(vDef.variable.name.value)) {
+    throw new Error(`Variable definition for ${vDef.variable.name.value} contains "___"`);
+  }
+
   vDef.variable.name.value = getVariableAliasName(vDef.variable, aliasName);
   return vDef;
 }
@@ -328,6 +332,10 @@ export function applyAliasNameToDocument(document: Document, aliasName: string):
 
 export function applyAliasNameToFragment(fragment: FragmentDefinition, aliasName: string,
   startIndex: number): FragmentDefinition {
+  if (containsMarker(fragment.name.value)) {
+    throw new Error(`Fragment ${fragment.name.value} contains "___"`);
+  }
+
   fragment.name.value = getFragmentAliasName(fragment, aliasName);
   fragment.selectionSet.selections =
     applyAliasNameToSelections(fragment.selectionSet.selections, aliasName, startIndex).res;
@@ -343,18 +351,18 @@ export function applyAliasNameToTopLevelFields(childQuery: OperationDefinition, 
 }
 
 export function getVariableAliasName(varNode: Variable, aliasName: string): string {
-  return `${aliasName}__${varNode.name.value}`;
+  return `${aliasName}___${varNode.name.value}`;
 }
 
 export function getFragmentAliasName(fragment: FragmentDefinition | FragmentSpread,
   queryAliasName: string): string {
-  return `${queryAliasName}__${fragment.name.value}`;
+  return `${queryAliasName}___${fragment.name.value}`;
 }
 
 // Returns an alias name for the query using the query's index
 // within a list of queries and the query object. For example, if a
 // query's name is "listOfAuthors" and has index "3", the name will
-// be "__listOfAuthors__requestIndex_3".
+// be "___listOfAuthors___requestIndex_3".
 export function getOperationDefinitionName(operationDef: OperationDefinition,
   requestIndex: number): string {
   let operationDefName = '';
@@ -362,10 +370,13 @@ export function getOperationDefinitionName(operationDef: OperationDefinition,
     operationDefName = operationDef.name.value;
   }
 
-  return `__${operationDefName}__requestIndex_${requestIndex}`;
+  return `___${operationDefName}___requestIndex_${requestIndex}`;
 }
 
 export function aliasField(field: Field, alias: string): Field {
+  if (containsMarker(field.name.value)) {
+    throw new Error(`Field ${field.name.value} contains "___".`);
+  }
   field.alias = {
     kind: 'Name',
     value: alias,
@@ -399,7 +410,7 @@ function applyAliasNameToSelections(selections: (Field | FragmentSpread | Inline
   const res = selections.map((selection) => {
     if (selection.kind === 'Field') {
       const aliasedField = aliasField(selection as Field,
-                        `${aliasName}__fieldIndex_${currIndex}`);
+                        `${aliasName}___fieldIndex_${currIndex}`);
       currIndex += 1;
       return aliasedField;
     } else if (selection.kind === 'InlineFragment') {
@@ -422,4 +433,9 @@ function applyAliasNameToSelections(selections: (Field | FragmentSpread | Inline
     res,
     newIndex: currIndex,
   };
+}
+
+// Checks if the name of something starts with the separating marker (i.e. "___")
+function containsMarker(name: string) {
+  return name.indexOf('___') > -1;
 }

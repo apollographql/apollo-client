@@ -24,14 +24,12 @@ export interface QueryFetchRequest {
   reject?: (error: Error) => void;
 };
 
-// QueryScheduler takes a operates on a queue  of QueryFetchRequests. It polls and checks this queue
+// QueryBatcher takes a operates on a queue  of QueryFetchRequests. It polls and checks this queue
 // for new fetch requests. If there are multiple requests in the queue at a time, it will batch
 // them together into one query. Batching can be toggled with the shouldBatch option.
-// Conditions this tries to guarantee:
-// - For polling queries, there should be only one query in flight at a time.
 export class QueryBatcher {
-  // Queue on which the QueryScheduler will operate on a per-tick basis.
-  public fetchRequests: QueryFetchRequest[] = [];
+  // Queue on which the QueryBatcher will operate on a per-tick basis.
+  public queuedRequests: QueryFetchRequest[] = [];
 
   private shouldBatch: Boolean;
   private pollInterval: Number;
@@ -49,12 +47,12 @@ export class QueryBatcher {
     networkInterface: NetworkInterface,
   }) {
     this.shouldBatch = shouldBatch;
-    this.fetchRequests = [];
+    this.queuedRequests = [];
     this.networkInterface = networkInterface;
   }
 
-  public queueRequest(request: QueryFetchRequest): Promise<GraphQLResult> {
-    this.fetchRequests.push(request);
+  public enqueueRequest(request: QueryFetchRequest): Promise<GraphQLResult> {
+    this.queuedRequests.push(request);
     request.promise = new Promise((resolve, reject) => {
       request.resolve = resolve;
       request.reject = reject;
@@ -62,32 +60,31 @@ export class QueryBatcher {
     return request.promise;
   }
 
-  // Consumes the queue. Called on a polling interval, exposed publicly
-  // in order to unit test. Returns a list of promises for each of the queries
-  // fetched primarily for unit testing purposes.
+  // Consumes the queue. Called on a polling interval.
+  // Returns a list of promises (one for each query).
   public consumeQueue(): Promise<GraphQLResult>[] {
-    if (this.fetchRequests.length < 1) {
+    if (this.queuedRequests.length < 1) {
       return;
     }
 
-    const requests: Request[] = this.fetchRequests.map((fetchRequests) => {
+    const requests: Request[] = this.queuedRequests.map((queuedRequest) => {
       return {
-        query: fetchRequests.options.query,
-        variables: fetchRequests.options.variables,
+        query: queuedRequest.options.query,
+        variables: queuedRequest.options.variables,
       };
     });
 
     const promises: Promise<GraphQLResult>[] = [];
     const resolvers = [];
     const rejecters = [];
-    this.fetchRequests.forEach((fetchRequest, index) => {
+    this.queuedRequests.forEach((fetchRequest, index) => {
       promises.push(fetchRequest.promise);
       resolvers.push(fetchRequest.resolve);
       rejecters.push(fetchRequest.reject);
     });
 
     if (this.shouldBatch) {
-      this.fetchRequests = [];
+      this.queuedRequests = [];
       const batchedPromise =
         (this.networkInterface as BatchedNetworkInterface).batchQuery(requests);
 
@@ -102,14 +99,14 @@ export class QueryBatcher {
       });
       return promises;
     } else {
-      this.fetchRequests.forEach((fetchRequest, index) => {
+      this.queuedRequests.forEach((fetchRequest, index) => {
         this.networkInterface.query(requests[index]).then((result) => {
           resolvers[index](result);
         }).catch((reason) => {
           rejecters[index](reason);
         });
       });
-      this.fetchRequests = [];
+      this.queuedRequests = [];
       return promises;
     }
   }

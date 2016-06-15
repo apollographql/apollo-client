@@ -1,7 +1,7 @@
 // The QueryScheduler is supposed to be a mechanism that schedules polling queries such that
 // they are clustered into the time slots of the QueryBatcher and are batched together. It
 // also makes sure that for a given polling query, if one instance of the query is inflight,
-// another instance will not be fired until the query returns or times out. We do this because if
+// another instance will not be fired until the query returns or times out. We do this because
 // another query fires while one is already in flight, the data will stay in the "loading" state
 // even after the first query has returned.
 
@@ -105,7 +105,6 @@ export class QueryScheduler {
       // "Fire" (i.e. add to the QueryBatcher queue)
       const queryListener = this.queryManager.queryListenerForObserver(options, observer);
       const queryId = this.startPollingQuery(options, queryListener);
-
 
       return {
         unsubscribe: () => {

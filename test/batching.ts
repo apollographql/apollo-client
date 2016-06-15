@@ -27,9 +27,9 @@ describe('QueryBatcher', () => {
       networkInterface,
     });
 
-    assert.equal(batcher.fetchRequests.length, 0);
+    assert.equal(batcher.queuedRequests.length, 0);
     batcher.consumeQueue();
-    assert.equal(batcher.fetchRequests.length, 0);
+    assert.equal(batcher.queuedRequests.length, 0);
   });
 
   it('should be able to add to the queue', () => {
@@ -51,11 +51,11 @@ describe('QueryBatcher', () => {
       queryId: 'not-a-real-id',
     };
 
-    assert.equal(batcher.fetchRequests.length, 0);
-    batcher.queueRequest(request);
-    assert.equal(batcher.fetchRequests.length, 1);
-    batcher.queueRequest(request);
-    assert.equal(batcher.fetchRequests.length, 2);
+    assert.equal(batcher.queuedRequests.length, 0);
+    batcher.enqueueRequest(request);
+    assert.equal(batcher.queuedRequests.length, 1);
+    batcher.enqueueRequest(request);
+    assert.equal(batcher.queuedRequests.length, 2);
   });
 
   describe('request queue', () => {
@@ -93,11 +93,11 @@ describe('QueryBatcher', () => {
 
     it('should be able to consume from a queue containing a single query',
        (done) => {
-      batcher.queueRequest(request);
+      batcher.enqueueRequest(request);
       const promises: Promise<GraphQLResult>[] = batcher.consumeQueue();
       assert.equal(promises.length, 1);
       promises[0].then((resultObj) => {
-        assert.equal(batcher.fetchRequests.length, 0);
+        assert.equal(batcher.queuedRequests.length, 0);
         assert.deepEqual(resultObj, { data } );
         done();
       });
@@ -121,10 +121,10 @@ describe('QueryBatcher', () => {
           }
         ),
       });
-      myBatcher.queueRequest(request);
-      myBatcher.queueRequest(request2);
+      myBatcher.enqueueRequest(request);
+      myBatcher.enqueueRequest(request2);
       const promises: Promise<GraphQLResult>[] = myBatcher.consumeQueue();
-      assert.equal(batcher.fetchRequests.length, 0);
+      assert.equal(batcher.queuedRequests.length, 0);
       assert.equal(promises.length, 2);
       promises[0].then((resultObj1) => {
         assert.deepEqual(resultObj1, { data });
@@ -145,7 +145,7 @@ describe('QueryBatcher', () => {
           }
         ),
       });
-      const promise = myBatcher.queueRequest(request);
+      const promise = myBatcher.enqueueRequest(request);
       myBatcher.consumeQueue();
       promise.then((result) => {
         assert.deepEqual(result, { data });
@@ -171,14 +171,14 @@ describe('QueryBatcher', () => {
       queryId: 'not-a-real-id',
     };
 
-    batcher.queueRequest(request);
-    batcher.queueRequest(request);
+    batcher.enqueueRequest(request);
+    batcher.enqueueRequest(request);
 
     //poll with a big interval so that the queue
     //won't actually be consumed by the time we stop.
     batcher.start(1000);
     batcher.stop();
-    assert.equal(batcher.fetchRequests.length, 2);
+    assert.equal(batcher.queuedRequests.length, 2);
   });
 
   it('should resolve the promise returned when we enqueue with shouldBatch: false', (done) => {
@@ -210,7 +210,7 @@ describe('QueryBatcher', () => {
       shouldBatch: false,
       networkInterface: myNetworkInterface,
     });
-    const promise = batcher.queueRequest(request);
+    const promise = batcher.enqueueRequest(request);
     batcher.consumeQueue();
     promise.then((result) => {
       assert.deepEqual(result, { data });
@@ -241,7 +241,7 @@ describe('QueryBatcher', () => {
       shouldBatch: true,
       networkInterface: myNetworkInterface,
     });
-    const promise = batcher.queueRequest(request);
+    const promise = batcher.enqueueRequest(request);
     batcher.consumeQueue();
     promise.catch((resError: Error) => {
       assert.equal(resError.message, 'Network error');
@@ -272,7 +272,7 @@ describe('QueryBatcher', () => {
       shouldBatch: false,
       networkInterface: myNetworkInterface,
     });
-    const promise = batcher.queueRequest(request);
+    const promise = batcher.enqueueRequest(request);
     batcher.consumeQueue();
     promise.catch((resError: Error) => {
       assert.equal(resError.message, 'Network error');

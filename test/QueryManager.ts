@@ -2081,6 +2081,7 @@ describe('QueryManager', () => {
       done();
     });
   });
+
   describe('batched queries', () => {
     it('should batch together two queries fired in the same batcher tick', (done) => {
       const query1 = gql`

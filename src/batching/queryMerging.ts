@@ -6,7 +6,7 @@
 // How merging GraphQL documents works (at a high level):
 //
 // We determine an alias name for the whole query using getOperationDefinitionName. This looks
-// like this: "___queryName___requestIndex_0" where 0 represents the index of the request
+// like: "___queryName___requestIndex_0" where 0 represents the index of the request
 // a list of requests.
 //
 // Then, this alias name is prepended to top-level field names and each field is given

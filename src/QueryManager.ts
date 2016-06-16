@@ -239,13 +239,6 @@ export class QueryManager {
           this.stopQuery(queryId);
         },
         refetch: (variables: any): Promise<GraphQLResult> => {
-          // if we are refetching, we clear out the polling interval
-          // if the new refetch passes pollInterval: false, it won't recreate
-          // the timer for subsequent refetches
-          if (pollingTimer) {
-            clearInterval(pollingTimer);
-          }
-
           // If no new variables passed, use existing variables
           variables = variables || options.variables;
 

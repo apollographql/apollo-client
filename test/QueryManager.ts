@@ -691,6 +691,80 @@ describe('QueryManager', () => {
     });
   });
 
+  it('continues to poll after refetch', (done) => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Patsy',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data: data1 },
+      },
+      {
+        request: { query },
+        result: { data: data2 },
+      },
+      {
+        request: { query },
+        result: { data: data3 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+      pollInterval: 200,
+    });
+
+    let resultCount = 0;
+
+    const sub = handle.subscribe({
+      next(result) {
+        resultCount++;
+        // Perform refetch on first result from watchQuery
+        if (resultCount === 1) {
+          sub.refetch();
+        };
+
+        // Wait for a result count of 3
+        if (resultCount === 3) {
+          // Stop polling
+          sub.stopPolling();
+          assert(result);
+          done();
+        }
+      },
+    });
+  });
+
   it('doesn\'t explode if you refetch before first fetch is done with query diffing', (done) => {
     const primeQuery = gql`
       {
@@ -935,10 +1009,10 @@ describe('QueryManager', () => {
     });
   });
 
-  it('runs a mutation and puts the result in the store', () => {
+  it('runs a mutation with object parameters and puts the result in the store', () => {
     const mutation = gql`
       mutation makeListPrivate {
-        makeListPrivate(id: "5") {
+        makeListPrivate(input: {id: "5"}) {
           id,
           isPrivate,
         }

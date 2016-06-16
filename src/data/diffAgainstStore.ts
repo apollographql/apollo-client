@@ -134,7 +134,6 @@ export function diffSelectionSetAgainstStore({
     }
 
     if (isField(selection)) {
-      if (included) {
         const {
           result: fieldResult,
           isMissing: fieldIsMissing,
@@ -145,19 +144,19 @@ export function diffSelectionSetAgainstStore({
           rootId,
           store,
           fragmentMap,
+          included,
         });
 
-        if (fieldIsMissing) {
-          pushMissingField(selection);
-        } else {
-          const resultFieldKey = resultKeyNameFromField(selection);
-
-          result[resultFieldKey] = fieldResult;
-        }
-      } else {
+      if (fieldIsMissing) {
+        // even if the field is not included, we want to keep it in the
+        // query that is sent to the server. So, we push it into the set of
+        // fields that is missing.
         pushMissingField(selection);
-      }
+      } else if (included) {
+        const resultFieldKey = resultKeyNameFromField(selection);
 
+        result[resultFieldKey] = fieldResult;
+      }
     } else if (isInlineFragment(selection)) {
       const {
         result: fieldResult,
@@ -242,6 +241,7 @@ function diffFieldAgainstStore({
   rootId,
   store,
   fragmentMap,
+  included,
 }: {
   field: Field,
   throwOnMissingField: boolean,
@@ -249,12 +249,16 @@ function diffFieldAgainstStore({
   rootId: string,
   store: NormalizedCache,
   fragmentMap?: FragmentMap,
+  included?: Boolean,
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
+  if (included === undefined) {
+    included = true;
+  }
 
   if (! has(storeObj, storeFieldKey)) {
-    if (throwOnMissingField) {
+    if (throwOnMissingField && included) {
       throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
     }
 

@@ -289,17 +289,13 @@ export function applyAliasNameToVariableDefinition(vDef: VariableDefinition, ali
 export function applyAliasNameToDocument(document: Document, aliasName: string): Document {
   //replace the fragment spread names
   document.definitions = document.definitions.map((definition) => {
-    if (definition.kind === 'OperationDefinition' || definition.kind === 'FragmentDefinition') {
-      const operationOrFragmentDef =
-        definition as (OperationDefinition | FragmentDefinition);
-      operationOrFragmentDef.selectionSet =
-        renameFragmentSpreads(operationOrFragmentDef.selectionSet, aliasName);
-      operationOrFragmentDef.selectionSet =
-        renameVariables(operationOrFragmentDef.selectionSet, aliasName);
-      return operationOrFragmentDef;
-    } else {
-      return definition;
-    }
+    const operationOrFragmentDef =
+      definition as (OperationDefinition | FragmentDefinition);
+    operationOrFragmentDef.selectionSet =
+      renameFragmentSpreads(operationOrFragmentDef.selectionSet, aliasName);
+    operationOrFragmentDef.selectionSet =
+      renameVariables(operationOrFragmentDef.selectionSet, aliasName);
+    return operationOrFragmentDef;
   });
 
   // replace the definitions within the document with the aliased versions

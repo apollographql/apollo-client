@@ -692,4 +692,15 @@ describe('Query merging', () => {
       assert.deepEqual(unpackedResults, expUnpackedResults);
     });
   });
+
+  it('should throw an error if we try to apply an alias name to a mutation doc', () => {
+    const mutation = gql`
+      mutation modifyEverything {
+        fortuneCookie
+      }`;
+    const aliasName = 'totally_made_up';
+    assert.throws(() => {
+      applyAliasNameToDocument(mutation, aliasName);
+    });
+  });
 });

@@ -401,8 +401,8 @@ export class QueryManager {
           let resultFromStore;
           try {
             // ensure result is combined with data already in store
-            // this will throw an error if there are missing fields that were
-            // included (e.g. @skip was false).
+            // this will throw an error if there are missing fields in
+            // the results if returnPartialData is false.
             resultFromStore = readSelectionSetFromStore({
               store: this.getApolloState().data,
               rootId: querySS.id,

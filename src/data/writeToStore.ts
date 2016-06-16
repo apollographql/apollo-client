@@ -34,7 +34,7 @@ import {
 } from './extensions';
 
 import {
-  shouldInclude
+  shouldInclude,
 } from '../queries/directives';
 
 // import {
@@ -119,7 +119,6 @@ export function writeSelectionSetToStore({
   variables,
   dataIdFromObject,
   fragmentMap,
-  thrownOnExtraField = true,
 }: {
   dataId: string,
   result: any,
@@ -128,7 +127,6 @@ export function writeSelectionSetToStore({
   variables: Object,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
-  thrownOnExtraField?: boolean,
 }): NormalizedCache {
 
   if (!fragmentMap) {
@@ -136,6 +134,7 @@ export function writeSelectionSetToStore({
     //to us for the fragments.
     fragmentMap = {};
   }
+
   selectionSet.selections.forEach((selection) => {
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
@@ -146,7 +145,11 @@ export function writeSelectionSetToStore({
         throw new Error(`Can't find field ${resultFieldKey} on result object ${dataId}.`);
       }
 
-      if (included) {
+      if (!isUndefined(value) && !included) {
+        throw new Error(`Found extra field ${resultFieldKey} on result object ${dataId}.`);
+      }
+
+      if (!isUndefined(value)) {
         writeFieldToStore({
           dataId,
           value,

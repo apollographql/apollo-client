@@ -102,7 +102,6 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField = false,
   variables,
   fragmentMap,
-  thrownOnExtraField = true,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
@@ -110,7 +109,6 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField: boolean,
   variables: Object,
   fragmentMap?: FragmentMap,
-  thrownOnExtraField?: boolean,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -126,6 +124,7 @@ export function diffSelectionSetAgainstStore({
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
+    const included = shouldInclude(selection, variables);
 
     function pushMissingField(missingField: Selection) {
       if (!missingFieldPushed) {
@@ -135,24 +134,26 @@ export function diffSelectionSetAgainstStore({
     }
 
     if (isField(selection)) {
-      const {
-        result: fieldResult,
-        isMissing: fieldIsMissing,
-      } = diffFieldAgainstStore({
-        field: selection,
-        throwOnMissingField,
-        variables,
-        rootId,
-        store,
-        fragmentMap,
-      });
+      if (included) {
+        const {
+          result: fieldResult,
+          isMissing: fieldIsMissing,
+        } = diffFieldAgainstStore({
+          field: selection,
+          throwOnMissingField,
+          variables,
+          rootId,
+          store,
+          fragmentMap,
+        });
 
-      if (fieldIsMissing) {
-        pushMissingField(selection);
-      } else {
-        const resultFieldKey = resultKeyNameFromField(selection);
+        if (fieldIsMissing) {
+          pushMissingField(selection);
+        } else {
+          const resultFieldKey = resultKeyNameFromField(selection);
 
-        result[resultFieldKey] = fieldResult;
+          result[resultFieldKey] = fieldResult;
+        }
       }
 
     } else if (isInlineFragment(selection)) {
@@ -249,14 +250,8 @@ function diffFieldAgainstStore({
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
-  const included = shouldInclude(field, variables);
 
-  // check if the field is in the store when it shouldn't be
-  //if(has(storeObj, storeFieldKey) && !included) {
-  //  throw new Error(`Found extra field ${storeFieldKey} on object ${storeObj}.`);
-  //}
-
-  if (! has(storeObj, storeFieldKey) && included) {
+  if (! has(storeObj, storeFieldKey)) {
     if (throwOnMissingField) {
       throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
     }

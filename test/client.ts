@@ -735,7 +735,7 @@ describe('client', () => {
           fortuneCookie @skip(if: false)
         }`;
       const result = {
-        fortuneCookie: "result",
+        fortuneCookie: 'result',
       };
       const networkInterface = mockNetworkInterface(
         {
@@ -756,9 +756,11 @@ describe('client', () => {
       const query = gql`
         query {
           fortuneCookie @skip(if: true)
+          otherThing
         }`;
       const result = {
-        fortuneCookie: "result",
+        fortuneCookie: 'you will go far',
+        otherThing: 'false',
       };
       const networkInterface = mockNetworkInterface(
         {
@@ -769,6 +771,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
       });
+
       client.query({ query }).catch((error) => {
         assert(error);
         done();

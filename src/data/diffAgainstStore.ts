@@ -32,6 +32,10 @@ import {
   FragmentMap,
 } from '../queries/getFromAST';
 
+import {
+  shouldInclude,
+} from '../queries/directives';
+
 export interface DiffResult {
   result: any;
   isMissing?: 'true';
@@ -98,6 +102,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField = false,
   variables,
   fragmentMap,
+  thrownOnExtraField = true,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
@@ -105,6 +110,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField: boolean,
   variables: Object,
   fragmentMap?: FragmentMap,
+  thrownOnExtraField?: boolean,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -120,6 +126,7 @@ export function diffSelectionSetAgainstStore({
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
+
     function pushMissingField(missingField: Selection) {
       if (!missingFieldPushed) {
         missingFields.push(missingField);
@@ -147,6 +154,7 @@ export function diffSelectionSetAgainstStore({
 
         result[resultFieldKey] = fieldResult;
       }
+
     } else if (isInlineFragment(selection)) {
       const {
         result: fieldResult,
@@ -241,8 +249,14 @@ function diffFieldAgainstStore({
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
+  const included = shouldInclude(field, variables);
 
-  if (! has(storeObj, storeFieldKey)) {
+  // check if the field is in the store when it shouldn't be
+  //if(has(storeObj, storeFieldKey) && !included) {
+  //  throw new Error(`Found extra field ${storeFieldKey} on object ${storeObj}.`);
+  //}
+
+  if (! has(storeObj, storeFieldKey) && included) {
     if (throwOnMissingField) {
       throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
     }

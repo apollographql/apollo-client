@@ -33,6 +33,10 @@ import {
   IdGetter,
 } from './extensions';
 
+import {
+  shouldInclude
+} from '../queries/directives';
+
 // import {
 //   printAST,
 // } from './debug';
@@ -115,6 +119,7 @@ export function writeSelectionSetToStore({
   variables,
   dataIdFromObject,
   fragmentMap,
+  thrownOnExtraField = true,
 }: {
   dataId: string,
   result: any,
@@ -123,6 +128,7 @@ export function writeSelectionSetToStore({
   variables: Object,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
+  thrownOnExtraField?: boolean,
 }): NormalizedCache {
 
   if (!fragmentMap) {
@@ -134,20 +140,23 @@ export function writeSelectionSetToStore({
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
+      const included = shouldInclude(selection, variables);
 
-      if (isUndefined(value)) {
+      if (isUndefined(value) && included) {
         throw new Error(`Can't find field ${resultFieldKey} on result object ${dataId}.`);
       }
 
-      writeFieldToStore({
-        dataId,
-        value,
-        variables,
-        store,
-        field: selection,
-        dataIdFromObject,
-        fragmentMap,
-      });
+      if (included) {
+        writeFieldToStore({
+          dataId,
+          value,
+          variables,
+          store,
+          field: selection,
+          dataIdFromObject,
+          fragmentMap,
+        });
+      }
     } else if (isInlineFragment(selection)) {
       // XXX what to do if this tries to write the same fields? Also, type conditions...
       writeSelectionSetToStore({

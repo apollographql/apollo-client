@@ -96,4 +96,86 @@ describe('query directives', () => {
     shouldInclude(field, {});
     assert.deepEqual(query, queryClone);
   });
+
+  it('throws an error on an unsupported directive', () => {
+    const query = gql`
+      query {
+        fortuneCookie @dosomething(if: true)
+      }`;
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+
+    assert.throws(() => {
+      shouldInclude(field, {});
+    });
+  });
+
+  it('throws an error on an invalid argument for the skip directive', () => {
+    const query = gql`
+      query {
+        fortuneCookie @skip(nothing: true)
+      }`;
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+
+    assert.throws(() => {
+      shouldInclude(field, {});
+    });
+  });
+
+  it('throws an error on an invalid argument for the include directive', () => {
+    const query = gql`
+      query {
+        fortuneCookie @include(nothing: true)
+      }`;
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+
+    assert.throws(() => {
+      shouldInclude(field, {});
+    });
+  });
+
+  it('throws an error on an invalid variable name within a directive argument', () => {
+    const query = gql`
+      query {
+        fortuneCookie @include(if: $neverDefined)
+      }`;
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+    assert.throws(() => {
+      shouldInclude(field, {});
+    });
+  });
+
+  it('evaluates variables on skip fields', () => {
+    const query = gql`
+      query($shouldSkip: Boolean) {
+        fortuneCookie @skip(if: $shouldSkip)
+      }`;
+    const variables = {
+      shouldSkip: true,
+    };
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+    assert(!shouldInclude(field, variables));
+  });
+
+  it('evaluates variables on include fields', () => {
+    const query = gql`
+      query($shouldSkip: Boolean) {
+        fortuneCookie @include(if: $shouldInclude)
+      }`;
+    const variables = {
+      shouldInclude: false,
+    };
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+    assert(!shouldInclude(field, variables));
+  });
+
+  it('throws an error if the value of the argument is not a variable or boolean', () => {
+    const query = gql`
+      query {
+        fortuneCookie @include(if: "string")
+      }`;
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+    assert.throws(() => {
+      shouldInclude(field, {});
+    });
+  });
 });

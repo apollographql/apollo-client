@@ -27,6 +27,14 @@ import {
 } from 'redux';
 
 import {
+  createApolloStore,
+} from '../src/store';
+
+import {
+  QueryManager,
+} from '../src/QueryManager';
+
+import {
   createNetworkInterface,
   HTTPNetworkInterface,
 } from '../src/networkInterface';
@@ -771,11 +779,22 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
       });
+      // we need this so it doesn't print out a bunch of stuff we don't need
+      // when we're trying to test an exception.
+      client.store = createApolloStore({ reportCrashes: false });
+      client.queryManager = new QueryManager({
+        networkInterface,
+        store: client.store,
+        reduxRootKey: 'apollo',
+      });
 
-      client.query({ query }).catch((error) => {
-        assert(error);
+      client.query({ query }).then(() => {
+        // do nothing
+      }).catch((error) => {
+        assert.include(error.message, 'Found extra field');
         done();
       });
+
     });
   });
 

@@ -154,6 +154,8 @@ export function diffSelectionSetAgainstStore({
 
           result[resultFieldKey] = fieldResult;
         }
+      } else {
+        pushMissingField(selection);
       }
 
     } else if (isInlineFragment(selection)) {

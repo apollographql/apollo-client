@@ -72,12 +72,18 @@ export function createApolloStore({
   reduxRootKey = 'apollo',
   initialState,
   config = {},
+  reportCrashes,
 }: {
   reduxRootKey?: string,
   initialState?: any,
   config?: ApolloReducerConfig,
+  reportCrashes?: boolean,
 } = {}): ApolloStore {
   const enhancers = [];
+
+  if (reportCrashes === undefined) {
+    reportCrashes = true;
+  }
 
   if (typeof window !== 'undefined') {
     const anyWindow = window as any;
@@ -86,7 +92,9 @@ export function createApolloStore({
     }
   }
 
-  enhancers.push(applyMiddleware(crashReporter));
+  if (reportCrashes) {
+    enhancers.push(applyMiddleware(crashReporter));
+  }
 
   return createStore(
     combineReducers({ [reduxRootKey]: createApolloReducer(config) }),

@@ -120,7 +120,7 @@ class postsList {
 }
 ```
 
-<h4 id="apollo2angular-mutations">Mutations</h4>
+<h4 id="angular2apollo-mutations">Mutations</h4>
 
 To call a mutation you can use `mutate` method with the same arguments as [`ApolloClient#mutate`](core.html#mutate). In this case as the result you will receive a promise that resolves to a GraphQLResult.
 
@@ -212,6 +212,22 @@ It allows you to define queries and mutations and to make them reactive. You can
 
 Each key on the object returned by `queries` function should be made up of the same possible arguments as [`ApolloClient#watchQuery`](core.html#watchQuery).
 
+The result of each query contains the same API as [`QuerySubscription`](core.html#QuerySubscription) and has the following form:
+
+```js
+{
+  queryName: any
+  ...
+  loading: boolean
+  errors: Error[]
+  ...
+  refetch(variables: Object)
+  unsubscribe()
+  stopPolling()
+  startPolling(pollInterval: number)
+}
+```
+
 Since `queries` function receives one argument which is a component's context you can use it to define variables.
 It is also reactive so your variables will be always up to date.
 
@@ -232,10 +248,6 @@ import ApolloClient, {
 
 import gql from 'apollo-client/gql';
 
-import {
-  Observable
-} from 'rxjs/Observable';
-
 const client = new ApolloClient({
   networkInterface: createNetworkInterface('http://localhost:8080')
 });
@@ -249,7 +261,7 @@ const client = new ApolloClient({
   client,
   queries(context) {
     return {
-      posts: {
+      data: {
         query: gql`
           query getPosts($tag: String) {
             posts(tag: $tag) {
@@ -259,14 +271,17 @@ const client = new ApolloClient({
         `,
         variables: {
           tag: context.tag
-        }
+        },
+        forceFetch: false,
+        returnPartialData: true,
+        pollInterval: 10000
       }
     };
   }
 })
 class postsList {
   public tag: string = '1234';
-  public posts: Observable<any[]>;
+  public data: any;
 }
 ```
 
@@ -290,7 +305,7 @@ import {
 } from 'angular2-apollo';
 
 import {
-  graphQLResult
+  GraphQLResult
 } from 'graphql';
 
 import ApolloClient, {
@@ -349,14 +364,10 @@ const client = new ApolloClient({
 class postsList {
   public token: string = 'random';
 
-  constructor() {
-
-  }
-
   reply(reply) {
     this.postReply(reply)
-      .then((graphQLResult) => {
-        const { errors, data } = graphQLResult;
+      .then((result: GraphQLResult) => {
+        const { errors, data } = result;
 
         if (data) {
           console.log('got data', data);
@@ -374,16 +385,37 @@ class postsList {
 
 <h2 id="apolloquerypipe">ApolloQueryPipe</h2>
 
-Apollo client exposes queries as observables, but each Apollo query can include few queries.
+Each Apollo query can include few queries.
 
-So inside an Apollo observable the data comes in the following form: `obs.data.queryName`
+[`Angular2Apollo#watchQuery`](angular2.html#angular2apollo-mutations) returns an Apollo observable.
+In combination with AsyncPipe the data comes in the following form:
 
-To handle that more easily we've created the `ApolloQueryPipe`. Here is how it works:
+```ts
+{
+  data: {
+    firstQuery: any
+    secondQuery: any
+  }
+}
+```
 
-template:
+Using `@Apollo` decorator, queries come directly as properties of result object. It looks like this:
+
+```ts
+{
+  firstQuery: any
+  secondQuery: any
+}
+```
+
+To handle that more easily we've created the `ApolloQueryPipe`.
+It automatically knows where to look for the query. You don't have to worry about it.
+
+Here is how it works:
+
 ```html
 <ul>
-  <li *ngFor="let post of posts | async | apolloQuery:'posts'">
+  <li *ngFor="let post of data | apolloQuery:'posts'">
       {{ post.title }}
   </li>
 </ul>

@@ -124,7 +124,6 @@ export function diffSelectionSetAgainstStore({
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
-    const included = shouldInclude(selection, variables);
 
     function pushMissingField(missingField: Selection) {
       if (!missingFieldPushed) {
@@ -134,6 +133,7 @@ export function diffSelectionSetAgainstStore({
     }
 
     if (isField(selection)) {
+        const includeField = shouldInclude(selection, variables);
         const {
           result: fieldResult,
           isMissing: fieldIsMissing,
@@ -144,7 +144,7 @@ export function diffSelectionSetAgainstStore({
           rootId,
           store,
           fragmentMap,
-          included,
+          included: includeField,
         });
 
       if (fieldIsMissing) {
@@ -152,7 +152,7 @@ export function diffSelectionSetAgainstStore({
         // query that is sent to the server. So, we push it into the set of
         // fields that is missing.
         pushMissingField(selection);
-      } else if (included) {
+      } else if (includeField) {
         const resultFieldKey = resultKeyNameFromField(selection);
 
         result[resultFieldKey] = fieldResult;

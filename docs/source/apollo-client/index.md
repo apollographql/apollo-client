@@ -84,7 +84,7 @@ import ApolloClient, { createNetworkInterface } from 'apollo-client';
 const networkInterface = createNetworkInterface('/graphql');
 
 networkInterface.use([{
-  applyMiddleWare(req, next) {
+  applyMiddleware(req, next) {
     if (!req.options.headers) {
       req.options.headers = {};  // Create the header object if needed.
     }

@@ -2,11 +2,29 @@ import isString = require('lodash.isstring');
 import assign = require('lodash.assign');
 import 'whatwg-fetch';
 
-import { GraphQLResult } from 'graphql';
+import {
+  GraphQLResult,
+  Document,
+} from 'graphql';
+
+import { print } from 'graphql/language/printer';
 
 import { MiddlewareInterface } from './middleware';
 
+import {
+  mergeRequests,
+  unpackMergedResult,
+} from './batching/queryMerging';
+
 export interface Request {
+  debugName?: string;
+  query?: Document;
+  variables?: Object;
+}
+
+// The request representation just before it is converted to JSON
+// and sent over the transport.
+export interface PrintedRequest {
   debugName?: string;
   query?: string;
   variables?: Object;
@@ -14,6 +32,10 @@ export interface Request {
 
 export interface NetworkInterface {
   query(request: Request): Promise<GraphQLResult>;
+}
+
+export interface BatchedNetworkInterface extends NetworkInterface {
+  batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
 }
 
 export interface HTTPNetworkInterface extends NetworkInterface {
@@ -26,6 +48,33 @@ export interface HTTPNetworkInterface extends NetworkInterface {
 export interface RequestAndOptions {
   request: Request;
   options: RequestInit;
+}
+
+// Takes a standard network interface (i.e. not necessarily a BatchedNetworkInterface) and turns
+// it into a network interface that supports batching by composing/merging queries in to one
+// query.
+export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetworkInterface {
+  return {
+    query(request: Request): Promise<GraphQLResult> {
+      return networkInterface.query(request);
+    },
+
+    batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+      const composedRequest = mergeRequests(requests);
+      return this.query(composedRequest).then((composedResult) => {
+        return unpackMergedResult(composedResult, requests);
+      });
+    },
+  };
+}
+
+export function printRequest(request: Request): PrintedRequest {
+  const printedRequest = {
+    debugName: request.debugName,
+    query: print(request.query),
+    variables: request.variables,
+  };
+  return printedRequest;
 }
 
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {
@@ -71,7 +120,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     options,
   }: RequestAndOptions): Promise<IResponse> {
     return fetch(uri, assign({}, _opts, options, {
-      body: JSON.stringify(request),
+      body: JSON.stringify(printRequest(request)),
       headers: assign({}, options.headers, {
         Accept: '*/*',
         'Content-Type': 'application/json',

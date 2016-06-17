@@ -20,3 +20,4 @@ import './gql';
 import './queryTransform';
 import './getFromAST';
 import './directives';
+import './queryMerging';

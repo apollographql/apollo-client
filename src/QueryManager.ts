@@ -155,13 +155,13 @@ export class QueryManager {
     let mutationDef = getMutationDefinition(mutation);
     if (this.queryTransformer) {
       mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
+      mutation = replaceOperationDefinition(mutation, mutationDef);
     }
     mutation = replaceOperationDefinition(mutation, mutationDef);
     const mutationString = print(mutation);
     const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
-
     const request = {
-      query: mutationString,
+      query: mutation,
       variables,
     } as Request;
 
@@ -302,7 +302,7 @@ export class QueryManager {
     // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
-
+    let minimizedQueryDoc = transformedQuery;
     let initialResult;
 
     if (!forceFetch) {
@@ -336,9 +336,11 @@ export class QueryManager {
         };
 
         minimizedQueryString = print(diffedQuery);
+        minimizedQueryDoc = diffedQuery;
       } else {
         minimizedQuery = null;
         minimizedQueryString = null;
+        minimizedQueryDoc = null;
       }
     }
 
@@ -374,7 +376,7 @@ export class QueryManager {
 
     if (minimizedQuery) {
       const request: Request = {
-        query: minimizedQueryString,
+        query: minimizedQueryDoc,
         variables,
       };
 

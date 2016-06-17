@@ -6,6 +6,7 @@ import {
   replaceOperationDefinition,
   createFragmentMap,
   FragmentMap,
+  getOperationName,
 } from '../src/queries/getFromAST';
 
 import {
@@ -218,5 +219,23 @@ describe('AST utility functions', () => {
       'moreAuthorDetails': fragments[1],
     };
     assert.deepEqual(fragmentMap, expectedTable);
+  });
+
+  it('should get the operation name out of a query', () => {
+    const query = gql`
+      query nameOfQuery {
+        fortuneCookie
+      }`;
+    const operationName = getOperationName(query);
+    assert.equal(operationName, 'nameOfQuery');
+  });
+
+  it('should get the operation name out of a mutation', () => {
+    const query = gql`
+      mutation nameOfMutation {
+        fortuneCookie
+      }`;
+    const operationName = getOperationName(query);
+    assert.equal(operationName, 'nameOfMutation');
   });
 });

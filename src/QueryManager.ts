@@ -537,6 +537,19 @@ export class QueryManager {
     });
   }
 
+  public resetStore(): void {
+    // reset the store
+    this.store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+    });
+
+
+  }
+
+  private getApolloState(): Store {
+    return this.store.getState()[this.reduxRootKey];
+  }
+
   private startQuery(options: WatchQueryOptions, listener: QueryListener) {
     const queryId = this.generateQueryId();
     this.queryListeners[queryId] = listener;

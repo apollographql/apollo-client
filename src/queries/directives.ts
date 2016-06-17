@@ -17,7 +17,7 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
   }
 
   let res: Boolean = true;
-  selection.directives.map((directive) => {
+  selection.directives.forEach((directive) => {
     // TODO should move this validation to GraphQL validation once that's implemented.
     if (directive.name.value !== 'skip' && directive.name.value !== 'include') {
       throw new Error(`Directive ${directive.name.value} not supported.`);

@@ -734,7 +734,7 @@ describe('client', () => {
   });
 
   it('should send operationName along with the mutation to the server', (done) => {
-    const query = gql`
+    const mutation = gql`
       mutation myMutationName {
         fortuneCookie
       }`;
@@ -750,7 +750,7 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
     });
-    client.query({ query }).then((actualResult) => {
+    client.mutate({ mutation }).then((actualResult) => {
       assert.deepEqual(actualResult.data, data);
       done();
     });

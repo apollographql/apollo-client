@@ -44,6 +44,17 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   }
 }
 
+export function getOperationName(doc: Document): string {
+  let res: string = '';
+  doc.definitions.forEach((definition) => {
+    if (definition.kind === 'OperationDefinition'
+        && (definition as OperationDefinition).name) {
+      res = (definition as OperationDefinition).name.value;
+    }
+  });
+  return res;
+}
+
 // Returns the FragmentDefinitions from a particular document as an array
 export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
   checkDocument(doc);

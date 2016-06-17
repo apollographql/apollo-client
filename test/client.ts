@@ -7,6 +7,7 @@ import {
   GraphQLError,
   OperationDefinition,
   print,
+  GraphQLResult,
 } from 'graphql';
 
 import {
@@ -29,6 +30,8 @@ import {
 import {
   createNetworkInterface,
   HTTPNetworkInterface,
+  Request,
+  NetworkInterface,
 } from '../src/networkInterface';
 
 import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
@@ -703,6 +706,52 @@ describe('client', () => {
     });
     client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
+      done();
+    });
+  });
+
+  it('should send operationName along with the query to the server', (done) => {
+    const query = gql`
+      query myQueryName {
+        fortuneCookie
+      }`;
+    const data = {
+      'fortuneCookie': 'The waiter spit in your food',
+    };
+    const networkInterface: NetworkInterface = {
+      query(request: Request): Promise<GraphQLResult> {
+        assert.equal(request.operationName, 'myQueryName');
+        return Promise.resolve({ data });
+      },
+    };
+    const client = new ApolloClient({
+      networkInterface,
+    });
+    client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, data);
+      done();
+    });
+  });
+
+  it('should send operationName along with the mutation to the server', (done) => {
+    const query = gql`
+      mutation myMutationName {
+        fortuneCookie
+      }`;
+    const data = {
+      'fortuneCookie': 'The waiter spit in your food',
+    };
+    const networkInterface: NetworkInterface = {
+      query(request: Request): Promise<GraphQLResult> {
+        assert.equal(request.operationName, 'myMutationName');
+        return Promise.resolve({ data });
+      },
+    };
+    const client = new ApolloClient({
+      networkInterface,
+    });
+    client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, data);
       done();
     });
   });

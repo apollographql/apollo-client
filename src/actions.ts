@@ -91,6 +91,14 @@ export function isMutationResultAction(action: ApolloAction): action is Mutation
   return action.type === 'APOLLO_MUTATION_RESULT';
 }
 
+export interface StoreResetAction {
+  type: 'APOLLO_STORE_RESET';
+}
+
+export function isStoreResetAction(action: ApolloAction): action is StoreResetAction {
+  return action.type === 'APOLLO_STORE_RESET';
+}
+
 export type ApolloAction =
   QueryResultAction |
   QueryErrorAction |
@@ -98,4 +106,5 @@ export type ApolloAction =
   QueryResultClientAction |
   QueryStopAction |
   MutationInitAction |
-  MutationResultAction;
+  MutationResultAction |
+  StoreResetAction;

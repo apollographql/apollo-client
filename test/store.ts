@@ -57,4 +57,34 @@ describe('createApolloStore', () => {
 
     assert.deepEqual(store.getState(), initialState);
   });
+
+  it('reset itself', () => {
+    const initialState = {
+      apollo: {
+        queries: {
+          'test.0': true,
+        },
+        mutations: {},
+        data: {
+          'test.0': true,
+        },
+      },
+    };
+
+    const emptyState = {
+      queries: { },
+      mutations: { },
+      data: { },
+    };
+
+    const store = createApolloStore({
+      initialState,
+    });
+
+    store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+    });
+
+    assert.deepEqual(store.getState().apollo, emptyState);
+  });
 });

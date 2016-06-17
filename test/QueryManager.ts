@@ -2156,6 +2156,98 @@ describe('QueryManager', () => {
         queryManager.fetchQuery('very-fake-id', { query: query2 });
         done();
       }, 100);
+
+    });
+  });
+
+  describe('store resets', () => {
+    it('should change the store state to an empty state', () => {
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.resetStore();
+      const currentState = queryManager.getApolloState();
+      const expectedState = {
+        data: {},
+        mutations: {},
+        queries: {},
+      };
+
+      assert.deepEqual(currentState, expectedState);
+    });
+
+    it('should throw an error on an inflight fetch query if the store is reset', (done) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface({
+          request: { query },
+          result: { data },
+          delay: 10000, //i.e. forever
+        }),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      queryManager.fetchQuery("made up id", { query }).then((result) => {
+        assert(false); //we don't want this promise to ever resolve correctly
+        done();
+      }).catch((error) => {
+        assert.include(error.message, "Store reset");
+        done();
+      });
+      queryManager.resetStore();
+    });
+
+    it('should throw an error a query subscription if the store is reset', (done) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastname: 'Smith',
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface({
+          request: { query },
+          result: { data },
+          delay: 10000,
+        }),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      const handle = queryManager.watchQuery({ query });
+      const subscription = handle.subscribe({
+        next: (result) => {
+          // there should be no result returned because the store should be
+          // reset before any of that happens.
+          done(new Error('Should not have returned data when store was reset.'));
+        },
+
+        error: (error) => {
+          done();
+        }
+      });
     });
   });
 });

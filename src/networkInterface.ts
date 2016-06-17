@@ -20,7 +20,7 @@ export interface Request {
   debugName?: string;
   query?: Document;
   variables?: Object;
-  operationName?: String;
+  operationName?: string;
 }
 
 // The request representation just before it is converted to JSON
@@ -29,7 +29,7 @@ export interface PrintedRequest {
   debugName?: string;
   query?: string;
   variables?: Object;
-  operationName?: String;
+  operationName?: string;
 }
 
 export interface NetworkInterface {

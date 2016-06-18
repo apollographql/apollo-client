@@ -13,7 +13,7 @@ We'll be using a package called [apollo-server](https://www.npmjs.com/package/ap
 For the remainder of this guide, we'll assume that you are familiar with using the command line of your operating system and already have Node.js and npm set up for your environment.
 If that's not the case, you should [do that first](https://nodejs.org/en/download/package-manager/) before you read the rest of this guide.
 
-To get started, you need to install a few packages and set up some boilerplate. To make this easier, we've created a barebones started kit which you can use:
+To get started, you need to install a few packages and set up some boilerplate. To make this easier, we've created a barebones starter kit which you can use:
 ```bash
 git clone --branch server-only https://github.com/apollostack/apollo-starter-kit
 cd apollo-starter-kit

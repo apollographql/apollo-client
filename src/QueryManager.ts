@@ -106,7 +106,7 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
-
+  private pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
@@ -114,7 +114,7 @@ export class QueryManager {
 
   private scheduler: QueryScheduler;
   private batcher: QueryBatcher;
-  private batcherPollInterval = 25;
+  private batcherPollInterval = 10;
 
   constructor({
     networkInterface,
@@ -135,7 +135,7 @@ export class QueryManager {
     this.store = store;
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
-
+    this.pollingTimers = {};
 
     const isBatchingInterface =
       (this.networkInterface as BatchedNetworkInterface).batchQuery !== undefined;
@@ -263,15 +263,44 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
-    // If we have a polling query, that should be handled by the scheduler.
-    if (options.pollInterval) {
-      return this.scheduler.registerPollingQuery(options);
-    }
-
     return new ObservableQuery((observer) => {
-      const listener = this.queryListenerForObserver(options, observer);
-      const queryId = this.startQuery(options, listener);
-      // const queryId = this.generateQueryId();
+      const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
+        if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
+          // XXX Currently, returning errors and data is exclusive because we
+          // don't handle partial results
+          if (queryStoreValue.graphQLErrors) {
+            if (observer.next) {
+              observer.next({ errors: queryStoreValue.graphQLErrors });
+            }
+          } else if (queryStoreValue.networkError) {
+            // XXX we might not want to re-broadcast the same error over and over if it didn't change
+            if (observer.error) {
+              observer.error(queryStoreValue.networkError);
+            } else {
+              console.error('Unhandled network error',
+                queryStoreValue.networkError,
+                queryStoreValue.networkError.stack);
+            }
+          } else {
+            const resultFromStore = readSelectionSetFromStore({
+              store: this.getApolloState().data,
+              rootId: queryStoreValue.query.id,
+              selectionSet: queryStoreValue.query.selectionSet,
+              variables: queryStoreValue.variables,
+              returnPartialData: options.returnPartialData,
+              fragmentMap: queryStoreValue.fragmentMap,
+            });
+
+            if (observer.next) {
+              observer.next({ data: resultFromStore });
+            }
+          }
+        }
+      });
+
+      // get the polling timer reference associated with this
+      // particular query.
+      const pollingTimer = this.pollingTimers[queryId];
 
       return {
         unsubscribe: () => {
@@ -288,12 +317,17 @@ export class QueryManager {
           }) as WatchQueryOptions);
         },
         stopPolling: (): void => {
-          this.scheduler.stopPollingQuery(queryId);
+          if (pollingTimer) {
+            clearInterval(pollingTimer);
+          }
         },
         startPolling: (pollInterval): void => {
-          this.scheduler.startPollingQuery(assign(options, {
-            pollInterval,
-          }) as WatchQueryOptions, listener, queryId);
+          this.pollingTimers[queryId] = setInterval(() => {
+            const pollingOptions = assign({}, options) as WatchQueryOptions;
+            // subsequent fetches from polling always reqeust new data
+            pollingOptions.forceFetch = true;
+            this.fetchQuery(queryId, pollingOptions);
+          }, pollInterval);
         },
       };
     });
@@ -307,6 +341,72 @@ export class QueryManager {
     return this.watchQuery(options).result();
   }
 
+  // Sends several queries batched together into one fetch over the transport.
+  public fetchBatchedQueries(fetchRequests: QueryFetchRequest[]): Promise<GraphQLResult[]> {
+    // There are three types of promises used here.
+    // - fillPromise: resolved once we have transformed each of the queries in
+    // fetchRequests have been transformed by fetchQueryOverInterface().
+    // - queryPromise: fetchQueryOverInterface() will write the results returned
+    // by the server for a particular query after this promise is resolved.
+    // - resultPromise: This is a promise returned by fetchQueryOverInterface().
+    // It is resolved once the query results have been written to store (i.e.
+    // the whole fetch procedure has been completed).
+    const queryPromises: Promise<GraphQLResult>[] = [];
+    const queryResolvers = [];
+    const queryRejecters = [];
+
+    const transformedRequests: Request[] = [];
+    const resultPromises: Promise<GraphQLResult>[] = [];
+
+    const fillPromise = new Promise((fillResolve, fillReject) => {
+      const batchingNetworkInterface: NetworkInterface = {
+        query(request: Request) {
+          transformedRequests.push(request);
+          const queryPromise = new Promise((resolve, reject) => {
+            queryResolvers.push(resolve);
+            queryRejecters.push(reject);
+          });
+          queryPromises.push(queryPromise);
+
+          const retPromise = fillPromise.then(() => {
+            return queryPromise;
+          });
+
+          if (queryPromises.length === fetchRequests.length) {
+            fillResolve();
+          }
+
+          return retPromise;
+        },
+      };
+
+      fetchRequests.forEach((fetchRequest) => {
+        const resultPromise = this.fetchQueryOverInterface(fetchRequest.queryId,
+                                                           fetchRequest.options,
+                                                           batchingNetworkInterface);
+        resultPromises.push(resultPromise);
+      });
+    });
+
+    // wait until all of the queryPromise values have been added to queryPromises
+    fillPromise.then(() => {
+      const requestObjects: Request[] = transformedRequests;
+      (this.networkInterface as BatchedNetworkInterface)
+        .batchQuery(requestObjects).then((results) => {
+        // Note: the server has to guarantee that the results will have the same
+        // ordering as the queries that they correspond to.
+        results.forEach((result, index) => {
+          queryResolvers[index](result);
+        });
+      });
+    });
+
+    return Promise.all(resultPromises);
+  }
+
+  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
+    return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
+  }
 
   public generateQueryId() {
     const queryId = this.idCounter.toString();
@@ -333,7 +433,9 @@ export class QueryManager {
     delete this.queryListeners[queryId];
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
+  private fetchQueryOverInterface(queryId: string,
+                                  options: WatchQueryOptions,
+                                  network: NetworkInterface): Promise<GraphQLResult> {
     const {
       query,
       variables,
@@ -439,11 +541,12 @@ export class QueryManager {
         query: minimizedQueryDoc,
         variables,
         operationName: getOperationName(minimizedQueryDoc),
-      }
+      };
 
       const fetchRequest: QueryFetchRequest = {
         options: { query: minimizedQueryDoc, variables },
         queryId: queryId,
+        operationName: request.operationName,
       };
 
       return this.batcher.enqueueRequest(fetchRequest)
@@ -503,8 +606,15 @@ export class QueryManager {
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options);
 
-    // Note: this method should never be called with a query that starts out as polling - those
-    // are all handled by the QueryScheduler.
+    if (options.pollInterval) {
+      this.pollingTimers[queryId] = setInterval(() => {
+        const pollingOptions = assign({}, options) as WatchQueryOptions;
+        // subsequent fetches from polling always reqeust new data
+        pollingOptions.forceFetch = true;
+        this.fetchQuery(queryId, pollingOptions);
+      }, options.pollInterval);
+    }
+
     return queryId;
   }
 
@@ -514,7 +624,9 @@ export class QueryManager {
     delete this.queryListeners[queryId];
 
     // if we have a polling interval running, stop it
-    this.scheduler.stopPollingQuery(queryId);
+    if (this.pollingTimers[queryId]) {
+      clearInterval(this.pollingTimers[queryId]);
+    }
 
     this.store.dispatch({
       type: 'APOLLO_QUERY_STOP',

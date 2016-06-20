@@ -91,13 +91,44 @@ describe('QueryBatcher', () => {
       queryId: 'not-a-real-id',
     };
 
-    it('should be able to consume from a queue containing a single query',
-       (done) => {
-      batcher.enqueueRequest(request);
-      const promises: Promise<GraphQLResult>[] = batcher.consumeQueue();
+    it('should be able to consume from a queue containing a single query', (done) => {
+      const myQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const myData = {
+        'author': {
+          'firstName': 'John',
+          'lastName': 'Smith',
+        },
+      };
+      const myNetworkInterface = mockBatchedNetworkInterface(
+        {
+          request: { query: myQuery },
+          result: { data: myData },
+        },
+        {
+          request: { query: myQuery },
+          result: { data: myData },
+        }
+      );
+      const myBatcher = new QueryBatcher({
+        shouldBatch: true,
+        networkInterface: myNetworkInterface,
+      });
+      const request: QueryFetchRequest = {
+        options: { query: myQuery },
+        queryId: 'not-a-very-real-id',
+      };
+
+      myBatcher.enqueueRequest(request);
+      const promises: Promise<GraphQLResult>[] = myBatcher.consumeQueue();
       assert.equal(promises.length, 1);
       promises[0].then((resultObj) => {
-        assert.equal(batcher.queuedRequests.length, 0);
+        assert.equal(myBatcher.queuedRequests.length, 0);
         assert.deepEqual(resultObj, { data } );
         done();
       });
@@ -189,7 +220,7 @@ describe('QueryBatcher', () => {
           lastName
         }
       }`;
-    const request = {
+    const myRequest = {
       options: { query },
       queryId: 'not-a-real-id',
     };
@@ -200,7 +231,7 @@ describe('QueryBatcher', () => {
         lastName: 'Smith',
       },
     };
-    const myNetworkInterface = mockNetworkInterface(
+    const networkInterface = mockNetworkInterface(
       {
         request: { query },
         result: { data },
@@ -208,9 +239,9 @@ describe('QueryBatcher', () => {
     );
     const batcher = new QueryBatcher({
       shouldBatch: false,
-      networkInterface: myNetworkInterface,
+      networkInterface,
     });
-    const promise = batcher.enqueueRequest(request);
+    const promise = batcher.enqueueRequest(myRequest);
     batcher.consumeQueue();
     promise.then((result) => {
       assert.deepEqual(result, { data });

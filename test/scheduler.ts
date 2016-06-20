@@ -40,13 +40,14 @@ describe('QueryScheduler', () => {
   it('should correctly start polling queries', (done) => {
     const query = gql`
       query {
-        author {
+        anotherAlias: author {
           firstName
           lastName
         }
       }`;
+
     const data = {
-      'author': {
+      'anotherAlias': {
         'firstName': 'John',
         'lastName': 'Smith',
       },
@@ -84,13 +85,13 @@ describe('QueryScheduler', () => {
   it('should correctly stop polling queries', (done) => {
     const query = gql`
       query {
-        author {
+        someAlias: author {
           firstName
           lastName
         }
       }`;
     const data = {
-      'author': {
+      'someAlias': {
         'firstName': 'John',
         'lastName': 'Smith',
       },
@@ -126,22 +127,22 @@ describe('QueryScheduler', () => {
   });
 
   it('should register a query and return an observable that can be unsubscribed', (done) => {
-    const query = gql`
+    const myQuery = gql`
       query {
-        author {
+        someAuthorAlias: author {
           firstName
           lastName
         }
       }`;
     const data = {
-      'author': {
+      'someAuthorAlias': {
         'firstName': 'John',
         'lastName': 'Smith',
       },
     };
     const queryOptions = {
-      query,
-      pollInterval: 50,
+      query: myQuery,
+      pollInterval: 20,
     };
     const networkInterface = mockNetworkInterface(
       {

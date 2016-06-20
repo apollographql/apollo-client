@@ -15,6 +15,7 @@ import {
 export interface QueryFetchRequest {
   options: WatchQueryOptions;
   queryId: string;
+  operationName?: string;
 
   // promise is created when the query fetch request is
   // added to the queue and is resolved once the result is back
@@ -71,6 +72,7 @@ export class QueryBatcher {
       return {
         query: queuedRequest.options.query,
         variables: queuedRequest.options.variables,
+        operationName: queuedRequest.operationName,
       };
     });
 

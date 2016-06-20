@@ -92,37 +92,10 @@ describe('QueryBatcher', () => {
     };
 
     it('should be able to consume from a queue containing a single query', (done) => {
-      const myQuery = gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }`;
-      const myData = {
-        'author': {
-          'firstName': 'John',
-          'lastName': 'Smith',
-        },
-      };
-      const myNetworkInterface = mockBatchedNetworkInterface(
-        {
-          request: { query: myQuery },
-          result: { data: myData },
-        },
-        {
-          request: { query: myQuery },
-          result: { data: myData },
-        }
-      );
       const myBatcher = new QueryBatcher({
         shouldBatch: true,
         networkInterface: myNetworkInterface,
       });
-      const request: QueryFetchRequest = {
-        options: { query: myQuery },
-        queryId: 'not-a-very-real-id',
-      };
 
       myBatcher.enqueueRequest(request);
       const promises: Promise<GraphQLResult>[] = myBatcher.consumeQueue();
@@ -231,7 +204,7 @@ describe('QueryBatcher', () => {
         lastName: 'Smith',
       },
     };
-    const networkInterface = mockNetworkInterface(
+    const myNetworkInterface = mockNetworkInterface(
       {
         request: { query },
         result: { data },
@@ -239,7 +212,7 @@ describe('QueryBatcher', () => {
     );
     const batcher = new QueryBatcher({
       shouldBatch: false,
-      networkInterface,
+      networkInterface: myNetworkInterface,
     });
     const promise = batcher.enqueueRequest(myRequest);
     batcher.consumeQueue();

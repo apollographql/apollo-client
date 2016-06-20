@@ -40,14 +40,14 @@ describe('QueryScheduler', () => {
   it('should correctly start polling queries', (done) => {
     const query = gql`
       query {
-        anotherAlias: author {
+        author {
           firstName
           lastName
         }
       }`;
 
     const data = {
-      'anotherAlias': {
+      'author': {
         'firstName': 'John',
         'lastName': 'Smith',
       },

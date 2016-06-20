@@ -341,69 +341,6 @@ export class QueryManager {
     return this.watchQuery(options).result();
   }
 
-  // Sends several queries batched together into one fetch over the transport.
-  public fetchBatchedQueries(fetchRequests: QueryFetchRequest[]): Promise<GraphQLResult[]> {
-    // There are three types of promises used here.
-    // - fillPromise: resolved once we have transformed each of the queries in
-    // fetchRequests have been transformed by fetchQueryOverInterface().
-    // - queryPromise: fetchQueryOverInterface() will write the results returned
-    // by the server for a particular query after this promise is resolved.
-    // - resultPromise: This is a promise returned by fetchQueryOverInterface().
-    // It is resolved once the query results have been written to store (i.e.
-    // the whole fetch procedure has been completed).
-    const queryPromises: Promise<GraphQLResult>[] = [];
-    const queryResolvers = [];
-    const queryRejecters = [];
-
-    const transformedRequests: Request[] = [];
-    const resultPromises: Promise<GraphQLResult>[] = [];
-
-    const fillPromise = new Promise((fillResolve, fillReject) => {
-      const batchingNetworkInterface: NetworkInterface = {
-        query(request: Request) {
-          transformedRequests.push(request);
-          const queryPromise = new Promise((resolve, reject) => {
-            queryResolvers.push(resolve);
-            queryRejecters.push(reject);
-          });
-          queryPromises.push(queryPromise);
-
-          const retPromise = fillPromise.then(() => {
-            return queryPromise;
-          });
-
-          if (queryPromises.length === fetchRequests.length) {
-            fillResolve();
-          }
-
-          return retPromise;
-        },
-      };
-
-      fetchRequests.forEach((fetchRequest) => {
-        const resultPromise = this.fetchQueryOverInterface(fetchRequest.queryId,
-                                                           fetchRequest.options,
-                                                           batchingNetworkInterface);
-        resultPromises.push(resultPromise);
-      });
-    });
-
-    // wait until all of the queryPromise values have been added to queryPromises
-    fillPromise.then(() => {
-      const requestObjects: Request[] = transformedRequests;
-      (this.networkInterface as BatchedNetworkInterface)
-        .batchQuery(requestObjects).then((results) => {
-        // Note: the server has to guarantee that the results will have the same
-        // ordering as the queries that they correspond to.
-        results.forEach((result, index) => {
-          queryResolvers[index](result);
-        });
-      });
-    });
-
-    return Promise.all(resultPromises);
-  }
-
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
     return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
   }

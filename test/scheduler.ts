@@ -174,6 +174,83 @@ describe('QueryScheduler', () => {
     }, 100);
   });
 
+  it('should handle network errors on polling queries correctly', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const error = new Error('something went terribly wrong');
+    const queryOptions = {
+      query,
+      pollInterval: 80,
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: queryOptions,
+        error,
+      }
+    );
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    let observableQuery = scheduler.registerPollingQuery(queryOptions);
+    const subscription = observableQuery.subscribe({
+      next(result) {
+        done(new Error('Observer provided a result despite a network error.'));
+      },
+
+      error(errorVal) {
+        assert(errorVal);
+        subscription.unsubscribe();
+        done();
+      },
+    });
+  });
+
+  it('should handle graphql errors on polling queries correctly', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const errors = [new Error('oh no something went wrong')];
+    const queryOptions = {
+      query,
+      pollInterval: 80,
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: queryOptions,
+        result: { errors },
+      }
+    );
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    let observableQuery = scheduler.registerPollingQuery(queryOptions);
+    const subscription = observableQuery.subscribe({
+      error(errorVal) {
+        subscription.unsubscribe();
+        assert(errorVal);
+        done();
+      },
+    });
+  });
   it('should keep track of in flight queries', (done) => {
     const query = gql`
       query {

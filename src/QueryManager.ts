@@ -24,6 +24,7 @@ import {
   replaceOperationDefinition,
   getFragmentDefinitions,
   createFragmentMap,
+  getOperationName,
 } from './queries/getFromAST';
 
 import {
@@ -163,6 +164,7 @@ export class QueryManager {
     const request = {
       query: mutation,
       variables,
+      operationName: getOperationName(mutation),
     } as Request;
 
     this.store.dispatch({
@@ -378,6 +380,7 @@ export class QueryManager {
       const request: Request = {
         query: minimizedQueryDoc,
         variables,
+        operationName: getOperationName(minimizedQueryDoc),
       };
 
       return this.networkInterface.query(request)

@@ -319,4 +319,30 @@ describe('QueryBatcher', () => {
       done();
     });
   });
+
+  it('should not start polling if shouldBatch is false', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+     }`;
+    const fetchRequest = {
+      options: { query },
+      queryId: 'super-real-id',
+    };
+    const batcher = new QueryBatcher({
+      shouldBatch: false,
+      networkInterface: mockNetworkInterface({
+        request: { query },
+      }),
+    });
+    batcher.start(1);
+    batcher.queuedRequests.push(fetchRequest);
+    setTimeout(() => {
+      assert.equal(batcher.queuedRequests.length, 1);
+      done();
+    });
+  });
 });

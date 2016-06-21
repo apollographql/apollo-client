@@ -119,10 +119,12 @@ export class QueryBatcher {
   }
 
   public start(pollInterval: Number) {
-    this.pollInterval = pollInterval;
-    this.pollTimer = setInterval(() => {
-      this.consumeQueue();
-    }, this.pollInterval);
+    if (this.shouldBatch) {
+      this.pollInterval = pollInterval;
+      this.pollTimer = setInterval(() => {
+        this.consumeQueue();
+      }, this.pollInterval);
+    }
   }
 
   public stop() {

@@ -703,4 +703,56 @@ describe('Query merging', () => {
       applyAliasNameToDocument(mutation, aliasName);
     });
   });
+
+  it('should correctly unpack results that consist of multiple fields', () => {
+    const query1 = gql`
+      query authorStuff {
+        author {
+          firstName
+          lastName
+        }
+        __typename
+      }
+    `;
+    const query2 = gql`
+      query personStuff {
+        person {
+          name
+        }
+      }`;
+    const result1 = {
+      data: {
+        __typename: 'RootQuery',
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      },
+    };
+    const result2 = {
+      data: {
+        person: {
+          name: 'John Smith',
+        },
+      },
+    };
+    const composedResult = {
+      data: {
+        ___authorStuff___requestIndex_0___fieldIndex_0: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        ___authorStuff___requestIndex_0___fieldIndex_1: "RootQuery",
+        ___personStuff___requestIndex_1___fieldIndex_0: {
+          name: 'John Smith',
+        },
+      },
+    };
+    const requests = [{ query: query1 }, { query: query2 }];
+    const unpackedResults = unpackMergedResult(composedResult, requests);
+    assert.equal(unpackedResults.length, 2);
+
+    assert.deepEqual(unpackedResults[0], result1);
+    assert.deepEqual(unpackedResults[1], result2);
+  });
 });

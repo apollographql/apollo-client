@@ -719,50 +719,6 @@ describe('client', () => {
   });
 
   describe('directives', () => {
-    it('should be able to send a query with a skip directive true', (done) => {
-      const query = gql`
-        query {
-          fortuneCookie @skip(if: true)
-        }`;
-      const result = {};
-      const networkInterface = mockNetworkInterface(
-        {
-          request: { query },
-          result: { data: result },
-        }
-      );
-      const client = new ApolloClient({
-        networkInterface,
-      });
-      client.query({ query }).then((actualResult) => {
-        assert.deepEqual(actualResult.data, result);
-        done();
-      });
-    });
-
-    it('should be able to send a query with a skip directive false', (done) => {
-      const query = gql`
-        query {
-          fortuneCookie @skip(if: false)
-        }`;
-      const result = {
-        fortuneCookie: 'result',
-      };
-      const networkInterface = mockNetworkInterface(
-        {
-          request: { query },
-          result: { data: result },
-        }
-      );
-      const client = new ApolloClient({
-        networkInterface,
-      });
-      client.query({ query }).then((actualResult) => {
-        assert.deepEqual(actualResult.data, result);
-        done();
-      });
-    });
-
     it('should reject the query promise if skipped data arrives in the result', (done) => {
       const query = gql`
         query {

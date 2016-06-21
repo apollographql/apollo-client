@@ -241,7 +241,7 @@ function diffFieldAgainstStore({
   rootId,
   store,
   fragmentMap,
-  included,
+  included = true,
 }: {
   field: Field,
   throwOnMissingField: boolean,
@@ -253,9 +253,6 @@ function diffFieldAgainstStore({
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
-  if (included === undefined) {
-    included = true;
-  }
 
   if (! has(storeObj, storeFieldKey)) {
     if (throwOnMissingField && included) {

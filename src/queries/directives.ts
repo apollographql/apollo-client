@@ -27,7 +27,7 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
     const directiveArguments = directive.arguments;
     const directiveName = directive.name.value;
     if (directiveArguments.length !== 1) {
-      throw new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
+      throw new Error(`Argument for the @${directiveName} directive must be a boolean value or variable.`);
     }
 
 

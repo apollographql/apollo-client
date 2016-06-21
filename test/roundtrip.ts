@@ -91,6 +91,24 @@ describe('roundtrip', () => {
       },
     });
   });
+
+  describe('directives', () => {
+    it('should be able to query with skip directive true', () => {
+      storeRoundtrip(gql`
+        query {
+          fortuneCookie @skip(if: true)
+        }
+      `, {});
+    });
+
+    it('should be able to query with skip directive false', () => {
+      storeRoundtrip(gql`
+        query {
+          fortuneCookie @skip(if: false)
+        }
+      `, {fortuneCookie: 'live long and prosper'});
+    });
+  });
 });
 
 function storeRoundtrip(query: Document, result, variables = {}) {

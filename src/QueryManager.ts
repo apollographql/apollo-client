@@ -1,7 +1,6 @@
 import {
   NetworkInterface,
   Request,
-  BatchedNetworkInterface,
 } from './networkInterface';
 
 
@@ -137,15 +136,13 @@ export class QueryManager {
     this.queryTransformer = queryTransformer;
     this.pollingTimers = {};
 
-    const isBatchingInterface =
-      (typeof (this.networkInterface as BatchedNetworkInterface).batchQuery) !== 'undefined'
     this.queryListeners = {};
     this.scheduler = new QueryScheduler({
       queryManager: this,
     });
     this.batcher = new QueryBatcher({
       //we batch if the network interface supports batching if user has not specified
-      shouldBatch: typeof shouldBatch === "undefined" ? isBatchingInterface : shouldBatch,
+      shouldBatch,
       networkInterface: this.networkInterface,
     });
     this.batcher.start(this.batcherPollInterval);

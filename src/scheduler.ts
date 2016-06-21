@@ -43,7 +43,7 @@ export class QueryScheduler {
   }
 
   public checkInFlight(queryId: string) {
-    return (this.inFlightQueries[queryId] !== undefined);
+    return this.inFlightQueries.hasOwnProperty(queryId);
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions) {

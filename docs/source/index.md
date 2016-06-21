@@ -32,6 +32,7 @@ We have put together some basic example apps using various parts of Apollo; chec
 - [A full-stack app with a Material UI React frontend on top of Discourse](https://github.com/apollostack/apollo-demo)
 - [A GraphQL server example that uses SQL, MongoDB + REST](https://github.com/apollostack/apollo-server-tutorial)
 - [A simple GraphQL blog that uses Feathersjs for managing database services](https://github.com/swarthout/feathers-apollo)
+- [A fork of Facebook's F8 React Native app that uses Apollo](https://github.com/nnance/f8app-apollo)
 
 ### Meteor Examples
 - [A bare-bones Meteor starter kit](https://github.com/apollostack/meteor-starter-kit)

@@ -27,7 +27,7 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
     const directiveArguments = directive.arguments;
     const directiveName = directive.name.value;
     if (directiveArguments.length !== 1) {
-      throw new Error(`Argument for the @${directiveName} directive must be a boolean value or variable.`);
+      throw new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
     }
 
 
@@ -41,7 +41,7 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
     if (!ifValue || ifValue.kind !== 'BooleanValue') {
       // means it has to be a variable value if this is a valid @skip or @include directive
       if (ifValue.kind !== 'Variable') {
-        throw new Error(`Invalid argument value for the @${directiveName} directive.`);
+        throw new Error(`Argument for the @${directiveName} directive must be a variable or a bool ean value.`);
       } else {
         evaledValue = variables[(ifValue as Variable).name.value];
         if (evaledValue === undefined) {

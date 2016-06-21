@@ -742,7 +742,7 @@ describe('Query merging', () => {
           firstName: 'John',
           lastName: 'Smith',
         },
-        ___authorStuff___requestIndex_0___fieldIndex_1: "RootQuery",
+        ___authorStuff___requestIndex_0___fieldIndex_1: 'RootQuery',
         ___personStuff___requestIndex_1___fieldIndex_0: {
           name: 'John Smith',
         },

@@ -97,7 +97,12 @@ export function unpackMergedResult(result: GraphQLResult,
     const fieldMap = fieldMaps[childRequestIndex];
     const field = fieldMap[mergeInfo.fieldIndex];
     data[field.name.value] = result.data[dataKey];
-    resultArray[childRequestIndex] = { data };
+
+    if (resultArray[childRequestIndex]) {
+      assign(resultArray[childRequestIndex].data, data);
+    } else {
+      resultArray[childRequestIndex] = { data };
+    }
   });
 
   return resultArray;

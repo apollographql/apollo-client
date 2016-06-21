@@ -58,6 +58,11 @@ export class QueryBatcher {
       request.resolve = resolve;
       request.reject = reject;
     });
+
+    if (!this.shouldBatch) {
+      this.consumeQueue();
+    }
+
     return request.promise;
   }
 
@@ -117,7 +122,7 @@ export class QueryBatcher {
     this.pollInterval = pollInterval;
     this.pollTimer = setInterval(() => {
       this.consumeQueue();
-    });
+    }, this.pollInterval);
   }
 
   public stop() {

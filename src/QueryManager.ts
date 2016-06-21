@@ -145,7 +145,7 @@ export class QueryManager {
     });
     this.batcher = new QueryBatcher({
       //we batch if the network interface supports batching if user has not specified
-      shouldBatch: shouldBatch || isBatchingInterface,
+      shouldBatch: shouldBatch === undefined ? isBatchingInterface : shouldBatch,
       networkInterface: this.networkInterface,
     });
     this.batcher.start(this.batcherPollInterval);

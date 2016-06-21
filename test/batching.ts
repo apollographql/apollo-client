@@ -222,6 +222,42 @@ describe('QueryBatcher', () => {
     });
   });
 
+  it('should immediately consume the queue when we enqueue with shouldBatch: false', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const myRequest = {
+      options: { query },
+      queryId: 'not-a-real-id',
+    };
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const myNetworkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      }
+    );
+    const batcher = new QueryBatcher({
+      shouldBatch: false,
+      networkInterface: myNetworkInterface,
+    });
+    const promise = batcher.enqueueRequest(myRequest);
+    promise.then((result) => {
+      assert.deepEqual(result, { data });
+      done();
+    });
+  });
+
   it('should reject the promise if there is a network error with batch:true', (done) => {
     const query = gql`
       query {

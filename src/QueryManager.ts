@@ -137,14 +137,16 @@ export class QueryManager {
     this.pollingTimers = {};
 
     this.queryListeners = {};
+
     this.scheduler = new QueryScheduler({
       queryManager: this,
     });
+
     this.batcher = new QueryBatcher({
-      //we batch if the network interface supports batching if user has not specified
       shouldBatch,
       networkInterface: this.networkInterface,
     });
+
     this.batcher.start(this.batcherPollInterval);
 
     // this.store is usually the fake store we get from the Redux middleware API

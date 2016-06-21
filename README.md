@@ -5,7 +5,7 @@
 
 The Apollo Client can easily be dropped into any JavaScript frontend where you want to use data from a GraphQL server.
 
-It's simple to use, and very small (less than 30kb), while having a lot of useful features around caching, polling, and refetching.
+It's simple to use, and very small (less than 32kb), while having a lot of useful features around caching, polling, and refetching.
 
 ## Installing
 

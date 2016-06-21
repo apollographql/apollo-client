@@ -51,6 +51,15 @@ import {
   queryDocument,
 } from './queryPrinting';
 
+import {
+  QueryFetchRequest,
+  QueryBatcher,
+} from './batching';
+
+import {
+  QueryScheduler,
+} from './scheduler';
+
 import { Observable, Observer, Subscription } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
@@ -90,7 +99,7 @@ export interface WatchQueryOptions {
   pollInterval?: number;
 }
 
-type QueryListener = (queryStoreValue: QueryStoreValue) => void
+export type QueryListener = (queryStoreValue: QueryStoreValue) => void
 
 export class QueryManager {
   private networkInterface: NetworkInterface;
@@ -102,16 +111,22 @@ export class QueryManager {
 
   private idCounter = 0;
 
+  private scheduler: QueryScheduler;
+  private batcher: QueryBatcher;
+  private batcherPollInterval = 10;
+
   constructor({
     networkInterface,
     store,
     reduxRootKey,
     queryTransformer,
+    shouldBatch = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
+    shouldBatch?: Boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -122,6 +137,17 @@ export class QueryManager {
     this.pollingTimers = {};
 
     this.queryListeners = {};
+
+    this.scheduler = new QueryScheduler({
+      queryManager: this,
+    });
+
+    this.batcher = new QueryBatcher({
+      shouldBatch,
+      networkInterface: this.networkInterface,
+    });
+
+    this.batcher.start(this.batcherPollInterval);
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
@@ -191,6 +217,45 @@ export class QueryManager {
         return result;
 
       });
+  }
+
+  // Returns a query listener that will update the given observer based on the
+  // results (or lack thereof) for a particular query.
+  public queryListenerForObserver(options: WatchQueryOptions,
+                                  observer: Observer<GraphQLResult>): QueryListener {
+    return (queryStoreValue: QueryStoreValue) => {
+      if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
+        // XXX Currently, returning errors and data is exclusive because we
+        // don't handle partial results
+        if (queryStoreValue.graphQLErrors) {
+          if (observer.next) {
+            observer.next({ errors: queryStoreValue.graphQLErrors });
+          }
+        } else if (queryStoreValue.networkError) {
+          // XXX we might not want to re-broadcast the same error over and over if it didn't change
+          if (observer.error) {
+            observer.error(queryStoreValue.networkError);
+          } else {
+            console.error('Unhandled network error',
+                          queryStoreValue.networkError,
+                          queryStoreValue.networkError.stack);
+          }
+        } else {
+          const resultFromStore = readSelectionSetFromStore({
+            store: this.getApolloState().data,
+            rootId: queryStoreValue.query.id,
+            selectionSet: queryStoreValue.query.selectionSet,
+            variables: queryStoreValue.variables,
+            returnPartialData: options.returnPartialData,
+            fragmentMap: queryStoreValue.fragmentMap,
+          });
+
+          if (observer.next) {
+            observer.next({ data: resultFromStore });
+          }
+        }
+      }
+    };
   }
 
   public watchQuery(options: WatchQueryOptions): ObservableQuery {
@@ -276,6 +341,37 @@ export class QueryManager {
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
+    return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
+  }
+
+  public generateQueryId() {
+    const queryId = this.idCounter.toString();
+    this.idCounter++;
+    return queryId;
+  }
+
+  public stopQueryInStore(queryId: string) {
+    this.store.dispatch({
+      type: 'APOLLO_QUERY_STOP',
+      queryId,
+    });
+  };
+
+  public getApolloState(): Store {
+    return this.store.getState()[this.reduxRootKey];
+  }
+
+  public addQueryListener(queryId: string, listener: QueryListener) {
+    this.queryListeners[queryId] = listener;
+  };
+
+  public removeQueryListener(queryId: string) {
+    delete this.queryListeners[queryId];
+  }
+
+  private fetchQueryOverInterface(queryId: string,
+                                  options: WatchQueryOptions,
+                                  network: NetworkInterface): Promise<GraphQLResult> {
     const {
       query,
       variables,
@@ -383,7 +479,13 @@ export class QueryManager {
         operationName: getOperationName(minimizedQueryDoc),
       };
 
-      return this.networkInterface.query(request)
+      const fetchRequest: QueryFetchRequest = {
+        options: { query: minimizedQueryDoc, variables },
+        queryId: queryId,
+        operationName: request.operationName,
+      };
+
+      return this.batcher.enqueueRequest(fetchRequest)
         .then((result: GraphQLResult) => {
           // XXX handle multiple GraphQLResults
           this.store.dispatch({
@@ -420,7 +522,7 @@ export class QueryManager {
           });
         }).catch((error: Error) => {
           this.store.dispatch({
-            type: 'APOLLO_QUERY_ERROR',
+           type: 'APOLLO_QUERY_ERROR',
             error,
             queryId,
             requestId,
@@ -433,10 +535,6 @@ export class QueryManager {
     return new Promise((resolve) => {
       resolve({ data: initialResult });
     });
-  }
-
-  private getApolloState(): Store {
-    return this.store.getState()[this.reduxRootKey];
   }
 
   private startQuery(options: WatchQueryOptions, listener: QueryListener) {
@@ -482,12 +580,6 @@ export class QueryManager {
         listener(queryStoreValue);
       }
     });
-  }
-
-  private generateQueryId() {
-    const queryId = this.idCounter.toString();
-    this.idCounter++;
-    return queryId;
   }
 
   private generateRequestId() {

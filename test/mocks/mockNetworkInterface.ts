@@ -1,5 +1,6 @@
 import {
   NetworkInterface,
+  BatchedNetworkInterface,
   Request,
 } from '../../src/networkInterface';
 
@@ -15,6 +16,12 @@ export default function mockNetworkInterface(
   ...mockedResponses: MockedResponse[]
 ): NetworkInterface {
   return new MockNetworkInterface(...mockedResponses);
+}
+
+export function mockBatchedNetworkInterface(
+    ...mockedResponses: MockedResponse[]
+): NetworkInterface {
+  return new MockBatchedNetworkInterface(...mockedResponses);
 }
 
 export interface ParsedRequest {
@@ -79,6 +86,19 @@ export class MockNetworkInterface implements NetworkInterface {
     });
   }
 }
+
+export class MockBatchedNetworkInterface
+extends MockNetworkInterface implements BatchedNetworkInterface {
+  public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+    const resultPromises: Promise<GraphQLResult>[] = [];
+    requests.forEach((request) => {
+      resultPromises.push(this.query(request));
+    });
+
+    return Promise.all(resultPromises);
+  }
+}
+
 
 function requestToKey(request: ParsedRequest): string {
   const queryString = request.query && print(request.query);

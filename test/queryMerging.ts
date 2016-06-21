@@ -27,8 +27,10 @@ import {
 
 import gql from '../src/gql';
 import { assert } from 'chai';
+import cloneDeep = require('lodash.clonedeep');
 
 describe('Query merging', () => {
+
   it('should be able to add a prefix to a variables object', () => {
     const variables = {
       'offset': 15,
@@ -82,7 +84,8 @@ describe('Query merging', () => {
     const expQueryDefinition = getQueryDefinition(expQuery);
     const queryField = queryDef.selectionSet.selections[0];
     const expField = expQueryDefinition.selectionSet.selections[0];
-    const resField = aliasField(queryField as Field, 'listOfAuthors');
+    const queryFieldCopy = cloneDeep(queryField);
+    const resField = aliasField(queryFieldCopy as Field, 'listOfAuthors');
     assert.deepEqual(print(resField), print(expField));
   });
 

@@ -121,7 +121,7 @@ export class QueryManager {
     store,
     reduxRootKey,
     queryTransformer,
-    shouldBatch,
+    shouldBatch = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -138,7 +138,7 @@ export class QueryManager {
     this.pollingTimers = {};
 
     const isBatchingInterface =
-      typeof (this.networkInterface as BatchedNetworkInterface).batchQuery !== undefined;
+      (typeof (this.networkInterface as BatchedNetworkInterface).batchQuery) !== undefined;
     this.queryListeners = {};
     this.scheduler = new QueryScheduler({
       queryManager: this,

@@ -353,6 +353,24 @@ describe('Query merging', () => {
     assert.equal(print(mergedQuery), print(exp));
   });
 
+  it('should be able to merge the same query with different variables correctly', () => {
+    const query1 = gql`
+      query authorById($id: Int) {
+        author(id: $id)
+      }`;
+    const query2 = gql`
+      query authorById($id: Int) {
+        author(id: $id)
+      }`;
+    const exp = gql`
+      query ___composed($___authorById___requestIndex_0___id: Int, $___authorById___requestIndex_1___id: Int) {
+        ___authorById___requestIndex_0___fieldIndex_0: author(id: $___authorById___requestIndex_0___id)
+        ___authorById___requestIndex_1___fieldIndex_0: author(id: $___authorById___requestIndex_1___id)
+      }`;
+    const mergedQuery = mergeQueryDocuments([query1, query2]);
+    assert.equal(print(mergedQuery), print(exp));
+  });
+
   it('should be able to merge queries with inline fragments', () => {
     const query1 = gql`
       query nameOfQuery {

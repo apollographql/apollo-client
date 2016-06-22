@@ -168,6 +168,8 @@ export function parseMergedKey(key: string): { requestIndex: number, fieldIndex:
 
 // Merges multiple queries into a single document. Starts out with an empty root
 // query. Used primarily to unit test addQueryToRoot.
+// Note: this method does NOT guarantee that the child query documents will remain
+// unchanged.
 export function mergeQueryDocuments(childQueryDocs: Document[]): Document {
   let rootQueryDoc: Document = createEmptyRootQueryDoc();
 

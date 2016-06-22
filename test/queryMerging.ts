@@ -758,4 +758,31 @@ describe('Query merging', () => {
     assert.deepEqual(unpackedResults[0], result1);
     assert.deepEqual(unpackedResults[1], result2);
   });
+
+  it('should correctly merge two queries that are the same other than variable values', () => {
+    const query1 = gql`
+      query authorStuff($id: Int) {
+        author(id: $id) {
+          name
+        }
+      }`;
+    const query2 = gql`
+      query authorStuff($id: Int) {
+        author(id: $id) {
+          name
+        }
+      }`;
+    const expQuery = gql`
+      query ___composed($___authorStuff___requestIndex_0___id: Int, $___authorStuff___requestIndex_1___id: Int) {
+        ___authorStuff___requestIndex_0___fieldIndex_0: author(id: $___authorStuff___requestIndex_0___id) {
+          name
+        }
+
+        ___authorStuff___requestIndex_1___fieldIndex_0: author(id: $___authorStuff___requestIndex_1___id) {
+          name
+        }
+      }`;
+    const mergedRequest = mergeRequests([{query: query1}, {query: query2}]);
+    assert.equal(print(mergedRequest.query), print(expQuery));
+  });
 });

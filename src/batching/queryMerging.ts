@@ -54,16 +54,16 @@ import cloneDeep = require('lodash.clonedeep');
 
 // Merges requests together.
 // NOTE: This is pretty much the only function from this file that should be
-// called from a network interface. It guarantees that the requests you pass in
+// called from outside of this file. It guarantees that the requests you pass in
 // will remain unchanged.
 export function mergeRequests(requests: Request[]): Request {
   // NOTE: subsequent calls actually modify the request object and/or GQL document.
   // So, to avoid changing the request passed in, we clone the whole request tree.
-  requests = cloneDeep(requests);
   let rootQueryDoc: Document = createEmptyRootQueryDoc();
   let rootVariables: { [key: string]: any };
 
   requests.forEach((request, requestIndex) => {
+    request = cloneDeep(request);
     rootQueryDoc = addQueryToRoot(rootQueryDoc, request.query, requestIndex);
     if (request.variables) {
       rootVariables = addVariablesToRoot(
@@ -168,6 +168,8 @@ export function parseMergedKey(key: string): { requestIndex: number, fieldIndex:
 
 // Merges multiple queries into a single document. Starts out with an empty root
 // query. Used primarily to unit test addQueryToRoot.
+// Note: this method does NOT guarantee that the child query documents will remain
+// unchanged.
 export function mergeQueryDocuments(childQueryDocs: Document[]): Document {
   let rootQueryDoc: Document = createEmptyRootQueryDoc();
 

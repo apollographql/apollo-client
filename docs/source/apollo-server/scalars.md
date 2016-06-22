@@ -96,10 +96,8 @@ function oddValue(value) {
 
 ### JSON data type
 
-Often we desire to use objects and store them in JSON format. In most databases,
-such fields are stored in a string format.
-We can use a scalar type to correctly recreate the object format of JSON and parse
-all its field into a correct data type. Following is an example of JSON scalar:
+While we usually want to define a schema for our data, in some cases it makes sense to store unstructured objects in the database, and not define a GraphQL schema for it. JSON is a commonly used format for storing such objects.
+In GraphQL, we can define a custom scalar type to serialize and parse JSON:
 
 
 ```js

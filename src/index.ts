@@ -52,6 +52,7 @@ export default class ApolloClient {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public queryTransformer: QueryTransformer;
+  public shouldBatch: boolean;
 
   constructor({
     networkInterface,
@@ -59,18 +60,21 @@ export default class ApolloClient {
     initialState,
     dataIdFromObject,
     queryTransformer,
+    shouldBatch = false,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
     initialState?: any,
     dataIdFromObject?: IdGetter,
     queryTransformer?: QueryTransformer,
+    shouldBatch?: boolean,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
     this.queryTransformer = queryTransformer;
+    this.shouldBatch = shouldBatch;
 
     this.reducerConfig = {
       dataIdFromObject,
@@ -140,6 +144,7 @@ export default class ApolloClient {
       reduxRootKey: this.reduxRootKey,
       store,
       queryTransformer: this.queryTransformer,
+      shouldBatch: this.shouldBatch,
     });
   };
 }

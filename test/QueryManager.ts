@@ -1,5 +1,6 @@
 import {
   QueryManager,
+  QuerySubscription,
 } from '../src/QueryManager';
 
 import {
@@ -2202,52 +2203,44 @@ describe('QueryManager', () => {
         reduxRootKey: 'apollo',
       });
 
-      queryManager.fetchQuery("made up id", { query }).then((result) => {
+      queryManager.fetchQuery('made up id', { query }).then((result) => {
         assert(false); //we don't want this promise to ever resolve correctly
         done();
       }).catch((error) => {
-        assert.include(error.message, "Store reset");
+        assert.include(error.message, 'Store reset');
         done();
       });
       queryManager.resetStore();
     });
 
-    it('should throw an error a query subscription if the store is reset', (done) => {
-      const query = gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }`;
-      const data = {
-        author: {
-          firstName: 'John',
-          lastname: 'Smith',
+    it('should call refetch on a mocked QuerySubscription if the store is reset', (done) => {
+      const mockQuerySubscription: QuerySubscription = {
+        unsubscribe() {
+          done(new Error('Unsubscribe was called on a subscription on store reset.'));
+        },
+
+        refetch(variables: any): Promise<GraphQLResult> {
+          done();
+          return null;
+        },
+
+        stopPolling(): void {
+          done(new Error('stopPolling was called on a subscription on store reset.'));
+        },
+
+        startPolling(pollInterval): void {
+          done(new Error('startPolling was called on a subscription on a store reset.'));
         },
       };
       const queryManager = new QueryManager({
-        networkInterface: mockNetworkInterface({
-          request: { query },
-          result: { data },
-          delay: 10000,
-        }),
+        networkInterface: mockNetworkInterface(),
         store: createApolloStore(),
         reduxRootKey: 'apollo',
       });
-
-      const handle = queryManager.watchQuery({ query });
-      const subscription = handle.subscribe({
-        next: (result) => {
-          // there should be no result returned because the store should be
-          // reset before any of that happens.
-          done(new Error('Should not have returned data when store was reset.'));
-        },
-
-        error: (error) => {
-          done();
-        }
-      });
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery(queryId, null);
+      queryManager.addQuerySubscription(queryId, mockQuerySubscription);
+      queryManager.resetStore();
     });
   });
 });

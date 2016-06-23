@@ -115,14 +115,22 @@ export class QueryManager {
   private batcher: QueryBatcher;
   private batcherPollInterval = 10;
 
-  // A map going an index (i.e. just like an array index, except that we can remove
-  // some of them) to a promise that has not yet been resolved. We use these to keep
-  // track of queries/mutations that are inflight and reject them in case some
+  // A map going from an index (i.e. just like an array index, except that we can remove
+  // some of them) to a promise that has not yet been resolved. We use this to keep
+  // track of queries that are inflight and reject them in case some
   // destabalizing action occurs (e.g. reset of the Apollo store).
   private fetchQueryPromises: { [promiseIndex: number]: {
     promise: Promise<GraphQLResult>;
     resolve: (GraphQLResult) => void;
     reject: (Error) => void;
+  } };
+
+  // A map going from queryId to an observer for a query issued by watchQuery. We use
+  // these to keep track of queries that are inflight and error on the observers associated
+  // with them in case of some destabalizing action (e.g. reset of the Apollo store).
+  private observableQueries: { [queryId: string]:  {
+    observableQuery: ObservableQuery;
+    subscriptions: QuerySubscription[];
   } };
 
   constructor({
@@ -159,6 +167,7 @@ export class QueryManager {
 
     this.batcher.start(this.batcherPollInterval);
     this.fetchQueryPromises = {};
+    this.observableQueries = {};
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
@@ -273,8 +282,10 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
-    return new ObservableQuery((observer) => {
+    const observableQuery = new ObservableQuery((observer) => {
       const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
+        this.addObservableQuery(queryId, observableQuery);
+
         if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
           // XXX Currently, returning errors and data is exclusive because we
           // don't handle partial results
@@ -308,11 +319,12 @@ export class QueryManager {
         }
       });
 
+
       // get the polling timer reference associated with this
       // particular query.
       const pollingTimer = this.pollingTimers[queryId];
 
-      return {
+      const retQuerySubscription = {
         unsubscribe: () => {
           this.stopQuery(queryId);
         },
@@ -340,7 +352,12 @@ export class QueryManager {
           }, pollInterval);
         },
       };
+
+      this.addQuerySubscription(queryId, retQuerySubscription);
+      return retQuerySubscription;
     });
+
+    return observableQuery;
   }
 
   public query(options: WatchQueryOptions): Promise<GraphQLResult> {
@@ -378,6 +395,75 @@ export class QueryManager {
 
   public removeQueryListener(queryId: string) {
     delete this.queryListeners[queryId];
+  }
+
+    // Adds a promise to this.fetchQueryPromises and returns the index
+  // (i.e. object key) at which the promise was inserted.
+  public addFetchQueryPromise(promise: Promise<GraphQLResult>,
+    resolve: (GraphQLResult) => void,
+    reject: (Error) => void,
+    queryId: string) {
+    this.fetchQueryPromises[queryId] = { promise, resolve, reject };
+  }
+
+  public removeFetchQueryPromise(queryId: string) {
+    delete this.fetchQueryPromises[queryId];
+  }
+
+  // Adds an ObservableQuery to this.observableQueries
+  public addObservableQuery(queryId: string, observableQuery: ObservableQuery) {
+    this.observableQueries[queryId] = { observableQuery, subscriptions: [] };
+  }
+
+  // Associates a query subscription with an ObservableQuery in this.observableQueries
+  public addQuerySubscription(queryId: string, querySubscription: QuerySubscription) {
+    if (this.observableQueries.hasOwnProperty(queryId)) {
+      this.observableQueries[queryId].subscriptions.push(querySubscription);
+    } else {
+      this.observableQueries[queryId] = {
+        observableQuery: null,
+        subscriptions: [querySubscription],
+      };
+    }
+  }
+
+  public removeObservableQuery(queryId: string) {
+    delete this.observableQueries[queryId];
+  }
+
+  public resetStore(): void {
+    // Before we have sent the reset action to the store,
+    // we can no longer rely on the results returned by in-flight
+    // requests since these may depend on values that previously existed
+    // in the data portion of the store. So, we cancel the promises and observers
+    // that we have issued so far and not yet resolved (in the case of
+    // queries).
+    Object.keys(this.fetchQueryPromises).forEach((key) => {
+      const { reject } = this.fetchQueryPromises[key];
+      reject(new Error('Store reset while query was in flight.'));
+    });
+
+    // Similarly, we have to have to refetch each of the queries currently being
+    // observed. We refetch instead of error'ing on these since the assumption is that
+    // resetting the store doesn't eliminate the need for the queries currently being
+    // watched. If there is an existing query in flight when the store is reset,
+    // the promise for it will be rejected and its results will not be written to the
+    // store.
+    Object.keys(this.observableQueries).forEach((queryId) => {
+      const subscriptions = this.observableQueries[queryId].subscriptions;
+
+      // we can refetch any one of the subscriptions.
+      subscriptions[subscriptions.length - 1].refetch();
+    });
+
+    // We also stop every query that is currently being listened to.
+    Object.keys(this.queryListeners).forEach((queryId) => {
+      this.stopQuery(queryId);
+    });
+
+    this.store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+    });
   }
 
   private fetchQueryOverInterface(queryId: string,
@@ -552,42 +638,6 @@ export class QueryManager {
     // return a chainable promise
     return new Promise((resolve) => {
       resolve({ data: initialResult });
-    });
-  }
-
-  // Adds a promise to this.fetchQueryPromises and returns the index
-  // (i.e. object key) at which the promise was inserted.
-  public addFetchQueryPromise(promise: Promise<GraphQLResult>,
-    resolve: (GraphQLResult) => void,
-    reject: (Error) => void,
-    queryId: string) {
-    this.fetchQueryPromises[queryId] = { promise, resolve, reject };
-  }
-
-  public removeFetchQueryPromise(queryId: string) {
-    delete this.fetchQueryPromises[queryId];
-  }
-
-  public resetStore(): void {
-    // Before we have sent the reset action to the store,
-    // we can no longer rely on the results returned by in-flight
-    // requests since these may depend on values that previously existed
-    // in the data portion of the store. So, we cancel the promises
-    // that we have issued so far and not yet resolved for
-    // queries or mutations.
-    Object.keys(this.fetchQueryPromises).forEach((key) => {
-      console.log("We have a key: ", key);
-      const { promise, resolve, reject } = this.fetchQueryPromises[key];
-      reject(new Error('Store reset while query was in flight.'));
-    });
-
-    // We also stop every query that is currently being listened to.
-    Object.keys(this.queryListeners).forEach((queryId) => {
-      this.stopQuery(queryId);
-    });
-
-    this.store.dispatch({
-      type: 'APOLLO_STORE_RESET',
     });
   }
 

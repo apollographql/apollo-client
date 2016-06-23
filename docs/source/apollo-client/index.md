@@ -29,6 +29,8 @@ Instantiate a new Apollo Client.
 - `networkInterface` (Optional, defaults to an HTTP interface that points to `/graphql`) The network interface to use when sending GraphQL queries to the server. Create this using [createNetworkInterface](#createNetworkInterface), or make a [totally custom one](network.html).
 - `dataIdFromObject` (Optional) A function to use during result normalization to determine the IDs of result objects. Function signature should be `(result: Object) => string`. [Learn more about normalization.](how-it-works.html#normalize)
 - `reduxRootKey` (Optional, `'apollo'` by default) The key under which Apollo data will be stored in the Redux store. [Read more about integrating with Redux](redux.html). If you aren't integrating with an existing Redux store, don't worry about this.
+- `shouldBatch` (Optional, `false` by default) A boolean value that specifies whether Apollo Client should batch queries together into one request. If you pass this option, the network interface must support batching. [Read more about query batching](network.html).
+- `queryTransformer` (Optional) A function that transforms GraphQL `SelectionSet`s before they are sent to the server. One common option which adds `__typename` to all queries can be imported with `import { addTypename } from 'apollo-client'`.
 
 Here's how you would instantiate a default client that points to `/graphql`:
 

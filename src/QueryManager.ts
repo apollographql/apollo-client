@@ -285,7 +285,6 @@ export class QueryManager {
     const observableQuery = new ObservableQuery((observer) => {
       const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
         this.addObservableQuery(queryId, observableQuery);
-
         if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
           // XXX Currently, returning errors and data is exclusive because we
           // don't handle partial results
@@ -365,7 +364,23 @@ export class QueryManager {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
 
-    return this.watchQuery(options).result();
+    if (options.query.kind !== 'Document') {
+      throw new Error('You must wrap the query string in a "gql" tag.');
+    }
+
+    const resPromise = new Promise((resolve, reject) => {
+      const promiseIndex = this.addFetchQueryPromise(resPromise, resolve, reject);
+
+      return this.watchQuery(options).result().then((result) => {
+        this.removeFetchQueryPromise(promiseIndex);
+        resolve(result);
+      }).catch((error) => {
+        this.removeFetchQueryPromise(promiseIndex);
+        reject(error);
+      });
+    });
+
+    return resPromise;
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
@@ -401,13 +416,14 @@ export class QueryManager {
   // (i.e. object key) at which the promise was inserted.
   public addFetchQueryPromise(promise: Promise<GraphQLResult>,
     resolve: (GraphQLResult) => void,
-    reject: (Error) => void,
-    queryId: string) {
-    this.fetchQueryPromises[queryId] = { promise, resolve, reject };
-  }
+    reject: (Error) => void): string {
+    const currentSize = Object.keys(this.fetchQueryPromises).length;
+    this.fetchQueryPromises[currentSize - 1] = { promise, resolve, reject };
+    return (currentSize - 1).toString();
+}
 
-  public removeFetchQueryPromise(queryId: string) {
-    delete this.fetchQueryPromises[queryId];
+  public removeFetchQueryPromise(promiseIndex: string) {
+    delete this.fetchQueryPromises[promiseIndex];
   }
 
   // Adds an ObservableQuery to this.observableQueries
@@ -454,11 +470,6 @@ export class QueryManager {
 
       // we can refetch any one of the subscriptions.
       subscriptions[subscriptions.length - 1].refetch();
-    });
-
-    // We also stop every query that is currently being listened to.
-    Object.keys(this.queryListeners).forEach((queryId) => {
-      this.stopQuery(queryId);
     });
 
     this.store.dispatch({
@@ -583,7 +594,7 @@ export class QueryManager {
       };
 
       const retPromise = new Promise<GraphQLResult>((resolve, reject) => {
-        this.addFetchQueryPromise(retPromise, resolve, reject, queryId);
+        const promiseIndex = this.addFetchQueryPromise(retPromise, resolve, reject);
 
         return this.batcher.enqueueRequest(fetchRequest)
           .then((result: GraphQLResult) => {
@@ -595,7 +606,7 @@ export class QueryManager {
               requestId,
             });
 
-            this.removeFetchQueryPromise(queryId);
+            this.removeFetchQueryPromise(promiseIndex);
             return result;
           }).then(() => {
 
@@ -618,7 +629,7 @@ export class QueryManager {
             /* tslint:enable */
 
             // return a chainable promise
-            this.removeFetchQueryPromise(queryId);
+            this.removeFetchQueryPromise(promiseIndex);
             resolve({ data: resultFromStore });
           }).catch((error: Error) => {
             this.store.dispatch({
@@ -628,7 +639,7 @@ export class QueryManager {
               requestId,
             });
 
-            this.removeFetchQueryPromise(queryId);
+            this.removeFetchQueryPromise(promiseIndex);
             return error;
           });
       });

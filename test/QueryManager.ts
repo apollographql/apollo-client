@@ -41,7 +41,10 @@ import assign = require('lodash.assign');
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
-import { BatchedNetworkInterface }from '../src/networkInterface';
+import {
+  BatchedNetworkInterface,
+  NetworkInterface,
+} from '../src/networkInterface';
 
 describe('QueryManager', () => {
   it('properly roundtrips through a Redux store', (done) => {
@@ -2243,6 +2246,45 @@ describe('QueryManager', () => {
       queryManager.resetStore();
     });
   });
+
+  it('should throw an error on an inflight query() if the store is reset', (done) => {
+    let queryManager: QueryManager = null;
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+
+    const myNetworkInterface: NetworkInterface = {
+      query(request: Request): Promise<GraphQLResult> {
+        // reset the store as soon as we hear about the query
+        queryManager.resetStore();
+        return Promise.resolve({ data });
+      },
+    };
+
+    queryManager = new QueryManager({
+      networkInterface: myNetworkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    queryManager.query({ query }).then((result) => {
+      done(new Error('query() gave results on a store reset'));
+    }).catch((error) => {
+      done();
+    });
+  });
+
 });
 
 function testDiffing(

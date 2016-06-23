@@ -32,6 +32,7 @@ import {
 
 import {
   QueryTransformer,
+  addTypenameToSelectionSet,
 } from './queries/queryTransform';
 
 import isUndefined = require('lodash.isundefined');
@@ -42,6 +43,7 @@ export {
   createApolloReducer,
   readQueryFromStore,
   readFragmentFromStore,
+  addTypenameToSelectionSet as addTypename,
 };
 
 export default class ApolloClient {

@@ -33,6 +33,7 @@ export interface PrintedRequest {
 }
 
 export interface NetworkInterface {
+  [others: string]: any;
   query(request: Request): Promise<GraphQLResult>;
 }
 
@@ -40,7 +41,7 @@ export interface BatchedNetworkInterface extends NetworkInterface {
   batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
 }
 
-export interface HTTPNetworkInterface extends NetworkInterface {
+export interface HTTPNetworkInterface extends BatchedNetworkInterface {
   _uri: string;
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[];
@@ -56,18 +57,14 @@ export interface RequestAndOptions {
 // it into a network interface that supports batching by composing/merging queries in to one
 // query.
 export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetworkInterface {
-  return {
-    query(request: Request): Promise<GraphQLResult> {
-      return networkInterface.query(request);
-    },
-
+  return assign(networkInterface, {
     batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
       const composedRequest = mergeRequests(requests);
       return this.query(composedRequest).then((composedResult) => {
         return unpackMergedResult(composedResult, requests);
       });
     },
-  };
+  }) as BatchedNetworkInterface;
 }
 
 export function printRequest(request: Request): PrintedRequest {
@@ -161,11 +158,13 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     });
   }
 
-  return {
+  // createNetworkInterface has batching ability by default, which is not used unless the
+  // `shouldBatch` option is passed to apollo-client
+  return addQueryMerging({
     _uri,
     _opts,
     _middlewares,
     query,
     use,
-  };
+  }) as HTTPNetworkInterface;
 }

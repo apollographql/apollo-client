@@ -16,7 +16,6 @@ import './networkInterface';
 import './QueryManager';
 import './client';
 import './store';
-import './gql';
 import './queryTransform';
 import './getFromAST';
 import './directives';

@@ -18,7 +18,7 @@ import {
   Store,
 } from '../src/store';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 import {
   createStore,

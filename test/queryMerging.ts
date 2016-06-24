@@ -25,7 +25,7 @@ import {
   OperationDefinition,
 } from 'graphql';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 import { assert } from 'chai';
 import cloneDeep = require('lodash.clonedeep');
 

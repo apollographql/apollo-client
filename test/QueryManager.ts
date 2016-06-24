@@ -15,7 +15,7 @@ import {
   addTypenameToSelectionSet,
 } from '../src/queries/queryTransform';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 import {
   assert,

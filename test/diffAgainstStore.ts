@@ -12,7 +12,7 @@ import {
   NormalizedCache,
 } from '../src/data/store';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {

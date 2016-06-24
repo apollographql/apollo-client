@@ -8,7 +8,7 @@ import {
   getMutationDefinition,
 } from '../src/queries/getFromAST';
 import { print } from 'graphql/language/printer';
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 import { assert } from 'chai';
 
 describe('query transforms', () => {

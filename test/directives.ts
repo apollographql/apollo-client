@@ -9,7 +9,7 @@ import {
   getQueryDefinition,
 } from '../src/queries/getFromAST';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 import cloneDeep = require('lodash.clonedeep');
 

@@ -93,7 +93,6 @@ export function isMutationResultAction(action: ApolloAction): action is Mutation
 
 export interface StoreResetAction {
   type: 'APOLLO_STORE_RESET';
-  observableQueryIds: string[];
 }
 
 export function isStoreResetAction(action: ApolloAction): action is StoreResetAction {

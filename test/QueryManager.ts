@@ -44,7 +44,6 @@ import mockNetworkInterface from './mocks/mockNetworkInterface';
 import {
   BatchedNetworkInterface,
   NetworkInterface,
-  Request,
 } from '../src/networkInterface';
 
 describe('QueryManager', () => {
@@ -1656,7 +1655,7 @@ describe('QueryManager', () => {
       },
     });
 
-    const subscription2 = handle2.subscribe({
+    handle2.subscribe({
       next(result) {
         handleCount++;
       },
@@ -1664,7 +1663,6 @@ describe('QueryManager', () => {
 
     setTimeout(() => {
       assert.equal(handleCount, 4);
-      subscription2.unsubscribe();
       done();
     }, 400);
   });
@@ -2247,60 +2245,6 @@ describe('QueryManager', () => {
       queryManager.addQuerySubscription(queryId, mockQuerySubscription);
       queryManager.resetStore();
     });
-  });
-
-  it('should only refetch once when we store reset', (done) => {
-    let queryManager: QueryManager = null;
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-    const data = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-
-    let timesFired = 0;
-    let numResults = 0;
-    const myNetworkInterface: NetworkInterface = {
-      query(request: Request): Promise<GraphQLResult> {
-        if (timesFired === 0) {
-          timesFired += 1;
-          queryManager.resetStore();
-        } else {
-          timesFired += 1;
-        }
-        return Promise.resolve({ data });
-      },
-    };
-
-    queryManager = new QueryManager({
-      networkInterface: myNetworkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({ query });
-    handle.subscribe({
-      next(result) {
-        numResults += 1;
-      },
-
-      error(err) {
-        done(new Error('Errored on observable on store reset.'));
-      },
-    });
-
-    setTimeout(() => {
-      assert.equal(timesFired, 2);
-      assert.equal(numResults, 1);
-      done();
-    }, 100);
   });
 
   it('should throw an error on an inflight query() if the store is reset', (done) => {

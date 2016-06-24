@@ -22,7 +22,6 @@ import {
 
 import {
   ApolloAction,
-  StoreResetAction,
   isStoreResetAction,
 } from './actions';
 
@@ -58,7 +57,11 @@ const crashReporter = store => next => action => {
 export function createApolloReducer(config: ApolloReducerConfig): Function {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
     if (isStoreResetAction(action)) {
-      return resetState(state, action);
+      return {
+        queries: {},
+        mutations: {},
+        data: {},
+      };
     }
 
     const newState = {
@@ -111,25 +114,4 @@ export function createApolloStore({
 
 export interface ApolloReducerConfig {
   dataIdFromObject?: IdGetter;
-}
-
-// Returns the new state after we receive a store reset action. Note that we don't remove the query
-// state for the query IDs that are associated with watchQuery() observables. This is because
-// these observables are simply refetched and not errored in the event of a store reset.
-function resetState(state: Store, action: StoreResetAction) {
-  const observableQueryIds = action.observableQueryIds;
-
-  // keep only the queries with query ids that are associated with observables
-  const newQueries = Object.keys(state.queries).filter((queryId) => {
-    return (observableQueryIds.indexOf(queryId) > -1);
-  }).reduce((res, key) => {
-    res[key] = state.queries[key];
-    return res;
-  }, {});
-
-  return {
-    queries: newQueries,
-    mutations: {},
-    data: {},
-  };
 }

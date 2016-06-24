@@ -235,6 +235,7 @@ export class QueryManager {
         });
 
         return result;
+
       });
   }
 
@@ -282,15 +283,48 @@ export class QueryManager {
     getQueryDefinition(options.query);
 
     const observableQuery = new ObservableQuery((observer) => {
-      const queryId = this.generateQueryId();
+      const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
+        this.addObservableQuery(queryId, observableQuery);
+        if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
+          // XXX Currently, returning errors and data is exclusive because we
+          // don't handle partial results
+          if (queryStoreValue.graphQLErrors) {
+            if (observer.next) {
+              observer.next({ errors: queryStoreValue.graphQLErrors });
+            }
+          } else if (queryStoreValue.networkError) {
+            // XXX we might not want to re-broadcast the same error over and over if it didn't change
+            if (observer.error) {
+              observer.error(queryStoreValue.networkError);
+            } else {
+              console.error('Unhandled network error',
+                queryStoreValue.networkError,
+                queryStoreValue.networkError.stack);
+            }
+          } else {
+            const resultFromStore = readSelectionSetFromStore({
+              store: this.getApolloState().data,
+              rootId: queryStoreValue.query.id,
+              selectionSet: queryStoreValue.query.selectionSet,
+              variables: queryStoreValue.variables,
+              returnPartialData: options.returnPartialData,
+              fragmentMap: queryStoreValue.fragmentMap,
+            });
+
+            if (observer.next) {
+              observer.next({ data: resultFromStore });
+            }
+          }
+        }
+      });
+
+
       // get the polling timer reference associated with this
       // particular query.
       const pollingTimer = this.pollingTimers[queryId];
 
       const retQuerySubscription = {
         unsubscribe: () => {
-          console.log('Unsubscribing...');
-          console.log('Query id: %d', queryId);
           this.stopQuery(queryId);
         },
         refetch: (variables: any): Promise<GraphQLResult> => {
@@ -318,10 +352,7 @@ export class QueryManager {
         },
       };
 
-      this.addObservableQuery(queryId, observableQuery);
       this.addQuerySubscription(queryId, retQuerySubscription);
-
-      this.startQuery(queryId, options, this.queryListenerForObserver(options, observer));
       return retQuerySubscription;
     });
 
@@ -416,7 +447,6 @@ export class QueryManager {
     delete this.observableQueries[queryId];
   }
 
-
   public resetStore(): void {
     // Before we have sent the reset action to the store,
     // we can no longer rely on the results returned by in-flight
@@ -429,11 +459,6 @@ export class QueryManager {
       reject(new Error('Store reset while query was in flight.'));
     });
 
-    this.store.dispatch({
-      type: 'APOLLO_STORE_RESET',
-      observableQueryIds: Object.keys(this.observableQueries),
-    });
-
     // Similarly, we have to have to refetch each of the queries currently being
     // observed. We refetch instead of error'ing on these since the assumption is that
     // resetting the store doesn't eliminate the need for the queries currently being
@@ -442,8 +467,13 @@ export class QueryManager {
     // store.
     Object.keys(this.observableQueries).forEach((queryId) => {
       const subscriptions = this.observableQueries[queryId].subscriptions;
+
       // we can refetch any one of the subscriptions.
       subscriptions[subscriptions.length - 1].refetch();
+    });
+
+    this.store.dispatch({
+      type: 'APOLLO_STORE_RESET',
     });
   }
 
@@ -565,6 +595,7 @@ export class QueryManager {
 
       const retPromise = new Promise<GraphQLResult>((resolve, reject) => {
         const promiseIndex = this.addFetchQueryPromise(retPromise, resolve, reject);
+
         return this.batcher.enqueueRequest(fetchRequest)
           .then((result: GraphQLResult) => {
             // XXX handle multiple GraphQLResults
@@ -621,9 +652,8 @@ export class QueryManager {
     });
   }
 
-  private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
-    console.log("STARTING POLLING QUERY WITH ID: %d\n", queryId);
-
+  private startQuery(options: WatchQueryOptions, listener: QueryListener) {
+    const queryId = this.generateQueryId();
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options);
 
@@ -642,14 +672,9 @@ export class QueryManager {
   private stopQuery(queryId: string) {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
-    console.log("stopping query...");
-    console.log("Query listeners: ");
-    console.log(this.queryListeners);
     delete this.queryListeners[queryId];
 
     // if we have a polling interval running, stop it
-    console.log("Polling timers: ");
-    console.log(this.pollingTimers[queryId]);
     if (this.pollingTimers[queryId]) {
       clearInterval(this.pollingTimers[queryId]);
     }

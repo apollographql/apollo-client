@@ -10,7 +10,10 @@ import {
 
 import {
   GraphQLResult,
+  print,
 } from 'graphql';
+
+import cloneDeep = require('lodash.clonedeep');
 
 export interface QueryFetchRequest {
   options: WatchQueryOptions;
@@ -104,16 +107,26 @@ export class QueryBatcher {
           rejecters[index](error);
         });
       });
+
       return promises;
     } else {
-      this.queuedRequests.forEach((fetchRequest, index) => {
+      // we clone the queue so that if this function is called again while we are
+      // processing the queue (e.g. due to a a reset), we don't end up processing
+      // a part of the queue that's already being processed.
+      const currentQueue = cloneDeep(this.queuedRequests);
+      this.queuedRequests = [];
+
+      currentQueue.forEach((fetchRequest, index) => {
+        console.log("Fetch request: ");
+        console.log(print(fetchRequest.options.query));
+
         this.networkInterface.query(requests[index]).then((result) => {
           resolvers[index](result);
         }).catch((reason) => {
           rejecters[index](reason);
         });
       });
-      this.queuedRequests = [];
+
       return promises;
     }
   }

@@ -351,6 +351,31 @@ describe('reading from the store', () => {
     }, /field missingField on object/);
   });
 
+  it('does not throw on a missing field if returnPartialData is true', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    } as StoreObject;
+
+    const store = { abcd: result } as NormalizedCache;
+
+    assert.doesNotThrow(() => {
+      readFragmentFromStore({
+        store,
+        fragment: gql`
+          fragment FragmentName on Item {
+            stringField,
+            missingField
+          }
+        `,
+        rootId: 'abcd',
+        returnPartialData: true,
+      });
+    }, /field missingField on object/);
+  });
+
   it('runs a nested fragment where the reference is null', () => {
     const result = {
       id: 'abcd',

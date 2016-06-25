@@ -278,13 +278,55 @@ export class QueryManager {
     };
   }
 
-  public watchQuery(options: WatchQueryOptions): ObservableQuery {
+  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
     const observableQuery = new ObservableQuery((observer) => {
-      const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
+      const queryId = this.generateQueryId();
+
+      const retQuerySubscription = {
+        unsubscribe: () => {
+          this.stopQuery(queryId);
+        },
+        refetch: (variables: any): Promise<GraphQLResult> => {
+          // If no new variables passed, use existing variables
+          variables = variables || options.variables;
+
+          // Use the same options as before, but with new variables and forceFetch true
+          return this.fetchQuery(queryId, assign(options, {
+            forceFetch: true,
+            variables,
+          }) as WatchQueryOptions);
+        },
+        stopPolling: (): void => {
+          if (this.pollingTimers[queryId]) {
+            clearInterval(this.pollingTimers[queryId]);
+          }
+        },
+        startPolling: (pollInterval): void => {
+          this.pollingTimers[queryId] = setInterval(() => {
+            const pollingOptions = assign({}, options) as WatchQueryOptions;
+            // subsequent fetches from polling always reqeust new data
+            pollingOptions.forceFetch = true;
+            this.fetchQuery(queryId, pollingOptions);
+          }, pollInterval);
+        },
+      };
+
+      if (shouldSubscribe) {
         this.addObservableQuery(queryId, observableQuery);
+        this.addQuerySubscription(queryId, retQuerySubscription);
+      }
+
+      this.startQuery(queryId, options, (queryStoreValue: QueryStoreValue) => {
+        // we could get back an empty store value if the store was reset while this
+        // query was still in flight. In this circumstance, we are no longer concerned
+        // with the return value of that particular instance of the query.
+        if (!queryStoreValue) {
+          return;
+        }
+
         if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
           // XXX Currently, returning errors and data is exclusive because we
           // don't handle partial results
@@ -318,41 +360,6 @@ export class QueryManager {
         }
       });
 
-
-      // get the polling timer reference associated with this
-      // particular query.
-      const pollingTimer = this.pollingTimers[queryId];
-
-      const retQuerySubscription = {
-        unsubscribe: () => {
-          this.stopQuery(queryId);
-        },
-        refetch: (variables: any): Promise<GraphQLResult> => {
-          // If no new variables passed, use existing variables
-          variables = variables || options.variables;
-
-          // Use the same options as before, but with new variables and forceFetch true
-          return this.fetchQuery(queryId, assign(options, {
-            forceFetch: true,
-            variables,
-          }) as WatchQueryOptions);
-        },
-        stopPolling: (): void => {
-          if (pollingTimer) {
-            clearInterval(pollingTimer);
-          }
-        },
-        startPolling: (pollInterval): void => {
-          this.pollingTimers[queryId] = setInterval(() => {
-            const pollingOptions = assign({}, options) as WatchQueryOptions;
-            // subsequent fetches from polling always reqeust new data
-            pollingOptions.forceFetch = true;
-            this.fetchQuery(queryId, pollingOptions);
-          }, pollInterval);
-        },
-      };
-
-      this.addQuerySubscription(queryId, retQuerySubscription);
       return retQuerySubscription;
     });
 
@@ -371,8 +378,7 @@ export class QueryManager {
     const resPromise = new Promise((resolve, reject) => {
       const promiseIndex = this.addFetchQueryPromise(resPromise, resolve, reject);
 
-      return this.watchQuery(options).result().then((result) => {
-        this.removeFetchQueryPromise(promiseIndex);
+      return this.watchQuery(options, false).result().then((result) => {
         resolve(result);
       }).catch((error) => {
         this.removeFetchQueryPromise(promiseIndex);
@@ -459,6 +465,11 @@ export class QueryManager {
       reject(new Error('Store reset while query was in flight.'));
     });
 
+    this.store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+      observableQueryIds: Object.keys(this.observableQueries),
+    });
+
     // Similarly, we have to have to refetch each of the queries currently being
     // observed. We refetch instead of error'ing on these since the assumption is that
     // resetting the store doesn't eliminate the need for the queries currently being
@@ -470,10 +481,6 @@ export class QueryManager {
 
       // we can refetch any one of the subscriptions.
       subscriptions[subscriptions.length - 1].refetch();
-    });
-
-    this.store.dispatch({
-      type: 'APOLLO_STORE_RESET',
     });
   }
 
@@ -652,8 +659,7 @@ export class QueryManager {
     });
   }
 
-  private startQuery(options: WatchQueryOptions, listener: QueryListener) {
-    const queryId = this.generateQueryId();
+  private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options);
 

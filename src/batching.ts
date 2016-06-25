@@ -12,6 +12,8 @@ import {
   GraphQLResult,
 } from 'graphql';
 
+import cloneDeep = require('lodash.clonedeep');
+
 export interface QueryFetchRequest {
   options: WatchQueryOptions;
   queryId: string;
@@ -106,14 +108,16 @@ export class QueryBatcher {
       });
       return promises;
     } else {
-      this.queuedRequests.forEach((fetchRequest, index) => {
+      const clonedRequests = cloneDeep(this.queuedRequests);
+      this.queuedRequests = [];
+      clonedRequests.forEach((fetchRequest, index) => {
         this.networkInterface.query(requests[index]).then((result) => {
           resolvers[index](result);
         }).catch((reason) => {
           rejecters[index](reason);
         });
       });
-      this.queuedRequests = [];
+
       return promises;
     }
   }

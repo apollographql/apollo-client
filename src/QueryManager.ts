@@ -99,7 +99,7 @@ export interface WatchQueryOptions {
   pollInterval?: number;
 }
 
-export type QueryListener = (queryStoreValue: QueryStoreValue) => void
+export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export class QueryManager {
   private networkInterface: NetworkInterface;
@@ -121,8 +121,8 @@ export class QueryManager {
   // destabalizing action occurs (e.g. reset of the Apollo store).
   private fetchQueryPromises: { [promiseIndex: number]: {
     promise: Promise<GraphQLResult>;
-    resolve: (GraphQLResult) => void;
-    reject: (Error) => void;
+    resolve: (result: GraphQLResult) => void;
+    reject: (error: Error) => void;
   } };
 
   // A map going from queryId to an observer for a query issued by watchQuery. We use
@@ -421,8 +421,8 @@ export class QueryManager {
     // Adds a promise to this.fetchQueryPromises and returns the index
   // (i.e. object key) at which the promise was inserted.
   public addFetchQueryPromise(promise: Promise<GraphQLResult>,
-    resolve: (GraphQLResult) => void,
-    reject: (Error) => void): string {
+    resolve: (result: GraphQLResult) => void,
+    reject: (error: Error) => void): string {
     const currentSize = Object.keys(this.fetchQueryPromises).length;
     this.fetchQueryPromises[currentSize - 1] = { promise, resolve, reject };
     return (currentSize - 1).toString();

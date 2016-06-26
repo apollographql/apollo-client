@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 - Exported `writeQueryToStore` and `writeFragmentToStore` directly from `apollo-client` to match `readQueryFromStore` and `readFragmentFromStore`.
+- Add (optional) `returnPartialData` to `readFragmentFromStore` and `readQueryFromStore`.
 
 ### v0.3.19
 

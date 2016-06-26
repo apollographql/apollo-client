@@ -25,10 +25,12 @@ export function readQueryFromStore({
   store,
   query,
   variables,
+  returnPartialData,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
+  returnPartialData?: boolean,
 }): Object {
   const queryDef = getQueryDefinition(query);
 
@@ -37,6 +39,7 @@ export function readQueryFromStore({
     rootId: 'ROOT_QUERY',
     selectionSet: queryDef.selectionSet,
     variables,
+    returnPartialData,
   });
 }
 
@@ -45,11 +48,13 @@ export function readFragmentFromStore({
   fragment,
   rootId,
   variables,
+  returnPartialData,
 }: {
   store: NormalizedCache,
   fragment: Document,
   rootId: string,
   variables?: Object,
+  returnPartialData?: boolean,
 }): Object {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -58,6 +63,7 @@ export function readFragmentFromStore({
     rootId,
     selectionSet: fragmentDef.selectionSet,
     variables,
+    returnPartialData,
   });
 }
 

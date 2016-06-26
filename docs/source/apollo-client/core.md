@@ -11,6 +11,8 @@ Most of the time, when you use the Apollo Client, you'll do it through one of th
 When using Apollo Client, you usually write your queries using multiline template literals. These literals need to be tagged with the `gql` tag, like this:
 
 ```js
+import gql from 'graphql-tag';
+
 const query = gql`
   {
     user(id: 5) {
@@ -20,18 +22,12 @@ const query = gql`
 `
 ```
 
-The `gql` tag is a function under the hood, therefore it must be imported wherever it is used:
+The `gql` tag is a function that parses the query string passed to it. It can be found in the `graphql-tag` companion package on npm.
+
+As a shortcut, if you prefer *not* to import `gql` tag in every place you use it, you can register it as a global:
 
 ```js
-import gql from 'graphql-tag';
-
-const query = gql`...`;
-```
-
-Alternatively, if you prefer *not* to import the `gql` tag each time you use it, you can register it as a global:
-
-```js
-// In a browser
+// In the browser
 import gql from 'graphql-tag';
 window['gql'] = gql;
 
@@ -45,12 +41,14 @@ const query = gql`...`;
 
 **Note:** ES6 imports are hoisted, which may mean that client code using the `gql` tag gets evaluated before the registration of the global. To avoid race conditions, it's best to just import the tag into each file that uses it.
 
+<h3 id="why-gql">Why use a template literal?</h3>
+
 This template literal tag serves two functions:
 
 1. It parses the query string.
 2. It tells developer tools like `eslint-plugin-graphql` which strings in your app are GraphQL queries, so that they can be treated specially.
 
-We hope to soon release a build tool you can run on your queries when deploying to production so that you can avoid the overhead of loading the GraphQL parser at runtime, much like Relay does with `Relay.QL`.
+Being able to statically analyze GraphQL queries in your app is a huge benefit of GraphQL, so it's correct to write them as special strings that can be found by these tools.
 
 <h2 id="queries">Queries</h2>
 

@@ -11,7 +11,7 @@ The Apollo Client can easily be dropped into any JavaScript frontend where you w
 ## Installing
 
 ```txt
-npm install apollo-client
+npm install apollo-client graphql-tag
 ```
 
 To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3. Move on to the next article to see how to import and initialize the client.

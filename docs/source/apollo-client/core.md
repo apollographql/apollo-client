@@ -20,24 +20,30 @@ const query = gql`
 `
 ```
 
-There are two ways to import and use the `gql` tag. You can either register it globally:
+The `gql` tag is a function under the hood, therefore it must be imported wherever it is used:
 
 ```js
-// Register it globally
-import { registerGqlTag } from 'apollo-client/gql';
-registerGqlTag();
+import gql from 'graphql-tag';
+
+const query = gql`...`;
+```
+
+Alternatively, if you prefer *not* to import the `gql` tag each time you use it, you can register it as a global:
+
+```js
+// In a browser
+import gql from 'graphql-tag';
+window['gql'] = gql;
+
+// In node.js
+import gql from 'graphql-tag';
+global['gql'] = gql;
 
 // Now, in any part of your app you can use the gql tag
 const query = gql`...`;
 ```
 
-Alternatively, you can import it in every file if you want to be more explicit:
-
-```js
-import gql from 'apollo-client/gql';
-
-const query = gql`...`;
-```
+**Note:** ES6 imports are hoisted, which may mean that client code using the `gql` tag gets evaluated before the registration of the global. To avoid race conditions, it's best to just import the tag into each file that uses it.
 
 This template literal tag serves two functions:
 

@@ -77,6 +77,14 @@ export interface MutationInitAction {
   fragmentMap: FragmentMap;
 }
 
+export interface ResetAction {
+  type: 'APOLLO_RESET';
+}
+
+export function isResetAction(action: ApolloAction): action is ResetAction {
+  return action.type === 'APOLLO_RESET';
+}
+
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
   return action.type === 'APOLLO_MUTATION_INIT';
 }
@@ -98,4 +106,5 @@ export type ApolloAction =
   QueryResultClientAction |
   QueryStopAction |
   MutationInitAction |
-  MutationResultAction;
+  MutationResultAction |
+  ResetAction;

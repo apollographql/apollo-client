@@ -123,4 +123,59 @@ describe('mutation results', () => {
       assert.isTrue(newResult.data.todoList.todos[0].completed);
     });
   });
+
+  describe('ARRAY_INSERT', () => {
+    it('correctly integrates a basic object', () => {
+      const mutation = gql`
+        mutation createTodo {
+          # skipping arguments in the test since they don't matter
+          createTodo {
+            id
+            text
+            completed
+            __typename
+          }
+          __typename
+        }
+      `;
+
+      const mutationResult = {
+        data: {
+          __typename: 'Mutation',
+          createTodo: {
+            __typename: 'Todo',
+            id: '99',
+            text: 'This one was created with a mutation.',
+            completed: true,
+          }
+        }
+      };
+
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          applyResult: [{
+            type: 'ARRAY_INSERT',
+            resultPath: [ 'createTodo' ],
+            storePath: [ '5', 'todos' ],
+            where: 'prepend',
+          }]
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation');
+      });
+    });
+  });
 });

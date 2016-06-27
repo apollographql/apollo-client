@@ -14,7 +14,7 @@ import {
   OperationDefinition,
 } from 'graphql';
 import { print } from 'graphql/language/printer';
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 import { assert } from 'chai';
 
 describe('AST utility functions', () => {

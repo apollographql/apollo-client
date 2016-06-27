@@ -19,7 +19,7 @@ import {
   MiddlewareRequest,
 } from '../src/middleware';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 import { print } from 'graphql/language/printer';
 

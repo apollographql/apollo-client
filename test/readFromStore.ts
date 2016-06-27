@@ -10,7 +10,7 @@ import {
   StoreObject,
 } from '../src/data/store';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 describe('reading from the store', () => {
   it('rejects malformed queries', () => {

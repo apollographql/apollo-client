@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import mockNetworkInterface, {
   mockBatchedNetworkInterface,
 } from './mocks/mockNetworkInterface';
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 import { GraphQLResult } from 'graphql';
 
 const networkInterface = mockNetworkInterface();

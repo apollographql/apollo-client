@@ -372,7 +372,7 @@ export class QueryManager {
 
   public getApolloStore(): NormalizedCache {
     const state = this.getApolloState();
-    return assign({}, state.data, state.optimistic.data);
+    return assign({}, state.data, state.optimistic.data) as NormalizedCache;
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {

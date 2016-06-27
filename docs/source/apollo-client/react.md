@@ -152,13 +152,13 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
 }
 ```
 
-`mapMutationsToProps` returns an object made up of keys and values that are custom functions to call the mutation. These can be used in children components (for instance, on a event handler) to trigger the mutation. The resulting function must return the same possible arguents as [`ApolloClient#mutate`](core.html#mutate). In this case, the `Category` component will get a prop called `postReply`, which has the following keys:
+`mapMutationsToProps` returns an object made up of keys and values that are custom functions to call the mutation. These can be used in children components (for instance, on a event handler) to trigger the mutation. The resulting function must return the same possible arguments as [`ApolloClient#mutate`](core.html#mutate). In this case, the `Category` component will get a prop called `postReply`, which has the following keys:
 
 ```js
 {
   loading: boolean,
   errors: Error[],
-  postReply: Data, // only when the muation has returned
+  postReply: Data, // only when the mutation has returned
 }
 ```
 
@@ -173,7 +173,7 @@ One typical pattern is wanting to refetch a query after a mutation has happened.
 @connect({ mapMutationsToProps, mapQueriesToProps })
 class Container extends React.Component{
   componentDidMount() {
-    // call the muation
+    // call the mutation
     this.props.mutations.makeListPrivate()
       .then((err, data) => {
         // if we have the data we want

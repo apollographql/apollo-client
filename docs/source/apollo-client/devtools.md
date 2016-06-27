@@ -50,7 +50,7 @@ When a query is executed and data has been resolved, the Store dispatches `QUERY
 
 ![QUERY_RESULT](../assets/devtools/query-result.png)
 
-When the Store gets a `QUERY_RESULT`, a couple pieces of state change. First our query is no longer `loading`, so we can see that state has updated in oure Store. Next we see that the `data` property is hyrdated with the data resolved by our query. From here you can use one of the Frontend integrations to bind the data from `QUERY_RESULT` to your UI Components. 
+When the Store gets a `QUERY_RESULT`, a couple pieces of state change. First our query is no longer `loading`, so we can see that state has updated in our Store. Next we see that the `data` property is hydrated with the data resolved by our query. From here you can use one of the Frontend integrations to bind the data from `QUERY_RESULT` to your UI Components. 
 
 ### Mutations
 

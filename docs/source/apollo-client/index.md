@@ -142,11 +142,11 @@ Given the above code, the header's `Authorization` value will be that of `token2
 
 <h4 id="corsSupport" title="cors support">CORS support</h4>
 
-If your GraphQL server and client application are running on different origins, you will get HTTP 405 errors thrown by the client. This happens when recieving the response from the server which is denying the request because of CORS. The client is working as designed. CORS support should be enabled in the apollo-server instance. How to do this is documented in the [apollo-server section](/apollo-server/tools.html#corsSupport).
+If your GraphQL server and client application are running on different origins, you will get HTTP 405 errors thrown by the client. This happens when receiving the response from the server which is denying the request because of CORS. The client is working as designed. CORS support should be enabled in the apollo-server instance. How to do this is documented in the [apollo-server section](/apollo-server/tools.html#corsSupport).
 
-<h3 id="store-rehydration" title="Loading Intial Data from Server">Loading Intial Data from Server</h3>
+<h3 id="store-rehydration" title="Loading Initial Data from Server">Loading Initial Data from Server</h3>
 
-For applications that support server side rendering, or that can perform some queries on the server prior to rendering the client, ApolloClient allows for setting the intial state of data. This is sometimes called store rehydration for redux applications.
+For applications that support server side rendering, or that can perform some queries on the server prior to rendering the client, ApolloClient allows for setting the initial state of data. This is sometimes called store rehydration for redux applications.
 
 > Note: if you are using redux externally to apollo, and already have store rehydration, this key isn't needed.
 

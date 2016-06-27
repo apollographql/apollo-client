@@ -162,7 +162,7 @@ describe('mutation results', () => {
             type: 'ARRAY_INSERT',
             resultPath: [ 'createTodo' ],
             storePath: [ '5', 'todos' ],
-            where: 'prepend',
+            where: 'PREPEND',
           }]
         });
       })

@@ -27,6 +27,14 @@ import {
   graphQLResultHasError,
 } from './storeUtils';
 
+import {
+  MutationApplyResultAction,
+} from './mutationResultActions';
+
+import {
+  GraphQLResult,
+} from 'graphql';
+
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
 }
@@ -37,6 +45,16 @@ export interface StoreObject {
 }
 
 export type StoreValue = number | string | string[];
+
+export type MutationResultReducerMap = {
+  [type: string]: MutationResultReducer;
+}
+
+export type MutationResultReducer = (
+  state: NormalizedCache,
+  action: MutationApplyResultAction,
+  result: GraphQLResult
+) => NormalizedCache;
 
 export function data(
   previousState: NormalizedCache = {},
@@ -93,6 +111,15 @@ export function data(
         dataIdFromObject: config.dataIdFromObject,
         fragmentMap: queryStoreValue.fragmentMap,
       });
+
+      if (action.applyResult) {
+        action.applyResult.forEach((applyResultAction) => {
+          if (!config.mutationResultReducers ||
+              !config.mutationResultReducers[applyResultAction.type]) {
+            throw new Error(`No mutation result reducer defined for type ${applyResultAction.type}`);
+          }
+        });
+      }
 
       return newState;
     }

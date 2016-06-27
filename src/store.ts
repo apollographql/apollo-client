@@ -28,6 +28,10 @@ import {
   IdGetter,
 } from './data/extensions';
 
+import {
+  MutationResultReducerMap,
+} from './data/store';
+
 export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
@@ -106,4 +110,5 @@ export function createApolloStore({
 
 export interface ApolloReducerConfig {
   dataIdFromObject?: IdGetter;
+  mutationResultReducers?: MutationResultReducerMap;
 }

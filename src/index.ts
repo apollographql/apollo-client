@@ -27,6 +27,11 @@ import {
 } from './data/readFromStore';
 
 import {
+  writeQueryToStore,
+  writeFragmentToStore,
+} from './data/writeToStore';
+
+import {
   IdGetter,
 } from './data/extensions';
 
@@ -44,6 +49,8 @@ export {
   readQueryFromStore,
   readFragmentFromStore,
   addTypenameToSelectionSet as addTypename,
+  writeQueryToStore,
+  writeFragmentToStore,
 };
 
 export default class ApolloClient {

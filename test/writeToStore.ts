@@ -23,7 +23,7 @@ import {
   Node,
 } from 'graphql';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {

@@ -8,7 +8,7 @@ import {
   createApolloStore,
 } from '../src/store';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 describe('QueryScheduler', () => {
   it('should throw an error if we try to register a non-polling query', () => {

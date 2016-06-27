@@ -7,7 +7,7 @@ import {
   Document,
 } from 'graphql';
 
-import gql from '../src/gql';
+import gql from 'graphql-tag';
 
 describe('roundtrip', () => {
   it('real graphql result', () => {

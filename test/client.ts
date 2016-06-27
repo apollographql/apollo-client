@@ -881,7 +881,7 @@ describe('client', () => {
     });
   });
 
-  describe.only('forceFetch', () => {
+  describe('forceFetch', () => {
     const query = gql`
       query number {
         myNumber {
@@ -916,7 +916,7 @@ describe('client', () => {
 
     afterEach(() => {
       if (clock) {
-        clock.reset();
+        clock.restore();
       }
     });
 

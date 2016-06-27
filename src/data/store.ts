@@ -58,7 +58,7 @@ export type MutationResultReducer = (
   state: NormalizedCache,
   action: MutationApplyResultAction,
   result: GraphQLResult,
-  mutation: Document,
+  mutation: Document
 ) => NormalizedCache;
 
 export function data(
@@ -120,7 +120,6 @@ export function data(
       if (action.applyResult) {
         action.applyResult.forEach((applyResultAction) => {
           if (defaultMutationResultReducers[applyResultAction.type]) {
-            console.log(queryStoreValue.mutation.selectionSet.selections[0])
             newState = defaultMutationResultReducers[applyResultAction.type](
               newState,
               applyResultAction,

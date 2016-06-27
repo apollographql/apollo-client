@@ -375,13 +375,15 @@ export class QueryManager {
       throw new Error('You must wrap the query string in a "gql" tag.');
     }
 
+    const requestId = this.idCounter;
     const resPromise = new Promise((resolve, reject) => {
-      const promiseIndex = this.addFetchQueryPromise(resPromise, resolve, reject);
+      this.addFetchQueryPromise(requestId, resPromise, resolve, reject);
 
       return this.watchQuery(options, false).result().then((result) => {
+        this.removeFetchQueryPromise(requestId);
         resolve(result);
       }).catch((error) => {
-        this.removeFetchQueryPromise(promiseIndex);
+        this.removeFetchQueryPromise(requestId);
         reject(error);
       });
     });
@@ -418,18 +420,16 @@ export class QueryManager {
     delete this.queryListeners[queryId];
   }
 
-    // Adds a promise to this.fetchQueryPromises and returns the index
-  // (i.e. object key) at which the promise was inserted.
-  public addFetchQueryPromise(promise: Promise<GraphQLResult>,
+  // Adds a promise to this.fetchQueryPromises for a given request ID.
+  public addFetchQueryPromise(requestId: number, promise: Promise<GraphQLResult>,
     resolve: (result: GraphQLResult) => void,
-    reject: (error: Error) => void): string {
-    const currentSize = Object.keys(this.fetchQueryPromises).length;
-    this.fetchQueryPromises[currentSize - 1] = { promise, resolve, reject };
-    return (currentSize - 1).toString();
-}
+    reject: (error: Error) => void) {
+    this.fetchQueryPromises[requestId.toString()] = { promise, resolve, reject };
+  }
 
-  public removeFetchQueryPromise(promiseIndex: string) {
-    delete this.fetchQueryPromises[promiseIndex];
+  // Removes the promise in this.fetchQueryPromises for a particular request ID.
+  public removeFetchQueryPromise(requestId: number) {
+    delete this.fetchQueryPromises[requestId.toString()];
   }
 
   // Adds an ObservableQuery to this.observableQueries
@@ -601,7 +601,7 @@ export class QueryManager {
       };
 
       const retPromise = new Promise<GraphQLResult>((resolve, reject) => {
-        const promiseIndex = this.addFetchQueryPromise(retPromise, resolve, reject);
+        this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
         return this.batcher.enqueueRequest(fetchRequest)
           .then((result: GraphQLResult) => {
@@ -613,7 +613,7 @@ export class QueryManager {
               requestId,
             });
 
-            this.removeFetchQueryPromise(promiseIndex);
+            this.removeFetchQueryPromise(requestId);
             return result;
           }).then(() => {
 
@@ -636,7 +636,7 @@ export class QueryManager {
             /* tslint:enable */
 
             // return a chainable promise
-            this.removeFetchQueryPromise(promiseIndex);
+            this.removeFetchQueryPromise(requestId);
             resolve({ data: resultFromStore });
           }).catch((error: Error) => {
             this.store.dispatch({
@@ -646,7 +646,7 @@ export class QueryManager {
               requestId,
             });
 
-            this.removeFetchQueryPromise(promiseIndex);
+            this.removeFetchQueryPromise(requestId);
             return error;
           });
       });

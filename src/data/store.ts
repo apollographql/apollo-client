@@ -32,6 +32,10 @@ import {
 } from './mutationResultActions';
 
 import {
+  defaultMutationResultReducers,
+} from './mutationResultReducers';
+
+import {
   GraphQLResult,
 } from 'graphql';
 
@@ -53,7 +57,8 @@ export type MutationResultReducerMap = {
 export type MutationResultReducer = (
   state: NormalizedCache,
   action: MutationApplyResultAction,
-  result: GraphQLResult
+  result: GraphQLResult,
+  mutation: Document,
 ) => NormalizedCache;
 
 export function data(
@@ -102,7 +107,7 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      const newState = writeSelectionSetToStore({
+      let newState = writeSelectionSetToStore({
         result: action.result.data,
         dataId: queryStoreValue.mutation.id,
         selectionSet: queryStoreValue.mutation.selectionSet,
@@ -114,8 +119,14 @@ export function data(
 
       if (action.applyResult) {
         action.applyResult.forEach((applyResultAction) => {
-          if (!config.mutationResultReducers ||
-              !config.mutationResultReducers[applyResultAction.type]) {
+          if (defaultMutationResultReducers[applyResultAction.type]) {
+            console.log(queryStoreValue.mutation.selectionSet.selections[0])
+            newState = defaultMutationResultReducers[applyResultAction.type](
+              newState,
+              applyResultAction,
+              action.result
+            );
+          } else {
             throw new Error(`No mutation result reducer defined for type ${applyResultAction.type}`);
           }
         });

@@ -7,7 +7,6 @@ import {
   getQueryDefinition,
   getMutationDefinition,
   getFragmentDefinition,
-  FragmentMap,
 } from '../src/queries/getFromAST';
 
 import gql from 'graphql-tag';
@@ -22,20 +21,148 @@ import {
 // 2. aliases
 // 3. arguments
 // 4. fragments
+// 5. directives
 
 describe('scoping selection set', () => {
-  it('scopes a basic selection set', () => {
+  it('basic', () => {
     testScope(
       gql`
         {
           a {
             b
+            c {
+              d
+            }
           }
         }
       `,
       gql`
         {
           b
+          c {
+            d
+          }
+        }
+      `,
+      ['a']
+    );
+
+    testScope(
+      gql`
+        {
+          a {
+            b
+            c {
+              d
+            }
+          }
+        }
+      `,
+      gql`
+        {
+          d
+        }
+      `,
+      ['a', 'c']
+    );
+  });
+
+  it('directives', () => {
+    testScope(
+      gql`
+        {
+          a @defer {
+            b
+            c @live {
+              d
+            }
+          }
+        }
+      `,
+      gql`
+        {
+          b
+          c @live {
+            d
+          }
+        }
+      `,
+      ['a']
+    );
+  });
+
+  it('alias', () => {
+    testScope(
+      gql`
+        {
+          alias: a {
+            b
+            c {
+              d
+            }
+          }
+        }
+      `,
+      gql`
+        {
+          b
+          c {
+            d
+          }
+        }
+      `,
+      ['alias']
+    );
+  });
+
+  it('inline fragment', () => {
+    testScope(
+      gql`
+        {
+          ... on Query {
+            a {
+              b
+              c {
+                d
+              }
+            }
+          }
+        }
+      `,
+      gql`
+        {
+          b
+          c {
+            d
+          }
+        }
+      `,
+      ['a']
+    );
+  });
+
+  it('named fragment', () => {
+    testScope(
+      gql`
+        {
+          ...Frag
+        }
+
+        fragment Frag on Query {
+          a {
+            b
+            c {
+              d
+            }
+          }
+        }
+      `,
+      gql`
+        {
+          b
+          c {
+            d
+          }
         }
       `,
       ['a']

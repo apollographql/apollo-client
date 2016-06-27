@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient from '../src';
+import ApolloClient, { addTypename } from '../src';
 
 import gql from 'graphql-tag';
 
@@ -13,13 +13,17 @@ describe('mutation results', () => {
           id
           text
           completed
+          __typename
         }
+        __typename
       }
+      __typename
     }
   `;
 
   const result = {
     data: {
+      __typename: 'Query',
       todoList: {
         __typename: 'TodoList',
         id: '5',
@@ -55,11 +59,25 @@ describe('mutation results', () => {
       result,
     });
 
-    client = new ApolloClient({ networkInterface });
+    client = new ApolloClient({
+      networkInterface,
+      // XXX right now this isn't compatible with our mocking
+      // strategy...
+      // FIX BEFORE PR MERGE
+      // queryTransformer: addTypename,
+      dataIdFromObject: (obj: any) => {
+        if (obj.id && obj.__typename) {
+          return obj.__typename + obj.id;
+        }
+        return null;
+      },
+    });
 
-    client.query({
+    return client.query({
       query,
-    }).then(() => done());
+    })
+      .then(() => done())
+      .catch((e) => console.log(e));
   });
 
   it('correctly primes cache for tests', () => {

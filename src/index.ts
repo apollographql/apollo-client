@@ -62,6 +62,7 @@ export default class ApolloClient {
   public reducerConfig: ApolloReducerConfig;
   public queryTransformer: QueryTransformer;
   public shouldBatch: boolean;
+  public shouldForceFetch: boolean;
 
   constructor({
     networkInterface,
@@ -70,6 +71,8 @@ export default class ApolloClient {
     dataIdFromObject,
     queryTransformer,
     shouldBatch = false,
+    ssrMode = false,
+    ssrForceFetchDelay = 0,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -77,6 +80,8 @@ export default class ApolloClient {
     dataIdFromObject?: IdGetter,
     queryTransformer?: QueryTransformer,
     shouldBatch?: boolean,
+    ssrMode?: boolean,
+    ssrForceFetchDelay?: number
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
@@ -84,6 +89,10 @@ export default class ApolloClient {
       createNetworkInterface('/graphql');
     this.queryTransformer = queryTransformer;
     this.shouldBatch = shouldBatch;
+    this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
+    if (ssrForceFetchDelay) {
+      setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
+    }
 
     this.reducerConfig = {
       dataIdFromObject,
@@ -93,11 +102,15 @@ export default class ApolloClient {
   public watchQuery = (options: WatchQueryOptions): ObservableQuery => {
     this.initStore();
 
+    options.forceFetch = this.shouldForceFetch && options.forceFetch;
+
     return this.queryManager.watchQuery(options);
   };
 
   public query = (options: WatchQueryOptions): Promise<GraphQLResult> => {
     this.initStore();
+
+    options.forceFetch = this.shouldForceFetch && options.forceFetch;
 
     return this.queryManager.query(options);
   };

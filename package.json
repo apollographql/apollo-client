@@ -79,12 +79,13 @@
     "pretty-bytes": "^3.0.1",
     "remap-istanbul": "^0.5.1",
     "request-promise": "^2.0.1",
+    "rxjs": "^5.0.0-beta.7",
+    "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "swapi-graphql": "^0.0.4",
     "tslint": "3.7.3",
     "typescript": "^1.8.9",
     "typings": "^1.0.0",
-    "uglify-js": "^2.6.2",
-    "rxjs": "^5.0.0-beta.7"
+    "uglify-js": "^2.6.2"
   }
 }

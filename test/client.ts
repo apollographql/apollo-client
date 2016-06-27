@@ -1,5 +1,6 @@
 import * as chai from 'chai';
 const { assert } = chai;
+import * as sinon from 'sinon';
 
 import ApolloClient from '../src';
 
@@ -877,6 +878,105 @@ describe('client', () => {
             }
           );
         });
+    });
+  });
+
+  describe('forceFetch', () => {
+    const query = gql`
+      query number {
+        myNumber {
+          n
+        }
+      }
+    `;
+
+    const firstFetch = {
+      myNumber: {
+        n: 1,
+      },
+    };
+    const secondFetch = {
+      myNumber: {
+        n: 2,
+      },
+    };
+
+
+    let networkInterface;
+    let clock;
+    beforeEach(() => {
+      networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data: firstFetch },
+      }, {
+        request: { query },
+        result: { data: secondFetch },
+      });
+    });
+
+    afterEach(() => {
+      if (clock) {
+        clock.restore();
+      }
+    });
+
+    it('forces the query to rerun', () => {
+      const client = new ApolloClient({
+        networkInterface,
+      });
+
+      // Run a query first to initialize the store
+      return client.query({ query })
+        // then query for real
+        .then(() => client.query({ query, forceFetch: true }))
+        .then((result) => {
+          assert.deepEqual(result.data, { myNumber: { n: 2 } });
+        });
+    });
+
+    it('can be disabled with ssrMode', () => {
+      const client = new ApolloClient({
+        networkInterface,
+        ssrMode: true,
+      });
+
+      // Run a query first to initialize the store
+      return client.query({ query })
+        // then query for real
+        .then(() => client.query({ query, forceFetch: true }))
+        .then((result) => {
+          assert.deepEqual(result.data, { myNumber: { n: 1 } });
+        });
+    });
+
+    it('can temporarily be disabled with ssrForceFetchDelay', () => {
+      clock = sinon.useFakeTimers();
+
+      const client = new ApolloClient({
+        networkInterface,
+        ssrForceFetchDelay: 100,
+      });
+
+      // Run a query first to initialize the store
+      const outerPromise = client.query({ query })
+        // then query for real
+        .then(() => {
+          const promise = client.query({ query, forceFetch: true });
+          clock.tick(0);
+          return promise;
+        })
+        .then((result) => {
+          assert.deepEqual(result.data, { myNumber: { n: 1 } });
+          clock.tick(100);
+          const promise = client.query({ query, forceFetch: true });
+          clock.tick(0);
+          return promise;
+        })
+        .then((result) => {
+          assert.deepEqual(result.data, { myNumber: { n: 2 } });
+        });
+      clock.tick(0);
+      return outerPromise;
     });
   });
 });

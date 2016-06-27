@@ -28,7 +28,8 @@ Just getting started with GraphQL? Check out the [official documentation](http:/
 We have put together some basic example apps using various parts of Apollo; check them out to see how everything fits together. We're always looking for improvements and feedback on these apps, and they'll get better as Apollo becomes more production-ready!
 
 ### General JS Examples
-- [A full-stack Apollo Client and Server example app that uses React, Webpack, Babel, and Redux](https://github.com/apollostack/GitHunt)
+- [Githunt - A full-stack Apollo Client and Server example app that uses React, Webpack, Babel, and Redux](https://github.com/apollostack/GitHunt)
+- [Githunt written in Angular 2](https://github.com/kamilkisiela/GitHunt-angular2)
 - [A full-stack app with a Material UI React frontend on top of Discourse](https://github.com/apollostack/apollo-demo)
 - [A GraphQL server example that uses SQL, MongoDB + REST](https://github.com/apollostack/apollo-server-tutorial)
 - [A simple GraphQL blog that uses Feathersjs for managing database services](https://github.com/swarthout/feathers-apollo)

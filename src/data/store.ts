@@ -27,7 +27,7 @@ import {
 } from './storeUtils';
 
 export interface NormalizedCache {
-  [dataId: string]: StoreObject;
+  [dataId: string]: any;
 }
 
 export interface StoreObject {

@@ -75,6 +75,7 @@ export interface MutationInitAction {
   variables: Object;
   mutationId: string;
   fragmentMap: FragmentMap;
+  optimisticResponse: Object,
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {

@@ -51,13 +51,14 @@ describe('mutation results', () => {
     },
   };
 
-  let client;
+  let client: ApolloClient;
   let networkInterface;
-  beforeEach((done) => {
+
+  function setup(...mockedResponses) {
     networkInterface = mockNetworkInterface({
       request: { query },
       result,
-    });
+    }, ...mockedResponses);
 
     client = new ApolloClient({
       networkInterface,
@@ -75,14 +76,51 @@ describe('mutation results', () => {
 
     return client.query({
       query,
-    })
-      .then(() => done())
-      .catch((e) => console.log(e));
-  });
+    });
+  };
 
   it('correctly primes cache for tests', () => {
-    return client.query({
-      query,
+    return setup()
+      .then(() => client.query({
+        query,
+      }));
+  });
+
+  it('correctly integrates field changes by default', () => {
+    const mutation = gql`
+      mutation setCompleted {
+        setCompleted(todoId: "3") {
+          id
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        setCompleted: {
+          __typename: 'Todo',
+          id: '3',
+          completed: true,
+        }
+      }
+    };
+
+    return setup({
+      request: { query: mutation },
+      result: mutationResult,
+    })
+    .then(() => {
+      return client.mutate({ mutation });
+    })
+    .then(() => {
+      return client.query({ query });
+    })
+    .then((newResult: any) => {
+      assert.isTrue(newResult.data.todoList.todos[0].completed);
     });
   });
 });

@@ -64,7 +64,7 @@ If you want to fetch some data to perform a one-time operation, then `query` is 
 
 This means that using `watchQuery` will keep your UI consistent, so that every query being displayed on the screen shows the exact same data for the same objects.
 
-Currently `watchQuery` allows reactivity via the optional `pollingInterval` argument. In the future, `watchQuery` will also have more options for reactivity, like connecting to a source of invalidations for reactive re-fetching, or accepting pushed data from the server for low-latency updates. Using it now will allow you to easily switch those options on when they become available.
+Currently `watchQuery` allows reactivity via the optional `pollInterval` argument. In the future, `watchQuery` will also have more options for reactivity, like connecting to a source of invalidations for reactive re-fetching, or accepting pushed data from the server for low-latency updates. Using it now will allow you to easily switch those options on when they become available.
 
 <h3 id="forceFetch">query diffing and forceFetch</h3>
 

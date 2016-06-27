@@ -33,7 +33,7 @@ import {
 } from './queries/queryTransform';
 
 import {
-  NormalizedCache
+  NormalizedCache,
 } from './data/store';
 
 import {

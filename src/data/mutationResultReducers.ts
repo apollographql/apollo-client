@@ -73,8 +73,6 @@ function mutationResultArrayInsertReducer({
     fragmentMap,
   });
 
-  console.log(JSON.stringify(state, null, 2));
-
   // Step 3: insert dataId reference into storePath array
   const array = scopeJSONToResultPath({
     json: state,
@@ -83,6 +81,8 @@ function mutationResultArrayInsertReducer({
 
   if (where === 'PREPEND') {
     array.unshift(dataId);
+  } else if (where === 'APPEND') {
+    array.push(dataId);
   } else {
     throw new Error('Unsupported "where" option to ARRAY_INSERT.');
   }

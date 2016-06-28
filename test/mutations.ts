@@ -283,10 +283,7 @@ describe('mutation results', () => {
       })
       .then((newResult: any) => {
         // There should be one more todo item than before
-        assert.equal(newResult.data.todoList.todos.length, 4);
-
-        // Since we used `prepend` it should be at the front
-        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+        assert.equal(newResult.data.todoList.todos.length, 2);
       });
     });
   });

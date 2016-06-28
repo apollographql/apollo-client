@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient from '../src';
+import ApolloClient, { addTypename } from '../src';
 import { MutationResultReducerArgs, MutationApplyResultAction } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 
@@ -11,17 +11,17 @@ import gql from 'graphql-tag';
 describe('mutation results', () => {
   const query = gql`
     query todoList {
+      __typename
       todoList(id: 5) {
+        __typename
         id
         todos {
+          __typename
           id
           text
           completed
-          __typename
         }
-        __typename
       }
-      __typename
     }
   `;
 
@@ -87,6 +87,7 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       networkInterface,
+      queryTransformer: addTypename,
 
       // XXX right now this isn't compatible with our mocking
       // strategy...

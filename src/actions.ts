@@ -8,7 +8,7 @@ import {
 
 import {
   MutationApplyResultAction,
-} from './data/mutationResultActions';
+} from './data/mutationResults';
 
 import { FragmentMap } from './queries/getFromAST';
 

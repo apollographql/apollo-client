@@ -29,12 +29,9 @@ import {
 
 import {
   MutationApplyResultAction,
-} from './mutationResultActions';
-
-import {
   defaultMutationResultReducers,
   MutationResultReducerArgs,
-} from './mutationResultReducers';
+} from './mutationResults';
 
 import {
   GraphQLResult,

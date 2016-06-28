@@ -42,7 +42,7 @@ import {
 
 import {
   MutationApplyResultAction,
-} from './data/mutationResultActions';
+} from './data/mutationResults';
 
 import isUndefined = require('lodash.isundefined');
 

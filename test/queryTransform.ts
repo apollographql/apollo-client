@@ -22,7 +22,7 @@ describe('query transforms', () => {
           }
         }
       }
-`;
+    `;
     const queryDef = getQueryDefinition(testQuery);
     const queryRes = addTypenameToSelectionSet(queryDef.selectionSet);
 
@@ -39,7 +39,45 @@ describe('query transforms', () => {
           }
           __typename
         }
-        __typename}`);
+        __typename
+      }
+    `);
+    const expectedQueryStr = print(expectedQuery);
+
+    assert.equal(expectedQueryStr, modifiedQueryStr);
+  });
+
+  it('should not add duplicates', () => {
+    let testQuery = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+            __typename
+          }
+        }
+      }
+    `;
+    const queryDef = getQueryDefinition(testQuery);
+    const queryRes = addTypenameToSelectionSet(queryDef.selectionSet);
+
+    // GraphQL print the parsed, updated query and replace the trailing
+    // newlines.
+    const modifiedQueryStr = print(queryRes);
+    const expectedQuery = getQueryDefinition(gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+    `);
     const expectedQueryStr = print(expectedQuery);
 
     assert.equal(expectedQueryStr, modifiedQueryStr);

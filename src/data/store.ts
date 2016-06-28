@@ -28,14 +28,9 @@ import {
 } from './storeUtils';
 
 import {
-  MutationApplyResultAction,
   defaultMutationResultReducers,
   MutationResultReducerArgs,
 } from './mutationResults';
-
-import {
-  GraphQLResult,
-} from 'graphql';
 
 export interface NormalizedCache {
   [dataId: string]: StoreObject;

@@ -15,6 +15,9 @@ import {
 
 import isNumber = require('lodash.isnumber');
 
+// The type of a path
+export type StorePath = (string|number)[];
+
 // This function takes a json blob and a path array, and returns the object at that path in the JSON
 // blob.
 export function scopeJSONToResultPath({
@@ -22,7 +25,7 @@ export function scopeJSONToResultPath({
   path,
 }: {
   json: any,
-  path: (string | number)[],
+  path: StorePath,
 }) {
   let current = json;
   path.forEach((pathSegment) => {
@@ -42,7 +45,7 @@ export function scopeSelectionSetToResultPath({
   selectionSet: SelectionSet,
   fragmentMap?: FragmentMap,
   // Path segment is string for objects, number for arrays
-  path: (string | number)[],
+  path: StorePath,
 }): SelectionSet {
   let currSelSet = selectionSet;
 

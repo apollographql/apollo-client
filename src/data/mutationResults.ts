@@ -19,6 +19,7 @@ import {
 import {
   scopeSelectionSetToResultPath,
   scopeJSONToResultPath,
+  StorePath,
 } from './scopeQuery';
 
 import {
@@ -29,6 +30,8 @@ import {
   writeSelectionSetToStore,
 } from './writeToStore';
 
+// Mutation result action types, these can be used in the `applyResult` argument to client.mutate
+
 export type MutationApplyResultAction =
   MutationArrayInsertAction |
   MutationArrayDeleteAction |
@@ -36,7 +39,7 @@ export type MutationApplyResultAction =
 
 export type MutationArrayInsertAction = {
   type: 'ARRAY_INSERT';
-  resultPath: (string|number)[];
+  resultPath: StorePath;
   storePath: StorePath;
   where: ArrayInsertWhere;
 }
@@ -56,8 +59,25 @@ export type ArrayInsertWhere =
   'PREPEND' |
   'APPEND';
 
-export type StorePath = (string|number)[];
+// These are the generic arguments passed into the mutation result reducers
+// The `action` field is specific to each reducer
+export type MutationResultReducerArgs = {
+  state: NormalizedCache;
+  action: MutationApplyResultAction;
+  result: GraphQLResult;
+  variables: any;
+  fragmentMap: FragmentMap;
+  selectionSet: SelectionSet;
+  config: ApolloReducerConfig;
+}
 
+export type MutationResultReducerMap = {
+  [type: string]: MutationResultReducer;
+}
+
+export type MutationResultReducer = (args: MutationResultReducerArgs) => NormalizedCache;
+
+// Reducer for ARRAY_INSERT action
 function mutationResultArrayInsertReducer({
   state,
   action,
@@ -86,8 +106,7 @@ function mutationResultArrayInsertReducer({
   });
 
   // OK, now we need to get a dataID to pass to writeSelectionSetToStore
-  // XXX generate dataID here!
-  const dataId = config.dataIdFromObject(scopedResult) || 'xxx';
+  const dataId = config.dataIdFromObject(scopedResult) || generateMutationResultDataId();
 
   // Step 2: insert object into store with writeSelectionSet
   state = writeSelectionSetToStore({
@@ -101,9 +120,10 @@ function mutationResultArrayInsertReducer({
   });
 
   // Step 3: insert dataId reference into storePath array
-  // XXX this is actually mutating the array! Do not merge
+  const dataIdOfObj = storePath.shift();
+  const clonedObj = cloneDeep(state[dataIdOfObj]);
   const array = scopeJSONToResultPath({
-    json: state,
+    json: clonedObj,
     path: storePath,
   });
 
@@ -115,9 +135,22 @@ function mutationResultArrayInsertReducer({
     throw new Error('Unsupported "where" option to ARRAY_INSERT.');
   }
 
-  return state;
+  return assign(state, {
+    [dataIdOfObj]: clonedObj,
+  }) as NormalizedCache;
 }
 
+// Helper for ARRAY_INSERT.
+// When writing query results to the store, we generate IDs based on their path in the query. Here,
+// we don't have access to such uniquely identifying information, so the best we can do is a
+// sequential ID.
+let currId = 0;
+function generateMutationResultDataId() {
+  currId++;
+  return `ARRAY_INSERT-gen-id-${currId}`;
+}
+
+// Reducer for 'DELETE' action
 function mutationResultDeleteReducer({
   action,
   state,
@@ -171,6 +204,7 @@ function cleanArray(arr, dataId) {
   }
 }
 
+// Reducer for 'ARRAY_DELETE' action
 function mutationResultArrayDeleteReducer({
   action,
   state,
@@ -194,24 +228,10 @@ function mutationResultArrayDeleteReducer({
   }) as NormalizedCache;
 }
 
+// Combines all of the default reducers into a map based on the action type they accept
+// The action type is used to pick the right reducer when evaluating the result of the mutation
 export const defaultMutationResultReducers: { [type: string]: MutationResultReducer } = {
   'ARRAY_INSERT': mutationResultArrayInsertReducer,
   'DELETE': mutationResultDeleteReducer,
   'ARRAY_DELETE': mutationResultArrayDeleteReducer,
 };
-
-export type MutationResultReducerArgs = {
-  state: NormalizedCache;
-  action: MutationApplyResultAction;
-  result: GraphQLResult;
-  variables: any;
-  fragmentMap: FragmentMap;
-  selectionSet: SelectionSet;
-  config: ApolloReducerConfig;
-}
-
-export type MutationResultReducerMap = {
-  [type: string]: MutationResultReducer;
-}
-
-export type MutationResultReducer = (args: MutationResultReducerArgs) => NormalizedCache;

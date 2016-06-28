@@ -15,6 +15,8 @@ import {
 
 import isNumber = require('lodash.isnumber');
 
+// This function takes a json blob and a path array, and returns the object at that path in the JSON
+// blob.
 export function scopeJSONToResultPath({
   json,
   path,
@@ -29,6 +31,9 @@ export function scopeJSONToResultPath({
   return current;
 }
 
+// Using the same path format as scopeJSONToResultPath, this applies the same operation to a GraphQL
+// query. You get the selection set of the query at the path specified. It also reaches into
+// fragments.
 export function scopeSelectionSetToResultPath({
   selectionSet,
   fragmentMap,
@@ -51,6 +56,7 @@ export function scopeSelectionSetToResultPath({
   return currSelSet;
 }
 
+// Helper function for scopeSelectionSetToResultPath
 function followOnePathSegment(
   currSelSet: SelectionSet,
   pathSegment: string,
@@ -70,6 +76,7 @@ function followOnePathSegment(
   return matchingFields[0].selectionSet;
 }
 
+// Helper function for followOnePathSegment
 function getMatchingFields(
   currSelSet: SelectionSet,
   pathSegment: string,

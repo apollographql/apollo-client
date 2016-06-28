@@ -9,6 +9,8 @@ import {
 
 import mapValues = require('lodash.mapvalues');
 import isArray = require('lodash.isarray');
+import cloneDeep = require('lodash.clonedeep');
+import assign = require('lodash.assign');
 
 import {
   FragmentMap,
@@ -29,6 +31,7 @@ import {
 
 export type MutationApplyResultAction =
   MutationArrayInsertAction |
+  MutationArrayDeleteAction |
   MutationDeleteAction;
 
 export type MutationArrayInsertAction = {
@@ -170,9 +173,33 @@ function cleanArray(arr, dataId) {
   }
 }
 
+function mutationResultArrayDeleteReducer({
+  action,
+  state,
+}: MutationResultReducerArgs): NormalizedCache {
+  const {
+    dataId,
+    storePath,
+  } = action as MutationArrayDeleteAction;
+
+  const dataIdOfObj = storePath.shift();
+  const clonedObj = cloneDeep(state[dataIdOfObj]);
+  const array = scopeJSONToResultPath({
+    json: clonedObj,
+    path: storePath,
+  });
+
+  array.splice(array.indexOf(dataId), 1);
+
+  return assign(state, {
+    [dataIdOfObj]: clonedObj,
+  }) as NormalizedCache;
+}
+
 export const defaultMutationResultReducers: { [type: string]: MutationResultReducer } = {
   'ARRAY_INSERT': mutationResultArrayInsertReducer,
   'DELETE': mutationResultDeleteReducer,
+  'ARRAY_DELETE': mutationResultArrayDeleteReducer,
 };
 
 export type MutationResultReducerArgs = {

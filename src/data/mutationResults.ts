@@ -118,6 +118,7 @@ function mutationResultDeleteReducer({
     dataId,
   } = action as MutationDeleteAction;
 
+  // Delete the object
   delete state[dataId];
 
   // Now we need to go through the whole store and remove all references

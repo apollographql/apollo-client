@@ -2,6 +2,7 @@ import {
   ApolloAction,
   isQueryResultAction,
   isMutationResultAction,
+  isStoreResetAction,
 } from '../actions';
 
 import {
@@ -95,6 +96,10 @@ export function data(
 
       return newState;
     }
+  } else if (isStoreResetAction(action)) {
+    // If we are resetting the store, we no longer need any of the data that is currently in
+    // the store so we can just throw it all away.
+    return {};
   }
 
   return previousState;

@@ -282,8 +282,11 @@ describe('mutation results', () => {
         return client.query({ query });
       })
       .then((newResult: any) => {
-        // There should be one more todo item than before
+        // There should be one fewer todo item than before
         assert.equal(newResult.data.todoList.todos.length, 2);
+
+        // The item shouldn't be in the store anymore
+        assert.notProperty(client.queryManager.getApolloState().data, 'Todo3');
       });
     });
   });

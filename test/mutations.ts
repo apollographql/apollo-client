@@ -264,7 +264,7 @@ describe('mutation results', () => {
       }
     };
 
-    it('deletes an object from an array', () => {
+    it('deletes object from array and store', () => {
       return setup({
         request: { query: mutation },
         result: mutationResult,
@@ -287,6 +287,56 @@ describe('mutation results', () => {
 
         // The item shouldn't be in the store anymore
         assert.notProperty(client.queryManager.getApolloState().data, 'Todo3');
+      });
+    });
+  });
+
+  describe('ARRAY_DELETE', () => {
+    const mutation = gql`
+      mutation removeTodo {
+        # skipping arguments in the test since they don't matter
+        removeTodo {
+          id
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        removeTodo: {
+          __typename: 'Todo',
+          id: '3',
+        }
+      }
+    };
+
+    it('deletes an object from array but not store', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          applyResult: [{
+            type: 'ARRAY_DELETE',
+            dataId: 'Todo3',
+            storePath: ['TodoList5', 'todos'],
+          }],
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one fewer todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 2);
+
+        // The item is still in the store
+        assert.property(client.queryManager.getApolloState().data, 'Todo3');
       });
     });
   });

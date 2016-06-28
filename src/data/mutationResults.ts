@@ -62,7 +62,6 @@ export type ArrayInsertWhere =
 // These are the generic arguments passed into the mutation result reducers
 // The `action` field is specific to each reducer
 export type MutationResultReducerArgs = {
-  state: NormalizedCache;
   action: MutationApplyResultAction;
   result: GraphQLResult;
   variables: any;
@@ -75,11 +74,10 @@ export type MutationResultReducerMap = {
   [type: string]: MutationResultReducer;
 }
 
-export type MutationResultReducer = (args: MutationResultReducerArgs) => NormalizedCache;
+export type MutationResultReducer = (state: NormalizedCache, args: MutationResultReducerArgs) => NormalizedCache;
 
 // Reducer for ARRAY_INSERT action
-function mutationResultArrayInsertReducer({
-  state,
+function mutationResultArrayInsertReducer(state: NormalizedCache, {
   action,
   result,
   variables,
@@ -151,9 +149,8 @@ function generateMutationResultDataId() {
 }
 
 // Reducer for 'DELETE' action
-function mutationResultDeleteReducer({
+function mutationResultDeleteReducer(state: NormalizedCache, {
   action,
-  state,
 }: MutationResultReducerArgs): NormalizedCache {
   const {
     dataId,
@@ -205,9 +202,8 @@ function cleanArray(arr, dataId) {
 }
 
 // Reducer for 'ARRAY_DELETE' action
-function mutationResultArrayDeleteReducer({
+function mutationResultArrayDeleteReducer(state: NormalizedCache, {
   action,
-  state,
 }: MutationResultReducerArgs): NormalizedCache {
   const {
     dataId,

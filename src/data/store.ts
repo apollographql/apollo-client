@@ -102,7 +102,6 @@ export function data(
       if (action.applyResult) {
         action.applyResult.forEach((applyResultAction) => {
           const args: MutationResultReducerArgs = {
-            state: newState,
             action: applyResultAction,
             result: action.result,
             variables: queryStoreValue.variables,
@@ -112,9 +111,9 @@ export function data(
           };
 
           if (defaultMutationResultReducers[applyResultAction.type]) {
-            newState = defaultMutationResultReducers[applyResultAction.type](args);
+            newState = defaultMutationResultReducers[applyResultAction.type](newState, args);
           } else if (config.mutationResultReducers[applyResultAction.type]) {
-            newState = config.mutationResultReducers[applyResultAction.type](args);
+            newState = config.mutationResultReducers[applyResultAction.type](newState, args);
           } else {
             throw new Error(`No mutation result reducer defined for type ${applyResultAction.type}`);
           }

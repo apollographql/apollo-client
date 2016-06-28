@@ -66,8 +66,7 @@ describe('mutation results', () => {
   }
 
   // This is an example of a basic mutation reducer that just sets a field in the store
-  function customMutationReducer({
-    state,
+  function customMutationReducer(state: NormalizedCache, {
     action,
   }: MutationResultReducerArgs): NormalizedCache {
     const customAction = action as any as CustomMutationResultAction;

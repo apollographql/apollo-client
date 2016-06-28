@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename } from '../src';
+import ApolloClient from '../src';
 import { MutationResultReducerArgs, MutationApplyResultAction } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 
@@ -176,8 +176,8 @@ describe('mutation results', () => {
           id: '99',
           text: 'This one was created with a mutation.',
           completed: true,
-        }
-      }
+        },
+      },
     };
 
     it('correctly integrates a basic object at the beginning', () => {
@@ -188,12 +188,14 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [{
-            type: 'ARRAY_INSERT',
-            resultPath: [ 'createTodo' ],
-            storePath: [ 'TodoList5', 'todos' ],
-            where: 'PREPEND',
-          }],
+          applyResult: [
+            {
+              type: 'ARRAY_INSERT',
+              resultPath: [ 'createTodo' ],
+              storePath: [ 'TodoList5', 'todos' ],
+              where: 'PREPEND',
+            },
+          ],
         });
       })
       .then(() => {
@@ -216,12 +218,14 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [{
-            type: 'ARRAY_INSERT',
-            resultPath: [ 'createTodo' ],
-            storePath: [ 'TodoList5', 'todos' ],
-            where: 'APPEND',
-          }],
+          applyResult: [
+            {
+              type: 'ARRAY_INSERT',
+              resultPath: [ 'createTodo' ],
+              storePath: [ 'TodoList5', 'todos' ],
+              where: 'APPEND',
+            },
+          ],
         });
       })
       .then(() => {
@@ -244,17 +248,19 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [{
-            type: 'ARRAY_INSERT',
-            resultPath: [ 'createTodo' ],
-            storePath: [ 'TodoList5', 'todos' ],
-            where: 'PREPEND',
-          }, {
-            type: 'ARRAY_INSERT',
-            resultPath: [ 'createTodo' ],
-            storePath: [ 'TodoList5', 'todos' ],
-            where: 'APPEND',
-          }],
+          applyResult: [
+            {
+              type: 'ARRAY_INSERT',
+              resultPath: [ 'createTodo' ],
+              storePath: [ 'TodoList5', 'todos' ],
+              where: 'PREPEND',
+            }, {
+              type: 'ARRAY_INSERT',
+              resultPath: [ 'createTodo' ],
+              storePath: [ 'TodoList5', 'todos' ],
+              where: 'APPEND',
+            },
+          ],
         });
       })
       .then(() => {
@@ -290,8 +296,8 @@ describe('mutation results', () => {
         deleteTodo: {
           __typename: 'Todo',
           id: '3',
-        }
-      }
+        },
+      },
     };
 
     it('deletes object from array and store', () => {
@@ -302,10 +308,12 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [{
-            type: 'DELETE',
-            dataId: 'Todo3',
-          }],
+          applyResult: [
+            {
+              type: 'DELETE',
+              dataId: 'Todo3',
+            },
+          ],
         });
       })
       .then(() => {
@@ -351,11 +359,13 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [{
-            type: 'ARRAY_DELETE',
-            dataId: 'Todo3',
-            storePath: ['TodoList5', 'todos'],
-          }],
+          applyResult: [
+            {
+              type: 'ARRAY_DELETE',
+              dataId: 'Todo3',
+              storePath: ['TodoList5', 'todos'],
+            },
+          ],
         });
       })
       .then(() => {

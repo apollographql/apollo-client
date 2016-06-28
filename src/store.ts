@@ -22,8 +22,6 @@ import {
 
 import {
   ApolloAction,
-  isStoreResetAction,
-  StoreResetAction,
 } from './actions';
 
 import {

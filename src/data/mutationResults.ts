@@ -43,6 +43,12 @@ export type MutationDeleteAction = {
   dataId: string;
 }
 
+export type MutationArrayDeleteAction = {
+  type: 'ARRAY_DELETE';
+  storePath: string[];
+  dataId: string;
+}
+
 export type ArrayInsertWhere =
   'PREPEND' |
   'APPEND';
@@ -94,6 +100,7 @@ function mutationResultArrayInsertReducer({
   });
 
   // Step 3: insert dataId reference into storePath array
+  // XXX this is actually mutating the array! Do not merge
   const array = scopeJSONToResultPath({
     json: state,
     path: storePath,

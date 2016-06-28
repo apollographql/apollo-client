@@ -36,8 +36,8 @@ export type MutationApplyResultAction =
 
 export type MutationArrayInsertAction = {
   type: 'ARRAY_INSERT';
-  resultPath: string[];
-  storePath: string[];
+  resultPath: (string|number)[];
+  storePath: StorePath;
   where: ArrayInsertWhere;
 }
 
@@ -48,7 +48,7 @@ export type MutationDeleteAction = {
 
 export type MutationArrayDeleteAction = {
   type: 'ARRAY_DELETE';
-  storePath: string[];
+  storePath: StorePath;
   dataId: string;
 }
 
@@ -56,6 +56,7 @@ export type ArrayInsertWhere =
   'PREPEND' |
   'APPEND';
 
+export type StorePath = (string|number)[];
 
 function mutationResultArrayInsertReducer({
   state,
@@ -73,9 +74,6 @@ function mutationResultArrayInsertReducer({
   } = action as MutationArrayInsertAction;
 
   // Step 1: get selection set and result for resultPath
-  //   This might actually be a relatively complex operation, on the level of
-  //   writing a query... perhaps we can factor that out
-  //   Note: this is also necessary for incorporating defer results..!
   const scopedSelectionSet = scopeSelectionSetToResultPath({
     selectionSet,
     fragmentMap,

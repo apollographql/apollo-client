@@ -68,6 +68,7 @@ export default class ApolloClient {
   public queryTransformer: QueryTransformer;
   public shouldBatch: boolean;
   public shouldForceFetch: boolean;
+  public dataId: IdGetter;
 
   constructor({
     networkInterface,
@@ -97,6 +98,8 @@ export default class ApolloClient {
     this.queryTransformer = queryTransformer;
     this.shouldBatch = shouldBatch;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
+    this.dataId = dataIdFromObject;
+
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
     }

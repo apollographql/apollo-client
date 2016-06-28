@@ -88,11 +88,6 @@ describe('mutation results', () => {
     client = new ApolloClient({
       networkInterface,
       queryTransformer: addTypename,
-
-      // XXX right now this isn't compatible with our mocking
-      // strategy...
-      // FIX BEFORE PR MERGE
-      // queryTransformer: addTypename,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
@@ -187,13 +182,18 @@ describe('mutation results', () => {
         result: mutationResult,
       })
       .then(() => {
+        const dataId = client.dataId({
+          __typename: 'TodoList',
+          id: '5',
+        });
+
         return client.mutate({
           mutation,
           applyResult: [
             {
               type: 'ARRAY_INSERT',
               resultPath: [ 'createTodo' ],
-              storePath: [ 'TodoList5', 'todos' ],
+              storePath: [ dataId, 'todos' ],
               where: 'PREPEND',
             },
           ],

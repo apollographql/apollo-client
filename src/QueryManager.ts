@@ -278,6 +278,12 @@ export class QueryManager {
     };
   }
 
+  // The shouldSubscribe option is a temporary fix that tells us whether watchQuery was called
+  // directly (i.e. through ApolloClient) or through the query method within QueryManager.
+  // Currently, the query method uses watchQuery in order to handle non-network errors correctly
+  // but we don't want to keep track observables issued for the query method since those aren't
+  // supposed to be refetched in the event of a store reset. Once we unify error handling for
+  // network errors and non-network errors, the shouldSubscribe option will go away.
   public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);

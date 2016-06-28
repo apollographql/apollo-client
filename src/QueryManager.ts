@@ -93,6 +93,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 
 export interface QuerySubscription extends Subscription {
   refetch(variables?: any): Promise<GraphQLResult>;
+  fetchMore(variables: any): Promise<GraphQLResult>;
   stopPolling(): void;
   startPolling(pollInterval: number): void;
 }
@@ -101,9 +102,11 @@ export interface WatchQueryOptions {
   query: Document;
   variables?: { [key: string]: any };
   forceFetch?: boolean;
+  fetchMore?: boolean;
   returnPartialData?: boolean;
   pollInterval?: number;
   fragments?: FragmentDefinition[];
+  paginationParameters?: string[];
 }
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
@@ -287,6 +290,7 @@ export class QueryManager {
             variables: queryStoreValue.variables,
             returnPartialData: options.returnPartialData,
             fragmentMap: queryStoreValue.fragmentMap,
+            paginationParameters: queryStoreValue.paginationParameters,
           });
 
           if (observer.next) {
@@ -324,6 +328,17 @@ export class QueryManager {
           // Use the same options as before, but with new variables and forceFetch true
           return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
+            variables,
+          }) as WatchQueryOptions);
+        },
+        fetchMore: (variables: any): Promise<GraphQLResult> => {
+          // If no new variables passed, use existing variables
+          variables = variables || options.variables;
+
+          // Use the same options as before, but with new variables and forceFetch true
+          return this.fetchQuery(queryId, assign(options, {
+            forceFetch: true,
+            fetchMore: true,
             variables,
           }) as WatchQueryOptions);
         },
@@ -379,6 +394,7 @@ export class QueryManager {
               variables: queryStoreValue.variables,
               returnPartialData: options.returnPartialData,
               fragmentMap: queryStoreValue.fragmentMap,
+              paginationParameters: queryStoreValue.paginationParameters,
             });
 
             if (observer.next) {
@@ -521,8 +537,10 @@ export class QueryManager {
       query,
       variables,
       forceFetch = false,
+      fetchMore = false,
       returnPartialData = false,
       fragments = [],
+      paginationParameters = [],
     } = options;
 
     let queryDef = getQueryDefinition(query);
@@ -603,7 +621,9 @@ export class QueryManager {
       minimizedQuery,
       variables,
       forceFetch,
+      fetchMore,
       returnPartialData,
+      paginationParameters,
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
@@ -664,6 +684,7 @@ export class QueryManager {
                 variables,
                 returnPartialData: returnPartialData,
                 fragmentMap: queryFragmentMap,
+                paginationParameters: paginationParameters,
               });
               // ensure multiple errors don't get thrown
               /* tslint:disable */

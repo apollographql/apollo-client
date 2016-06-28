@@ -46,10 +46,12 @@ export function diffQueryAgainstStore({
   store,
   query,
   variables,
+  paginationParameters,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
+  paginationParameters?: string[],
 }): DiffResult {
   const queryDef = getQueryDefinition(query);
 
@@ -59,6 +61,7 @@ export function diffQueryAgainstStore({
     selectionSet: queryDef.selectionSet,
     throwOnMissingField: false,
     variables,
+    paginationParameters,
   });
 }
 
@@ -67,11 +70,13 @@ export function diffFragmentAgainstStore({
   fragment,
   rootId,
   variables,
+  paginationParameters,
 }: {
   store: NormalizedCache,
   fragment: Document,
   rootId: string,
   variables?: Object,
+  paginationParameters?: string[],
 }): DiffResult {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -81,6 +86,7 @@ export function diffFragmentAgainstStore({
     selectionSet: fragmentDef.selectionSet,
     throwOnMissingField: false,
     variables,
+    paginationParameters,
   });
 }
 
@@ -102,6 +108,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField = false,
   variables,
   fragmentMap,
+  paginationParameters,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
@@ -109,6 +116,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField: boolean,
   variables: Object,
   fragmentMap?: FragmentMap,
+  paginationParameters?: string[],
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -145,6 +153,7 @@ export function diffSelectionSetAgainstStore({
           store,
           fragmentMap,
           included: includeField,
+          paginationParameters,
         });
 
       if (fieldIsMissing) {
@@ -168,6 +177,7 @@ export function diffSelectionSetAgainstStore({
         rootId,
         store,
         fragmentMap,
+        paginationParameters,
       });
 
       if (fieldIsMissing) {
@@ -191,6 +201,7 @@ export function diffSelectionSetAgainstStore({
         rootId,
         store,
         fragmentMap,
+        paginationParameters,
       });
 
       if (fieldIsMissing) {
@@ -242,6 +253,7 @@ function diffFieldAgainstStore({
   store,
   fragmentMap,
   included = true,
+  paginationParameters,
 }: {
   field: Field,
   throwOnMissingField: boolean,
@@ -250,9 +262,10 @@ function diffFieldAgainstStore({
   store: NormalizedCache,
   fragmentMap?: FragmentMap,
   included?: Boolean,
+  paginationParameters?: string[],
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
-  const storeFieldKey = storeKeyNameFromField(field, variables);
+  const storeFieldKey = storeKeyNameFromField(field, variables, paginationParameters);
 
   if (! has(storeObj, storeFieldKey)) {
     if (throwOnMissingField && included) {
@@ -298,6 +311,7 @@ function diffFieldAgainstStore({
         selectionSet: field.selectionSet,
         variables,
         fragmentMap,
+        paginationParameters,
       });
 
       if (itemDiffResult.isMissing) {
@@ -322,6 +336,7 @@ function diffFieldAgainstStore({
       selectionSet: field.selectionSet,
       variables,
       fragmentMap,
+      paginationParameters,
     });
   }
 

@@ -116,6 +116,16 @@ export class QueryScheduler {
           return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
             variables,
+            paginationParameters: [],
+          }) as WatchQueryOptions);
+        },
+
+        fetchMore: (variables: any): Promise<GraphQLResult> => {
+          variables = variables || options.variables;
+          return this.fetchQuery(queryId, assign(options, {
+            forceFetch: true,
+            fetchMore: true,
+            variables,
           }) as WatchQueryOptions);
         },
 

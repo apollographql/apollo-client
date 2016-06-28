@@ -42,7 +42,9 @@ export interface QueryInitAction {
   minimizedQuery: SelectionSetWithRoot;
   variables: Object;
   forceFetch: boolean;
+  fetchMore: boolean;
   returnPartialData: boolean;
+  paginationParameters: string[];
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;

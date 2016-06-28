@@ -11,6 +11,19 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Fix unintentional breaking change where `apollo-client/gql` import stopped working. [Issue #327](https://github.com/apollostack/apollo-client/issues/327)
 
+- **Add mutation result handling to Apollo Client.** This is done by passing an `applyResult` option to
+`client.mutate`, with an array of "Mutation Result Actions". You can attach any number of result
+actions to each mutation. These result actions are attached to the `MUTATION_RESULT` redux action
+that is dispatched when the query result arrives from the store, and are handled by special
+"Mutation Result Reducers". These are special because they get a whole bunch of GraphQL-specific
+information in the arguments, and are all called synchronously when the result of a mutation
+arrives. In this version, Apollo Client ships with a set of default mutation result actions/reducers
+including `ARRAY_INSERT`, `DELETE`, and `ARRAY_DELETE`, but you can add any custom ones you want
+by passing the new `mutationResultReducers` option to the `ApolloClient` constructor. The previous
+default functionality of merging all mutation results into the store is preserved.
+[PR #320](https://github.com/apollostack/apollo-client/pull/320)
+[Read the design in depth in Issue #317](https://github.com/apollostack/apollo-client/issues/317)
+
 ### v0.3.21
 
 - Move out GraphQL query parsing into a new package [`graphql-tag`](https://github.com/apollostack/graphql-tag) with a backcompat shim for `apollo-client/gql`. [Issue #312](https://github.com/apollostack/apollo-client/issues/312) [PR #313](https://github.com/apollostack/apollo-client/pull/313)

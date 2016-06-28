@@ -76,3 +76,67 @@ store.getState();
 <h2 id="react-redux">react-redux</h2>
 
 The `react-apollo` integration package is a drop-in replacement for `react-redux`, so if you are using Redux and Apollo together you don't need to have nested data containers. [Read the docs for `react-apollo` to see how to do this.](react.html)
+
+<h2 id="async-actions">Async Actions with thunk</h2>
+
+In Redux, we handle asynchronity via the `thunk` middleware. This allows you to dispatch a function, instead of an Action Object. To integrate `thunk` into your workflow, follow the steps below:
+ 
+1. Install `redux-thunk` from npm.
+2. Include the middleware into your store initiation.
+
+```js
+import ReduxThunk from 'redux-thunk' 
+
+const client = new ApolloClient({
+  reduxRootKey: 'myDifferentKey',
+});
+
+const store = createStore(
+  combineReducers({
+    todos: todoReducer,
+    users: userReducer,
+    myDifferentKey: client.reducer(),
+  }),
+  applyMiddleware(client.middleware(), ReduxThunk)
+);
+
+```
+
+Great! Now your store can dispatch functions. This will allow you to write more complex Action Creators. 
+
+Since 2.1.0, `Redux Thunk` supports injecting a custom argument using the withExtraArgument function. It is recommended we attach the `ApolloClient` into our middleware. This will allow you to have reference to `dispatch`, `getState`, and the `ApolloClient`:
+
+```js
+import ReduxThunk from 'redux-thunk' 
+
+const client = new ApolloClient({
+  reduxRootKey: 'myDifferentKey',
+});
+
+const store = createStore(
+  combineReducers({
+    todos: todoReducer,
+    users: userReducer,
+    myDifferentKey: client.reducer(),
+  }),
+  applyMiddleware(client.middleware(), ReduxThunk.withExtraArgument(client))
+);
+
+```
+
+Now if we dispatch a function our Action Creator is enhanced:
+
+```js
+function fetchUser(id) {
+  return (dispatch, getState, client) => {
+    // you can use the apollo client here
+    client.mutate(...).then((result) => {
+        dispatch({
+            type: 'SOME_UI_ACTION',
+            data: result
+        });
+    });   
+  }
+}
+
+```

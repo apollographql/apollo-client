@@ -77,6 +77,8 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMap: queryStoreValue.fragmentMap,
+        paginationParameters: queryStoreValue.paginationParameters,
+        fetchMore: queryStoreValue.fetchMore,
       });
 
       return newState;

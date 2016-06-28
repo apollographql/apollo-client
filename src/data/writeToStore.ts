@@ -57,12 +57,16 @@ export function writeFragmentToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
+  paginationParameters,
+  fetchMore,
 }: {
   result: Object,
   fragment: Document,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
+  paginationParameters?: string[],
+  fetchMore?: boolean,
 }): NormalizedCache {
   // Argument validation
   if (!fragment) {
@@ -83,6 +87,8 @@ export function writeFragmentToStore({
     store,
     variables,
     dataIdFromObject,
+    paginationParameters,
+    fetchMore,
   });
 }
 
@@ -92,12 +98,16 @@ export function writeQueryToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
+  paginationParameters,
+  fetchMore,
 }: {
   result: Object,
   query: Document,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
+  paginationParameters?: string[],
+  fetchMore?: boolean,
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
@@ -108,6 +118,8 @@ export function writeQueryToStore({
     store,
     variables,
     dataIdFromObject,
+    paginationParameters,
+    fetchMore,
   });
 }
 
@@ -119,6 +131,8 @@ export function writeSelectionSetToStore({
   variables,
   dataIdFromObject,
   fragmentMap,
+  paginationParameters,
+  fetchMore,
 }: {
   dataId: string,
   result: any,
@@ -127,6 +141,8 @@ export function writeSelectionSetToStore({
   variables: Object,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
+  paginationParameters?: string[],
+  fetchMore?: boolean,
 }): NormalizedCache {
 
   if (!fragmentMap) {
@@ -158,6 +174,8 @@ export function writeSelectionSetToStore({
           field: selection,
           dataIdFromObject,
           fragmentMap,
+          paginationParameters,
+          fetchMore,
         });
       }
     } else if (isInlineFragment(selection)) {
@@ -170,6 +188,8 @@ export function writeSelectionSetToStore({
         dataId,
         dataIdFromObject,
         fragmentMap,
+        paginationParameters,
+        fetchMore,
       });
     } else {
       //look up the fragment referred to in the selection
@@ -186,6 +206,8 @@ export function writeSelectionSetToStore({
         dataId,
         dataIdFromObject,
         fragmentMap,
+        paginationParameters,
+        fetchMore,
       });
 
       //throw new Error('Non-inline fragments not supported.');
@@ -203,6 +225,8 @@ function writeFieldToStore({
   dataId,
   dataIdFromObject,
   fragmentMap,
+  paginationParameters,
+  fetchMore,
 }: {
   field: Field,
   value: any,
@@ -211,23 +235,35 @@ function writeFieldToStore({
   dataId: string,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
+  paginationParameters?: string[],
+  fetchMore?: boolean,
 }) {
   let storeValue;
 
-  const storeFieldName: string = storeKeyNameFromField(field, variables);
+  const storeFieldName: string = storeKeyNameFromField(field, variables, paginationParameters);
 
   // If it's a scalar, just store it in the store
   if (!field.selectionSet || isNull(value)) {
     storeValue = value;
   } else if (isArray(value)) {
     // this is an array with sub-objects
-    const thisIdList: Array<string> = [];
+    let thisIdList: Array<string> = [];
+    // tracks the offset when writing the index, will be zero unless concatenation is performed
+    let indexOffset = 0;
+    // If we're fetching more, resume from where it was
+    if (fetchMore) {
+      const storeArray = store[dataId][storeFieldName];
+      if (storeArray instanceof Array) {
+        thisIdList = storeArray || [];
+        indexOffset = thisIdList.length;
+      }
+    }
 
     value.forEach((item, index) => {
       if (isNull(item)) {
         thisIdList.push(null);
       } else {
-        let itemDataId = `${dataId}.${storeFieldName}.${index}`;
+        let itemDataId = `${dataId}.${storeFieldName}.${index + indexOffset}`;
 
         if (dataIdFromObject) {
           const semanticId = dataIdFromObject(item);
@@ -247,6 +283,8 @@ function writeFieldToStore({
           variables,
           dataIdFromObject,
           fragmentMap,
+          paginationParameters,
+          fetchMore,
         });
       }
     });
@@ -272,6 +310,8 @@ function writeFieldToStore({
       variables,
       dataIdFromObject,
       fragmentMap,
+      paginationParameters,
+      fetchMore,
     });
 
     storeValue = valueDataId;

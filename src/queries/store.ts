@@ -38,7 +38,9 @@ export interface QueryStoreValue {
   networkError: Error;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
+  fetchMore?: boolean;
   returnPartialData: boolean;
+  paginationParameters: string[];
   lastRequestId: number;
   fragmentMap: FragmentMap;
 }
@@ -69,7 +71,9 @@ export function queries(
       networkError: null,
       graphQLErrors: null,
       forceFetch: action.forceFetch,
+      fetchMore: action.fetchMore,
       returnPartialData: action.returnPartialData,
+      paginationParameters: action.paginationParameters,
       lastRequestId: action.requestId,
       fragmentMap: action.fragmentMap,
     };

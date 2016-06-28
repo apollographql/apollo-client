@@ -140,3 +140,60 @@ function fetchUser(id) {
 }
 
 ```
+
+<h2 id="using-thunk">Using thunk</h2>
+
+Okay now that you understand the basics of `thunk`, let's go over dispatching an `Apollo` mutation.
+
+```js
+// let's write a function to generate our mutation params
+// in our example we'll be updating the count of a counter
+function generateMutationObject(id) {
+  return {
+    mutation: gql`
+    mutation createCount($id: String) {
+     incrementCount(id: $id)
+    }`,
+    variables: {
+      id
+    }
+  };
+}
+
+```
+
+Now we will write our `thunk`:
+
+```js
+function incrementCount(id) {
+  return (dispatch, getState, client) => {
+    // we have access to the client inside this function
+    client.mutate(generateMutationObject(id)).then((result) => {
+      if (result.data) {
+        // if the mutation yields data, dispatch an action with that data
+        return dispatch({
+          type: "UPDATE_COUNT",
+          data: result.data.incrementCount
+        });
+      }
+    });
+  };
+}
+```
+
+Plug it into your UI
+
+```js
+import { connect } from 'react-redux';
+
+function CounterButton({ dispatch }) {
+    return (
+        <button onClick={function () { return dispatch(incrementCount(1));}}>Click me!</button>
+    );
+}
+
+export default connect()(CounterButton);
+```
+
+
+

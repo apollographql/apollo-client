@@ -7,7 +7,8 @@ import {
   SelectionSet,
 } from 'graphql';
 
-import forOwn = require('lodash.forown');
+import mapValues = require('lodash.mapvalues');
+import isArray = require('lodash.isarray');
 
 import {
   FragmentMap,
@@ -120,9 +121,44 @@ function mutationResultDeleteReducer({
   delete state[dataId];
 
   // Now we need to go through the whole store and remove all references
+  const newState = mapValues(state, (storeObj) => {
+    return removeRefsFromStoreObj(storeObj, dataId);
+  });
 
+  return newState;
+}
 
-  return state;
+function removeRefsFromStoreObj(storeObj, dataId) {
+  let affected = false;
+
+  const cleanedObj = mapValues(storeObj, (value, key) => {
+    if (value === dataId) {
+      affected = true;
+      return null;
+    }
+
+    if (isArray(value)) {
+      affected = true;
+      return cleanArray(value, dataId);
+    }
+  });
+
+  if (affected) {
+    // Maintain === for unchanged objects
+    return cleanedObj;
+  } else {
+    return storeObj;
+  }
+}
+
+function cleanArray(arr, dataId) {
+  if (arr.length && isArray(arr[0])) {
+    // Handle arbitrarily nested arrays
+    return arr.map((nestedArray) => cleanArray(nestedArray, dataId));
+  } else {
+    // XXX this will create a new array reference even if no items were removed
+    return arr.filter((item) => item !== dataId);
+  }
 }
 
 export const defaultMutationResultReducers: { [type: string]: MutationResultReducer } = {

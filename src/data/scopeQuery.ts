@@ -13,8 +13,21 @@ import {
   resultKeyNameFromField,
 } from './storeUtils';
 
-import cloneDeep = require('lodash.clonedeep');
 import isNumber = require('lodash.isnumber');
+
+export function scopeJSONToResultPath({
+  json,
+  path,
+}: {
+  json: any,
+  path: (string | number)[],
+}) {
+  let current = json;
+  path.forEach((pathSegment) => {
+    current = current[pathSegment];
+  });
+  return current;
+}
 
 export function scopeSelectionSetToResultPath({
   selectionSet,

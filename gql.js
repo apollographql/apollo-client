@@ -3,8 +3,8 @@ module.exports = require('graphql-tag');
 
 module.exports.registerGqlTag = function () {
   if (typeof window !== 'undefined') {
-    window['gql'] = gql;
+    window['gql'] = module.exports;
   } else if (typeof global !== 'undefined') {
-    global['gql'] = gql;
+    global['gql'] = module.exports;
   }
 }

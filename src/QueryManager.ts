@@ -119,7 +119,7 @@ export class QueryManager {
   // some of them) to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
   // destabalizing action occurs (e.g. reset of the Apollo store).
-  private fetchQueryPromises: { [promiseIndex: number]: {
+  private fetchQueryPromises: { [requestId: string]: {
     promise: Promise<GraphQLResult>;
     resolve: (result: GraphQLResult) => void;
     reject: (error: Error) => void;

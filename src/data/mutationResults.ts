@@ -158,6 +158,7 @@ function cleanArray(arr, dataId) {
     return arr.map((nestedArray) => cleanArray(nestedArray, dataId));
   } else {
     // XXX this will create a new array reference even if no items were removed
+    // switch to this: https://twitter.com/leeb/status/747601132080377856
     return arr.filter((item) => item !== dataId);
   }
 }

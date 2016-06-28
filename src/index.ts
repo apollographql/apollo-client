@@ -42,6 +42,7 @@ import {
 
 import {
   MutationApplyResultAction,
+  MutationResultReducerMap,
 } from './data/mutationResults';
 
 import isUndefined = require('lodash.isundefined');
@@ -77,6 +78,7 @@ export default class ApolloClient {
     shouldBatch = false,
     ssrMode = false,
     ssrForceFetchDelay = 0,
+    mutationResultReducers = {} as MutationResultReducerMap,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -86,6 +88,7 @@ export default class ApolloClient {
     shouldBatch?: boolean,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
+    mutationResultReducers?: MutationResultReducerMap,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
@@ -100,6 +103,7 @@ export default class ApolloClient {
 
     this.reducerConfig = {
       dataIdFromObject,
+      mutationResultReducers,
     };
   }
 

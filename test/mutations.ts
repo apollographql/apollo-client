@@ -125,32 +125,32 @@ describe('mutation results', () => {
   });
 
   describe('ARRAY_INSERT', () => {
-    it('correctly integrates a basic object at the beginning', () => {
-      const mutation = gql`
-        mutation createTodo {
-          # skipping arguments in the test since they don't matter
-          createTodo {
-            id
-            text
-            completed
-            __typename
-          }
+    const mutation = gql`
+      mutation createTodo {
+        # skipping arguments in the test since they don't matter
+        createTodo {
+          id
+          text
+          completed
           __typename
         }
-      `;
+        __typename
+      }
+    `;
 
-      const mutationResult = {
-        data: {
-          __typename: 'Mutation',
-          createTodo: {
-            __typename: 'Todo',
-            id: '99',
-            text: 'This one was created with a mutation.',
-            completed: true,
-          }
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          __typename: 'Todo',
+          id: '99',
+          text: 'This one was created with a mutation.',
+          completed: true,
         }
-      };
+      }
+    };
 
+    it('correctly integrates a basic object at the beginning', () => {
       return setup({
         request: { query: mutation },
         result: mutationResult,
@@ -179,31 +179,6 @@ describe('mutation results', () => {
     });
 
     it('correctly integrates a basic object at the end', () => {
-      const mutation = gql`
-        mutation createTodo {
-          # skipping arguments in the test since they don't matter
-          createTodo {
-            id
-            text
-            completed
-            __typename
-          }
-          __typename
-        }
-      `;
-
-      const mutationResult = {
-        data: {
-          __typename: 'Mutation',
-          createTodo: {
-            __typename: 'Todo',
-            id: '99',
-            text: 'This one was created with a mutation.',
-            completed: true,
-          }
-        }
-      };
-
       return setup({
         request: { query: mutation },
         result: mutationResult,
@@ -228,6 +203,41 @@ describe('mutation results', () => {
 
         // Since we used `APPEND` it should be at the end
         assert.equal(newResult.data.todoList.todos[3].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('accepts two operations', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          applyResult: [{
+            type: 'ARRAY_INSERT',
+            resultPath: [ 'createTodo' ],
+            storePath: [ 'TodoList5', 'todos' ],
+            where: 'PREPEND',
+          }, {
+            type: 'ARRAY_INSERT',
+            resultPath: [ 'createTodo' ],
+            storePath: [ 'TodoList5', 'todos' ],
+            where: 'APPEND',
+          }],
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 5);
+
+        // There will be two copies
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+
+        assert.equal(newResult.data.todoList.todos[4].text, 'This one was created with a mutation.');
       });
     });
   });

@@ -30,7 +30,7 @@ import {
 
 import {
   MutationResultReducerMap,
-} from './data/store';
+} from './data/mutationResultReducers';
 
 export interface Store {
   data: NormalizedCache;

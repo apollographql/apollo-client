@@ -32,6 +32,7 @@ import {
 
 import {
   defaultMutationResultReducers,
+  MutationResultReducerArgs,
 } from './mutationResultReducers';
 
 import {
@@ -48,17 +49,6 @@ export interface StoreObject {
 }
 
 export type StoreValue = number | string | string[];
-
-export type MutationResultReducerMap = {
-  [type: string]: MutationResultReducer;
-}
-
-export type MutationResultReducer = (
-  state: NormalizedCache,
-  action: MutationApplyResultAction,
-  result: GraphQLResult,
-  mutation: Document
-) => NormalizedCache;
 
 export function data(
   previousState: NormalizedCache = {},
@@ -118,12 +108,18 @@ export function data(
 
       if (action.applyResult) {
         action.applyResult.forEach((applyResultAction) => {
+          const args: MutationResultReducerArgs = {
+            state: newState,
+            action: applyResultAction,
+            result: action.result,
+            variables: queryStoreValue.variables,
+            fragmentMap: queryStoreValue.fragmentMap,
+            selectionSet: queryStoreValue.mutation.selectionSet,
+            config,
+          };
+
           if (defaultMutationResultReducers[applyResultAction.type]) {
-            newState = defaultMutationResultReducers[applyResultAction.type](
-              newState,
-              applyResultAction,
-              action.result
-            );
+            newState = defaultMutationResultReducers[applyResultAction.type](args);
           } else {
             throw new Error(`No mutation result reducer defined for type ${applyResultAction.type}`);
           }

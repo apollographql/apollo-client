@@ -161,7 +161,7 @@ describe('mutation results', () => {
           applyResult: [{
             type: 'ARRAY_INSERT',
             resultPath: [ 'createTodo' ],
-            storePath: [ '5', 'todos' ],
+            storePath: [ 'TodoList5', 'todos' ],
             where: 'PREPEND',
           }]
         });
@@ -174,7 +174,7 @@ describe('mutation results', () => {
         assert.equal(newResult.data.todoList.todos.length, 4);
 
         // Since we used `prepend` it should be at the front
-        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation');
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
       });
     });
   });

@@ -1,8 +1,4 @@
 import {
-  MutationArrayInsertAction,
-} from './mutationResultActions';
-
-import {
   NormalizedCache,
 } from './store';
 
@@ -10,6 +6,8 @@ import {
   GraphQLResult,
   SelectionSet,
 } from 'graphql';
+
+import forOwn = require('lodash.forown');
 
 import {
   FragmentMap,
@@ -28,6 +26,27 @@ import {
   writeSelectionSetToStore,
 } from './writeToStore';
 
+export type MutationApplyResultAction =
+  MutationArrayInsertAction |
+  MutationDeleteAction;
+
+export type MutationArrayInsertAction = {
+  type: 'ARRAY_INSERT';
+  resultPath: string[];
+  storePath: string[];
+  where: ArrayInsertWhere;
+}
+
+export type MutationDeleteAction = {
+  type: 'DELETE';
+  dataId: string;
+}
+
+export type ArrayInsertWhere =
+  'PREPEND' |
+  'APPEND';
+
+
 function mutationResultArrayInsertReducer({
   state,
   action,
@@ -41,7 +60,7 @@ function mutationResultArrayInsertReducer({
     resultPath,
     storePath,
     where,
-  } = action;
+  } = action as MutationArrayInsertAction;
 
   // Step 1: get selection set and result for resultPath
   //   This might actually be a relatively complex operation, on the level of
@@ -90,13 +109,30 @@ function mutationResultArrayInsertReducer({
   return state;
 }
 
+function mutationResultDeleteReducer({
+  action,
+  state,
+}: MutationResultReducerArgs): NormalizedCache {
+  const {
+    dataId,
+  } = action as MutationDeleteAction;
+
+  delete state[dataId];
+
+  // Now we need to go through the whole store and remove all references
+
+
+  return state;
+}
+
 export const defaultMutationResultReducers: { [type: string]: MutationResultReducer } = {
   'ARRAY_INSERT': mutationResultArrayInsertReducer,
+  'DELETE': mutationResultDeleteReducer,
 };
 
 export type MutationResultReducerArgs = {
   state: NormalizedCache;
-  action: MutationArrayInsertAction;
+  action: MutationApplyResultAction;
   result: GraphQLResult;
   variables: any;
   fragmentMap: FragmentMap;

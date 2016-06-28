@@ -241,4 +241,53 @@ describe('mutation results', () => {
       });
     });
   });
+
+  describe('DELETE', () => {
+    const mutation = gql`
+      mutation deleteTodo {
+        # skipping arguments in the test since they don't matter
+        deleteTodo {
+          id
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        deleteTodo: {
+          __typename: 'Todo',
+          id: '3',
+        }
+      }
+    };
+
+    it('deletes an object from an array', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          applyResult: [{
+            type: 'DELETE',
+            dataId: 'Todo3',
+          }],
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+  });
 });

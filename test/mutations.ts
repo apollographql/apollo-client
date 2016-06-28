@@ -1,6 +1,10 @@
 import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient, { addTypename } from '../src';
+import { MutationResultReducerArgs, MutationApplyResultAction } from '../src/data/mutationResults';
+import { NormalizedCache, StoreObject } from '../src/data/store';
+
+import assign = require('lodash.assign');
 
 import gql from 'graphql-tag';
 
@@ -54,6 +58,27 @@ describe('mutation results', () => {
   let client: ApolloClient;
   let networkInterface;
 
+  type CustomMutationResultAction = {
+    type: 'CUSTOM_MUTATION_RESULT',
+    dataId: string,
+    field: string,
+    value: any,
+  }
+
+  // This is an example of a basic mutation reducer that just sets a field in the store
+  function customMutationReducer({
+    state,
+    action,
+  }: MutationResultReducerArgs): NormalizedCache {
+    const customAction = action as any as CustomMutationResultAction;
+
+    state[customAction.dataId] = assign({}, state[customAction.dataId], {
+      [customAction.field]: customAction.value,
+    }) as StoreObject;
+
+    return state;
+  }
+
   function setup(...mockedResponses) {
     networkInterface = mockNetworkInterface({
       request: { query },
@@ -62,6 +87,7 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       networkInterface,
+
       // XXX right now this isn't compatible with our mocking
       // strategy...
       // FIX BEFORE PR MERGE
@@ -71,6 +97,10 @@ describe('mutation results', () => {
           return obj.__typename + obj.id;
         }
         return null;
+      },
+
+      mutationResultReducers: {
+        'CUSTOM_MUTATION_RESULT': customMutationReducer,
       },
     });
 
@@ -105,8 +135,8 @@ describe('mutation results', () => {
           __typename: 'Todo',
           id: '3',
           completed: true,
-        }
-      }
+        },
+      },
     };
 
     return setup({
@@ -309,8 +339,8 @@ describe('mutation results', () => {
         removeTodo: {
           __typename: 'Todo',
           id: '3',
-        }
-      }
+        },
+      },
     };
 
     it('deletes an object from array but not store', () => {
@@ -337,6 +367,56 @@ describe('mutation results', () => {
 
         // The item is still in the store
         assert.property(client.queryManager.getApolloState().data, 'Todo3');
+      });
+    });
+  });
+
+  describe('CUSTOM_MUTATION_RESULT', () => {
+    const mutation = gql`
+      mutation setField {
+        # skipping arguments in the test since they don't matter
+        setSomething {
+          aValue
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        setSomething: {
+          __typename: 'Value',
+          aValue: 'rainbow',
+        },
+      },
+    };
+
+    it('runs the custom reducer', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          applyResult: [
+            {
+              type: 'CUSTOM_MUTATION_RESULT',
+              dataId: 'Todo3',
+              field: 'text',
+              value: 'this is the new text',
+            } as any as MutationApplyResultAction,
+          ],
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // Our custom reducer has indeed modified the state!
+        assert.equal(newResult.data.todoList.todos[0].text, 'this is the new text');
       });
     });
   });

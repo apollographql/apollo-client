@@ -118,6 +118,8 @@ export function data(
 
           if (defaultMutationResultReducers[applyResultAction.type]) {
             newState = defaultMutationResultReducers[applyResultAction.type](args);
+          } else if (config.mutationResultReducers[applyResultAction.type]) {
+            newState = config.mutationResultReducers[applyResultAction.type](args);
           } else {
             throw new Error(`No mutation result reducer defined for type ${applyResultAction.type}`);
           }

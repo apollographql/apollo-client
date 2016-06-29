@@ -5,6 +5,8 @@ import {
   isQueryErrorAction,
   isQueryResultClientAction,
   isQueryStopAction,
+  isStoreResetAction,
+  StoreResetAction,
 } from '../actions';
 
 import {
@@ -130,7 +132,27 @@ export function queries(
     delete newState[action.queryId];
 
     return newState;
+  } else if (isStoreResetAction(action)) {
+    return resetQueryState(previousState, action);
   }
 
   return previousState;
+}
+
+// Returns the new query state after we receive a store reset action.
+// Note that we don't remove the query state for the query IDs that are associated with watchQuery()
+// observables. This is because these observables are simply refetched and not
+// errored in the event of a store reset.
+function resetQueryState(state: QueryStore, action: StoreResetAction): QueryStore {
+  const observableQueryIds = action.observableQueryIds;
+
+  // keep only the queries with query ids that are associated with observables
+  const newQueries = Object.keys(state).filter((queryId) => {
+    return (observableQueryIds.indexOf(queryId) > -1);
+  }).reduce((res, key) => {
+    res[key] = state[key];
+    return res;
+  }, {} as QueryStore);
+
+  return newQueries;
 }

@@ -103,6 +103,7 @@ export function createApolloStore({
   );
 }
 
+
 export interface ApolloReducerConfig {
   dataIdFromObject?: IdGetter;
 }

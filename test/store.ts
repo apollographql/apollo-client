@@ -57,4 +57,70 @@ describe('createApolloStore', () => {
 
     assert.deepEqual(store.getState(), initialState);
   });
+
+  it('reset itself', () => {
+    const initialState = {
+      apollo: {
+        queries: {
+          'test.0': true,
+        },
+        mutations: {},
+        data: {
+          'test.0': true,
+        },
+      },
+    };
+
+    const emptyState = {
+      queries: { },
+      mutations: { },
+      data: { },
+    };
+
+    const store = createApolloStore({
+      initialState,
+    });
+
+    store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+      observableQueryIds: [],
+    });
+
+    assert.deepEqual(store.getState().apollo, emptyState);
+  });
+
+  it('can reset itself and keep the observable query ids', () => {
+    const initialState = {
+      apollo: {
+        queries: {
+          'test.0': true,
+          'test.1': false,
+        },
+        mutations: {},
+        data: {
+          'test.0': true,
+          'test.1': true,
+        },
+      },
+    };
+
+    const emptyState = {
+      queries: {
+        'test.0': true,
+      },
+      mutations: {},
+      data: {},
+    };
+
+    const store = createApolloStore({
+      initialState,
+    });
+
+    store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+      observableQueryIds: ['test.0'],
+    });
+
+    assert.deepEqual(store.getState().apollo, emptyState);
+  });
 });

@@ -99,7 +99,7 @@ export interface WatchQueryOptions {
   pollInterval?: number;
 }
 
-export type QueryListener = (queryStoreValue: QueryStoreValue) => void
+export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export class QueryManager {
   private networkInterface: NetworkInterface;
@@ -114,6 +114,24 @@ export class QueryManager {
   private scheduler: QueryScheduler;
   private batcher: QueryBatcher;
   private batcherPollInterval = 10;
+
+  // A map going from an index (i.e. just like an array index, except that we can remove
+  // some of them) to a promise that has not yet been resolved. We use this to keep
+  // track of queries that are inflight and reject them in case some
+  // destabalizing action occurs (e.g. reset of the Apollo store).
+  private fetchQueryPromises: { [requestId: string]: {
+    promise: Promise<GraphQLResult>;
+    resolve: (result: GraphQLResult) => void;
+    reject: (error: Error) => void;
+  } };
+
+  // A map going from queryId to an observer for a query issued by watchQuery. We use
+  // these to keep track of queries that are inflight and error on the observers associated
+  // with them in case of some destabalizing action (e.g. reset of the Apollo store).
+  private observableQueries: { [queryId: string]:  {
+    observableQuery: ObservableQuery;
+    subscriptions: QuerySubscription[];
+  } };
 
   constructor({
     networkInterface,
@@ -148,6 +166,8 @@ export class QueryManager {
     });
 
     this.batcher.start(this.batcherPollInterval);
+    this.fetchQueryPromises = {};
+    this.observableQueries = {};
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
@@ -258,12 +278,61 @@ export class QueryManager {
     };
   }
 
-  public watchQuery(options: WatchQueryOptions): ObservableQuery {
+  // The shouldSubscribe option is a temporary fix that tells us whether watchQuery was called
+  // directly (i.e. through ApolloClient) or through the query method within QueryManager.
+  // Currently, the query method uses watchQuery in order to handle non-network errors correctly
+  // but we don't want to keep track observables issued for the query method since those aren't
+  // supposed to be refetched in the event of a store reset. Once we unify error handling for
+  // network errors and non-network errors, the shouldSubscribe option will go away.
+  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
-    return new ObservableQuery((observer) => {
-      const queryId = this.startQuery(options, (queryStoreValue: QueryStoreValue) => {
+    const observableQuery = new ObservableQuery((observer) => {
+      const queryId = this.generateQueryId();
+
+      const retQuerySubscription = {
+        unsubscribe: () => {
+          this.stopQuery(queryId);
+        },
+        refetch: (variables: any): Promise<GraphQLResult> => {
+          // If no new variables passed, use existing variables
+          variables = variables || options.variables;
+
+          // Use the same options as before, but with new variables and forceFetch true
+          return this.fetchQuery(queryId, assign(options, {
+            forceFetch: true,
+            variables,
+          }) as WatchQueryOptions);
+        },
+        stopPolling: (): void => {
+          if (this.pollingTimers[queryId]) {
+            clearInterval(this.pollingTimers[queryId]);
+          }
+        },
+        startPolling: (pollInterval): void => {
+          this.pollingTimers[queryId] = setInterval(() => {
+            const pollingOptions = assign({}, options) as WatchQueryOptions;
+            // subsequent fetches from polling always reqeust new data
+            pollingOptions.forceFetch = true;
+            this.fetchQuery(queryId, pollingOptions);
+          }, pollInterval);
+        },
+      };
+
+      if (shouldSubscribe) {
+        this.addObservableQuery(queryId, observableQuery);
+        this.addQuerySubscription(queryId, retQuerySubscription);
+      }
+
+      this.startQuery(queryId, options, (queryStoreValue: QueryStoreValue) => {
+        // we could get back an empty store value if the store was reset while this
+        // query was still in flight. In this circumstance, we are no longer concerned
+        // with the return value of that particular instance of the query.
+        if (!queryStoreValue) {
+          return;
+        }
+
         if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
           // XXX Currently, returning errors and data is exclusive because we
           // don't handle partial results
@@ -297,39 +366,10 @@ export class QueryManager {
         }
       });
 
-      // get the polling timer reference associated with this
-      // particular query.
-      const pollingTimer = this.pollingTimers[queryId];
-
-      return {
-        unsubscribe: () => {
-          this.stopQuery(queryId);
-        },
-        refetch: (variables: any): Promise<GraphQLResult> => {
-          // If no new variables passed, use existing variables
-          variables = variables || options.variables;
-
-          // Use the same options as before, but with new variables and forceFetch true
-          return this.fetchQuery(queryId, assign(options, {
-            forceFetch: true,
-            variables,
-          }) as WatchQueryOptions);
-        },
-        stopPolling: (): void => {
-          if (pollingTimer) {
-            clearInterval(pollingTimer);
-          }
-        },
-        startPolling: (pollInterval): void => {
-          this.pollingTimers[queryId] = setInterval(() => {
-            const pollingOptions = assign({}, options) as WatchQueryOptions;
-            // subsequent fetches from polling always reqeust new data
-            pollingOptions.forceFetch = true;
-            this.fetchQuery(queryId, pollingOptions);
-          }, pollInterval);
-        },
-      };
+      return retQuerySubscription;
     });
+
+    return observableQuery;
   }
 
   public query(options: WatchQueryOptions): Promise<GraphQLResult> {
@@ -337,7 +377,24 @@ export class QueryManager {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
 
-    return this.watchQuery(options).result();
+    if (options.query.kind !== 'Document') {
+      throw new Error('You must wrap the query string in a "gql" tag.');
+    }
+
+    const requestId = this.idCounter;
+    const resPromise = new Promise((resolve, reject) => {
+      this.addFetchQueryPromise(requestId, resPromise, resolve, reject);
+
+      return this.watchQuery(options, false).result().then((result) => {
+        this.removeFetchQueryPromise(requestId);
+        resolve(result);
+      }).catch((error) => {
+        this.removeFetchQueryPromise(requestId);
+        reject(error);
+      });
+    });
+
+    return resPromise;
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
@@ -367,6 +424,70 @@ export class QueryManager {
 
   public removeQueryListener(queryId: string) {
     delete this.queryListeners[queryId];
+  }
+
+  // Adds a promise to this.fetchQueryPromises for a given request ID.
+  public addFetchQueryPromise(requestId: number, promise: Promise<GraphQLResult>,
+    resolve: (result: GraphQLResult) => void,
+    reject: (error: Error) => void) {
+    this.fetchQueryPromises[requestId.toString()] = { promise, resolve, reject };
+  }
+
+  // Removes the promise in this.fetchQueryPromises for a particular request ID.
+  public removeFetchQueryPromise(requestId: number) {
+    delete this.fetchQueryPromises[requestId.toString()];
+  }
+
+  // Adds an ObservableQuery to this.observableQueries
+  public addObservableQuery(queryId: string, observableQuery: ObservableQuery) {
+    this.observableQueries[queryId] = { observableQuery, subscriptions: [] };
+  }
+
+  // Associates a query subscription with an ObservableQuery in this.observableQueries
+  public addQuerySubscription(queryId: string, querySubscription: QuerySubscription) {
+    if (this.observableQueries.hasOwnProperty(queryId)) {
+      this.observableQueries[queryId].subscriptions.push(querySubscription);
+    } else {
+      this.observableQueries[queryId] = {
+        observableQuery: null,
+        subscriptions: [querySubscription],
+      };
+    }
+  }
+
+  public removeObservableQuery(queryId: string) {
+    delete this.observableQueries[queryId];
+  }
+
+  public resetStore(): void {
+    // Before we have sent the reset action to the store,
+    // we can no longer rely on the results returned by in-flight
+    // requests since these may depend on values that previously existed
+    // in the data portion of the store. So, we cancel the promises and observers
+    // that we have issued so far and not yet resolved (in the case of
+    // queries).
+    Object.keys(this.fetchQueryPromises).forEach((key) => {
+      const { reject } = this.fetchQueryPromises[key];
+      reject(new Error('Store reset while query was in flight.'));
+    });
+
+    this.store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+      observableQueryIds: Object.keys(this.observableQueries),
+    });
+
+    // Similarly, we have to have to refetch each of the queries currently being
+    // observed. We refetch instead of error'ing on these since the assumption is that
+    // resetting the store doesn't eliminate the need for the queries currently being
+    // watched. If there is an existing query in flight when the store is reset,
+    // the promise for it will be rejected and its results will not be written to the
+    // store.
+    Object.keys(this.observableQueries).forEach((queryId) => {
+      const subscriptions = this.observableQueries[queryId].subscriptions;
+
+      // we can refetch any one of the subscriptions.
+      subscriptions[subscriptions.length - 1].refetch();
+    });
   }
 
   private fetchQueryOverInterface(queryId: string,
@@ -485,60 +606,66 @@ export class QueryManager {
         operationName: request.operationName,
       };
 
-      return this.batcher.enqueueRequest(fetchRequest)
-        .then((result: GraphQLResult) => {
-          // XXX handle multiple GraphQLResults
-          this.store.dispatch({
-            type: 'APOLLO_QUERY_RESULT',
-            result,
-            queryId,
-            requestId,
-          });
+      const retPromise = new Promise<GraphQLResult>((resolve, reject) => {
+        this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-          return result;
-        }).then(() => {
-
-          let resultFromStore;
-          try {
-            // ensure result is combined with data already in store
-            // this will throw an error if there are missing fields in
-            // the results if returnPartialData is false.
-            resultFromStore = readSelectionSetFromStore({
-              store: this.getApolloState().data,
-              rootId: querySS.id,
-              selectionSet: querySS.selectionSet,
-              variables,
-              returnPartialData: returnPartialData,
-              fragmentMap: queryFragmentMap,
+        return this.batcher.enqueueRequest(fetchRequest)
+          .then((result: GraphQLResult) => {
+            // XXX handle multiple GraphQLResults
+            this.store.dispatch({
+              type: 'APOLLO_QUERY_RESULT',
+              result,
+              queryId,
+              requestId,
             });
-          // ensure multiple errors don't get thrown
-          /* tslint:disable */
-          } catch (e) {}
-          /* tslint:enable */
 
-          // return a chainable promise
-          return new Promise((resolve) => {
+            this.removeFetchQueryPromise(requestId);
+            return result;
+          }).then(() => {
+
+            let resultFromStore;
+            try {
+              // ensure result is combined with data already in store
+              // this will throw an error if there are missing fields in
+              // the results if returnPartialData is false.
+              resultFromStore = readSelectionSetFromStore({
+                store: this.getApolloState().data,
+                rootId: querySS.id,
+                selectionSet: querySS.selectionSet,
+                variables,
+                returnPartialData: returnPartialData,
+                fragmentMap: queryFragmentMap,
+              });
+              // ensure multiple errors don't get thrown
+              /* tslint:disable */
+            } catch (e) {}
+            /* tslint:enable */
+
+            // return a chainable promise
+            this.removeFetchQueryPromise(requestId);
             resolve({ data: resultFromStore });
-          });
-        }).catch((error: Error) => {
-          this.store.dispatch({
-           type: 'APOLLO_QUERY_ERROR',
-            error,
-            queryId,
-            requestId,
-          });
+          }).catch((error: Error) => {
+            this.store.dispatch({
+              type: 'APOLLO_QUERY_ERROR',
+              error,
+              queryId,
+              requestId,
+            });
 
-          return error;
-        });
+            this.removeFetchQueryPromise(requestId);
+            return error;
+          });
+      });
+      return retPromise;
     }
+
     // return a chainable promise
     return new Promise((resolve) => {
       resolve({ data: initialResult });
     });
   }
 
-  private startQuery(options: WatchQueryOptions, listener: QueryListener) {
-    const queryId = this.generateQueryId();
+  private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options);
 

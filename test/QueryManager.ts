@@ -1,5 +1,6 @@
 import {
   QueryManager,
+  QuerySubscription,
 } from '../src/QueryManager';
 
 import {
@@ -40,7 +41,10 @@ import assign = require('lodash.assign');
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
-import { BatchedNetworkInterface }from '../src/networkInterface';
+import {
+  BatchedNetworkInterface,
+  NetworkInterface,
+} from '../src/networkInterface';
 
 describe('QueryManager', () => {
   it('properly roundtrips through a Redux store', (done) => {
@@ -2154,6 +2158,251 @@ describe('QueryManager', () => {
       queryManager.fetchQuery('super-fake-id', { query: query1 });
       setTimeout(() => {
         queryManager.fetchQuery('very-fake-id', { query: query2 });
+        done();
+      }, 100);
+
+    });
+  });
+
+  describe('store resets', () => {
+    it('should change the store state to an empty state', () => {
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.resetStore();
+      const currentState = queryManager.getApolloState();
+      const expectedState = {
+        data: {},
+        mutations: {},
+        queries: {},
+      };
+
+      assert.deepEqual(currentState, expectedState);
+    });
+
+    it('should only refetch once when we store reset', (done) => {
+      let queryManager: QueryManager = null;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      let numResults = 0;
+      const myNetworkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          if (timesFired === 0) {
+            timesFired += 1;
+            queryManager.resetStore();
+          } else {
+            timesFired += 1;
+          }
+          return Promise.resolve({ data });
+        },
+      };
+
+      queryManager = new QueryManager({
+        networkInterface: myNetworkInterface,
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      const handle = queryManager.watchQuery({ query });
+      handle.subscribe({
+        next(result) {
+          numResults += 1;
+        },
+
+        error(err) {
+          done(new Error('Errored on observable on store reset.'));
+        },
+      });
+
+      setTimeout(() => {
+        assert.equal(timesFired, 2);
+        assert.equal(numResults, 1);
+        done();
+      }, 100);
+    });
+
+
+    it('should throw an error on an inflight fetch query if the store is reset', (done) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface({
+          request: { query },
+          result: { data },
+          delay: 10000, //i.e. forever
+        }),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      queryManager.fetchQuery('made up id', { query }).then((result) => {
+        assert(false); //we don't want this promise to ever resolve correctly
+        done();
+      }).catch((error) => {
+        assert.include(error.message, 'Store reset');
+        done();
+      });
+      queryManager.resetStore();
+    });
+
+    it('should call refetch on a mocked QuerySubscription if the store is reset', (done) => {
+      const mockQuerySubscription: QuerySubscription = {
+        unsubscribe() {
+          done(new Error('Unsubscribe was called on a subscription on store reset.'));
+        },
+
+        refetch(variables: any): Promise<GraphQLResult> {
+          done();
+          return null;
+        },
+
+        stopPolling(): void {
+          done(new Error('stopPolling was called on a subscription on store reset.'));
+        },
+
+        startPolling(pollInterval): void {
+          done(new Error('startPolling was called on a subscription on a store reset.'));
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery(queryId, null);
+      queryManager.addQuerySubscription(queryId, mockQuerySubscription);
+      queryManager.resetStore();
+    });
+
+
+    it('should throw an error on an inflight query() if the store is reset', (done) => {
+      let queryManager: QueryManager = null;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const myNetworkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          // reset the store as soon as we hear about the query
+          queryManager.resetStore();
+          return Promise.resolve({ data });
+        },
+      };
+
+      queryManager = new QueryManager({
+        networkInterface: myNetworkInterface,
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      queryManager.query({ query }).then((result) => {
+        done(new Error('query() gave results on a store reset'));
+      }).catch((error) => {
+        done();
+      });
+    });
+
+    it('should refetch the results even for observables with multiple subscriptions', (done) => {
+      let queryManager: QueryManager = null;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      let numResults = 0;
+      let numResultsSecond = 0;
+
+      const myNetworkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          if (timesFired === 0) {
+            timesFired += 1;
+            queryManager.resetStore();
+          } else {
+            timesFired += 1;
+          }
+          return Promise.resolve({ data });
+        },
+      };
+
+      queryManager = new QueryManager({
+        networkInterface: myNetworkInterface,
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      const handle = queryManager.watchQuery({ query });
+
+      handle.subscribe({
+        next(result) {
+          numResults += 1;
+        },
+
+        error(err) {
+          done(new Error('Errored on observable on store reset.'));
+        },
+      });
+
+      handle.subscribe({
+        next(result) {
+          numResultsSecond += 1;
+        },
+        error(err) {
+          done(new Error('Errored on observable on store reset.'));
+        },
+      });
+
+      setTimeout(() => {
+        assert.equal(timesFired, 3);
+        assert.equal(numResults, 2);
+        assert.equal(numResultsSecond, 1);
         done();
       }, 100);
     });

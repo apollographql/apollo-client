@@ -7,6 +7,11 @@ import {
 } from '../actions';
 
 import {
+  data,
+  NormalizedCache,
+} from '../data/store';
+
+import {
   SelectionSet,
 } from 'graphql';
 
@@ -78,45 +83,60 @@ export function mutations(
 }
 
 export interface OptimisticStore {
-  data: Object;
-  mutationIds: Object;
+  data: NormalizedCache;
+  mutationIds: any;
 }
 
 const optimisticDefaultState = {
-  data: {},
-  mutationIds: {},
+  data: {} as NormalizedCache,
+  mutationIds: [],
 };
 
 export function optimistic(
   previousState = optimisticDefaultState,
   action,
+  queriesState,
+  mutationsState,
+  dataState,
   config
 ): OptimisticStore {
   if (isMutationInitAction(action) && action.optimisticResponse) {
-    const newState = {
-      data: assign({}, previousState.data),
-      mutationIds: assign({}, previousState.mutationIds),
-    };
-    const { dataIdFromObject } = config;
-    const dataId = dataIdFromObject(action.optimisticResponse);
+    const fakeMutationResultAction = {
+      type: 'APOLLO_MUTATION_RESULT',
+      result: { data: action.optimisticResponse },
+      mutationId: action.mutationId,
+    } as ApolloAction;
 
-    newState.data[dataId] = action.optimisticResponse;
-    newState.mutationIds[dataId] = action.mutationId;
+    const fakeDataResultState = data(previousState.data,
+      fakeMutationResultAction,
+      queriesState,
+      mutationsState,
+      config);
+
+    const newState = {
+      data: fakeDataResultState,
+      mutationIds: [...previousState.mutationIds],
+    };
+    newState.mutationIds.push(action.mutationId);
 
     return newState;
   } else if (isMutationResultAction(action) && action.optimisticResponse) {
-    let newState = previousState;
-    const { dataIdFromObject } = config;
-    const dataId = dataIdFromObject(action.optimisticResponse);
-    const lastMutationId = newState.mutationIds[dataId];
+    let newState;
+    const newMutationIds = previousState.mutationIds.filter((id) => {
+      return id !== action.mutationId;
+    });
 
-    if (lastMutationId === action.mutationId) {
+    // throw away if no outstanding mutation requests
+    if (newMutationIds.length === 0) {
       newState = {
-        data: assign({}, previousState.data),
-        mutationIds: assign({}, previousState.mutationIds),
+        data: {} as NormalizedCache,
+        mutationIds: []
       };
-      delete newState.data[dataId];
-      delete newState.mutationIds[dataId];
+    } else {
+      newState = {
+        data: previousState.data,
+        mutationIds: newMutationIds,
+      };
     }
 
     return newState;

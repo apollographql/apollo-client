@@ -18,6 +18,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Added support for resetting the store [Issue #158](https://github.com/apollostack/apollo-client/issues/158) and [PR #314](https://github.com/apollostack/apollo-client/pull/314).
 - Deprecate `apollo-client/gql` for `graphql-tag` and show a meaningful warning when importing
   `apollo-client/gql`
+- Exposed a `printAST` method that is just `graphql-js`'s `print` method underneath.
 
 ### v0.3.22 + v0.3.23 + v0.3.24
 

@@ -22,3 +22,5 @@ import './directives';
 import './queryMerging';
 import './batching';
 import './scheduler';
+import './mutationResults';
+import './scopeQuery';

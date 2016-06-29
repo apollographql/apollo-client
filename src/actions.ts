@@ -6,6 +6,10 @@ import {
   SelectionSetWithRoot,
 } from './queries/store';
 
+import {
+  MutationBehavior,
+} from './data/mutationResults';
+
 import { FragmentMap } from './queries/getFromAST';
 
 export interface QueryResultAction {
@@ -85,6 +89,7 @@ export interface MutationResultAction {
   type: 'APOLLO_MUTATION_RESULT';
   result: GraphQLResult;
   mutationId: string;
+  resultBehaviors?: MutationBehavior[];
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

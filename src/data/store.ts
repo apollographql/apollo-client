@@ -27,6 +27,11 @@ import {
   graphQLResultHasError,
 } from './storeUtils';
 
+import {
+  defaultMutationBehaviorReducers,
+  MutationBehaviorReducerArgs,
+} from './mutationResults';
+
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
 }
@@ -84,7 +89,7 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      const newState = writeSelectionSetToStore({
+      let newState = writeSelectionSetToStore({
         result: action.result.data,
         dataId: queryStoreValue.mutation.id,
         selectionSet: queryStoreValue.mutation.selectionSet,
@@ -93,6 +98,27 @@ export function data(
         dataIdFromObject: config.dataIdFromObject,
         fragmentMap: queryStoreValue.fragmentMap,
       });
+
+      if (action.resultBehaviors) {
+        action.resultBehaviors.forEach((behavior) => {
+          const args: MutationBehaviorReducerArgs = {
+            behavior,
+            result: action.result,
+            variables: queryStoreValue.variables,
+            fragmentMap: queryStoreValue.fragmentMap,
+            selectionSet: queryStoreValue.mutation.selectionSet,
+            config,
+          };
+
+          if (defaultMutationBehaviorReducers[behavior.type]) {
+            newState = defaultMutationBehaviorReducers[behavior.type](newState, args);
+          } else if (config.mutationBehaviorReducers[behavior.type]) {
+            newState = config.mutationBehaviorReducers[behavior.type](newState, args);
+          } else {
+            throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
+          }
+        });
+      }
 
       return newState;
     }

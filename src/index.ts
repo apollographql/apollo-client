@@ -40,6 +40,15 @@ import {
   addTypenameToSelectionSet,
 } from './queries/queryTransform';
 
+import {
+  MutationBehavior,
+  MutationBehaviorReducerMap,
+} from './data/mutationResults';
+
+import {
+  storeKeyNameFromFieldNameAndArgs,
+} from './data/storeUtils';
+
 import isUndefined = require('lodash.isundefined');
 
 export {
@@ -63,6 +72,8 @@ export default class ApolloClient {
   public queryTransformer: QueryTransformer;
   public shouldBatch: boolean;
   public shouldForceFetch: boolean;
+  public dataId: IdGetter;
+  public fieldWithArgs: (fieldName: string, args?: Object) => string;
 
   constructor({
     networkInterface,
@@ -73,6 +84,7 @@ export default class ApolloClient {
     shouldBatch = false,
     ssrMode = false,
     ssrForceFetchDelay = 0,
+    mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -82,6 +94,7 @@ export default class ApolloClient {
     shouldBatch?: boolean,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
+    mutationBehaviorReducers?: MutationBehaviorReducerMap,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
@@ -90,12 +103,16 @@ export default class ApolloClient {
     this.queryTransformer = queryTransformer;
     this.shouldBatch = shouldBatch;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
+    this.dataId = dataIdFromObject;
+    this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
     }
 
     this.reducerConfig = {
       dataIdFromObject,
+      mutationBehaviorReducers,
     };
   }
 
@@ -117,6 +134,7 @@ export default class ApolloClient {
 
   public mutate = (options: {
     mutation: Document,
+    resultBehaviors?: MutationBehavior[],
     variables?: Object,
   }): Promise<GraphQLResult> => {
     this.initStore();

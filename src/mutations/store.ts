@@ -76,3 +76,52 @@ export function mutations(
 
   return previousState;
 }
+
+export interface OptimisticStore {
+  data: Object;
+  mutationIds: Object;
+}
+
+const optimisticDefaultState = {
+  data: {},
+  mutationIds: {},
+};
+
+export function optimistic(
+  previousState = optimisticDefaultState,
+  action,
+  config
+): OptimisticStore {
+  if (isMutationInitAction(action) && action.optimisticResponse) {
+    const newState = {
+      data: assign({}, previousState.data),
+      mutationIds: assign({}, previousState.mutationIds),
+    };
+    const { dataIdFromObject } = config;
+    const dataId = dataIdFromObject(action.optimisticResponse);
+
+    newState.data[dataId] = action.optimisticResponse;
+    newState.mutationIds[dataId] = action.mutationId;
+
+    return newState;
+  } else if (isMutationResultAction(action) && action.optimisticResponse) {
+    let newState = previousState;
+    const { dataIdFromObject } = config;
+    const dataId = dataIdFromObject(action.optimisticResponse);
+    const lastMutationId = newState.mutationIds[dataId];
+
+    if (lastMutationId === action.mutationId) {
+      newState = {
+        data: assign({}, previousState.data),
+        mutationIds: assign({}, previousState.mutationIds),
+      };
+      delete newState.data[dataId];
+      delete newState.mutationIds[dataId];
+    }
+
+    return newState;
+  }
+
+  return previousState;
+}
+

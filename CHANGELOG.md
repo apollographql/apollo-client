@@ -49,6 +49,8 @@ This release has a minor version bump, which means npm will not automatically up
 - Deprecate `apollo-client/gql` for `graphql-tag` and show a meaningful warning when importing
   `apollo-client/gql`
 
+- Allow `client.mutate` to accept an `optimisticResponse` argument to update the cache immediately, then after the server responds replace the `optimisticResponse` with the real response.
+
 ### v0.3.22 + v0.3.23 + v0.3.24
 
 - Fix unintentional breaking change where `apollo-client/gql` import stopped working. [Issue #327](https://github.com/apollostack/apollo-client/issues/327)

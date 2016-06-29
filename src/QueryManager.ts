@@ -6,6 +6,7 @@ import {
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
+// import merge = require('lodash.merge');
 
 import {
   ApolloStore,
@@ -31,6 +32,10 @@ import {
   QueryTransformer,
   applyTransformerToOperation,
 } from './queries/queryTransform';
+
+import {
+  NormalizedCache,
+} from './data/store';
 
 import {
   GraphQLResult,
@@ -218,6 +223,7 @@ export class QueryManager {
     variables,
     resultBehaviors,
     fragments = [],
+    optimisticResponse,
   }: {
     mutation: Document,
     variables?: Object,
@@ -256,6 +262,7 @@ export class QueryManager {
       variables,
       mutationId,
       fragmentMap: queryFragmentMap,
+      optimisticResponse,
     });
 
     return this.networkInterface.query(request)
@@ -265,6 +272,7 @@ export class QueryManager {
           result,
           mutationId,
           resultBehaviors,
+          optimisticResponse,
         });
 
         return result;
@@ -447,6 +455,11 @@ export class QueryManager {
 
   public getApolloState(): Store {
     return this.store.getState()[this.reduxRootKey];
+  }
+
+  public getApolloCacheData(): NormalizedCache {
+    const state = this.getApolloState();
+    return assign({}, state.data, state.optimistic.data) as NormalizedCache;
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {

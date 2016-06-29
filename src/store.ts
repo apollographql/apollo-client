@@ -18,6 +18,8 @@ import {
 import {
   mutations,
   MutationStore,
+  optimistic,
+  OptimisticStore,
 } from './mutations/store';
 
 import {
@@ -36,6 +38,7 @@ export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
   mutations: MutationStore;
+  optimistic: OptimisticStore;
 }
 
 // This is our interface on top of Redux to get types in our actions
@@ -66,6 +69,7 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
       // Note that we are passing the queries into this, because it reads them to associate
       // the query ID in the result with the actual query
       data: data(state.data, action, state.queries, state.mutations, config),
+      optimistic: optimistic(state.optimistic, action, config),
     };
 
     return newState;

@@ -72,8 +72,8 @@ function followOnePathSegment(
   }
 
   if (matchingFields.length > 1) {
-    throw new Error(`Multiple fields found in query for path segment: ${pathSegment}. \
-      Please file an issue on Apollo Client if you run into this situation.`);
+    throw new Error(`Multiple fields found in query for path segment "${pathSegment}". \
+Please file an issue on Apollo Client if you run into this situation.`);
   }
 
   return matchingFields[0].selectionSet;

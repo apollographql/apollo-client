@@ -168,6 +168,73 @@ describe('scoping selection set', () => {
       ['a']
     );
   });
+
+  describe('errors', () => {
+    it('basic collision', () => {
+      assert.throws(() => {
+        scope(
+          gql`
+            {
+              a {
+                b
+              }
+              a {
+                c
+              }
+            }
+          `,
+          ['a']
+        );
+      }, /Multiple fields found/);
+    });
+
+    it('named fragment collision', () => {
+      assert.throws(() => {
+        scope(
+          gql`
+            {
+              a {
+                b
+              }
+              ...Frag
+            }
+
+            fragment Frag on Query {
+              a {
+                b
+                c {
+                  d
+                }
+              }
+            }
+          `,
+          ['a']
+        );
+      }, /Multiple fields found/);
+    });
+
+    it('inline fragment collision', () => {
+      assert.throws(() => {
+        scope(gql`
+            {
+              a {
+                b
+              }
+              ... on Query {
+                a {
+                  b
+                  c {
+                    d
+                  }
+                }
+              }
+            }
+          `,
+          ['a']
+        );
+      }, /Multiple fields found/);
+    });
+  });
 });
 
 function extractMainSelectionSet(doc) {

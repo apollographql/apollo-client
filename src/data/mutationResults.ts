@@ -199,7 +199,7 @@ function removeRefsFromStoreObj(storeObj, dataId) {
 
 // Remove any occurrences of dataId in an arbitrarily nested array, and make sure that the old array
 // === the new array if nothing was changed
-function cleanArray(originalArray, dataId) {
+export function cleanArray(originalArray, dataId) {
   if (originalArray.length && isArray(originalArray[0])) {
     // Handle arbitrarily nested arrays
     let modified = false;
@@ -208,7 +208,10 @@ function cleanArray(originalArray, dataId) {
 
       if (nestedFilteredArray !== nestedArray) {
         modified = true;
+        return nestedFilteredArray;
       }
+
+      return nestedArray;
     });
 
     if (! modified) {

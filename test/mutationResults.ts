@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient, { addTypename } from '../src';
-import { MutationBehaviorReducerArgs, MutationBehavior } from '../src/data/mutationResults';
+import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 
 import assign = require('lodash.assign');
@@ -18,6 +18,15 @@ describe('mutation results', () => {
         todos {
           __typename
           id
+          text
+          completed
+        }
+      }
+      noIdList: todoList(id: 6) {
+        __typename
+        id
+        todos {
+          __typename
           text
           completed
         }
@@ -47,6 +56,27 @@ describe('mutation results', () => {
           {
             __typename: 'Todo',
             id: '12',
+            text: 'Do other stuff',
+            completed: false,
+          },
+        ],
+      },
+      noIdList: {
+        __typename: 'TodoList',
+        id: '7',
+        todos: [
+          {
+            __typename: 'Todo',
+            text: 'Hello world',
+            completed: false,
+          },
+          {
+            __typename: 'Todo',
+            text: 'Second task',
+            completed: false,
+          },
+          {
+            __typename: 'Todo',
             text: 'Do other stuff',
             completed: false,
           },
@@ -175,6 +205,29 @@ describe('mutation results', () => {
       },
     };
 
+    const mutationNoId = gql`
+      mutation createTodo {
+        # skipping arguments in the test since they don't matter
+        createTodo {
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResultNoId = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          __typename: 'Todo',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
     it('correctly integrates a basic object at the beginning', () => {
       return setup({
         request: { query: mutation },
@@ -237,6 +290,36 @@ describe('mutation results', () => {
 
         // Since we used `APPEND` it should be at the end
         assert.equal(newResult.data.todoList.todos[3].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('correctly integrates a basic object at the end without id', () => {
+      return setup({
+        request: { query: mutationNoId },
+        result: mutationResultNoId,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation: mutationNoId,
+          resultBehaviors: [
+            {
+              type: 'ARRAY_INSERT',
+              resultPath: [ 'createTodo' ],
+              storePath: [ 'TodoList7', 'todos' ],
+              where: 'APPEND',
+            },
+          ],
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.noIdList.todos.length, 4);
+
+        // Since we used `APPEND` it should be at the end
+        assert.equal(newResult.data.noIdList.todos[3].text, 'This one was created with a mutation.');
       });
     });
 
@@ -428,6 +511,35 @@ describe('mutation results', () => {
         // Our custom reducer has indeed modified the state!
         assert.equal(newResult.data.todoList.todos[0].text, 'this is the new text');
       });
+    });
+  });
+
+  describe('array cleaning for ARRAY_DELETE', () => {
+    it('maintains reference on flat array', () => {
+      const array = [1, 2, 3, 4, 5];
+      assert.isTrue(cleanArray(array, 6) === array);
+      assert.isFalse(cleanArray(array, 3) === array);
+    });
+
+    it('works on nested array', () => {
+      const array = [
+        [1, 2, 3, 4, 5],
+        [6, 7, 8, 9, 10],
+      ];
+
+      const cleaned = cleanArray(array, 5);
+      assert.equal(cleaned[0].length, 4);
+      assert.equal(cleaned[1].length, 5);
+    });
+
+    it('maintains reference on nested array', () => {
+      const array = [
+        [1, 2, 3, 4, 5],
+        [6, 7, 8, 9, 10],
+      ];
+
+      assert.isTrue(cleanArray(array, 11) === array);
+      assert.isFalse(cleanArray(array, 5) === array);
     });
   });
 });

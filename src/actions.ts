@@ -7,7 +7,7 @@ import {
 } from './queries/store';
 
 import {
-  MutationApplyResultAction,
+  MutationBehavior,
 } from './data/mutationResults';
 
 import { FragmentMap } from './queries/getFromAST';
@@ -89,7 +89,7 @@ export interface MutationResultAction {
   type: 'APOLLO_MUTATION_RESULT';
   result: GraphQLResult;
   mutationId: string;
-  applyResult?: MutationApplyResultAction[];
+  resultBehaviors?: MutationBehavior[];
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

@@ -48,7 +48,7 @@ import {
 } from './data/diffAgainstStore';
 
 import {
-  MutationApplyResultAction,
+  MutationBehavior,
 } from './data/mutationResults';
 
 import {
@@ -197,11 +197,11 @@ export class QueryManager {
   public mutate({
     mutation,
     variables,
-    applyResult,
+    resultBehaviors,
   }: {
     mutation: Document,
     variables?: Object,
-    applyResult?: MutationApplyResultAction[],
+    resultBehaviors?: MutationBehavior[],
   }): Promise<GraphQLResult> {
     const mutationId = this.generateQueryId();
 
@@ -238,7 +238,7 @@ export class QueryManager {
           type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
-          applyResult,
+          resultBehaviors,
         });
 
         return result;

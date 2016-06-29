@@ -41,8 +41,8 @@ import {
 } from './queries/queryTransform';
 
 import {
-  MutationApplyResultAction,
-  MutationResultReducerMap,
+  MutationBehavior,
+  MutationBehaviorReducerMap,
 } from './data/mutationResults';
 
 import isUndefined = require('lodash.isundefined');
@@ -79,7 +79,7 @@ export default class ApolloClient {
     shouldBatch = false,
     ssrMode = false,
     ssrForceFetchDelay = 0,
-    mutationResultReducers = {} as MutationResultReducerMap,
+    mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -89,7 +89,7 @@ export default class ApolloClient {
     shouldBatch?: boolean,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
-    mutationResultReducers?: MutationResultReducerMap,
+    mutationBehaviorReducers?: MutationBehaviorReducerMap,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
@@ -106,7 +106,7 @@ export default class ApolloClient {
 
     this.reducerConfig = {
       dataIdFromObject,
-      mutationResultReducers,
+      mutationBehaviorReducers,
     };
   }
 
@@ -128,7 +128,7 @@ export default class ApolloClient {
 
   public mutate = (options: {
     mutation: Document,
-    applyResult?: MutationApplyResultAction[],
+    resultBehaviors?: MutationBehavior[],
     variables?: Object,
   }): Promise<GraphQLResult> => {
     this.initStore();

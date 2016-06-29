@@ -30,26 +30,26 @@ import {
   writeSelectionSetToStore,
 } from './writeToStore';
 
-// Mutation result action types, these can be used in the `applyResult` argument to client.mutate
+// Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 
-export type MutationApplyResultAction =
-  MutationArrayInsertAction |
-  MutationArrayDeleteAction |
-  MutationDeleteAction;
+export type MutationBehavior =
+  MutationArrayInsertBehavior |
+  MutationArrayDeleteBehavior |
+  MutationDeleteBehavior;
 
-export type MutationArrayInsertAction = {
+export type MutationArrayInsertBehavior = {
   type: 'ARRAY_INSERT';
   resultPath: StorePath;
   storePath: StorePath;
   where: ArrayInsertWhere;
 }
 
-export type MutationDeleteAction = {
+export type MutationDeleteBehavior = {
   type: 'DELETE';
   dataId: string;
 }
 
-export type MutationArrayDeleteAction = {
+export type MutationArrayDeleteBehavior = {
   type: 'ARRAY_DELETE';
   storePath: StorePath;
   dataId: string;
@@ -60,9 +60,9 @@ export type ArrayInsertWhere =
   'APPEND';
 
 // These are the generic arguments passed into the mutation result reducers
-// The `action` field is specific to each reducer
-export type MutationResultReducerArgs = {
-  action: MutationApplyResultAction;
+// The `behavior` field is specific to each reducer
+export type MutationBehaviorReducerArgs = {
+  behavior: MutationBehavior;
   result: GraphQLResult;
   variables: any;
   fragmentMap: FragmentMap;
@@ -70,26 +70,26 @@ export type MutationResultReducerArgs = {
   config: ApolloReducerConfig;
 }
 
-export type MutationResultReducerMap = {
-  [type: string]: MutationResultReducer;
+export type MutationBehaviorReducerMap = {
+  [type: string]: MutationBehaviorReducer;
 }
 
-export type MutationResultReducer = (state: NormalizedCache, args: MutationResultReducerArgs) => NormalizedCache;
+export type MutationBehaviorReducer = (state: NormalizedCache, args: MutationBehaviorReducerArgs) => NormalizedCache;
 
-// Reducer for ARRAY_INSERT action
+// Reducer for ARRAY_INSERT behavior
 function mutationResultArrayInsertReducer(state: NormalizedCache, {
-  action,
+  behavior,
   result,
   variables,
   fragmentMap,
   selectionSet,
   config,
-}: MutationResultReducerArgs): NormalizedCache {
+}: MutationBehaviorReducerArgs): NormalizedCache {
   const {
     resultPath,
     storePath,
     where,
-  } = action as MutationArrayInsertAction;
+  } = behavior as MutationArrayInsertBehavior;
 
   // Step 1: get selection set and result for resultPath
   const scopedSelectionSet = scopeSelectionSetToResultPath({
@@ -148,13 +148,13 @@ function generateMutationResultDataId() {
   return `ARRAY_INSERT-gen-id-${currId}`;
 }
 
-// Reducer for 'DELETE' action
+// Reducer for 'DELETE' behavior
 function mutationResultDeleteReducer(state: NormalizedCache, {
-  action,
-}: MutationResultReducerArgs): NormalizedCache {
+  behavior,
+}: MutationBehaviorReducerArgs): NormalizedCache {
   const {
     dataId,
-  } = action as MutationDeleteAction;
+  } = behavior as MutationDeleteBehavior;
 
   // Delete the object
   delete state[dataId];
@@ -201,14 +201,14 @@ function cleanArray(arr, dataId) {
   }
 }
 
-// Reducer for 'ARRAY_DELETE' action
+// Reducer for 'ARRAY_DELETE' behavior
 function mutationResultArrayDeleteReducer(state: NormalizedCache, {
-  action,
-}: MutationResultReducerArgs): NormalizedCache {
+  behavior,
+}: MutationBehaviorReducerArgs): NormalizedCache {
   const {
     dataId,
     storePath,
-  } = action as MutationArrayDeleteAction;
+  } = behavior as MutationArrayDeleteBehavior;
 
   const dataIdOfObj = storePath.shift();
   const clonedObj = cloneDeep(state[dataIdOfObj]);
@@ -224,9 +224,9 @@ function mutationResultArrayDeleteReducer(state: NormalizedCache, {
   }) as NormalizedCache;
 }
 
-// Combines all of the default reducers into a map based on the action type they accept
-// The action type is used to pick the right reducer when evaluating the result of the mutation
-export const defaultMutationResultReducers: { [type: string]: MutationResultReducer } = {
+// Combines all of the default reducers into a map based on the behavior type they accept
+// The behavior type is used to pick the right reducer when evaluating the result of the mutation
+export const defaultMutationBehaviorReducers: { [type: string]: MutationBehaviorReducer } = {
   'ARRAY_INSERT': mutationResultArrayInsertReducer,
   'DELETE': mutationResultDeleteReducer,
   'ARRAY_DELETE': mutationResultArrayDeleteReducer,

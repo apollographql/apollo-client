@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient, { addTypename } from '../src';
-import { MutationResultReducerArgs, MutationApplyResultAction } from '../src/data/mutationResults';
+import { MutationBehaviorReducerArgs, MutationBehavior } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 
 import assign = require('lodash.assign');
@@ -58,7 +58,7 @@ describe('mutation results', () => {
   let client: ApolloClient;
   let networkInterface;
 
-  type CustomMutationResultAction = {
+  type CustomMutationBehavior = {
     type: 'CUSTOM_MUTATION_RESULT',
     dataId: string,
     field: string,
@@ -67,12 +67,12 @@ describe('mutation results', () => {
 
   // This is an example of a basic mutation reducer that just sets a field in the store
   function customMutationReducer(state: NormalizedCache, {
-    action,
-  }: MutationResultReducerArgs): NormalizedCache {
-    const customAction = action as any as CustomMutationResultAction;
+    behavior,
+  }: MutationBehaviorReducerArgs): NormalizedCache {
+    const customBehavior = behavior as any as CustomMutationBehavior;
 
-    state[customAction.dataId] = assign({}, state[customAction.dataId], {
-      [customAction.field]: customAction.value,
+    state[customBehavior.dataId] = assign({}, state[customBehavior.dataId], {
+      [customBehavior.field]: customBehavior.value,
     }) as StoreObject;
 
     return state;
@@ -94,7 +94,7 @@ describe('mutation results', () => {
         return null;
       },
 
-      mutationResultReducers: {
+      mutationBehaviorReducers: {
         'CUSTOM_MUTATION_RESULT': customMutationReducer,
       },
     });
@@ -188,7 +188,7 @@ describe('mutation results', () => {
 
         return client.mutate({
           mutation,
-          applyResult: [
+          resultBehaviors: [
             {
               type: 'ARRAY_INSERT',
               resultPath: [ 'createTodo' ],
@@ -218,7 +218,7 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [
+          resultBehaviors: [
             {
               type: 'ARRAY_INSERT',
               resultPath: [ 'createTodo' ],
@@ -248,7 +248,7 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [
+          resultBehaviors: [
             {
               type: 'ARRAY_INSERT',
               resultPath: [ 'createTodo' ],
@@ -308,7 +308,7 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [
+          resultBehaviors: [
             {
               type: 'DELETE',
               dataId: 'Todo3',
@@ -359,7 +359,7 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [
+          resultBehaviors: [
             {
               type: 'ARRAY_DELETE',
               dataId: 'Todo3',
@@ -411,13 +411,13 @@ describe('mutation results', () => {
       .then(() => {
         return client.mutate({
           mutation,
-          applyResult: [
+          resultBehaviors: [
             {
               type: 'CUSTOM_MUTATION_RESULT',
               dataId: 'Todo3',
               field: 'text',
               value: 'this is the new text',
-            } as any as MutationApplyResultAction,
+            } as any as MutationBehavior,
           ],
         });
       })

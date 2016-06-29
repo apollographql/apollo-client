@@ -29,7 +29,7 @@ import {
 } from './data/extensions';
 
 import {
-  MutationResultReducerMap,
+  MutationBehaviorReducerMap,
 } from './data/mutationResults';
 
 export interface Store {
@@ -110,5 +110,5 @@ export function createApolloStore({
 
 export interface ApolloReducerConfig {
   dataIdFromObject?: IdGetter;
-  mutationResultReducers?: MutationResultReducerMap;
+  mutationBehaviorReducers?: MutationBehaviorReducerMap;
 }

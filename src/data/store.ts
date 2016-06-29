@@ -28,8 +28,8 @@ import {
 } from './storeUtils';
 
 import {
-  defaultMutationResultReducers,
-  MutationResultReducerArgs,
+  defaultMutationBehaviorReducers,
+  MutationBehaviorReducerArgs,
 } from './mutationResults';
 
 export interface NormalizedCache {
@@ -99,10 +99,10 @@ export function data(
         fragmentMap: queryStoreValue.fragmentMap,
       });
 
-      if (action.applyResult) {
-        action.applyResult.forEach((applyResultAction) => {
-          const args: MutationResultReducerArgs = {
-            action: applyResultAction,
+      if (action.resultBehaviors) {
+        action.resultBehaviors.forEach((behavior) => {
+          const args: MutationBehaviorReducerArgs = {
+            behavior,
             result: action.result,
             variables: queryStoreValue.variables,
             fragmentMap: queryStoreValue.fragmentMap,
@@ -110,12 +110,12 @@ export function data(
             config,
           };
 
-          if (defaultMutationResultReducers[applyResultAction.type]) {
-            newState = defaultMutationResultReducers[applyResultAction.type](newState, args);
-          } else if (config.mutationResultReducers[applyResultAction.type]) {
-            newState = config.mutationResultReducers[applyResultAction.type](newState, args);
+          if (defaultMutationBehaviorReducers[behavior.type]) {
+            newState = defaultMutationBehaviorReducers[behavior.type](newState, args);
+          } else if (config.mutationBehaviorReducers[behavior.type]) {
+            newState = config.mutationBehaviorReducers[behavior.type](newState, args);
           } else {
-            throw new Error(`No mutation result reducer defined for type ${applyResultAction.type}`);
+            throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
           }
         });
       }

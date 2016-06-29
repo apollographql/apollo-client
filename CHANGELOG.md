@@ -4,6 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Deprecate `apollo-client/gql` for `graphql-tag` and show a meaningful warning when importing
+  `apollo-client/gql`
+
 ### v0.3.22 + v0.3.23 + v0.3.24
 
 - Fix unintentional breaking change where `apollo-client/gql` import stopped working. [Issue #327](https://github.com/apollostack/apollo-client/issues/327)

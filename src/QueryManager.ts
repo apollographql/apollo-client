@@ -33,6 +33,10 @@ import {
 } from './queries/queryTransform';
 
 import {
+  NormalizedCache,
+} from './data/store';
+
+import {
   GraphQLResult,
   Document,
 } from 'graphql';
@@ -193,9 +197,11 @@ export class QueryManager {
   public mutate({
     mutation,
     variables,
+    optimisticResponse,
   }: {
     mutation: Document,
     variables?: Object,
+    optimisticResponse?: Object,
   }): Promise<GraphQLResult> {
     const mutationId = this.generateQueryId();
 
@@ -224,6 +230,7 @@ export class QueryManager {
       variables,
       mutationId,
       fragmentMap: queryFragmentMap,
+      optimisticResponse,
     });
 
     return this.networkInterface.query(request)
@@ -232,6 +239,7 @@ export class QueryManager {
           type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
+          optimisticResponse,
         });
 
         return result;
@@ -350,8 +358,9 @@ export class QueryManager {
                 queryStoreValue.networkError.stack);
             }
           } else {
+
             const resultFromStore = readSelectionSetFromStore({
-              store: this.getApolloState().data,
+              store: this.getApolloStore(),
               rootId: queryStoreValue.query.id,
               selectionSet: queryStoreValue.query.selectionSet,
               variables: queryStoreValue.variables,
@@ -416,6 +425,11 @@ export class QueryManager {
 
   public getApolloState(): Store {
     return this.store.getState()[this.reduxRootKey];
+  }
+
+  public getApolloStore(): NormalizedCache {
+    const state = this.getApolloState();
+    return assign({}, state.data, state.optimistic.data) as NormalizedCache;
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {

@@ -118,6 +118,7 @@ export default class ApolloClient {
   public mutate = (options: {
     mutation: Document,
     variables?: Object,
+    optimisticResponse?: Object,
   }): Promise<GraphQLResult> => {
     this.initStore();
     return this.queryManager.mutate(options);

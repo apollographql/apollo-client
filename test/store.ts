@@ -19,6 +19,10 @@ describe('createApolloStore', () => {
         queries: {},
         mutations: {},
         data: {},
+        optimistic: {
+          data: {},
+          mutationIds: {},
+        },
       }
     );
   });
@@ -34,6 +38,10 @@ describe('createApolloStore', () => {
         queries: {},
         mutations: {},
         data: {},
+        optimistic: {
+          data: {},
+          mutationIds: {},
+        },
       }
     );
   });
@@ -47,6 +55,10 @@ describe('createApolloStore', () => {
         mutations: {},
         data: {
           'test.0': true,
+        },
+        optimistic: {
+          data: {},
+          mutationIds: {},
         },
       },
     };

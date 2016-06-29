@@ -177,8 +177,15 @@ function removeRefsFromStoreObj(storeObj, dataId) {
     }
 
     if (isArray(value)) {
-      affected = true;
-      return cleanArray(value, dataId);
+      const filteredArray = cleanArray(value, dataId);
+
+      if (filteredArray !== value) {
+        affected = true;
+        return filteredArray;
+      }
+
+      // If not modified, return the original value
+      return value;
     }
   });
 
@@ -190,14 +197,34 @@ function removeRefsFromStoreObj(storeObj, dataId) {
   }
 }
 
-function cleanArray(arr, dataId) {
-  if (arr.length && isArray(arr[0])) {
+// Remove any occurrences of dataId in an arbitrarily nested array, and make sure that the old array
+// === the new array if nothing was changed
+function cleanArray(originalArray, dataId) {
+  if (originalArray.length && isArray(originalArray[0])) {
     // Handle arbitrarily nested arrays
-    return arr.map((nestedArray) => cleanArray(nestedArray, dataId));
+    let modified = false;
+    const filteredArray = originalArray.map((nestedArray) => {
+      const nestedFilteredArray = cleanArray(nestedArray, dataId);
+
+      if (nestedFilteredArray !== nestedArray) {
+        modified = true;
+      }
+    });
+
+    if (! modified) {
+      return originalArray;
+    }
+
+    return filteredArray;
   } else {
-    // XXX this will create a new array reference even if no items were removed
-    // switch to this: https://twitter.com/leeb/status/747601132080377856
-    return arr.filter((item) => item !== dataId);
+    const filteredArray = originalArray.filter((item) => item !== dataId);
+
+    if (filteredArray.length === originalArray.length) {
+      // No items were removed, return original array
+      return originalArray;
+    }
+
+    return filteredArray;
   }
 }
 

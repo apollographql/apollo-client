@@ -170,6 +170,21 @@ describe('scoping selection set', () => {
   });
 
   describe('errors', () => {
+    it('field missing', () => {
+      assert.throws(() => {
+        scope(
+          gql`
+            {
+              a {
+                b
+              }
+            }
+          `,
+          ['c']
+        );
+      }, /No matching field/);
+    });
+
     it('basic collision', () => {
       assert.throws(() => {
         scope(

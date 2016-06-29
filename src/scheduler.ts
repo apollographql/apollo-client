@@ -10,6 +10,7 @@
 
 import {
   GraphQLResult,
+  Document,
 } from 'graphql';
 
 import {
@@ -46,9 +47,9 @@ export class QueryScheduler {
     return this.inFlightQueries.hasOwnProperty(queryId);
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions) {
+  public fetchQuery(queryId: string, options: WatchQueryOptions, fragments: Document[]) {
     return new Promise((resolve, reject) => {
-      this.queryManager.fetchQuery(queryId, options).then((result) => {
+      this.queryManager.fetchQuery(queryId, options, fragments).then((result) => {
         this.removeInFlight(queryId);
         resolve(result);
       }).catch((error) => {
@@ -60,11 +61,12 @@ export class QueryScheduler {
   }
 
   public startPollingQuery(options: WatchQueryOptions, listener: QueryListener,
-                           queryId?: string): string {
+    fragments: Document[] = [],
+    queryId?: string): string {
     if (!queryId) {
       queryId = this.queryManager.generateQueryId();
       // Fire an initial fetch before we start the polling query
-      this.fetchQuery(queryId, options);
+      this.fetchQuery(queryId, options, fragments);
     }
     this.queryManager.addQueryListener(queryId, listener);
 
@@ -75,7 +77,7 @@ export class QueryScheduler {
       // We only fire the query if another instance of this same polling query isn't
       // already in flight. See top of this file for the reasoning as to why we do this.
       if (!this.checkInFlight(queryId)) {
-        this.fetchQuery(queryId, pollingOptions);
+        this.fetchQuery(queryId, pollingOptions, fragments);
       }
     }, options.pollInterval);
 
@@ -96,7 +98,8 @@ export class QueryScheduler {
   }
 
   // Tell the QueryScheduler to schedule the queries fired by a polling query.
-  public registerPollingQuery(options: WatchQueryOptions): ObservableQuery {
+  public registerPollingQuery(options: WatchQueryOptions,
+    fragments: Document[] = []): ObservableQuery {
     if (!options.pollInterval) {
       throw new Error('Tried to register a non-polling query with the scheduler.');
     }
@@ -104,7 +107,7 @@ export class QueryScheduler {
     return new ObservableQuery((observer) => {
       // "Fire" (i.e. add to the QueryBatcher queue)
       const queryListener = this.queryManager.queryListenerForObserver(options, observer);
-      const queryId = this.startPollingQuery(options, queryListener);
+      const queryId = this.startPollingQuery(options, queryListener, fragments);
 
       return {
         unsubscribe: () => {
@@ -116,14 +119,14 @@ export class QueryScheduler {
           return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
             variables,
-          }) as WatchQueryOptions);
+          }) as WatchQueryOptions, fragments);
         },
 
         startPolling: (pollInterval): void => {
           this.pollingTimers[queryId] = setInterval(() => {
             const pollingOptions = assign({}, options) as WatchQueryOptions;
             pollingOptions.forceFetch = true;
-            this.fetchQuery(queryId, pollingOptions).then(() => {
+            this.fetchQuery(queryId, pollingOptions, fragments).then(() => {
               this.removeInFlight(queryId);
             });
           }, pollInterval);

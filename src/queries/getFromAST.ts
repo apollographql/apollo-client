@@ -57,8 +57,6 @@ export function getOperationName(doc: Document): string {
 
 // Returns the FragmentDefinitions from a particular document as an array
 export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
-  checkDocument(doc);
-
   let fragmentDefinitions: FragmentDefinition[] = doc.definitions.filter((definition) => {
     if (definition.kind === 'FragmentDefinition') {
       return true;

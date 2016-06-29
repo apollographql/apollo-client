@@ -291,7 +291,11 @@ export class QueryManager {
   // but we don't want to keep track observables issued for the query method since those aren't
   // supposed to be refetched in the event of a store reset. Once we unify error handling for
   // network errors and non-network errors, the shouldSubscribe option will go away.
-  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
+
+  // The fragments option specifies a list of fragments that can be referenced by the query.
+  // Used to compose queries out of a bunch of fragments for UI components.
+  public watchQuery(options: WatchQueryOptions, fragments: Document[] = [],
+    shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
@@ -310,7 +314,7 @@ export class QueryManager {
           return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
             variables,
-          }) as WatchQueryOptions);
+          }) as WatchQueryOptions, fragments);
         },
         stopPolling: (): void => {
           if (this.pollingTimers[queryId]) {
@@ -322,7 +326,7 @@ export class QueryManager {
             const pollingOptions = assign({}, options) as WatchQueryOptions;
             // subsequent fetches from polling always reqeust new data
             pollingOptions.forceFetch = true;
-            this.fetchQuery(queryId, pollingOptions);
+            this.fetchQuery(queryId, pollingOptions, fragments);
           }, pollInterval);
         },
       };
@@ -371,7 +375,7 @@ export class QueryManager {
             }
           }
         }
-      });
+      }, fragments);
 
       return retQuerySubscription;
     });
@@ -379,7 +383,9 @@ export class QueryManager {
     return observableQuery;
   }
 
-  public query(options: WatchQueryOptions): Promise<GraphQLResult> {
+  // Takes a list of fragments that can be referenced from the query document. The fragment
+  // documents should contain only the fragment definition and nothig else.
+  public query(options: WatchQueryOptions, fragments: Document[] = []): Promise<GraphQLResult> {
     if (options.returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
@@ -392,7 +398,7 @@ export class QueryManager {
     const resPromise = new Promise((resolve, reject) => {
       this.addFetchQueryPromise(requestId, resPromise, resolve, reject);
 
-      return this.watchQuery(options, false).result().then((result) => {
+      return this.watchQuery(options, fragments, false).result().then((result) => {
         this.removeFetchQueryPromise(requestId);
         resolve(result);
       }).catch((error) => {
@@ -404,7 +410,8 @@ export class QueryManager {
     return resPromise;
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
+  public fetchQuery(queryId: string, options: WatchQueryOptions,
+    fragments: Document[] = []): Promise<GraphQLResult> {
     return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
   }
 
@@ -672,16 +679,17 @@ export class QueryManager {
     });
   }
 
-  private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
+  private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener,
+    fragments: Document[]) {
     this.queryListeners[queryId] = listener;
-    this.fetchQuery(queryId, options);
+    this.fetchQuery(queryId, options, fragments);
 
     if (options.pollInterval) {
       this.pollingTimers[queryId] = setInterval(() => {
         const pollingOptions = assign({}, options) as WatchQueryOptions;
         // subsequent fetches from polling always reqeust new data
         pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
+        this.fetchQuery(queryId, pollingOptions, fragments);
       }, options.pollInterval);
     }
 

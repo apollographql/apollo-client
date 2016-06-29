@@ -16,8 +16,14 @@ describe('mutation results', () => {
         __typename
         id
         todos {
-          __typename
           id
+          __typename
+          text
+          completed
+        }
+        filteredTodos: todos(completed: true) {
+          id
+          __typename
           text
           completed
         }
@@ -60,6 +66,7 @@ describe('mutation results', () => {
             completed: false,
           },
         ],
+        filteredTodos: [],
       },
       noIdList: {
         __typename: 'TodoList',
@@ -290,6 +297,37 @@ describe('mutation results', () => {
 
         // Since we used `APPEND` it should be at the end
         assert.equal(newResult.data.todoList.todos[3].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('correctly integrates a basic object at the end with arguments', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          resultBehaviors: [
+            {
+              type: 'ARRAY_INSERT',
+              resultPath: [ 'createTodo' ],
+              storePath: [
+                'TodoList5',
+                client.fieldWithArgs('todos', {completed: true}),
+              ],
+              where: 'APPEND',
+            },
+          ],
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.filteredTodos.length, 1);
+        assert.equal(newResult.data.todoList.filteredTodos[0].text, 'This one was created with a mutation.');
       });
     });
 

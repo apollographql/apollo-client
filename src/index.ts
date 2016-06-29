@@ -45,6 +45,10 @@ import {
   MutationBehaviorReducerMap,
 } from './data/mutationResults';
 
+import {
+  storeKeyNameFromFieldNameAndArgs,
+} from './data/storeUtils';
+
 import isUndefined = require('lodash.isundefined');
 
 export {
@@ -69,6 +73,7 @@ export default class ApolloClient {
   public shouldBatch: boolean;
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
+  public fieldWithArgs: (fieldName: string, args?: Object) => string;
 
   constructor({
     networkInterface,
@@ -99,6 +104,7 @@ export default class ApolloClient {
     this.shouldBatch = shouldBatch;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
+    this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);

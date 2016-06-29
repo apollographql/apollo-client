@@ -21,7 +21,7 @@ describe('createApolloStore', () => {
         data: {},
         optimistic: {
           data: {},
-          mutationIds: {},
+          mutationIds: [],
         },
       }
     );
@@ -40,7 +40,7 @@ describe('createApolloStore', () => {
         data: {},
         optimistic: {
           data: {},
-          mutationIds: {},
+          mutationIds: [],
         },
       }
     );
@@ -58,7 +58,7 @@ describe('createApolloStore', () => {
         },
         optimistic: {
           data: {},
-          mutationIds: {},
+          mutationIds: [],
         },
       },
     };
@@ -87,6 +87,10 @@ describe('createApolloStore', () => {
       queries: { },
       mutations: { },
       data: { },
+      optimistic: {
+        data: {},
+        mutationIds: [],
+      },
     };
 
     const store = createApolloStore({
@@ -113,6 +117,10 @@ describe('createApolloStore', () => {
           'test.0': true,
           'test.1': true,
         },
+        optimistic: {
+          data: {},
+          mutationIds: [],
+        },
       },
     };
 
@@ -122,6 +130,10 @@ describe('createApolloStore', () => {
       },
       mutations: {},
       data: {},
+      optimistic: {
+        data: {},
+        mutationIds: [],
+      },
     };
 
     const store = createApolloStore({

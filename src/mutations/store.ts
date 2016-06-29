@@ -130,7 +130,7 @@ export function optimistic(
     if (newMutationIds.length === 0) {
       newState = {
         data: {} as NormalizedCache,
-        mutationIds: []
+        mutationIds: [],
       };
     } else {
       newState = {

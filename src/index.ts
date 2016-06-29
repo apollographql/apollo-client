@@ -9,6 +9,10 @@ import {
 } from 'graphql';
 
 import {
+  print,
+} from 'graphql/language/printer';
+
+import {
   createApolloStore,
   ApolloStore,
   createApolloReducer,
@@ -52,6 +56,9 @@ import {
 import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
 
+// We expose the print method from GraphQL so that people that implement
+// custom network interfaces can turn query ASTs into query strings as needed.
+const printAST = print;
 export {
   createNetworkInterface,
   createApolloStore,
@@ -61,6 +68,7 @@ export {
   addTypenameToSelectionSet as addTypename,
   writeQueryToStore,
   writeFragmentToStore,
+  printAST,
 };
 
 export default class ApolloClient {

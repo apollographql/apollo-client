@@ -17,6 +17,10 @@ import {
 } from './storeUtils';
 
 import {
+  diffFieldAgainstStore,
+} from './diffAgainstStore';
+
+import {
   OperationDefinition,
   SelectionSet,
   FragmentDefinition,
@@ -248,14 +252,25 @@ function writeFieldToStore({
   } else if (isArray(value)) {
     // this is an array with sub-objects
     let thisIdList: Array<string> = [];
-    // tracks the offset when writing the index, will be zero unless concatenation is performed
-    let indexOffset = 0;
-    // If we're fetching more, resume from where it was
+    // If we're fetching more, append/prepend existing values
     if (fetchMore) {
-      const storeArray = store[dataId][storeFieldName];
-      if (storeArray instanceof Array) {
-        thisIdList = storeArray || [];
-        indexOffset = thisIdList.length;
+      const {
+        result: currentlyStoredValues,
+      } = diffFieldAgainstStore({
+        field,
+        throwOnMissingField: false,
+        variables,
+        rootId: dataId,
+        store,
+        fragmentMap,
+        included: true,
+        quietFields,
+
+      });
+      if (fetchMore === 'APPEND') {
+        value = [].concat(currentlyStoredValues, value);
+      } else {
+        value = [].concat(value, currentlyStoredValues);
       }
     }
 
@@ -263,7 +278,7 @@ function writeFieldToStore({
       if (isNull(item)) {
         thisIdList.push(null);
       } else {
-        let itemDataId = `${dataId}.${storeFieldName}.${index + indexOffset}`;
+        let itemDataId = `${dataId}.${storeFieldName}.${index}`;
 
         if (dataIdFromObject) {
           const semanticId = dataIdFromObject(item);

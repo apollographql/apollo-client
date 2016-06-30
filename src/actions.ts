@@ -44,7 +44,7 @@ export interface QueryInitAction {
   forceFetch: boolean;
   fetchMore: boolean;
   returnPartialData: boolean;
-  paginationParameters: string[];
+  quietFields: string[];
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;

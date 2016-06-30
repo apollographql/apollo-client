@@ -67,7 +67,7 @@ export {
   addTypenameToSelectionSet as addTypename,
   writeQueryToStore,
   writeFragmentToStore,
-  printAST: print,
+  print as printAST,
 };
 
 export default class ApolloClient {

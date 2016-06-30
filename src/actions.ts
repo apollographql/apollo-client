@@ -42,7 +42,7 @@ export interface QueryInitAction {
   minimizedQuery: SelectionSetWithRoot;
   variables: Object;
   forceFetch: boolean;
-  fetchMore: boolean;
+  fetchMore: 'APPEND'|'PREPEND';
   returnPartialData: boolean;
   quietFields: string[];
   queryId: string;

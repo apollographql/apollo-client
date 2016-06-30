@@ -66,7 +66,7 @@ export function writeFragmentToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   quietFields?: string[],
-  fetchMore?: boolean,
+  fetchMore?: 'APPEND'|'PREPEND',
 }): NormalizedCache {
   // Argument validation
   if (!fragment) {
@@ -107,7 +107,7 @@ export function writeQueryToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   quietFields?: string[],
-  fetchMore?: boolean,
+  fetchMore?: 'APPEND'|'PREPEND',
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
@@ -142,7 +142,7 @@ export function writeSelectionSetToStore({
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
   quietFields?: string[],
-  fetchMore?: boolean,
+  fetchMore?: 'APPEND'|'PREPEND',
 }): NormalizedCache {
 
   if (!fragmentMap) {
@@ -236,7 +236,7 @@ function writeFieldToStore({
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
   quietFields?: string[],
-  fetchMore?: boolean,
+  fetchMore?: 'APPEND'|'PREPEND',
 }) {
   let storeValue;
 

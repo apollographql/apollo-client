@@ -6,6 +6,58 @@ import {
   BooleanValue,
 } from 'graphql';
 
+// TODO: move all directive validation to a solution using GraphQL-js
+
+export function checkDirectives(selection: Selection, variables: { [name: string]: any }): Error {
+  const errors = selection.directives.map((directive) => {
+    const directiveName = directive.name.value;
+    const directiveArguments = directive.arguments;
+    switch (directiveName) {
+      case 'skip':
+      case 'include':
+        if (directiveArguments.length !== 1) {
+          return new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
+        }
+        const ifArgument = directive.arguments[0];
+        if (!ifArgument.name || ifArgument.name.value !== 'if') {
+          return new Error(`Invalid argument for the @${directiveName} directive.`);
+        }
+        const ifValue = directive.arguments[0].value;
+        if (!ifValue || ifValue.kind !== 'BooleanValue') {
+          if (ifValue.kind !== 'Variable') {
+            return new Error(`Argument for the @${directiveName} directive must be a variable or a boolean value.`);
+          } else {
+            if (variables[(ifValue as Variable).name.value] === undefined) {
+              return new Error(`Invalid variable referenced in @${directiveName} directive.`);
+            }
+          }
+        }
+        return null;
+      case 'apolloFetchMore':
+        if (directiveArguments.length !== 1) {
+          return new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
+        }
+        const nameArgument = directive.arguments[0];
+        if (!nameArgument.name || nameArgument.name.value !== 'name') {
+          return new Error(`Invalid argument for the @${directiveName} directive.`);
+        }
+        const nameValue = directive.arguments[0].value;
+        if (!nameValue || nameValue.kind !== 'StringValue') {
+          if (nameValue.kind !== 'Variable') {
+            return new Error(`Argument for the @${directiveName} directive must be a variable or a string value.`);
+          } else {
+            if (variables[(nameValue as Variable).name.value] === undefined) {
+              return new Error(`Invalid variable referenced in @${directiveName} directive.`);
+            }
+          }
+        }
+        return null;
+      default:
+        return new Error(`Directive ${directive.name.value} not supported.`);
+    }
+  });
+  return errors.filter(error => !!error)[0] || null;
+}
 
 export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): Boolean {
   if (!variables) {
@@ -16,37 +68,25 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
     return true;
   }
 
+  let err = checkDirectives(selection, variables);
+  if (err) {
+    throw err;
+  }
+
   let res: Boolean = true;
   selection.directives.forEach((directive) => {
-    // TODO should move this validation to GraphQL validation once that's implemented.
-    if (directive.name.value !== 'skip' && directive.name.value !== 'include') {
-      throw new Error(`Directive ${directive.name.value} not supported.`);
-    }
-
-    //evaluate the "if" argument and skip (i.e. return undefined) if it evaluates to true.
-    const directiveArguments = directive.arguments;
     const directiveName = directive.name.value;
-    if (directiveArguments.length !== 1) {
-      throw new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
+    if (directiveName !== 'skip' && directiveName !== 'include') {
+      return;
     }
 
-
-    const ifArgument = directive.arguments[0];
-    if (!ifArgument.name || ifArgument.name.value !== 'if') {
-      throw new Error(`Invalid argument for the @${directiveName} directive.`);
-    }
-
-    const ifValue = directive.arguments[0].value;
+    const ifValue = directive.arguments[0].value
+    ;
     let evaledValue: Boolean = false;
     if (!ifValue || ifValue.kind !== 'BooleanValue') {
       // means it has to be a variable value if this is a valid @skip or @include directive
-      if (ifValue.kind !== 'Variable') {
-        throw new Error(`Argument for the @${directiveName} directive must be a variable or a bool ean value.`);
-      } else {
+      if (ifValue.kind === 'Variable') {
         evaledValue = variables[(ifValue as Variable).name.value];
-        if (evaledValue === undefined) {
-          throw new Error(`Invalid variable referenced in @${directiveName} directive.`);
-        }
       }
     } else {
       evaledValue = (ifValue as BooleanValue).value;

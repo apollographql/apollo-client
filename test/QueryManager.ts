@@ -882,7 +882,7 @@ describe('QueryManager', () => {
   it('allows you to fetch more in queries', (done) => {
     const query = gql`
       query fetch_people($latest_name: String, $type: String) {
-        all_people(latest_name: $latest_name, type: $type) {
+        all_people(latest_name: $latest_name, type: $type) @apolloFetchMore(name: "all_people") {
           name
         }
       }
@@ -959,7 +959,7 @@ describe('QueryManager', () => {
   it('allows you to fetch more in queries backwards', (done) => {
     const query = gql`
       query fetch_people($latest_name: String, $type: String) {
-        all_people(latest_name: $latest_name, type: $type) {
+        all_people(latest_name: $latest_name, type: $type) @apolloFetchMore(name: "all_people") {
           name
         }
       }

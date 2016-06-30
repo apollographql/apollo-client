@@ -120,11 +120,11 @@ export class QueryScheduler {
           }) as WatchQueryOptions);
         },
 
-        fetchMore: (variables: any): Promise<GraphQLResult> => {
+        fetchMore: (variables: any, direction: 'APPEND'|'PREPEND' = 'APPEND'): Promise<GraphQLResult> => {
           variables = variables || options.variables;
           return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
-            fetchMore: true,
+            fetchMore: direction,
             variables,
           }) as WatchQueryOptions);
         },

@@ -1314,5 +1314,51 @@ describe('client', () => {
         },
       });
     });
+
+    it('should allow passing fragments in polling queries', (done) => {
+      const queryDoc = gql`
+        query {
+          author {
+            ...authorDetails
+          }
+        }`;
+      const composedQuery = gql`
+        query {
+          author {
+            ...authorDetails
+          }
+        }
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const networkInterface = mockNetworkInterface({
+        request: { query: composedQuery },
+        result: { data },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+      });
+      const fragmentDefs = client.fragment(gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`);
+
+      const observer = client.watchQuery({ query: queryDoc, pollInterval: 30}, fragmentDefs);
+      const subscription = observer.subscribe({
+        next(result) {
+          assert.deepEqual(result, { data });
+          subscription.unsubscribe();
+          done();
+        },
+      });
+    });
   });
 });

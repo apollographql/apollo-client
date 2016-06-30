@@ -935,7 +935,7 @@ describe('QueryManager', () => {
 
     const handle = queryManager.watchQuery({
       query,
-      quietFields: ['latest_name'],
+      quietArguments: ['latest_name'],
       variables: variables1,
     });
 
@@ -1012,7 +1012,7 @@ describe('QueryManager', () => {
 
     const handle = queryManager.watchQuery({
       query,
-      quietFields: ['latest_name'],
+      quietArguments: ['latest_name'],
       variables: variables1,
     });
 

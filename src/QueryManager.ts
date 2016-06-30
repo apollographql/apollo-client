@@ -106,7 +106,7 @@ export interface WatchQueryOptions {
   returnPartialData?: boolean;
   pollInterval?: number;
   fragments?: FragmentDefinition[];
-  quietFields?: string[];
+  quietArguments?: string[];
 }
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
@@ -290,7 +290,7 @@ export class QueryManager {
             variables: queryStoreValue.variables,
             returnPartialData: options.returnPartialData,
             fragmentMap: queryStoreValue.fragmentMap,
-            quietFields: queryStoreValue.quietFields,
+            quietArguments: queryStoreValue.quietArguments,
           });
 
           if (observer.next) {
@@ -394,7 +394,7 @@ export class QueryManager {
               variables: queryStoreValue.variables,
               returnPartialData: options.returnPartialData,
               fragmentMap: queryStoreValue.fragmentMap,
-              quietFields: queryStoreValue.quietFields,
+              quietArguments: queryStoreValue.quietArguments,
             });
 
             if (observer.next) {
@@ -540,7 +540,7 @@ export class QueryManager {
       fetchMore = null,
       returnPartialData = false,
       fragments = [],
-      quietFields = [],
+      quietArguments = [],
     } = options;
 
     let queryDef = getQueryDefinition(query);
@@ -623,7 +623,7 @@ export class QueryManager {
       forceFetch,
       fetchMore,
       returnPartialData,
-      quietFields,
+      quietArguments,
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
@@ -684,7 +684,7 @@ export class QueryManager {
                 variables,
                 returnPartialData: returnPartialData,
                 fragmentMap: queryFragmentMap,
-                quietFields: quietFields,
+                quietArguments: quietArguments,
               });
               // ensure multiple errors don't get thrown
               /* tslint:disable */

@@ -26,13 +26,13 @@ export function readQueryFromStore({
   query,
   variables,
   returnPartialData,
-  quietFields,
+  quietArguments,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
   returnPartialData?: boolean,
-  quietFields?: string[],
+  quietArguments?: string[],
 }): Object {
   const queryDef = getQueryDefinition(query);
 
@@ -42,7 +42,7 @@ export function readQueryFromStore({
     selectionSet: queryDef.selectionSet,
     variables,
     returnPartialData,
-    quietFields,
+    quietArguments,
   });
 }
 
@@ -52,14 +52,14 @@ export function readFragmentFromStore({
   rootId,
   variables,
   returnPartialData,
-  quietFields,
+  quietArguments,
 }: {
   store: NormalizedCache,
   fragment: Document,
   rootId: string,
   variables?: Object,
   returnPartialData?: boolean,
-  quietFields?: string[],
+  quietArguments?: string[],
 }): Object {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -69,7 +69,7 @@ export function readFragmentFromStore({
     selectionSet: fragmentDef.selectionSet,
     variables,
     returnPartialData,
-    quietFields,
+    quietArguments,
   });
 }
 
@@ -80,7 +80,7 @@ export function readSelectionSetFromStore({
   variables,
   returnPartialData = false,
   fragmentMap,
-  quietFields,
+  quietArguments,
 }: {
   store: NormalizedCache,
   rootId: string,
@@ -88,7 +88,7 @@ export function readSelectionSetFromStore({
   variables: Object,
   returnPartialData?: boolean,
   fragmentMap?: FragmentMap,
-  quietFields?: string[],
+  quietArguments?: string[],
 }): Object {
   const {
     result,
@@ -99,7 +99,7 @@ export function readSelectionSetFromStore({
     throwOnMissingField: !returnPartialData,
     variables,
     fragmentMap,
-    quietFields,
+    quietArguments,
   });
 
   return result;

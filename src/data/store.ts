@@ -77,7 +77,7 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMap: queryStoreValue.fragmentMap,
-        quietFields: queryStoreValue.quietFields,
+        quietArguments: queryStoreValue.quietArguments,
         fetchMore: queryStoreValue.fetchMore,
       });
 

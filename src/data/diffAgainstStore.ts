@@ -46,12 +46,12 @@ export function diffQueryAgainstStore({
   store,
   query,
   variables,
-  quietFields,
+  quietArguments,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
-  quietFields?: string[],
+  quietArguments?: string[],
 }): DiffResult {
   const queryDef = getQueryDefinition(query);
 
@@ -61,7 +61,7 @@ export function diffQueryAgainstStore({
     selectionSet: queryDef.selectionSet,
     throwOnMissingField: false,
     variables,
-    quietFields,
+    quietArguments,
   });
 }
 
@@ -70,13 +70,13 @@ export function diffFragmentAgainstStore({
   fragment,
   rootId,
   variables,
-  quietFields,
+  quietArguments,
 }: {
   store: NormalizedCache,
   fragment: Document,
   rootId: string,
   variables?: Object,
-  quietFields?: string[],
+  quietArguments?: string[],
 }): DiffResult {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -86,7 +86,7 @@ export function diffFragmentAgainstStore({
     selectionSet: fragmentDef.selectionSet,
     throwOnMissingField: false,
     variables,
-    quietFields,
+    quietArguments,
   });
 }
 
@@ -108,7 +108,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField = false,
   variables,
   fragmentMap,
-  quietFields,
+  quietArguments,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
@@ -116,7 +116,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField: boolean,
   variables: Object,
   fragmentMap?: FragmentMap,
-  quietFields?: string[],
+  quietArguments?: string[],
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -153,7 +153,7 @@ export function diffSelectionSetAgainstStore({
           store,
           fragmentMap,
           included: includeField,
-          quietFields,
+          quietArguments,
         });
 
       if (fieldIsMissing) {
@@ -177,7 +177,7 @@ export function diffSelectionSetAgainstStore({
         rootId,
         store,
         fragmentMap,
-        quietFields,
+        quietArguments,
       });
 
       if (fieldIsMissing) {
@@ -201,7 +201,7 @@ export function diffSelectionSetAgainstStore({
         rootId,
         store,
         fragmentMap,
-        quietFields,
+        quietArguments,
       });
 
       if (fieldIsMissing) {
@@ -253,7 +253,7 @@ export function diffFieldAgainstStore({
   store,
   fragmentMap,
   included = true,
-  quietFields,
+  quietArguments,
 }: {
   field: Field,
   throwOnMissingField: boolean,
@@ -262,10 +262,10 @@ export function diffFieldAgainstStore({
   store: NormalizedCache,
   fragmentMap?: FragmentMap,
   included?: Boolean,
-  quietFields?: string[],
+  quietArguments?: string[],
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
-  const storeFieldKey = storeKeyNameFromField(field, variables, quietFields);
+  const storeFieldKey = storeKeyNameFromField(field, variables, quietArguments);
 
   if (! has(storeObj, storeFieldKey)) {
     if (throwOnMissingField && included) {
@@ -311,7 +311,7 @@ export function diffFieldAgainstStore({
         selectionSet: field.selectionSet,
         variables,
         fragmentMap,
-        quietFields,
+        quietArguments,
       });
 
       if (itemDiffResult.isMissing) {
@@ -336,7 +336,7 @@ export function diffFieldAgainstStore({
       selectionSet: field.selectionSet,
       variables,
       fragmentMap,
-      quietFields,
+      quietArguments,
     });
   }
 

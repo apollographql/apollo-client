@@ -93,7 +93,7 @@ import {
   Observable
 } from 'rxjs/Observable';
 
-import gql from 'apollo-client/gql';
+import gql from 'graphql-tag';
 
 @Component({
   selector: 'postsList',
@@ -136,7 +136,7 @@ import {
   Angular2Apollo
 } from 'angular2-apollo';
 
-import gql from 'apollo-client/gql';
+import gql from 'graphql-tag';
 
 import {
   graphQLResult
@@ -246,7 +246,7 @@ import ApolloClient, {
   createNetworkInterface
 } from 'apollo-client';
 
-import gql from 'apollo-client/gql';
+import gql from 'graphql-tag';
 
 const client = new ApolloClient({
   networkInterface: createNetworkInterface('http://localhost:8080')
@@ -312,7 +312,7 @@ import ApolloClient, {
   createNetworkInterface
 } from 'apollo-client';
 
-import gql from 'apollo-client/gql';
+import gql from 'graphql-tag';
 
 const client = new ApolloClient({
   networkInterface: createNetworkInterface('http://localhost:8080')

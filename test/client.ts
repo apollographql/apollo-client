@@ -47,6 +47,8 @@ import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
+import { getFragmentDefinitions } from '../src/queries/getFromAST';
+
 import * as chaiAsPromised from 'chai-as-promised';
 
 // make it easy to assert with promises
@@ -992,5 +994,196 @@ describe('client', () => {
       }`;
 
     assert.equal(printAST(query), print(query));
+  });
+
+  describe('fragment', () => {
+    it('should return a fragment def with a unique name', () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+
+      const fragment = gql`
+        fragment authorDetails on Author {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const fragmentDefs = client.fragment(fragment, []);
+      assert.equal(fragmentDefs.length, 1);
+      assert.equal(print(fragmentDefs[0]), print(getFragmentDefinitions(fragment)[0]));
+    });
+
+    it('should correctly return multiple fragments from a single document', () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const fragmentDoc = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }
+        fragment personDetails on Person {
+          name
+        }
+        `;
+      const fragmentDefs = client.fragment(fragmentDoc, []);
+      assert.equal(fragmentDefs.length, 2);
+      const expFragmentDefs = getFragmentDefinitions(fragmentDoc);
+      assert.equal(print(fragmentDefs[0]), print(expFragmentDefs[0]));
+      assert.equal(print(fragmentDefs[1]), print(expFragmentDefs[1]));
+    });
+
+    it('should correctly return fragment defs with one fragment depending on another', () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const fragmentDoc = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+          ...otherAuthorDetails
+        }`;
+      const otherFragmentDoc = gql`
+        fragment otherFragmentDoc on Author {
+          address
+        }`;
+      const fragmentDefs = client.fragment(fragmentDoc, getFragmentDefinitions(otherFragmentDoc));
+      assert.equal(fragmentDefs.length, 2);
+      const expFragmentDefs = getFragmentDefinitions(otherFragmentDoc)
+        .concat(getFragmentDefinitions(fragmentDoc));
+      assert.deepEqual(fragmentDefs.map(print), expFragmentDefs.map(print));
+    });
+
+    it('should return fragment defs with a multiple fragments depending on other fragments', () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const fragmentDoc = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+          ...otherAuthorDetails
+        }
+
+        fragment onlineAuthorDetails on Author {
+          email
+          ...otherAuthorDetails
+        }`;
+      const otherFragmentDoc = gql`
+        fragment otherAuthorDetails on Author {
+          address
+        }`;
+      const fragmentDefs = client.fragment(fragmentDoc, getFragmentDefinitions(otherFragmentDoc));
+      assert.equal(fragmentDefs.length, 3);
+
+      const expFragmentDefs = getFragmentDefinitions(otherFragmentDoc)
+        .concat(getFragmentDefinitions(fragmentDoc));
+      assert.deepEqual(fragmentDefs.map(print), expFragmentDefs.map(print));
+    });
+
+    it('should add a fragment to the fragmentDefinitionsMap', () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const fragmentDoc = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      client.fragment(fragmentDoc, []);
+      assert.equal(Object.keys(client.fragmentDefinitionsMap).length, 1);
+      assert(client.fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
+      assert.equal(client.fragmentDefinitionsMap['authorDetails'].length, 1)
+      assert.equal(print(client.fragmentDefinitionsMap['authorDetails']), print(getFragmentDefinitions(fragmentDoc)[0]));
+    });
+
+    it('should add fragments with the same name to fragmentDefinitionsMap + print warning', () => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const fragmentDoc = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }
+        fragment authorDetails on Author {
+          address
+        }`;
+
+      // hacky solution that allows us to test whether the warning is printed
+      const oldWarn = console.warn;
+      console.warn = (str) => {
+        assert.include(str, "Warning: fragment with name");
+      };
+
+      client.fragment(fragmentDoc, []);
+      assert.equal(Object.keys(client.fragmentDefinitionsMap).length, 1);
+      assert.equal(client.fragmentDefinitionsMap['authorDetails'].length, 2);
+      console.warn = oldWarn;
+    });
+
+    it('should issue a warning if we try query with a conflicting fragment name', (done) => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const fragmentDoc = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      const queryDoc = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      client.fragment(fragmentDoc);
+
+      const oldWarn = console.warn;
+      console.warn = (str) => {
+        assert.include(str, "Warning: fragment with name");
+        console.warn = oldWarn;
+        done();
+      };
+      client.query({ query: queryDoc });
+    });
+
+    it('should issue a warning if we try to watchQuery with a conflicting fragment name', (done) => {
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(),
+      });
+      const fragmentDoc = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      const queryDoc = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      client.fragment(fragmentDoc);
+
+      const oldWarn = console.warn;
+      console.warn = (str) => {
+        assert.include(str, "Warning: fragment with name");
+        console.warn = oldWarn;
+        done();
+      };
+      client.watchQuery({ query: queryDoc });
+    });
   });
 });

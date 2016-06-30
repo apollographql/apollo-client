@@ -46,6 +46,10 @@ import {
   NetworkInterface,
 } from '../src/networkInterface';
 
+import {
+  getFragmentDefinitions,
+} from '../src/queries/getFromAST';
+
 describe('QueryManager', () => {
   it('properly roundtrips through a Redux store', (done) => {
     const query = gql`
@@ -2410,15 +2414,16 @@ describe('QueryManager', () => {
 
   describe('fragment referencing', () => {
     it('should accept a list of fragments and let us reference them through fetchQuery', (done) => {
-      const fragment1 = gql`
+      const fragment1 = getFragmentDefinitions(gql`
         fragment authorDetails on Author {
           firstName
           lastName
-        }`;
-      const fragment2 = gql`
+        }`)[0];
+      const fragment2 = getFragmentDefinitions(gql`
         fragment personDetails on Person {
           name
-        }`;
+        }`)[0];
+      const fragments = [fragment1, fragment2];
       const query = gql`
         query {
           author {
@@ -2458,11 +2463,80 @@ describe('QueryManager', () => {
         result: { data }
       });
       const queryManager = new QueryManager({
-        networkInterface: mockNetworkInterface(),
+        networkInterface: networkInterface,
         store: createApolloStore(),
         reduxRootKey: 'apollo',
       });
-      queryManager.fetchQuery('bad-id', { query }).then((result) => {
+
+      queryManager.fetchQuery('bad-id', { query }, fragments).then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+      });
+    });
+    it('should accept a list of fragments and let us reference them from mutate', (done) => {
+      const fragment1 = getFragmentDefinitions(gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`)[0];
+      const fragment2 = getFragmentDefinitions(gql`
+        fragment personDetails on Person {
+          name
+        }`)[0];
+      const fragments = [fragment1, fragment2];
+      const mutation = gql`
+        mutation changeStuff {
+          changeStuff {
+            author {
+              ...authorDetails
+            }
+            person {
+              ...personDetails
+            }
+          }
+       }`;
+      const composedMutation = gql`
+        mutation changeStuff {
+          changeStuff {
+            author {
+              ...authorDetails
+            }
+            person {
+              ...personDetails
+            }
+          }
+       }
+       fragment authorDetails on Author {
+         firstName
+         lastName
+       }
+       fragment personDetails on Person {
+         name
+       }`;
+
+      const data = {
+        changeStuff: {
+          author: {
+            firstName: 'John',
+            lastName: 'Smith',
+          },
+          person: {
+            name: 'John Smith',
+          },
+        },
+      };
+
+      const networkInterface = mockNetworkInterface({
+        request: { query: composedMutation },
+        result: { data },
+      });
+      const queryManager = new QueryManager({
+        networkInterface: networkInterface,
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      queryManager.mutate({ mutation }, fragments).then((result) => {
         assert.deepEqual(result, { data });
         done();
       });

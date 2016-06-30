@@ -25,8 +25,8 @@ import {
   getFragmentDefinitions,
   createFragmentMap,
   getOperationName,
-  createFragmentMapFromDocuments,
   FragmentMap,
+  addFragmentsToDocument,
 } from './queries/getFromAST';
 
 import {
@@ -37,6 +37,7 @@ import {
 import {
   GraphQLResult,
   Document,
+  FragmentDefinition,
 } from 'graphql';
 
 import { print } from 'graphql/language/printer';
@@ -204,7 +205,7 @@ export class QueryManager {
     mutation: Document,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
-  }): Promise<GraphQLResult> {
+  }, fragments: FragmentDefinition[] = []): Promise<GraphQLResult> {
     const mutationId = this.generateQueryId();
 
     let mutationDef = getMutationDefinition(mutation);
@@ -213,6 +214,11 @@ export class QueryManager {
       mutation = replaceOperationDefinition(mutation, mutationDef);
     }
     mutation = replaceOperationDefinition(mutation, mutationDef);
+
+    // add the fragments that were passed in to the mutation document and then
+    // construct the fragment map.
+    mutation = addFragmentsToDocument(mutation, fragments);
+
     const mutationString = print(mutation);
     const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
     const request = {
@@ -296,7 +302,7 @@ export class QueryManager {
 
   // The fragments option specifies a list of fragments that can be referenced by the query.
   // Used to compose queries out of a bunch of fragments for UI components.
-  public watchQuery(options: WatchQueryOptions, fragments: Document[] = [],
+  public watchQuery(options: WatchQueryOptions, fragments: FragmentDefinition[] = [],
     shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
@@ -387,7 +393,7 @@ export class QueryManager {
 
   // Takes a list of fragments that can be referenced from the query document. The fragment
   // documents should contain only the fragment definition and nothig else.
-  public query(options: WatchQueryOptions, fragments: Document[] = []): Promise<GraphQLResult> {
+  public query(options: WatchQueryOptions, fragments: FragmentDefinition[] = []): Promise<GraphQLResult> {
     if (options.returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
@@ -413,7 +419,7 @@ export class QueryManager {
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions,
-    fragments: Document[] = []): Promise<GraphQLResult> {
+    fragments: FragmentDefinition[] = []): Promise<GraphQLResult> {
       return this.fetchQueryOverInterface(queryId, options, fragments, this.networkInterface);
   }
 
@@ -508,7 +514,7 @@ export class QueryManager {
 
   private fetchQueryOverInterface(queryId: string,
   options: WatchQueryOptions,
-  fragments: Document[],
+  fragments: FragmentDefinition[],
   network: NetworkInterface): Promise<GraphQLResult> {
     const {
       query,
@@ -524,13 +530,11 @@ export class QueryManager {
     }
     let transformedQuery = replaceOperationDefinition(query, queryDef);
 
-    // then, apply any fragment definitions that we have been passed and add them onto the query
-    transformedQuery = addFragmentDefinitionsFromDocuments(transformedQuery, fragments);
+    // Add the fragments passed in into the query and then create the fragment map
+    transformedQuery = addFragmentsToDocument(transformedQuery, fragments);
+    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(transformedQuery));
 
     const queryString = print(transformedQuery);
-    const queryFragmentMap: FragmentMap = assign({},
-      globalFragmentMap,
-      createFragmentMap(getFragmentDefinitions(transformedQuery))) as FragmentMap;
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -689,7 +693,7 @@ export class QueryManager {
   }
 
   private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener,
-    fragments: Document[]) {
+    fragments: FragmentDefinition[]) {
     this.queryListeners[queryId] = listener;
     this.fetchQuery(queryId, options, fragments);
 

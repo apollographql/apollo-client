@@ -11,6 +11,7 @@
 import {
   GraphQLResult,
   Document,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -47,7 +48,7 @@ export class QueryScheduler {
     return this.inFlightQueries.hasOwnProperty(queryId);
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions, fragments: Document[]) {
+  public fetchQuery(queryId: string, options: WatchQueryOptions, fragments: FragmentDefinition[]) {
     return new Promise((resolve, reject) => {
       this.queryManager.fetchQuery(queryId, options, fragments).then((result) => {
         this.removeInFlight(queryId);
@@ -61,7 +62,7 @@ export class QueryScheduler {
   }
 
   public startPollingQuery(options: WatchQueryOptions, listener: QueryListener,
-    fragments: Document[] = [],
+    fragments: FragmentDefinition[] = [],
     queryId?: string): string {
     if (!queryId) {
       queryId = this.queryManager.generateQueryId();
@@ -99,7 +100,7 @@ export class QueryScheduler {
 
   // Tell the QueryScheduler to schedule the queries fired by a polling query.
   public registerPollingQuery(options: WatchQueryOptions,
-    fragments: Document[] = []): ObservableQuery {
+    fragments: FragmentDefinition[] = []): ObservableQuery {
     if (!options.pollInterval) {
       throw new Error('Tried to register a non-polling query with the scheduler.');
     }

@@ -139,21 +139,7 @@ export function createFragmentMap(fragments: FragmentDefinition[]): FragmentMap 
   return symTable;
 }
 
-// Take a list of fragment query documents and return a fragment map
-// (i.e. a map that goes from the name of the fragment to the fragment itself).
-export function createFragmentMapFromDocuments(fragmentDocs: Document[]): FragmentMap {
-  let definitions: FragmentDefinition[] = [];
-  fragmentDocs.forEach((fragmentDoc) => {
-    definitions = definitions.concat(getFragmentDefinitions(fragmentDoc));
-  });
-
-  return createFragmentMap(definitions);
-}
-
-// Takes a list of fragments (stored as documents) and tacks them onto the end of the query
-// document.
-// Note: this function does not do any uniqueness-of-name checking.
-export function addFragmentsToDocument(queryDoc: Document, fragmentDocs: Document[]): Document {
-  const fragmentMap = createFragmentMapFromDocuments(fragmentDocs);
-  queryDoc.definitions = queryDoc.definitions.concat(Object.values(fragmentMap));
+export function addFragmentsToDocument(queryDoc: Document, fragments: FragmentDefinition[]): Document {
+  queryDoc.definitions = queryDoc.definitions.concat(fragments);
+  return queryDoc;
 }

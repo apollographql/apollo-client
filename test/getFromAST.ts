@@ -7,8 +7,6 @@ import {
   createFragmentMap,
   FragmentMap,
   getOperationName,
-  createFragmentMapFromDocuments,
-  addFragmentsToDocument,
 } from '../src/queries/getFromAST';
 
 import {
@@ -240,61 +238,4 @@ describe('AST utility functions', () => {
     const operationName = getOperationName(query);
     assert.equal(operationName, 'nameOfMutation');
   });
-
-  it('should create a fragment map out of documents containing fragment definitions', () => {
-    const fragment1 = gql`
-      fragment author on Author {
-        firstName
-        lastName
-      }`;
-    const fragment2 = gql`
-      fragment person on Person {
-        name
-      }`;
-    const fragments = [fragment1, fragment2];
-    const fragmentMap = createFragmentMapFromDocuments(fragments);
-    assert.equal(Object.keys(fragmentMap).length, 2);
-    assert.equal(print(fragmentMap['author']), print(getFragmentDefinitions(fragment1)[0]));
-    assert.equal(print(fragmentMap['person']), print(getFragmentDefinitions(fragment2)[0]));
-  });
-
-  it('should add fragment definitions from fragment documents to a query doc', () => {
-    const fragment1 = gql`
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }`;
-    const fragment2 = gql`
-      fragment personDetails on Person {
-        name
-      }`;
-    const query = gql`
-      query {
-        author {
-          ...authorDetails
-        }
-        person {
-          ...personDetails
-        }
-      }`;
-    const composedQuery = gql`
-      query {
-        author {
-          ...authorDetails
-        }
-        person {
-          ...personDetails
-        }
-      }
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
-      fragment personDetails on Person {
-        name
-      }`;
-    const doc = addFragmentsToDocument(query, [fragment1, fragment2]);
-    assert.equal(print(doc), print(composedQuery));
-  });
-
 });

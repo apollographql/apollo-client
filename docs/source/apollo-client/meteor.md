@@ -4,121 +4,95 @@ order: 112
 description: Specifics about using Apollo in your Meteor application.
 ---
 
-The Apollo client and server tools are published on NPM, which makes them available to all JavaScript applications, including those written with Meteor 1.3 and above. When using Meteor with Apollo, there are a few things to keep in mind to have a smooth integration between the client and server.
+The Apollo client and server tools are published on NPM, which makes them available to all JavaScript applications, including those written with Meteor 1.3 and above. When using Meteor with Apollo, you can use those npm packages directly, or you can use the [`apollo` Atmosphere package](https://github.com/apollostack/meteor-integration/), which simplifies things for you.
 
-You can see all of these in action in the [Apollo Meteor starter kit](https://github.com/apollostack/meteor-starter-kit).
+To install `apollo`, run both of these commands:
 
-## Client
-
-### Using with Meteor Accounts
-
-The only thing you need to do on the client to pass through your Meteor login token into the Apollo server is to create a network interface with a header that passes the login token you can get from the Meteor Accounts client. Then just log in as normal and requests sent after that point will be authenticated.
-
-```js
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
-import { Accounts } from 'meteor/accounts-base';
-
-const networkInterface = createNetworkInterface('/graphql');
-
-networkInterface.use([{
-  applyMiddleware(request, next) {
-    const currentUserToken = Accounts._storedLoginToken();
-
-    if (!currentUserToken) {
-      next();
-      return;
-    }
-
-    if (!request.options.headers) {
-      request.options.headers = new Headers();
-    }
-
-    request.options.headers.Authorization = currentUserToken;
-
-    next();
-  }
-}]);
-
-const client = new ApolloClient({
-  networkInterface,
-});
+```text
+meteor add apollo
+meteor npm install --save apollo-client apollo-server express
 ```
 
-## Server
+## Usage
 
-### Using Express with WebApp
+You can see this package in action in the [Apollo Meteor starter kit](https://github.com/apollostack/meteor-starter-kit).
 
-The Apollo server, and the Express GraphQL package that it is based on, rely on the Express server-side API framework. To use it, you will need to initialize a new Express server and proxy it to your Meteor `WebApp` server.
+### Client
+
+Connect to the Apollo server with [`meteorClientConfig`](#meteorClientConfig):
 
 ```js
-import { apolloServer } from 'graphql-tools';
-import express from 'express';
-import { Meteor } from 'meteor/meteor';
-import { WebApp } from 'meteor/webapp';
+import ApolloClient from 'apollo-client';
+import { meteorClientConfig } from 'meteor/apollo';
 
-import { schema, resolvers } from '/imports/api/schema';
+const client = new ApolloClient(meteorClientConfig());
+```
 
-const graphQLServer = express();
+### Server
 
-graphQLServer.use('/graphql', apolloServer({
+Define your schema and resolvers, and then set up the Apollo server with [`createApolloServer`](#createApolloServer):
+
+```js
+import { createApolloServer } from 'meteor/apollo';
+
+import schema from '/imports/api/schema';
+import resolvers from '/imports/api/resolvers';
+
+createApolloServer({
   graphiql: true,
   pretty: true,
   schema,
   resolvers,
-}));
-
-// This redirects all requests to /graphql to our Express GraphQL server
-WebApp.connectHandlers.use(Meteor.bindEnvironment(graphQLServer));
+});
 ```
 
-### Getting the current user
+The [GraphiQL](https://github.com/graphql/graphiql) url is [http://localhost:3000/graphql](http://localhost:3000/graphql)
 
-If you are passing in the login token from the client as detailed above, you probably want to get the current user on the server, and use that in your resolvers. To do so, you should make your `apolloServer` options a function of the current request, and use some Meteor packages to get the user from the login token.
+Inside your resolvers, if the user is logged in, their id will be  `context.userId`:
 
 ```js
-// Some more imports
-import { Meteor } from 'meteor/meteor';
-import { Accounts } from 'meteor/accounts-base';
-import { check } from 'meteor/check';
-
-// ... same setup code as above
-
-graphQLServer.use('/graphql', apolloServer(async (req) => {
-  let user = null;
-
-  // Get the token from the header
-  if (req.headers.authorization) {
-    const token = req.headers.authorization;
-    check(token, String);
-    const hashedToken = Accounts._hashLoginToken(token);
-
-    // Get the user from the database
-    user = await Meteor.users.findOne(
-      {"services.resume.loginTokens.hashedToken": hashedToken});
-  }
-
-  return {
-    graphiql: true,
-    pretty: true,
-    schema,
-    resolvers,
-
-    // Attach the user to the context object
-    context: {
-      // The current user will now be available on context.user in all resolvers
-      user,
+export const resolvers = {
+  Query: {
+    async user(root, args, context) {
+      // Only return the current user, for security
+      if (context.userId === args.id) {
+        return await Meteor.users.findOne(context.userId);
+      }
     },
-  };
-}));
-```
-
-Now, you can use `context.user` from your resolvers:
-
-```js
-user(root, args, context) {
-  // Only return data if the fetched id matches the current user, for security
-  if (context.user._id === args.id) {
-    return context.user;
-  }
+  },
+  User: ...
 }
 ```
+
+## API
+
+### meteorClientConfig
+
+`meteorClientConfig(networkInterfaceConfig)`
+
+`networkInterfaceConfig` may contain any of the following fields:
+- `path`: path of the GraphQL server. Default: `'/graphql'`.
+- `options`: `FetchOptions` passed to [`createNetworkInterface`](http://docs.apollostack.com/apollo-client/index.html#createNetworkInterface). Default: `{}`.
+- `useMeteorAccounts`: Whether to send the current user's login token to the GraphQL server with each request. Default: `true`.
+
+Returns an [`options` object](http://0.0.0.0:4000/apollo-client/index.html#ApolloClient) for `ApolloClient`:
+
+```
+{
+  networkInterface
+  queryTransformer: addTypenameToSelectionSet
+  dataIdFromObject: object.__typename + object._id
+}
+```
+
+### createApolloServer
+
+`createApolloServer(options, config)`
+
+- [`options`](http://docs.apollostack.com/apollo-server/tools.html#apolloServer)
+- `config` may contain any of the following fields:
+  - `path`: [Path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. Default: `'/graphql'`.
+  - `maxAccountsCacheSizeInMB`: User account ids are cached in memory to reduce the response latency on multiple requests from the same user. Default: `1`.
+
+It will use the same port as your Meteor server. Don't put a route or static asset at the same path as the Apollo server (default is `/graphql`).
+

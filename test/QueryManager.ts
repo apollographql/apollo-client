@@ -2460,7 +2460,7 @@ describe('QueryManager', () => {
       };
       const networkInterface = mockNetworkInterface({
         request: { query: composedQuery },
-        result: { data }
+        result: { data },
       });
       const queryManager = new QueryManager({
         networkInterface: networkInterface,

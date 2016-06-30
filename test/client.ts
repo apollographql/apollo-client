@@ -996,7 +996,7 @@ describe('client', () => {
     assert.equal(printAST(query), print(query));
   });
 
-  describe('fragment', () => {
+  describe('fragments', () => {
     it('should return a fragment def with a unique name', () => {
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface(),
@@ -1095,7 +1095,7 @@ describe('client', () => {
       client.fragment(fragmentDoc, []);
       assert.equal(Object.keys(client.fragmentDefinitionsMap).length, 1);
       assert(client.fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
-      assert.equal(client.fragmentDefinitionsMap['authorDetails'].length, 1)
+      assert.equal(client.fragmentDefinitionsMap['authorDetails'].length, 1);
       assert.equal(print(client.fragmentDefinitionsMap['authorDetails']), print(getFragmentDefinitions(fragmentDoc)[0]));
     });
 
@@ -1115,7 +1115,7 @@ describe('client', () => {
       // hacky solution that allows us to test whether the warning is printed
       const oldWarn = console.warn;
       console.warn = (str) => {
-        assert.include(str, "Warning: fragment with name");
+        assert.include(str, 'Warning: fragment with name');
       };
 
       client.fragment(fragmentDoc, []);
@@ -1148,7 +1148,7 @@ describe('client', () => {
 
       const oldWarn = console.warn;
       console.warn = (str) => {
-        assert.include(str, "Warning: fragment with name");
+        assert.include(str, 'Warning: fragment with name');
         console.warn = oldWarn;
         done();
       };
@@ -1179,11 +1179,140 @@ describe('client', () => {
 
       const oldWarn = console.warn;
       console.warn = (str) => {
-        assert.include(str, "Warning: fragment with name");
+        assert.include(str, 'Warning: fragment with name');
         console.warn = oldWarn;
         done();
       };
       client.watchQuery({ query: queryDoc });
+    });
+
+    it('should allow passing fragments to query', (done) => {
+      const queryDoc = gql`
+        query {
+          author {
+            ...authorDetails
+          }
+        }`;
+      const composedQuery = gql`
+        query {
+          author {
+            ...authorDetails
+          }
+        }
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const networkInterface = mockNetworkInterface({
+        request: { query: composedQuery },
+        result: { data },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+      });
+      const fragmentDefs = client.fragment(gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`);
+
+      client.query({ query: queryDoc }, fragmentDefs).then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+      });
+    });
+
+    it('show allow passing fragments to mutate', (done) => {
+      const mutationDoc = gql`
+        mutation createAuthor {
+          createAuthor {
+            ...authorDetails
+          }
+        }`;
+      const composedMutation = gql`
+        mutation createAuthor {
+          createAuthor {
+            ...authorDetails
+          }
+        }
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      const data = {
+        createAuthor: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const networkInterface = mockNetworkInterface({
+        request: { query: composedMutation },
+        result: { data },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+      });
+      const fragmentDefs = client.fragment(gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`);
+
+      client.mutate({ mutation: mutationDoc }, fragmentDefs).then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+      });
+    });
+
+    it('should allow passing fragments to watchQuery', (done) => {
+      const queryDoc = gql`
+        query {
+          author {
+            ...authorDetails
+          }
+        }`;
+      const composedQuery = gql`
+        query {
+          author {
+            ...authorDetails
+          }
+        }
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const networkInterface = mockNetworkInterface({
+        request: { query: composedQuery },
+        result: { data },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+      });
+      const fragmentDefs = client.fragment(gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`);
+
+      const observer = client.watchQuery({ query: queryDoc }, fragmentDefs);
+      observer.subscribe({
+        next(result) {
+          assert.deepEqual(result, { data });
+          done();
+        },
+      });
     });
   });
 });

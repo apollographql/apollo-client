@@ -92,7 +92,7 @@ export default class ApolloClient {
   // The method fragment adds fragments to this map. The point is to keep track
   // of fragments that exist and print a warning if we encounter two fragments
   // that have the same name, i.e. the values *should* be of length 1.
-  public fragmentDefinitionsMap: { [fragmentName: string]: FragmentDefinition[] }
+  public fragmentDefinitionsMap: { [fragmentName: string]: FragmentDefinition[] };
 
   constructor({
     networkInterface,
@@ -171,9 +171,9 @@ export default class ApolloClient {
     mutation: Document,
     resultBehaviors?: MutationBehavior[],
     variables?: Object,
-  }): Promise<GraphQLResult> => {
+  }, fragments: FragmentDefinition[] = []): Promise<GraphQLResult> => {
     this.initStore();
-    return this.queryManager.mutate(options);
+    return this.queryManager.mutate(options, fragments);
   };
 
   public reducer(): Function {
@@ -214,7 +214,7 @@ export default class ApolloClient {
     const fragmentDefinitions = getFragmentDefinitions(doc);
     fragmentDefinitions.forEach((fragmentDefinition) => {
       const fragmentName = fragmentDefinition.name.value;
-      if(this.fragmentDefinitionsMap.hasOwnProperty(fragmentName)) {
+      if (this.fragmentDefinitionsMap.hasOwnProperty(fragmentName)) {
         // this is a problem because the app developer is trying to register another fragment with
         // the same name as one previously registered. So, we tell them about it.
         console.warn(`Warning: fragment with name ${fragmentDefinition.name.value} already exists.`);

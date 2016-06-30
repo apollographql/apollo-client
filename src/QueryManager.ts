@@ -25,7 +25,6 @@ import {
   getFragmentDefinitions,
   createFragmentMap,
   getOperationName,
-  FragmentMap,
   addFragmentsToDocument,
 } from './queries/getFromAST';
 

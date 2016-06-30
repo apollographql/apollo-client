@@ -10,7 +10,6 @@
 
 import {
   GraphQLResult,
-  Document,
   FragmentDefinition,
 } from 'graphql';
 

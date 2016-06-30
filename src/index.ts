@@ -50,6 +50,7 @@ import {
 } from './data/storeUtils';
 
 import isUndefined = require('lodash.isundefined');
+import assign = require('lodash.assign');
 
 export {
   createNetworkInterface,
@@ -119,7 +120,11 @@ export default class ApolloClient {
   public watchQuery = (options: WatchQueryOptions): ObservableQuery => {
     this.initStore();
 
-    options.forceFetch = this.shouldForceFetch && options.forceFetch;
+    if (!this.shouldForceFetch && options.forceFetch) {
+      options = assign({}, options, {
+        forceFetch: false,
+      }) as WatchQueryOptions;
+    }
 
     return this.queryManager.watchQuery(options);
   };
@@ -127,7 +132,11 @@ export default class ApolloClient {
   public query = (options: WatchQueryOptions): Promise<GraphQLResult> => {
     this.initStore();
 
-    options.forceFetch = this.shouldForceFetch && options.forceFetch;
+    if (!this.shouldForceFetch && options.forceFetch) {
+      options = assign({}, options, {
+        forceFetch: false,
+      }) as WatchQueryOptions;
+    }
 
     return this.queryManager.query(options);
   };

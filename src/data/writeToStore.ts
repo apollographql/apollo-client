@@ -61,7 +61,7 @@ export function writeFragmentToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
-  quietFields,
+  quietArguments,
   fetchMore,
 }: {
   result: Object,
@@ -69,7 +69,7 @@ export function writeFragmentToStore({
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
-  quietFields?: string[],
+  quietArguments?: string[],
   fetchMore?: 'APPEND'|'PREPEND',
 }): NormalizedCache {
   // Argument validation
@@ -91,7 +91,7 @@ export function writeFragmentToStore({
     store,
     variables,
     dataIdFromObject,
-    quietFields,
+    quietArguments,
     fetchMore,
   });
 }
@@ -102,7 +102,7 @@ export function writeQueryToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
-  quietFields,
+  quietArguments,
   fetchMore,
 }: {
   result: Object,
@@ -110,7 +110,7 @@ export function writeQueryToStore({
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
-  quietFields?: string[],
+  quietArguments?: string[],
   fetchMore?: 'APPEND'|'PREPEND',
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
@@ -122,7 +122,7 @@ export function writeQueryToStore({
     store,
     variables,
     dataIdFromObject,
-    quietFields,
+    quietArguments,
     fetchMore,
   });
 }
@@ -135,7 +135,7 @@ export function writeSelectionSetToStore({
   variables,
   dataIdFromObject,
   fragmentMap,
-  quietFields,
+  quietArguments,
   fetchMore,
 }: {
   dataId: string,
@@ -145,7 +145,7 @@ export function writeSelectionSetToStore({
   variables: Object,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
-  quietFields?: string[],
+  quietArguments?: string[],
   fetchMore?: 'APPEND'|'PREPEND',
 }): NormalizedCache {
 
@@ -178,7 +178,7 @@ export function writeSelectionSetToStore({
           field: selection,
           dataIdFromObject,
           fragmentMap,
-          quietFields,
+          quietArguments,
           fetchMore,
         });
       }
@@ -192,7 +192,7 @@ export function writeSelectionSetToStore({
         dataId,
         dataIdFromObject,
         fragmentMap,
-        quietFields,
+        quietArguments,
         fetchMore,
       });
     } else {
@@ -210,7 +210,7 @@ export function writeSelectionSetToStore({
         dataId,
         dataIdFromObject,
         fragmentMap,
-        quietFields,
+        quietArguments,
         fetchMore,
       });
 
@@ -229,7 +229,7 @@ function writeFieldToStore({
   dataId,
   dataIdFromObject,
   fragmentMap,
-  quietFields,
+  quietArguments,
   fetchMore,
 }: {
   field: Field,
@@ -239,12 +239,12 @@ function writeFieldToStore({
   dataId: string,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
-  quietFields?: string[],
+  quietArguments?: string[],
   fetchMore?: 'APPEND'|'PREPEND',
 }) {
   let storeValue;
 
-  const storeFieldName: string = storeKeyNameFromField(field, variables, quietFields);
+  const storeFieldName: string = storeKeyNameFromField(field, variables, quietArguments);
 
   // If it's a scalar, just store it in the store
   if (!field.selectionSet || isNull(value)) {
@@ -264,7 +264,7 @@ function writeFieldToStore({
         store,
         fragmentMap,
         included: true,
-        quietFields,
+        quietArguments,
 
       });
       if (fetchMore === 'APPEND') {
@@ -298,7 +298,7 @@ function writeFieldToStore({
           variables,
           dataIdFromObject,
           fragmentMap,
-          quietFields,
+          quietArguments,
           fetchMore,
         });
       }
@@ -325,7 +325,7 @@ function writeFieldToStore({
       variables,
       dataIdFromObject,
       fragmentMap,
-      quietFields,
+      quietArguments,
       fetchMore,
     });
 

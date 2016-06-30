@@ -44,7 +44,7 @@ export interface QueryInitAction {
   forceFetch: boolean;
   fetchMore: 'APPEND'|'PREPEND';
   returnPartialData: boolean;
-  quietFields: string[];
+  quietArguments: string[];
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;

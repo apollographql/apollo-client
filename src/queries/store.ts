@@ -40,7 +40,7 @@ export interface QueryStoreValue {
   forceFetch: boolean;
   fetchMore?: 'APPEND'|'PREPEND';
   returnPartialData: boolean;
-  quietFields: string[];
+  quietArguments: string[];
   lastRequestId: number;
   fragmentMap: FragmentMap;
 }
@@ -73,7 +73,7 @@ export function queries(
       forceFetch: action.forceFetch,
       fetchMore: action.fetchMore,
       returnPartialData: action.returnPartialData,
-      quietFields: action.quietFields,
+      quietArguments: action.quietArguments,
       lastRequestId: action.requestId,
       fragmentMap: action.fragmentMap,
     };

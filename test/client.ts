@@ -341,7 +341,7 @@ describe('client', () => {
             graphQLErrors: null,
             forceFetch: false,
             fetchMore: null,
-            quietFields: [],
+            quietArguments: [],
             fragmentMap: {},
             returnPartialData: false,
             lastRequestId: 1,

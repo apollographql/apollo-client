@@ -69,12 +69,12 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
   }
 }
 
-export function storeKeyNameFromField(field: Field, variables?: Object, quietFields?: string[]): string {
+export function storeKeyNameFromField(field: Field, variables?: Object, quietArguments?: string[]): string {
   if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
 
     field.arguments.forEach(({name, value}) =>
-      (quietFields || []).indexOf(name.value) < 0 ?
+      (quietArguments || []).indexOf(name.value) < 0 ?
         valueToObjectRepresentation(argObj, name, value, variables) :
         null);
 

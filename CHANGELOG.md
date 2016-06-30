@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Fix regression where options passed to query and watchQuery were modified if `shouldForceFetch` was false. [Issue #339](https://github.com/apollostack/apollo-client/issues/317) [PR #340](https://github.com/apollostack/apollo-client/pull/340)
 - **Add flexible mutation result handling to Apollo Client.**
   - This is done by passing an `resultBehaviors` option to `client.mutate`, with an array of "Mutation Result Behaviors".
   - You can attach any number of result behaviors to each mutation.

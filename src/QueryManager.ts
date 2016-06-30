@@ -25,6 +25,8 @@ import {
   getFragmentDefinitions,
   createFragmentMap,
   getOperationName,
+  createFragmentMapFromDocuments,
+  FragmentMap,
 } from './queries/getFromAST';
 
 import {
@@ -412,7 +414,7 @@ export class QueryManager {
 
   public fetchQuery(queryId: string, options: WatchQueryOptions,
     fragments: Document[] = []): Promise<GraphQLResult> {
-    return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
+      return this.fetchQueryOverInterface(queryId, options, fragments, this.networkInterface);
   }
 
   public generateQueryId() {
@@ -505,8 +507,9 @@ export class QueryManager {
   }
 
   private fetchQueryOverInterface(queryId: string,
-                                  options: WatchQueryOptions,
-                                  network: NetworkInterface): Promise<GraphQLResult> {
+  options: WatchQueryOptions,
+  fragments: Document[],
+  network: NetworkInterface): Promise<GraphQLResult> {
     const {
       query,
       variables,
@@ -519,9 +522,15 @@ export class QueryManager {
     if (this.queryTransformer) {
       queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
     }
-    const transformedQuery = replaceOperationDefinition(query, queryDef);
+    let transformedQuery = replaceOperationDefinition(query, queryDef);
+
+    // then, apply any fragment definitions that we have been passed and add them onto the query
+    transformedQuery = addFragmentDefinitionsFromDocuments(transformedQuery, fragments);
+
     const queryString = print(transformedQuery);
-    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(transformedQuery));
+    const queryFragmentMap: FragmentMap = assign({},
+      globalFragmentMap,
+      createFragmentMap(getFragmentDefinitions(transformedQuery))) as FragmentMap;
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string

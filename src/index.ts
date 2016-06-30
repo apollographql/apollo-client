@@ -6,6 +6,7 @@ import {
 import {
   GraphQLResult,
   Document,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -53,6 +54,10 @@ import {
   storeKeyNameFromFieldNameAndArgs,
 } from './data/storeUtils';
 
+import {
+  getFragmentDefinitions,
+} from './queries/getFromAST';
+
 import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
 
@@ -82,6 +87,12 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+
+  // A map going from the name of a fragment to that fragment's definition.
+  // The method fragment adds fragments to this map. The point is to keep track
+  // of fragments that exist and print a warning if we encounter two fragments
+  // that have the same name, i.e. the values *should* be of length 1.
+  private fragmentDefinitions: { [fragmentName: string]: FragmentDefinition[] }
 
   constructor({
     networkInterface,
@@ -186,6 +197,23 @@ export default class ApolloClient {
       config: this.reducerConfig,
     }));
   };
+
+  // Takes a document, extracts the FragmentDefinitions from it and puts
+  // them in this.fragmentDefinitions.
+  public fragment(doc: Document) {
+    const fragmentDefinitions = getFragmentDefinitions(doc);
+    fragmentDefinitions.forEach((fragmentDefinition) => {
+      const fragmentName = fragmentDefinition.name.value;
+      if(this.fragmentDefinitions.hasOwnProperty(fragmentName)) {
+        // this is a problem because the app developer is trying to register another fragment with
+        // the same name as one previously registered. So, we tell them about it.
+        console.warn(`Warning: fragment with name ${fragmentDefinition.name.value} already exists.`);
+        this.fragmentDefinitions[fragmentName].push(fragmentDefinition);
+      } else {
+        this.fragmentDefinitions[fragmentName] = [fragmentDefinition];
+      }
+    });
+  }
 
   private setStore = (store: ApolloStore) => {
     // ensure existing store has apolloReducer

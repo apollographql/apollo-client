@@ -2407,6 +2407,67 @@ describe('QueryManager', () => {
       }, 100);
     });
   });
+
+  describe('fragment referencing', () => {
+    it('should accept a list of fragments and let us reference them through fetchQuery', (done) => {
+      const fragment1 = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }`;
+      const fragment2 = gql`
+        fragment personDetails on Person {
+          name
+        }`;
+      const query = gql`
+        query {
+          author {
+            ...authorDetails
+          }
+          person {
+            ...personDetails
+          }
+        }`;
+      const composedQuery = gql`
+        query {
+          author {
+            ...authorDetails
+          }
+          person {
+            ...personDetails
+          }
+        }
+        fragment authorDetails on Author {
+          firstName
+          lastName
+        }
+        fragment personDetails on Person {
+          name
+        }`;
+      const data = {
+        'author': {
+          'firstName': 'John',
+          'lastName': 'Smith',
+        },
+        'person': {
+          'name': 'John Smith',
+        },
+      };
+      const networkInterface = mockNetworkInterface({
+        request: { query: composedQuery },
+        result: { data }
+      });
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.fetchQuery('bad-id', { query }).then((result) => {
+        assert.deepEqual(result, { data });
+        done();
+      });
+    });
+  });
 });
 
 function testDiffing(

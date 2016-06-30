@@ -139,7 +139,10 @@ export function createFragmentMap(fragments: FragmentDefinition[]): FragmentMap 
   return symTable;
 }
 
-export function addFragmentsToDocument(queryDoc: Document, fragments: FragmentDefinition[]): Document {
+// Utility function that takes a list of fragment definitions and adds them to a particular
+// document.
+export function addFragmentsToDocument(queryDoc: Document,
+  fragments: FragmentDefinition[]): Document {
   queryDoc.definitions = queryDoc.definitions.concat(fragments);
   return queryDoc;
 }

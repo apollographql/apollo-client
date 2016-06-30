@@ -214,7 +214,7 @@ export class QueryManager {
     }
     mutation = replaceOperationDefinition(mutation, mutationDef);
 
-    // add the fragments that were passed in to the mutation document and then
+    // Add the fragments that were passed in to the mutation document and then
     // construct the fragment map.
     mutation = addFragmentsToDocument(mutation, fragments);
 

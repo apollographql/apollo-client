@@ -89,9 +89,8 @@ export default class ApolloClient {
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
 
   // A map going from the name of a fragment to that fragment's definition.
-  // The method fragment adds fragments to this map. The point is to keep track
-  // of fragments that exist and print a warning if we encounter two fragments
-  // that have the same name, i.e. the values *should* be of length 1.
+  // The point is to keep track of fragments that exist and print a warning if we encounter two
+  // fragments that have the same name, i.e. the values *should* be of length 1.
   public fragmentDefinitionsMap: { [fragmentName: string]: FragmentDefinition[] };
 
   constructor({
@@ -146,7 +145,9 @@ export default class ApolloClient {
       }) as WatchQueryOptions;
     }
 
-    // register each of the fragments present in the query document
+    // Register each of the fragments present in the query document. The point
+    // is to prevent fragment name collisions with fragments that are in the query
+    // document itself.
     this.fragment(options.query, []);
 
     return this.queryManager.watchQuery(options, fragments);
@@ -161,7 +162,9 @@ export default class ApolloClient {
       }) as WatchQueryOptions;
     }
 
-    // register each of the fragments in the query document
+    // Register each of the fragments present in the query document. The point
+    // is to prevent fragment name collisions with fragments that are in the query
+    // document itself.
     this.fragment(options.query, []);
 
     return this.queryManager.query(options, fragments);
@@ -209,7 +212,8 @@ export default class ApolloClient {
   // Takes a document, extracts the FragmentDefinitions from it and puts
   // them in this.fragmentDefinitions. The second argument specifies the fragments
   // that the fragment in the document depends on. The fragment definition array from the document
-  // are concatenated with the fragment definition array passed as the second argument and returned.
+  // is concatenated with the fragment definition array passed as the second argument and this
+  // concatenated array is returned.
   public fragment(doc: Document, fragments: FragmentDefinition[] = []): FragmentDefinition[] {
     const fragmentDefinitions = getFragmentDefinitions(doc);
     fragmentDefinitions.forEach((fragmentDefinition) => {

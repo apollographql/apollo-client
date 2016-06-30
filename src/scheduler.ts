@@ -116,7 +116,7 @@ export class QueryScheduler {
           return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
             variables,
-            paginationParameters: [],
+            quietFields: [],
           }) as WatchQueryOptions);
         },
 

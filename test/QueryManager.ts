@@ -935,7 +935,7 @@ describe('QueryManager', () => {
 
     const handle = queryManager.watchQuery({
       query,
-      paginationParameters: ['latest_name'],
+      quietFields: ['latest_name'],
       variables: variables1,
     });
 

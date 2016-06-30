@@ -11,7 +11,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Removed dependency on `graphql` npm package, which was causing compilation errors in the React Native bundler. Issues [#261](https://github.com/apollostack/apollo-client/issues/261) [#163](https://github.com/apollostack/apollo-client/issues/163), [PR #357](https://github.com/apollostack/apollo-client/pull/357)
 - Added support for query composition through fragments [Issue #338](https://github.com/apollostack/apollo-client/issues/338) and [PR #343](https://github.com/apollostack/apollo-client/pull/343)
 - **Add `fetchMore` method for for infinite scroll in pagination**
-  - This is done by adding to the watched query a `paginationParameters` array
+  - This is done by adding to the watched query a `quietFields` array
     that lists all parameters used for pagination that will not be re-inflated
     in the `itemDataId` in the store.
   - `fetchMore` sets a `forceFetch` alongside a `fetchMore` in the new query

@@ -40,7 +40,7 @@ export interface QueryStoreValue {
   forceFetch: boolean;
   fetchMore?: boolean;
   returnPartialData: boolean;
-  paginationParameters: string[];
+  quietFields: string[];
   lastRequestId: number;
   fragmentMap: FragmentMap;
 }
@@ -73,7 +73,7 @@ export function queries(
       forceFetch: action.forceFetch,
       fetchMore: action.fetchMore,
       returnPartialData: action.returnPartialData,
-      paginationParameters: action.paginationParameters,
+      quietFields: action.quietFields,
       lastRequestId: action.requestId,
       fragmentMap: action.fragmentMap,
     };

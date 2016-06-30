@@ -69,12 +69,12 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
   }
 }
 
-export function storeKeyNameFromField(field: Field, variables?: Object, paginationParameters?: string[]): string {
+export function storeKeyNameFromField(field: Field, variables?: Object, quietFields?: string[]): string {
   if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
 
     field.arguments.forEach(({name, value}) =>
-      (paginationParameters || []).indexOf(name.value) < 0 ?
+      (quietFields || []).indexOf(name.value) < 0 ?
         valueToObjectRepresentation(argObj, name, value, variables) :
         null);
 

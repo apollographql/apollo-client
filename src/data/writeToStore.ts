@@ -57,7 +57,7 @@ export function writeFragmentToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
-  paginationParameters,
+  quietFields,
   fetchMore,
 }: {
   result: Object,
@@ -65,7 +65,7 @@ export function writeFragmentToStore({
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
-  paginationParameters?: string[],
+  quietFields?: string[],
   fetchMore?: boolean,
 }): NormalizedCache {
   // Argument validation
@@ -87,7 +87,7 @@ export function writeFragmentToStore({
     store,
     variables,
     dataIdFromObject,
-    paginationParameters,
+    quietFields,
     fetchMore,
   });
 }
@@ -98,7 +98,7 @@ export function writeQueryToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
-  paginationParameters,
+  quietFields,
   fetchMore,
 }: {
   result: Object,
@@ -106,7 +106,7 @@ export function writeQueryToStore({
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
-  paginationParameters?: string[],
+  quietFields?: string[],
   fetchMore?: boolean,
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
@@ -118,7 +118,7 @@ export function writeQueryToStore({
     store,
     variables,
     dataIdFromObject,
-    paginationParameters,
+    quietFields,
     fetchMore,
   });
 }
@@ -131,7 +131,7 @@ export function writeSelectionSetToStore({
   variables,
   dataIdFromObject,
   fragmentMap,
-  paginationParameters,
+  quietFields,
   fetchMore,
 }: {
   dataId: string,
@@ -141,7 +141,7 @@ export function writeSelectionSetToStore({
   variables: Object,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
-  paginationParameters?: string[],
+  quietFields?: string[],
   fetchMore?: boolean,
 }): NormalizedCache {
 
@@ -174,7 +174,7 @@ export function writeSelectionSetToStore({
           field: selection,
           dataIdFromObject,
           fragmentMap,
-          paginationParameters,
+          quietFields,
           fetchMore,
         });
       }
@@ -188,7 +188,7 @@ export function writeSelectionSetToStore({
         dataId,
         dataIdFromObject,
         fragmentMap,
-        paginationParameters,
+        quietFields,
         fetchMore,
       });
     } else {
@@ -206,7 +206,7 @@ export function writeSelectionSetToStore({
         dataId,
         dataIdFromObject,
         fragmentMap,
-        paginationParameters,
+        quietFields,
         fetchMore,
       });
 
@@ -225,7 +225,7 @@ function writeFieldToStore({
   dataId,
   dataIdFromObject,
   fragmentMap,
-  paginationParameters,
+  quietFields,
   fetchMore,
 }: {
   field: Field,
@@ -235,12 +235,12 @@ function writeFieldToStore({
   dataId: string,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
-  paginationParameters?: string[],
+  quietFields?: string[],
   fetchMore?: boolean,
 }) {
   let storeValue;
 
-  const storeFieldName: string = storeKeyNameFromField(field, variables, paginationParameters);
+  const storeFieldName: string = storeKeyNameFromField(field, variables, quietFields);
 
   // If it's a scalar, just store it in the store
   if (!field.selectionSet || isNull(value)) {
@@ -283,7 +283,7 @@ function writeFieldToStore({
           variables,
           dataIdFromObject,
           fragmentMap,
-          paginationParameters,
+          quietFields,
           fetchMore,
         });
       }
@@ -310,7 +310,7 @@ function writeFieldToStore({
       variables,
       dataIdFromObject,
       fragmentMap,
-      paginationParameters,
+      quietFields,
       fetchMore,
     });
 

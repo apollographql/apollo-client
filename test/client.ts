@@ -940,12 +940,17 @@ describe('client', () => {
         ssrMode: true,
       });
 
+      const options = { query, forceFetch: true };
+
       // Run a query first to initialize the store
       return client.query({ query })
         // then query for real
-        .then(() => client.query({ query, forceFetch: true }))
+        .then(() => client.query(options))
         .then((result) => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
+
+          // Test that options weren't mutated, issue #339
+          assert.deepEqual(options, { query, forceFetch: true });
         });
     });
 

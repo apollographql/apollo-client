@@ -245,7 +245,7 @@ export function diffSelectionSetAgainstStore({
   };
 }
 
-function diffFieldAgainstStore({
+export function diffFieldAgainstStore({
   field,
   throwOnMissingField,
   variables,
@@ -343,7 +343,7 @@ function diffFieldAgainstStore({
   throw new Error('Unexpected number value in the store where the query had a subselection.');
 }
 
-interface FieldDiffResult {
+export interface FieldDiffResult {
   result?: any;
   isMissing?: 'true';
 }

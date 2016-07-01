@@ -281,7 +281,9 @@ function writeFieldToStore({
     // this is an array with sub-objects
     let thisIdList: Array<string> = [];
     // If we're fetching more, append/prepend existing values
-    if (fetchMore) {
+    const fetchMoreDirective = field.directives
+    .filter(dir => dir.name.value === 'apolloFetchMore')[0] || null;
+    if (fetchMore && fetchMoreDirective) {
       const {
         result: currentlyStoredValues,
       } = diffFieldAgainstStore({

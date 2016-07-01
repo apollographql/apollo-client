@@ -960,7 +960,9 @@ describe('QueryManager', () => {
     const query = gql`
       query fetch_people($latest_name: String, $type: String) {
         all_people(latest_name: $latest_name, type: $type) {
-          tags @apolloFetchMore
+          tags @apolloFetchMore {
+            name
+          }
         }
       }
     `;
@@ -978,7 +980,7 @@ describe('QueryManager', () => {
     const data1 = {
       all_people: [
         {
-          tags: ['jedi'],
+          tags: [{name: 'jedi'}],
         },
       ],
     };
@@ -986,7 +988,7 @@ describe('QueryManager', () => {
     const data2 = {
       all_people: [
         {
-          tags: ['human'],
+          tags: [{name: 'human'}],
         },
       ],
     };
@@ -1041,7 +1043,9 @@ describe('QueryManager', () => {
     const query = gql`
       query fetch_people($latest_name: String, $type: String) {
         all_people(latest_name: $latest_name, type: $type) @apolloFetchMore(name: "all_people") {
-          tags @apolloFetchMore(name: "tags")
+          tags @apolloFetchMore(name: "tags") {
+            name
+          }
         }
       }
     `;
@@ -1059,7 +1063,7 @@ describe('QueryManager', () => {
     const data1 = {
       all_people: [
         {
-          tags: ['jedi'],
+          tags: [{name: 'jedi'}],
         },
       ],
     };
@@ -1067,7 +1071,7 @@ describe('QueryManager', () => {
     const data2 = {
       all_people: [
         {
-          tags: ['human'],
+          tags: [{name: 'human'}],
         },
       ],
     };

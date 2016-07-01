@@ -6,8 +6,7 @@ import {
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
-// import merge = require('lodash.merge');
-import { merge } from 'lodash';
+import merge = require('lodash.merge');
 
 import {
   ApolloStore,

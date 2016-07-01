@@ -143,16 +143,17 @@ export function getDirectiveArgs(
   }
   let args = {};
   directive.arguments.forEach(arg => {
-    const argValue = arg.value;
     let value = arg.value;
-    if (argValue.kind === 'Variable') {
-      value = variables[(argValue as Variable).name.value];
+    if (arg.value.kind === 'Variable') {
+      value = variables[(arg.value as Variable).name.value];
     }
     if (value.kind === 'ListValue') {
       args[arg.name.value] = (value as ListValue).values
       .map(subVal => (subVal as StringValue).value);
-    } else {
+    } else if (value.kind) {
       args[arg.name.value] = (value as StringValue).value;
+    } else {
+      args[arg.name.value] = value;
     }
   });
   return args;

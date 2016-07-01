@@ -945,7 +945,7 @@ describe('QueryManager', () => {
 
         if (handleCount === 1) {
           assert.deepEqual(result.data, data1);
-          subscription.fetchMore(variables2);
+          subscription.refetchMore({variables: variables2});
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, {
             all_people: [].concat(data1.all_people, data2.all_people),
@@ -2363,7 +2363,7 @@ describe('QueryManager', () => {
           return null;
         },
 
-        fetchMore(variables: any): Promise<GraphQLResult> {
+        refetchMore(options: any): Promise<GraphQLResult> {
           done(new Error('fetchMore was called on a subscription on store reset.'));
           return null;
         },

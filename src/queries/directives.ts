@@ -80,8 +80,7 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
       return;
     }
 
-    const ifValue = directive.arguments[0].value
-    ;
+    const ifValue = directive.arguments[0].value;
     let evaledValue: Boolean = false;
     if (!ifValue || ifValue.kind !== 'BooleanValue') {
       // means it has to be a variable value if this is a valid @skip or @include directive

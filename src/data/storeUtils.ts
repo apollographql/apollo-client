@@ -73,8 +73,22 @@ export function storeKeyNameFromField(field: Field, variables?: Object, quietArg
   if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
 
+    let localQuietArguments = [];
+    const fetchMoreDirective = field.directives
+    .filter(dir => dir.name.value === 'apolloFetchMore')[0] || null;
+    if (fetchMoreDirective) {
+      const localQuietArg = fetchMoreDirective.arguments
+      .filter(arg => arg.name.value === 'quiet')[0] || null;
+      if (localQuietArg && localQuietArg.value.kind === 'StringValue') {
+        localQuietArguments = (localQuietArg.value as StringValue).value.split(',');
+      } else if (localQuietArg && localQuietArg.value.kind === 'Variable') {
+        localQuietArguments = variables[(localQuietArg.value as Variable).name.value].split(',');
+      }
+    }
+
+    const allQuietArgs = [].concat(quietArguments, localQuietArguments);
     field.arguments.forEach(({name, value}) =>
-      (quietArguments || []).indexOf(name.value) < 0 ?
+      allQuietArgs.indexOf(name.value) < 0 ?
         valueToObjectRepresentation(argObj, name, value, variables) :
         null);
 

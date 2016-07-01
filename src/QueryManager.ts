@@ -535,7 +535,7 @@ export class QueryManager {
       query,
       variables,
       forceFetch = false,
-      fetchMore = null,
+      fetchMore = false,
       returnPartialData = false,
       fragments = [],
       quietArguments = [],

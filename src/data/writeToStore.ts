@@ -4,12 +4,6 @@ import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
 
 import {
-  StringValue,
-  BooleanValue,
-  Variable,
-} from 'graphql';
-
-import {
   getQueryDefinition,
   getFragmentDefinition,
   FragmentMap,
@@ -21,6 +15,11 @@ import {
   isField,
   isInlineFragment,
 } from './storeUtils';
+
+import {
+  getDirectiveArgs,
+  validateSelectionDirectives,
+} from '../queries/directives';
 
 import {
   diffFieldAgainstStore,
@@ -287,25 +286,17 @@ function writeFieldToStore({
   if (!field.selectionSet || isNull(value)) {
     storeValue = value;
   } else if (isArray(value)) {
+    // First check if directives will work
+    validateSelectionDirectives(field, variables);
     // this is an array with sub-objects
     let thisIdList: Array<string> = [];
     // If we're fetching more, append/prepend existing values
-    const fetchMoreDirective = field.directives
-    .filter(dir => dir.name.value === 'apolloFetchMore')[0] || null;
-    if (fetchMore && fetchMoreDirective) {
-      const nameArg = fetchMoreDirective.arguments
-      .filter(arg => arg.name.value === 'name')[0] || null;
-      let fetchMoreDirectiveName = null;
-      if (nameArg && nameArg.value.kind === 'StringValue') {
-        fetchMoreDirectiveName = (nameArg.value as StringValue).value;
-      } else if (nameArg && nameArg.value.kind === 'Variable') {
-        fetchMoreDirectiveName = variables[(nameArg.value as Variable).name.value];
-      }
-
+    const fetchMoreArgs = getDirectiveArgs(field, 'apolloFetchMore', variables);
+    if (fetchMore && fetchMoreArgs) {
       if (
         !targetedFetchMoreDirectives ||
         targetedFetchMoreDirectives.length < 1 ||
-        targetedFetchMoreDirectives.indexOf(fetchMoreDirectiveName) >= 0
+        targetedFetchMoreDirectives.indexOf(fetchMoreArgs.name) >= 0
       ) {
         const {
           result: currentlyStoredValues,
@@ -319,45 +310,18 @@ function writeFieldToStore({
           included: true,
           quietArguments,
         });
-        if (mergeResults && mergeResults[fetchMoreDirectiveName]) {
-          value = mergeResults[fetchMoreDirectiveName](currentlyStoredValues, value);
+        if (mergeResults && mergeResults[fetchMoreArgs.name]) {
+          value = mergeResults[fetchMoreArgs.name](currentlyStoredValues, value);
         } else if (typeof mergeResults === 'function') {
           value = (mergeResults as MergeResultsFunction)(currentlyStoredValues, value);
         } else {
-          const orderByArg = fetchMoreDirective.arguments
-          .filter(arg => arg.name.value === 'orderBy')[0] || null;
-          let orderByField = null;
-          if (orderByArg && orderByArg.value.kind === 'StringValue') {
-            orderByField = (orderByArg.value as StringValue).value;
-          } else if (orderByArg && orderByArg.value.kind === 'Variable') {
-            orderByField = variables[(orderByArg.value as Variable).name.value];
-          }
-
-          const descArg = fetchMoreDirective.arguments
-          .filter(arg => arg.name.value === 'orderBy')[0] || null;
-          let orderDesc = false;
-          if (descArg && descArg.value.kind === 'BooleanValue') {
-            orderDesc = (descArg.value as BooleanValue).value;
-          } else if (descArg && descArg.value.kind === 'Variable') {
-            orderDesc = variables[(descArg.value as Variable).name.value];
-          }
-
-          const prependArg = fetchMoreDirective.arguments
-          .filter(arg => arg.name.value === 'prepend')[0] || null;
-          let prependMerge = null;
-          if (prependArg && prependArg.value.kind === 'BooleanValue') {
-            prependMerge = (prependArg.value as BooleanValue).value;
-          } else if (prependArg && prependArg.value.kind === 'Variable') {
-            prependMerge = variables[(prependArg.value as Variable).name.value];
-          }
-
-          if (orderByField) {
+          if (fetchMoreArgs.orderBy) {
             value = [].concat(currentlyStoredValues, value)
-            .sort((a, b) => (orderDesc ?
-              a[orderByField] > b[orderByField] :
-              a[orderByField] < b[orderByField]
+            .sort((a, b) => (fetchMoreArgs.desc ?
+              a[fetchMoreArgs.orderBy] < b[fetchMoreArgs.orderBy] :
+              a[fetchMoreArgs.orderBy] > b[fetchMoreArgs.orderBy]
             ) ? 1 : -1);
-          } else if (prependArg) {
+          } else if (fetchMoreArgs.prepend) {
             value = [].concat(value, currentlyStoredValues);
           } else {
             value = [].concat(currentlyStoredValues, value);

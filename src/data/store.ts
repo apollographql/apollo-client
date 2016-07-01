@@ -79,6 +79,8 @@ export function data(
         fragmentMap: queryStoreValue.fragmentMap,
         quietArguments: queryStoreValue.quietArguments,
         fetchMore: queryStoreValue.fetchMore,
+        mergeResults: queryStoreValue.mergeResults,
+        targetedFetchMoreDirectives: queryStoreValue.targetedFetchMoreDirectives,
       });
 
       return newState;

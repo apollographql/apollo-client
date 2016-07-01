@@ -1,6 +1,6 @@
 # Apollo client
 
-[![npm](https://img.shields.io/npm/v/apollo-client.svg?maxAge=2592000)](https://www.npmjs.com/package/apollo-client)
+[![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
 The Apollo Client can easily be dropped into any JavaScript frontend where you want to use data from a GraphQL server.

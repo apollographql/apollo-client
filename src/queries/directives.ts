@@ -4,43 +4,94 @@ import {
   Selection,
   Variable,
   BooleanValue,
+  Directive,
+  GraphQLDirective,
+  GraphQLIncludeDirective,
+  GraphQLSkipDirective,
+  GraphQLDeprecatedDirective,
+  GraphQLNonNull,
+  GraphQLScalarType,
+  GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 
-// TODO: move all directive validation to a solution using GraphQL-js
+const apolloFetchMoreDirective = new GraphQLDirective(({
+  name: 'apolloFetchMore',
+  description: 'Directs the Apollo store to treat this field as a paginated list.',
+  locations: ['FIELD'],
+  args: {
+    name: {
+      type: GraphQLString,
+      description: 'A reference to the paginated field',
+    },
+    quiet: {
+      type: GraphQLString,
+      description: 'Comma-separated list of field arguments to ignore when writing into the store.',
+    },
+    prepend: {
+      type: GraphQLBoolean,
+      description: 'When adding new elements, prepend into the list instead of appending.',
+    },
+    orderBy: {
+      type: GraphQLString,
+      description: 'Subfield used for reordering alphabetically the results when new arrives.',
+    },
+    desc: {
+      type: GraphQLBoolean,
+      description: 'Reverse the order.',
+    },
+  },
+} as any));
 
-export function checkDirectives(selection: Selection, variables: { [name: string]: any }): Error {
-  const errors = selection.directives.map((directive) => {
-    const directiveName = directive.name.value;
-    const directiveArguments = directive.arguments;
-    switch (directiveName) {
-      case 'skip':
-      case 'include':
-        if (directiveArguments.length !== 1) {
-          return new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
-        }
-        const ifArgument = directive.arguments[0];
-        if (!ifArgument.name || ifArgument.name.value !== 'if') {
-          return new Error(`Invalid argument for the @${directiveName} directive.`);
-        }
-        const ifValue = directive.arguments[0].value;
-        if (!ifValue || ifValue.kind !== 'BooleanValue') {
-          if (ifValue.kind !== 'Variable') {
-            return new Error(`Argument for the @${directiveName} directive must be a variable or a boolean value.`);
-          } else {
-            if (variables[(ifValue as Variable).name.value] === undefined) {
-              return new Error(`Invalid variable referenced in @${directiveName} directive.`);
-            }
-          }
-        }
-        return null;
-      case 'apolloFetchMore':
-        // TODO: define possible parameters and add constraints
-        return null;
-      default:
-        return new Error(`Directive ${directive.name.value} not supported.`);
+const DEFAULT_DIRECTIVES: GraphQLDirective[] = [
+  GraphQLIncludeDirective,
+  GraphQLSkipDirective,
+  GraphQLDeprecatedDirective,
+  apolloFetchMoreDirective,
+];
+
+export function validateDirective(
+  selection: Selection, variables: any, directive: Directive,
+  availDirectives: GraphQLDirective[]
+) {
+  const matchedDirectiveDef = availDirectives
+  .filter(dirDef => dirDef.name === directive.name.value)[0] || null;
+  if (!matchedDirectiveDef) {
+    throw new Error(`Directive ${directive.name.value} not supported.`);
+  }
+  const presentArgs = directive.arguments.map(arg => {
+    const matchedArgDef = matchedDirectiveDef.args
+    .filter(argDef => argDef.name === arg.name.value)[0] || null;
+    if (!matchedArgDef) {
+      throw new Error(`Invalid argument ${arg.name.value} for the @${directive.name.value} directive.`);
+    }
+    const matchedType = (matchedArgDef.type as GraphQLNonNull).ofType || matchedArgDef.type;
+    // TODO: handle more complex input fields
+    if (matchedType instanceof GraphQLScalarType && arg.value.kind !== 'Variable') {
+      if (matchedType.toString() + 'Value' !== arg.value.kind) {
+        throw new Error(`Argument for the @${directive.name.value} directive must be a variable or a ${matchedType.toString()} value.`);
+      }
+    } else if (arg.value.kind === 'Variable') {
+      if (variables[(arg.value as Variable).name.value] === undefined) {
+        throw new Error(`Variable ${(arg.value as Variable).name.value}  not found in context.`);
+      }
+    }
+    return arg.name.value;
+  });
+  matchedDirectiveDef.args.forEach(argDef => {
+    if (argDef.type instanceof GraphQLNonNull && presentArgs.indexOf(argDef.name) < 0) {
+      throw new Error(`Required argument ${argDef.name} not present in @${directive.name.value} directive.`);
     }
   });
-  return errors.filter(error => !!error)[0] || null;
+}
+
+export function validateSelectionDirectives(
+  selection: Selection, variables: any = {},
+  directives: GraphQLDirective[] = DEFAULT_DIRECTIVES
+) {
+  if (selection.directives) {
+    selection.directives.forEach(dir => validateDirective(selection, variables, dir, directives));
+  }
 }
 
 export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): Boolean {
@@ -52,10 +103,7 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
     return true;
   }
 
-  let err = checkDirectives(selection, variables);
-  if (err) {
-    throw err;
-  }
+  validateSelectionDirectives(selection, variables);
 
   let res: Boolean = true;
   selection.directives.forEach((directive) => {

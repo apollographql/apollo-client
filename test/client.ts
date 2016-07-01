@@ -337,7 +337,7 @@ describe('client', () => {
             networkError: null,
             graphQLErrors: null,
             forceFetch: false,
-            fetchMore: null,
+            fetchMore: false,
             quietArguments: [],
             fragmentMap: {},
             returnPartialData: false,

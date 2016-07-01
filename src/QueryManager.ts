@@ -98,6 +98,11 @@ export interface QuerySubscription extends Subscription {
   startPolling(pollInterval: number): void;
 }
 
+export type MergeResultsFunction = (existingArr: any[], newArr: any[]) => any[];
+
+export type MergeResultsType = MergeResultsFunction
+                             | {[fetchMoreDirectiveName: string]: MergeResultsFunction};
+
 export interface WatchQueryOptions {
   query: Document;
   variables?: { [key: string]: any };
@@ -107,6 +112,8 @@ export interface WatchQueryOptions {
   pollInterval?: number;
   fragments?: FragmentDefinition[];
   quietArguments?: string[];
+  mergeResults?: MergeResultsType;
+  targetedFetchMoreDirectives?: string[];
 }
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;

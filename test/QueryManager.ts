@@ -47,7 +47,7 @@ import {
 } from '../src/networkInterface';
 
 import {
-  getFragmentDefinitions,
+  getFragmentDefinition,
 } from '../src/queries/getFromAST';
 
 describe('QueryManager', () => {
@@ -2414,15 +2414,15 @@ describe('QueryManager', () => {
 
   describe('fragment referencing', () => {
     it('should accept a list of fragments and let us reference them through fetchQuery', (done) => {
-      const fragment1 = getFragmentDefinitions(gql`
+      const fragment1 = getFragmentDefinition(gql`
         fragment authorDetails on Author {
           firstName
           lastName
-        }`)[0];
-      const fragment2 = getFragmentDefinitions(gql`
+        }`);
+      const fragment2 = getFragmentDefinition(gql`
         fragment personDetails on Person {
           name
-        }`)[0];
+        }`);
       const fragments = [fragment1, fragment2];
       const query = gql`
         query {
@@ -2474,15 +2474,15 @@ describe('QueryManager', () => {
       });
     });
     it('should accept a list of fragments and let us reference them from mutate', (done) => {
-      const fragment1 = getFragmentDefinitions(gql`
+      const fragment1 = getFragmentDefinition(gql`
         fragment authorDetails on Author {
           firstName
           lastName
-        }`)[0];
-      const fragment2 = getFragmentDefinitions(gql`
+        }`);
+      const fragment2 = getFragmentDefinition(gql`
         fragment personDetails on Person {
           name
-        }`)[0];
+        }`);
       const fragments = [fragment1, fragment2];
       const mutation = gql`
         mutation changeStuff {

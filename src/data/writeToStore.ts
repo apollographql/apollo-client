@@ -4,6 +4,11 @@ import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
 
 import {
+  StringValue,
+  Variable,
+} from 'graphql';
+
+import {
   getQueryDefinition,
   getFragmentDefinition,
   FragmentMap,
@@ -284,21 +289,36 @@ function writeFieldToStore({
     const fetchMoreDirective = field.directives
     .filter(dir => dir.name.value === 'apolloFetchMore')[0] || null;
     if (fetchMore && fetchMoreDirective) {
-      const {
-        result: currentlyStoredValues,
-      } = diffFieldAgainstStore({
-        field,
-        throwOnMissingField: false,
-        variables,
-        rootId: dataId,
-        store,
-        fragmentMap,
-        included: true,
-        quietArguments,
-      });
-      // TODO: use the right merging function
-      if (fetchMore) {
-        value = [].concat(currentlyStoredValues, value);
+      const nameArg = fetchMoreDirective.arguments
+      .filter(arg => arg.name.value === 'name')[0] || null;
+      let fetchMoreDirectiveName = null;
+      if (nameArg && nameArg.value.kind === 'StringValue') {
+        fetchMoreDirectiveName = (nameArg.value as StringValue).value;
+      } else if (nameArg && nameArg.value.kind === 'Variable') {
+        fetchMoreDirectiveName = variables[(nameArg.value as Variable).name.value];
+      }
+
+      if (
+        !targetedFetchMoreDirectives ||
+        targetedFetchMoreDirectives.length < 1 ||
+        targetedFetchMoreDirectives.indexOf(fetchMoreDirectiveName) >= 0
+      ) {
+        const {
+          result: currentlyStoredValues,
+        } = diffFieldAgainstStore({
+          field,
+          throwOnMissingField: false,
+          variables,
+          rootId: dataId,
+          store,
+          fragmentMap,
+          included: true,
+          quietArguments,
+        });
+        // TODO: use the right merging function
+        if (fetchMore) {
+          value = [].concat(currentlyStoredValues, value);
+        }
       }
     }
 

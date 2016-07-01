@@ -3,7 +3,7 @@
 import {
   Selection,
   Variable,
-  BooleanValue,
+  StringValue,
   Directive,
   GraphQLDirective,
   GraphQLIncludeDirective,
@@ -15,7 +15,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 
-const apolloFetchMoreDirective = new GraphQLDirective(({
+export const apolloFetchMoreDirective = new GraphQLDirective(({
   name: 'apolloFetchMore',
   description: 'Directs the Apollo store to treat this field as a paginated list.',
   locations: ['FIELD'],
@@ -50,7 +50,7 @@ const DEFAULT_DIRECTIVES: GraphQLDirective[] = [
   apolloFetchMoreDirective,
 ];
 
-export function validateDirective(
+function validateDirective(
   selection: Selection, variables: any, directive: Directive,
   availDirectives: GraphQLDirective[]
 ) {
@@ -94,43 +94,43 @@ export function validateSelectionDirectives(
   }
 }
 
-export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): Boolean {
-  if (!variables) {
-    variables = {};
-  }
-
+export function getDirectiveArgs(
+  selection: Selection, directiveName: string, variables: any = {}
+): any {
   if (!selection.directives) {
-    return true;
+    return null;
   }
+  const directive = selection.directives
+  .filter(dir => dir.name.value === directiveName)[0] || null;
+  if (!directive) {
+    return null;
+  }
+  let args = {};
+  directive.arguments.forEach(arg => {
+    const argValue = arg.value;
+    if (argValue.kind === 'Variable') {
+      return args[arg.name.value] = variables[(argValue as Variable).name.value];
+    }
+    args[arg.name.value] = (argValue as StringValue).value;
+  });
+  return args;
+}
 
+export function shouldInclude(selection: Selection, variables: { [name: string]: any } = {}): Boolean {
   validateSelectionDirectives(selection, variables);
 
-  let res: Boolean = true;
-  selection.directives.forEach((directive) => {
-    const directiveName = directive.name.value;
-    if (directiveName !== 'skip' && directiveName !== 'include') {
-      return;
-    }
+  let evaledValue: Boolean = true;
 
-    const ifValue = directive.arguments[0].value;
-    let evaledValue: Boolean = false;
-    if (!ifValue || ifValue.kind !== 'BooleanValue') {
-      // means it has to be a variable value if this is a valid @skip or @include directive
-      if (ifValue.kind === 'Variable') {
-        evaledValue = variables[(ifValue as Variable).name.value];
-      }
-    } else {
-      evaledValue = (ifValue as BooleanValue).value;
-    }
-
-    if (directiveName === 'skip') {
-      evaledValue = !evaledValue;
-    }
-
-    if (!evaledValue) {
-      res = false;
-    }
-  });
-
-  return res;
+  const skipArgs = getDirectiveArgs(selection, 'skip', variables);
+  const includeArgs = getDirectiveArgs(selection, 'include', variables);
+  if (includeArgs) {
+    evaledValue = includeArgs.if;
+  }
+  if (skipArgs) {
+    evaledValue = !skipArgs.if;
+  }
+  if (skipArgs && includeArgs) {
+    evaledValue = includeArgs.if && !skipArgs.if;
+  }
+  return evaledValue;
 }

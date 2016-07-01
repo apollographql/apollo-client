@@ -57,8 +57,6 @@ export function getOperationName(doc: Document): string {
 
 // Returns the FragmentDefinitions from a particular document as an array
 export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
-  checkDocument(doc);
-
   let fragmentDefinitions: FragmentDefinition[] = doc.definitions.filter((definition) => {
     if (definition.kind === 'FragmentDefinition') {
       return true;
@@ -139,4 +137,12 @@ export function createFragmentMap(fragments: FragmentDefinition[]): FragmentMap 
   });
 
   return symTable;
+}
+
+// Utility function that takes a list of fragment definitions and adds them to a particular
+// document.
+export function addFragmentsToDocument(queryDoc: Document,
+  fragments: FragmentDefinition[]): Document {
+  queryDoc.definitions = queryDoc.definitions.concat(fragments);
+  return queryDoc;
 }

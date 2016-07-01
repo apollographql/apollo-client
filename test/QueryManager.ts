@@ -2468,7 +2468,7 @@ describe('QueryManager', () => {
         reduxRootKey: 'apollo',
       });
 
-      queryManager.fetchQuery('bad-id', { query }, fragments).then((result) => {
+      queryManager.fetchQuery('bad-id', { query, fragments }).then((result) => {
         assert.deepEqual(result, { data });
         done();
       });
@@ -2536,7 +2536,7 @@ describe('QueryManager', () => {
         reduxRootKey: 'apollo',
       });
 
-      queryManager.mutate({ mutation }, fragments).then((result) => {
+      queryManager.mutate({ mutation, fragments }).then((result) => {
         assert.deepEqual(result, { data });
         done();
       });

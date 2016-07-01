@@ -136,7 +136,7 @@ export default class ApolloClient {
     this.fragmentDefinitionsMap = {};
   }
 
-  public watchQuery = (options: WatchQueryOptions, fragments: FragmentDefinition[] = []): ObservableQuery => {
+  public watchQuery = (options: WatchQueryOptions): ObservableQuery => {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -148,12 +148,12 @@ export default class ApolloClient {
     // Register each of the fragments present in the query document. The point
     // is to prevent fragment name collisions with fragments that are in the query
     // document itself.
-    this.fragment(options.query, []);
+    this.fragment(options.query);
 
-    return this.queryManager.watchQuery(options, fragments);
+    return this.queryManager.watchQuery(options);
   };
 
-  public query = (options: WatchQueryOptions, fragments: FragmentDefinition[] = []): Promise<GraphQLResult> => {
+  public query = (options: WatchQueryOptions): Promise<GraphQLResult> => {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -165,18 +165,19 @@ export default class ApolloClient {
     // Register each of the fragments present in the query document. The point
     // is to prevent fragment name collisions with fragments that are in the query
     // document itself.
-    this.fragment(options.query, []);
+    this.fragment(options.query);
 
-    return this.queryManager.query(options, fragments);
+    return this.queryManager.query(options);
   };
 
   public mutate = (options: {
     mutation: Document,
     resultBehaviors?: MutationBehavior[],
     variables?: Object,
-  }, fragments: FragmentDefinition[] = []): Promise<GraphQLResult> => {
+    fragments?: FragmentDefinition[],
+  }): Promise<GraphQLResult> => {
     this.initStore();
-    return this.queryManager.mutate(options, fragments);
+    return this.queryManager.mutate(options);
   };
 
   public reducer(): Function {

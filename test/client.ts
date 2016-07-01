@@ -996,7 +996,7 @@ describe('client', () => {
     assert.equal(printAST(query), print(query));
   });
 
-  describe('fragments', () => {
+  describe('fragment referencing', () => {
     it('should return a fragment def with a unique name', () => {
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface(),
@@ -1010,7 +1010,7 @@ describe('client', () => {
           }
         }
       `;
-      const fragmentDefs = client.fragment(fragment, []);
+      const fragmentDefs = client.fragment(fragment);
       assert.equal(fragmentDefs.length, 1);
       assert.equal(print(fragmentDefs[0]), print(getFragmentDefinitions(fragment)[0]));
     });
@@ -1028,7 +1028,7 @@ describe('client', () => {
           name
         }
         `;
-      const fragmentDefs = client.fragment(fragmentDoc, []);
+      const fragmentDefs = client.fragment(fragmentDoc);
       assert.equal(fragmentDefs.length, 2);
       const expFragmentDefs = getFragmentDefinitions(fragmentDoc);
       assert.equal(print(fragmentDefs[0]), print(expFragmentDefs[0]));
@@ -1092,7 +1092,7 @@ describe('client', () => {
           firstName
           lastName
         }`;
-      client.fragment(fragmentDoc, []);
+      client.fragment(fragmentDoc);
       assert.equal(Object.keys(client.fragmentDefinitionsMap).length, 1);
       assert(client.fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
       assert.equal(client.fragmentDefinitionsMap['authorDetails'].length, 1);
@@ -1118,7 +1118,7 @@ describe('client', () => {
         assert.include(str, 'Warning: fragment with name');
       };
 
-      client.fragment(fragmentDoc, []);
+      client.fragment(fragmentDoc);
       assert.equal(Object.keys(client.fragmentDefinitionsMap).length, 1);
       assert.equal(client.fragmentDefinitionsMap['authorDetails'].length, 2);
       console.warn = oldWarn;
@@ -1222,7 +1222,7 @@ describe('client', () => {
           lastName
         }`);
 
-      client.query({ query: queryDoc }, fragmentDefs).then((result) => {
+      client.query({ query: queryDoc, fragments: fragmentDefs }).then((result) => {
         assert.deepEqual(result, { data });
         done();
       });
@@ -1264,7 +1264,7 @@ describe('client', () => {
           lastName
         }`);
 
-      client.mutate({ mutation: mutationDoc }, fragmentDefs).then((result) => {
+      client.mutate({ mutation: mutationDoc, fragments: fragmentDefs }).then((result) => {
         assert.deepEqual(result, { data });
         done();
       });
@@ -1306,7 +1306,7 @@ describe('client', () => {
           lastName
         }`);
 
-      const observer = client.watchQuery({ query: queryDoc }, fragmentDefs);
+      const observer = client.watchQuery({ query: queryDoc, fragments: fragmentDefs });
       observer.subscribe({
         next(result) {
           assert.deepEqual(result, { data });
@@ -1351,7 +1351,8 @@ describe('client', () => {
           lastName
         }`);
 
-      const observer = client.watchQuery({ query: queryDoc, pollInterval: 30}, fragmentDefs);
+      const observer = client.watchQuery(
+        { query: queryDoc, pollInterval: 30, fragments: fragmentDefs});
       const subscription = observer.subscribe({
         next(result) {
           assert.deepEqual(result, { data });

@@ -34,23 +34,7 @@ export function checkDirectives(selection: Selection, variables: { [name: string
         }
         return null;
       case 'apolloFetchMore':
-        if (directiveArguments.length !== 1) {
-          return new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
-        }
-        const nameArgument = directive.arguments[0];
-        if (!nameArgument.name || nameArgument.name.value !== 'name') {
-          return new Error(`Invalid argument for the @${directiveName} directive.`);
-        }
-        const nameValue = directive.arguments[0].value;
-        if (!nameValue || nameValue.kind !== 'StringValue') {
-          if (nameValue.kind !== 'Variable') {
-            return new Error(`Argument for the @${directiveName} directive must be a variable or a string value.`);
-          } else {
-            if (variables[(nameValue as Variable).name.value] === undefined) {
-              return new Error(`Invalid variable referenced in @${directiveName} directive.`);
-            }
-          }
-        }
+        // TODO: define possible parameters and add constraints
         return null;
       default:
         return new Error(`Directive ${directive.name.value} not supported.`);

@@ -70,7 +70,7 @@ export function writeFragmentToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   quietArguments?: string[],
-  fetchMore?: 'APPEND'|'PREPEND',
+  fetchMore?: boolean,
 }): NormalizedCache {
   // Argument validation
   if (!fragment) {
@@ -111,7 +111,7 @@ export function writeQueryToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   quietArguments?: string[],
-  fetchMore?: 'APPEND'|'PREPEND',
+  fetchMore?: boolean,
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
@@ -146,7 +146,7 @@ export function writeSelectionSetToStore({
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
   quietArguments?: string[],
-  fetchMore?: 'APPEND'|'PREPEND',
+  fetchMore?: boolean,
 }): NormalizedCache {
 
   if (!fragmentMap) {
@@ -240,7 +240,7 @@ function writeFieldToStore({
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
   quietArguments?: string[],
-  fetchMore?: 'APPEND'|'PREPEND',
+  fetchMore?: boolean,
 }) {
   let storeValue;
 
@@ -267,10 +267,9 @@ function writeFieldToStore({
         quietArguments,
 
       });
-      if (fetchMore === 'APPEND') {
+      // TODO: use the right merging function
+      if (fetchMore) {
         value = [].concat(currentlyStoredValues, value);
-      } else {
-        value = [].concat(value, currentlyStoredValues);
       }
     }
 

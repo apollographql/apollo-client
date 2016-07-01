@@ -38,7 +38,7 @@ export interface QueryStoreValue {
   networkError: Error;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
-  fetchMore?: 'APPEND'|'PREPEND';
+  fetchMore?: boolean;
   returnPartialData: boolean;
   quietArguments: string[];
   lastRequestId: number;

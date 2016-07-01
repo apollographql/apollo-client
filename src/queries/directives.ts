@@ -5,49 +5,75 @@ import {
   Variable,
   StringValue,
   Directive,
-  GraphQLDirective,
-  GraphQLIncludeDirective,
-  GraphQLSkipDirective,
-  GraphQLDeprecatedDirective,
-  GraphQLNonNull,
-  GraphQLScalarType,
-  GraphQLString,
-  GraphQLBoolean,
 } from 'graphql';
 
-export const apolloFetchMoreDirective = new GraphQLDirective(({
+import {
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLBoolean,
+  GraphQLDirective,
+  GraphQLScalarType,
+} from '../util/PseudoGraphQL';
+
+const graphqlSkipDirective = {
+  name: 'skip',
+  locations: ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGEMENT'],
+  args: [
+    {
+      name: 'if',
+      type: new GraphQLNonNull(GraphQLBoolean),
+    },
+  ],
+};
+
+const graphqlIncludeDirective = {
+  name: 'include',
+  locations: ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGEMENT'],
+  args: [
+    {
+      name: 'if',
+      type: new GraphQLNonNull(GraphQLBoolean),
+    },
+  ],
+};
+
+const apolloFetchMoreDirective = {
   name: 'apolloFetchMore',
   description: 'Directs the Apollo store to treat this field as a paginated list.',
   locations: ['FIELD'],
-  args: {
-    name: {
+  args: [
+    {
+      name: 'name',
       type: GraphQLString,
       description: 'A reference to the paginated field',
     },
-    quiet: {
+    {
+      name: 'quiet',
       type: GraphQLString,
       description: 'Comma-separated list of field arguments to ignore when writing into the store.',
     },
-    prepend: {
+    {
+      name: 'prepend',
       type: GraphQLBoolean,
       description: 'When adding new elements, prepend into the list instead of appending.',
     },
-    orderBy: {
+    {
+      name: 'orderBy',
       type: GraphQLString,
       description: 'Subfield used for reordering alphabetically the results when new arrives.',
     },
-    desc: {
+    {
+      name: 'desc',
       type: GraphQLBoolean,
       description: 'Reverse the order.',
     },
-  },
-} as any));
+  ],
+};
 
 const DEFAULT_DIRECTIVES: GraphQLDirective[] = [
-  GraphQLIncludeDirective,
-  GraphQLSkipDirective,
-  GraphQLDeprecatedDirective,
   apolloFetchMoreDirective,
+  graphqlSkipDirective,
+  graphqlIncludeDirective,
 ];
 
 function validateDirective(

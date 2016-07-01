@@ -320,7 +320,7 @@ export class QueryManager {
           }
         } else {
           const resultFromStore = readSelectionSetFromStore({
-            store: this.getApolloState().data,
+            store: this.getApolloCacheData(),
             rootId: queryStoreValue.query.id,
             selectionSet: queryStoreValue.query.selectionSet,
             variables: queryStoreValue.variables,
@@ -683,7 +683,7 @@ export class QueryManager {
               // this will throw an error if there are missing fields in
               // the results if returnPartialData is false.
               resultFromStore = readSelectionSetFromStore({
-                store: this.getApolloState().data,
+                store: this.getApolloCacheData(),
                 rootId: querySS.id,
                 selectionSet: querySS.selectionSet,
                 variables,

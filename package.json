@@ -87,7 +87,7 @@
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "swapi-graphql": "^0.0.4",
-    "tslint": "3.7.3",
+    "tslint": "3.13.0",
     "typescript": "^1.8.9",
     "typings": "^1.0.0",
     "uglify-js": "^2.6.2"

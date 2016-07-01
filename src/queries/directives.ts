@@ -5,10 +5,12 @@ import {
   Variable,
   StringValue,
   Directive,
+  ListValue,
 } from 'graphql';
 
 import {
   GraphQLNonNull,
+  GraphQLList,
   GraphQLString,
   GraphQLBoolean,
   GraphQLDirective,
@@ -49,8 +51,8 @@ const apolloFetchMoreDirective = {
     },
     {
       name: 'quiet',
-      type: GraphQLString,
-      description: 'Comma-separated list of field arguments to ignore when writing into the store.',
+      type: new GraphQLList(GraphQLString),
+      description: 'List of field arguments to ignore when writing into the store.',
     },
     {
       name: 'prepend',
@@ -91,11 +93,19 @@ function validateDirective(
     if (!matchedArgDef) {
       throw new Error(`Invalid argument ${arg.name.value} for the @${directive.name.value} directive.`);
     }
-    const matchedType = (matchedArgDef.type as GraphQLNonNull).ofType || matchedArgDef.type;
+    const matchedType = matchedArgDef.type instanceof GraphQLNonNull ?
+      (matchedArgDef.type as GraphQLNonNull).ofType :
+      matchedArgDef.type;
     // TODO: handle more complex input fields
     if (matchedType instanceof GraphQLScalarType && arg.value.kind !== 'Variable') {
       if (matchedType.toString() + 'Value' !== arg.value.kind) {
-        throw new Error(`Argument for the @${directive.name.value} directive must be a variable or a ${matchedType.toString()} value.`);
+        throw new Error(
+          `Argument ${arg.name.value} for the @${directive.name.value} directive must be a variable or a ${matchedType.toString()} value.`
+        );
+      }
+    } else if (matchedType instanceof GraphQLList && arg.value.kind !== 'Variable') {
+      if (arg.value.kind !== 'ListValue') {
+        throw new Error(`Argument ${arg.name.value} for the @${directive.name.value} directive must be a variable or a List value.`);
       }
     } else if (arg.value.kind === 'Variable') {
       if (variables[(arg.value as Variable).name.value] === undefined) {
@@ -134,10 +144,16 @@ export function getDirectiveArgs(
   let args = {};
   directive.arguments.forEach(arg => {
     const argValue = arg.value;
+    let value = arg.value;
     if (argValue.kind === 'Variable') {
-      return args[arg.name.value] = variables[(argValue as Variable).name.value];
+      value = variables[(argValue as Variable).name.value];
     }
-    args[arg.name.value] = (argValue as StringValue).value;
+    if (value.kind === 'ListValue') {
+      args[arg.name.value] = (value as ListValue).values
+      .map(subVal => (subVal as StringValue).value);
+    } else {
+      args[arg.name.value] = (value as StringValue).value;
+    }
   });
   return args;
 }

@@ -232,9 +232,13 @@ describe('QueryManager', () => {
 
     handle.subscribe({
       next(result) {
-        assert.equal(result.errors[0].message, 'This is an error message.');
-        done();
+        done(new Error('Returned a result when it was supposed to error out'));
       },
+
+      error(apolloError) {
+        assert(apolloError);
+        done();
+      }
     });
   });
 
@@ -282,7 +286,11 @@ describe('QueryManager', () => {
 
     handle.subscribe({
       next(result) {
-        assert.equal(result.errors[0].message, 'This is an error message.');
+        done(new Error('Returned data when it was supposed to error out.'));
+      },
+
+      error(apolloError) {
+        assert(apolloError);
         done();
       },
     });

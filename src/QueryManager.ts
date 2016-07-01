@@ -68,6 +68,10 @@ import {
 
 import { Observable, Observer, Subscription, SubscriberFunction } from './util/Observable';
 
+import {
+  ApolloError,
+} from './errors';
+
 export class ObservableQuery extends Observable<GraphQLResult> {
   public refetch: (variables?: any) => Promise<GraphQLResult>;
   public stopPolling: () => void;
@@ -281,18 +285,18 @@ export class QueryManager {
       if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
         // XXX Currently, returning errors and data is exclusive because we
         // don't handle partial results
-        if (queryStoreValue.graphQLErrors) {
-          if (observer.next) {
-            observer.next({ errors: queryStoreValue.graphQLErrors });
-          }
-        } else if (queryStoreValue.networkError) {
-          // XXX we might not want to re-broadcast the same error over and over if it didn't change
+
+        // If we have either a GraphQL error or a network error, we create a
+        // an error and tell the observer about it.
+        if (queryStoreValue.graphQLErrors || queryStoreValue.networkError) {
+          const apolloError = new ApolloError({
+            graphQLErrors: queryStoreValue.graphQLErrors,
+            networkError: queryStoreValue.networkError,
+          });
           if (observer.error) {
-            observer.error(queryStoreValue.networkError);
+            observer.error(apolloError);
           } else {
-            console.error('Unhandled network error',
-                          queryStoreValue.networkError,
-                          queryStoreValue.networkError.stack);
+            console.error('Unhandled error', apolloError, apolloError.stack);
           }
         } else {
           const resultFromStore = readSelectionSetFromStore({

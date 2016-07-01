@@ -14,6 +14,11 @@ import {
   Name,
 } from 'graphql';
 
+import {
+  getDirectiveArgs,
+  validateSelectionDirectives,
+} from '../queries/directives';
+
 import includes = require('lodash.includes');
 
 type ScalarValue = StringValue | BooleanValue;
@@ -71,19 +76,13 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
 
 export function storeKeyNameFromField(field: Field, variables?: Object, quietArguments?: string[]): string {
   if (field.arguments && field.arguments.length) {
+    validateSelectionDirectives(field, variables);
     const argObj: Object = {};
 
+    const fetchMoreArgs = getDirectiveArgs(field, 'apolloFetchMore', variables);
     let localQuietArguments = [];
-    const fetchMoreDirective = field.directives
-    .filter(dir => dir.name.value === 'apolloFetchMore')[0] || null;
-    if (fetchMoreDirective) {
-      const localQuietArg = fetchMoreDirective.arguments
-      .filter(arg => arg.name.value === 'quiet')[0] || null;
-      if (localQuietArg && localQuietArg.value.kind === 'StringValue') {
-        localQuietArguments = (localQuietArg.value as StringValue).value.split(',');
-      } else if (localQuietArg && localQuietArg.value.kind === 'Variable') {
-        localQuietArguments = variables[(localQuietArg.value as Variable).name.value].split(',');
-      }
+    if (fetchMoreArgs) {
+      localQuietArguments = fetchMoreArgs.quiet;
     }
 
     const allQuietArgs = [].concat(quietArguments, localQuietArguments);

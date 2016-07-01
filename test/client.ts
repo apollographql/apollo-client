@@ -2,7 +2,7 @@ import * as chai from 'chai';
 const { assert } = chai;
 import * as sinon from 'sinon';
 
-import ApolloClient from '../src';
+import ApolloClient, { printAST } from '../src';
 
 import {
   GraphQLError,
@@ -983,5 +983,14 @@ describe('client', () => {
       clock.tick(0);
       return outerPromise;
     });
+  });
+
+  it('should expose a method called printAST that is prints graphql queries', () => {
+    const query = gql`
+      query {
+        fortuneCookie
+      }`;
+
+    assert.equal(printAST(query), print(query));
   });
 });

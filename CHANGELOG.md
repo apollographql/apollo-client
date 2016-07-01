@@ -3,7 +3,20 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
 - Added support for query composition through fragments [Issue #338](https://github.com/apollostack/apollo-client/issues/338) and [PR #343](https://github.com/apollostack/apollo-client/pull/343)
+- **Add `refetchMore` method for for infinite scroll in pagination**
+  - There are 3 places where you can define pagination options to control the `refetchMore` call: the query directives, the `refetchMore` call itself, the query options.
+  - We added an `@apolloFetchMore` directive signaling a list that can be infinitely paginated this directive supports the following arguments:
+    - `name: string`: name the directive to reference it in the query/`refetchMore` call
+    - `quiet: string`: define the arguments (separated by commas) in this field that should be ignored in the store (therefore authorizing fields like `cursor`)
+    - `prepend: boolean`: instead of appending the results (default behavior), prepend them (like in a chat!)
+    - `orderBy: string`: order by a sub-field name before saving it into the store
+    - `desc: boolean`: Associated with `orderBy`, will order by descending order
+  - Then, the query options and the `refetchMore` call (biggest priority) will introduce control:
+    - `mergeResults: Function|{[name: string]: Function}`: Defines a way to merge new results into old results. It can reference precise directives.
+    - `quietArguments: string[]`: Arguments that will always be made quiet whatever the field and/or directive is. Outside of paginated calls, this lets you preserve the store the way you want.
+    - `targetedFetchMoreDirectives: string[]`: References (directives) on which to fetch more!
 
 ### v0.3.26
 

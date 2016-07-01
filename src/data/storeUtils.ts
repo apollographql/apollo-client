@@ -14,6 +14,11 @@ import {
   Name,
 } from 'graphql';
 
+import {
+  getDirectiveArgs,
+  validateSelectionDirectives,
+} from '../queries/directives';
+
 import includes = require('lodash.includes');
 
 type ScalarValue = StringValue | BooleanValue;
@@ -69,12 +74,22 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
   }
 }
 
-export function storeKeyNameFromField(field: Field, variables?: Object): string {
+export function storeKeyNameFromField(field: Field, variables?: Object, quietArguments?: string[]): string {
   if (field.arguments && field.arguments.length) {
+    validateSelectionDirectives(field, variables);
     const argObj: Object = {};
 
-    field.arguments.forEach(({name, value}) => valueToObjectRepresentation(
-      argObj, name, value, variables));
+    const fetchMoreArgs = getDirectiveArgs(field, 'apolloFetchMore', variables);
+    let localQuietArguments = [];
+    if (fetchMoreArgs) {
+      localQuietArguments = fetchMoreArgs.quiet;
+    }
+
+    const allQuietArgs = [].concat(quietArguments, localQuietArguments);
+    field.arguments.forEach(({name, value}) =>
+      allQuietArgs.indexOf(name.value) < 0 ?
+        valueToObjectRepresentation(argObj, name, value, variables) :
+        null);
 
     return storeKeyNameFromFieldNameAndArgs(field.name.value, argObj);
   }

@@ -77,6 +77,10 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMap: queryStoreValue.fragmentMap,
+        quietArguments: queryStoreValue.quietArguments,
+        fetchMore: queryStoreValue.fetchMore,
+        mergeResults: queryStoreValue.mergeResults,
+        targetedFetchMoreDirectives: queryStoreValue.targetedFetchMoreDirectives,
       });
 
       return newState;

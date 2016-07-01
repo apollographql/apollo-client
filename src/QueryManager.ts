@@ -93,17 +93,31 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 
 export interface QuerySubscription extends Subscription {
   refetch(variables?: any): Promise<GraphQLResult>;
+  refetchMore(methodOptions: {
+    variables: any,
+    mergeResults?: MergeResultsType,
+    targetedFetchMoreDirectives?: string[],
+  }): Promise<GraphQLResult>;
   stopPolling(): void;
   startPolling(pollInterval: number): void;
 }
+
+export type MergeResultsFunction = (existingArr: any[], newArr: any[]) => any[];
+
+export type MergeResultsType = MergeResultsFunction
+                             | {[fetchMoreDirectiveName: string]: MergeResultsFunction};
 
 export interface WatchQueryOptions {
   query: Document;
   variables?: { [key: string]: any };
   forceFetch?: boolean;
+  fetchMore?: boolean;
   returnPartialData?: boolean;
   pollInterval?: number;
   fragments?: FragmentDefinition[];
+  quietArguments?: string[];
+  mergeResults?: MergeResultsType;
+  targetedFetchMoreDirectives?: string[];
 }
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
@@ -287,6 +301,7 @@ export class QueryManager {
             variables: queryStoreValue.variables,
             returnPartialData: options.returnPartialData,
             fragmentMap: queryStoreValue.fragmentMap,
+            quietArguments: queryStoreValue.quietArguments,
           });
 
           if (observer.next) {
@@ -324,7 +339,18 @@ export class QueryManager {
           // Use the same options as before, but with new variables and forceFetch true
           return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
+            fetchMore: false,
             variables,
+          }) as WatchQueryOptions);
+        },
+        refetchMore: (methodOptions: {
+          variables: any,
+          mergeResults?: MergeResultsType,
+          targetedFetchMoreDirectives?: string[],
+        }): Promise<GraphQLResult> => {
+          return this.fetchQuery(queryId, assign(options, methodOptions, {
+            forceFetch: true,
+            fetchMore: true,
           }) as WatchQueryOptions);
         },
         stopPolling: (): void => {
@@ -379,6 +405,7 @@ export class QueryManager {
               variables: queryStoreValue.variables,
               returnPartialData: options.returnPartialData,
               fragmentMap: queryStoreValue.fragmentMap,
+              quietArguments: queryStoreValue.quietArguments,
             });
 
             if (observer.next) {
@@ -521,8 +548,12 @@ export class QueryManager {
       query,
       variables,
       forceFetch = false,
+      fetchMore = false,
       returnPartialData = false,
       fragments = [],
+      quietArguments = [],
+      mergeResults = null,
+      targetedFetchMoreDirectives = [],
     } = options;
 
     let queryDef = getQueryDefinition(query);
@@ -603,10 +634,14 @@ export class QueryManager {
       minimizedQuery,
       variables,
       forceFetch,
+      fetchMore,
       returnPartialData,
+      quietArguments,
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
+      mergeResults,
+      targetedFetchMoreDirectives,
     });
 
     if (! minimizedQuery || returnPartialData) {
@@ -664,6 +699,7 @@ export class QueryManager {
                 variables,
                 returnPartialData: returnPartialData,
                 fragmentMap: queryFragmentMap,
+                quietArguments: quietArguments,
               });
               // ensure multiple errors don't get thrown
               /* tslint:disable */

@@ -93,7 +93,7 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 
 export interface QuerySubscription extends Subscription {
   refetch(variables?: any): Promise<GraphQLResult>;
-  fetchMore(variables?: any, direction?: 'APPEND'|'PREPEND'): Promise<GraphQLResult>;
+  refetchMore(methodOptions: {variables: any}): Promise<GraphQLResult>;
   stopPolling(): void;
   startPolling(pollInterval: number): void;
 }
@@ -328,18 +328,16 @@ export class QueryManager {
           // Use the same options as before, but with new variables and forceFetch true
           return this.fetchQuery(queryId, assign(options, {
             forceFetch: true,
+            fetchMore: false,
             variables,
           }) as WatchQueryOptions);
         },
-        fetchMore: (variables: any, direction: 'APPEND'|'PREPEND' = 'APPEND'): Promise<GraphQLResult> => {
-          // If no new variables passed, use existing variables
-          variables = variables || options.variables;
-
-          // Use the same options as before, but with new variables and forceFetch true
-          return this.fetchQuery(queryId, assign(options, {
+        refetchMore: (methodOptions: {
+          variables: any,
+        }): Promise<GraphQLResult> => {
+          return this.fetchQuery(queryId, assign(options, methodOptions, {
             forceFetch: true,
-            fetchMore: direction,
-            variables,
+            fetchMore: true,
           }) as WatchQueryOptions);
         },
         stopPolling: (): void => {

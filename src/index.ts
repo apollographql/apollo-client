@@ -100,7 +100,9 @@ export function createFragment(doc: Document, fragments: FragmentDefinition[] = 
       // this is a problem because the app developer is trying to register another fragment with
       // the same name as one previously registered. So, we tell them about it.
       if (printFragmentWarnings) {
-        console.warn(`Warning: fragment with name ${fragmentDefinition.name.value} already exists.`);
+        console.warn(`Warning: fragment with name ${fragmentDefinition.name.value} already exists.
+Apollo Client enforces all fragment names across your application to be unique; read more about
+this in the docs: http://docs.apollostack.com/`);
       }
 
       fragmentDefinitionsMap[fragmentName].push(fragmentDefinition);
@@ -113,10 +115,14 @@ export function createFragment(doc: Document, fragments: FragmentDefinition[] = 
 }
 
 // This function disables the warnings printed about fragment names. One place where this chould be
-// is called when writing unit tests that depend on Apollo Client and use named fragments that may
-// have the Nsame name across different unit tests.
+// called is within writing unit tests that depend on Apollo Client and use named fragments that may
+// have the same name across different unit tests.
 export function disableFragmentWarnings() {
   printFragmentWarnings = false;
+}
+
+export function enableFragmentWarnings() {
+  printFragmentWarnings = true;
 }
 
 // This function is used to be empty the namespace of fragment definitions. Used for unit tests.

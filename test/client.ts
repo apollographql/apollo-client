@@ -8,6 +8,7 @@ import ApolloClient, {
   clearFragmentDefinitions,
   disableFragmentWarnings,
   printAST,
+  enableFragmentWarnings,
 } from '../src';
 
 import {
@@ -59,6 +60,9 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
+
+// Turn off warnings for repeated fragment names
+disableFragmentWarnings();
 
 describe('client', () => {
   it('does not require any arguments and creates store lazily', () => {
@@ -1107,7 +1111,7 @@ describe('client', () => {
 
       // hacky solution that allows us to test whether the warning is printed
       const oldWarn = console.warn;
-      console.warn = (str) => {
+      console.warn = (str, vals) => {
         assert.include(str, 'Warning: fragment with name');
       };
 
@@ -1118,6 +1122,8 @@ describe('client', () => {
     });
 
     it('should issue a warning if we try query with a conflicting fragment name', (done) => {
+      enableFragmentWarnings();
+
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface(),
       });
@@ -1146,9 +1152,13 @@ describe('client', () => {
         done();
       };
       client.query({ query: queryDoc });
+
+      disableFragmentWarnings();
     });
 
     it('should issue a warning if we try to watchQuery with a conflicting fragment name', (done) => {
+      enableFragmentWarnings();
+
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface(),
       });
@@ -1177,6 +1187,8 @@ describe('client', () => {
         done();
       };
       client.watchQuery({ query: queryDoc });
+
+      disableFragmentWarnings();
     });
 
     it('should allow passing fragments to query', (done) => {

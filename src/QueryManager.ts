@@ -258,8 +258,10 @@ export class QueryManager {
 
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
-  public queryListenerForObserver(options: WatchQueryOptions,
-                                  observer: Observer<GraphQLResult>): QueryListener {
+  public queryListenerForObserver(
+    options: WatchQueryOptions,
+    observer: Observer<GraphQLResult>
+  ): QueryListener {
     return (queryStoreValue: QueryStoreValue) => {
       if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
         // XXX Currently, returning errors and data is exclusive because we
@@ -418,7 +420,7 @@ export class QueryManager {
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
-      return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
+    return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
   }
 
   public generateQueryId() {
@@ -510,9 +512,11 @@ export class QueryManager {
     });
   }
 
-  private fetchQueryOverInterface(queryId: string,
-  options: WatchQueryOptions,
-  network: NetworkInterface): Promise<GraphQLResult> {
+  private fetchQueryOverInterface(
+    queryId: string,
+    options: WatchQueryOptions,
+    network: NetworkInterface
+  ): Promise<GraphQLResult> {
     const {
       query,
       variables,

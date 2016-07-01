@@ -102,7 +102,7 @@ export interface WatchQueryOptions {
   query: Document;
   variables?: { [key: string]: any };
   forceFetch?: boolean;
-  fetchMore?: 'APPEND'|'PREPEND';
+  fetchMore?: boolean;
   returnPartialData?: boolean;
   pollInterval?: number;
   fragments?: FragmentDefinition[];

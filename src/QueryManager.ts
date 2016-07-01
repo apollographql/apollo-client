@@ -93,7 +93,11 @@ export class ObservableQuery extends Observable<GraphQLResult> {
 
 export interface QuerySubscription extends Subscription {
   refetch(variables?: any): Promise<GraphQLResult>;
-  refetchMore(methodOptions: {variables: any}): Promise<GraphQLResult>;
+  refetchMore(methodOptions: {
+    variables: any,
+    mergeResults?: MergeResultsType,
+    targetedFetchMoreDirectives?: string[],
+  }): Promise<GraphQLResult>;
   stopPolling(): void;
   startPolling(pollInterval: number): void;
 }
@@ -341,6 +345,8 @@ export class QueryManager {
         },
         refetchMore: (methodOptions: {
           variables: any,
+          mergeResults?: MergeResultsType,
+          targetedFetchMoreDirectives?: string[],
         }): Promise<GraphQLResult> => {
           return this.fetchQuery(queryId, assign(options, methodOptions, {
             forceFetch: true,
@@ -546,6 +552,8 @@ export class QueryManager {
       returnPartialData = false,
       fragments = [],
       quietArguments = [],
+      mergeResults = null,
+      targetedFetchMoreDirectives = [],
     } = options;
 
     let queryDef = getQueryDefinition(query);
@@ -632,6 +640,8 @@ export class QueryManager {
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
+      mergeResults,
+      targetedFetchMoreDirectives,
     });
 
     if (! minimizedQuery || returnPartialData) {

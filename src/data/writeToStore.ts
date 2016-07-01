@@ -46,7 +46,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
-import { MergeResultsType } from '../QueryManager';
+import {
+  MergeResultsType,
+  MergeResultsFunction,
+ } from '../QueryManager';
 
 // import {
 //   printAST,
@@ -315,8 +318,11 @@ function writeFieldToStore({
           included: true,
           quietArguments,
         });
-        // TODO: use the right merging function
-        if (fetchMore) {
+        if (mergeResults && mergeResults[fetchMoreDirectiveName]) {
+          value = mergeResults[fetchMoreDirectiveName](currentlyStoredValues, value);
+        } else if (typeof mergeResults === 'function') {
+          value = (mergeResults as MergeResultsFunction)(currentlyStoredValues, value);
+        } else {
           value = [].concat(currentlyStoredValues, value);
         }
       }

@@ -22,6 +22,8 @@ import {
   GraphQLError,
 } from 'graphql';
 
+import { MergeResultsType } from '../QueryManager';
+
 import assign = require('lodash.assign');
 
 export interface QueryStore {
@@ -38,11 +40,13 @@ export interface QueryStoreValue {
   networkError: Error;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
-  fetchMore?: boolean;
+  fetchMore: boolean;
   returnPartialData: boolean;
   quietArguments: string[];
   lastRequestId: number;
   fragmentMap: FragmentMap;
+  mergeResults: MergeResultsType;
+  targetedFetchMoreDirectives: string[];
 }
 
 export interface SelectionSetWithRoot {
@@ -76,6 +80,8 @@ export function queries(
       quietArguments: action.quietArguments,
       lastRequestId: action.requestId,
       fragmentMap: action.fragmentMap,
+      mergeResults: action.mergeResults,
+      targetedFetchMoreDirectives: action.targetedFetchMoreDirectives,
     };
 
     return newState;

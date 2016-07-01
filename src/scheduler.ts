@@ -17,6 +17,7 @@ import {
   WatchQueryOptions,
   QueryManager,
   QueryListener,
+  MergeResultsType,
 } from './QueryManager';
 
 import assign = require('lodash.assign');
@@ -123,6 +124,8 @@ export class QueryScheduler {
 
         refetchMore: (methodOptions: {
           variables: any,
+          mergeResults?: MergeResultsType,
+          targetedFetchMoreDirectives?: string[],
         }): Promise<GraphQLResult> => {
           return this.fetchQuery(queryId, assign(options, methodOptions, {
             forceFetch: true,

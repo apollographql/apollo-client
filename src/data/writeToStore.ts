@@ -41,6 +41,8 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import { MergeResultsType } from '../QueryManager';
+
 // import {
 //   printAST,
 // } from './debug';
@@ -63,6 +65,8 @@ export function writeFragmentToStore({
   dataIdFromObject = null,
   quietArguments,
   fetchMore,
+  mergeResults,
+  targetedFetchMoreDirectives,
 }: {
   result: Object,
   fragment: Document,
@@ -71,6 +75,8 @@ export function writeFragmentToStore({
   dataIdFromObject?: IdGetter,
   quietArguments?: string[],
   fetchMore?: boolean,
+  mergeResults?: MergeResultsType,
+  targetedFetchMoreDirectives?: string[],
 }): NormalizedCache {
   // Argument validation
   if (!fragment) {
@@ -93,6 +99,8 @@ export function writeFragmentToStore({
     dataIdFromObject,
     quietArguments,
     fetchMore,
+    mergeResults,
+    targetedFetchMoreDirectives,
   });
 }
 
@@ -104,6 +112,8 @@ export function writeQueryToStore({
   dataIdFromObject = null,
   quietArguments,
   fetchMore,
+  mergeResults,
+  targetedFetchMoreDirectives,
 }: {
   result: Object,
   query: Document,
@@ -112,6 +122,8 @@ export function writeQueryToStore({
   dataIdFromObject?: IdGetter,
   quietArguments?: string[],
   fetchMore?: boolean,
+  mergeResults?: MergeResultsType,
+  targetedFetchMoreDirectives?: string[],
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
@@ -124,6 +136,8 @@ export function writeQueryToStore({
     dataIdFromObject,
     quietArguments,
     fetchMore,
+    mergeResults,
+    targetedFetchMoreDirectives,
   });
 }
 
@@ -137,6 +151,8 @@ export function writeSelectionSetToStore({
   fragmentMap,
   quietArguments,
   fetchMore,
+  mergeResults,
+  targetedFetchMoreDirectives,
 }: {
   dataId: string,
   result: any,
@@ -147,6 +163,8 @@ export function writeSelectionSetToStore({
   fragmentMap?: FragmentMap,
   quietArguments?: string[],
   fetchMore?: boolean,
+  mergeResults?: MergeResultsType,
+  targetedFetchMoreDirectives?: string[],
 }): NormalizedCache {
 
   if (!fragmentMap) {
@@ -180,6 +198,8 @@ export function writeSelectionSetToStore({
           fragmentMap,
           quietArguments,
           fetchMore,
+          mergeResults,
+          targetedFetchMoreDirectives,
         });
       }
     } else if (isInlineFragment(selection)) {
@@ -194,6 +214,8 @@ export function writeSelectionSetToStore({
         fragmentMap,
         quietArguments,
         fetchMore,
+        mergeResults,
+        targetedFetchMoreDirectives,
       });
     } else {
       //look up the fragment referred to in the selection
@@ -212,6 +234,8 @@ export function writeSelectionSetToStore({
         fragmentMap,
         quietArguments,
         fetchMore,
+        mergeResults,
+        targetedFetchMoreDirectives,
       });
 
       //throw new Error('Non-inline fragments not supported.');
@@ -231,6 +255,8 @@ function writeFieldToStore({
   fragmentMap,
   quietArguments,
   fetchMore,
+  mergeResults,
+  targetedFetchMoreDirectives,
 }: {
   field: Field,
   value: any,
@@ -241,6 +267,8 @@ function writeFieldToStore({
   fragmentMap?: FragmentMap,
   quietArguments?: string[],
   fetchMore?: boolean,
+  mergeResults?: MergeResultsType,
+  targetedFetchMoreDirectives?: string[],
 }) {
   let storeValue;
 
@@ -265,7 +293,6 @@ function writeFieldToStore({
         fragmentMap,
         included: true,
         quietArguments,
-
       });
       // TODO: use the right merging function
       if (fetchMore) {
@@ -299,6 +326,8 @@ function writeFieldToStore({
           fragmentMap,
           quietArguments,
           fetchMore,
+          mergeResults,
+          targetedFetchMoreDirectives,
         });
       }
     });
@@ -326,6 +355,8 @@ function writeFieldToStore({
       fragmentMap,
       quietArguments,
       fetchMore,
+      mergeResults,
+      targetedFetchMoreDirectives,
     });
 
     storeValue = valueDataId;

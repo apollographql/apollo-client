@@ -5,6 +5,7 @@
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
   "scripts": {
+    "dev": "./scripts/dev.sh",
     "deploy": "rm -rf ./lib && npm run compile && ./scripts/deploy.sh",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
@@ -65,6 +66,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^5.2.0",
     "colors": "^1.1.2",
+    "concurrently": "^2.1.0",
     "dataloader": "^1.1.0",
     "es6-promise": "^3.1.2",
     "grunt": "1.0.1",
@@ -77,6 +79,7 @@
     "lodash.omit": "^4.2.1",
     "minimist": "^1.2.0",
     "mocha": "^2.3.3",
+    "nodemon": "^1.9.2",
     "pretty-bytes": "^3.0.1",
     "remap-istanbul": "^0.5.1",
     "request-promise": "^2.0.1",

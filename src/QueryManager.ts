@@ -272,6 +272,12 @@ export class QueryManager {
     observer: Observer<GraphQLResult>
   ): QueryListener {
     return (queryStoreValue: QueryStoreValue) => {
+      // The query store value can be undefined in the event of a store
+      // reset.
+      if (!queryStoreValue) {
+        return;
+      }
+
       if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
         // XXX Currently, returning errors and data is exclusive because we
         // don't handle partial results
@@ -335,46 +341,8 @@ export class QueryManager {
         this.addQuerySubscription(queryId, retQuerySubscription);
       }
 
-      this.startQuery(queryId, options, (queryStoreValue: QueryStoreValue) => {
-        // we could get back an empty store value if the store was reset while this
-        // query was still in flight. In this circumstance, we are no longer concerned
-        // with the return value of that particular instance of the query.
-        if (!queryStoreValue) {
-          return;
-        }
+      this.startQuery(queryId, options, this.queryListenerForObserver(options, observer));
 
-        if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
-          // XXX Currently, returning errors and data is exclusive because we
-          // don't handle partial results
-          if (queryStoreValue.graphQLErrors) {
-            if (observer.next) {
-              observer.next({ errors: queryStoreValue.graphQLErrors });
-            }
-          } else if (queryStoreValue.networkError) {
-            // XXX we might not want to re-broadcast the same error over and over if it didn't change
-            if (observer.error) {
-              observer.error(queryStoreValue.networkError);
-            } else {
-              console.error('Unhandled network error',
-                queryStoreValue.networkError,
-                queryStoreValue.networkError.stack);
-            }
-          } else {
-            const resultFromStore = readSelectionSetFromStore({
-              store: this.getApolloState().data,
-              rootId: queryStoreValue.query.id,
-              selectionSet: queryStoreValue.query.selectionSet,
-              variables: queryStoreValue.variables,
-              returnPartialData: options.returnPartialData,
-              fragmentMap: queryStoreValue.fragmentMap,
-            });
-
-            if (observer.next) {
-              observer.next({ data: resultFromStore });
-            }
-          }
-        }
-      });
       return retQuerySubscription;
     };
 
@@ -474,6 +442,7 @@ export class QueryManager {
     reject: (error: Error) => void) {
     this.fetchQueryPromises[requestId.toString()] = { promise, resolve, reject };
   }
+
 
   // Removes the promise in this.fetchQueryPromises for a particular request ID.
   public removeFetchQueryPromise(requestId: number) {

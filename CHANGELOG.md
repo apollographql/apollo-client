@@ -5,18 +5,24 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 - Made sure `diffSelectionSetAgainstStore` will return any available data from the local cache if `throwOnMissingField` is `false`, even if some fields in the query are missing. This also means that the `returnPartialData` option of `watchQuery` will return partial data if some fields are missing in the cache, rather than an empty object. [Issue #359](https://github.com/apollostack/apollo-client/issues/359) and [PR #360](https://github.com/apollostack/apollo-client/pull/360).
+- **Add `refetchMore` method for for infinite scroll in pagination**
+  - There are 3 places where you can define pagination options to control the `refetchMore` call: the query directives, the `refetchMore` call itself, the query options.
+  - We added an `@apolloFetchMore` directive signaling a list that can be infinitely paginated this directive supports the following arguments:
+    - `name: string`: name the directive to reference it in the query/`refetchMore` call
+    - `quiet: string`: define the arguments (separated by commas) in this field that should be ignored in the store (therefore authorizing fields like `cursor`)
+    - `prepend: boolean`: instead of appending the results (default behavior), prepend them (like in a chat!)
+    - `orderBy: string`: order by a sub-field name before saving it into the store
+    - `desc: boolean`: Associated with `orderBy`, will order by descending order
+  - Then, the query options and the `refetchMore` call (biggest priority) will introduce control:
+    - `mergeResults: Function|{[name: string]: Function}`: Defines a way to merge new results into old results. It can reference precise directives.
+    - `quietArguments: string[]`: Arguments that will always be made quiet whatever the field and/or directive is. Outside of paginated calls, this lets you preserve the store the way you want.
+    - `targetedFetchMoreDirectives: string[]`: References (directives) on which to fetch more!
 
 ### v0.3.27
 
 - Removed dependency on `graphql` npm package, which was causing compilation errors in the React Native bundler. Issues [#261](https://github.com/apollostack/apollo-client/issues/261) [#163](https://github.com/apollostack/apollo-client/issues/163), [PR #357](https://github.com/apollostack/apollo-client/pull/357)
 - Added support for query composition through fragments [Issue #338](https://github.com/apollostack/apollo-client/issues/338) and [PR #343](https://github.com/apollostack/apollo-client/pull/343)
-- **Add `fetchMore` method for for infinite scroll in pagination**
-  - This is done by adding to the watched query a `quietArguments` array
-    that lists all parameters used for pagination that will not be re-inflated
-    in the `itemDataId` in the store.
-  - `fetchMore` sets a `forceFetch` alongside a `fetchMore` in the new query
-    performed. That way, we force data retrieval but indicate to concatenate
-    results under the same `itemDataId` in the store.
+
 
 ### v0.3.26
 

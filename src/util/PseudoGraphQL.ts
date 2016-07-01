@@ -24,12 +24,24 @@ export class GraphQLNonNull {
   }
 }
 
+export class GraphQLList {
+  private ofType: GraphQLScalarType;
+
+  constructor(type: GraphQLScalarType) {
+    this.ofType = type;
+  }
+
+  public toString(): string {
+    return '[' + this.ofType.toString() + ']';
+  }
+}
+
 export const GraphQLString = new GraphQLScalarType('String');
 export const GraphQLBoolean = new GraphQLScalarType('Boolean');
 
 export interface GraphQLArgument {
   name: string;
-  type: GraphQLScalarType|GraphQLNonNull;
+  type: GraphQLScalarType|GraphQLNonNull|GraphQLList;
   description?: string;
 }
 

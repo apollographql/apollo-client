@@ -959,7 +959,7 @@ describe('QueryManager', () => {
   it('allows you to fetch more in queries by defining the quiet fields in the directive', (done) => {
     const query = gql`
       query fetch_people($latest_name: String, $type: String) {
-        all_people(latest_name: $latest_name, type: $type) @apolloFetchMore(quiet: "latest_name") {
+        all_people(latest_name: $latest_name, type: $type) @apolloFetchMore(quiet: ["latest_name"]) {
           name
         }
       }

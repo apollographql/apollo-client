@@ -879,7 +879,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('allows you to fetch more in queries with the default behavior', (done) => {
+  it('allows you to fetch more in queries with the default behavior (append)', (done) => {
     const query = gql`
       query fetch_people($latest_name: String, $type: String) {
         all_people(latest_name: $latest_name, type: $type) @apolloFetchMore {
@@ -1116,6 +1116,165 @@ describe('QueryManager', () => {
                 tags: [].concat(data1.all_people[0].tags, data2.all_people[0].tags),
               },
             ],
+          });
+          done();
+        }
+      },
+    });
+  });
+
+  it('allows you to fetch more in queries with the a special global behavior', (done) => {
+    const query = gql`
+      query fetch_people($latest_name: String, $type: String) {
+        all_people(latest_name: $latest_name, type: $type) @apolloFetchMore {
+          name
+        }
+      }
+    `;
+
+    const variables1 = {
+      type: 'Jedi',
+      latest_name: null,
+    };
+
+    const variables2 = {
+      type: 'Jedi',
+      latest_name: 'Luke Skywalker',
+    };
+
+    const data1 = {
+      all_people: [
+        {
+          name: 'Luke Skywalker',
+        },
+      ],
+    };
+
+    const data2 = {
+      all_people: [
+        {
+          name: 'Obi-Wan Kenobi',
+        },
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query, variables: variables1 },
+        result: { data: data1 },
+      },
+      {
+        request: { query, variables: variables2 },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    let handleCount = 0;
+
+    const handle = queryManager.watchQuery({
+      query,
+      quietArguments: ['latest_name'],
+      variables: variables1,
+      mergeResults: (oldArr, newArr) => [].concat(newArr, oldArr),
+    });
+
+    const subscription = handle.subscribe({
+      next(result) {
+        handleCount++;
+
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          subscription.refetchMore({variables: variables2});
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, {
+            all_people: [].concat(data2.all_people, data1.all_people),
+          });
+          done();
+        }
+      },
+    });
+  });
+
+  it('allows you to fetch more in queries with the a special behavior for a named directive', (done) => {
+    const query = gql`
+      query fetch_people($latest_name: String, $type: String) {
+        all_people(latest_name: $latest_name, type: $type) @apolloFetchMore(name: "all_people") {
+          name
+        }
+      }
+    `;
+
+    const variables1 = {
+      type: 'Jedi',
+      latest_name: null,
+    };
+
+    const variables2 = {
+      type: 'Jedi',
+      latest_name: 'Luke Skywalker',
+    };
+
+    const data1 = {
+      all_people: [
+        {
+          name: 'Luke Skywalker',
+        },
+      ],
+    };
+
+    const data2 = {
+      all_people: [
+        {
+          name: 'Obi-Wan Kenobi',
+        },
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query, variables: variables1 },
+        result: { data: data1 },
+      },
+      {
+        request: { query, variables: variables2 },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    let handleCount = 0;
+
+    const handle = queryManager.watchQuery({
+      query,
+      quietArguments: ['latest_name'],
+      variables: variables1,
+      mergeResults: {
+        empty: (oldArr, newArr) => [],
+        all_people: (oldArr, newArr) => [].concat(newArr, oldArr),
+      },
+    });
+
+    const subscription = handle.subscribe({
+      next(result) {
+        handleCount++;
+
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          subscription.refetchMore({variables: variables2});
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, {
+            all_people: [].concat(data2.all_people, data1.all_people),
           });
           done();
         }

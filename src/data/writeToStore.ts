@@ -5,6 +5,7 @@ import assign = require('lodash.assign');
 
 import {
   StringValue,
+  BooleanValue,
   Variable,
 } from 'graphql';
 
@@ -323,7 +324,44 @@ function writeFieldToStore({
         } else if (typeof mergeResults === 'function') {
           value = (mergeResults as MergeResultsFunction)(currentlyStoredValues, value);
         } else {
-          value = [].concat(currentlyStoredValues, value);
+          const orderByArg = fetchMoreDirective.arguments
+          .filter(arg => arg.name.value === 'orderBy')[0] || null;
+          let orderByField = null;
+          if (orderByArg && orderByArg.value.kind === 'StringValue') {
+            orderByField = (orderByArg.value as StringValue).value;
+          } else if (orderByArg && orderByArg.value.kind === 'Variable') {
+            orderByField = variables[(orderByArg.value as Variable).name.value];
+          }
+
+          const descArg = fetchMoreDirective.arguments
+          .filter(arg => arg.name.value === 'orderBy')[0] || null;
+          let orderDesc = false;
+          if (descArg && descArg.value.kind === 'BooleanValue') {
+            orderDesc = (descArg.value as BooleanValue).value;
+          } else if (descArg && descArg.value.kind === 'Variable') {
+            orderDesc = variables[(descArg.value as Variable).name.value];
+          }
+
+          const prependArg = fetchMoreDirective.arguments
+          .filter(arg => arg.name.value === 'prepend')[0] || null;
+          let prependMerge = null;
+          if (prependArg && prependArg.value.kind === 'BooleanValue') {
+            prependMerge = (prependArg.value as BooleanValue).value;
+          } else if (prependArg && prependArg.value.kind === 'Variable') {
+            prependMerge = variables[(prependArg.value as Variable).name.value];
+          }
+
+          if (orderByField) {
+            value = [].concat(currentlyStoredValues, value)
+            .sort((a, b) => (orderDesc ?
+              a[orderByField] > b[orderByField] :
+              a[orderByField] < b[orderByField]
+            ) ? 1 : -1);
+          } else if (prependArg) {
+            value = [].concat(value, currentlyStoredValues);
+          } else {
+            value = [].concat(currentlyStoredValues, value);
+          }
         }
       }
     }

@@ -50,6 +50,10 @@ import {
   getFragmentDefinition,
 } from '../src/queries/getFromAST';
 
+import {
+  ApolloError,
+} from '../src/errors';
+
 describe('QueryManager', () => {
   it('properly roundtrips through a Redux store', (done) => {
     const query = gql`
@@ -238,7 +242,7 @@ describe('QueryManager', () => {
       error(apolloError) {
         assert(apolloError);
         done();
-      }
+      },
     });
   });
 
@@ -375,7 +379,9 @@ describe('QueryManager', () => {
         done(new Error('Should not deliver result'));
       },
       error: (error) => {
-        assert.equal(error.message, 'Network error');
+        const apolloError = error as ApolloError;
+        assert(apolloError.networkError);
+        assert.include(apolloError.networkError.message, 'Network error');
         done();
       },
     });

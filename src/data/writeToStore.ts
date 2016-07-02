@@ -290,7 +290,7 @@ function writeFieldToStore({
     validateSelectionDirectives(field, variables);
     // this is an array with sub-objects
     let thisIdList: Array<string> = [];
-    // If we're fetching more, append/prepend existing values
+    // If we're fetching more, append existing values
     const fetchMoreArgs = getDirectiveArgs(field, 'apolloFetchMore', variables);
     if (fetchMore && fetchMoreArgs) {
       if (
@@ -315,11 +315,7 @@ function writeFieldToStore({
         } else if (typeof mergeResults === 'function') {
           value = (mergeResults as MergeResultsFunction)(currentlyStoredValues, value);
         } else {
-          if (fetchMoreArgs.prepend) {
-            value = [].concat(value, currentlyStoredValues);
-          } else {
-            value = [].concat(currentlyStoredValues, value);
-          }
+          value = [].concat(currentlyStoredValues, value);
         }
       }
     }

@@ -54,11 +54,6 @@ const apolloFetchMoreDirective = {
       type: new GraphQLList(GraphQLString),
       description: 'List of field arguments to ignore when writing into the store.',
     },
-    {
-      name: 'prepend',
-      type: GraphQLBoolean,
-      description: 'When adding new elements, prepend into the list instead of appending.',
-    },
   ],
 };
 

@@ -315,13 +315,7 @@ function writeFieldToStore({
         } else if (typeof mergeResults === 'function') {
           value = (mergeResults as MergeResultsFunction)(currentlyStoredValues, value);
         } else {
-          if (fetchMoreArgs.orderBy) {
-            value = [].concat(currentlyStoredValues, value)
-            .sort((a, b) => (fetchMoreArgs.desc ?
-              a[fetchMoreArgs.orderBy] < b[fetchMoreArgs.orderBy] :
-              a[fetchMoreArgs.orderBy] > b[fetchMoreArgs.orderBy]
-            ) ? 1 : -1);
-          } else if (fetchMoreArgs.prepend) {
+          if (fetchMoreArgs.prepend) {
             value = [].concat(value, currentlyStoredValues);
           } else {
             value = [].concat(currentlyStoredValues, value);

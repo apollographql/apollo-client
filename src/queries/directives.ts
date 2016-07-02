@@ -59,16 +59,6 @@ const apolloFetchMoreDirective = {
       type: GraphQLBoolean,
       description: 'When adding new elements, prepend into the list instead of appending.',
     },
-    {
-      name: 'orderBy',
-      type: GraphQLString,
-      description: 'Subfield used for reordering alphabetically the results when new arrives.',
-    },
-    {
-      name: 'desc',
-      type: GraphQLBoolean,
-      description: 'Reverse the order.',
-    },
   ],
 };
 

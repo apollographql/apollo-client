@@ -11,8 +11,6 @@ Expect active development and potentially significant breaking changes in the `0
     - `name: string`: name the directive to reference it in the query/`refetchMore` call
     - `quiet: string`: define the arguments (separated by commas) in this field that should be ignored in the store (therefore authorizing fields like `cursor`)
     - `prepend: boolean`: instead of appending the results (default behavior), prepend them (like in a chat!)
-    - `orderBy: string`: order by a sub-field name before saving it into the store
-    - `desc: boolean`: Associated with `orderBy`, will order by descending order
   - Then, the query options and the `refetchMore` call (biggest priority) will introduce control:
     - `mergeResults: Function|{[name: string]: Function}`: Defines a way to merge new results into old results. It can reference precise directives.
     - `quietArguments: string[]`: Arguments that will always be made quiet whatever the field and/or directive is. Outside of paginated calls, this lets you preserve the store the way you want.

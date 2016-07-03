@@ -30,6 +30,7 @@ sidebar_categories:
     - apollo-server/tools
     - apollo-server/generate-schema
     - apollo-server/resolvers
+    - apollo-server/scalars
     - apollo-server/mocking
     - apollo-server/connectors
     - apollo-server/errors

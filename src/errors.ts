@@ -21,7 +21,11 @@ export class ApolloError extends Error {
     this.graphQLErrors = graphQLErrors;
     this.networkError = networkError;
 
-    this.generateErrorMessage();
+    if (!errorMessage) {
+      this.generateErrorMessage();
+    } else {
+      this.message = errorMessage;
+    }
   }
 
   // Sets the error message on this error according to the
@@ -38,12 +42,12 @@ export class ApolloError extends Error {
     // If we have GraphQL errors present, add that to the error message.
     if (Array.isArray(this.graphQLErrors) && this.graphQLErrors.length !== 0) {
       this.graphQLErrors.forEach((graphQLError) => {
-        message += graphQLError.message + '\n';
+        message += 'GraphQL error: ' + graphQLError.message + '\n';
       });
     }
 
     if (this.networkError) {
-      message += this.networkError.message + '\n';
+      message += 'Network error: ' + this.networkError.message + '\n';
     }
 
     // strip newline from the end of the message

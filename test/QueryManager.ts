@@ -1819,7 +1819,7 @@ describe('QueryManager', () => {
         }
       },
       error: (error) => {
-        assert.equal(error.message, 'Network error');
+        assert.include(error.message, 'Network error');
         subscription.unsubscribe();
       },
     });

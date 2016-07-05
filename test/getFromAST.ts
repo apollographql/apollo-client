@@ -13,7 +13,7 @@ import {
   FragmentDefinition,
   OperationDefinition,
 } from 'graphql';
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql-tag/printer';
 import gql from 'graphql-tag';
 import { assert } from 'chai';
 

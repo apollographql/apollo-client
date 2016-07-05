@@ -39,7 +39,7 @@ import {
   FragmentDefinition,
 } from 'graphql';
 
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql-tag/printer';
 
 import {
   readSelectionSetFromStore,

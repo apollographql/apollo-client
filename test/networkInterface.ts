@@ -21,7 +21,7 @@ import {
 
 import gql from 'graphql-tag';
 
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql-tag/printer';
 
 import { GraphQLResult } from 'graphql';
 

@@ -109,6 +109,54 @@ describe('roundtrip', () => {
       `, {fortuneCookie: 'live long and prosper'});
     });
   });
+
+  describe('inline fragments', () => {
+    it('should resolve on union types with inline fragments', () => {
+      storeRoundtrip(gql`
+        query {
+          all_people {
+            name
+            ... on Jedi {
+              side
+            }
+            ... on Droid {
+              model
+            }
+          }
+        }`, {
+        all_people: [
+          {
+            name: 'Luke Skywalker',
+            side: 'bright',
+          },
+          {
+            name: 'R2D2',
+            model: 'astromech',
+          },
+        ],
+      });
+    });
+
+    it('should resolve on @include and @skip with inline fragments', () => {
+      storeRoundtrip(gql`
+        query {
+          person {
+            name
+            ... on Jedi @include(if: true) {
+              side
+            }
+            ... on Droid @skip(if: true) {
+              model
+            }
+          }
+        }`, {
+        person: {
+          name: 'Luke Skywalker',
+          side: 'bright',
+        },
+      });
+    });
+  });
 });
 
 function storeRoundtrip(query: Document, result, variables = {}) {

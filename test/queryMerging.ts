@@ -20,10 +20,13 @@ import {
 } from '../src/queries/getFromAST';
 
 import {
-  print,
   Field,
   OperationDefinition,
 } from 'graphql';
+
+import {
+  print,
+} from 'graphql-tag/printer';
 
 import gql from 'graphql-tag';
 import { assert } from 'chai';

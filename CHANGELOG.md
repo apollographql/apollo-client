@@ -23,7 +23,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Removed dependency on `graphql` npm package, which was causing compilation errors in the React Native bundler. Issues [#261](https://github.com/apollostack/apollo-client/issues/261) [#163](https://github.com/apollostack/apollo-client/issues/163), [PR #357](https://github.com/apollostack/apollo-client/pull/357)
 - Added support for query composition through fragments [Issue #338](https://github.com/apollostack/apollo-client/issues/338) and [PR #343](https://github.com/apollostack/apollo-client/pull/343)
-- Unified error handling for GraphQL errors and network errors. Both now result in rejected promises and passed as errors on observables through a new `ApolloError` type. This is a significant departure from the previous method of error handling which passed GraphQL errors in resolvers and `next` methods on subscriptions.
+- Introduced a breaking change in the form of unified error handling for GraphQL errors and network errors. Both now result in rejected promises and passed as errors on observables through a new `ApolloError` type. This is a significant departure from the previous method of error handling which passed GraphQL errors in resolvers and `next` methods on subscriptions. [PR #352](https://github.com/apollostack/apollo-client/pull/352)
 
 ### v0.3.26
 

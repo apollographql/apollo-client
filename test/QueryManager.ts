@@ -2542,6 +2542,48 @@ describe('QueryManager', () => {
       });
     });
   });
+
+  describe('inline fragments', () => {
+    it('should resolve on union types with inline fragments', (done) => {
+      const query = gql`
+        query {
+          all_people {
+            name
+            ... on Jedi {
+              side
+            }
+            ... on Droid {
+              model
+            }
+          }
+        }`;
+      const data = {
+        all_people: [
+          {
+            name: 'Luke Skywalker',
+            side: 'bright',
+          },
+          {
+            name: 'R2D2',
+            model: 'astromech',
+          },
+        ],
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface({
+          request: { query },
+          result: { data },
+        }),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      queryManager.fetchQuery('made up id', { query }).then((result) => {
+        assert.deepEqual(result.data, data);
+        done();
+      }).catch(done);
+    });
+  });
 });
 
 function testDiffing(

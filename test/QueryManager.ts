@@ -2476,6 +2476,65 @@ describe('QueryManager', () => {
       });
     });
   });
+
+  it('should reject a fetchQuery promise given a network error', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const networkError = new Error('Network error');
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      error: networkError,
+    });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    queryManager.fetchQuery('fake-id', { query }).then((result) => {
+      done(new Error('Returned result on an errored fetchQuery'));
+    }).catch((error) => {
+      const apolloError = error as ApolloError;
+
+      assert(apolloError.message);
+      assert.equal(apolloError.networkError, networkError);
+      assert(!apolloError.graphQLErrors);
+      done();
+    });
+  });
+
+  it('should reject a fetchQuery promise given a GraphQL error', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const graphQLErrors = [new Error('GraphQL error')];
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { errors: graphQLErrors },
+    });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    queryManager.fetchQuery('fake-id', { query }).then((result) => {
+      done(new Error('Returned result on an errored fetchQuery'));
+    }).catch((error) => {
+      const apolloError = error as ApolloError;
+      assert(apolloError.message);
+      assert.equal(apolloError.graphQLErrors, graphQLErrors);
+      assert(!apolloError.networkError);
+      done();
+    });
+  });
 });
 
 function testDiffing(

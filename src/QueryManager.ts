@@ -639,6 +639,11 @@ export class QueryManager {
             });
 
             this.removeFetchQueryPromise(requestId);
+            if (result.errors) {
+              reject(new ApolloError({
+                graphQLErrors: result.errors,
+              }));
+            }
             return result;
           }).then(() => {
 
@@ -672,7 +677,9 @@ export class QueryManager {
             });
 
             this.removeFetchQueryPromise(requestId);
-            return error;
+            reject(new ApolloError({
+              networkError: error,
+            }));
           });
       });
       return retPromise;

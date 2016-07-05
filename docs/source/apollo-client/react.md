@@ -77,6 +77,7 @@ Basic Apollo version:
 
 ```js
 import { connect } from 'react-apollo';
+import gql from 'graphql-tag';
 
 import Category from '../components/Category';
 

@@ -146,6 +146,8 @@ function fetchUser(id) {
 Okay now that you understand the basics of `thunk`, let's go over dispatching an `Apollo` mutation.
 
 ```js
+import gql from 'graphql-tag';
+
 // let's write a function to generate our mutation params
 // in our example we'll be updating the count of a counter
 function generateMutationObject(id) {

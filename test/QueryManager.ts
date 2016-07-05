@@ -2583,6 +2583,40 @@ describe('QueryManager', () => {
         done();
       }).catch(done);
     });
+
+    it('should resolve on @include and @skip with inline fragments', (done) => {
+      const query = gql`
+        query {
+          person {
+            name
+            ... on Jedi @include(if: true) {
+              side
+            }
+            ... on Droid @skip(if: true) {
+              model
+            }
+          }
+        }`;
+      const data = {
+        person: {
+          name: 'Luke Skywalker',
+          side: 'bright',
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface({
+          request: { query },
+          result: { data },
+        }),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+
+      queryManager.fetchQuery('made up id', { query }).then((result) => {
+        assert.deepEqual(result.data, data);
+        done();
+      }).catch(done);
+    });
   });
 });
 

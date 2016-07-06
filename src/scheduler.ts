@@ -100,47 +100,52 @@ export class QueryScheduler {
     if (!options.pollInterval) {
       throw new Error('Tried to register a non-polling query with the scheduler.');
     }
+    const queryId = this.queryManager.generateQueryId();
+    return new ObservableQuery(
+      (observer) => {
+        console.log('query id subscrip');
+        console.log(queryId);
+        // "Fire" (i.e. add to the QueryBatcher queue)
+        const queryListener = this.queryManager.queryListenerForObserver(options, observer);
+        this.startPollingQuery(options, queryListener, queryId);
 
-    return new ObservableQuery((observer) => {
-      // "Fire" (i.e. add to the QueryBatcher queue)
-      const queryListener = this.queryManager.queryListenerForObserver(options, observer);
-      const queryId = this.startPollingQuery(options, queryListener);
-
-      return {
-        unsubscribe: () => {
-          this.stopPollingQuery(queryId);
-        },
-
-        refetch: (variables: any): Promise<GraphQLResult> => {
-          variables = variables || options.variables;
-          return this.fetchQuery(queryId, assign(options, {
-            forceFetch: true,
-            variables,
-          }) as WatchQueryOptions);
-        },
-
-        startPolling: (pollInterval): void => {
-          this.pollingTimers[queryId] = setInterval(() => {
-            const pollingOptions = assign({}, options) as WatchQueryOptions;
-            pollingOptions.forceFetch = true;
-            this.fetchQuery(queryId, pollingOptions).then(() => {
-              this.removeInFlight(queryId);
-            });
-          }, pollInterval);
-        },
-
-        stopPolling: (): void => {
-          this.stopPollingQuery(queryId);
-        },
-      };
-    });
+        return {
+          unsubscribe: () => {
+            this.stopPollingQuery(queryId);
+          },
+        };
+      },
+      (variables: any) => {
+        console.log('query id refetch');
+        console.log(queryId);
+        variables = variables || options.variables;
+        return this.fetchQuery(queryId, assign(options, {
+          forceFetch: true,
+          variables,
+        }) as WatchQueryOptions);
+      },
+      () => {
+        this.pollingTimers[queryId] = setInterval(() => {
+          const pollingOptions = assign({}, options) as WatchQueryOptions;
+          pollingOptions.forceFetch = true;
+          this.fetchQuery(queryId, pollingOptions).then(() => {
+            this.removeInFlight(queryId);
+          });
+        }, options.pollInterval);
+      },
+      () => {
+        this.stopPollingQuery(queryId);
+      }
+    );
   }
 
   private addInFlight(queryId: string, options: WatchQueryOptions) {
+    console.log("adding in flight");
     this.inFlightQueries[queryId] = options;
   }
 
   private removeInFlight(queryId: string) {
+    console.log("deleting in flight");
     delete this.inFlightQueries[queryId];
   }
 }

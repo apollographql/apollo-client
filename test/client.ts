@@ -14,7 +14,6 @@ import ApolloClient, {
 import {
   GraphQLError,
   OperationDefinition,
-  print,
   GraphQLResult,
 } from 'graphql';
 
@@ -27,6 +26,10 @@ import {
 } from '../src/store';
 
 import gql from 'graphql-tag';
+
+import {
+  print,
+} from 'graphql-tag/printer';
 
 import {
   createStore,

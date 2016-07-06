@@ -7,7 +7,7 @@ import {
   Document,
 } from 'graphql';
 
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql-tag/printer';
 
 import { MiddlewareInterface } from './middleware';
 

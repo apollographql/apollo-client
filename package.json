@@ -38,8 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "es6-promise": "^3.1.2",
-    "graphql": "^0.4.18 || ^0.5.0 || ^0.6.0",
-    "graphql-tag": "^0.1.1",
+    "graphql-tag": "^0.1.8",
     "lodash.assign": "^4.0.8",
     "lodash.clonedeep": "^4.3.2",
     "lodash.countby": "^4.4.0",
@@ -86,7 +85,6 @@
     "rxjs": "^5.0.0-beta.7",
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
-    "swapi-graphql": "^0.0.4",
     "tslint": "3.13.0",
     "typescript": "^1.8.9",
     "typings": "^1.0.0",

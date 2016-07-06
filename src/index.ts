@@ -11,7 +11,7 @@ import {
 
 import {
   print,
-} from 'graphql/language/printer';
+} from 'graphql-tag/printer';
 
 import {
   createApolloStore,

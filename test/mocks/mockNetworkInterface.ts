@@ -7,8 +7,11 @@ import {
 import {
   GraphQLResult,
   Document,
-  print,
 } from 'graphql';
+
+import {
+  print,
+} from 'graphql-tag/printer';
 
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server

@@ -24,6 +24,7 @@ import {
   Field,
   Document,
   Selection,
+  InlineFragment,
 } from 'graphql';
 
 import {
@@ -158,22 +159,25 @@ export function diffSelectionSetAgainstStore({
         result[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {
-      const {
-        result: fieldResult,
-        isMissing: fieldIsMissing,
-      } = diffSelectionSetAgainstStore({
-        selectionSet: selection.selectionSet,
-        throwOnMissingField,
-        variables,
-        rootId,
-        store,
-        fragmentMap,
-      });
+      const included = shouldInclude(selection as InlineFragment, variables);
+      if (included) {
+        const {
+          result: fieldResult,
+          isMissing: fieldIsMissing,
+        } = diffSelectionSetAgainstStore({
+          selectionSet: selection.selectionSet,
+          throwOnMissingField,
+          variables,
+          rootId,
+          store,
+          fragmentMap,
+        });
 
-      if (fieldIsMissing) {
-        pushMissingField(selection);
-      } else {
-        assign(result, fieldResult);
+        if (fieldIsMissing) {
+          pushMissingField(selection);
+        } else {
+          assign(result, fieldResult);
+        }
       }
     } else {
       const fragment = fragmentMap[selection.name.value];

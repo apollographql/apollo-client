@@ -22,6 +22,7 @@ import {
   FragmentDefinition,
   Field,
   Document,
+  InlineFragment,
 } from 'graphql';
 
 import {
@@ -161,16 +162,19 @@ export function writeSelectionSetToStore({
         });
       }
     } else if (isInlineFragment(selection)) {
-      // XXX what to do if this tries to write the same fields? Also, type conditions...
-      writeSelectionSetToStore({
-        result,
-        selectionSet: selection.selectionSet,
-        store,
-        variables,
-        dataId,
-        dataIdFromObject,
-        fragmentMap,
-      });
+      const included = shouldInclude(selection as InlineFragment, variables);
+      if (included) {
+        // XXX what to do if this tries to write the same fields? Also, type conditions...
+        writeSelectionSetToStore({
+          result,
+          selectionSet: selection.selectionSet,
+          store,
+          variables,
+          dataId,
+          dataIdFromObject,
+          fragmentMap,
+        });
+      }
     } else {
       //look up the fragment referred to in the selection
       const fragment = fragmentMap[selection.name.value];

@@ -35,10 +35,8 @@ export class Observable<T> {
     let subscriptionOrCleanupFunction = this.subscriberFunction(observer);
 
     if (isSubscription(subscriptionOrCleanupFunction)) {
-      console.log("is subscrip");
       return subscriptionOrCleanupFunction;
     } else {
-      console.log("is cleanup");
       return {
         unsubscribe: subscriptionOrCleanupFunction,
       };

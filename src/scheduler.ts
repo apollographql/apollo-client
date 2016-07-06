@@ -9,10 +9,6 @@
 // adds queries to the QueryBatcher queue.
 
 import {
-  GraphQLResult,
-} from 'graphql';
-
-import {
   ObservableQuery,
   WatchQueryOptions,
   QueryManager,
@@ -63,9 +59,9 @@ export class QueryScheduler {
     queryId?: string): string {
     if (!queryId) {
       queryId = this.queryManager.generateQueryId();
-      // Fire an initial fetch before we start the polling query
-      this.fetchQuery(queryId, options);
     }
+    // Fire an initial fetch before we start the polling query
+    this.fetchQuery(queryId, options);
     this.queryManager.addQueryListener(queryId, listener);
 
     this.pollingTimers[queryId] = setInterval(() => {
@@ -103,8 +99,6 @@ export class QueryScheduler {
     const queryId = this.queryManager.generateQueryId();
     return new ObservableQuery(
       (observer) => {
-        console.log('query id subscrip');
-        console.log(queryId);
         // "Fire" (i.e. add to the QueryBatcher queue)
         const queryListener = this.queryManager.queryListenerForObserver(options, observer);
         this.startPollingQuery(options, queryListener, queryId);
@@ -116,8 +110,6 @@ export class QueryScheduler {
         };
       },
       (variables: any) => {
-        console.log('query id refetch');
-        console.log(queryId);
         variables = variables || options.variables;
         return this.fetchQuery(queryId, assign(options, {
           forceFetch: true,
@@ -140,12 +132,10 @@ export class QueryScheduler {
   }
 
   private addInFlight(queryId: string, options: WatchQueryOptions) {
-    console.log("adding in flight");
     this.inFlightQueries[queryId] = options;
   }
 
   private removeInFlight(queryId: string) {
-    console.log("deleting in flight");
     delete this.inFlightQueries[queryId];
   }
 }

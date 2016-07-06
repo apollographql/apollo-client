@@ -66,7 +66,7 @@ import {
   QueryScheduler,
 } from './scheduler';
 
-import { Observable, Observer, Subscription, SubscriberFunction } from './util/Observable';
+import { Observable, Observer, Subscription } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
   public subscribe(observer: Observer<GraphQLResult>): QuerySubscription {

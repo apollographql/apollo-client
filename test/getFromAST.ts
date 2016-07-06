@@ -99,7 +99,6 @@ describe('AST utility functions', () => {
       expectedDoc.definitions[0] as FragmentDefinition,
       expectedDoc.definitions[1] as FragmentDefinition,
     ];
-
     const actualResult = getFragmentDefinitions(multipleFragmentDefinitions);
     assert.deepEqual(actualResult.map(print), expectedResult.map(print));
   });

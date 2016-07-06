@@ -122,6 +122,7 @@ export function diffSelectionSetAgainstStore({
   const result = {};
   const missingFields: Selection[] = [];
 
+  let fragmentErrors = [];
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
@@ -161,22 +162,27 @@ export function diffSelectionSetAgainstStore({
     } else if (isInlineFragment(selection)) {
       const included = shouldInclude(selection as InlineFragment, variables);
       if (included) {
-        const {
-          result: fieldResult,
-          isMissing: fieldIsMissing,
-        } = diffSelectionSetAgainstStore({
-          selectionSet: selection.selectionSet,
-          throwOnMissingField,
-          variables,
-          rootId,
-          store,
-          fragmentMap,
-        });
+        try {
+          const {
+            result: fieldResult,
+            isMissing: fieldIsMissing,
+          } = diffSelectionSetAgainstStore({
+            selectionSet: selection.selectionSet,
+            throwOnMissingField,
+            variables,
+            rootId,
+            store,
+            fragmentMap,
+          });
 
-        if (fieldIsMissing) {
-          pushMissingField(selection);
-        } else {
-          assign(result, fieldResult);
+          if (fieldIsMissing) {
+            pushMissingField(selection);
+          } else {
+            assign(result, fieldResult);
+          }
+          fragmentErrors.push(false);
+        } catch (e) {
+          fragmentErrors.push(e);
         }
       }
     } else {
@@ -204,6 +210,10 @@ export function diffSelectionSetAgainstStore({
       }
     }
   });
+
+  if (fragmentErrors.length > 0 && fragmentErrors.filter(e => !e).length === 0) {
+    throw fragmentErrors.some(e => !!e);
+  }
 
   // Set this to true if we don't have enough information at this level to generate a refetch
   // query, so we need to merge the selection set with the parent, rather than appending

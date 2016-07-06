@@ -136,6 +136,7 @@ export function writeSelectionSetToStore({
     fragmentMap = {};
   }
 
+  let fragmentErrors = [];
   selectionSet.selections.forEach((selection) => {
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
@@ -164,16 +165,21 @@ export function writeSelectionSetToStore({
     } else if (isInlineFragment(selection)) {
       const included = shouldInclude(selection as InlineFragment, variables);
       if (included) {
-        // XXX what to do if this tries to write the same fields? Also, type conditions...
-        writeSelectionSetToStore({
-          result,
-          selectionSet: selection.selectionSet,
-          store,
-          variables,
-          dataId,
-          dataIdFromObject,
-          fragmentMap,
-        });
+        try {
+          // XXX what to do if this tries to write the same fields? Also, type conditions...
+          writeSelectionSetToStore({
+            result,
+            selectionSet: selection.selectionSet,
+            store,
+            variables,
+            dataId,
+            dataIdFromObject,
+            fragmentMap,
+          });
+          fragmentErrors.push(false);
+        } catch (e) {
+          fragmentErrors.push(e);
+        }
       }
     } else {
       //look up the fragment referred to in the selection
@@ -195,6 +201,9 @@ export function writeSelectionSetToStore({
       //throw new Error('Non-inline fragments not supported.');
     }
   });
+  if (fragmentErrors.length > 0 && fragmentErrors.filter(e => !e).length === 0) {
+    throw fragmentErrors.some(e => !!e);
+  }
 
   return store;
 }

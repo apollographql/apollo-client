@@ -12,6 +12,8 @@ npm install react-apollo --save
 
 [Follow apollostack/react-apollo on GitHub.](https://github.com/apollostack/react-apollo)
 
+Note: You don't have to do anything special to get Apollo Client to work in React Native, just install and import it as usual.
+
 <h2 id="apollo-provider">ApolloProvider</h2>
 
 Injects an ApolloClient instance into a React view tree.

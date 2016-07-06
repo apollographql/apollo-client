@@ -138,21 +138,28 @@ export function getDirectiveArgs(
   return args;
 }
 
-export function shouldInclude(selection: Selection, variables: { [name: string]: any } = {}): Boolean {
+export function shouldInclude(
+  selection: Selection,
+  variables: Object = {}
+): Boolean {
   validateSelectionDirectives(selection, variables);
 
   let evaledValue: Boolean = true;
 
   const skipArgs = getDirectiveArgs(selection, 'skip', variables);
   const includeArgs = getDirectiveArgs(selection, 'include', variables);
+
   if (includeArgs) {
     evaledValue = includeArgs.if;
   }
+
   if (skipArgs) {
     evaledValue = !skipArgs.if;
   }
+
   if (skipArgs && includeArgs) {
     evaledValue = includeArgs.if && !skipArgs.if;
   }
+
   return evaledValue;
 }

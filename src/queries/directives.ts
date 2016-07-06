@@ -61,7 +61,9 @@ export function validateSelectionDirectives(
 }
 
 export function getDirectiveArgs(
-  selection: Selection, directiveName: string, variables: any = {}
+  selection: Selection,
+  directiveName: string,
+  variables: any = {}
 ): any {
   if (!selection.directives) {
     return null;

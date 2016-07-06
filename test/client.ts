@@ -1417,6 +1417,122 @@ describe('client', () => {
       assert.equal(fragmentDefinitionsMap['authorDetails'].length, 1);
     });
   });
+
+  it('can setup global pagination quietArguments for relay schemas', (done) => {
+    const query = gql`
+      query people($nPeople: Int!, $cursor: ID, $type: String!) {
+        allPeople(type: $type, first: $nPeople, after: $cursor) {
+          edges @apolloFetchMore {
+            node {
+              id
+              name
+            }
+            cursor
+          }
+        }
+      }
+    `;
+
+    const data1 = {
+      allPeople: {
+        edges: [
+          {
+            node: {
+              id: 'id:person:luke',
+              name: 'Luke Skywalker',
+            },
+            cursor: 'cursor:person:luke',
+          },
+        ],
+      },
+    };
+    const variables1 = {
+      nPeople: 1,
+      cursor: null,
+      type: 'Jedi',
+    };
+
+    const data2 = {
+      allPeople: {
+        edges: [
+          {
+            node: {
+              id: 'id:person:obiwan',
+              name: 'Obi-Wan Kenobi',
+            },
+            cursor: 'cursor:person:obiwan',
+          },
+          {
+            node: {
+              id: 'id:person:anakin',
+              name: 'Anakin Skywalker',
+            },
+            cursor: 'cursor:person:anakin',
+          },
+        ],
+      },
+    };
+    const variables2 = {
+      nPeople: 2,
+      cursor: 'cursor:person:luke',
+      type: 'Jedi',
+    };
+
+    const data3 = {
+      allPeople: {
+        edges: [
+          {
+            node: {
+              id: 'id:person:vader',
+              name: 'Darth Vader',
+            },
+            cursor: 'cursor:person:vader',
+          },
+        ],
+      },
+    };
+    const variables3 = {
+      nPeople: 1,
+      cursor: null,
+      type: 'Sith',
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query, variables: variables1 },
+      result: { data: data1 },
+    }, {
+      request: { query, variables: variables2 },
+      result: { data: data2 },
+    }, {
+      request: { query, variables: variables3 },
+      result: { data: data3 },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      quietArguments: ['first', 'last', 'after', 'before'],
+    });
+
+    let handleCount = 0;
+    const subscription = client.watchQuery({ query, variables: variables1 }).subscribe({
+      next(result) {
+        handleCount ++;
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          subscription.refetchMore({
+            variables: variables2,
+          });
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, {
+            allPeople: {
+              edges: [].concat(data1.allPeople.edges, data2.allPeople.edges),
+            },
+          });
+          subscription.refetch(variables3);
+        } else if (handleCount === 3) {
+          assert.deepEqual(result.data, data3);
+          done();
+        }
       },
     });
   });

@@ -26,8 +26,6 @@ function validateDirective(
     if (!isEqual(argKeys, ['if']) || !isBoolean(args['if'])) {
       throw new Error(`Invalid arguments ${JSON.stringify(argKeys)} for the @${directive.name.value} directive.`);
     }
-
-    return;
   }
 
   if (directive.name.value === 'apolloFetchMore') {
@@ -44,11 +42,7 @@ function validateDirective(
     if (args['quiet'] && !isArray(args['quiet'])) {
       throw new Error(`'quiet' argument to @apolloFetchMore must be an array of strings.`);
     }
-
-    return;
   }
-
-  throw new Error(`@${directive.name.value} directive not supported.`);
 }
 
 export function validateSelectionDirectives(

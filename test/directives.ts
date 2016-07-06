@@ -108,16 +108,15 @@ describe('query directives', () => {
     assert.deepEqual(query, queryClone);
   });
 
-  it('throws an error on an unsupported directive', () => {
+  it('let through unknown directives', () => {
     const query = gql`
       query {
         fortuneCookie @dosomething(if: true)
       }`;
+    const queryClone = cloneDeep(query);
     const field = getQueryDefinition(query).selectionSet.selections[0];
-
-    assert.throws(() => {
-      shouldInclude(field, {});
-    });
+    shouldInclude(field, {});
+    assert.deepEqual(query, queryClone);
   });
 
   it('throws an error on an invalid argument for the skip directive', () => {

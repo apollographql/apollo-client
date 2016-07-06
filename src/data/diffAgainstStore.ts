@@ -25,6 +25,7 @@ import {
   Document,
   Selection,
   InlineFragment,
+  FragmentSpread,
 } from 'graphql';
 
 import {
@@ -191,22 +192,30 @@ export function diffSelectionSetAgainstStore({
         throw new Error(`No fragment named ${selection.name.value}`);
       }
 
-      const {
-        result: fieldResult,
-        isMissing: fieldIsMissing,
-      } = diffSelectionSetAgainstStore({
-        selectionSet: fragment.selectionSet,
-        throwOnMissingField,
-        variables,
-        rootId,
-        store,
-        fragmentMap,
-      });
+      const included = shouldInclude(selection as FragmentSpread, variables);
+      if (included) {
+        try {
+          const {
+            result: fieldResult,
+            isMissing: fieldIsMissing,
+          } = diffSelectionSetAgainstStore({
+            selectionSet: fragment.selectionSet,
+            throwOnMissingField,
+            variables,
+            rootId,
+            store,
+            fragmentMap,
+          });
 
-      if (fieldIsMissing) {
-        pushMissingField(selection);
-      } else {
-        assign(result, fieldResult);
+          if (fieldIsMissing) {
+            pushMissingField(selection);
+          } else {
+            assign(result, fieldResult);
+          }
+          fragmentErrors.push(false);
+        } catch (e) {
+          fragmentErrors.push(e);
+        }
       }
     }
   });

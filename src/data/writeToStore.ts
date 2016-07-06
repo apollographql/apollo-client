@@ -23,6 +23,7 @@ import {
   Field,
   Document,
   InlineFragment,
+  FragmentSpread,
 } from 'graphql';
 
 import {
@@ -187,18 +188,23 @@ export function writeSelectionSetToStore({
       if (!fragment) {
         throw new Error(`No fragment named ${selection.name.value}.`);
       }
-
-      writeSelectionSetToStore({
-        result,
-        selectionSet: fragment.selectionSet,
-        store,
-        variables,
-        dataId,
-        dataIdFromObject,
-        fragmentMap,
-      });
-
-      //throw new Error('Non-inline fragments not supported.');
+      const included = shouldInclude(selection as FragmentSpread, variables);
+      if (included) {
+        try {
+          writeSelectionSetToStore({
+            result,
+            selectionSet: fragment.selectionSet,
+            store,
+            variables,
+            dataId,
+            dataIdFromObject,
+            fragmentMap,
+          });
+          fragmentErrors.push(false);
+        } catch (e) {
+          fragmentErrors.push(e);
+        }
+      }
     }
   });
   if (fragmentErrors.length > 0 && fragmentErrors.filter(e => !e).length === 0) {

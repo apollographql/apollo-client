@@ -66,7 +66,9 @@ const DEFAULT_DIRECTIVES: GraphQLDirective[] = [
 ];
 
 function validateDirective(
-  selection: Selection, variables: any, directive: Directive,
+  selection: Selection,
+  variables: Object,
+  directive: Directive,
   availDirectives: GraphQLDirective[]
 ) {
   const matchedDirectiveDef = availDirectives
@@ -109,7 +111,8 @@ function validateDirective(
 }
 
 export function validateSelectionDirectives(
-  selection: Selection, variables: any = {},
+  selection: Selection,
+  variables: Object = {},
   directives: GraphQLDirective[] = DEFAULT_DIRECTIVES
 ) {
   if (selection.directives) {

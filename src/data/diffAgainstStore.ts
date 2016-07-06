@@ -147,14 +147,14 @@ export function diffSelectionSetAgainstStore({
           included: includeField,
         });
 
+      const resultFieldKey = resultKeyNameFromField(selection);
       if (fieldIsMissing) {
         // even if the field is not included, we want to keep it in the
         // query that is sent to the server. So, we push it into the set of
         // fields that is missing.
         pushMissingField(selection);
-      } else if (includeField) {
-        const resultFieldKey = resultKeyNameFromField(selection);
-
+      }
+      if (includeField && fieldResult !== undefined) {
         result[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {

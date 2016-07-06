@@ -1,8 +1,13 @@
 import { assert } from 'chai';
 
-import { diffQueryAgainstStore } from '../src/data/diffAgainstStore';
+import {
+  diffQueryAgainstStore,
+  diffSelectionSetAgainstStore,
+} from '../src/data/diffAgainstStore';
 import { writeQueryToStore } from '../src/data/writeToStore';
 import { printQueryForMissingData } from '../src/queryPrinting';
+import { getQueryDefinition } from '../src/queries/getFromAST';
+
 
 import {
   getIdField,
@@ -278,5 +283,62 @@ describe('diffing queries against the store', () => {
 }
 `);
     assert.deepEqual(store['1'], result.people_one);
+  });
+
+  it('returns available fields if throwOnMissingField is false', () => {
+    const firstQuery = gql`
+      {
+        people_one(id: "1") {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const firstResult = {
+      people_one: {
+        __typename: 'Person',
+        id: 'lukeId',
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const store = writeQueryToStore({
+      result: firstResult,
+      query: firstQuery,
+    });
+
+    const queryWithMissingField = gql`
+      {
+        people_one(id: "1") {
+          name
+          age
+        }
+      }
+    `;
+
+    const { result } = diffSelectionSetAgainstStore({
+      store,
+      rootId: 'ROOT_QUERY',
+      selectionSet: getQueryDefinition(queryWithMissingField).selectionSet,
+      variables: null,
+      throwOnMissingField: false,
+    });
+
+    assert.deepEqual(result, {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    });
+    assert.throws(function() {
+      diffSelectionSetAgainstStore({
+        store,
+        rootId: 'ROOT_QUERY',
+        selectionSet: getQueryDefinition(queryWithMissingField).selectionSet,
+        variables: null,
+        throwOnMissingField: true,
+      });
+    });
   });
 });

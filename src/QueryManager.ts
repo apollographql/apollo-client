@@ -348,6 +348,19 @@ export class QueryManager {
           mergeResults?: MergeResultsType,
           targetedFetchMoreDirectives?: string[],
         }): Promise<GraphQLResult> => {
+          if (options.pollInterval) {
+            // We emit a development-only warning to point out a potential issue
+            if (
+              process.env.NODE_ENV === 'development' ||
+              process.env.NODE_ENV === 'test'
+            ) {
+              console.warn(
+                'Warning: You are trying to refetchMore on a polled query. ' +
+                'Doing so will result to an inpredicatble behavior. ' +
+                'Please control manually your polling instead.'
+              );
+            }
+          }
           return this.fetchQuery(queryId, assign(options, methodOptions, {
             forceFetch: true,
             fetchMore: true,

@@ -1358,6 +1358,84 @@ describe('QueryManager', () => {
     });
   });
 
+  it('warns when trying to fetch more on polled query', (done) => {
+    const query = gql`
+      query fetch_people($latest_name: String, $type: String) {
+        all_people(latest_name: $latest_name, type: $type) @apolloFetchMore {
+          name
+        }
+      }
+    `;
+
+    const variables1 = {
+      type: 'Jedi',
+      latest_name: null,
+    };
+
+    const variables2 = {
+      type: 'Jedi',
+      latest_name: 'Luke Skywalker',
+    };
+
+    const data1 = {
+      all_people: [
+        {
+          name: 'Luke Skywalker',
+        },
+      ],
+    };
+
+    const data2 = {
+      all_people: [
+        {
+          name: 'Obi-Wan Kenobi',
+        },
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query, variables: variables1 },
+        result: { data: data1 },
+      },
+      {
+        request: { query, variables: variables2 },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+      quietArguments: ['latest_name'],
+      variables: variables1,
+      pollInterval: 100000,
+    });
+
+    let handled = false;
+    const subscription = handle.subscribe({
+      next(result) {
+        if (!handled) {
+          handled = true;
+          // hacky solution that allows us to test whether the warning is printed
+          const oldWarn = console.warn;
+          console.warn = (str, vals) => {
+            subscription.unsubscribe();
+            assert.include(str, 'Warning: You are trying to refetchMore on a polled query.');
+            console.warn = oldWarn;
+            done();
+          };
+          subscription.refetchMore({variables: variables2});
+        }
+      },
+    });
+  });
+
   it('supports returnPartialData #193', () => {
     const primeQuery = gql`
       query primeQuery {

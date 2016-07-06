@@ -16,8 +16,11 @@ import {
 } from '../util/PseudoGraphQL';
 
 import {
-  valueToObjectRepresentation,
+  argsToPOJO,
 } from '../data/storeUtils';
+
+import isEqual = require('lodash.isequal');
+import isBoolean = require('lodash.isboolean');
 
 const graphqlSkipDirective = {
   name: 'skip',
@@ -71,6 +74,15 @@ function validateDirective(
   directive: Directive,
   availDirectives: GraphQLDirective[]
 ) {
+  if (directive.name.value === 'skip' || directive.name.value === 'include') {
+    const args = argsToPOJO(directive.arguments, variables);
+    const argKeys = Object.keys(args);
+    if (!isEqual(argKeys, ['if']) || !isBoolean(args['if'])) {
+      throw new Error(`Invalid arguments ${JSON.stringify(argKeys)} for the @${directive.name.value} directive.`);
+    }
+    return;
+  }
+
   const matchedDirectiveDef = availDirectives
   .filter(dirDef => dirDef.name === directive.name.value)[0] || null;
   if (!matchedDirectiveDef) {
@@ -134,11 +146,7 @@ export function getDirectiveArgs(
     return null;
   }
 
-  let args = {};
-  directive.arguments.forEach(arg => {
-    valueToObjectRepresentation(args, arg.name, arg.value, variables);
-  });
-  return args;
+  return argsToPOJO(directive.arguments, variables);
 }
 
 export function shouldInclude(

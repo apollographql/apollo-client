@@ -12,6 +12,7 @@ import {
   Selection,
   GraphQLResult,
   Name,
+  Argument,
 } from 'graphql';
 
 import {
@@ -78,6 +79,16 @@ export function valueToObjectRepresentation(
     throw new Error(`The inline argument "${name.value}" of kind "${value.kind}" is not supported.
                     Use variables instead of inline arguments to overcome this limitation.`);
   }
+}
+
+export function argsToPOJO(graphQLArgs: Argument[], variables: Object): Object {
+  const args = {};
+
+  graphQLArgs.forEach(arg => {
+    valueToObjectRepresentation(args, arg.name, arg.value, variables);
+  });
+
+  return args;
 }
 
 export function storeKeyNameFromField(field: Field, variables?: Object, quietArguments?: string[]): string {

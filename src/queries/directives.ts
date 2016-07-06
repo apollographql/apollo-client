@@ -17,6 +17,10 @@ import {
   GraphQLScalarType,
 } from '../util/PseudoGraphQL';
 
+import {
+  valueToObjectRepresentation,
+} from '../data/storeUtils';
+
 const graphqlSkipDirective = {
   name: 'skip',
   locations: ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGEMENT'],
@@ -128,18 +132,7 @@ export function getDirectiveArgs(
   }
   let args = {};
   directive.arguments.forEach(arg => {
-    let value = arg.value;
-    if (arg.value.kind === 'Variable') {
-      value = variables[(arg.value as Variable).name.value];
-    }
-    if (value.kind === 'ListValue') {
-      args[arg.name.value] = (value as ListValue).values
-      .map(subVal => (subVal as StringValue).value);
-    } else if (value.kind) {
-      args[arg.name.value] = (value as StringValue).value;
-    } else {
-      args[arg.name.value] = value;
-    }
+    valueToObjectRepresentation(args, arg.name, arg.value, variables);
   });
   return args;
 }

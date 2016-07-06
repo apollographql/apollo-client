@@ -47,14 +47,20 @@ function isList(value: Value): value is ListValue {
   return value.kind === 'ListValue';
 }
 
-function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, variables?: Object) {
+export function valueToObjectRepresentation(
+  argObj: Object,
+  name: Name,
+  value: Value,
+  variables?: Object
+) {
   if (isNumberValue(value)) {
     argObj[name.value] = Number(value.value);
   } else if (isScalarValue(value)) {
     argObj[name.value] = value.value;
   } else if (isObject(value)) {
     const nestedArgObj = {};
-    value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
+    value.fields.map((obj) =>
+      valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
     argObj[name.value] = nestedArgObj;
   } else if (isVariable(value)) {
     if (! variables || !(value.name.value in variables)) {

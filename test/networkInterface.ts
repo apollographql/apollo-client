@@ -21,17 +21,9 @@ import {
 
 import gql from 'graphql-tag';
 
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql-tag/printer';
 
 import { GraphQLResult } from 'graphql';
-
-// import {
-//   graphql,
-// } from 'graphql';
-
-/* tslint:disable */
-// const swapiSchema = require('swapi-graphql').schema;
-/* tslint:enable */
 
 describe('network interface', () => {
   before(() => {

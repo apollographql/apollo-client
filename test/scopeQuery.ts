@@ -12,9 +12,12 @@ import {
 import gql from 'graphql-tag';
 
 import {
-  print,
   Document,
 } from 'graphql';
+
+import {
+  print,
+} from 'graphql-tag/printer';
 
 // To test:
 // 1. basic

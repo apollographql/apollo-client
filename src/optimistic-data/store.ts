@@ -9,22 +9,21 @@ import {
   NormalizedCache,
 } from '../data/store';
 
-export interface OptimisticStore {
-  data: NormalizedCache;
-  mutationIds: any;
-}
+import {
+  getDataWithOptimisticResults,
+} from '../store';
 
-const optimisticDefaultState = {
-  data: {} as NormalizedCache,
-  mutationIds: [],
-};
+export type OptimisticStore = {
+  mutationId: string,
+  data: NormalizedCache
+}[];
+
+const optimisticDefaultState = [];
 
 export function optimistic(
   previousState = optimisticDefaultState,
   action,
-  queriesState,
-  mutationsState,
-  dataState,
+  store,
   config
 ): OptimisticStore {
   if (isMutationInitAction(action) && action.optimisticResponse) {
@@ -34,37 +33,24 @@ export function optimistic(
       mutationId: action.mutationId,
     } as ApolloAction;
 
-    const fakeDataResultState = data(previousState.data,
+    const fakeDataResultState = data(
+      getDataWithOptimisticResults(store),
       fakeMutationResultAction,
-      queriesState,
-      mutationsState,
-      config);
+      store.queries,
+      store.mutations,
+      config
+    );
 
-    const newState = {
+    const newState = previousState.concat([{
       data: fakeDataResultState,
-      mutationIds: [...previousState.mutationIds],
-    };
-    newState.mutationIds.push(action.mutationId);
+      mutationId: action.mutationId,
+    }]);
 
     return newState;
   } else if (isMutationResultAction(action) && action.optimisticResponse) {
-    let newState;
-    const newMutationIds = previousState.mutationIds.filter((id) => {
-      return id !== action.mutationId;
-    });
-
-    // throw away if no outstanding mutation requests
-    if (newMutationIds.length === 0) {
-      newState = {
-        data: {} as NormalizedCache,
-        mutationIds: [],
-      };
-    } else {
-      newState = {
-        data: previousState.data,
-        mutationIds: newMutationIds,
-      };
-    }
+    // throw away optimistic changes of that particular mutation
+    const newState = previousState.filter(
+      (change) => change.mutationId === action.id);
 
     return newState;
   }

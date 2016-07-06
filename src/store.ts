@@ -37,6 +37,8 @@ import {
   MutationBehaviorReducerMap,
 } from './data/mutationResults';
 
+import merge = require('lodash.merge');
+
 export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
@@ -72,16 +74,13 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
       // Note that we are passing the queries into this, because it reads them to associate
       // the query ID in the result with the actual query
       data: data(state.data, action, state.queries, state.mutations, config),
-      optimistic: {},
+      optimistic: optimistic(
+        state.optimistic,
+        action,
+        state,
+        config
+      ),
     };
-
-    newState.optimistic = optimistic(
-      state.optimistic,
-      action,
-      newState.queries,
-      newState.mutations,
-      newState.data,
-      config);
 
     return newState;
   };
@@ -126,4 +125,9 @@ export function createApolloStore({
 export interface ApolloReducerConfig {
   dataIdFromObject?: IdGetter;
   mutationBehaviorReducers?: MutationBehaviorReducerMap;
+}
+
+export function getDataWithOptimisticResults(store: Store): NormalizedCache {
+  const patches = store.optimistic.map(change => change.data);
+  return merge({}, store.data, ...patches) as NormalizedCache;
 }

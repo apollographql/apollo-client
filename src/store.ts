@@ -18,9 +18,12 @@ import {
 import {
   mutations,
   MutationStore,
+} from './mutations/store';
+
+import {
   optimistic,
   OptimisticStore,
-} from './mutations/store';
+} from './optimistic-data/store';
 
 import {
   ApolloAction,

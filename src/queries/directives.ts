@@ -3,9 +3,7 @@
 import {
   Selection,
   Variable,
-  StringValue,
   Directive,
-  ListValue,
 } from 'graphql';
 
 import {

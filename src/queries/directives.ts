@@ -123,11 +123,14 @@ export function getDirectiveArgs(
   if (!selection.directives) {
     return null;
   }
+
   const directive = selection.directives
-  .filter(dir => dir.name.value === directiveName)[0] || null;
+    .filter(dir => dir.name.value === directiveName)[0] || null;
+
   if (!directive) {
     return null;
   }
+
   let args = {};
   directive.arguments.forEach(arg => {
     valueToObjectRepresentation(args, arg.name, arg.value, variables);

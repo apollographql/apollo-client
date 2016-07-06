@@ -137,6 +137,36 @@ describe('roundtrip', () => {
       });
     });
 
+    it('should resolve on union types with spread fragments', () => {
+      storeRoundtrip(gql`
+        fragment jediFragment on Jedi {
+          side
+        }
+
+        fragment droidFragment on Droid {
+          model
+        }
+
+        query {
+          all_people {
+            name
+            ...jediFragment
+            ...droidFragment
+          }
+        }`, {
+        all_people: [
+          {
+            name: 'Luke Skywalker',
+            side: 'bright',
+          },
+          {
+            name: 'R2D2',
+            model: 'astromech',
+          },
+        ],
+      });
+    });
+
     it('should resolve on @include and @skip with inline fragments', () => {
       storeRoundtrip(gql`
         query {
@@ -148,6 +178,30 @@ describe('roundtrip', () => {
             ... on Droid @skip(if: true) {
               model
             }
+          }
+        }`, {
+        person: {
+          name: 'Luke Skywalker',
+          side: 'bright',
+        },
+      });
+    });
+
+    it('should resolve on @include and @skip with spread fragments', () => {
+      storeRoundtrip(gql`
+        fragment jediFragment on Jedi {
+          side
+        }
+
+        fragment droidFragment on Droid {
+          model
+        }
+
+        query {
+          person {
+            name
+            ...jediFragment @include(if: true)
+            ...droidFragment @skip(if: true)
           }
         }`, {
         person: {

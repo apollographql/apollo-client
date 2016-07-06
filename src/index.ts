@@ -143,6 +143,7 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+  public quietArguments: string[];
 
   constructor({
     networkInterface,
@@ -154,6 +155,7 @@ export default class ApolloClient {
     ssrMode = false,
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
+    quietArguments = [],
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -164,6 +166,7 @@ export default class ApolloClient {
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
+    quietArguments?: string[],
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
@@ -174,6 +177,7 @@ export default class ApolloClient {
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.quietArguments = quietArguments;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -187,6 +191,9 @@ export default class ApolloClient {
 
   public watchQuery = (options: WatchQueryOptions): ObservableQuery => {
     this.initStore();
+
+    // Add the global quietArguments stored in the client
+    options.quietArguments = [].concat(this.quietArguments, options.quietArguments || []);
 
     if (!this.shouldForceFetch && options.forceFetch) {
       options = assign({}, options, {
@@ -204,6 +211,9 @@ export default class ApolloClient {
 
   public query = (options: WatchQueryOptions): Promise<GraphQLResult> => {
     this.initStore();
+
+    // Add the global quietArguments stored in the client
+    options.quietArguments = [].concat(this.quietArguments, options.quietArguments || []);
 
     if (!this.shouldForceFetch && options.forceFetch) {
       options = assign({}, options, {

@@ -969,7 +969,7 @@ describe('client', () => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
 
           // Test that options weren't mutated, issue #339
-          assert.deepEqual(options, { query, forceFetch: true });
+          assert.deepEqual(options, { query, forceFetch: true, quietArguments: [] });
         });
     });
 
@@ -1415,6 +1415,9 @@ describe('client', () => {
         }`);
       assert(fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
       assert.equal(fragmentDefinitionsMap['authorDetails'].length, 1);
+    });
+  });
+      },
     });
   });
 });

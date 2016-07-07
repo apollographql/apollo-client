@@ -141,6 +141,30 @@ describe('roundtrip', () => {
       });
     });
 
+    it('should throw on error on two of the same inline fragment types', () => {
+      assert.throws(() =>
+        storeRoundtrip(gql`
+          query {
+            all_people {
+              name
+              ... on Jedi {
+                side
+              }
+              ... on Jedi {
+                rank
+              }
+            }
+          }`, {
+          all_people: [
+            {
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+          ],
+        })
+      );
+    });
+
     it('should resolve on union types with spread fragments', () => {
       storeRoundtrip(gql`
         fragment jediFragment on Jedi {
@@ -169,6 +193,34 @@ describe('roundtrip', () => {
           },
         ],
       });
+    });
+
+    it('should throw on error on two of the same spread fragment types', () => {
+      assert.throws(() =>
+        storeRoundtrip(gql`
+          fragment jediSide on Jedi {
+            side
+          }
+
+          fragment jediRank on Jedi {
+            rank
+          }
+
+          query {
+            all_people {
+              name
+              ...jediSide
+              ...jediRank
+            }
+          }`, {
+          all_people: [
+            {
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+          ],
+        })
+      );
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

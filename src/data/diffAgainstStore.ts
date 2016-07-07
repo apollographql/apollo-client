@@ -26,6 +26,7 @@ import {
   Selection,
   InlineFragment,
   FragmentSpread,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -123,7 +124,7 @@ export function diffSelectionSetAgainstStore({
   const result = {};
   const missingFields: Selection[] = [];
 
-  let fragmentErrors = [];
+  let fragmentErrors = {};
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
@@ -162,6 +163,7 @@ export function diffSelectionSetAgainstStore({
       }
     } else if (isInlineFragment(selection)) {
       const included = shouldInclude(selection as InlineFragment, variables);
+      const typeName = (selection as InlineFragment).typeCondition.name.value;
       if (included) {
         try {
           const {
@@ -181,9 +183,11 @@ export function diffSelectionSetAgainstStore({
           } else {
             assign(result, fieldResult);
           }
-          fragmentErrors.push(false);
+          if (!fragmentErrors[typeName]) {
+            fragmentErrors[typeName] = null;
+          }
         } catch (e) {
-          fragmentErrors.push(e);
+          fragmentErrors[typeName] = e;
         }
       }
     } else {
@@ -193,6 +197,7 @@ export function diffSelectionSetAgainstStore({
       }
 
       const included = shouldInclude(selection as FragmentSpread, variables);
+      const typeName = (fragment as FragmentDefinition).typeCondition.name.value;
       if (included) {
         try {
           const {
@@ -212,16 +217,20 @@ export function diffSelectionSetAgainstStore({
           } else {
             assign(result, fieldResult);
           }
-          fragmentErrors.push(false);
+
+          if (!fragmentErrors[typeName]) {
+            fragmentErrors[typeName] = null;
+          }
         } catch (e) {
-          fragmentErrors.push(e);
+          fragmentErrors[typeName] = e;
         }
       }
     }
   });
 
-  if (fragmentErrors.length > 0 && fragmentErrors.filter(e => !e).length === 0) {
-    throw fragmentErrors.some(e => !!e);
+  const errors = Object.keys(fragmentErrors).map(type => fragmentErrors[type]);
+  if (errors.length > 0 && errors.filter(err => !!err).length === errors.length) {
+    throw errors.some(err => !!err);
   }
 
   // Set this to true if we don't have enough information at this level to generate a refetch

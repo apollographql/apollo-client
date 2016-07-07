@@ -140,7 +140,7 @@ export function writeSelectionSetToStore({
     fragmentMap = {};
   }
 
-  let fragmentErrors = [];
+  let fragmentErrors = {};
   selectionSet.selections.forEach((selection) => {
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
@@ -168,6 +168,7 @@ export function writeSelectionSetToStore({
       }
     } else if (isInlineFragment(selection)) {
       const included = shouldInclude(selection as InlineFragment, variables);
+      const typeName = (selection as InlineFragment).typeCondition.name.value;
       if (included) {
         try {
           // XXX what to do if this tries to write the same fields? Also, type conditions...
@@ -180,9 +181,11 @@ export function writeSelectionSetToStore({
             dataIdFromObject,
             fragmentMap,
           });
-          fragmentErrors.push(false);
+          if (!fragmentErrors[typeName]) {
+            fragmentErrors[typeName] = null;
+          }
         } catch (e) {
-          fragmentErrors.push(e);
+          fragmentErrors[typeName] = e;
         }
       }
     } else {
@@ -192,6 +195,7 @@ export function writeSelectionSetToStore({
         throw new Error(`No fragment named ${selection.name.value}.`);
       }
       const included = shouldInclude(selection as FragmentSpread, variables);
+      const typeName = (fragment as FragmentDefinition).typeCondition.name.value;
       if (included) {
         try {
           writeSelectionSetToStore({
@@ -203,15 +207,19 @@ export function writeSelectionSetToStore({
             dataIdFromObject,
             fragmentMap,
           });
-          fragmentErrors.push(false);
+
+          if (!fragmentErrors[typeName]) {
+            fragmentErrors[typeName] = null;
+          }
         } catch (e) {
-          fragmentErrors.push(e);
+          fragmentErrors[typeName] = e;
         }
       }
     }
   });
-  if (fragmentErrors.length > 0 && fragmentErrors.filter(e => !e).length === 0) {
-    throw fragmentErrors.some(e => !!e);
+  const errors = Object.keys(fragmentErrors).map(type => fragmentErrors[type]);
+  if (errors.length > 0 && errors.filter(err => !!err).length === errors.length) {
+    throw  errors.some(err => !!err);
   }
 
   return store;

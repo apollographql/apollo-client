@@ -25,7 +25,7 @@ sidebar_categories:
     - apollo-client/devtools
     - apollo-client/how-it-works
   Apollo Server:
-    -apollo-server/index
+    - apollo-server/index
   GraphQL Tools:
     - graphql-tools/index
 #    - graphql-tools/guide

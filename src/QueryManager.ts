@@ -66,6 +66,10 @@ import {
   QueryScheduler,
 } from './scheduler';
 
+import {
+  stripApolloDirectivesFromRequest,
+} from './queries/directives';
+
 import { Observable, Observer, Subscription } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
@@ -256,7 +260,7 @@ export class QueryManager {
       fragmentMap: queryFragmentMap,
     });
 
-    return this.networkInterface.query(request)
+    return this.networkInterface.query(stripApolloDirectivesFromRequest(request))
       .then((result) => {
         this.store.dispatch({
           type: 'APOLLO_MUTATION_RESULT',

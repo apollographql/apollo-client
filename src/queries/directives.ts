@@ -15,6 +15,10 @@ import {
 } from 'graphql';
 
 import {
+  Request,
+} from '../networkInterface';
+
+import {
   argsToPOJO,
 } from '../data/storeUtils';
 
@@ -117,14 +121,17 @@ export function stripApolloDirectivesFromSelectionSet(selectionSet: SelectionSet
   return assign({}, selectionSet, {
     selections: selectionSet.selections.map((selection) => {
       const subSelectionSet = (selection as Field|InlineFragment).selectionSet;
-      return assign({}, selection, {
-        directives: selection.directives.filter(dir =>
-          APOLLO_CLIENT_DIRECTIVES.indexOf(dir.name.value) < 0
-        ),
-        selectionSet: subSelectionSet ?
-           stripApolloDirectivesFromSelectionSet(subSelectionSet) :
-           undefined,
-      });
+      const directives = selection.directives;
+      return assign({}, selection,
+        directives ? {
+          directives: directives.filter(dir =>
+            APOLLO_CLIENT_DIRECTIVES.indexOf(dir.name.value) < 0
+          ),
+        } : {},
+        subSelectionSet ? {
+          selectionSet: stripApolloDirectivesFromSelectionSet(subSelectionSet),
+        } : {}
+      );
     }),
   }) as SelectionSet;
 }
@@ -144,4 +151,10 @@ export function stripApolloDirectivesFromDocument(document: Document): Document 
   return assign({}, document, {
     definitions: document.definitions.map(stripApolloDirectivesFromDefinition),
   }) as Document;
+}
+
+export function stripApolloDirectivesFromRequest(request: Request): Request {
+  return assign({}, request, {
+    query: stripApolloDirectivesFromDocument(request.query),
+  }) as Request;
 }

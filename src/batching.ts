@@ -12,6 +12,10 @@ import {
   GraphQLResult,
 } from 'graphql';
 
+import {
+  stripApolloDirectivesFromRequest,
+} from './queries/directives';
+
 import cloneDeep = require('lodash.clonedeep');
 
 export interface QueryFetchRequest {
@@ -81,7 +85,7 @@ export class QueryBatcher {
         variables: queuedRequest.options.variables,
         operationName: queuedRequest.operationName,
       };
-    });
+    }).map(stripApolloDirectivesFromRequest);
 
     const promises: Promise<GraphQLResult>[] = [];
     const resolvers = [];

@@ -13,6 +13,9 @@ import {
 } from 'chai';
 
 import ApolloClient from '../src';
+import {
+  stripApolloDirectivesFromDocument,
+} from '../src/queries/directives';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
@@ -25,6 +28,7 @@ describe('fetchMore', () => {
         }
       }
     `;
+    const networkSentQuery = stripApolloDirectivesFromDocument(query);
 
     const variables1 = {
       type: 'Jedi',
@@ -54,11 +58,11 @@ describe('fetchMore', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query, variables: variables1 },
+        request: { query: networkSentQuery, variables: variables1 },
         result: { data: data1 },
       },
       {
-        request: { query, variables: variables2 },
+        request: { query: networkSentQuery, variables: variables2 },
         result: { data: data2 },
       }
     );
@@ -102,6 +106,7 @@ describe('fetchMore', () => {
         }
       }
     `;
+    const networkSentQuery = stripApolloDirectivesFromDocument(query);
 
     const variables1 = {
       type: 'Jedi',
@@ -131,11 +136,11 @@ describe('fetchMore', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query, variables: variables1 },
+        request: { query: networkSentQuery, variables: variables1 },
         result: { data: data1 },
       },
       {
-        request: { query, variables: variables2 },
+        request: { query: networkSentQuery, variables: variables2 },
         result: { data: data2 },
       }
     );
@@ -180,6 +185,7 @@ describe('fetchMore', () => {
         }
       }
     `;
+    const networkSentQuery = stripApolloDirectivesFromDocument(query);
 
     const variables1 = {
       type: 'Jedi',
@@ -209,11 +215,11 @@ describe('fetchMore', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query, variables: variables1 },
+        request: { query: networkSentQuery, variables: variables1 },
         result: { data: data1 },
       },
       {
-        request: { query, variables: variables2 },
+        request: { query: networkSentQuery, variables: variables2 },
         result: { data: data2 },
       }
     );
@@ -263,6 +269,7 @@ describe('fetchMore', () => {
         }
       }
     `;
+    const networkSentQuery = stripApolloDirectivesFromDocument(query);
 
     const variables1 = {
       type: 'Jedi',
@@ -292,11 +299,11 @@ describe('fetchMore', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query, variables: variables1 },
+        request: { query: networkSentQuery, variables: variables1 },
         result: { data: data1 },
       },
       {
-        request: { query, variables: variables2 },
+        request: { query: networkSentQuery, variables: variables2 },
         result: { data: data2 },
       }
     );
@@ -345,6 +352,7 @@ describe('fetchMore', () => {
         }
       }
     `;
+    const networkSentQuery = stripApolloDirectivesFromDocument(query);
 
     const variables1 = {
       type: 'Jedi',
@@ -374,11 +382,11 @@ describe('fetchMore', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query, variables: variables1 },
+        request: { query: networkSentQuery, variables: variables1 },
         result: { data: data1 },
       },
       {
-        request: { query, variables: variables2 },
+        request: { query: networkSentQuery, variables: variables2 },
         result: { data: data2 },
       }
     );
@@ -423,6 +431,7 @@ describe('fetchMore', () => {
         }
       }
     `;
+    const networkSentQuery = stripApolloDirectivesFromDocument(query);
 
     const variables1 = {
       type: 'Jedi',
@@ -452,11 +461,11 @@ describe('fetchMore', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query, variables: variables1 },
+        request: { query: networkSentQuery, variables: variables1 },
         result: { data: data1 },
       },
       {
-        request: { query, variables: variables2 },
+        request: { query: networkSentQuery, variables: variables2 },
         result: { data: data2 },
       }
     );
@@ -504,6 +513,7 @@ describe('fetchMore', () => {
         }
       }
     `;
+    const networkSentQuery = stripApolloDirectivesFromDocument(query);
 
     const variables1 = {
       type: 'Jedi',
@@ -533,11 +543,11 @@ describe('fetchMore', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query, variables: variables1 },
+        request: { query: networkSentQuery, variables: variables1 },
         result: { data: data1 },
       },
       {
-        request: { query, variables: variables2 },
+        request: { query: networkSentQuery, variables: variables2 },
         result: { data: data2 },
       }
     );
@@ -588,6 +598,7 @@ describe('fetchMore', () => {
         }
       }
     `;
+    const networkSentQuery = stripApolloDirectivesFromDocument(query);
 
     const data1 = {
       allPeople: {
@@ -654,13 +665,13 @@ describe('fetchMore', () => {
     };
 
     const networkInterface = mockNetworkInterface({
-      request: { query, variables: variables1 },
+      request: { query: networkSentQuery, variables: variables1 },
       result: { data: data1 },
     }, {
-      request: { query, variables: variables2 },
+      request: { query: networkSentQuery, variables: variables2 },
       result: { data: data2 },
     }, {
-      request: { query, variables: variables3 },
+      request: { query: networkSentQuery, variables: variables3 },
       result: { data: data3 },
     });
 

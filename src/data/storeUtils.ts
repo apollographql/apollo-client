@@ -96,12 +96,6 @@ export function storeKeyNameFromField(field: Field, variables?: Object, quietArg
     validateSelectionDirectives(field, variables);
     const argObj: Object = {};
 
-    const fetchMoreArgs = getDirectiveArgs(field, 'apolloFetchMore', variables);
-    let localQuietArguments = [];
-    if (fetchMoreArgs) {
-      localQuietArguments = fetchMoreArgs.quiet;
-    }
-
     const allQuietArgs = [].concat(quietArguments, localQuietArguments);
     field.arguments.forEach(({name, value}) =>
       allQuietArgs.indexOf(name.value) < 0 ?

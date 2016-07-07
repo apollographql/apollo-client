@@ -25,7 +25,6 @@ import {
 import isEqual = require('lodash.isequal');
 import isBoolean = require('lodash.isboolean');
 import isString = require('lodash.isstring');
-import isArray = require('lodash.isarray');
 
 const APOLLO_CLIENT_DIRECTIVES = ['apolloFetchMore'];
 
@@ -44,18 +43,8 @@ function validateDirective(
   }
 
   if (directive.name.value === 'apolloFetchMore') {
-    argKeys.forEach((argName) => {
-      if (argName !== 'name' && argName !== 'quiet') {
-        throw new Error(`Invalid argument ${argName} in @apolloFetchMore directive.`);
-      }
-    });
-
-    if (args['name'] && !isString(args['name'])) {
-      throw new Error(`'name' argument to @apolloFetchMore must be a string.`);
-    }
-
-    if (args['quiet'] && !isArray(args['quiet'])) {
-      throw new Error(`'quiet' argument to @apolloFetchMore must be an array of strings.`);
+    if (!isEqual(argKeys, []) && (!isEqual(argKeys, ['name']) || !isString(args['name']))) {
+      throw new Error(`Invalid arguments ${JSON.stringify(argKeys)} for the @${directive.name.value} directive.`);
     }
   }
 }

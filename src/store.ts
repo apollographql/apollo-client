@@ -74,13 +74,19 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
       // Note that we are passing the queries into this, because it reads them to associate
       // the query ID in the result with the actual query
       data: data(state.data, action, state.queries, state.mutations, config),
-      optimistic: optimistic(
-        state.optimistic,
-        action,
-        state,
-        config
-      ),
+      optimistic: [],
     };
+
+    // Note, we need to have the results of the
+    // APOLLO_MUTATION_INIT action to simulate
+    // the APOLLO_MUTATION_RESULT action. That's
+    // why we pass in newState
+    newState.optimistic = optimistic(
+      state.optimistic,
+      action,
+      newState,
+      config
+    );
 
     return newState;
   };

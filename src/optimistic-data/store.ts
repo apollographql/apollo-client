@@ -9,13 +9,9 @@ import {
   NormalizedCache,
 } from '../data/store';
 
-import {
-  getDataWithOptimisticResults,
-} from '../store';
-
 export type OptimisticStore = {
   mutationId: string,
-  data: NormalizedCache
+  data: NormalizedCache,
 }[];
 
 const optimisticDefaultState = [];
@@ -34,23 +30,25 @@ export function optimistic(
     } as ApolloAction;
 
     const fakeDataResultState = data(
-      getDataWithOptimisticResults(store),
+      {} as NormalizedCache,
       fakeMutationResultAction,
       store.queries,
       store.mutations,
       config
     );
 
-    const newState = previousState.concat([{
+    const optimisticPatch = {
       data: fakeDataResultState,
       mutationId: action.mutationId,
-    }]);
+    };
+
+    const newState = [...previousState, optimisticPatch];
 
     return newState;
   } else if (isMutationResultAction(action) && action.optimisticResponse) {
     // throw away optimistic changes of that particular mutation
     const newState = previousState.filter(
-      (change) => change.mutationId === action.id);
+      (change) => change.mutationId !== action.mutationId);
 
     return newState;
   }

@@ -1,8 +1,17 @@
 // Provides the methods that allow QueryManager to handle
 // the `skip` and `include` directives within GraphQL.
+import assign = require('lodash.assign');
+
 import {
   Selection,
   Directive,
+  SelectionSet,
+  Field,
+  InlineFragment,
+  Document,
+  Definition,
+  OperationDefinition,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -13,6 +22,8 @@ import isEqual = require('lodash.isequal');
 import isBoolean = require('lodash.isboolean');
 import isString = require('lodash.isstring');
 import isArray = require('lodash.isarray');
+
+const APOLLO_CLIENT_DIRECTIVES = ['apolloFetchMore'];
 
 function validateDirective(
   selection: Selection,
@@ -97,4 +108,40 @@ export function shouldInclude(
   }
 
   return evaledValue;
+}
+
+export function stripApolloDirectivesFromSelectionSet(selectionSet: SelectionSet): SelectionSet {
+  if (selectionSet == null || selectionSet.selections == null) {
+    return selectionSet;
+  }
+  return assign({}, selectionSet, {
+    selections: selectionSet.selections.map((selection) => {
+      const subSelectionSet = (selection as Field|InlineFragment).selectionSet;
+      return assign({}, selection, {
+        directives: selection.directives.filter(dir =>
+          APOLLO_CLIENT_DIRECTIVES.indexOf(dir.name.value) < 0
+        ),
+        selectionSet: subSelectionSet ?
+           stripApolloDirectivesFromSelectionSet(subSelectionSet) :
+           undefined,
+      });
+    }),
+  }) as SelectionSet;
+}
+
+export function stripApolloDirectivesFromDefinition(definition: Definition): Definition {
+  const selectionSet = (definition as OperationDefinition|FragmentDefinition).selectionSet;
+  if (selectionSet) {
+    return assign({}, definition, {
+      selectionSet: stripApolloDirectivesFromSelectionSet(selectionSet),
+    }) as Definition;
+  } else {
+    return definition;
+  }
+}
+
+export function stripApolloDirectivesFromDocument(document: Document): Document {
+  return assign({}, document, {
+    definitions: document.definitions.map(stripApolloDirectivesFromDefinition),
+  }) as Document;
 }

@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Fix issues with fragment error handling (especially in [Issue #354](https://github.com/apollostack/apollo-client/issues/354) & [Issue #355](https://github.com/apollostack/apollo-client/issues/355)).
 - Don't throw on unknown directives, instead just pass them through. This can open the door to implementing `@live`, `@defer`, and `@stream`, if coupled with some changes in the network layer. [PR #372](https://github.com/apollostack/apollo-client/pull/372)
 
 ### v0.3.29

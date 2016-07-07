@@ -1,5 +1,5 @@
 ---
-title: GraphQL type language
+title: Generating a schema
 order: 204
 description: Generate a GraphQL schema from the concise type definition language.
 ---

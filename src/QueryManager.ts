@@ -108,8 +108,12 @@ export interface QuerySubscription extends Subscription {
 
 export type MergeResultsFunction = (existingArr: any[], newArr: any[]) => any[];
 
-export type MergeResultsType = MergeResultsFunction
-                             | {[fetchMoreDirectiveName: string]: MergeResultsFunction};
+export type MergeResultsType = MergeResultsFunction |
+  {[fetchMoreDirectiveName: string]: MergeResultsFunction};
+
+export type QuietArgumentsList = string[];
+export type QuietArgumentsMap = QuietArgumentsList |
+  {[fetchMoreDirectiveName: string]: QuietArgumentsList};
 
 export interface WatchQueryOptions {
   query: Document;

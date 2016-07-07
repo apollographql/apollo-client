@@ -16,7 +16,6 @@ import {
 } from 'graphql';
 
 import {
-  getDirectiveArgs,
   validateSelectionDirectives,
 } from '../queries/directives';
 
@@ -91,14 +90,17 @@ export function argsToPOJO(graphQLArgs: Argument[], variables: Object): Object {
   return args;
 }
 
-export function storeKeyNameFromField(field: Field, variables?: Object, quietArguments?: string[]): string {
+export function storeKeyNameFromField(
+  field: Field,
+  variables?: Object,
+  quietArguments: string[] = []
+): string {
   if (field.arguments && field.arguments.length) {
     validateSelectionDirectives(field, variables);
     const argObj: Object = {};
 
-    const allQuietArgs = [].concat(quietArguments, localQuietArguments);
     field.arguments.forEach(({name, value}) =>
-      allQuietArgs.indexOf(name.value) < 0 ?
+      quietArguments.indexOf(name.value) < 0 ?
         valueToObjectRepresentation(argObj, name, value, variables) :
         null);
 

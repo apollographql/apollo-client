@@ -2,6 +2,10 @@ import { assert } from 'chai';
 
 import { writeQueryToStore } from '../src/data/writeToStore';
 import { readQueryFromStore } from '../src/data/readFromStore';
+import {
+  getFragmentDefinitions,
+  createFragmentMap,
+} from '../src/queries/getFromAST';
 
 import {
   Document,
@@ -110,7 +114,7 @@ describe('roundtrip', () => {
     });
   });
 
-  describe('inline fragments', () => {
+  describe('fragments', () => {
     it('should resolve on union types with inline fragments', () => {
       storeRoundtrip(gql`
         query {
@@ -214,16 +218,19 @@ describe('roundtrip', () => {
 });
 
 function storeRoundtrip(query: Document, result, variables = {}) {
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
   const store = writeQueryToStore({
     result,
     query,
     variables,
+    fragmentMap,
   });
 
   const reconstructedResult = readQueryFromStore({
     store,
     query,
     variables,
+    fragmentMap,
   });
 
   assert.deepEqual(result, reconstructedResult);

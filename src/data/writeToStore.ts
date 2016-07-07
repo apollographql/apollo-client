@@ -94,12 +94,14 @@ export function writeQueryToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
+  fragmentMap,
 }: {
   result: Object,
   query: Document,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
+  fragmentMap?: FragmentMap,
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
@@ -110,6 +112,7 @@ export function writeQueryToStore({
     store,
     variables,
     dataIdFromObject,
+    fragmentMap,
   });
 }
 

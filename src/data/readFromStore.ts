@@ -26,11 +26,13 @@ export function readQueryFromStore({
   query,
   variables,
   returnPartialData,
+  fragmentMap,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
   returnPartialData?: boolean,
+  fragmentMap?: FragmentMap,
 }): Object {
   const queryDef = getQueryDefinition(query);
 
@@ -40,6 +42,7 @@ export function readQueryFromStore({
     selectionSet: queryDef.selectionSet,
     variables,
     returnPartialData,
+    fragmentMap,
   });
 }
 

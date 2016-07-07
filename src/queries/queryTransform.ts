@@ -31,7 +31,7 @@ export function addFieldToSelectionSet(fieldName: string, selectionSet: Selectio
     // We use type assertions to make sure the selection isn't a FragmentSpread because
     // that can't have a selectionSet.
     if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
-      addTypenameToSelectionSet((selection as (Field | InlineFragment)).selectionSet);
+      addFieldToSelectionSet(fieldName, (selection as (Field | InlineFragment)).selectionSet);
     }
 
     if (selection.kind === 'Field' && (selection as Field).name.value === fieldName) {

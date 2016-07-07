@@ -66,11 +66,24 @@ import {
   QueryScheduler,
 } from './scheduler';
 
-import { Observable, Observer, Subscription } from './util/Observable';
+import { Observable, Observer, Subscription, SubscriberFunction } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
-  public subscribe(observer: Observer<GraphQLResult>): QuerySubscription {
-    return super.subscribe(observer) as QuerySubscription;
+  public refetch: (variables?: any) => Promise<GraphQLResult>;
+  public stopPolling: () => void;
+  public startPolling: (p: number) => void;
+
+  constructor(subscriberFunction: SubscriberFunction<GraphQLResult>,
+    refetch: (variables?: any) => Promise<GraphQLResult>,
+    stopPolling: () => void, startPolling: (p: number) => void) {
+      super(subscriberFunction);
+      this.refetch = refetch;
+      this.stopPolling = stopPolling;
+      this.startPolling = startPolling;
+
+  }
+  public subscribe(observer: Observer<GraphQLResult>): Subscription {
+    return super.subscribe(observer) as Subscription;
   }
 
 
@@ -89,9 +102,6 @@ export class ObservableQuery extends Observable<GraphQLResult> {
       });
     });
   }
-}
-
-export interface QuerySubscription extends Subscription {
 }
 
 export interface WatchQueryOptions {
@@ -134,7 +144,7 @@ export class QueryManager {
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   private observableQueries: { [queryId: string]:  {
     observableQuery: ObservableQuery;
-    subscriptions: QuerySubscription[];
+    subscriptions: Subscription[];
   } };
 
   constructor({
@@ -308,6 +318,33 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
     const queryId = this.generateQueryId();
+
+    const refetch = (variables?: any) => {
+      // If no new variables passed, use existing variables
+      variables = variables || options.variables;
+
+      // Use the same options as before, but with new variables and forceFetch true
+      return this.fetchQuery(queryId, assign(options, {
+        forceFetch: true,
+        variables,
+      }) as WatchQueryOptions);
+    };
+
+    const stopPolling = () => {
+      if (this.pollingTimers[queryId]) {
+        clearInterval(this.pollingTimers[queryId]);
+      }
+    };
+
+    const startPolling = (pollInterval) => {
+      this.pollingTimers[queryId] = setInterval(() => {
+        const pollingOptions = assign({}, options) as WatchQueryOptions;
+        // subsequent fetches from polling always reqeust new data
+        pollingOptions.forceFetch = true;
+        this.fetchQuery(queryId, pollingOptions);
+      }, pollInterval);
+    };
+
     const observableQuery = new ObservableQuery((observer) => {
       const retQuerySubscription = {
         unsubscribe: () => {
@@ -360,32 +397,11 @@ export class QueryManager {
           }
         }
       });
-
       return retQuerySubscription;
     },
-    (variables?: any) => {
-        // If no new variables passed, use existing variables
-        variables = variables || options.variables;
-
-        // Use the same options as before, but with new variables and forceFetch true
-        return this.fetchQuery(queryId, assign(options, {
-          forceFetch: true,
-          variables,
-        }) as WatchQueryOptions);
-      },
-    () => {
-        if (this.pollingTimers[queryId]) {
-          clearInterval(this.pollingTimers[queryId]);
-        }
-      },
-    (pollInterval) => {
-        this.pollingTimers[queryId] = setInterval(() => {
-          const pollingOptions = assign({}, options) as WatchQueryOptions;
-          // subsequent fetches from polling always reqeust new data
-          pollingOptions.forceFetch = true;
-          this.fetchQuery(queryId, pollingOptions);
-        }, pollInterval);
-      }
+    refetch,
+    stopPolling,
+    startPolling
     );
 
     return observableQuery;
@@ -463,7 +479,7 @@ export class QueryManager {
   }
 
   // Associates a query subscription with an ObservableQuery in this.observableQueries
-  public addQuerySubscription(queryId: string, querySubscription: QuerySubscription) {
+  public addQuerySubscription(queryId: string, querySubscription: Subscription) {
     if (this.observableQueries.hasOwnProperty(queryId)) {
       this.observableQueries[queryId].subscriptions.push(querySubscription);
     } else {

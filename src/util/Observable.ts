@@ -2,7 +2,6 @@
 // See https://github.com/zenparsing/es-observable
 
 import * as $$observable from 'symbol-observable';
-import { GraphQLResult } from 'graphql';
 
 export type CleanupFunction = () => void;
 export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | CleanupFunction);
@@ -12,18 +11,10 @@ function isSubscription(subscription: Function | Subscription): subscription is 
 }
 
 export class Observable<T> {
-  public refetch: (variables?: any) => Promise<GraphQLResult>;
-  public stopPolling: () => void;
-  public startPolling: (p: number) => void;
   private subscriberFunction: SubscriberFunction<T>;
 
-  constructor(subscriberFunction: SubscriberFunction<T>,
-    refetch: (variables?: any) => Promise<GraphQLResult>,
-    stopPolling: () => void, startPolling: (p: number) => void) {
+  constructor(subscriberFunction: SubscriberFunction<T>) {
     this.subscriberFunction = subscriberFunction;
-    this.refetch = refetch;
-    this.stopPolling = stopPolling;
-    this.startPolling = startPolling;
 
   }
 

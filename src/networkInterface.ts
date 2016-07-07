@@ -59,6 +59,14 @@ export interface RequestAndOptions {
 export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetworkInterface {
   return assign(networkInterface, {
     batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+      // If we a have a single request, there is no point doing any merging
+      // at all.
+      if (requests.length === 1) {
+        return this.query(requests[0]).then((result) => {
+          return Promise.resolve([result]);
+        });
+      }
+
       const composedRequest = mergeRequests(requests);
       return this.query(composedRequest).then((composedResult) => {
         return unpackMergedResult(composedResult, requests);

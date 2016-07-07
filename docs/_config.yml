@@ -24,16 +24,16 @@ sidebar_categories:
     - apollo-client/network
     - apollo-client/devtools
     - apollo-client/how-it-works
-  Apollo Server:
-    - apollo-server/index
-    - apollo-server/guide
-    - apollo-server/tools
-    - apollo-server/generate-schema
-    - apollo-server/resolvers
-    - apollo-server/scalars
-    - apollo-server/mocking
-    - apollo-server/connectors
-    - apollo-server/errors
+  GraphQL Tools:
+    - graphql-tools/index
+    - graphql-tools/guide
+    - graphql-tools/tools
+    - graphql-tools/generate-schema
+    - graphql-tools/resolvers
+    - graphql-tools/scalars
+    - graphql-tools/mocking
+    - graphql-tools/connectors
+    - graphql-tools/errors
 github_repo: apollostack/docs
 content_root: source
 logo:

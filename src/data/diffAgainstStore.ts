@@ -36,6 +36,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import {
+  QuietArgumentsMap,
+} from '../QueryManager';
+
 export interface DiffResult {
   result: any;
   isMissing?: 'true';
@@ -51,7 +55,7 @@ export function diffQueryAgainstStore({
   store: NormalizedCache,
   query: Document,
   variables?: Object,
-  quietArguments?: string[],
+  quietArguments?: QuietArgumentsMap,
 }): DiffResult {
   const queryDef = getQueryDefinition(query);
 
@@ -76,7 +80,7 @@ export function diffFragmentAgainstStore({
   fragment: Document,
   rootId: string,
   variables?: Object,
-  quietArguments?: string[],
+  quietArguments?: QuietArgumentsMap,
 }): DiffResult {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -116,7 +120,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField: boolean,
   variables: Object,
   fragmentMap?: FragmentMap,
-  quietArguments?: string[],
+  quietArguments?: QuietArgumentsMap,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -262,7 +266,7 @@ export function diffFieldAgainstStore({
   store: NormalizedCache,
   fragmentMap?: FragmentMap,
   included?: Boolean,
-  quietArguments?: string[],
+  quietArguments?: QuietArgumentsMap,
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables, quietArguments);

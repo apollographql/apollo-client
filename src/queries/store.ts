@@ -22,7 +22,10 @@ import {
   GraphQLError,
 } from 'graphql';
 
-import { MergeResultsType } from '../QueryManager';
+import {
+  MergeResultsType,
+  QuietArgumentsMap,
+} from '../QueryManager';
 
 import assign = require('lodash.assign');
 
@@ -42,7 +45,7 @@ export interface QueryStoreValue {
   forceFetch: boolean;
   fetchMore: boolean;
   returnPartialData: boolean;
-  quietArguments: string[];
+  quietArguments: QuietArgumentsMap;
   lastRequestId: number;
   fragmentMap: FragmentMap;
   mergeResults: MergeResultsType;

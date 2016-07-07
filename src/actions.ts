@@ -12,7 +12,10 @@ import {
 
 import { FragmentMap } from './queries/getFromAST';
 
-import { MergeResultsType } from './QueryManager';
+import {
+  MergeResultsType,
+  QuietArgumentsMap,
+} from './QueryManager';
 
 export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
@@ -46,7 +49,7 @@ export interface QueryInitAction {
   forceFetch: boolean;
   fetchMore: boolean;
   returnPartialData: boolean;
-  quietArguments: string[];
+  quietArguments: QuietArgumentsMap;
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;

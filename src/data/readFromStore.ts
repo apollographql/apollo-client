@@ -17,9 +17,9 @@ import {
   NormalizedCache,
 } from './store';
 
-// import {
-//   printAST,
-// } from './debug';
+import {
+  QuietArgumentsMap,
+} from '../QueryManager';
 
 export function readQueryFromStore({
   store,
@@ -32,7 +32,7 @@ export function readQueryFromStore({
   query: Document,
   variables?: Object,
   returnPartialData?: boolean,
-  quietArguments?: string[],
+  quietArguments?: QuietArgumentsMap,
 }): Object {
   const queryDef = getQueryDefinition(query);
 
@@ -59,7 +59,7 @@ export function readFragmentFromStore({
   rootId: string,
   variables?: Object,
   returnPartialData?: boolean,
-  quietArguments?: string[],
+  quietArguments?: QuietArgumentsMap,
 }): Object {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -88,7 +88,7 @@ export function readSelectionSetFromStore({
   variables: Object,
   returnPartialData?: boolean,
   fragmentMap?: FragmentMap,
-  quietArguments?: string[],
+  quietArguments?: QuietArgumentsMap,
 }): Object {
   const {
     result,

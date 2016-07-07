@@ -49,6 +49,7 @@ import {
 import {
   MergeResultsType,
   MergeResultsFunction,
+  QuietArgumentsMap,
  } from '../QueryManager';
 
 export interface WriteToStoreOptions {
@@ -56,7 +57,7 @@ export interface WriteToStoreOptions {
   store?: NormalizedCache;
   variables?: Object;
   dataIdFromObject?: IdGetter;
-  quietArguments?: string[];
+  quietArguments?: QuietArgumentsMap;
   fetchMore?: boolean;
   mergeResults?: MergeResultsType;
   targetedFetchMoreDirectives?: string[];

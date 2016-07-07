@@ -24,6 +24,7 @@ import {
   QueryManager,
   WatchQueryOptions,
   ObservableQuery,
+  QuietArgumentsMap,
 } from './QueryManager';
 
 import {
@@ -143,7 +144,7 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
-  public quietArguments: string[];
+  public quietArguments: QuietArgumentsMap;
 
   constructor({
     networkInterface,

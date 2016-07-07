@@ -17,9 +17,15 @@ import {
 
 import {
   validateSelectionDirectives,
+  getDirectiveArgs,
 } from '../queries/directives';
 
+import {
+  QuietArgumentsMap,
+} from '../QueryManager';
+
 import includes = require('lodash.includes');
+import isArray = require('lodash.isarray');
 
 type ScalarValue = StringValue | BooleanValue;
 
@@ -93,16 +99,32 @@ export function argsToPOJO(graphQLArgs: Argument[], variables: Object): Object {
 export function storeKeyNameFromField(
   field: Field,
   variables?: Object,
-  quietArguments: string[] = []
+  quietArguments: QuietArgumentsMap = []
 ): string {
   if (field.arguments && field.arguments.length) {
     validateSelectionDirectives(field, variables);
+
+    let quietArgumentsArray: string[];
+
+    if (isArray(quietArguments)) {
+      quietArgumentsArray = quietArguments;
+    } else {
+      const {
+        name,
+      } = getDirectiveArgs(field, 'apolloFetchMore', variables);
+
+      quietArgumentsArray = quietArguments[name];
+    }
+
     const argObj: Object = {};
 
-    field.arguments.forEach(({name, value}) =>
-      quietArguments.indexOf(name.value) < 0 ?
-        valueToObjectRepresentation(argObj, name, value, variables) :
-        null);
+    field.arguments.forEach(({name, value}) => {
+      const skipArg = quietArgumentsArray.indexOf(name.value) !== -1;
+
+      if (! skipArg) {
+        valueToObjectRepresentation(argObj, name, value, variables);
+      }
+    });
 
     return storeKeyNameFromFieldNameAndArgs(field.name.value, argObj);
   }

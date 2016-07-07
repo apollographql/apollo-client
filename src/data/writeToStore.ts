@@ -51,9 +51,35 @@ import {
   MergeResultsFunction,
  } from '../QueryManager';
 
-// import {
-//   printAST,
-// } from './debug';
+export interface WriteToStoreOptions {
+  result: any;
+  store?: NormalizedCache;
+  variables?: Object;
+  dataIdFromObject?: IdGetter;
+  quietArguments?: string[];
+  fetchMore?: boolean;
+  mergeResults?: MergeResultsType;
+  targetedFetchMoreDirectives?: string[];
+  fragmentMap?: FragmentMap;
+};
+
+export interface WriteFragmentToStoreOptions extends WriteToStoreOptions {
+  fragment: Document;
+}
+
+export interface WriteQueryToStoreOptions extends WriteToStoreOptions {
+  query: Document;
+}
+
+export interface WriteSelectionSetToStoreOptions extends WriteToStoreOptions {
+  selectionSet: SelectionSet;
+  dataId: string;
+}
+
+export interface WriteFieldToStoreOptions extends WriteToStoreOptions {
+  field: Field;
+  dataId: string;
+}
 
 /**
  * Convert a nested GraphQL result into a normalized store, where each object from the schema
@@ -75,17 +101,7 @@ export function writeFragmentToStore({
   fetchMore,
   mergeResults,
   targetedFetchMoreDirectives,
-}: {
-  result: Object,
-  fragment: Document,
-  store?: NormalizedCache,
-  variables?: Object,
-  dataIdFromObject?: IdGetter,
-  quietArguments?: string[],
-  fetchMore?: boolean,
-  mergeResults?: MergeResultsType,
-  targetedFetchMoreDirectives?: string[],
-}): NormalizedCache {
+}: WriteFragmentToStoreOptions): NormalizedCache {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
@@ -122,17 +138,7 @@ export function writeQueryToStore({
   fetchMore,
   mergeResults,
   targetedFetchMoreDirectives,
-}: {
-  result: Object,
-  query: Document,
-  store?: NormalizedCache,
-  variables?: Object,
-  dataIdFromObject?: IdGetter,
-  quietArguments?: string[],
-  fetchMore?: boolean,
-  mergeResults?: MergeResultsType,
-  targetedFetchMoreDirectives?: string[],
-}): NormalizedCache {
+}: WriteQueryToStoreOptions): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
   return writeSelectionSetToStore({
@@ -161,19 +167,7 @@ export function writeSelectionSetToStore({
   fetchMore,
   mergeResults,
   targetedFetchMoreDirectives,
-}: {
-  dataId: string,
-  result: any,
-  selectionSet: SelectionSet,
-  store?: NormalizedCache,
-  variables: Object,
-  dataIdFromObject: IdGetter,
-  fragmentMap?: FragmentMap,
-  quietArguments?: string[],
-  fetchMore?: boolean,
-  mergeResults?: MergeResultsType,
-  targetedFetchMoreDirectives?: string[],
-}): NormalizedCache {
+}: WriteSelectionSetToStoreOptions): NormalizedCache {
 
   if (!fragmentMap) {
     //we have an empty sym table if there's no sym table given
@@ -198,7 +192,7 @@ export function writeSelectionSetToStore({
       if (!isUndefined(value)) {
         writeFieldToStore({
           dataId,
-          value,
+          result: value,
           variables,
           store,
           field: selection,
@@ -255,7 +249,7 @@ export function writeSelectionSetToStore({
 
 function writeFieldToStore({
   field,
-  value,
+  result: value,
   variables,
   store,
   dataId,
@@ -265,19 +259,7 @@ function writeFieldToStore({
   fetchMore,
   mergeResults,
   targetedFetchMoreDirectives,
-}: {
-  field: Field,
-  value: any,
-  variables: {},
-  store: NormalizedCache,
-  dataId: string,
-  dataIdFromObject: IdGetter,
-  fragmentMap?: FragmentMap,
-  quietArguments?: string[],
-  fetchMore?: boolean,
-  mergeResults?: MergeResultsType,
-  targetedFetchMoreDirectives?: string[],
-}) {
+}: WriteFieldToStoreOptions) {
   let storeValue;
 
   const storeFieldName: string = storeKeyNameFromField(field, variables, quietArguments);

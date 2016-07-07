@@ -78,7 +78,7 @@ describe('createApolloStore', () => {
       queries: { },
       mutations: { },
       data: { },
-      optimistic: []
+      optimistic: [],
     };
 
     const store = createApolloStore({

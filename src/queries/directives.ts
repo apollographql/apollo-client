@@ -2,65 +2,81 @@
 // the `skip` and `include` directives within GraphQL.
 import {
   Selection,
-  Variable,
-  BooleanValue,
+  Directive,
 } from 'graphql';
 
+import {
+  argsToKeyValueMap,
+} from '../data/storeUtils';
 
-export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): Boolean {
-  if (!variables) {
-    variables = {};
+import isEqual = require('lodash.isequal');
+import isBoolean = require('lodash.isboolean');
+
+function validateDirective(
+  selection: Selection,
+  variables: Object,
+  directive: Directive
+) {
+  const args = argsToKeyValueMap(directive.arguments, variables);
+  const argKeys = Object.keys(args);
+
+  if (directive.name.value === 'skip' || directive.name.value === 'include') {
+    if (!isEqual(argKeys, ['if']) || !isBoolean(args['if'])) {
+      throw new Error(`Invalid arguments ${JSON.stringify(argKeys)} for the @${directive.name.value} directive.`);
+    }
   }
+}
 
+export function validateSelectionDirectives(
+  selection: Selection,
+  variables: Object = {}
+) {
+  if (selection.directives) {
+    selection.directives.forEach(dir => validateDirective(selection, variables, dir));
+  }
+}
+
+export function getDirectiveArgs(
+  selection: Selection,
+  directiveName: string,
+  variables: any = {}
+): any {
   if (!selection.directives) {
-    return true;
+    return null;
   }
 
-  let res: Boolean = true;
-  selection.directives.forEach((directive) => {
-    // TODO should move this validation to GraphQL validation once that's implemented.
-    if (directive.name.value !== 'skip' && directive.name.value !== 'include') {
-      // Just don't worry about directives we don't understand
-      return;
-    }
+  const directive = selection.directives
+    .filter(dir => dir.name.value === directiveName)[0] || null;
 
-    //evaluate the "if" argument and skip (i.e. return undefined) if it evaluates to true.
-    const directiveArguments = directive.arguments;
-    const directiveName = directive.name.value;
-    if (directiveArguments.length !== 1) {
-      throw new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
-    }
+  if (!directive) {
+    return null;
+  }
 
+  return argsToKeyValueMap(directive.arguments, variables);
+}
 
-    const ifArgument = directive.arguments[0];
-    if (!ifArgument.name || ifArgument.name.value !== 'if') {
-      throw new Error(`Invalid argument for the @${directiveName} directive.`);
-    }
+export function shouldInclude(
+  selection: Selection,
+  variables: Object = {}
+): Boolean {
+  validateSelectionDirectives(selection, variables);
 
-    const ifValue = directive.arguments[0].value;
-    let evaledValue: Boolean = false;
-    if (!ifValue || ifValue.kind !== 'BooleanValue') {
-      // means it has to be a variable value if this is a valid @skip or @include directive
-      if (ifValue.kind !== 'Variable') {
-        throw new Error(`Argument for the @${directiveName} directive must be a variable or a bool ean value.`);
-      } else {
-        evaledValue = variables[(ifValue as Variable).name.value];
-        if (evaledValue === undefined) {
-          throw new Error(`Invalid variable referenced in @${directiveName} directive.`);
-        }
-      }
-    } else {
-      evaledValue = (ifValue as BooleanValue).value;
-    }
+  let evaledValue: Boolean = true;
 
-    if (directiveName === 'skip') {
-      evaledValue = !evaledValue;
-    }
+  const skipArgs = getDirectiveArgs(selection, 'skip', variables);
+  const includeArgs = getDirectiveArgs(selection, 'include', variables);
 
-    if (!evaledValue) {
-      res = false;
-    }
-  });
+  if (includeArgs) {
+    evaledValue = includeArgs.if;
+  }
 
-  return res;
+  if (skipArgs) {
+    evaledValue = !skipArgs.if;
+  }
+
+  if (skipArgs && includeArgs) {
+    evaledValue = includeArgs.if && !skipArgs.if;
+  }
+
+  return evaledValue;
 }

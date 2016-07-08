@@ -307,7 +307,7 @@ describe('optimistic mutation results', () => {
       setSomething: {
         __typename: 'Value',
         aValue: 'Does not matter',
-      }
+      },
     };
 
     it('optimistically runs the custom reducer', () => {

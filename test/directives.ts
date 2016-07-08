@@ -97,14 +97,14 @@ describe('query directives', () => {
     assert.deepEqual(query, queryClone);
   });
 
-  it('throws an error on an unsupported directive', () => {
+  it('does not throw an error on an unsupported directive', () => {
     const query = gql`
       query {
         fortuneCookie @dosomething(if: true)
       }`;
     const field = getQueryDefinition(query).selectionSet.selections[0];
 
-    assert.throws(() => {
+    assert.doesNotThrow(() => {
       shouldInclude(field, {});
     });
   });

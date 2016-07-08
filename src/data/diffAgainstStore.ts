@@ -25,7 +25,6 @@ import {
   Document,
   Selection,
   InlineFragment,
-  FragmentSpread,
   FragmentDefinition,
 } from 'graphql';
 
@@ -136,20 +135,22 @@ export function diffSelectionSetAgainstStore({
       }
     }
 
+    const included = shouldInclude(selection, variables);
+
     if (isField(selection)) {
-        const includeField = shouldInclude(selection, variables);
-        const {
-          result: fieldResult,
-          isMissing: fieldIsMissing,
-        } = diffFieldAgainstStore({
-          field: selection,
-          throwOnMissingField,
-          variables,
-          rootId,
-          store,
-          fragmentMap,
-          included: includeField,
-        });
+
+      const {
+        result: fieldResult,
+        isMissing: fieldIsMissing,
+      } = diffFieldAgainstStore({
+        field: selection,
+        throwOnMissingField,
+        variables,
+        rootId,
+        store,
+        fragmentMap,
+        included,
+      });
 
       const resultFieldKey = resultKeyNameFromField(selection);
       if (fieldIsMissing) {
@@ -158,11 +159,10 @@ export function diffSelectionSetAgainstStore({
         // fields that is missing.
         pushMissingField(selection);
       }
-      if (includeField && fieldResult !== undefined) {
+      if (included && fieldResult !== undefined) {
         result[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {
-      const included = shouldInclude(selection as InlineFragment, variables);
       const typeName = (selection as InlineFragment).typeCondition.name.value;
       if (included) {
         try {
@@ -196,8 +196,8 @@ export function diffSelectionSetAgainstStore({
         throw new Error(`No fragment named ${selection.name.value}`);
       }
 
-      const included = shouldInclude(selection as FragmentSpread, variables);
       const typeName = (fragment as FragmentDefinition).typeCondition.name.value;
+
       if (included) {
         try {
           const {

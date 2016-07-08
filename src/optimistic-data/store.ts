@@ -13,6 +13,8 @@ import {
   getDataWithOptimisticResults,
 } from '../store';
 
+// Currently every OptimisticStore stack's element contains an entirely new copy of `data`
+// This could be optimized with a copy-on-write data structure like immutable.js
 export type OptimisticStore = {
   mutationId: string,
   data: NormalizedCache,
@@ -42,12 +44,12 @@ export function optimistic(
       config
     );
 
-    const optimisticPatch = {
+    const optimisticState = {
       data: fakeDataResultState,
       mutationId: action.mutationId,
     };
 
-    const newState = [...previousState, optimisticPatch];
+    const newState = [...previousState, optimisticState];
 
     return newState;
   } else if (isMutationResultAction(action) && action.optimisticResponse) {

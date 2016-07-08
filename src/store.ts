@@ -37,8 +37,6 @@ import {
   MutationBehaviorReducerMap,
 } from './data/mutationResults';
 
-import merge = require('lodash.merge');
-
 export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
@@ -134,6 +132,6 @@ export interface ApolloReducerConfig {
 }
 
 export function getDataWithOptimisticResults(store: Store): NormalizedCache {
-  const patches = store.optimistic.map(change => change.data);
-  return merge({}, store.data, ...patches) as NormalizedCache;
+  const lastOptimisticState = store.optimistic[store.optimistic.length - 1];
+  return lastOptimisticState ? lastOptimisticState.data : store.data;
 }

@@ -9,6 +9,10 @@ import {
   NormalizedCache,
 } from '../data/store';
 
+import {
+  getDataWithOptimisticResults,
+} from '../store';
+
 export type OptimisticStore = {
   mutationId: string,
   data: NormalizedCache,
@@ -27,10 +31,11 @@ export function optimistic(
       type: 'APOLLO_MUTATION_RESULT',
       result: { data: action.optimisticResponse },
       mutationId: action.mutationId,
+      resultBehaviors: action.resultBehaviors,
     } as ApolloAction;
 
     const fakeDataResultState = data(
-      {} as NormalizedCache,
+      getDataWithOptimisticResults(store),
       fakeMutationResultAction,
       store.queries,
       store.mutations,

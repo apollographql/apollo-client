@@ -263,6 +263,7 @@ export class QueryManager {
       mutationId,
       fragmentMap: queryFragmentMap,
       optimisticResponse,
+      resultBehaviors,
     });
 
     return this.networkInterface.query(request)

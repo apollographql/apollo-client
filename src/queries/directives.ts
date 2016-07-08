@@ -1,65 +1,149 @@
 // Provides the methods that allow QueryManager to handle
 // the `skip` and `include` directives within GraphQL.
+import assign = require('lodash.assign');
+
 import {
   Selection,
-  Variable,
-  BooleanValue,
+  Directive,
+  SelectionSet,
+  Field,
+  InlineFragment,
+  Document,
+  Definition,
+  OperationDefinition,
+  FragmentDefinition,
 } from 'graphql';
 
+import {
+  Request,
+} from '../networkInterface';
 
-export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): Boolean {
-  if (!variables) {
-    variables = {};
+import {
+  argsToPOJO,
+} from '../data/storeUtils';
+
+import isEqual = require('lodash.isequal');
+import isBoolean = require('lodash.isboolean');
+import isString = require('lodash.isstring');
+
+const APOLLO_CLIENT_DIRECTIVES = ['apolloFetchMore'];
+
+function validateDirective(
+  selection: Selection,
+  variables: Object,
+  directive: Directive
+) {
+  const args = argsToPOJO(directive.arguments, variables);
+  const argKeys = Object.keys(args);
+
+  if (directive.name.value === 'skip' || directive.name.value === 'include') {
+    if (!isEqual(argKeys, ['if']) || !isBoolean(args['if'])) {
+      throw new Error(`Invalid arguments ${JSON.stringify(argKeys)} for the @${directive.name.value} directive.`);
+    }
   }
 
+  if (directive.name.value === 'apolloFetchMore') {
+    if (!isEqual(argKeys, []) && (!isEqual(argKeys, ['name']) || !isString(args['name']))) {
+      throw new Error(`Invalid arguments ${JSON.stringify(argKeys)} for the @${directive.name.value} directive.`);
+    }
+  }
+}
+
+export function validateSelectionDirectives(
+  selection: Selection,
+  variables: Object = {}
+) {
+  if (selection.directives) {
+    selection.directives.forEach(dir => validateDirective(selection, variables, dir));
+  }
+}
+
+export function getDirectiveArgs(
+  selection: Selection,
+  directiveName: string,
+  variables: any = {}
+): any {
   if (!selection.directives) {
-    return true;
+    return null;
   }
 
-  let res: Boolean = true;
-  selection.directives.forEach((directive) => {
-    // TODO should move this validation to GraphQL validation once that's implemented.
-    if (directive.name.value !== 'skip' && directive.name.value !== 'include') {
-      throw new Error(`Directive ${directive.name.value} not supported.`);
-    }
+  const directive = selection.directives
+    .filter(dir => dir.name.value === directiveName)[0] || null;
 
-    //evaluate the "if" argument and skip (i.e. return undefined) if it evaluates to true.
-    const directiveArguments = directive.arguments;
-    const directiveName = directive.name.value;
-    if (directiveArguments.length !== 1) {
-      throw new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
-    }
+  if (!directive) {
+    return null;
+  }
 
+  return argsToPOJO(directive.arguments, variables);
+}
 
-    const ifArgument = directive.arguments[0];
-    if (!ifArgument.name || ifArgument.name.value !== 'if') {
-      throw new Error(`Invalid argument for the @${directiveName} directive.`);
-    }
+export function shouldInclude(
+  selection: Selection,
+  variables: Object = {}
+): Boolean {
+  validateSelectionDirectives(selection, variables);
 
-    const ifValue = directive.arguments[0].value;
-    let evaledValue: Boolean = false;
-    if (!ifValue || ifValue.kind !== 'BooleanValue') {
-      // means it has to be a variable value if this is a valid @skip or @include directive
-      if (ifValue.kind !== 'Variable') {
-        throw new Error(`Argument for the @${directiveName} directive must be a variable or a bool ean value.`);
-      } else {
-        evaledValue = variables[(ifValue as Variable).name.value];
-        if (evaledValue === undefined) {
-          throw new Error(`Invalid variable referenced in @${directiveName} directive.`);
-        }
-      }
-    } else {
-      evaledValue = (ifValue as BooleanValue).value;
-    }
+  let evaledValue: Boolean = true;
 
-    if (directiveName === 'skip') {
-      evaledValue = !evaledValue;
-    }
+  const skipArgs = getDirectiveArgs(selection, 'skip', variables);
+  const includeArgs = getDirectiveArgs(selection, 'include', variables);
 
-    if (!evaledValue) {
-      res = false;
-    }
-  });
+  if (includeArgs) {
+    evaledValue = includeArgs.if;
+  }
 
-  return res;
+  if (skipArgs) {
+    evaledValue = !skipArgs.if;
+  }
+
+  if (skipArgs && includeArgs) {
+    evaledValue = includeArgs.if && !skipArgs.if;
+  }
+
+  return evaledValue;
+}
+
+export function stripApolloDirectivesFromSelectionSet(selectionSet: SelectionSet): SelectionSet {
+  if (selectionSet == null || selectionSet.selections == null) {
+    return selectionSet;
+  }
+  return assign({}, selectionSet, {
+    selections: selectionSet.selections.map((selection) => {
+      const subSelectionSet = (selection as Field|InlineFragment).selectionSet;
+      const directives = selection.directives;
+      return assign({}, selection,
+        directives ? {
+          directives: directives.filter(dir =>
+            APOLLO_CLIENT_DIRECTIVES.indexOf(dir.name.value) < 0
+          ),
+        } : {},
+        subSelectionSet ? {
+          selectionSet: stripApolloDirectivesFromSelectionSet(subSelectionSet),
+        } : {}
+      );
+    }),
+  }) as SelectionSet;
+}
+
+export function stripApolloDirectivesFromDefinition(definition: Definition): Definition {
+  const selectionSet = (definition as OperationDefinition|FragmentDefinition).selectionSet;
+  if (selectionSet) {
+    return assign({}, definition, {
+      selectionSet: stripApolloDirectivesFromSelectionSet(selectionSet),
+    }) as Definition;
+  } else {
+    return definition;
+  }
+}
+
+export function stripApolloDirectivesFromDocument(document: Document): Document {
+  return assign({}, document, {
+    definitions: document.definitions.map(stripApolloDirectivesFromDefinition),
+  }) as Document;
+}
+
+export function stripApolloDirectivesFromRequest(request: Request): Request {
+  return assign({}, request, {
+    query: stripApolloDirectivesFromDocument(request.query),
+  }) as Request;
 }

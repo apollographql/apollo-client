@@ -894,6 +894,8 @@ declare module "graphql" {
 
     export var GraphQLSkipDirective: GraphQLDirective;
 
+    export var GraphQLDeprecatedDirective: GraphQLDirective;
+
 // type/introspection.js
 
     var __Schema: GraphQLObjectType;

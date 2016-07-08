@@ -340,9 +340,13 @@ describe('client', () => {
             networkError: null,
             graphQLErrors: null,
             forceFetch: false,
+            fetchMore: false,
+            quietArguments: [],
             fragmentMap: {},
             returnPartialData: false,
             lastRequestId: 1,
+            mergeResults: null,
+            targetedFetchMoreDirectives: [],
           },
         },
         mutations: {},
@@ -965,7 +969,7 @@ describe('client', () => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
 
           // Test that options weren't mutated, issue #339
-          assert.deepEqual(options, { query, forceFetch: true });
+          assert.deepEqual(options, { query, forceFetch: true, quietArguments: [] });
         });
     });
 

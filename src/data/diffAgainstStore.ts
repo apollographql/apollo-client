@@ -36,6 +36,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import {
+  QuietArgumentsMap,
+} from '../QueryManager';
+
 export interface DiffResult {
   result: any;
   isMissing?: 'true';
@@ -46,10 +50,12 @@ export function diffQueryAgainstStore({
   store,
   query,
   variables,
+  quietArguments,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
+  quietArguments?: QuietArgumentsMap,
 }): DiffResult {
   const queryDef = getQueryDefinition(query);
 
@@ -59,6 +65,7 @@ export function diffQueryAgainstStore({
     selectionSet: queryDef.selectionSet,
     throwOnMissingField: false,
     variables,
+    quietArguments,
   });
 }
 
@@ -67,11 +74,13 @@ export function diffFragmentAgainstStore({
   fragment,
   rootId,
   variables,
+  quietArguments,
 }: {
   store: NormalizedCache,
   fragment: Document,
   rootId: string,
   variables?: Object,
+  quietArguments?: QuietArgumentsMap,
 }): DiffResult {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -81,6 +90,7 @@ export function diffFragmentAgainstStore({
     selectionSet: fragmentDef.selectionSet,
     throwOnMissingField: false,
     variables,
+    quietArguments,
   });
 }
 
@@ -102,6 +112,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField = false,
   variables,
   fragmentMap,
+  quietArguments,
 }: {
   selectionSet: SelectionSet,
   store: NormalizedCache,
@@ -109,6 +120,7 @@ export function diffSelectionSetAgainstStore({
   throwOnMissingField: boolean,
   variables: Object,
   fragmentMap?: FragmentMap,
+  quietArguments?: QuietArgumentsMap,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
@@ -145,6 +157,7 @@ export function diffSelectionSetAgainstStore({
           store,
           fragmentMap,
           included: includeField,
+          quietArguments,
         });
 
       const resultFieldKey = resultKeyNameFromField(selection);
@@ -168,6 +181,7 @@ export function diffSelectionSetAgainstStore({
         rootId,
         store,
         fragmentMap,
+        quietArguments,
       });
 
       if (fieldIsMissing) {
@@ -191,6 +205,7 @@ export function diffSelectionSetAgainstStore({
         rootId,
         store,
         fragmentMap,
+        quietArguments,
       });
 
       if (fieldIsMissing) {
@@ -234,7 +249,7 @@ export function diffSelectionSetAgainstStore({
   };
 }
 
-function diffFieldAgainstStore({
+export function diffFieldAgainstStore({
   field,
   throwOnMissingField,
   variables,
@@ -242,6 +257,7 @@ function diffFieldAgainstStore({
   store,
   fragmentMap,
   included = true,
+  quietArguments,
 }: {
   field: Field,
   throwOnMissingField: boolean,
@@ -250,9 +266,10 @@ function diffFieldAgainstStore({
   store: NormalizedCache,
   fragmentMap?: FragmentMap,
   included?: Boolean,
+  quietArguments?: QuietArgumentsMap,
 }): FieldDiffResult {
   const storeObj = store[rootId] || {};
-  const storeFieldKey = storeKeyNameFromField(field, variables);
+  const storeFieldKey = storeKeyNameFromField(field, variables, quietArguments);
 
   if (! has(storeObj, storeFieldKey)) {
     if (throwOnMissingField && included) {
@@ -298,6 +315,7 @@ function diffFieldAgainstStore({
         selectionSet: field.selectionSet,
         variables,
         fragmentMap,
+        quietArguments,
       });
 
       if (itemDiffResult.isMissing) {
@@ -322,13 +340,14 @@ function diffFieldAgainstStore({
       selectionSet: field.selectionSet,
       variables,
       fragmentMap,
+      quietArguments,
     });
   }
 
   throw new Error('Unexpected number value in the store where the query had a subselection.');
 }
 
-interface FieldDiffResult {
+export interface FieldDiffResult {
   result?: any;
   isMissing?: 'true';
 }

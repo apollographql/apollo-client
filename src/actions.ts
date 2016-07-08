@@ -12,6 +12,11 @@ import {
 
 import { FragmentMap } from './queries/getFromAST';
 
+import {
+  MergeResultsType,
+  QuietArgumentsMap,
+} from './QueryManager';
+
 export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
   result: GraphQLResult;
@@ -42,10 +47,14 @@ export interface QueryInitAction {
   minimizedQuery: SelectionSetWithRoot;
   variables: Object;
   forceFetch: boolean;
+  fetchMore: boolean;
   returnPartialData: boolean;
+  quietArguments: QuietArgumentsMap;
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;
+  mergeResults: MergeResultsType;
+  targetedFetchMoreDirectives: string[];
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {

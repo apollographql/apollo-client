@@ -2286,6 +2286,11 @@ describe('QueryManager', () => {
           return null;
         },
 
+        refetchMore(options: any): Promise<GraphQLResult> {
+          done(new Error('fetchMore was called on a subscription on store reset.'));
+          return null;
+        },
+
         stopPolling(): void {
           done(new Error('stopPolling was called on a subscription on store reset.'));
         },

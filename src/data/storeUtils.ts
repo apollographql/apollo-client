@@ -12,9 +12,20 @@ import {
   Selection,
   GraphQLResult,
   Name,
+  Argument,
 } from 'graphql';
 
+import {
+  validateSelectionDirectives,
+  getDirectiveArgs,
+} from '../queries/directives';
+
+import {
+  QuietArgumentsMap,
+} from '../QueryManager';
+
 import includes = require('lodash.includes');
+import isArray = require('lodash.isarray');
 
 type ScalarValue = StringValue | BooleanValue;
 
@@ -42,14 +53,20 @@ function isList(value: Value): value is ListValue {
   return value.kind === 'ListValue';
 }
 
-function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, variables?: Object) {
+export function valueToObjectRepresentation(
+  argObj: Object,
+  name: Name,
+  value: Value,
+  variables?: Object
+) {
   if (isNumberValue(value)) {
     argObj[name.value] = Number(value.value);
   } else if (isScalarValue(value)) {
     argObj[name.value] = value.value;
   } else if (isObject(value)) {
     const nestedArgObj = {};
-    value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
+    value.fields.map((obj) =>
+      valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
     argObj[name.value] = nestedArgObj;
   } else if (isVariable(value)) {
     if (! variables || !(value.name.value in variables)) {
@@ -69,12 +86,45 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
   }
 }
 
-export function storeKeyNameFromField(field: Field, variables?: Object): string {
+export function argsToPOJO(graphQLArgs: Argument[], variables: Object): Object {
+  const args = {};
+
+  graphQLArgs.forEach(arg => {
+    valueToObjectRepresentation(args, arg.name, arg.value, variables);
+  });
+
+  return args;
+}
+
+export function storeKeyNameFromField(
+  field: Field,
+  variables?: Object,
+  quietArguments: QuietArgumentsMap = []
+): string {
   if (field.arguments && field.arguments.length) {
+    validateSelectionDirectives(field, variables);
+
+    let quietArgumentsArray: string[];
+
+    if (isArray(quietArguments)) {
+      quietArgumentsArray = quietArguments;
+    } else {
+      const {
+        name,
+      } = getDirectiveArgs(field, 'apolloFetchMore', variables);
+
+      quietArgumentsArray = quietArguments[name];
+    }
+
     const argObj: Object = {};
 
-    field.arguments.forEach(({name, value}) => valueToObjectRepresentation(
-      argObj, name, value, variables));
+    field.arguments.forEach(({name, value}) => {
+      const skipArg = quietArgumentsArray.indexOf(name.value) !== -1;
+
+      if (! skipArg) {
+        valueToObjectRepresentation(argObj, name, value, variables);
+      }
+    });
 
     return storeKeyNameFromFieldNameAndArgs(field.name.value, argObj);
   }

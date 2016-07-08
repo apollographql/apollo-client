@@ -17,6 +17,15 @@ import {
 } from './storeUtils';
 
 import {
+  getDirectiveArgs,
+  validateSelectionDirectives,
+} from '../queries/directives';
+
+import {
+  diffFieldAgainstStore,
+} from './diffAgainstStore';
+
+import {
   OperationDefinition,
   SelectionSet,
   FragmentDefinition,
@@ -37,9 +46,41 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
-// import {
-//   printAST,
-// } from './debug';
+import {
+  MergeResultsType,
+  MergeResultsFunction,
+  QuietArgumentsMap,
+ } from '../QueryManager';
+
+export interface WriteToStoreOptions {
+  result: any;
+  store?: NormalizedCache;
+  variables?: Object;
+  dataIdFromObject?: IdGetter;
+  quietArguments?: QuietArgumentsMap;
+  fetchMore?: boolean;
+  mergeResults?: MergeResultsType;
+  targetedFetchMoreDirectives?: string[];
+  fragmentMap?: FragmentMap;
+};
+
+export interface WriteFragmentToStoreOptions extends WriteToStoreOptions {
+  fragment: Document;
+}
+
+export interface WriteQueryToStoreOptions extends WriteToStoreOptions {
+  query: Document;
+}
+
+export interface WriteSelectionSetToStoreOptions extends WriteToStoreOptions {
+  selectionSet: SelectionSet;
+  dataId: string;
+}
+
+export interface WriteFieldToStoreOptions extends WriteToStoreOptions {
+  field: Field;
+  dataId: string;
+}
 
 /**
  * Convert a nested GraphQL result into a normalized store, where each object from the schema
@@ -57,13 +98,11 @@ export function writeFragmentToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
-}: {
-  result: Object,
-  fragment: Document,
-  store?: NormalizedCache,
-  variables?: Object,
-  dataIdFromObject?: IdGetter,
-}): NormalizedCache {
+  quietArguments,
+  fetchMore,
+  mergeResults,
+  targetedFetchMoreDirectives,
+}: WriteFragmentToStoreOptions): NormalizedCache {
   // Argument validation
   if (!fragment) {
     throw new Error('Must pass fragment.');
@@ -83,6 +122,10 @@ export function writeFragmentToStore({
     store,
     variables,
     dataIdFromObject,
+    quietArguments,
+    fetchMore,
+    mergeResults,
+    targetedFetchMoreDirectives,
   });
 }
 
@@ -92,13 +135,11 @@ export function writeQueryToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
-}: {
-  result: Object,
-  query: Document,
-  store?: NormalizedCache,
-  variables?: Object,
-  dataIdFromObject?: IdGetter,
-}): NormalizedCache {
+  quietArguments,
+  fetchMore,
+  mergeResults,
+  targetedFetchMoreDirectives,
+}: WriteQueryToStoreOptions): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
   return writeSelectionSetToStore({
@@ -108,6 +149,10 @@ export function writeQueryToStore({
     store,
     variables,
     dataIdFromObject,
+    quietArguments,
+    fetchMore,
+    mergeResults,
+    targetedFetchMoreDirectives,
   });
 }
 
@@ -119,15 +164,11 @@ export function writeSelectionSetToStore({
   variables,
   dataIdFromObject,
   fragmentMap,
-}: {
-  dataId: string,
-  result: any,
-  selectionSet: SelectionSet,
-  store?: NormalizedCache,
-  variables: Object,
-  dataIdFromObject: IdGetter,
-  fragmentMap?: FragmentMap,
-}): NormalizedCache {
+  quietArguments,
+  fetchMore,
+  mergeResults,
+  targetedFetchMoreDirectives,
+}: WriteSelectionSetToStoreOptions): NormalizedCache {
 
   if (!fragmentMap) {
     //we have an empty sym table if there's no sym table given
@@ -152,12 +193,16 @@ export function writeSelectionSetToStore({
       if (!isUndefined(value)) {
         writeFieldToStore({
           dataId,
-          value,
+          result: value,
           variables,
           store,
           field: selection,
           dataIdFromObject,
           fragmentMap,
+          quietArguments,
+          fetchMore,
+          mergeResults,
+          targetedFetchMoreDirectives,
         });
       }
     } else if (isInlineFragment(selection)) {
@@ -170,6 +215,10 @@ export function writeSelectionSetToStore({
         dataId,
         dataIdFromObject,
         fragmentMap,
+        quietArguments,
+        fetchMore,
+        mergeResults,
+        targetedFetchMoreDirectives,
       });
     } else {
       //look up the fragment referred to in the selection
@@ -186,6 +235,10 @@ export function writeSelectionSetToStore({
         dataId,
         dataIdFromObject,
         fragmentMap,
+        quietArguments,
+        fetchMore,
+        mergeResults,
+        targetedFetchMoreDirectives,
       });
 
       //throw new Error('Non-inline fragments not supported.');
@@ -197,31 +250,58 @@ export function writeSelectionSetToStore({
 
 function writeFieldToStore({
   field,
-  value,
+  result: value,
   variables,
   store,
   dataId,
   dataIdFromObject,
   fragmentMap,
-}: {
-  field: Field,
-  value: any,
-  variables: {},
-  store: NormalizedCache,
-  dataId: string,
-  dataIdFromObject: IdGetter,
-  fragmentMap?: FragmentMap,
-}) {
+  quietArguments,
+  fetchMore,
+  mergeResults,
+  targetedFetchMoreDirectives,
+}: WriteFieldToStoreOptions) {
   let storeValue;
 
-  const storeFieldName: string = storeKeyNameFromField(field, variables);
+  const storeFieldName: string = storeKeyNameFromField(field, variables, quietArguments);
 
   // If it's a scalar, just store it in the store
   if (!field.selectionSet || isNull(value)) {
     storeValue = value;
   } else if (isArray(value)) {
+    // First check if directives will work
+    validateSelectionDirectives(field, variables);
     // this is an array with sub-objects
-    const thisIdList: Array<string> = [];
+    let thisIdList: Array<string> = [];
+    // If we're fetching more, append existing values
+    const fetchMoreArgs = getDirectiveArgs(field, 'apolloFetchMore', variables);
+    if (fetchMore && fetchMoreArgs) {
+      if (
+        !targetedFetchMoreDirectives ||
+        targetedFetchMoreDirectives.length < 1 ||
+        targetedFetchMoreDirectives.indexOf(fetchMoreArgs.name) >= 0
+      ) {
+        const {
+          result: currentlyStoredValues,
+        } = diffFieldAgainstStore({
+          field,
+          throwOnMissingField: false,
+          variables,
+          rootId: dataId,
+          store,
+          fragmentMap,
+          included: true,
+          quietArguments,
+        });
+        if (mergeResults && mergeResults[fetchMoreArgs.name]) {
+          value = mergeResults[fetchMoreArgs.name](currentlyStoredValues, value);
+        } else if (typeof mergeResults === 'function') {
+          value = (mergeResults as MergeResultsFunction)(currentlyStoredValues, value);
+        } else {
+          value = [].concat(currentlyStoredValues, value);
+        }
+      }
+    }
 
     value.forEach((item, index) => {
       if (isNull(item)) {
@@ -247,6 +327,10 @@ function writeFieldToStore({
           variables,
           dataIdFromObject,
           fragmentMap,
+          quietArguments,
+          fetchMore,
+          mergeResults,
+          targetedFetchMoreDirectives,
         });
       }
     });
@@ -272,6 +356,10 @@ function writeFieldToStore({
       variables,
       dataIdFromObject,
       fragmentMap,
+      quietArguments,
+      fetchMore,
+      mergeResults,
+      targetedFetchMoreDirectives,
     });
 
     storeValue = valueDataId;

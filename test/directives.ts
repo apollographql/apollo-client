@@ -97,16 +97,26 @@ describe('query directives', () => {
     assert.deepEqual(query, queryClone);
   });
 
-  it('throws an error on an unsupported directive', () => {
+  it('should accept the apolloFetchMore directive', () => {
+    const query = gql`
+      query {
+        fortuneCookie @apolloFetchMore(name: "cookie")
+      }`;
+    const queryClone = cloneDeep(query);
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+    shouldInclude(field, {});
+    assert.deepEqual(query, queryClone);
+  });
+
+  it('let through unknown directives', () => {
     const query = gql`
       query {
         fortuneCookie @dosomething(if: true)
       }`;
+    const queryClone = cloneDeep(query);
     const field = getQueryDefinition(query).selectionSet.selections[0];
-
-    assert.throws(() => {
-      shouldInclude(field, {});
-    });
+    shouldInclude(field, {});
+    assert.deepEqual(query, queryClone);
   });
 
   it('throws an error on an invalid argument for the skip directive', () => {
@@ -125,6 +135,19 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @include(nothing: true)
+      }`;
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+
+    assert.throws(() => {
+      shouldInclude(field, {});
+    });
+  });
+
+  // TODO: Complete this test once the API gets freezed
+  it.skip('throws an error on an invalid argument for the apolloFetchMore directive', () => {
+    const query = gql`
+      query {
+        fortuneCookie @apolloFetchMore(nothing: "cookie")
       }`;
     const field = getQueryDefinition(query).selectionSet.selections[0];
 
@@ -166,6 +189,18 @@ describe('query directives', () => {
     };
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(!shouldInclude(field, variables));
+  });
+
+  it('evaluates variables on apolloFetchMore fields', () => {
+    const query = gql`
+      query($paginationName: String) {
+        fortuneCookie @apolloFetchMore(name: $paginationName)
+      }`;
+    const variables = {
+      paginationName: 'cookie',
+    };
+    const field = getQueryDefinition(query).selectionSet.selections[0];
+    assert(shouldInclude(field, variables));
   });
 
   it('throws an error if the value of the argument is not a variable or boolean', () => {

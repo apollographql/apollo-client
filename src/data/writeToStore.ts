@@ -142,10 +142,11 @@ export function writeSelectionSetToStore({
 
   let fragmentErrors = {};
   selectionSet.selections.forEach((selection) => {
+    const included = shouldInclude(selection, variables);
+
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
-      const included = shouldInclude(selection, variables);
 
       if (isUndefined(value) && included) {
         throw new Error(`Can't find field ${resultFieldKey} on result object ${dataId}.`);
@@ -167,7 +168,6 @@ export function writeSelectionSetToStore({
         });
       }
     } else if (isInlineFragment(selection)) {
-      const included = shouldInclude(selection as InlineFragment, variables);
       const typeName = (selection as InlineFragment).typeCondition.name.value;
       if (included) {
         try {
@@ -194,7 +194,6 @@ export function writeSelectionSetToStore({
       if (!fragment) {
         throw new Error(`No fragment named ${selection.name.value}.`);
       }
-      const included = shouldInclude(selection as FragmentSpread, variables);
       const typeName = (fragment as FragmentDefinition).typeCondition.name.value;
       if (included) {
         try {

@@ -162,7 +162,7 @@ describe('roundtrip', () => {
             },
           ],
         })
-      , /useful message here/);
+      , /Can\'t find field rank on result object/);
     });
 
     it('should resolve on union types with spread fragments', () => {
@@ -220,7 +220,7 @@ describe('roundtrip', () => {
             },
           ],
         })
-      , /useful message here/);
+      , /Can\'t find field rank on result object/);
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

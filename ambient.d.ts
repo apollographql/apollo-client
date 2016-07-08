@@ -88,6 +88,11 @@ declare module 'lodash.identity' {
   export = main.identity;
 }
 
+declare module 'lodash.find' {
+  import main = require('~lodash/index');
+  export = main.find;
+}
+
 /*
 
   GRAPHQL

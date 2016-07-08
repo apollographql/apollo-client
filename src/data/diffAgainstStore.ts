@@ -3,6 +3,7 @@ import isNull = require('lodash.isnull');
 import isString = require('lodash.isstring');
 import has = require('lodash.has');
 import assign = require('lodash.assign');
+import find = require('lodash.find');
 
 import {
   storeKeyNameFromField,
@@ -230,7 +231,7 @@ export function diffSelectionSetAgainstStore({
 
   const errors = Object.keys(fragmentErrors).map(type => fragmentErrors[type]);
   if (errors.length > 0 && errors.filter(err => !!err).length === errors.length) {
-    throw errors.some(err => !!err);
+    throw find(errors, err => !!err);
   }
 
   // Set this to true if we don't have enough information at this level to generate a refetch

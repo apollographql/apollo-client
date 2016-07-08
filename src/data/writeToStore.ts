@@ -2,6 +2,7 @@ import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
+import find = require('lodash.find');
 
 import {
   getQueryDefinition,
@@ -221,7 +222,7 @@ export function writeSelectionSetToStore({
   });
   const errors = Object.keys(fragmentErrors).map(type => fragmentErrors[type]);
   if (errors.length > 0 && errors.filter(err => !!err).length === errors.length) {
-    throw  errors.some(err => !!err);
+    throw find(errors, err => !!err);
   }
 
   return store;

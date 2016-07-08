@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Don't throw on unknown directives, instead just pass them through. This can open the door to implementing `@live`, `@defer`, and `@stream`, if coupled with some changes in the network layer. [PR #372](https://github.com/apollostack/apollo-client/pull/372)
+
 ### v0.3.29
 
 - Made sure that query merging is only applied when we have more than one query in the batcher's queue [Issue #308](https://github.com/apollostack/apollo-client/issues/308) and [PR #369](https://github.com/apollostack/apollo-client/pull/369).

@@ -61,6 +61,10 @@ import {
 } from './queryPrinting';
 
 import {
+  stripApolloDirectivesFromRequest,
+} from './queries/directives';
+
+import {
   QueryFetchRequest,
   QueryBatcher,
 } from './batching';
@@ -238,7 +242,7 @@ export class QueryManager {
     });
 
     return new Promise((resolve, reject) => {
-      this.networkInterface.query(request)
+      this.networkInterface.query(stripApolloDirectivesFromRequest(request))
         .then((result) => {
           if (result.errors) {
             reject(new ApolloError({

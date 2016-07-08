@@ -3,6 +3,7 @@ const { assert } = chai;
 
 import {
   shouldInclude,
+  stripApolloDirectivesFromDocument,
 } from '../src/queries/directives';
 
 import {
@@ -176,6 +177,80 @@ describe('query directives', () => {
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert.throws(() => {
       shouldInclude(field, {});
+    });
+  });
+
+  describe('stripping', () => {
+    it('should strip @apolloFetchMore from query fields', () => {
+      const doc = gql`
+        query {
+          fortuneCookie @apolloFetchMore
+        }
+      `;
+      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      assert.notDeepEqual(doc, strippedDoc);
+      assert.deepPropertyVal(strippedDoc,
+        'definitions.0.selectionSet.selections.0.directives.length', 0);
+    });
+
+    it('should strip nested @apolloFetchMore from query fields', () => {
+      const doc = gql`
+        query {
+          test {
+            fortuneCookie @apolloFetchMore
+          }
+        }
+      `;
+      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      assert.notDeepEqual(doc, strippedDoc);
+      assert.deepPropertyVal(strippedDoc,
+        'definitions.0.selectionSet.selections.0.selectionSet.selections.0.directives.length', 0);
+    });
+
+    it('should strip @apolloFetchMore from inline fragments', () => {
+      const doc = gql`
+        query {
+          ... on Cookie @apolloFetchMore {
+            fortuneCookie
+          }
+        }
+      `;
+      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      assert.notDeepEqual(doc, strippedDoc);
+      assert.deepPropertyVal(strippedDoc,
+        'definitions.0.selectionSet.selections.0.directives.length', 0);
+    });
+
+    it('should strip @apolloFetchMore from fragment spreads', () => {
+      const doc = gql`
+        query {
+          ...cookieSpread @apolloFetchMore
+        }
+
+        fragment cookieSpread on Cookie {
+          fortuneCookie
+        }
+      `;
+      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      assert.notDeepEqual(doc, strippedDoc);
+      assert.deepPropertyVal(strippedDoc,
+        'definitions.0.selectionSet.selections.0.directives.length', 0);
+    });
+
+    it('should strip @apolloFetchMore in named fragments', () => {
+      const doc = gql`
+        query {
+          ...cookieSpread
+        }
+
+        fragment cookieSpread on Cookie {
+          fortuneCookie @apolloFetchMore
+        }
+      `;
+      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      assert.notDeepEqual(doc, strippedDoc);
+      assert.deepPropertyVal(strippedDoc,
+        'definitions.1.selectionSet.selections.0.directives.length', 0);
     });
   });
 });

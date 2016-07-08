@@ -24,8 +24,6 @@ import {
   Field,
   Document,
   Selection,
-  InlineFragment,
-  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -163,7 +161,8 @@ export function diffSelectionSetAgainstStore({
         result[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {
-      const typeName = (selection as InlineFragment).typeCondition.name.value;
+      const typeName = selection.typeCondition.name.value;
+
       if (included) {
         try {
           const {
@@ -192,11 +191,12 @@ export function diffSelectionSetAgainstStore({
       }
     } else {
       const fragment = fragmentMap[selection.name.value];
+
       if (!fragment) {
         throw new Error(`No fragment named ${selection.name.value}`);
       }
 
-      const typeName = (fragment as FragmentDefinition).typeCondition.name.value;
+      const typeName = fragment.typeCondition.name.value;
 
       if (included) {
         try {

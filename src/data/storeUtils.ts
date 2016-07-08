@@ -12,6 +12,7 @@ import {
   Selection,
   GraphQLResult,
   Name,
+  Argument,
 } from 'graphql';
 
 import includes = require('lodash.includes');
@@ -104,4 +105,14 @@ export function isInlineFragment(selection: Selection): selection is InlineFragm
 
 export function graphQLResultHasError(result: GraphQLResult) {
   return result.errors && result.errors.length;
+}
+
+export function argsToKeyValueMap(graphQLArgs: Argument[], variables: Object): Object {
+  const args = {};
+
+  graphQLArgs.forEach(arg => {
+    valueToObjectRepresentation(args, arg.name, arg.value, variables);
+  });
+
+  return args;
 }

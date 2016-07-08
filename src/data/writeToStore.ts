@@ -22,8 +22,6 @@ import {
   FragmentDefinition,
   Field,
   Document,
-  InlineFragment,
-  FragmentSpread,
 } from 'graphql';
 
 import {

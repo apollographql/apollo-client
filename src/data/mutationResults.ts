@@ -118,11 +118,11 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
   });
 
   // Step 3: insert dataId reference into storePath array
-  const dataIdOfObj = storePath.shift();
+  const [dataIdOfObj, ...restStorePath] = storePath;
   const clonedObj = cloneDeep(state[dataIdOfObj]);
   const array = scopeJSONToResultPath({
     json: clonedObj,
-    path: storePath,
+    path: restStorePath,
   });
 
   if (where === 'PREPEND') {
@@ -240,11 +240,11 @@ function mutationResultArrayDeleteReducer(state: NormalizedCache, {
     storePath,
   } = behavior as MutationArrayDeleteBehavior;
 
-  const dataIdOfObj = storePath.shift();
+  const [dataIdOfObj, ...restStorePath] = storePath;
   const clonedObj = cloneDeep(state[dataIdOfObj]);
   const array = scopeJSONToResultPath({
     json: clonedObj,
-    path: storePath,
+    path: restStorePath,
   });
 
   array.splice(array.indexOf(dataId), 1);

@@ -162,7 +162,7 @@ describe('roundtrip', () => {
             },
           ],
         })
-      );
+      , /useful message here/);
     });
 
     it('should resolve on union types with spread fragments', () => {
@@ -220,7 +220,7 @@ describe('roundtrip', () => {
             },
           ],
         })
-      );
+      , /useful message here/);
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

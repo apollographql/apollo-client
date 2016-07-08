@@ -58,14 +58,5 @@ To generate the [API docs](http://apollostack.github.io/apollo-client/), run the
 
 ```bash
 npm run docs
-git checkout gh-pages
-cp -r docs/* .
-
-# now checkin changes
-git add -A
-git commit
-git push origin gh-pages
-
-# go back to wherever you were
-git checkout master
+git subtree push --prefix docs origin gh-pages
 ```

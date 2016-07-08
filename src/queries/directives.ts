@@ -11,6 +11,7 @@ import {
 
 import isEqual = require('lodash.isequal');
 import isBoolean = require('lodash.isboolean');
+import isString = require('lodash.isstring');
 
 function validateDirective(
   selection: Selection,
@@ -22,6 +23,12 @@ function validateDirective(
 
   if (directive.name.value === 'skip' || directive.name.value === 'include') {
     if (!isEqual(argKeys, ['if']) || !isBoolean(args['if'])) {
+      throw new Error(`Invalid arguments ${JSON.stringify(argKeys)} for the @${directive.name.value} directive.`);
+    }
+  }
+
+  if (directive.name.value === 'apolloFetchMore') {
+    if (!isEqual(argKeys, []) && (!isEqual(argKeys, ['name']) || !isString(args['name']))) {
       throw new Error(`Invalid arguments ${JSON.stringify(argKeys)} for the @${directive.name.value} directive.`);
     }
   }

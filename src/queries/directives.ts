@@ -13,6 +13,10 @@ import {
 } from 'graphql';
 
 import {
+  Request,
+} from '../networkInterface';
+
+import {
   argsToKeyValueMap,
 } from '../data/storeUtils';
 
@@ -135,4 +139,10 @@ export function stripApolloDirectivesFromDocument(document: Document): Document 
   return assign({}, document, {
     definitions: document.definitions.map(stripApolloDirectivesFromDefinition),
   }) as Document;
+}
+
+export function stripApolloDirectivesFromRequest(request: Request): Request {
+  return assign({}, request, {
+    query: stripApolloDirectivesFromDocument(request.query),
+  }) as Request;
 }

@@ -12,6 +12,8 @@ Send a mutation to the server and get the result. The result is also incorporate
 
 - `mutation: string` The mutation to send to the server.
 - `variables: Object` The variables to send along with the mutation.
+- `fragments: FragmentDefinition[]` An array of fragment definitions, as returned by `createFragment`. [Learn more on the fragments page.](fragments.html)
+
 
 Here's how you would call a mutation and pass in arguments via variables:
 

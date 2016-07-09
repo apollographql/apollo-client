@@ -27,56 +27,68 @@ The method `createFragment` returns an array of `FragmentDefinition` objects ext
 
 <h2 id="using-fragments">Using fragments</h2>
 
-Say we need to fetch a list of authors' names in one UI component and fetch the cities they live in from another UI component.
+Fragments are especially helpful in the case where you have deeply nested UI components, and you want to keep the fields the component needs next to the component code itself. You also want to avoid multiple roundtrips. Imagine the following UI structure:
 
-```javascript
-client.query({ query: gql`
-  query {
-    author {
-      firstName
-      lastName
-    }
-  }`,
-});
-
-client.query({query: gql`
-  query {
-    author {
-      city
-    }
-  }`,
-})
-
+```js
+<Author>
+  <Book />
+  <Book />
+  <Book />
+</Author>
 ```
 
-Instead of firing those two queries separately, we can define the data that they request as fragments and register them with Apollo Client. Then, we can compose a single query that uses these fragments and fire that instead. We can do that with `createFragment`:
+To render such a UI, without fragments the first intuition might be:
 
-```javascript
+```js
+// One query on the Author component to render the list of books
+{
+  author(id: 5) {
+    books {
+      id
+    }
+  }
+}
+
+// Another query on the Book component to get book details
+{
+  book(id: 19) {
+    name
+    coverImage
+    numPages
+  }
+}
+```
+
+However, this isn't optimal because you have to wait to get the entire list of books before you send any requests to get the details. This means the data will only appear after two roundtrips to the server. It would be much better to instead compose these two queries together into one, and send that in one request. Here's how you could do that:
+
+```js
 import { createFragment } from 'apollo-client';
 
-const fragmentDefs = createFragment(gql`
-  fragment authorNames on Author {
-    firstName
-    lastName
-  }
-
-  fragment authorCities on Author {
-    city
+// Save the fragment into a variable
+const bookInfoFragment = createFragment(gql`
+  fragment bookInfo on Book {
+    name
+    coverImage
+    numPages
   }
 `);
 
-client.query({ query: gql`
-  query {
-    author {
-      ...authorNames
-      ...authorCities
+// Use the fragment in a query
+// Note that we use the fragment name to refer to it, not the variable name from JavaScript.
+client.query({
+  query: gql`
+    {
+      author(id: 5) {
+        books {
+          id
+          ...bookInfo
+        }
+      }
     }
-  }
   `,
-}, fragmentDefs);
+  fragments: bookInfoFragment,
+})
 ```
-
-By doing this, we're no longer firing two queries. Instead, we're only firing one query which will get us all the data that we need. So, query composition through named fragments benefits you by reducing the number of roundtrips you make to the server. Query composition through fragments is often useful when we you want to load nested data, refetch the same data in a mutation and a query or if a UI component defines its own fields.
 
 <h2 id="unique-names">Unique fragment names</h2>
 

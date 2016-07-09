@@ -31,7 +31,7 @@ The method `createFragment` returns an array of `FragmentDefinition` objects ext
 
 Fragments are especially helpful in the case where you have deeply nested UI components, and you want to keep the fields the component needs next to the component code itself. You also want to avoid multiple roundtrips. Imagine the following UI structure:
 
-```js
+```html
 <Author>
   <Book />
   <Book />

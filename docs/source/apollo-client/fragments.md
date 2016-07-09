@@ -4,7 +4,9 @@ order: 104
 description: How to compose your queries and mutations from fragments with Apollo Client.
 ---
 
-Apollo Client supports composition of queries and mutations using named fragments. For example, if you have several UI components and each defines a fragment that it must fetch in order to render itself, a root UI component can compose a single query that references each of those fragments. This single query is then fetched from the server and will return the data requested by each of the fragments. This alows you to get the data needed to render all of those UI components in a single request to your GraphQL server.
+Apollo Client supports composition of queries and mutations using named fragments. For example, if you have several UI components and each defines a fragment that it must fetch in order to render itself, a root UI component can compose a single query that references each of those fragments. This single query is then fetched from the server and will return the data requested by each of the fragments. This allows you to get the data needed to render all of those UI components in a single request to your GraphQL server.
+
+Note that a similar effect can be achieved with [batching](network.html#query-batching), so it's up to you to decide when it's a good idea to use fragments vs. batching. Fragments are particularly useful in cases when you need to render nested components, each with their own data requirements.
 
 <h2 id="creating-fragments">Creating fragments</h2>
 

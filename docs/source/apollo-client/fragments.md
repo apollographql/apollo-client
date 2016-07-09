@@ -25,7 +25,7 @@ This function takes the following arguments:
 
 The method `createFragment` returns an array of `FragmentDefinition` objects extracted from `doc`. This array can be passed to the `query`, `watchQuery` or `mutate` methods on Apollo Client, allowing the GraphQL query or mutation to reference these fragments.
 
-<h3 id="fragment-example" title="fragment-example">Example with fragments</h3>
+<h2 id="using-fragments">Using fragments</h2>
 
 Say we need to fetch a list of authors' names in one UI component and fetch the cities they live in from another UI component.
 
@@ -78,6 +78,6 @@ client.query({ query: gql`
 
 By doing this, we're no longer firing two queries. Instead, we're only firing one query which will get us all the data that we need. So, query composition through named fragments benefits you by reducing the number of roundtrips you make to the server. Query composition through fragments is often useful when we you want to load nested data, refetch the same data in a mutation and a query or if a UI component defines its own fields.
 
-<h3 id="unique-names">Unique fragment names</h3>
+<h2 id="unique-names">Unique fragment names</h2>
 
-For query composition through fragments to work, Apollo Client requires unique fragment names across your application and will warn you if this is not the case. We can use the `createFragment` method to register a fragment for use in queries or mutations.
+For better server-side debugging and logging, it's good to have the fragment names in your app be unique. If your fragments have unique names, Apollo Client doesn't have to generate fragment names for you, which means you can easily see which fragments are appearing in your network logs and server-side debugging tools. Apollo Client checks that fragment names are unique across your application for you, and will warn you if you create two fragments with the same name.

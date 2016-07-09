@@ -1,6 +1,6 @@
 ---
 title: Developer tools
-order: 142
+order: 111
 description: How to use extensions and developer tools to get insight into what your app is doing.
 ---
 
@@ -20,18 +20,18 @@ To get started with Redux DevTools, click the DevTools icon in your chrome brows
 * Lets you go back in time by “cancelling” action.
 * If the change in Apollo's `apolloReducer` throws, you will see which action caused this to happen, and what the error was.
 
-### Lifecycles 
+### Lifecycles
 
 Redux Store's can be created with initial states. At the top of your DevTools you should see an action for `@@INIT`. The `@@INIT` action is responsible for calling `combineReducers` which bootstraps our store with 3 special state keys:
 
-* `queries` 
+* `queries`
 * `mutations`
 * `data`
 
-Along with these keys, any non-apollo reducer will have the same behavior as they do in vanilla Redux today. 
+Along with these keys, any non-apollo reducer will have the same behavior as they do in vanilla Redux today.
 
 As you interact with your application, the GraphQL server will resolve queries and mutations from the client. We utilize Redux to manage the state change our application goes through as we issue queries and mutations from the client.
-  
+
 ### Queries
 
 When a query is sent to your GraphQL server, Apollo dispatches an action to the Redux Store of type `APOLLO_QUERY_INIT`.
@@ -48,12 +48,12 @@ When a query is sent to your GraphQL server, Apollo dispatches an action to the 
 }
 ```
 
-Taking a closer look at the metadata that comes with a `APOLLO_QUERY_INIT` action, we see that `APOLLO_QUERY_INIT` sends over `queryId`, `queryString`, and `query`. The action takes these pieces of metadata and adds it to the Redux store. These properties can now be found saved in Redux. 
+Taking a closer look at the metadata that comes with a `APOLLO_QUERY_INIT` action, we see that `APOLLO_QUERY_INIT` sends over `queryId`, `queryString`, and `query`. The action takes these pieces of metadata and adds it to the Redux store. These properties can now be found saved in Redux.
 The beauty of these state changes is the management for data "readyness". When the Store dispatches `APOLLO_QUERY_INIT`, the particular query we are trying to resolve will have this structure:
 
 ![QUERY_INIT_DATA](../assets/devtools/query-init-data.png)
 
-* The keys `loading` to manage our data "readyness", 
+* The keys `loading` to manage our data "readyness",
 * `networkError` and `graphQLErrors` to have complete visibility of errors to the end user.
 
 When a query is executed and data has been resolved, the Store dispatches `APOLLO_QUERY_RESULT`.
@@ -74,7 +74,7 @@ When a query is executed and data has been resolved, the Store dispatches `APOLL
                    returnPartialData: false,
                    queryId: "0"
                    lastRequestId: 1
-               
+
                }
             }
         }
@@ -82,7 +82,7 @@ When a query is executed and data has been resolved, the Store dispatches `APOLL
 }
 ```
 
-When the Store gets a `APOLLO_QUERY_RESULT`, a couple pieces of state change. First our query is no longer `loading`, so we can see that state has updated in oure Store. Next we see that the `data` property is hyrdated with the data resolved by our query. From here you can use one of the Frontend integrations to bind the data from `APOLLO_QUERY_RESULT` to your UI Components. 
+When the Store gets a `APOLLO_QUERY_RESULT`, a couple pieces of state change. First our query is no longer `loading`, so we can see that state has updated in oure Store. Next we see that the `data` property is hyrdated with the data resolved by our query. From here you can use one of the Frontend integrations to bind the data from `APOLLO_QUERY_RESULT` to your UI Components.
 
 ### Mutations
 
@@ -102,13 +102,13 @@ When a mutation is sent to your GraphQL server, Apollo dispatches an action to t
 }
 ```
 
-Here we can see the `selection set` of our mutation and the variables used in the mutation. 
+Here we can see the `selection set` of our mutation and the variables used in the mutation.
 
-When a mutation has been resolved, the Store dispatches `APOLLO_MUTATION_RESULT`. 
+When a mutation has been resolved, the Store dispatches `APOLLO_MUTATION_RESULT`.
 
 ![MUTATION_RESULT](../assets/devtools/mutation-result.png)
 
-* The keys `loading` to manage our mutation "readyness" 
+* The keys `loading` to manage our mutation "readyness"
 * `error` to have complete visibility of errors to the end user.
 
 ```js

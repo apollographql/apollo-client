@@ -1,6 +1,6 @@
 ---
 title: How it works
-order: 143
+order: 120
 description: An explanation of Apollo Client internals and query lifecycle
 ---
 

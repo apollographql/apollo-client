@@ -22,7 +22,7 @@ The most convenient way to use Apollo Client in your app is through [react-apoll
 
 The Apollo Client class is the thing you import from this package, and should be instantiated to communicate with your server. You can instantiate as many clients as you want, but most apps will have exactly one of these. If you want to talk to multiple backends, the right place to do that is in your GraphQL server.
 
-<h3 id="ApolloClient" title="ApolloClient constructor">new ApolloClient(options)</h3>
+<h3 id="ApolloClient" title="new ApolloClient()">new ApolloClient(options)</h3>
 
 Instantiate a new Apollo Client.
 
@@ -50,6 +50,54 @@ var ApolloClient = require('apollo-client').default;
 
 The rest of the code snippets will use ES2015 import syntax.
 
+<h2 id="gql">gql query strings</h2>
+
+When using Apollo Client, you usually write your queries using multiline template literals. These literals need to be tagged with the `gql` tag, like this:
+
+```js
+import gql from 'graphql-tag';
+
+const query = gql`
+  {
+    user(id: 5) {
+      username
+    }
+  }
+`
+```
+
+The `gql` tag is a function that parses the query string passed to it. It can be found in the `graphql-tag` companion package on npm.
+
+As a shortcut, if you prefer *not* to import `gql` tag in every place you use it, you can register it as a global:
+
+```js
+// In the browser
+import gql from 'graphql-tag';
+window['gql'] = gql;
+
+// In node.js
+import gql from 'graphql-tag';
+global['gql'] = gql;
+
+// Now, in any part of your app you can use the gql tag
+const query = gql`...`;
+```
+
+**Note:** ES6 imports are hoisted, which may mean that client code using the `gql` tag gets evaluated before the registration of the global. To avoid race conditions, it's best to just import the tag into each file that uses it.
+
+<h3 id="why-gql">Why use a template literal?</h3>
+
+This template literal tag serves two functions:
+
+1. It parses the query string.
+2. It tells developer tools like `eslint-plugin-graphql` which strings in your app are GraphQL queries, so that they can be treated specially.
+
+Being able to statically analyze GraphQL queries in your app is a huge benefit of GraphQL, so it's correct to write them as special strings that can be found by these tools.
+
+<h2 id="network-interfaces">Network interfaces</h2>
+
+Apollo Client has a pluggable network interface layer, which can let you configure how queries are sent over HTTP, or replace the whole network part with something completely custom, like a websocket transport, mocked server data, or anything else you can imagine.
+
 <h3 id="createNetworkInterface" title="createNetworkInterface">createNetworkInterface(url, options)</h3>
 
 Create a new HTTP network interface that points to a GraphQL server at a specific URI.
@@ -69,7 +117,7 @@ const client = new ApolloClient({
 });
 ```
 
-<h4 id="networkInterfaceMiddleware" title="Middleware">Middleware</h4>
+<h3 id="networkInterfaceMiddleware" title="Middleware">Middleware</h3>
 
 It is possible to use middleware with the network interface created via `createNetworkInterface`.  In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.  Each object must contain an `applyMiddleware` method with the following parameters:
 
@@ -140,11 +188,17 @@ const client = new ApolloClient({
 
 Given the above code, the header's `Authorization` value will be that of `token2`.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware, passed to `.use()` as an array.
 
-<h4 id="corsSupport" title="cors support">CORS support</h4>
+<h3 id="corsSupport">CORS support</h3>
 
 If your GraphQL server and client application are running on different origins, you will get HTTP 405 errors thrown by the client. This happens when receiving the response from the server which is denying the request because of CORS. The client is working as designed. CORS support should be enabled in the apollo-server instance. How to do this is documented in the [apollo-server section](/apollo-server/tools.html#corsSupport).
 
-<h3 id="store-rehydration" title="Loading Initial Data from Server">Loading Initial Data from Server</h3>
+<h3 id="fetch-polyfill">Fetch polyfill</h3>
+
+Apollo uses [fetch](https://fetch.spec.whatwg.org/) behind the scenes to make HTTP requests. Be aware that many browser versions now support the `window.fetch` function natively (check [caniuse.com](http://caniuse.com/#feat=fetch)), but Node, for example, doesn't (as of v6).
+
+Where it is not supported, you can use one of several popular polyfills, including [whatwg-fetch](https://github.com/github/fetch), [node-fetch](https://github.com/bitinn/node-fetch) or [isomorphic-fetch](https://github.com/matthew-andrews/isomorphic-fetch).
+
+<h2 id="store-rehydration">Store hydration</h2>
 
 For applications that support server side rendering, or that can perform some queries on the server prior to rendering the client, ApolloClient allows for setting the initial state of data. This is sometimes called store rehydration for redux applications.
 

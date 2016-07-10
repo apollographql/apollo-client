@@ -61,6 +61,10 @@ import {
 } from './data/diffAgainstStore';
 
 import {
+  StoreFetchMiddleware,
+} from './data/fetchMiddleware';
+
+import {
   MutationBehavior,
   MutationQueryReducersMap,
 } from './data/mutationResults';
@@ -103,6 +107,7 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private reduxRootKey: string;
   private queryTransformer: QueryTransformer;
+  private storeFetchMiddleware: StoreFetchMiddleware;
   private queryListeners: { [queryId: string]: QueryListener };
 
   // A map going from queryId to the last result/state that the queryListener was told about.
@@ -140,6 +145,7 @@ export class QueryManager {
     store,
     reduxRootKey,
     queryTransformer,
+    storeFetchMiddleware,
     shouldBatch = false,
     batchInterval = 10,
   }: {
@@ -147,6 +153,7 @@ export class QueryManager {
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
+    storeFetchMiddleware?: StoreFetchMiddleware,
     shouldBatch?: Boolean,
     batchInterval?: number,
   }) {
@@ -156,6 +163,7 @@ export class QueryManager {
     this.store = store;
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
+    this.storeFetchMiddleware = storeFetchMiddleware;
     this.pollingTimers = {};
     this.batchInterval = batchInterval;
     this.queryListeners = {};
@@ -328,6 +336,7 @@ export class QueryManager {
                 context: {
                   store: this.getDataWithOptimisticResults(),
                   fragmentMap: queryStoreValue.fragmentMap,
+                  fetchMiddleware: this.storeFetchMiddleware,
                 },
                 rootId: queryStoreValue.query.id,
                 selectionSet: queryStoreValue.query.selectionSet,
@@ -681,6 +690,7 @@ export class QueryManager {
       context: {
         store: this.store.getState()[this.reduxRootKey].data,
         fragmentMap,
+        fetchMiddleware: this.storeFetchMiddleware,
       },
       selectionSet: queryDef.selectionSet,
       throwOnMissingField: false,
@@ -770,6 +780,7 @@ export class QueryManager {
               context: {
                 store: this.getApolloState().data,
                 fragmentMap,
+                fetchMiddleware: this.storeFetchMiddleware,
               },
               rootId: querySS.id,
               selectionSet: querySS.selectionSet,

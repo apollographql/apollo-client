@@ -60,6 +60,11 @@ import {
 } from './queries/queryTransform';
 
 import {
+  cachedFetchById,
+  StoreFetchMiddleware,
+} from './data/fetchMiddleware';
+
+import {
   MutationBehavior,
   MutationBehaviorReducerMap,
   MutationQueryReducersMap,
@@ -87,6 +92,7 @@ export {
   readQueryFromStore,
   readFragmentFromStore,
   addTypenameToSelectionSet as addTypename,
+  cachedFetchById,
   writeQueryToStore,
   writeFragmentToStore,
   print as printAST,
@@ -167,6 +173,7 @@ export default class ApolloClient {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public queryTransformer: QueryTransformer;
+  public storeFetchMiddleware: StoreFetchMiddleware;
   public shouldBatch: boolean;
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
@@ -179,6 +186,7 @@ export default class ApolloClient {
     initialState,
     dataIdFromObject,
     queryTransformer,
+    storeFetchMiddleware,
     shouldBatch = false,
     ssrMode = false,
     ssrForceFetchDelay = 0,
@@ -190,6 +198,7 @@ export default class ApolloClient {
     initialState?: any,
     dataIdFromObject?: IdGetter,
     queryTransformer?: QueryTransformer,
+    storeFetchMiddleware?: StoreFetchMiddleware,
     shouldBatch?: boolean,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
@@ -201,6 +210,7 @@ export default class ApolloClient {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
     this.queryTransformer = queryTransformer;
+    this.storeFetchMiddleware = storeFetchMiddleware;
     this.shouldBatch = shouldBatch;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
@@ -307,6 +317,7 @@ export default class ApolloClient {
       reduxRootKey: this.reduxRootKey,
       store,
       queryTransformer: this.queryTransformer,
+      storeFetchMiddleware: this.storeFetchMiddleware,
       shouldBatch: this.shouldBatch,
       batchInterval: this.batchInterval,
     });

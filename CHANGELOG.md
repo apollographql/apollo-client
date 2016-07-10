@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Fixed an issue with named fragments in batched queries. [PR #509](https://github.com/apollostack/apollo-client/pull/509) and [Issue #501](https://github.com/apollostack/apollo-client/issues/501).
 - Fixed an issue with unused variables in queries after diffing queries against information available in the store. [PR #518](https://github.com/apollostack/apollo-client/pull/518) and [Issue #496](https://github.com/apollostack/apollo-client/issues/496).
+- Added a `storeFetchMiddleware` option to `ApolloClient` that allows transformation of values returned from the store. Also exposes a `cachedFetchById` middleware to handle the common case of fetching cached resources by id. [PR #376](https://github.com/apollostack/apollo-client/pull/376)
 
 ### v0.4.11
 

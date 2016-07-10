@@ -1,5 +1,6 @@
 import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
+import isUndefined = require('lodash.isundefined');
 import has = require('lodash.has');
 import assign = require('lodash.assign');
 
@@ -15,6 +16,10 @@ import {
   isJsonValue,
   isIdValue,
 } from './store';
+
+import {
+  StoreFetchMiddleware,
+} from './fetchMiddleware';
 
 import {
   SelectionSetWithRoot,
@@ -57,6 +62,7 @@ export interface DiffResult {
 export interface StoreContext {
   store: NormalizedCache;
   fragmentMap: FragmentMap;
+  fetchMiddleware?: StoreFetchMiddleware;
 }
 
 export function diffQueryAgainstStore({
@@ -326,7 +332,17 @@ function diffFieldAgainstStore({
   const storeObj = context.store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
 
-  if (! has(storeObj, storeFieldKey)) {
+  let storeValue, fieldMissing;
+  // Give the transformer a chance to yield a rewritten result.
+  if (context.fetchMiddleware) {
+    storeValue = context.fetchMiddleware(field, variables, context.store, () => storeObj[storeFieldKey]);
+    fieldMissing = isUndefined(storeValue);
+  } else {
+    storeValue = storeObj[storeFieldKey];
+    fieldMissing = !has(storeObj, storeFieldKey);
+  }
+
+  if (fieldMissing) {
     if (throwOnMissingField && included) {
       throw new ApolloError({
         errorMessage: `Can't find field ${storeFieldKey} on object (${rootId}) ${JSON.stringify(storeObj, null, 2)}.
@@ -341,8 +357,6 @@ Perhaps you want to use the \`returnPartialData\` option?`,
       isMissing: 'true',
     };
   }
-
-  const storeValue = storeObj[storeFieldKey];
 
   // Handle all scalar types here
   if (! field.selectionSet) {

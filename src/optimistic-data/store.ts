@@ -12,7 +12,10 @@ import {
 
 import {
   getDataWithOptimisticResults,
+  Store,
 } from '../store';
+
+import assign = require('lodash.assign');
 
 // Currently every OptimisticStore stack's element contains an entirely new copy of `data`
 // This could be optimized with a copy-on-write data structure like immutable.js
@@ -38,8 +41,9 @@ export function optimistic(
       resultBehaviors: action.resultBehaviors,
     } as ApolloAction;
 
+    const fakeStore = assign({}, store, { optimistic: previousState }) as Store;
     const fakeDataResultState = data(
-      getDataWithOptimisticResults(store),
+      getDataWithOptimisticResults(fakeStore),
       fakeMutationResultAction,
       store.queries,
       store.mutations,

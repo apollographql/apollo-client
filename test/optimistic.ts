@@ -468,6 +468,45 @@ describe('optimistic mutation results', () => {
       return setup({
         request: { query: mutation },
         error: new Error('forbidden (test error)'),
+      })
+      .then(() => {
+        const dataId = client.dataId({
+          __typename: 'TodoList',
+          id: '5',
+        });
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+          resultBehaviors: [
+            {
+              type: 'ARRAY_INSERT',
+              resultPath: [ 'createTodo' ],
+              storePath: [ dataId, 'todos' ],
+              where: 'PREPEND',
+            },
+          ],
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+
+        return promise;
+      })
+      .catch((err) => {
+        assert.instanceOf(err, Error);
+        assert.equal(err.message, 'forbidden (test error)');
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 3);
+        assert.notProperty(dataInStore, 'Todo99');
+      });
+    });
+
+    it('handles errors produced by one mutation in a series', () => {
+      return setup({
+        request: { query: mutation },
+        error: new Error('forbidden (test error)'),
       }, {
         request: { query: mutation },
         result: mutationResult2,
@@ -516,45 +555,6 @@ describe('optimistic mutation results', () => {
         assert.property(dataInStore, 'Todo66');
         assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
         assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
-      });
-    });
-
-    it('handles errors produced by one mutation in a series', () => {
-      return setup({
-        request: { query: mutation },
-        error: new Error('forbidden (test error)'),
-      })
-      .then(() => {
-        const dataId = client.dataId({
-          __typename: 'TodoList',
-          id: '5',
-        });
-        const promise = client.mutate({
-          mutation,
-          optimisticResponse,
-          resultBehaviors: [
-            {
-              type: 'ARRAY_INSERT',
-              resultPath: [ 'createTodo' ],
-              storePath: [ dataId, 'todos' ],
-              where: 'PREPEND',
-            },
-          ],
-        });
-
-        const dataInStore = client.queryManager.getDataWithOptimisticResults();
-        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
-        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
-
-        return promise;
-      })
-      .catch((err) => {
-        assert.instanceOf(err, Error);
-        assert.equal(err.message, 'forbidden (test error)');
-
-        const dataInStore = client.queryManager.getDataWithOptimisticResults();
-        assert.equal((dataInStore['TodoList5'] as any).todos.length, 3);
-        assert.notProperty(dataInStore, 'Todo99');
       });
     });
   });

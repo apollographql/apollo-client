@@ -249,6 +249,7 @@ export class QueryManager {
       variables,
       mutationId,
       fragmentMap: queryFragmentMap,
+      mutations: this.getApolloState().mutations,
     });
 
     return this.networkInterface.query(request)
@@ -258,6 +259,7 @@ export class QueryManager {
           result,
           mutationId,
           resultBehaviors,
+          mutations: this.getApolloState().mutations,
         });
 
         return result;
@@ -453,6 +455,7 @@ export class QueryManager {
     this.store.dispatch({
       type: 'APOLLO_QUERY_STOP',
       queryId,
+      queries: this.getApolloState().queries,
     });
   };
 
@@ -624,6 +627,7 @@ export class QueryManager {
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
+      queries: this.getApolloState().queries,
     });
 
     if (! minimizedQuery || returnPartialData) {
@@ -636,6 +640,7 @@ export class QueryManager {
         query: querySS,
         complete: !! minimizedQuery,
         queryId,
+        queries: this.getApolloState().queries
       });
     }
 
@@ -663,6 +668,7 @@ export class QueryManager {
               result,
               queryId,
               requestId,
+              queries: this.getApolloState().queries
             });
 
             this.removeFetchQueryPromise(requestId);
@@ -696,6 +702,7 @@ export class QueryManager {
               error,
               queryId,
               requestId,
+              queries: this.getApolloState().queries,
             });
 
             this.removeFetchQueryPromise(requestId);
@@ -740,6 +747,7 @@ export class QueryManager {
     this.store.dispatch({
       type: 'APOLLO_QUERY_STOP',
       queryId,
+      queries: this.getApolloState().queries,
     });
   }
 

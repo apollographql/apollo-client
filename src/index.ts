@@ -5,7 +5,6 @@ import {
 } from './networkInterface';
 
 import {
-  GraphQLResult,
   Document,
   FragmentDefinition,
 } from 'graphql';
@@ -77,6 +76,12 @@ export {
   print as printAST,
 };
 
+export type ApolloQueryResult = {
+  data: any;
+  // Right now only has one property, but will later include loading state, and possibly other info
+  // This is different from the GraphQLResult type because it doesn't include errors - those are
+  // thrown via the standard promise/observer catch mechanism
+}
 
 // A map going from the name of a fragment to that fragment's definition.
 // The point is to keep track of fragments that exist and print a warning if we encounter two
@@ -204,7 +209,7 @@ export default class ApolloClient {
     return this.queryManager.watchQuery(options);
   };
 
-  public query = (options: WatchQueryOptions): Promise<GraphQLResult> => {
+  public query = (options: WatchQueryOptions): Promise<ApolloQueryResult> => {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -226,7 +231,7 @@ export default class ApolloClient {
     resultBehaviors?: MutationBehavior[],
     variables?: Object,
     fragments?: FragmentDefinition[],
-  }): Promise<GraphQLResult> => {
+  }): Promise<ApolloQueryResult> => {
     this.initStore();
     return this.queryManager.mutate(options);
   };

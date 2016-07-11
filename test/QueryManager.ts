@@ -50,6 +50,10 @@ import {
   getFragmentDefinition,
 } from '../src/queries/getFromAST';
 
+import {
+  ApolloError,
+} from '../src/errors';
+
 describe('QueryManager', () => {
   it('properly roundtrips through a Redux store', (done) => {
     const query = gql`
@@ -232,7 +236,11 @@ describe('QueryManager', () => {
 
     handle.subscribe({
       next(result) {
-        assert.equal(result.errors[0].message, 'This is an error message.');
+        done(new Error('Returned a result when it was supposed to error out'));
+      },
+
+      error(apolloError) {
+        assert(apolloError);
         done();
       },
     });
@@ -282,7 +290,11 @@ describe('QueryManager', () => {
 
     handle.subscribe({
       next(result) {
-        assert.equal(result.errors[0].message, 'This is an error message.');
+        done(new Error('Returned data when it was supposed to error out.'));
+      },
+
+      error(apolloError) {
+        assert(apolloError);
         done();
       },
     });
@@ -367,7 +379,9 @@ describe('QueryManager', () => {
         done(new Error('Should not deliver result'));
       },
       error: (error) => {
-        assert.equal(error.message, 'Network error');
+        const apolloError = error as ApolloError;
+        assert(apolloError.networkError);
+        assert.include(apolloError.networkError.message, 'Network error');
         done();
       },
     });
@@ -1805,7 +1819,7 @@ describe('QueryManager', () => {
         }
       },
       error: (error) => {
-        assert.equal(error.message, 'Network error');
+        assert.include(error.message, 'Network error');
         subscription.unsubscribe();
       },
     });
@@ -2460,6 +2474,65 @@ describe('QueryManager', () => {
         assert.deepEqual(result, { data });
         done();
       });
+    });
+  });
+
+  it('should reject a fetchQuery promise given a network error', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const networkError = new Error('Network error');
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      error: networkError,
+    });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    queryManager.fetchQuery('fake-id', { query }).then((result) => {
+      done(new Error('Returned result on an errored fetchQuery'));
+    }).catch((error) => {
+      const apolloError = error as ApolloError;
+
+      assert(apolloError.message);
+      assert.equal(apolloError.networkError, networkError);
+      assert(!apolloError.graphQLErrors);
+      done();
+    });
+  });
+
+  it('should reject a fetchQuery promise given a GraphQL error', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const graphQLErrors = [new Error('GraphQL error')];
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { errors: graphQLErrors },
+    });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    queryManager.fetchQuery('fake-id', { query }).then((result) => {
+      done(new Error('Returned result on an errored fetchQuery'));
+    }).catch((error) => {
+      const apolloError = error as ApolloError;
+      assert(apolloError.message);
+      assert.equal(apolloError.graphQLErrors, graphQLErrors);
+      assert(!apolloError.networkError);
+      done();
     });
   });
 });

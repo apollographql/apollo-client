@@ -96,6 +96,7 @@ export class QueryScheduler {
     if (!options.pollInterval) {
       throw new Error('Tried to register a non-polling query with the scheduler.');
     }
+
     const queryId = this.queryManager.generateQueryId();
 
     const subscriberFunction = (observer) => {

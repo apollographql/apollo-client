@@ -49,14 +49,14 @@ nav_links:
     partial: illustration-compass
     target: _new
   'GraphQL Guide':
-    url: http://docs.apollo-stack.com/graphql
+    url: http://docs.apollostack.com/graphql
     partial: illustration-compass
   'Apollo Client':
-    url: http://docs.apollo-stack.com/client
+    url: http://docs.apollostack.com/client
     partial: illustration-compass
     active: true
   'Apollo Server':
-    url: http://docs.apollo-stack.com/server
+    url: http://docs.apollostack.com/server
     partial: illustration-compass
   'GitHub':
     url: https://github.com/apollostack

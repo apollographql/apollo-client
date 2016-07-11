@@ -46,6 +46,10 @@ import {
 } from './queries/queryTransform';
 
 import {
+  ResultTransformer,
+} from './data/diffAgainstStore';
+
+import {
   MutationBehavior,
   MutationBehaviorReducerMap,
 } from './data/mutationResults';
@@ -137,7 +141,6 @@ export function clearFragmentDefinitions() {
   fragmentDefinitionsMap = {};
 }
 
-
 export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
@@ -146,6 +149,7 @@ export default class ApolloClient {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public queryTransformer: QueryTransformer;
+  public resultTransformer: ResultTransformer;
   public shouldBatch: boolean;
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
@@ -158,6 +162,7 @@ export default class ApolloClient {
     initialState,
     dataIdFromObject,
     queryTransformer,
+    resultTransformer,
     shouldBatch = false,
     ssrMode = false,
     ssrForceFetchDelay = 0,
@@ -169,6 +174,7 @@ export default class ApolloClient {
     initialState?: any,
     dataIdFromObject?: IdGetter,
     queryTransformer?: QueryTransformer,
+    resultTransformer?: ResultTransformer,
     shouldBatch?: boolean,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
@@ -180,6 +186,7 @@ export default class ApolloClient {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
     this.queryTransformer = queryTransformer;
+    this.resultTransformer = resultTransformer;
     this.shouldBatch = shouldBatch;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
@@ -284,6 +291,7 @@ export default class ApolloClient {
       reduxRootKey: this.reduxRootKey,
       store,
       queryTransformer: this.queryTransformer,
+      resultTransformer: this.resultTransformer,
       shouldBatch: this.shouldBatch,
       batchInterval: this.batchInterval,
     });

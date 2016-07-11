@@ -51,6 +51,7 @@ import {
 
 import {
   diffSelectionSetAgainstStore,
+  ResultTransformer,
 } from './data/diffAgainstStore';
 
 import {
@@ -191,6 +192,7 @@ export class QueryManager {
   private store: ApolloStore;
   private reduxRootKey: string;
   private queryTransformer: QueryTransformer;
+  private resultTransformer: ResultTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
   private idCounter = 0;
@@ -222,6 +224,7 @@ export class QueryManager {
     store,
     reduxRootKey,
     queryTransformer,
+    resultTransformer,
     shouldBatch = false,
     batchInterval = 10,
   }: {
@@ -229,6 +232,7 @@ export class QueryManager {
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
+    resultTransformer?: ResultTransformer,
     shouldBatch?: Boolean,
     batchInterval?: number,
   }) {
@@ -238,6 +242,7 @@ export class QueryManager {
     this.store = store;
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
+    this.resultTransformer = resultTransformer;
     this.pollingTimers = {};
     this.batchInterval = batchInterval;
     this.queryListeners = {};
@@ -382,6 +387,7 @@ export class QueryManager {
             context: {
               store: this.getDataWithOptimisticResults(),
               fragmentMap: queryStoreValue.fragmentMap,
+              resultTransformer: this.resultTransformer,
             },
             rootId: queryStoreValue.query.id,
             selectionSet: queryStoreValue.query.selectionSet,
@@ -627,6 +633,7 @@ export class QueryManager {
         context: {
           store: this.store.getState()[this.reduxRootKey].data,
           fragmentMap: queryFragmentMap,
+          resultTransformer: this.resultTransformer,
         },
         selectionSet: querySS.selectionSet,
         throwOnMissingField: false,
@@ -734,6 +741,7 @@ export class QueryManager {
                 context: {
                   store: this.getApolloState().data,
                   fragmentMap: queryFragmentMap,
+                  resultTransformer: this.resultTransformer,
                 },
                 rootId: querySS.id,
                 selectionSet: querySS.selectionSet,

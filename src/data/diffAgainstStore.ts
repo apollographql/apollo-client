@@ -42,11 +42,14 @@ export interface DiffResult {
   missingSelectionSets?: SelectionSetWithRoot[];
 }
 
+export type ResultTransformer = (result: DiffResult) => DiffResult;
+
 // Contexual state and configuration that is used throught a request from the
 // store.
 export interface StoreContext {
   store: NormalizedCache;
   fragmentMap: FragmentMap;
+  resultTransformer?: ResultTransformer;
 }
 
 export function diffQueryAgainstStore({
@@ -225,11 +228,17 @@ export function diffSelectionSetAgainstStore({
     }
   }
 
-  return {
+  let diffResult: DiffResult = {
     result,
     isMissing,
     missingSelectionSets,
   };
+
+  if (context.resultTransformer) {
+    diffResult = context.resultTransformer(diffResult);
+  }
+
+  return diffResult;
 }
 
 function diffFieldAgainstStore({

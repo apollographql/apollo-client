@@ -102,6 +102,7 @@ export interface WatchQueryOptions {
   variables?: { [key: string]: any };
   forceFetch?: boolean;
   returnPartialData?: boolean;
+  noFetch?: boolean;
   pollInterval?: number;
   fragments?: FragmentDefinition[];
 }
@@ -286,6 +287,7 @@ export class QueryManager {
             selectionSet: queryStoreValue.query.selectionSet,
             variables: queryStoreValue.variables,
             returnPartialData: options.returnPartialData,
+            noFetch: options.noFetch,
             fragmentMap: queryStoreValue.fragmentMap,
           });
 
@@ -323,7 +325,7 @@ export class QueryManager {
 
           // Use the same options as before, but with new variables and forceFetch true
           return this.fetchQuery(queryId, assign(options, {
-            forceFetch: true,
+            forceFetch: !options.noFetch ? true : false,
             variables,
           }) as WatchQueryOptions);
         },
@@ -336,7 +338,7 @@ export class QueryManager {
           this.pollingTimers[queryId] = setInterval(() => {
             const pollingOptions = assign({}, options) as WatchQueryOptions;
             // subsequent fetches from polling always reqeust new data
-            pollingOptions.forceFetch = true;
+            pollingOptions.forceFetch = !options.noFetch ? true : false;
             this.fetchQuery(queryId, pollingOptions);
           }, pollInterval);
         },
@@ -378,6 +380,7 @@ export class QueryManager {
               selectionSet: queryStoreValue.query.selectionSet,
               variables: queryStoreValue.variables,
               returnPartialData: options.returnPartialData,
+              noFetch: options.noFetch,
               fragmentMap: queryStoreValue.fragmentMap,
             });
 
@@ -522,6 +525,7 @@ export class QueryManager {
       variables,
       forceFetch = false,
       returnPartialData = false,
+      noFetch = false,
       fragments = [],
     } = options;
 
@@ -568,7 +572,7 @@ export class QueryManager {
 
       initialResult = result;
 
-      if (missingSelectionSets && missingSelectionSets.length) {
+      if (missingSelectionSets && missingSelectionSets.length && !noFetch) {
         const diffedQuery = queryDocument({
           missingSelectionSets,
           variableDefinitions: queryDef.variableDefinitions,
@@ -604,12 +608,13 @@ export class QueryManager {
       variables,
       forceFetch,
       returnPartialData,
+      noFetch,
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
     });
 
-    if (! minimizedQuery || returnPartialData) {
+    if (! minimizedQuery || returnPartialData || noFetch) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: {
@@ -663,6 +668,7 @@ export class QueryManager {
                 selectionSet: querySS.selectionSet,
                 variables,
                 returnPartialData: returnPartialData,
+                noFetch: noFetch,
                 fragmentMap: queryFragmentMap,
               });
               // ensure multiple errors don't get thrown
@@ -696,6 +702,9 @@ export class QueryManager {
 
   private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.queryListeners[queryId] = listener;
+    if (options.noFetch) {
+      options.pollInterval = null;
+    }
     this.fetchQuery(queryId, options);
 
     if (options.pollInterval) {

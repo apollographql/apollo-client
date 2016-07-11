@@ -953,6 +953,61 @@ describe('QueryManager', () => {
     });
   });
 
+    it('supports noFetch', () => {
+    const primeQuery = gql`
+      query primeQuery {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const complexQuery = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: primeQuery },
+        result: { data: data1 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    // First, prime the cache
+    queryManager.query({
+      query: primeQuery,
+    }).then(() => {
+      const handle = queryManager.watchQuery({
+        query: complexQuery,
+        noFetch: true,
+      });
+
+      return handle.result().then((result) => {
+        assert.equal(result.data['luke'].name, 'Luke Skywalker');
+        assert.notProperty(result.data, 'vader');
+      });
+    });
+  });
+
   it('runs a mutation', () => {
     const mutation = gql`
       mutation makeListPrivate {

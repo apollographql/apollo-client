@@ -39,6 +39,7 @@ export interface QueryStoreValue {
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
   returnPartialData: boolean;
+  noFetch: boolean;
   lastRequestId: number;
   fragmentMap: FragmentMap;
 }
@@ -70,6 +71,7 @@ export function queries(
       graphQLErrors: null,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
+      noFetch: action.noFetch,
       lastRequestId: action.requestId,
       fragmentMap: action.fragmentMap,
     };

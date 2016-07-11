@@ -1422,7 +1422,7 @@ describe('client', () => {
     });
   });
 
-  describe.only('result transformation', () => {
+  describe('result transformation', () => {
 
     class Task {
       constructor(properties) {
@@ -1435,7 +1435,7 @@ describe('client', () => {
       }
     }
 
-    let getTerseTask, getFullTask, task, client, requests;
+    let task, client;
     beforeEach(() => {
       task = {
         __typename: 'Task',

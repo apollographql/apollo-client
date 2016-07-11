@@ -23,7 +23,6 @@ node -e "var package = require('./package.json'); \
 cp README.md npm/
 cp LICENSE npm/
 cp .npmignore npm/
-cp gql.js npm/
 
 echo 'deploying to npm...'
 cd npm && npm publish

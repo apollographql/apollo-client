@@ -98,6 +98,18 @@ export class QueryScheduler {
     }
     const queryId = this.queryManager.generateQueryId();
 
+    const subscriberFunction = (observer) => {
+      // "Fire" (i.e. add to the QueryBatcher queue)
+      const queryListener = this.queryManager.queryListenerForObserver(options, observer);
+      this.startPollingQuery(options, queryListener, queryId);
+
+      return {
+        unsubscribe: () => {
+          this.stopPollingQuery(queryId);
+        },
+      };
+    };
+
     const refetch = (variables: any) => {
       variables = variables || options.variables;
       return this.fetchQuery(queryId, assign(options, {
@@ -120,22 +132,12 @@ export class QueryScheduler {
       this.stopPollingQuery(queryId);
     };
 
-    return new ObservableQuery(
-      (observer) => {
-        // "Fire" (i.e. add to the QueryBatcher queue)
-        const queryListener = this.queryManager.queryListenerForObserver(options, observer);
-        this.startPollingQuery(options, queryListener, queryId);
-
-        return {
-          unsubscribe: () => {
-            this.stopPollingQuery(queryId);
-          },
-        };
-      },
+    return new ObservableQuery({
+      subscriberFunction,
       refetch,
       stopPolling,
-      startPolling
-    );
+      startPolling,
+    });
   }
 
   private addInFlight(queryId: string, options: WatchQueryOptions) {

@@ -695,7 +695,7 @@ export class QueryManager {
 
             this.removeFetchQueryPromise(requestId);
 
-            return Promise.reject(new ApolloError({
+            reject(new ApolloError({
               networkError: error,
             }));
           });

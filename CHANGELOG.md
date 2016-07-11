@@ -4,6 +4,16 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- **Breaking change** Moved refetch(), startPolling(), and stopPolling() methods from QuerySubscription to ObservableQuery. This shouldn't affect anyone using `react-apollo`, but if you were calling those methods on the subscription directly, you need to call them on the query handle/observable instead. The benefit of this is that developers that want to use RxJS for their observable handling can now have access to these methods. [Issue #194] (https://github.com/apollostack/apollo-client/issues/194) and [PR #362] (https://github.com/apollostack/apollo-client/pull/362)
+
+### v0.3.30
+
+- Don't throw on unknown directives, instead just pass them through. This can open the door to implementing `@live`, `@defer`, and `@stream`, if coupled with some changes in the network layer. [PR #372](https://github.com/apollostack/apollo-client/pull/372)
+
+### v0.3.29
+
+- Made sure that query merging is only applied when we have more than one query in the batcher's queue [Issue #308](https://github.com/apollostack/apollo-client/issues/308) and [PR #369](https://github.com/apollostack/apollo-client/pull/369).
+
 ### v0.3.28
 
 - Added missing export for the `addQueryMerging` method defined in the docs [here](http://docs.apollostack.com/apollo-client/network.html#addQueryMerging). [PR #364](https://github.com/apollostack/apollo-client/pull/364) and [Issue #363](https://github.com/apollostack/apollo-client/issues/363).

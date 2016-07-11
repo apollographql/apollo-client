@@ -6,7 +6,10 @@
       "type": "node",
       "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
       "stopOnEntry": false,
-      "args": ["lib/test/tests.js"],
+      "args": [
+        "--no-timeouts",
+        "lib/test/tests.js"
+      ],
       "cwd": "${workspaceRoot}",
       "runtimeExecutable": null
     }

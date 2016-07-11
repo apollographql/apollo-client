@@ -407,6 +407,34 @@ describe('network interface', () => {
         done();
       });
     });
+
+    it('should not merge queries when batchQuery is passed a single query', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const request = { query: query };
+      const myNetworkInterface: NetworkInterface = {
+        query(requestReceived: Request): Promise<GraphQLResult> {
+          assert.equal(print(requestReceived.query), print(query));
+          return Promise.resolve({ data });
+        },
+      };
+      const mergingNetworkInterface = addQueryMerging(myNetworkInterface);
+      mergingNetworkInterface.batchQuery([request]).then((results) => {
+        assert.equal(results.length[0], 1);
+        assert.deepEqual(results[0], { data });
+      });
+    });
   });
 });
 

@@ -319,7 +319,7 @@ describe('diffing queries against the store', () => {
     `;
 
     const { result } = diffSelectionSetAgainstStore({
-      store,
+      context: { store, fragmentMap: {} },
       rootId: 'ROOT_QUERY',
       selectionSet: getQueryDefinition(queryWithMissingField).selectionSet,
       variables: null,
@@ -333,7 +333,7 @@ describe('diffing queries against the store', () => {
     });
     assert.throws(function() {
       diffSelectionSetAgainstStore({
-        store,
+        context: { store, fragmentMap: {} },
         rootId: 'ROOT_QUERY',
         selectionSet: getQueryDefinition(queryWithMissingField).selectionSet,
         variables: null,

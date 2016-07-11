@@ -42,6 +42,13 @@ export interface DiffResult {
   missingSelectionSets?: SelectionSetWithRoot[];
 }
 
+// Contexual state and configuration that is used throught a request from the
+// store.
+export interface StoreContext {
+  store: NormalizedCache;
+  fragmentMap: FragmentMap;
+}
+
 export function diffQueryAgainstStore({
   store,
   query,
@@ -54,7 +61,7 @@ export function diffQueryAgainstStore({
   const queryDef = getQueryDefinition(query);
 
   return diffSelectionSetAgainstStore({
-    store,
+    context: { store, fragmentMap: {} },
     rootId: 'ROOT_QUERY',
     selectionSet: queryDef.selectionSet,
     throwOnMissingField: false,
@@ -76,7 +83,7 @@ export function diffFragmentAgainstStore({
   const fragmentDef = getFragmentDefinition(fragment);
 
   return diffSelectionSetAgainstStore({
-    store,
+    context: { store, fragmentMap: {} },
     rootId,
     selectionSet: fragmentDef.selectionSet,
     throwOnMissingField: false,
@@ -96,26 +103,20 @@ export function diffFragmentAgainstStore({
  * @return {result: Object, missingSelectionSets: [SelectionSet]}
  */
 export function diffSelectionSetAgainstStore({
+  context,
   selectionSet,
-  store,
   rootId,
   throwOnMissingField = false,
   variables,
-  fragmentMap,
 }: {
+  context: StoreContext,
   selectionSet: SelectionSet,
-  store: NormalizedCache,
   rootId: string,
   throwOnMissingField: boolean,
   variables: Object,
-  fragmentMap?: FragmentMap,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
-  }
-
-  if (!fragmentMap) {
-    fragmentMap = {};
   }
 
   const result = {};
@@ -138,12 +139,11 @@ export function diffSelectionSetAgainstStore({
           result: fieldResult,
           isMissing: fieldIsMissing,
         } = diffFieldAgainstStore({
+          context,
           field: selection,
           throwOnMissingField,
           variables,
           rootId,
-          store,
-          fragmentMap,
           included: includeField,
         });
 
@@ -162,12 +162,11 @@ export function diffSelectionSetAgainstStore({
         result: fieldResult,
         isMissing: fieldIsMissing,
       } = diffSelectionSetAgainstStore({
+        context,
         selectionSet: selection.selectionSet,
         throwOnMissingField,
         variables,
         rootId,
-        store,
-        fragmentMap,
       });
 
       if (fieldIsMissing) {
@@ -176,7 +175,7 @@ export function diffSelectionSetAgainstStore({
         assign(result, fieldResult);
       }
     } else {
-      const fragment = fragmentMap[selection.name.value];
+      const fragment = context.fragmentMap[selection.name.value];
       if (!fragment) {
         throw new Error(`No fragment named ${selection.name.value}`);
       }
@@ -185,12 +184,11 @@ export function diffSelectionSetAgainstStore({
         result: fieldResult,
         isMissing: fieldIsMissing,
       } = diffSelectionSetAgainstStore({
+        context,
         selectionSet: fragment.selectionSet,
         throwOnMissingField,
         variables,
         rootId,
-        store,
-        fragmentMap,
       });
 
       if (fieldIsMissing) {
@@ -235,23 +233,21 @@ export function diffSelectionSetAgainstStore({
 }
 
 function diffFieldAgainstStore({
+  context,
   field,
   throwOnMissingField,
   variables,
   rootId,
-  store,
-  fragmentMap,
   included = true,
 }: {
+  context: StoreContext,
   field: Field,
   throwOnMissingField: boolean,
   variables: Object,
   rootId: string,
-  store: NormalizedCache,
-  fragmentMap?: FragmentMap,
   included?: Boolean,
 }): FieldDiffResult {
-  const storeObj = store[rootId] || {};
+  const storeObj = context.store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
 
   if (! has(storeObj, storeFieldKey)) {
@@ -293,12 +289,11 @@ Perhaps you want to use the \`returnPartialData\` option?`);
       }
 
       const itemDiffResult = diffSelectionSetAgainstStore({
-        store,
+        context,
         throwOnMissingField,
         rootId: id,
         selectionSet: field.selectionSet,
         variables,
-        fragmentMap,
       });
 
       if (itemDiffResult.isMissing) {
@@ -317,12 +312,11 @@ Perhaps you want to use the \`returnPartialData\` option?`);
 
   if (isString(storeValue)) {
     return diffSelectionSetAgainstStore({
-      store,
+      context,
       throwOnMissingField,
       rootId: storeValue,
       selectionSet: field.selectionSet,
       variables,
-      fragmentMap,
     });
   }
 

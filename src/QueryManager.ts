@@ -73,19 +73,22 @@ export class ObservableQuery extends Observable<GraphQLResult> {
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
 
-  constructor(subscriberFunction: SubscriberFunction<GraphQLResult>,
+  constructor(
+    subscriberFunction: SubscriberFunction<GraphQLResult>,
     refetch: (variables?: any) => Promise<GraphQLResult>,
-    stopPolling: () => void, startPolling: (p: number) => void) {
-      super(subscriberFunction);
-      this.refetch = refetch;
-      this.stopPolling = stopPolling;
-      this.startPolling = startPolling;
+    stopPolling: () => void,
+    startPolling: (p: number) => void
+  ) {
+    super(subscriberFunction);
+    this.refetch = refetch;
+    this.stopPolling = stopPolling;
+    this.startPolling = startPolling;
 
   }
+
   public subscribe(observer: Observer<GraphQLResult>): Subscription {
-    return super.subscribe(observer) as Subscription;
+    return super.subscribe(observer);
   }
-
 
   public result(): Promise<GraphQLResult> {
     return new Promise((resolve, reject) => {

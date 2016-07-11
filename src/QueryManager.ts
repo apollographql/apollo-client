@@ -229,6 +229,7 @@ export class QueryManager {
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
+    optimisticResponse?: Object,
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
@@ -284,6 +285,7 @@ export class QueryManager {
           error: err,
           mutationId,
           resultBehaviors,
+          optimisticResponse,
         });
 
         return Promise.reject(err);

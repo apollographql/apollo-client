@@ -268,7 +268,16 @@ export class QueryManager {
         });
 
         return result;
+      })
+      .catch((err) => {
+        this.store.dispatch({
+          type: 'APOLLO_MUTATION_ERROR',
+          error: err,
+          mutationId,
+          resultBehaviors,
+        });
 
+        return Promise.reject(err);
       });
   }
 
@@ -685,6 +694,7 @@ export class QueryManager {
             });
 
             this.removeFetchQueryPromise(requestId);
+
             reject(new ApolloError({
               networkError: error,
             }));

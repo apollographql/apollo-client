@@ -2,6 +2,7 @@ import {
   ApolloAction,
   isMutationInitAction,
   isMutationResultAction,
+  isMutationErrorAction,
   isStoreResetAction,
 } from '../actions';
 
@@ -60,6 +61,13 @@ export function mutations(
     }) as MutationStoreValue;
 
     return newState;
+  } else if (isMutationErrorAction(action)) {
+    const newState = assign({}, previousState) as MutationStore;
+
+    newState[action.mutationId] = assign({}, previousState[action.mutationId], {
+      loading: false,
+      error: action.error,
+    }) as MutationStoreValue;
   } else if (isStoreResetAction(action)) {
     // if we are resetting the store, we no longer need information about the mutations
     // that are currently in the store so we can just throw them all away.

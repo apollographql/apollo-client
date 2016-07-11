@@ -411,4 +411,80 @@ describe('optimistic mutation results', () => {
       });
     });
   });
+
+  describe('error handling', () => {
+    const mutation = gql`
+      mutation createTodo {
+        # skipping arguments in the test since they don't matter
+        createTodo {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          __typename: 'Todo',
+          id: '99',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
+    const optimisticResponse = {
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '99',
+        text: 'Optimistically generated',
+        completed: true,
+      },
+    };
+
+    it('handles a single error for a single mutation', () => {
+      return setup({
+        request: { query: mutation },
+        error: new Error('forbidden (test error)'),
+      })
+      .then(() => {
+        const dataId = client.dataId({
+          __typename: 'TodoList',
+          id: '5',
+        });
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+          resultBehaviors: [
+            {
+              type: 'ARRAY_INSERT',
+              resultPath: [ 'createTodo' ],
+              storePath: [ dataId, 'todos' ],
+              where: 'PREPEND',
+            },
+          ],
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+
+        return promise;
+      })
+      .catch((err) => {
+        assert.instanceOf(err, Error);
+        assert.equal(err.message, 'forbidden (test error)');
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 3);
+        assert.notProperty(dataInStore, 'Todo99');
+      });
+    });
+  });
 });

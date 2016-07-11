@@ -2,6 +2,7 @@ import {
   ApolloAction,
   isMutationInitAction,
   isMutationResultAction,
+  isMutationErrorAction,
 } from '../actions';
 
 import {
@@ -33,6 +34,7 @@ export function optimistic(
       type: 'APOLLO_MUTATION_RESULT',
       result: { data: action.optimisticResponse },
       mutationId: action.mutationId,
+      optimisticResponse: null,
       resultBehaviors: action.resultBehaviors,
     } as ApolloAction;
 
@@ -52,7 +54,8 @@ export function optimistic(
     const newState = [...previousState, optimisticState];
 
     return newState;
-  } else if (isMutationResultAction(action) && action.optimisticResponse) {
+  } else if ((isMutationErrorAction(action) || isMutationResultAction(action))
+               && action.optimisticResponse) {
     // throw away optimistic changes of that particular mutation
     const newState = previousState.filter(
       (change) => change.mutationId !== action.mutationId);

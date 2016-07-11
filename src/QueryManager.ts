@@ -66,13 +66,28 @@ import {
   QueryScheduler,
 } from './scheduler';
 
-import { Observable, Observer, Subscription } from './util/Observable';
+import { Observable, Observer, Subscription, SubscriberFunction } from './util/Observable';
 
 export class ObservableQuery extends Observable<GraphQLResult> {
-  public subscribe(observer: Observer<GraphQLResult>): QuerySubscription {
-    return super.subscribe(observer) as QuerySubscription;
+  public refetch: (variables?: any) => Promise<GraphQLResult>;
+  public stopPolling: () => void;
+  public startPolling: (p: number) => void;
+
+  constructor(options: {
+    subscriberFunction: SubscriberFunction<GraphQLResult>,
+    refetch: (variables?: any) => Promise<GraphQLResult>,
+    stopPolling: () => void,
+    startPolling: (p: number) => void
+  }) {
+    super(options.subscriberFunction);
+    this.refetch = options.refetch;
+    this.stopPolling = options.stopPolling;
+    this.startPolling = options.startPolling;
   }
 
+  public subscribe(observer: Observer<GraphQLResult>): Subscription {
+    return super.subscribe(observer);
+  }
 
   public result(): Promise<GraphQLResult> {
     return new Promise((resolve, reject) => {
@@ -89,12 +104,6 @@ export class ObservableQuery extends Observable<GraphQLResult> {
       });
     });
   }
-}
-
-export interface QuerySubscription extends Subscription {
-  refetch(variables?: any): Promise<GraphQLResult>;
-  stopPolling(): void;
-  startPolling(pollInterval: number): void;
 }
 
 export interface WatchQueryOptions {
@@ -137,7 +146,7 @@ export class QueryManager {
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   private observableQueries: { [queryId: string]:  {
     observableQuery: ObservableQuery;
-    subscriptions: QuerySubscription[];
+    subscriptions: Subscription[];
   } };
 
   constructor({
@@ -310,35 +319,14 @@ export class QueryManager {
   public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
-    const observableQuery = new ObservableQuery((observer) => {
-      const queryId = this.generateQueryId();
+    const queryId = this.generateQueryId();
 
+    let observableQuery;
+
+    const subscriberFunction = (observer) => {
       const retQuerySubscription = {
         unsubscribe: () => {
           this.stopQuery(queryId);
-        },
-        refetch: (variables: any): Promise<GraphQLResult> => {
-          // If no new variables passed, use existing variables
-          variables = variables || options.variables;
-
-          // Use the same options as before, but with new variables and forceFetch true
-          return this.fetchQuery(queryId, assign(options, {
-            forceFetch: true,
-            variables,
-          }) as WatchQueryOptions);
-        },
-        stopPolling: (): void => {
-          if (this.pollingTimers[queryId]) {
-            clearInterval(this.pollingTimers[queryId]);
-          }
-        },
-        startPolling: (pollInterval): void => {
-          this.pollingTimers[queryId] = setInterval(() => {
-            const pollingOptions = assign({}, options) as WatchQueryOptions;
-            // subsequent fetches from polling always reqeust new data
-            pollingOptions.forceFetch = true;
-            this.fetchQuery(queryId, pollingOptions);
-          }, pollInterval);
         },
       };
 
@@ -387,8 +375,40 @@ export class QueryManager {
           }
         }
       });
-
       return retQuerySubscription;
+    };
+
+    const refetch = (variables?: any) => {
+      // If no new variables passed, use existing variables
+      variables = variables || options.variables;
+
+      // Use the same options as before, but with new variables and forceFetch true
+      return this.fetchQuery(queryId, assign(options, {
+        forceFetch: true,
+        variables,
+      }) as WatchQueryOptions);
+    };
+
+    const stopPolling = () => {
+      if (this.pollingTimers[queryId]) {
+        clearInterval(this.pollingTimers[queryId]);
+      }
+    };
+
+    const startPolling = (pollInterval) => {
+      this.pollingTimers[queryId] = setInterval(() => {
+        const pollingOptions = assign({}, options) as WatchQueryOptions;
+        // subsequent fetches from polling always reqeust new data
+        pollingOptions.forceFetch = true;
+        this.fetchQuery(queryId, pollingOptions);
+      }, pollInterval);
+    };
+
+    observableQuery = new ObservableQuery({
+      subscriberFunction,
+      refetch,
+      stopPolling,
+      startPolling,
     });
 
     return observableQuery;
@@ -466,7 +486,7 @@ export class QueryManager {
   }
 
   // Associates a query subscription with an ObservableQuery in this.observableQueries
-  public addQuerySubscription(queryId: string, querySubscription: QuerySubscription) {
+  public addQuerySubscription(queryId: string, querySubscription: Subscription) {
     if (this.observableQueries.hasOwnProperty(queryId)) {
       this.observableQueries[queryId].subscriptions.push(querySubscription);
     } else {
@@ -505,10 +525,7 @@ export class QueryManager {
     // the promise for it will be rejected and its results will not be written to the
     // store.
     Object.keys(this.observableQueries).forEach((queryId) => {
-      const subscriptions = this.observableQueries[queryId].subscriptions;
-
-      // we can refetch any one of the subscriptions.
-      subscriptions[subscriptions.length - 1].refetch();
+      this.observableQueries[queryId].observableQuery.refetch();
     });
   }
 

@@ -1,6 +1,6 @@
 import {
   QueryManager,
-  QuerySubscription,
+  ObservableQuery,
 } from '../src/QueryManager';
 
 import {
@@ -561,13 +561,13 @@ describe('QueryManager', () => {
       variables,
     });
 
-    const subscription = handle.subscribe({
+    handle.subscribe({
       next(result) {
         handleCount++;
 
         if (handleCount === 1) {
           assert.deepEqual(result.data, data1);
-          subscription.refetch();
+          handle.refetch();
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, data2);
           done();
@@ -618,9 +618,9 @@ describe('QueryManager', () => {
       query,
     });
 
-    const subscription = handle.subscribe({});
+    handle.subscribe({});
 
-    subscription.refetch().then((result) => {
+    handle.refetch().then((result) => {
       assert.deepEqual(result.data, data2);
       done();
     });
@@ -684,16 +684,16 @@ describe('QueryManager', () => {
       query: query,
     });
 
-    const subscription = handle.subscribe({
+    handle.subscribe({
       next(result) {
         handleCount++;
 
         if (handleCount === 1) {
           assert.deepEqual(result.data, data1);
-          subscription.refetch();
+          handle.refetch();
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, data2);
-          subscription.refetch(variables);
+          handle.refetch(variables);
         } else if (handleCount === 3) {
           assert.deepEqual(result.data, data3);
           done();
@@ -757,18 +757,18 @@ describe('QueryManager', () => {
 
     let resultCount = 0;
 
-    const sub = handle.subscribe({
+    handle.subscribe({
       next(result) {
         resultCount++;
         // Perform refetch on first result from watchQuery
         if (resultCount === 1) {
-          sub.refetch();
+          handle.refetch();
         };
 
         // Wait for a result count of 3
         if (resultCount === 3) {
           // Stop polling
-          sub.stopPolling();
+          handle.stopPolling();
           assert(result);
           done();
         }
@@ -875,7 +875,7 @@ describe('QueryManager', () => {
       });
 
       // Refetch before we get any data - maybe the network is slow, and the user clicked refresh?
-      subscription.refetch();
+      handle.refetch();
     });
   });
 
@@ -1305,12 +1305,12 @@ describe('QueryManager', () => {
     });
 
     let handleCount = 0;
-    const subscription = handle.subscribe({
+    handle.subscribe({
       next(result) {
         handleCount++;
         if (handleCount === 1) {
           assert.deepEqual(result.data, data1);
-          return subscription.refetch();
+          return handle.refetch();
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, data2);
           store.dispatch({
@@ -1879,7 +1879,7 @@ describe('QueryManager', () => {
       },
     });
 
-    subscription.startPolling(50);
+    handle.startPolling(50);
   });
   it('exposes a way to stop a polling query', (done) => {
     const query = gql`
@@ -1931,12 +1931,12 @@ describe('QueryManager', () => {
       pollInterval: 50,
     });
 
-    const subscription = handle.subscribe({
+    handle.subscribe({
       next(result) {
         handleCount++;
 
         if (handleCount === 2) {
-          subscription.stopPolling();
+          handle.stopPolling();
         }
       },
     });
@@ -2275,33 +2275,20 @@ describe('QueryManager', () => {
       queryManager.resetStore();
     });
 
-    it('should call refetch on a mocked QuerySubscription if the store is reset', (done) => {
-      const mockQuerySubscription: QuerySubscription = {
-        unsubscribe() {
-          done(new Error('Unsubscribe was called on a subscription on store reset.'));
-        },
-
+    it('should call refetch on a mocked Observable if the store is reset', (done) => {
+      const mockObservableQuery: ObservableQuery = {
         refetch(variables: any): Promise<GraphQLResult> {
           done();
           return null;
         },
-
-        stopPolling(): void {
-          done(new Error('stopPolling was called on a subscription on store reset.'));
-        },
-
-        startPolling(pollInterval): void {
-          done(new Error('startPolling was called on a subscription on a store reset.'));
-        },
-      };
+      } as ObservableQuery;
       const queryManager = new QueryManager({
         networkInterface: mockNetworkInterface(),
         store: createApolloStore(),
         reduxRootKey: 'apollo',
       });
       const queryId = 'super-fake-id';
-      queryManager.addObservableQuery(queryId, null);
-      queryManager.addQuerySubscription(queryId, mockQuerySubscription);
+      queryManager.addObservableQuery(queryId, mockObservableQuery);
       queryManager.resetStore();
     });
 
@@ -2342,73 +2329,6 @@ describe('QueryManager', () => {
       }).catch((error) => {
         done();
       });
-    });
-
-    it('should refetch the results even for observables with multiple subscriptions', (done) => {
-      let queryManager: QueryManager = null;
-      const query = gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }`;
-      const data = {
-        author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      };
-
-      let timesFired = 0;
-      let numResults = 0;
-      let numResultsSecond = 0;
-
-      const myNetworkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
-          if (timesFired === 0) {
-            timesFired += 1;
-            queryManager.resetStore();
-          } else {
-            timesFired += 1;
-          }
-          return Promise.resolve({ data });
-        },
-      };
-
-      queryManager = new QueryManager({
-        networkInterface: myNetworkInterface,
-        store: createApolloStore(),
-        reduxRootKey: 'apollo',
-      });
-
-      const handle = queryManager.watchQuery({ query });
-
-      handle.subscribe({
-        next(result) {
-          numResults += 1;
-        },
-
-        error(err) {
-          done(new Error('Errored on observable on store reset.'));
-        },
-      });
-
-      handle.subscribe({
-        next(result) {
-          numResultsSecond += 1;
-        },
-        error(err) {
-          done(new Error('Errored on observable on store reset.'));
-        },
-      });
-
-      setTimeout(() => {
-        assert.equal(timesFired, 3);
-        assert.equal(numResults, 2);
-        assert.equal(numResultsSecond, 1);
-        done();
-      }, 100);
     });
   });
 

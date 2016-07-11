@@ -127,25 +127,25 @@ Run a GraphQL query and return a QueryObservable that is updated as the query re
 
 <h3 id="QueryObservable" title="QueryObservable">QueryObservable</h3>
 
-This is the object you get when you call `watchQuery`. It has just one method, `subscribe`, to which you can pass a `QueryObserver` object:
+This is the object you get when you call `watchQuery`. The most important method is `subscribe`, which lets you get query results. There are also some Apollo-Client-specific methods to refetch and poll query results:
 
 - `subscribe(observer: QueryObserver)` Pass an observer object which gets called when there is new data. Returns a `QuerySubscription` object which you can use to unsubscribe or refetch.
+- `refetch(variables: Object)` Refetch this query from the server. Think of it like a refresh button. This can take an object of new variables
+- `stopPolling()` Stop an actively polling query.
+- `startPolling(pollInterval: number)` Start polling a query
 
 <h3 id="QueryObserver" title="QueryObserver">interface QueryObserver</h3>
 
-The object you pass into `QueryObservable#subscribe`. Includes optional callbacks to receive results:
+The object you pass into `QueryObservable#subscribe`. It should include optional callbacks to get results or errors from the query:
 
 - `next(result: GraphQLResult)` Called when there is a new result for the query.
 - `error(error: ApolloError)` Called when there is any error for the query. Read more [in the `ApolloError` section below](queries.html#ApolloError).
 
 <h3 id="QuerySubscription" title="QuerySubscription">QuerySubscription</h3>
 
-The object returned from `QueryObservable#subscribe`. Includes four methods:
+The object returned from `QueryObservable#subscribe`. Includes just one method:
 
-- `refetch(variables: Object)` Refetch this query from the server. Think of it like a refresh button. This can take an object of new variables
 - `unsubscribe()` Notify the client to no longer care about this query. After this is called, none of the callbacks on the observer will be fired anymore. It's very important to call this when you are done with the query, because that is what lets the client know that it can clean up the data associated with this subscription. The view integrations will do this for you.
-- `stopPolling()` Stop an actively polling query.
-- `startPolling(pollInterval: number)` Start polling a query
 
 #### Code sample
 

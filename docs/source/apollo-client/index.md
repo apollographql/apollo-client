@@ -234,3 +234,7 @@ const client = new ApolloClient({
 ```
 
 Then, when a client calls ApolloClient#query or ApolloClient#watchQuery, the data should be returned instantly because it is already in the store! This also makes full page server side rendering without a page rebuild (if using react for instance) possible because the server rendered template won't differ from the client)
+
+## Change log
+
+Upgrading to a new version? [Check out the change log on GitHub](https://github.com/apollostack/apollo-client/blob/master/CHANGELOG.md).

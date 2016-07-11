@@ -438,6 +438,15 @@ describe('optimistic mutation results', () => {
       },
     };
 
+    const mutationResult2 = {
+      data: assign({}, mutationResult.data, {
+        createTodo: assign({}, mutationResult.data.createTodo, {
+          id: '66',
+          text: 'Second mutation.',
+        }),
+      }),
+    };
+
     const optimisticResponse = {
       __typename: 'Mutation',
       createTodo: {
@@ -448,7 +457,69 @@ describe('optimistic mutation results', () => {
       },
     };
 
+    const optimisticResponse2 = assign({}, optimisticResponse, {
+      createTodo: assign({}, optimisticResponse.createTodo, {
+        id: '66',
+        text: 'Optimistically generated 2',
+      }),
+    });
+
     it('handles a single error for a single mutation', () => {
+      return setup({
+        request: { query: mutation },
+        error: new Error('forbidden (test error)'),
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+      })
+      .then(() => {
+        const dataId = client.dataId({
+          __typename: 'TodoList',
+          id: '5',
+        });
+        const resultBehaviors = [
+          {
+            type: 'ARRAY_INSERT',
+            resultPath: [ 'createTodo' ],
+            storePath: [ dataId, 'todos' ],
+            where: 'PREPEND',
+          } as MutationBehavior,
+        ];
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+          resultBehaviors,
+        }).catch((err) => {
+          // it is ok to fail here
+          assert.instanceOf(err, Error);
+          assert.equal(err.message, 'forbidden (test error)');
+          return null;
+        });
+
+        const promise2 = client.mutate({
+          mutation,
+          optimisticResponse: optimisticResponse2,
+          resultBehaviors,
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+        assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+
+        return Promise.all([promise, promise2]);
+      })
+      .then(() => {
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.notProperty(dataInStore, 'Todo99');
+        assert.property(dataInStore, 'Todo66');
+        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
+        assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
+      });
+    });
+
+    it('handles errors produced by one mutation in a series', () => {
       return setup({
         request: { query: mutation },
         error: new Error('forbidden (test error)'),

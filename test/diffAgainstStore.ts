@@ -311,7 +311,10 @@ describe('diffing queries against the store', () => {
       }`;
     assert.throws(() => {
       diffSelectionSetAgainstStore({
-        store,
+        context: {
+          store,
+          fragmentMap: {},
+        },
         rootId: 'ROOT_QUERY',
         selectionSet: getQueryDefinition(unionQuery).selectionSet,
         variables: null,
@@ -353,7 +356,10 @@ describe('diffing queries against the store', () => {
       }`;
     assert.doesNotThrow(() => {
       diffSelectionSetAgainstStore({
-        store,
+        context: {
+          store,
+          fragmentMap: {},
+        },
         rootId: 'ROOT_QUERY',
         selectionSet: getQueryDefinition(unionQuery).selectionSet,
         variables: null,
@@ -395,12 +401,14 @@ describe('diffing queries against the store', () => {
       }`;
     assert.doesNotThrow(() => {
       diffSelectionSetAgainstStore({
-        store,
+        context: {
+          store,
+          fragmentMap: createFragmentMap(getFragmentDefinitions(unionQuery)),
+        },
         rootId: 'ROOT_QUERY',
         selectionSet: getQueryDefinition(unionQuery).selectionSet,
         variables: null,
         throwOnMissingField: true,
-        fragmentMap: createFragmentMap(getFragmentDefinitions(unionQuery)),
       });
     });
   });
@@ -439,12 +447,14 @@ describe('diffing queries against the store', () => {
       }`;
     assert.throw(() => {
       diffSelectionSetAgainstStore({
-        store,
+        context: {
+          store,
+          fragmentMap: createFragmentMap(getFragmentDefinitions(unionQuery)),
+        },
         rootId: 'ROOT_QUERY',
         selectionSet: getQueryDefinition(unionQuery).selectionSet,
         variables: null,
         throwOnMissingField: true,
-        fragmentMap: createFragmentMap(getFragmentDefinitions(unionQuery)),
       });
     });
   });
@@ -484,7 +494,10 @@ describe('diffing queries against the store', () => {
 
     assert.throw(() => {
       diffSelectionSetAgainstStore({
-        store,
+        context: {
+          store,
+          fragmentMap: {},
+        },
         rootId: 'ROOT_QUERY',
         selectionSet: getQueryDefinition(unionQuery).selectionSet,
         variables: null,
@@ -527,7 +540,7 @@ describe('diffing queries against the store', () => {
     `;
 
     const { result } = diffSelectionSetAgainstStore({
-      store,
+      context: { store, fragmentMap: {} },
       rootId: 'ROOT_QUERY',
       selectionSet: getQueryDefinition(queryWithMissingField).selectionSet,
       variables: null,
@@ -541,7 +554,7 @@ describe('diffing queries against the store', () => {
     });
     assert.throws(function() {
       diffSelectionSetAgainstStore({
-        store,
+        context: { store, fragmentMap: {} },
         rootId: 'ROOT_QUERY',
         selectionSet: getQueryDefinition(queryWithMissingField).selectionSet,
         variables: null,

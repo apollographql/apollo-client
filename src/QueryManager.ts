@@ -325,12 +325,14 @@ export class QueryManager {
           try {
             const resultFromStore = {
               data: readSelectionSetFromStore({
-                store: this.getDataWithOptimisticResults(),
+                context: {
+                  store: this.getDataWithOptimisticResults(),
+                  fragmentMap: queryStoreValue.fragmentMap,
+                },
                 rootId: queryStoreValue.query.id,
                 selectionSet: queryStoreValue.query.selectionSet,
                 variables: queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
-                fragmentMap: queryStoreValue.fragmentMap,
               }),
               loading: queryStoreValue.loading,
             };
@@ -558,15 +560,17 @@ export class QueryManager {
     }
 
     const previousResult = readSelectionSetFromStore({
-      // In case of an optimistic change, apply reducer on top of the
-      // results including previous optimistic updates. Otherwise, apply it
-      // on top of the real data only.
-      store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+      context: {
+        // In case of an optimistic change, apply reducer on top of the
+        // results including previous optimistic updates. Otherwise, apply it
+        // on top of the real data only.
+        store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+        fragmentMap: createFragmentMap(fragments || []),
+      },
       rootId: 'ROOT_QUERY',
       selectionSet: queryDefinition.selectionSet,
       variables: queryOptions.variables,
       returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
-      fragmentMap: createFragmentMap(fragments || []),
     });
 
     return {
@@ -674,12 +678,14 @@ export class QueryManager {
     initialResult: Object,
   } {
     const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
+      context: {
+        store: this.store.getState()[this.reduxRootKey].data,
+        fragmentMap,
+      },
       selectionSet: queryDef.selectionSet,
-      store: this.store.getState()[this.reduxRootKey].data,
       throwOnMissingField: false,
       rootId,
       variables,
-      fragmentMap,
     });
 
     const initialResult = result;
@@ -761,12 +767,14 @@ export class QueryManager {
             // this will throw an error if there are missing fields in
             // the results if returnPartialData is false.
             resultFromStore = readSelectionSetFromStore({
-              store: this.getApolloState().data,
+              context: {
+                store: this.getApolloState().data,
+                fragmentMap,
+              },
               rootId: querySS.id,
               selectionSet: querySS.selectionSet,
               variables,
               returnPartialData: returnPartialData || noFetch,
-              fragmentMap,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */

@@ -13,7 +13,7 @@ Apollo Client handles both of these requirements.
 
 <h2 id="mutate" title="ApolloClient#mutate">ApolloClient#mutate(options)</h2>
 
-Send a mutation to the server and get the result. The result is also incorporated into the store, updating any queries registered with `watchQuery` that are interested in the changed objects. Returns a promise that resolves to a GraphQLResult.
+Send a mutation to the server and get the result. The result is also incorporated into the store, updating any queries registered with `watchQuery` that are interested in the changed objects. Returns a promise that resolves to a GraphQLResult, or throws an [`ApolloError`](queries.html#ApolloError).
 
 - `mutation: string` The mutation to send to the server.
 - `variables: Object` The variables to send along with the mutation.
@@ -41,16 +41,8 @@ client.mutate({
     category_id: '456',
     raw: 'This is the post text.',
   }
-}).then((graphQLResult) => {
-  const { errors, data } = graphQLResult;
-
-  if (data) {
-    console.log('got data', data);
-  }
-
-  if (errors) {
-    console.log('got some GraphQL execution errors', errors);
-  }
+}).then(({ data }) => {
+  console.log('got data', data);
 }).catch((error) => {
   console.log('there was an error sending the query', error);
 });

@@ -76,7 +76,7 @@ Of course, you don't always want to use the existing data in the store - sometim
 
 <h2 id="query" title="ApolloClient#query">ApolloClient#query(options)</h2>
 
-Run a GraphQL query and return a promise that resolves to a `GraphQLResult`.
+Run a GraphQL query and return a promise that resolves to a `GraphQLResult`, or throws an [`ApolloError`](#ApolloError).
 
 - `query: string` A GraphQL query string to fetch.
 - `variables: Object` The variables to pass along with the query.
@@ -106,16 +106,8 @@ client.query({
     categoryId: 5,
   },
   forceFetch: false,
-}).then((graphQLResult) => {
-  const { errors, data } = graphQLResult;
-
-  if (data) {
-    console.log('got data', data);
-  }
-
-  if (errors) {
-    console.log('got some GraphQL execution errors', errors);
-  }
+}).then(({ data }) => {
+  console.log('got data', data);
 }).catch((error) => {
   console.log('there was an error sending the query', error);
 });
@@ -123,7 +115,7 @@ client.query({
 
 <h2 id="watchQuery" title="ApolloClient#watchQuery">ApolloClient#watchQuery(options)</h2>
 
-Run a GraphQL query and return a QueryObservable that is updated as the query result in the store changes.
+Run a GraphQL query and return a QueryObservable that is updated as the query result in the store changes, or throws an [`ApolloError`](#ApolloError).
 
 - `query: string` A GraphQL query string to fetch.
 - `variables: Object` The variables to pass along with the query.
@@ -144,7 +136,7 @@ This is the object you get when you call `watchQuery`. It has just one method, `
 The object you pass into `QueryObservable#subscribe`. Includes optional callbacks to receive results:
 
 - `next(result: GraphQLResult)` Called when there is a new result for the query.
-- `error(error: Error)` Called when there is a network error for the query.
+- `error(error: ApolloError)` Called when there is any error for the query. Read more [in the `ApolloError` section below](queries.html#ApolloError).
 
 <h3 id="QuerySubscription" title="QuerySubscription">QuerySubscription</h3>
 
@@ -178,16 +170,8 @@ const queryObservable = client.watchQuery({
 });
 
 const subscription = queryObservable.subscribe({
-  next: (graphQLResult) => {
-    const { errors, data } = graphQLResult;
-
-    if (data) {
-      console.log('got data', data);
-    }
-
-    if (errors) {
-      console.log('got some GraphQL execution errors', errors);
-    }
+  next: ({ data }) => {
+    console.log('got data', data);
   },
   error: (error) => {
     console.log('there was an error sending the query', error);
@@ -206,3 +190,13 @@ subscription.startPolling(100);
 // Call when we're done watching this query
 subscription.unsubscribe();
 ```
+
+<h2 id="ApolloError">ApolloError</h2>
+
+Apollo uses the custom error type `ApolloError` as the standard way to communicate GraphQL-related errors to your application.
+
+`ApolloError` extends the standard Javascript `Error` type, meaning that you can treat it as a standard `Error` and expect it to work correctly, but it also includes some extra fields that will help you write code that handles different types of errors. As a rule of thumb, you should not use the error message string to determine the type of error that has occurred. Instead, you should use the information that `ApolloError` provides:
+
+- `graphQLErrors: GraphQLError[]`: Array containing the errors returned by the server on a specific GraphQL query. When Apollo Client sends a query to the GraphQL server, these errors are contained within the errors key of the response returned by the server.
+- `networkError: Error`: Error that has occurred in fetching the query from the server (e.g. Apollo Client is unable to reach the server).
+- `message: string`: The error message that describes what went wrong. If there were multiple errors, this error message includes the error messages (separated by newlines) for each element in `graphQLErrors` and the `networkError`, if they are defined.

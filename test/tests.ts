@@ -24,3 +24,4 @@ import './batching';
 import './scheduler';
 import './mutationResults';
 import './scopeQuery';
+import './errors';

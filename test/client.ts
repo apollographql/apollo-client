@@ -61,6 +61,8 @@ import { getFragmentDefinitions } from '../src/queries/getFromAST';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
+import { ApolloError } from '../src/errors';
+
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
@@ -448,8 +450,9 @@ describe('client', () => {
     });
 
     return client.query({ query })
-      .then((result) => {
-        assert.deepEqual(result, { errors });
+      .catch((error) => {
+        const apolloError = error as ApolloError;
+        assert.deepEqual(apolloError.graphQLErrors, errors);
       });
   });
 

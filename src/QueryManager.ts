@@ -3,7 +3,6 @@ import {
   Request,
 } from './networkInterface';
 
-
 import forOwn = require('lodash.forown');
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
@@ -66,16 +65,24 @@ import {
   QueryScheduler,
 } from './scheduler';
 
+import {
+  ApolloQueryResult,
+} from './index';
+
 import { Observable, Observer, Subscription, SubscriberFunction } from './util/Observable';
 
-export class ObservableQuery extends Observable<GraphQLResult> {
-  public refetch: (variables?: any) => Promise<GraphQLResult>;
+import {
+  ApolloError,
+} from './errors';
+
+export class ObservableQuery extends Observable<ApolloQueryResult> {
+  public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
 
   constructor(options: {
-    subscriberFunction: SubscriberFunction<GraphQLResult>,
-    refetch: (variables?: any) => Promise<GraphQLResult>,
+    subscriberFunction: SubscriberFunction<ApolloQueryResult>,
+    refetch: (variables?: any) => Promise<ApolloQueryResult>,
     stopPolling: () => void,
     startPolling: (p: number) => void
   }) {
@@ -85,11 +92,11 @@ export class ObservableQuery extends Observable<GraphQLResult> {
     this.startPolling = options.startPolling;
   }
 
-  public subscribe(observer: Observer<GraphQLResult>): Subscription {
+  public subscribe(observer: Observer<ApolloQueryResult>): Subscription {
     return super.subscribe(observer);
   }
 
-  public result(): Promise<GraphQLResult> {
+  public result(): Promise<ApolloQueryResult> {
     return new Promise((resolve, reject) => {
       const subscription = this.subscribe({
         next(result) {
@@ -137,8 +144,8 @@ export class QueryManager {
   // track of queries that are inflight and reject them in case some
   // destabalizing action occurs (e.g. reset of the Apollo store).
   private fetchQueryPromises: { [requestId: string]: {
-    promise: Promise<GraphQLResult>;
-    resolve: (result: GraphQLResult) => void;
+    promise: Promise<ApolloQueryResult>;
+    resolve: (result: ApolloQueryResult) => void;
     reject: (error: Error) => void;
   } };
 
@@ -217,7 +224,7 @@ export class QueryManager {
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
-  }): Promise<GraphQLResult> {
+  }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
     let mutationDef = getMutationDefinition(mutation);
@@ -270,24 +277,30 @@ export class QueryManager {
   // results (or lack thereof) for a particular query.
   public queryListenerForObserver(
     options: WatchQueryOptions,
-    observer: Observer<GraphQLResult>
+    observer: Observer<ApolloQueryResult>
   ): QueryListener {
     return (queryStoreValue: QueryStoreValue) => {
+      // The query store value can be undefined in the event of a store
+      // reset.
+      if (!queryStoreValue) {
+        return;
+      }
+
       if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
         // XXX Currently, returning errors and data is exclusive because we
         // don't handle partial results
-        if (queryStoreValue.graphQLErrors) {
-          if (observer.next) {
-            observer.next({ errors: queryStoreValue.graphQLErrors });
-          }
-        } else if (queryStoreValue.networkError) {
-          // XXX we might not want to re-broadcast the same error over and over if it didn't change
+
+        // If we have either a GraphQL error or a network error, we create
+        // an error and tell the observer about it.
+        if (queryStoreValue.graphQLErrors || queryStoreValue.networkError) {
+          const apolloError = new ApolloError({
+            graphQLErrors: queryStoreValue.graphQLErrors,
+            networkError: queryStoreValue.networkError,
+          });
           if (observer.error) {
-            observer.error(queryStoreValue.networkError);
+            observer.error(apolloError);
           } else {
-            console.error('Unhandled network error',
-                          queryStoreValue.networkError,
-                          queryStoreValue.networkError.stack);
+            console.error('Unhandled error', apolloError, apolloError.stack);
           }
         } else {
           const resultFromStore = readSelectionSetFromStore({
@@ -321,11 +334,12 @@ export class QueryManager {
   public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
+
     const queryId = this.generateQueryId();
 
     let observableQuery;
 
-    const subscriberFunction = (observer) => {
+    const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
       const retQuerySubscription = {
         unsubscribe: () => {
           this.stopQuery(queryId);
@@ -337,47 +351,13 @@ export class QueryManager {
         this.addQuerySubscription(queryId, retQuerySubscription);
       }
 
-      this.startQuery(queryId, options, (queryStoreValue: QueryStoreValue) => {
-        // we could get back an empty store value if the store was reset while this
-        // query was still in flight. In this circumstance, we are no longer concerned
-        // with the return value of that particular instance of the query.
-        if (!queryStoreValue) {
-          return;
-        }
+      this.startQuery(
+        queryId,
+        options,
+        this.queryListenerForObserver(options, observer)
+      );
 
-        if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
-          // XXX Currently, returning errors and data is exclusive because we
-          // don't handle partial results
-          if (queryStoreValue.graphQLErrors) {
-            if (observer.next) {
-              observer.next({ errors: queryStoreValue.graphQLErrors });
-            }
-          } else if (queryStoreValue.networkError) {
-            // XXX we might not want to re-broadcast the same error over and over if it didn't change
-            if (observer.error) {
-              observer.error(queryStoreValue.networkError);
-            } else {
-              console.error('Unhandled network error',
-                queryStoreValue.networkError,
-                queryStoreValue.networkError.stack);
-            }
-          } else {
-            const resultFromStore = readSelectionSetFromStore({
-              store: this.getApolloState().data,
-              rootId: queryStoreValue.query.id,
-              selectionSet: queryStoreValue.query.selectionSet,
-              variables: queryStoreValue.variables,
-              returnPartialData: options.returnPartialData,
-              noFetch: options.noFetch,
-              fragmentMap: queryStoreValue.fragmentMap,
-            });
 
-            if (observer.next) {
-              observer.next({ data: resultFromStore });
-            }
-          }
-        }
-      });
       return retQuerySubscription;
     };
 
@@ -417,7 +397,7 @@ export class QueryManager {
     return observableQuery;
   }
 
-  public query(options: WatchQueryOptions): Promise<GraphQLResult> {
+  public query(options: WatchQueryOptions): Promise<ApolloQueryResult> {
     if (options.returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
@@ -442,7 +422,7 @@ export class QueryManager {
     return resPromise;
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<GraphQLResult> {
+  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<ApolloQueryResult> {
     return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
   }
 
@@ -472,11 +452,12 @@ export class QueryManager {
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.
-  public addFetchQueryPromise(requestId: number, promise: Promise<GraphQLResult>,
-    resolve: (result: GraphQLResult) => void,
+  public addFetchQueryPromise(requestId: number, promise: Promise<ApolloQueryResult>,
+    resolve: (result: ApolloQueryResult) => void,
     reject: (error: Error) => void) {
     this.fetchQueryPromises[requestId.toString()] = { promise, resolve, reject };
   }
+
 
   // Removes the promise in this.fetchQueryPromises for a particular request ID.
   public removeFetchQueryPromise(requestId: number) {
@@ -536,7 +517,7 @@ export class QueryManager {
     queryId: string,
     options: WatchQueryOptions,
     network: NetworkInterface
-  ): Promise<GraphQLResult> {
+  ): Promise<ApolloQueryResult> {
     const {
       query,
       variables,
@@ -657,12 +638,12 @@ export class QueryManager {
         operationName: request.operationName,
       };
 
-      const retPromise = new Promise<GraphQLResult>((resolve, reject) => {
+      const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
         this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
         return this.batcher.enqueueRequest(fetchRequest)
           .then((result: GraphQLResult) => {
-            // XXX handle multiple GraphQLResults
+            // XXX handle multiple ApolloQueryResults
             this.store.dispatch({
               type: 'APOLLO_QUERY_RESULT',
               result,
@@ -671,6 +652,11 @@ export class QueryManager {
             });
 
             this.removeFetchQueryPromise(requestId);
+            if (result.errors) {
+              reject(new ApolloError({
+                graphQLErrors: result.errors,
+              }));
+            }
             return result;
           }).then(() => {
 
@@ -705,7 +691,9 @@ export class QueryManager {
             });
 
             this.removeFetchQueryPromise(requestId);
-            return error;
+            reject(new ApolloError({
+              networkError: error,
+            }));
           });
       });
       return retPromise;

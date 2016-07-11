@@ -956,7 +956,7 @@ describe('QueryManager', () => {
   it('supports noFetch fetching only cached data', () => {
     const primeQuery = gql`
       query primeQuery {
-        people_one(id: 1) {
+        luke: people_one(id: 1) {
           name
         }
       }
@@ -974,7 +974,7 @@ describe('QueryManager', () => {
     `;
 
     const data1 = {
-      people_one: {
+      luke: {
         name: 'Luke Skywalker',
       },
     };

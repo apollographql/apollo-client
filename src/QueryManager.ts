@@ -293,21 +293,27 @@ export class QueryManager {
             console.error('Unhandled error', apolloError, apolloError.stack);
           }
         } else {
-          const resultFromStore = {
-            data: readSelectionSetFromStore({
-              store: this.getDataWithOptimisticResults(),
-              rootId: queryStoreValue.query.id,
-              selectionSet: queryStoreValue.query.selectionSet,
-              variables: queryStoreValue.variables,
-              returnPartialData: options.returnPartialData || options.noFetch,
-              fragmentMap: queryStoreValue.fragmentMap,
-            }),
-          };
+          try {
+            const resultFromStore = {
+              data: readSelectionSetFromStore({
+                store: this.getDataWithOptimisticResults(),
+                rootId: queryStoreValue.query.id,
+                selectionSet: queryStoreValue.query.selectionSet,
+                variables: queryStoreValue.variables,
+                returnPartialData: options.returnPartialData || options.noFetch,
+                fragmentMap: queryStoreValue.fragmentMap,
+              }),
+            };
 
-          if (observer.next) {
-            if (this.isDifferentResult(queryId, resultFromStore )) {
-              this.queryResults[queryId] = resultFromStore;
-              observer.next(resultFromStore);
+            if (observer.next) {
+              if (this.isDifferentResult(queryId, resultFromStore )) {
+                this.queryResults[queryId] = resultFromStore;
+                observer.next(resultFromStore);
+              }
+            }
+          } catch (error) {
+            if (observer.error) {
+              observer.error(error);
             }
           }
         }

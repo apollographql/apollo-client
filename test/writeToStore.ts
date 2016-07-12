@@ -234,9 +234,9 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     }), {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
-        nestedObj: `${result.id}.nestedObj`,
+        nestedObj: `$${result.id}.nestedObj`,
       }),
-      [`${result.id}.nestedObj`]: result.nestedObj,
+      [`$${result.id}.nestedObj`]: result.nestedObj,
     });
   });
 
@@ -272,9 +272,9 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     }), {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
-        'nestedObj({"arg":"val"})': `${result.id}.nestedObj({"arg":"val"})`,
+        'nestedObj({"arg":"val"})': `$${result.id}.nestedObj({"arg":"val"})`,
       }),
-      [`${result.id}.nestedObj({"arg":"val"})`]: result.nestedObj,
+      [`$${result.id}.nestedObj({"arg":"val"})`]: result.nestedObj,
     });
   });
 
@@ -646,9 +646,9 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     }), {
       'ROOT_QUERY': {
-        'people_one({"id":"5"})': 'ROOT_QUERY.people_one({"id":"5"})',
+        'people_one({"id":"5"})': '$ROOT_QUERY.people_one({"id":"5"})',
       },
-      'ROOT_QUERY.people_one({"id":"5"})': {
+      '$ROOT_QUERY.people_one({"id":"5"})': {
         'id': 'abcd',
         'stringField': 'This is a string!',
       },
@@ -780,6 +780,76 @@ describe('writing to the store', () => {
         throw 'No operation definition found';
       }
     });
+  });
+
+  it('should merge objects when overwriting a generated id with a real id', () => {
+    const dataWithoutId = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+
+    const dataWithId = {
+      author: {
+        firstName: 'John',
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const dataIdFromObject = (object) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+    };
+    const queryWithoutId = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const queryWithId = gql`
+      query {
+        author {
+          firstName
+          id
+          __typename
+        }
+      }`;
+    const expStoreWithoutId = {
+      '$ROOT_QUERY.author': {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+      ROOT_QUERY: {
+        'author': '$ROOT_QUERY.author',
+      },
+    };
+    const expStoreWithId = {
+      'Author__129': {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+      ROOT_QUERY: {
+        'author': 'Author__129',
+      },
+    };
+    const storeWithoutId = writeQueryToStore({
+      result: dataWithoutId,
+      query: queryWithoutId,
+      dataIdFromObject,
+    });
+    assert.deepEqual(storeWithoutId, expStoreWithoutId);
+    const storeWithId = writeQueryToStore({
+      result: dataWithId,
+      query: queryWithId,
+      store: storeWithoutId,
+      dataIdFromObject,
+    });
+    assert.deepEqual(storeWithId, expStoreWithId);
   });
 
   it('throw an error if a variable is not provided', () => {

@@ -344,7 +344,6 @@ describe('client', () => {
             forceFetch: false,
             fragmentMap: {},
             returnPartialData: false,
-            noFetch: false,
             lastRequestId: 1,
           },
         },

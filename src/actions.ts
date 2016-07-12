@@ -43,7 +43,6 @@ export interface QueryInitAction {
   variables: Object;
   forceFetch: boolean;
   returnPartialData: boolean;
-  noFetch: boolean;
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;

@@ -3,35 +3,25 @@
 
 import * as $$observable from 'symbol-observable';
 
+import {
+  QueryManager,
+  WatchQueryOptions,
+} from '../QueryManager';
+
 export type CleanupFunction = () => void;
 export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | CleanupFunction);
 
-function isSubscription(subscription: Function | Subscription): subscription is Subscription {
-  return (<Subscription>subscription).unsubscribe !== undefined;
-}
-
 export class Observable<T> {
-  private subscriberFunction: SubscriberFunction<T>;
+  public queryManager: QueryManager;
+  public options: WatchQueryOptions;
 
-  constructor(subscriberFunction: SubscriberFunction<T>) {
-    this.subscriberFunction = subscriberFunction;
-
+  constructor(queryManager: QueryManager, options: WatchQueryOptions) {
+    this.options = options;
+    this.queryManager = queryManager;
   }
 
   public [$$observable]() {
     return this;
-  }
-
-  public subscribe(observer: Observer<T>): Subscription {
-    let subscriptionOrCleanupFunction = this.subscriberFunction(observer);
-
-    if (isSubscription(subscriptionOrCleanupFunction)) {
-      return subscriptionOrCleanupFunction;
-    } else {
-      return {
-        unsubscribe: subscriptionOrCleanupFunction,
-      };
-    }
   }
 }
 

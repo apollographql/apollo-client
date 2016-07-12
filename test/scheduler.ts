@@ -251,7 +251,7 @@ describe('QueryScheduler', () => {
       },
     });
   });
-  it('should keep track of in flight queries', (done) => {
+  /*it('should keep track of in flight queries', (done) => {
     const query = gql`
       query {
         fortuneCookie
@@ -330,5 +330,5 @@ describe('QueryScheduler', () => {
       subscription.unsubscribe();
       done();
     }, 100);
-  });
+  });*/
 });

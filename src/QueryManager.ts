@@ -75,25 +75,97 @@ import {
   ApolloError,
 } from './errors';
 
+export interface WatchQueryOptions {
+  query: Document;
+  variables?: { [key: string]: any };
+  forceFetch?: boolean;
+  returnPartialData?: boolean;
+  noFetch?: boolean;
+  pollInterval?: number;
+  fragments?: FragmentDefinition[];
+}
+
 export class ObservableQuery extends Observable<ApolloQueryResult> {
+  public queryId: string;
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
+  private subscriberFunction: SubscriberFunction<GraphQLResult>;
 
-  constructor(options: {
-    subscriberFunction: SubscriberFunction<ApolloQueryResult>,
-    refetch: (variables?: any) => Promise<ApolloQueryResult>,
-    stopPolling: () => void,
-    startPolling: (p: number) => void
+  constructor({
+    queryManager,
+    options,
+    shouldSubscribe = true,
+  }: {
+    queryManager: QueryManager,
+    options: WatchQueryOptions,
+    shouldSubscribe?: boolean,
   }) {
-    super(options.subscriberFunction);
-    this.refetch = options.refetch;
-    this.stopPolling = options.stopPolling;
-    this.startPolling = options.startPolling;
+    super(queryManager, options);
+    this.queryId = this.queryManager.generateQueryId();
+
+    this.subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
+      const retQuerySubscription = {
+        unsubscribe: () => {
+          this.queryManager.stopQuery(this.queryId);
+        },
+      };
+
+      if (shouldSubscribe) {
+        this.queryManager.addObservableQuery(this.queryId, this);
+        this.queryManager.addQuerySubscription(this.queryId, retQuerySubscription);
+      }
+
+      this.queryManager.startQuery(
+        this.queryId,
+        this.options,
+        this.queryManager.queryListenerForObserver(this.options, observer)
+      );
+      return retQuerySubscription;
+    };
+
+    this.refetch = (variables?: any) => {
+      // If no new variables passed, use existing variables
+      variables = variables || this.options.variables;
+      if (this.options.noFetch) {
+        throw new Error('noFetch option should not use query refetch.');
+      }
+      // Use the same options as before, but with new variables and forceFetch true
+      return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
+        forceFetch: true,
+        variables,
+      }) as WatchQueryOptions);
+    };
+
+    this.stopPolling = () => {
+      if (this.queryManager.pollingTimers[this.queryId]) {
+        clearInterval(this.queryManager.pollingTimers[this.queryId]);
+      }
+    };
+
+    this.startPolling = (pollInterval) => {
+      if (this.options.noFetch) {
+        throw new Error('noFetch option should not use query polling.');
+      }
+      this.queryManager.pollingTimers[this.queryId] = setInterval(() => {
+        const pollingOptions = assign({}, this.options) as WatchQueryOptions;
+        // subsequent fetches from polling always reqeust new data
+        pollingOptions.forceFetch = true;
+        this.queryManager.fetchQuery(this.queryId, pollingOptions);
+      }, pollInterval);
+    };
   }
 
-  public subscribe(observer: Observer<ApolloQueryResult>): Subscription {
-    return super.subscribe(observer);
+  public subscribe(observer: Observer<GraphQLResult>): Subscription {
+    let subscriptionOrCleanupFunction = this.subscriberFunction(observer);
+
+    if (this.isSubscription(subscriptionOrCleanupFunction)) {
+      return subscriptionOrCleanupFunction;
+    } else {
+      return {
+        unsubscribe: subscriptionOrCleanupFunction,
+      };
+    }
   }
 
   public result(): Promise<ApolloQueryResult> {
@@ -111,25 +183,19 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       });
     });
   }
-}
 
-export interface WatchQueryOptions {
-  query: Document;
-  variables?: { [key: string]: any };
-  forceFetch?: boolean;
-  returnPartialData?: boolean;
-  noFetch?: boolean;
-  pollInterval?: number;
-  fragments?: FragmentDefinition[];
+  private isSubscription(subscription: Function | Subscription): subscription is Subscription {
+  return (<Subscription>subscription).unsubscribe !== undefined;
+  }
 }
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export class QueryManager {
+  public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
-  private pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
@@ -308,8 +374,7 @@ export class QueryManager {
             rootId: queryStoreValue.query.id,
             selectionSet: queryStoreValue.query.selectionSet,
             variables: queryStoreValue.variables,
-            returnPartialData: options.returnPartialData,
-            noFetch: options.noFetch,
+            returnPartialData: options.returnPartialData || options.noFetch,
             fragmentMap: queryStoreValue.fragmentMap,
           });
 
@@ -335,63 +400,10 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
-    const queryId = this.generateQueryId();
-
-    let observableQuery;
-
-    const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
-      const retQuerySubscription = {
-        unsubscribe: () => {
-          this.stopQuery(queryId);
-        },
-      };
-
-      if (shouldSubscribe) {
-        this.addObservableQuery(queryId, observableQuery);
-        this.addQuerySubscription(queryId, retQuerySubscription);
-      }
-
-      this.startQuery(
-        queryId,
-        options,
-        this.queryListenerForObserver(options, observer)
-      );
-
-
-      return retQuerySubscription;
-    };
-
-    const refetch = (variables?: any) => {
-      // If no new variables passed, use existing variables
-      variables = variables || options.variables;
-
-      // Use the same options as before, but with new variables and forceFetch true
-      return this.fetchQuery(queryId, assign(options, {
-        forceFetch: options.noFetch ? false : true,
-        variables,
-      }) as WatchQueryOptions);
-    };
-
-    const stopPolling = () => {
-      if (this.pollingTimers[queryId]) {
-        clearInterval(this.pollingTimers[queryId]);
-      }
-    };
-
-    const startPolling = (pollInterval) => {
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = options.noFetch ? false : true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, pollInterval);
-    };
-
-    observableQuery = new ObservableQuery({
-      subscriberFunction,
-      refetch,
-      stopPolling,
-      startPolling,
+    let observableQuery = new ObservableQuery({
+      queryManager: this,
+      options: options,
+      shouldSubscribe: shouldSubscribe,
     });
 
     return observableQuery;
@@ -513,6 +525,41 @@ export class QueryManager {
     });
   }
 
+  public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
+    this.queryListeners[queryId] = listener;
+    this.fetchQuery(queryId, options);
+
+    if (options.pollInterval) {
+      if (options.noFetch) {
+        throw new Error('noFetch option should not use query polling.');
+      }
+      this.pollingTimers[queryId] = setInterval(() => {
+        const pollingOptions = assign({}, options) as WatchQueryOptions;
+        // subsequent fetches from polling always reqeust new data
+        pollingOptions.forceFetch = true;
+        this.fetchQuery(queryId, pollingOptions);
+      }, options.pollInterval);
+    }
+
+    return queryId;
+  }
+
+  public stopQuery(queryId: string) {
+    // XXX in the future if we should cancel the request
+    // so that it never tries to return data
+    delete this.queryListeners[queryId];
+
+    // if we have a polling interval running, stop it
+    if (this.pollingTimers[queryId]) {
+      clearInterval(this.pollingTimers[queryId]);
+    }
+
+    this.store.dispatch({
+      type: 'APOLLO_QUERY_STOP',
+      queryId,
+    });
+  }
+
   private fetchQueryOverInterface(
     queryId: string,
     options: WatchQueryOptions,
@@ -605,8 +652,7 @@ export class QueryManager {
       minimizedQuery,
       variables,
       forceFetch,
-      returnPartialData,
-      noFetch,
+      returnPartialData: returnPartialData || noFetch,
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
@@ -670,8 +716,7 @@ export class QueryManager {
                 rootId: querySS.id,
                 selectionSet: querySS.selectionSet,
                 variables,
-                returnPartialData: returnPartialData,
-                noFetch: noFetch,
+                returnPartialData: returnPartialData || noFetch,
                 fragmentMap: queryFragmentMap,
               });
               // ensure multiple errors don't get thrown
@@ -702,41 +747,6 @@ export class QueryManager {
     // return a chainable promise
     return new Promise((resolve) => {
       resolve({ data: initialResult });
-    });
-  }
-
-  private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
-    this.queryListeners[queryId] = listener;
-    if (options.noFetch) {
-      options.pollInterval = null;
-    }
-    this.fetchQuery(queryId, options);
-
-    if (options.pollInterval) {
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, options.pollInterval);
-    }
-
-    return queryId;
-  }
-
-  private stopQuery(queryId: string) {
-    // XXX in the future if we should cancel the request
-    // so that it never tries to return data
-    delete this.queryListeners[queryId];
-
-    // if we have a polling interval running, stop it
-    if (this.pollingTimers[queryId]) {
-      clearInterval(this.pollingTimers[queryId]);
-    }
-
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_STOP',
-      queryId,
     });
   }
 

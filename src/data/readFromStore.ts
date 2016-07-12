@@ -26,13 +26,11 @@ export function readQueryFromStore({
   query,
   variables,
   returnPartialData,
-  noFetch,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
   returnPartialData?: boolean,
-  noFetch?: boolean,
 }): Object {
   const queryDef = getQueryDefinition(query);
 
@@ -42,7 +40,6 @@ export function readQueryFromStore({
     selectionSet: queryDef.selectionSet,
     variables,
     returnPartialData,
-    noFetch,
   });
 }
 
@@ -52,14 +49,12 @@ export function readFragmentFromStore({
   rootId,
   variables,
   returnPartialData,
-  noFetch,
 }: {
   store: NormalizedCache,
   fragment: Document,
   rootId: string,
   variables?: Object,
   returnPartialData?: boolean,
-  noFetch?: boolean,
 }): Object {
   const fragmentDef = getFragmentDefinition(fragment);
 
@@ -69,7 +64,6 @@ export function readFragmentFromStore({
     selectionSet: fragmentDef.selectionSet,
     variables,
     returnPartialData,
-    noFetch,
   });
 }
 
@@ -79,7 +73,6 @@ export function readSelectionSetFromStore({
   selectionSet,
   variables,
   returnPartialData = false,
-  noFetch = false,
   fragmentMap,
 }: {
   store: NormalizedCache,
@@ -87,7 +80,6 @@ export function readSelectionSetFromStore({
   selectionSet: SelectionSet,
   variables: Object,
   returnPartialData?: boolean,
-  noFetch?: boolean,
   fragmentMap?: FragmentMap,
 }): Object {
   const {
@@ -96,7 +88,7 @@ export function readSelectionSetFromStore({
     selectionSet,
     rootId,
     store,
-    throwOnMissingField: !returnPartialData && !noFetch,
+    throwOnMissingField: !returnPartialData,
     variables,
     fragmentMap,
   });

@@ -97,7 +97,7 @@ export class QueryScheduler {
       throw new Error('Tried to register a non-polling query with the scheduler.');
     }
 
-    const queryId = this.queryManager.generateQueryId();
+    /*
 
     const subscriberFunction = (observer) => {
       // "Fire" (i.e. add to the QueryBatcher queue)
@@ -111,33 +111,11 @@ export class QueryScheduler {
       };
     };
 
-    const refetch = (variables: any) => {
-      variables = variables || options.variables;
-      return this.fetchQuery(queryId, assign(options, {
-        forceFetch: true,
-        variables,
-      }) as WatchQueryOptions);
-    };
-
-    const startPolling = () => {
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions).then(() => {
-          this.removeInFlight(queryId);
-        });
-      }, options.pollInterval);
-    };
-
-    const stopPolling = () => {
-      this.stopPollingQuery(queryId);
-    };
+    */
 
     return new ObservableQuery({
-      subscriberFunction,
-      refetch,
-      stopPolling,
-      startPolling,
+      queryManager: this.queryManager,
+      options: options,
     });
   }
 

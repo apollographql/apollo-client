@@ -141,7 +141,7 @@ export class QueryManager {
 
   private scheduler: QueryScheduler;
   private batcher: QueryBatcher;
-  private batcherPollInterval = 10;
+  private batcherPollInterval: number;
 
   // A map going from an index (i.e. just like an array index, except that we can remove
   // some of them) to a promise that has not yet been resolved. We use this to keep
@@ -167,12 +167,14 @@ export class QueryManager {
     reduxRootKey,
     queryTransformer,
     shouldBatch = false,
+    batcherPollInterval = 10,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
     shouldBatch?: Boolean,
+    batcherPollInterval?: number,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -181,7 +183,7 @@ export class QueryManager {
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
     this.pollingTimers = {};
-
+    this.batcherPollInterval = batcherPollInterval;
     this.queryListeners = {};
 
     this.scheduler = new QueryScheduler({

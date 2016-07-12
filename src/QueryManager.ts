@@ -685,7 +685,7 @@ export class QueryManager {
               // this will throw an error if there are missing fields in
               // the results if returnPartialData is false.
               resultFromStore = readSelectionSetFromStore({
-                store: this.getDataWithOptimisticResults(),
+                store: this.getApolloState().data,
                 rootId: querySS.id,
                 selectionSet: querySS.selectionSet,
                 variables,

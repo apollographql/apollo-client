@@ -608,7 +608,7 @@ describe('optimistic mutation results', () => {
           optimisticResponse: optimisticResponse2,
           resultBehaviors,
         }).then((res) => {
-          checkBothMutationsAreApplied('This one was created with a mutation.', 'second mutation.');
+          checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
           const mutationsState = client.store.getState().apollo.mutations;
           assert.equal(mutationsState[2].loading, false);
           assert.equal(mutationsState[3].loading, false);
@@ -625,7 +625,7 @@ describe('optimistic mutation results', () => {
         return Promise.all([promise, promise2]);
       })
       .then(() => {
-        checkBothMutationsAreApplied('This one was created with a mutation.', 'second mutation.');
+        checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
       });
     });
   });

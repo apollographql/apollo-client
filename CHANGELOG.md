@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)
+
 ### v0.4.1
 
 - Allow `client.mutate` to accept an `optimisticResponse` argument to update the cache immediately, then after the server responds replace the `optimisticResponse` with the real response. [Issue #287](https://github.com/apollostack/apollo-client/issues/287) [PR #336](https://github.com/apollostack/apollo-client/pull/336)

@@ -4,7 +4,12 @@ import {
 
 import {
   SelectionSetWithRoot,
+  QueryStore,
 } from './queries/store';
+
+import {
+  MutationStore,
+} from './mutations/store';
 
 import {
   MutationBehavior,
@@ -15,6 +20,7 @@ import { FragmentMap } from './queries/getFromAST';
 export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
   result: GraphQLResult;
+  queries: QueryStore;
   queryId: string;
   requestId: number;
 }
@@ -27,6 +33,7 @@ export interface QueryErrorAction {
   type: 'APOLLO_QUERY_ERROR';
   error: Error;
   queryId: string;
+  queries: QueryStore;
   requestId: number;
 }
 
@@ -45,6 +52,7 @@ export interface QueryInitAction {
   returnPartialData: boolean;
   queryId: string;
   requestId: number;
+  queries: QueryStore;
   fragmentMap: FragmentMap;
 }
 
@@ -56,6 +64,7 @@ export interface QueryResultClientAction {
   type: 'APOLLO_QUERY_RESULT_CLIENT';
   result: GraphQLResult;
   complete: boolean;
+  queries: QueryStore;
   queryId: string;
 }
 
@@ -66,6 +75,7 @@ export function isQueryResultClientAction(action: ApolloAction): action is Query
 export interface QueryStopAction {
   type: 'APOLLO_QUERY_STOP';
   queryId: string;
+  queries: QueryStore;
 }
 
 export function isQueryStopAction(action: ApolloAction): action is QueryStopAction {
@@ -79,6 +89,7 @@ export interface MutationInitAction {
   variables: Object;
   mutationId: string;
   fragmentMap: FragmentMap;
+  mutations: MutationStore;
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
@@ -90,6 +101,7 @@ export interface MutationResultAction {
   result: GraphQLResult;
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
+  mutations: MutationStore;
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

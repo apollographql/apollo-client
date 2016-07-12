@@ -16,9 +16,9 @@ import {
 } from '../store';
 
 import assign = require('lodash.assign');
+import pick = require('lodash.pick');
 
-// Currently every OptimisticStore stack's element contains an entirely new copy of `data`
-// This could be optimized with a copy-on-write data structure like immutable.js
+// a stack of patches of new or changed documents
 export type OptimisticStore = {
   mutationId: string,
   data: NormalizedCache,
@@ -42,16 +42,21 @@ export function optimistic(
     } as ApolloAction;
 
     const fakeStore = assign({}, store, { optimistic: previousState }) as Store;
+    const optimisticData = getDataWithOptimisticResults(fakeStore);
     const fakeDataResultState = data(
-      getDataWithOptimisticResults(fakeStore),
+      optimisticData,
       fakeMutationResultAction,
       store.queries,
       store.mutations,
       config
     );
 
+    const changedKeys = Object.keys(fakeDataResultState).filter(
+      key => optimisticData[key] !== fakeDataResultState[key]);
+    const patch = pick(fakeDataResultState, changedKeys);
+
     const optimisticState = {
-      data: fakeDataResultState,
+      data: patch,
       mutationId: action.mutationId,
     };
 

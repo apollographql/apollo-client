@@ -40,6 +40,11 @@ declare module 'lodash.merge' {
   export = main.merge;
 }
 
+declare module 'lodash.pick' {
+  import main = require('~lodash/index');
+  export = main.pick;
+}
+
 declare module 'lodash.includes' {
   import main = require('~lodash/index');
   export = main.includes;

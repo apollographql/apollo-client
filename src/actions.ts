@@ -91,7 +91,6 @@ export interface MutationResultAction {
   type: 'APOLLO_MUTATION_RESULT';
   result: GraphQLResult;
   mutationId: string;
-  optimisticResponse: Object;
   resultBehaviors?: MutationBehavior[];
 }
 

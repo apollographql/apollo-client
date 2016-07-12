@@ -37,7 +37,6 @@ export function optimistic(
       type: 'APOLLO_MUTATION_RESULT',
       result: { data: action.optimisticResponse },
       mutationId: action.mutationId,
-      optimisticResponse: null,
       resultBehaviors: action.resultBehaviors,
     } as ApolloAction;
 
@@ -64,7 +63,7 @@ export function optimistic(
 
     return newState;
   } else if ((isMutationErrorAction(action) || isMutationResultAction(action))
-               && action.optimisticResponse) {
+               && previousState.some(change => change.mutationId === action.mutationId)) {
     // throw away optimistic changes of that particular mutation
     const newState = previousState.filter(
       (change) => change.mutationId !== action.mutationId);

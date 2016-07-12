@@ -274,7 +274,6 @@ export class QueryManager {
           result,
           mutationId,
           resultBehaviors,
-          optimisticResponse,
         });
 
         return result;
@@ -285,7 +284,6 @@ export class QueryManager {
           error: err,
           mutationId,
           resultBehaviors,
-          optimisticResponse,
         });
 
         return Promise.reject(err);

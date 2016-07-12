@@ -69,7 +69,7 @@ import {
   ApolloQueryResult,
 } from './index';
 
-import { Observable, Observer, Subscription, SubscriberFunction } from './util/Observable';
+import { Observable, Observer, Subscription } from './util/Observable';
 
 import {
   ApolloError,
@@ -86,11 +86,12 @@ export interface WatchQueryOptions {
 }
 
 export class ObservableQuery extends Observable<ApolloQueryResult> {
-  public queryId: string;
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
-  private subscriberFunction: SubscriberFunction<GraphQLResult>;
+  public options: WatchQueryOptions;
+  public queryManager: QueryManager;
+  private queryId: string;
 
   constructor({
     queryManager,
@@ -101,28 +102,31 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     options: WatchQueryOptions,
     shouldSubscribe?: boolean,
   }) {
-    super(queryManager, options);
-    this.queryId = this.queryManager.generateQueryId();
 
-    this.subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
+    const queryId = queryManager.generateQueryId();
+    const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
       const retQuerySubscription = {
         unsubscribe: () => {
-          this.queryManager.stopQuery(this.queryId);
+          queryManager.stopQuery(queryId);
         },
       };
 
       if (shouldSubscribe) {
-        this.queryManager.addObservableQuery(this.queryId, this);
-        this.queryManager.addQuerySubscription(this.queryId, retQuerySubscription);
+        queryManager.addObservableQuery(queryId, this);
+        queryManager.addQuerySubscription(queryId, retQuerySubscription);
       }
 
-      this.queryManager.startQuery(
-        this.queryId,
-        this.options,
-        this.queryManager.queryListenerForObserver(this.options, observer)
+      queryManager.startQuery(
+        queryId,
+        options,
+        queryManager.queryListenerForObserver(options, observer)
       );
       return retQuerySubscription;
     };
+    super(subscriberFunction);
+    this.options = options;
+    this.queryManager = queryManager;
+    this.queryId = queryId;
 
     this.refetch = (variables?: any) => {
       // If no new variables passed, use existing variables
@@ -156,18 +160,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     };
   }
 
-  public subscribe(observer: Observer<GraphQLResult>): Subscription {
-    let subscriptionOrCleanupFunction = this.subscriberFunction(observer);
-
-    if (this.isSubscription(subscriptionOrCleanupFunction)) {
-      return subscriptionOrCleanupFunction;
-    } else {
-      return {
-        unsubscribe: subscriptionOrCleanupFunction,
-      };
-    }
-  }
-
   public result(): Promise<ApolloQueryResult> {
     return new Promise((resolve, reject) => {
       const subscription = this.subscribe({
@@ -184,9 +176,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     });
   }
 
-  private isSubscription(subscription: Function | Subscription): subscription is Subscription {
-  return (<Subscription>subscription).unsubscribe !== undefined;
-  }
 }
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
@@ -530,7 +519,9 @@ export class QueryManager {
     // the promise for it will be rejected and its results will not be written to the
     // store.
     Object.keys(this.observableQueries).forEach((queryId) => {
-      this.observableQueries[queryId].observableQuery.refetch();
+      if (! this.observableQueries[queryId].observableQuery.options.noFetch) {
+        this.observableQueries[queryId].observableQuery.refetch();
+      }
     });
   }
 

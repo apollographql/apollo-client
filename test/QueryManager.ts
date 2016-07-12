@@ -1,6 +1,7 @@
 import {
   QueryManager,
   ObservableQuery,
+  WatchQueryOptions,
 } from '../src/QueryManager';
 
 import {
@@ -2358,22 +2359,76 @@ describe('QueryManager', () => {
     });
 
     it('should call refetch on a mocked Observable if the store is reset', (done) => {
-      const mockObservableQuery: ObservableQuery = {
-        refetch(variables: any): Promise<GraphQLResult> {
-          done();
-          return null;
-        },
-      } as ObservableQuery;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
       const queryManager = new QueryManager({
         networkInterface: mockNetworkInterface(),
         store: createApolloStore(),
         reduxRootKey: 'apollo',
       });
+      const mockObservableQuery: ObservableQuery = {
+        refetch(variables: any): Promise<GraphQLResult> {
+          done();
+          return null;
+        },
+        stopPolling(): void {
+          return;
+        },
+        startPolling(pollInterval): void {
+          return;
+        },
+        options: {
+          query: query,
+        },
+        queryManager: queryManager,
+      } as ObservableQuery;
+
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery(queryId, mockObservableQuery);
       queryManager.resetStore();
     });
 
+    it('should not call refetch on a noFetch Observable if the store is reset', (done) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      const options = assign({}) as WatchQueryOptions;
+      options.noFetch = true;
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery = {
+        refetch(variables: any): Promise<GraphQLResult> {
+          refetchCount ++;
+          done();
+          return null;
+        },
+        options,
+        queryManager: queryManager,
+      } as ObservableQuery;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery(queryId, mockObservableQuery);
+      queryManager.resetStore();
+      setTimeout(() => {
+        assert.equal(refetchCount, 0);
+        done();
+      }, 400);
+
+    });
 
     it('should throw an error on an inflight query() if the store is reset', (done) => {
       let queryManager: QueryManager = null;

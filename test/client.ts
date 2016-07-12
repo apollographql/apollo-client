@@ -153,6 +153,7 @@ describe('client', () => {
           queries: {},
           mutations: {},
           data: {},
+          optimistic: [],
         },
       }
     );
@@ -173,6 +174,7 @@ describe('client', () => {
           queries: {},
           mutations: {},
           data: {},
+          optimistic: [],
         },
       }
     );
@@ -359,6 +361,7 @@ describe('client', () => {
             'allPeople({"first":1})': 'ROOT_QUERY.allPeople({"first":1})',
           },
         },
+        optimistic: [],
       },
     };
 

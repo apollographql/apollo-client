@@ -10,6 +10,7 @@ import isEqual = require('lodash.isequal');
 import {
   ApolloStore,
   Store,
+  getDataWithOptimisticResults,
 } from './store';
 
 import {
@@ -31,6 +32,10 @@ import {
   QueryTransformer,
   applyTransformerToOperation,
 } from './queries/queryTransform';
+
+import {
+  NormalizedCache,
+} from './data/store';
 
 import {
   GraphQLResult,
@@ -274,11 +279,13 @@ export class QueryManager {
     variables,
     resultBehaviors,
     fragments = [],
+    optimisticResponse,
   }: {
     mutation: Document,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
+    optimisticResponse?: Object,
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
@@ -312,6 +319,8 @@ export class QueryManager {
       variables,
       mutationId,
       fragmentMap: queryFragmentMap,
+      optimisticResponse,
+      resultBehaviors,
     });
 
     return this.networkInterface.query(request)
@@ -368,7 +377,7 @@ export class QueryManager {
           }
         } else {
           const resultFromStore = readSelectionSetFromStore({
-            store: this.getApolloState().data,
+            store: this.getDataWithOptimisticResults(),
             rootId: queryStoreValue.query.id,
             selectionSet: queryStoreValue.query.selectionSet,
             variables: queryStoreValue.variables,
@@ -451,6 +460,10 @@ export class QueryManager {
 
   public getApolloState(): Store {
     return this.store.getState()[this.reduxRootKey];
+  }
+
+  public getDataWithOptimisticResults(): NormalizedCache {
+    return getDataWithOptimisticResults(this.getApolloState());
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {

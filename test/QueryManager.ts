@@ -2264,6 +2264,7 @@ describe('QueryManager', () => {
         data: {},
         mutations: {},
         queries: {},
+        optimistic: [],
       };
 
       assert.deepEqual(currentState, expectedState);
@@ -2657,6 +2658,98 @@ describe('QueryManager', () => {
       assert(!apolloError.networkError);
       done();
     });
+  });
+
+  it('should not empty the store when a non-polling query fails due to a network error', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const data = {
+      author: {
+        firstName: 'Dhaivat',
+        lastName: 'Pandya',
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      },
+      {
+        request: { query },
+        error: new Error('Network error ocurred'),
+      }
+    );
+    const store = createApolloStore();
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      reduxRootKey: 'apollo',
+    });
+    queryManager.query({ query }).then((result) => {
+      assert.deepEqual(result, { data });
+
+      queryManager.query({ query, forceFetch: true }).then(() => {
+        done(new Error('Returned a result when it was not supposed to.'));
+      }).catch((error) => {
+        // make that the error thrown doesn't empty the state
+        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data['author']);
+        done();
+      });
+    }).catch((error) => {
+      done(new Error('Threw an error on the first query.'));
+    });
+  });
+
+  it('should not empty the store when a polling query fails due to a network error', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      },
+      {
+        request: { query },
+        error: new Error('Network error occurred.'),
+      }
+    );
+    const store = createApolloStore();
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      reduxRootKey: 'apollo',
+    });
+    const handle = queryManager.watchQuery({ query, pollInterval: 20 });
+    const subscription = handle.subscribe({
+      next(result) {
+        assert.deepEqual(result, { data });
+        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data.author);
+      },
+
+      error(error) {
+        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data.author);
+        subscription.unsubscribe();
+      },
+    });
+    setTimeout(() => {
+      done();
+    }, 100);
   });
 });
 

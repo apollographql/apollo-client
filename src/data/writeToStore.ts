@@ -1,6 +1,8 @@
 import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isUndefined = require('lodash.isundefined');
+import isString = require('lodash.isstring');
+import isObject = require('lodash.isobject');
 import assign = require('lodash.assign');
 
 import {
@@ -205,14 +207,14 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
   const generated = cache[generatedKey];
   const real = cache[realKey];
 
-  if (typeof generated !== 'object' || typeof real !== 'object') {
+  if (!isObject(generated) || !isObject(real)) {
     return;
   }
   Object.keys(generated).forEach((key) => {
     const value = generated[key];
-    if (typeof value === 'string'
+    if (isString(value)
         && isGeneratedId(value)
-        && typeof real[key] === 'string') {
+        && isString(real[key])) {
       mergeWithGenerated(value, real[key] as string, cache);
     }
     cache[realKey] = assign({}, generated, real) as StoreObject;
@@ -242,6 +244,8 @@ function writeFieldToStore({
   const storeFieldName: string = storeKeyNameFromField(field, variables);
   // specifies if we need to merge existing keys in the store
   let shouldMerge = false;
+  // If we merge, this will be the generatedKey
+  let generatedKey: string;
 
   // If it's a scalar, just store it in the store
   if (!field.selectionSet || isNull(value)) {
@@ -282,6 +286,9 @@ function writeFieldToStore({
   } else {
     // It's an object
     let valueDataId = `${dataId}.${storeFieldName}`;
+
+    // We only prepend the '$' if the valueDataId isn't already a generated
+    // id.
     if (!isGeneratedId(valueDataId)) {
       valueDataId = '$' + valueDataId;
     }
@@ -318,8 +325,8 @@ function writeFieldToStore({
     // about to place this new id. If there was, we have to merge the
     // data from that id with the data we're about to write in the store.
     if (store[dataId] && store[dataId][storeFieldName] !== storeValue) {
-      const currentKey = store[dataId][storeFieldName] as string;
-      if (currentKey && isGeneratedId(currentKey)) {
+      generatedKey = store[dataId][storeFieldName] as string;
+      if (generatedKey && isGeneratedId(generatedKey)) {
         shouldMerge = true;
       }
     }
@@ -333,7 +340,7 @@ function writeFieldToStore({
     store[dataId] = newStoreObj;
   }
   if (shouldMerge) {
-    mergeWithGenerated(store[dataId][storeFieldName] as string, storeValue, store);
+    mergeWithGenerated(generatedKey, storeValue, store);
   }
   store[dataId] = newStoreObj;
 }

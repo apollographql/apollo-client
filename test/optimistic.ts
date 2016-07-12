@@ -557,5 +557,76 @@ describe('optimistic mutation results', () => {
         assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
       });
     });
+    it('can run 2 mutations concurrently and handles all intermediate states well', () => {
+      function checkBothMutationsAreApplied(expectedText1, expectedText2) {
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
+        assert.property(dataInStore, 'Todo99');
+        assert.property(dataInStore, 'Todo66');
+        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
+        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo99');
+        assert.equal((dataInStore['Todo99'] as any).text, expectedText1);
+        assert.equal((dataInStore['Todo66'] as any).text, expectedText2);
+      }
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+        // make sure it always happens later
+        delay: 100,
+      })
+      .then(() => {
+        const dataId = client.dataId({
+          __typename: 'TodoList',
+          id: '5',
+        });
+        const resultBehaviors = [
+          {
+            type: 'ARRAY_INSERT',
+            resultPath: [ 'createTodo' ],
+            storePath: [ dataId, 'todos' ],
+            where: 'PREPEND',
+          } as MutationBehavior,
+        ];
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+          resultBehaviors,
+        }).then((res) => {
+          checkBothMutationsAreApplied('This one was created with a mutation.', 'Optimistically generated 2');
+          const mutationsState = client.store.getState().apollo.mutations;
+          assert.equal(mutationsState[2].loading, false);
+          assert.equal(mutationsState[3].loading, true);
+
+          return res;
+        });
+
+        const promise2 = client.mutate({
+          mutation,
+          optimisticResponse: optimisticResponse2,
+          resultBehaviors,
+        }).then((res) => {
+          checkBothMutationsAreApplied('This one was created with a mutation.', 'second mutation.');
+          const mutationsState = client.store.getState().apollo.mutations;
+          assert.equal(mutationsState[2].loading, false);
+          assert.equal(mutationsState[3].loading, false);
+
+          return res;
+        });
+
+        const mutationsState = client.store.getState().apollo.mutations;
+        assert.equal(mutationsState[2].loading, true);
+        assert.equal(mutationsState[3].loading, true);
+
+        checkBothMutationsAreApplied('Optimistically generated', 'Optimistically generated 2');
+
+        return Promise.all([promise, promise2]);
+      })
+      .then(() => {
+        checkBothMutationsAreApplied('This one was created with a mutation.', 'second mutation.');
+      });
+    });
   });
 });

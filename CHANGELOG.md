@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Allow `client.mutate` to accept an `optimisticResponse` argument to update the cache immediately, then after the server responds replace the `optimisticResponse` with the real response. [Issue #287](https://github.com/apollostack/apollo-client/issues/287) [PR #336](https://github.com/apollostack/apollo-client/pull/336)
+
 ### v0.4.0
 
 This release has a minor version bump, which means npm will not automatically update to this version. Consider the list of breaking changes below, then upgrade and update your app correspondingly.

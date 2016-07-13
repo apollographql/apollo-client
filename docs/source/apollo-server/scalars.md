@@ -44,6 +44,8 @@ type MyType {
 And here is the resolver:
 
 ```js
+import { Kind } from 'graphql/language';
+
 Date: {
   __parseValue (value) {
     return new Date(value); // value from the client
@@ -76,7 +78,7 @@ type MyType {
 And now the resolver:
 
 ```js
-import { Kind } from 'graphql/type'
+import { Kind } from 'graphql/language';
 
 Odd: {
   __serialize: oddValue,
@@ -111,6 +113,8 @@ type MyType {
 And the implementation of the resolver:
 
 ```js
+import { Kind } from 'graphql/language';
+
 function parseJSONLiteral(ast) {
   switch (ast.kind) {
     case Kind.STRING:

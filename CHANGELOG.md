@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Stringify `storeObj` for error message in `diffFieldAgainstStore`.
 - Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)
 
 ### v0.4.1

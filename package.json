@@ -62,7 +62,7 @@
     "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {
-    "async": "^1.5.2",
+    "async": "^2.0.0",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.2.0",

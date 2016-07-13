@@ -5,6 +5,9 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Added the `batcherPollInterval` option to ApolloClient that allows you to specify the width of the batcher polling interval as per your app's needs. [Issue #394](https://github.com/apollostack/apollo-client/issues/394) and [PR #395](https://github.com/apollostack/apollo-client/pull/395).
 
+- Stringify `storeObj` for error message in `diffFieldAgainstStore`.
+- Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)
+
 ### v0.4.1
 
 - Allow `client.mutate` to accept an `optimisticResponse` argument to update the cache immediately, then after the server responds replace the `optimisticResponse` with the real response. [Issue #287](https://github.com/apollostack/apollo-client/issues/287) [PR #336](https://github.com/apollostack/apollo-client/pull/336)

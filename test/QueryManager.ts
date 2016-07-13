@@ -2732,6 +2732,55 @@ describe('QueryManager', () => {
       done();
     }, 100);
   });
+
+  it('should not fire next on an observer if there is no change in the result', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      }
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      },
+
+      {
+        request: { query },
+        result: { data },
+      }
+    );
+    const queryManager = new QueryManager({
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+      networkInterface,
+    });
+    const handle = queryManager.watchQuery({ query });
+    let timesFired = 0;
+     handle.subscribe({
+      next(result) {
+        timesFired += 1;
+        assert.deepEqual(result, { data });
+      },
+    });
+    queryManager.query({ query }).then((result) => {
+      assert.deepEqual(result, { data });
+      console.log('Times fired: ');
+      console.log(timesFired);
+
+      assert.equal(timesFired, 1);
+      done();
+    });
+  });
 });
 
 function testDiffing(

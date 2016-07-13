@@ -183,10 +183,10 @@ function removeRefsFromStoreObj(storeObj, dataId) {
         affected = true;
         return filteredArray;
       }
-
-      // If not modified, return the original value
-      return value;
     }
+
+    // If not modified, return the original value
+    return value;
   });
 
   if (affected) {

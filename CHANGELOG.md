@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Added the `batchInterval` option to ApolloClient that allows you to specify the width of the batching interval as per your app's needs. [Issue #394](https://github.com/apollostack/apollo-client/issues/394) and [PR #395](https://github.com/apollostack/apollo-client/pull/395).
 
 - Stringify `storeObj` for error message in `diffFieldAgainstStore`.
 - Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)

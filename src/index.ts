@@ -150,6 +150,7 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+  public batchInterval: number;
 
   constructor({
     networkInterface,
@@ -161,6 +162,7 @@ export default class ApolloClient {
     ssrMode = false,
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
+    batchInterval,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -171,6 +173,7 @@ export default class ApolloClient {
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
+    batchInterval?: number,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
@@ -181,6 +184,7 @@ export default class ApolloClient {
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.batchInterval = batchInterval;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -281,6 +285,7 @@ export default class ApolloClient {
       store,
       queryTransformer: this.queryTransformer,
       shouldBatch: this.shouldBatch,
+      batchInterval: this.batchInterval,
     });
   };
 }

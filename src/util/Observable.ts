@@ -14,17 +14,6 @@ function isSubscription(subscription: Function | Subscription): subscription is 
   return (<Subscription>subscription).unsubscribe !== undefined;
 }
 
-export interface WatchQueryOptions {
-  query: Document;
-  variables?: { [key: string]: any };
-  forceFetch?: boolean;
-  returnPartialData?: boolean;
-  noFetch?: boolean;
-  pollInterval?: number;
-  fragments?: FragmentDefinition[];
-}
-
-
 export class Observable<T> {
   private subscriberFunction: SubscriberFunction<T>;
 

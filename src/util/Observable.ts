@@ -3,10 +3,6 @@
 
 import * as $$observable from 'symbol-observable';
 
-import {
-  FragmentDefinition,
-} from 'graphql';
-
 export type CleanupFunction = () => void;
 export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | CleanupFunction);
 

@@ -47,7 +47,8 @@ export interface HTTPNetworkInterface extends BatchedNetworkInterface {
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[];
   _afterwares: AfterwareInterface[];
-  use(middlewares?: MiddlewareInterface[], afterwares?: AfterwareInterface[]);
+  use(middlewares: MiddlewareInterface[]);
+  useAfter(afterwares?: AfterwareInterface[]);
 }
 
 export interface RequestAndOptions {
@@ -196,7 +197,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
       });
   };
 
-  function use(middlewares: MiddlewareInterface[] = [], afterwares: AfterwareInterface[] = []) {
+  function use(middlewares: MiddlewareInterface[]) {
     middlewares.map((middleware) => {
       if (typeof middleware.applyMiddleware === 'function') {
         _middlewares.push(middleware);
@@ -204,7 +205,9 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
         throw new Error('Middleware must implement the applyMiddleware function');
       }
     });
+  }
 
+  function useAfter(afterwares: AfterwareInterface[]) {
     afterwares.map(afterware => {
       if (typeof afterware.applyAfterware === 'function') {
         _afterwares.push(afterware);
@@ -223,5 +226,6 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     _afterwares,
     query,
     use,
+    useAfter,
   }) as HTTPNetworkInterface;
 }

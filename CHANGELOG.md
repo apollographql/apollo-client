@@ -6,13 +6,14 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Stringify `storeObj` for error message in `diffFieldAgainstStore`.
 - Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)
-- Add afterwares which runs after a request is made (after middlewares).
-  Afterwares runs after a request is made and after a middleware. It will return you the
-  whole response, so you can handle status codes and errors properly. It will for example ease
-  the use of checking if user is authenticated, ie check if the request did return an 401 response.
+- Add `useAfter` function that accepts `afterwares`. Afterwares runs after
+  a request is made (after middlewares). It will return you the whole response,
+  so you can handle status codes and errors properly. It will for example ease
+  the use of checking if user is authenticated, i.e check if the request did
+  return an 401 response.
 
-  It can be used just as a `middleware` is used, it is the second parameter
-  to the `use` function.
+  It can be used just as a `middleware` is used. Just pass an array of afterwares to the
+  `useAfter` function.
 
 ### v0.4.1
 

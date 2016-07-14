@@ -270,7 +270,7 @@ describe('network interface', () => {
       const networkInterface = createNetworkInterface('/graphql');
 
       try {
-        networkInterface.use([], [malWare]);
+        networkInterface.useAfter([malWare]);
         expect.fail();
       } catch (error) {
         assert.equal(
@@ -285,7 +285,7 @@ describe('network interface', () => {
       const testWare = new TestAfterWare();
 
       const networkInterface = createNetworkInterface('/graphql');
-      networkInterface.use([], [testWare]);
+      networkInterface.useAfter([testWare]);
 
       assert.equal(networkInterface._afterwares[0], testWare);
     });
@@ -295,7 +295,7 @@ describe('network interface', () => {
       const testWare2 = new TestAfterWare();
 
       const networkInterface = createNetworkInterface('/graphql');
-      networkInterface.use([], [testWare1, testWare2]);
+      networkInterface.useAfter([testWare1, testWare2]);
 
       assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
     });

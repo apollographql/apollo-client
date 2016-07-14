@@ -28,6 +28,14 @@ export class QueryScheduler {
   // Map going from queryIds to polling timers.
   private pollingTimers: { [queryId: string]: NodeJS.Timer | any }; // oddity in Typescript
 
+  // Map going from query ids to the query options associated with those queries. Contains all of
+  // the queries, both in flight and not in flight.
+  private registeredQueries: { [queryId: string]: WatchQueryOptions };
+
+  // Map going from polling interval with to the query ids that fire on that interval.
+  // These query ids are associated with a set of options in the this.registeredQueries.
+  public intervalQueries: { [interval: number]: string[] };
+
   constructor({
     queryManager,
   }: {
@@ -36,6 +44,7 @@ export class QueryScheduler {
     this.queryManager = queryManager;
     this.pollingTimers = {};
     this.inFlightQueries = {};
+    this.intervalQueries = {};
   }
 
   public checkInFlight(queryId: string) {
@@ -101,6 +110,38 @@ export class QueryScheduler {
       queryManager: this.queryManager,
       options: options,
     });
+  }
+
+  // Fires the all of the queries on a particular interval. Called on a setInterval.
+  public fireQueriesOnInterval(interval: number) {
+    this.intervalQueries[interval].forEach((queryId) => {
+      const queryOptions = this.registeredQueries[queryId];
+
+      const pollingOptions = assign({}, queryOptions) as WatchQueryOptions;
+      pollingOptions.forceFetch = true;
+      this.fetchQuery(queryId, pollingOptions).then(() => {
+        this.removeInFlight(queryId);
+      });
+    });
+  }
+
+  // Adds a query on a particular interval to this.intervalQueries and then fires
+  // that query with all the other queries executing on that interval. Note that the query id
+  // and query options must have been added to this.registeredQueries before this function is called.
+  public addQueryOnInterval(queryId: string, queryOptions: WatchQueryOptions) {
+    const interval = queryOptions.pollInterval;
+
+    // If there are other queries on this interval, this query will just fire with those
+    // and we don't need to create a new timer.
+    if (this.intervalQueries.hasOwnProperty(interval.toString())) {
+      this.intervalQueries[interval].push(queryId);
+    } else {
+      this.intervalQueries[interval] = [queryId];
+      // set up the timer
+      this.pollingTimers[queryId] = setInterval(() => {
+        this.fireQueriesOnInterval(interval)
+      }, interval);
+    }
   }
 
   private addInFlight(queryId: string, options: WatchQueryOptions) {

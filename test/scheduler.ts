@@ -332,4 +332,39 @@ describe('QueryScheduler', () => {
       done();
     }, 100);
   });
+
+  it('should add queries on an interval correctly', () => {
+    const query = gql`
+      query {
+        fortuneCookie
+      }`;
+    const data = {
+      'fortuneCookie': 'live long and prosper',
+    };
+    const queryOptions = {
+      query,
+      pollInterval: 10000,
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: queryOptions,
+        result: { data },
+      }
+    );
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    const queryId = 'fake-id';
+    scheduler.addQueryOnInterval(queryId, queryOptions);
+    assert.equal(Object.keys(scheduler.intervalQueries).length, 1);
+    assert.equal(Object.keys(scheduler.intervalQueries)[0], queryOptions.pollInterval.toString());
+    const queries = scheduler.intervalQueries[queryOptions.pollInterval.toString()];
+    assert.equal(queries.length, 1);
+    assert.equal(queries[0], queryId);
+  });
 });

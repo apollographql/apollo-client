@@ -30,7 +30,7 @@ export class QueryScheduler {
 
   // Map going from query ids to the query options associated with those queries. Contains all of
   // the queries, both in flight and not in flight.
-  private registeredQueries: { [queryId: string]: WatchQueryOptions };
+  public registeredQueries: { [queryId: string]: WatchQueryOptions };
 
   // Map going from polling interval with to the query ids that fire on that interval.
   // These query ids are associated with a set of options in the this.registeredQueries.

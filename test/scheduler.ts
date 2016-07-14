@@ -368,4 +368,114 @@ describe('QueryScheduler', () => {
     assert.equal(queries.length, 1);
     assert.equal(queries[0], queryId);
   });
+
+  it('should add multiple queries to an interval correctly', () => {
+    const query1 = gql`
+      query {
+        fortuneCookie
+      }`;
+    const data1 = {
+      'fortuneCookie': 'live long and prosper',
+    };
+    const query2 = gql`
+    query {
+      author {
+        firstName
+        lastName
+      }
+    }`;
+    const data2 = {
+      author: {
+        firstName: 'Dhaivat',
+        lastName: 'Pandya',
+      }
+    };
+    const interval = 20000;
+    const queryOptions1 = {
+      query: query1,
+      pollInterval: interval,
+    };
+    const queryOptions2 = {
+      query: query2,
+      pollInterval: interval,
+    };
+    const queryManager = new QueryManager({
+      networkInterface: mockNetworkInterface(
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+        }
+      ),
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    const observable1 = scheduler.registerPollingQuery(queryOptions1);
+    observable1.subscribe({
+      next(result) {
+        //do nothing
+      }
+    });
+
+    const observable2 = scheduler.registerPollingQuery(queryOptions2);
+    observable2.subscribe({
+      next(result) {
+        //do nothing
+      }
+    });
+
+    const keys = Object.keys(scheduler.intervalQueries);
+    assert.equal(keys.length, 1);
+    assert.equal(keys[0], interval);
+
+    const queryIds = scheduler.intervalQueries[keys[0]];
+    assert.equal(queryIds.length, 2);
+    assert.deepEqual(scheduler.registeredQueries[queryIds[0]], queryOptions1);
+    assert.deepEqual(scheduler.registeredQueries[queryIds[1]], queryOptions2);
+  });
+
+  it('should remove queries from the interval list correctly', () => {
+    const query = gql`
+    query {
+      author {
+        firstName
+        lastName
+      }
+    }`;
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      }
+    };
+    const queryManager = new QueryManager({
+      networkInterface: mockNetworkInterface(
+        {
+          request: { query },
+          result: { data },
+        }
+      ),
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    let timesFired = 0;
+    const observable = scheduler.registerPollingQuery({ query, pollInterval: 20 });
+    const subscription = observable.subscribe({
+      next(result) {
+        timesFired += 1;
+        assert.deepEqual(result, { data });
+        subscription.unsubscribe();
+        assert.equal(Object.keys(scheduler.registeredQueries).length, 0);
+      }
+    });
+  });
 });

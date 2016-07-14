@@ -446,6 +446,8 @@ describe('mutation results', () => {
 
         // The item shouldn't be in the store anymore
         assert.notProperty(client.queryManager.getApolloState().data, 'Todo3');
+        // shouldn't have affected other data elements
+        assert.notEqual(client.queryManager.getApolloState().data['TodoList5']['__typename'], undefined);
       });
     });
   });

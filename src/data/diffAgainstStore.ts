@@ -256,7 +256,8 @@ function diffFieldAgainstStore({
 
   if (! has(storeObj, storeFieldKey)) {
     if (throwOnMissingField && included) {
-      throw new Error(`Can't find field ${storeFieldKey} on object ${storeObj}.`);
+      throw new Error(`Can't find field ${storeFieldKey} on object ${JSON.stringify(storeObj)}.
+Perhaps you want to use the \`returnPartialData\` option?`);
     }
 
     return {

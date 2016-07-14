@@ -93,7 +93,5 @@ export function readSelectionSetFromStore({
     fragmentMap,
   });
 
-  console.log('Return partial data (selection set): %s', returnPartialData);
-
   return result;
 }

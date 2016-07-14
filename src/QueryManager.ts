@@ -388,7 +388,7 @@ export class QueryManager {
               rootId: queryStoreValue.query.id,
               selectionSet: queryStoreValue.query.selectionSet,
               variables: queryStoreValue.variables,
-              returnPartialData: options.returnPartialData,
+              returnPartialData: options.returnPartialData || options.noFetch,
               fragmentMap: queryStoreValue.fragmentMap,
             }),
           };
@@ -735,10 +735,6 @@ export class QueryManager {
               // ensure result is combined with data already in store
               // this will throw an error if there are missing fields in
               // the results if returnPartialData is false.
-
-
-              console.log('Return partial data: %s', returnPartialData);
-              console.log('No fetch: %s', noFetch);
               resultFromStore = readSelectionSetFromStore({
                 store: this.getApolloState().data,
                 rootId: querySS.id,

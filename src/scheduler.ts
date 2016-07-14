@@ -21,13 +21,6 @@ export class QueryScheduler {
   // Map going from queryIds to query options that are in flight.
   public inFlightQueries: { [queryId: string]: WatchQueryOptions };
 
-  // We use this instance to actually fire queries (i.e. send them to the batching
-  // mechanism).
-  private queryManager: QueryManager;
-
-  // Map going from polling interval widths to polling timers.
-  private pollingTimers: { [interval: number]: NodeJS.Timer | any }; // oddity in Typescript
-
   // Map going from query ids to the query options associated with those queries. Contains all of
   // the queries, both in flight and not in flight.
   public registeredQueries: { [queryId: string]: WatchQueryOptions };
@@ -35,6 +28,13 @@ export class QueryScheduler {
   // Map going from polling interval with to the query ids that fire on that interval.
   // These query ids are associated with a set of options in the this.registeredQueries.
   public intervalQueries: { [interval: number]: string[] };
+
+  // We use this instance to actually fire queries (i.e. send them to the batching
+  // mechanism).
+  private queryManager: QueryManager;
+
+  // Map going from polling interval widths to polling timers.
+  private pollingTimers: { [interval: number]: NodeJS.Timer | any }; // oddity in Typescript
 
   constructor({
     queryManager,
@@ -129,7 +129,7 @@ export class QueryScheduler {
       return true;
     });
 
-    if (this.intervalQueries[interval].length == 0) {
+    if (this.intervalQueries[interval].length === 0) {
       clearInterval(this.pollingTimers[interval]);
     }
   }
@@ -148,7 +148,7 @@ export class QueryScheduler {
       this.intervalQueries[interval] = [queryId];
       // set up the timer for the function that will handle this interval
       this.pollingTimers[interval] = setInterval(() => {
-        this.fireQueriesOnInterval(interval)
+        this.fireQueriesOnInterval(interval);
       }, interval);
     }
   }

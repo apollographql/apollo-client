@@ -388,7 +388,7 @@ describe('QueryScheduler', () => {
       author: {
         firstName: 'Dhaivat',
         lastName: 'Pandya',
-      }
+      },
     };
     const interval = 20000;
     const queryOptions1 = {
@@ -420,14 +420,14 @@ describe('QueryScheduler', () => {
     observable1.subscribe({
       next(result) {
         //do nothing
-      }
+      },
     });
 
     const observable2 = scheduler.registerPollingQuery(queryOptions2);
     observable2.subscribe({
       next(result) {
         //do nothing
-      }
+      },
     });
 
     const keys = Object.keys(scheduler.intervalQueries);
@@ -452,7 +452,7 @@ describe('QueryScheduler', () => {
       author: {
         firstName: 'John',
         lastName: 'Smith',
-      }
+      },
     };
     const queryManager = new QueryManager({
       networkInterface: mockNetworkInterface(
@@ -475,7 +475,7 @@ describe('QueryScheduler', () => {
         assert.deepEqual(result, { data });
         subscription.unsubscribe();
         assert.equal(Object.keys(scheduler.registeredQueries).length, 0);
-      }
+      },
     });
   });
 });

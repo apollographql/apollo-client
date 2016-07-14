@@ -194,7 +194,7 @@ export class QueryManager {
   private queryListeners: { [queryId: string]: QueryListener };
 
   // A map going from queryId to the last result/state that the queryListener was told about.
-  private queryResults: { [queryId: string]: ApolloQueryResult }
+  private queryResults: { [queryId: string]: ApolloQueryResult };
 
   private idCounter = 0;
 
@@ -364,7 +364,6 @@ export class QueryManager {
       if (!queryStoreValue) {
         return;
       }
-      console.log('QUERY LISTENER');
 
       if (!queryStoreValue.loading || queryStoreValue.returnPartialData) {
         // XXX Currently, returning errors and data is exclusive because we
@@ -395,13 +394,10 @@ export class QueryManager {
           };
 
           if (observer.next) {
-            console.log('Is it a different result?');
-            observer.next(resultFromStore);
-            /*
             if (this.isDifferentResult(queryId, resultFromStore )) {
               this.queryResults[queryId] = resultFromStore;
               observer.next(resultFromStore);
-            } */
+            }
           }
         }
       }

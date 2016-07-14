@@ -664,7 +664,7 @@ describe('QueryManager', () => {
 
     const data3 = {
       people_one: {
-        name: 'Luke Skywalker has a new name',
+        name: 'Luke Skywalker has a new name and age',
       },
     };
 
@@ -683,7 +683,7 @@ describe('QueryManager', () => {
       },
       {
         request: { query: query, variables },
-        result: { data: data2 },
+        result: { data: data3 },
       }
     );
 
@@ -1467,9 +1467,7 @@ describe('QueryManager', () => {
     });
 
     function checkDone() {
-      // If we make sure queries aren't called twice if the result didn't change, handle2Count
-      // should change to 1
-      if (handle1Count === 1 && handle2Count === 2) {
+      if (handle1Count === 1 && handle2Count === 1) {
         done();
       }
 
@@ -1546,7 +1544,7 @@ describe('QueryManager', () => {
           queryManager.query({
             query: query2,
           });
-        } else if (handle1Count === 3 &&
+        } else if (handle1Count === 2 &&
             result.data['people_one'].name === 'Luke Skywalker has a new name') {
           // 3 because the query init action for the second query causes a callback
           assert.deepEqual(result.data, {
@@ -1736,7 +1734,7 @@ describe('QueryManager', () => {
     });
 
     setTimeout(() => {
-      assert.equal(handleCount, 4);
+      assert.equal(handleCount, 3);
       done();
     }, 400);
   });
@@ -2746,7 +2744,7 @@ describe('QueryManager', () => {
       author: {
         firstName: 'John',
         lastName: 'Smith',
-      }
+      },
     };
     const networkInterface = mockNetworkInterface(
       {
@@ -2774,9 +2772,6 @@ describe('QueryManager', () => {
     });
     queryManager.query({ query }).then((result) => {
       assert.deepEqual(result, { data });
-      console.log('Times fired: ');
-      console.log(timesFired);
-
       assert.equal(timesFired, 1);
       done();
     });

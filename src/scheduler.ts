@@ -97,22 +97,6 @@ export class QueryScheduler {
       throw new Error('Tried to register a non-polling query with the scheduler.');
     }
 
-    /*
-
-    const subscriberFunction = (observer) => {
-      // "Fire" (i.e. add to the QueryBatcher queue)
-      const queryListener = this.queryManager.queryListenerForObserver(options, observer);
-      this.startPollingQuery(options, queryListener, queryId);
-
-      return {
-        unsubscribe: () => {
-          this.stopPollingQuery(queryId);
-        },
-      };
-    };
-
-    */
-
     return new ObservableQuery({
       queryManager: this.queryManager,
       options: options,

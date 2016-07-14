@@ -994,23 +994,10 @@ describe('QueryManager', () => {
       },
     };
 
-    const data2 = {
-      luke: {
-        name: 'Luke Skywalker',
-      },
-      vader: {
-        name: 'Darth Vader',
-      },
-    };
-
     const networkInterface = mockNetworkInterface(
       {
         request: { query: primeQuery },
         result: { data: data1 },
-      },
-      {
-        request: { query: complexQuery },
-        result: { data: data2 },
       }
     );
 
@@ -2376,12 +2363,6 @@ describe('QueryManager', () => {
         refetch(variables: any): Promise<GraphQLResult> {
           done();
           return null;
-        },
-        stopPolling(): void {
-          return;
-        },
-        startPolling(pollInterval): void {
-          return;
         },
         options: {
           query: query,

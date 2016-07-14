@@ -124,7 +124,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       queryManager.startQuery(
         queryId,
         options,
-        queryManager.queryListenerForObserver(options, observer)
+        queryManager.queryListenerForObserver(queryId, options, observer)
       );
       return retQuerySubscription;
     };
@@ -418,69 +418,10 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
-<<<<<<< HEAD
     let observableQuery = new ObservableQuery({
       queryManager: this,
       options: options,
       shouldSubscribe: shouldSubscribe,
-=======
-    const queryId = this.generateQueryId();
-
-    let observableQuery;
-
-    const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
-      const retQuerySubscription = {
-        unsubscribe: () => {
-          this.stopQuery(queryId);
-        },
-      };
-
-      if (shouldSubscribe) {
-        this.addObservableQuery(queryId, observableQuery);
-        this.addQuerySubscription(queryId, retQuerySubscription);
-      }
-
-      this.startQuery(
-        queryId,
-        options,
-        this.queryListenerForObserver(queryId, options, observer)
-      );
-
-      return retQuerySubscription;
-    };
-
-    const refetch = (variables?: any) => {
-      // If no new variables passed, use existing variables
-      variables = variables || options.variables;
-
-      // Use the same options as before, but with new variables and forceFetch true
-      return this.fetchQuery(queryId, assign(options, {
-        forceFetch: true,
-        variables,
-      }) as WatchQueryOptions);
-    };
-
-    const stopPolling = () => {
-      if (this.pollingTimers[queryId]) {
-        clearInterval(this.pollingTimers[queryId]);
-      }
-    };
-
-    const startPolling = (pollInterval) => {
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, pollInterval);
-    };
-
-    observableQuery = new ObservableQuery({
-      subscriberFunction,
-      refetch,
-      stopPolling,
-      startPolling,
->>>>>>> in progress commit for the component updating code
     });
 
     return observableQuery;
@@ -794,6 +735,10 @@ export class QueryManager {
               // ensure result is combined with data already in store
               // this will throw an error if there are missing fields in
               // the results if returnPartialData is false.
+
+
+              console.log('Return partial data: %s', returnPartialData);
+              console.log('No fetch: %s', noFetch);
               resultFromStore = readSelectionSetFromStore({
                 store: this.getApolloState().data,
                 rootId: querySS.id,
@@ -834,47 +779,12 @@ export class QueryManager {
     });
   }
 
-<<<<<<< HEAD
-=======
-  private startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
-    this.queryListeners[queryId] = listener;
-    this.fetchQuery(queryId, options);
-
-    if (options.pollInterval) {
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, options.pollInterval);
-    }
-
-    return queryId;
-  }
-
-  private stopQuery(queryId: string) {
-    // XXX in the future if we should cancel the request
-    // so that it never tries to return data
-    delete this.queryListeners[queryId];
-
-    // if we have a polling interval running, stop it
-    if (this.pollingTimers[queryId]) {
-      clearInterval(this.pollingTimers[queryId]);
-    }
-
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_STOP',
-      queryId,
-    });
-  }
-
   // Given a query id and a new result, this checks if the old result is
   // the same as the last result for that particular query id.
   private isDifferentResult(queryId: string, result: ApolloQueryResult): boolean {
     return !isEqual(this.queryResults[queryId], result);
   }
 
->>>>>>> in progress commit for the component updating code
   private broadcastQueries() {
     const queries = this.getApolloState().queries;
     forOwn(this.queryListeners, (listener: QueryListener, queryId: string) => {

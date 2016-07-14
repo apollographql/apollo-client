@@ -440,7 +440,7 @@ describe('QueryScheduler', () => {
     assert.deepEqual(scheduler.registeredQueries[queryIds[1]], queryOptions2);
   });
 
-  it('should remove queries from the interval list correctly', () => {
+  it('should remove queries from the interval list correctly', (done) => {
     const query = gql`
     query {
       author {
@@ -468,7 +468,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    const observable = scheduler.registerPollingQuery({ query, pollInterval: 20 });
+    const observable = scheduler.registerPollingQuery({ query, pollInterval: 10 });
     const subscription = observable.subscribe({
       next(result) {
         timesFired += 1;
@@ -477,5 +477,10 @@ describe('QueryScheduler', () => {
         assert.equal(Object.keys(scheduler.registeredQueries).length, 0);
       },
     });
+
+    setTimeout(() => {
+      assert.equal(timesFired, 1);
+      done();
+    }, 100);
   });
 });

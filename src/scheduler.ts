@@ -25,8 +25,8 @@ export class QueryScheduler {
   // mechanism).
   private queryManager: QueryManager;
 
-  // Map going from queryIds to polling timers.
-  private pollingTimers: { [queryId: string]: NodeJS.Timer | any }; // oddity in Typescript
+  // Map going from polling interval widths to polling timers.
+  private pollingTimers: { [interval: number]: NodeJS.Timer | any }; // oddity in Typescript
 
   // Map going from query ids to the query options associated with those queries. Contains all of
   // the queries, both in flight and not in flight.
@@ -44,6 +44,7 @@ export class QueryScheduler {
     this.queryManager = queryManager;
     this.pollingTimers = {};
     this.inFlightQueries = {};
+    this.registeredQueries = {};
     this.intervalQueries = {};
   }
 
@@ -64,25 +65,18 @@ export class QueryScheduler {
     });
   }
 
-  public startPollingQuery(options: WatchQueryOptions, listener: QueryListener,
-    queryId?: string): string {
+  public startPollingQuery(
+    options: WatchQueryOptions,
+    listener: QueryListener,
+    queryId?: string
+  ): string {
     if (!queryId) {
       queryId = this.queryManager.generateQueryId();
     }
     // Fire an initial fetch before we start the polling query
     this.fetchQuery(queryId, options);
     this.queryManager.addQueryListener(queryId, listener);
-
-    this.pollingTimers[queryId] = setInterval(() => {
-      const pollingOptions = assign({}, options) as WatchQueryOptions;
-      pollingOptions.forceFetch = true;
-
-      // We only fire the query if another instance of this same polling query isn't
-      // already in flight. See top of this file for the reasoning as to why we do this.
-      if (!this.checkInFlight(queryId)) {
-        this.fetchQuery(queryId, pollingOptions);
-      }
-    }, options.pollInterval);
+    this.addQueryOnInterval(queryId, options);
 
     return queryId;
   }
@@ -92,9 +86,9 @@ export class QueryScheduler {
     // further data returned.
     this.queryManager.removeQueryListener(queryId);
 
-    if (this.pollingTimers[queryId]) {
-      clearInterval(this.pollingTimers[queryId]);
-    }
+    // Remove the query options from one of the registered queries.
+    // The polling function will then take care of not firing it anymore.
+    delete this.registeredQueries[queryId];
 
     // Fire a APOLLO_STOP_QUERY state change to the underlying store.
     this.queryManager.stopQueryInStore(queryId);
@@ -114,15 +108,30 @@ export class QueryScheduler {
 
   // Fires the all of the queries on a particular interval. Called on a setInterval.
   public fireQueriesOnInterval(interval: number) {
-    this.intervalQueries[interval].forEach((queryId) => {
-      const queryOptions = this.registeredQueries[queryId];
+    this.intervalQueries[interval] = this.intervalQueries[interval].filter((queryId) => {
+      // If queryOptions can't be found from registeredQueries, it means that this queryId
+      // is no longer registered and should be removed from the list of queries firing on this
+      // interval.
+      if (!this.registeredQueries.hasOwnProperty(queryId)) {
+        return false;
+      }
 
+      // Don't fire this instance of the polling query is one of the instances is already in
+      // flight.
+      if (this.checkInFlight(queryId)) {
+        return true;
+      }
+
+      const queryOptions = this.registeredQueries[queryId];
       const pollingOptions = assign({}, queryOptions) as WatchQueryOptions;
       pollingOptions.forceFetch = true;
-      this.fetchQuery(queryId, pollingOptions).then(() => {
-        this.removeInFlight(queryId);
-      });
+      this.fetchQuery(queryId, pollingOptions);
+      return true;
     });
+
+    if (this.intervalQueries[interval].length == 0) {
+      clearInterval(this.pollingTimers[interval]);
+    }
   }
 
   // Adds a query on a particular interval to this.intervalQueries and then fires
@@ -137,8 +146,8 @@ export class QueryScheduler {
       this.intervalQueries[interval].push(queryId);
     } else {
       this.intervalQueries[interval] = [queryId];
-      // set up the timer
-      this.pollingTimers[queryId] = setInterval(() => {
+      // set up the timer for the function that will handle this interval
+      this.pollingTimers[interval] = setInterval(() => {
         this.fireQueriesOnInterval(interval)
       }, interval);
     }

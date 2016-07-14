@@ -263,6 +263,7 @@ describe('QueryScheduler', () => {
     const queryOptions = {
       query,
       pollInterval: 70,
+      forceFetch: true,
     };
     const networkInterface = mockNetworkInterface(
       {
@@ -333,7 +334,7 @@ describe('QueryScheduler', () => {
     }, 100);
   });
 
-  it('should add queries on an interval correctly', () => {
+  it('should add a query to an interval correctly', () => {
     const query = gql`
       query {
         fortuneCookie

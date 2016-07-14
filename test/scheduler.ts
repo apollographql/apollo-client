@@ -251,7 +251,8 @@ describe('QueryScheduler', () => {
       },
     });
   });
-  it('should keep track of in flight queries', (done) => {
+
+  it.skip('should keep track of in flight queries', (done) => {
     const query = gql`
       query {
         fortuneCookie
@@ -296,7 +297,7 @@ describe('QueryScheduler', () => {
     }, 100);
   });
 
-  it('should not fire another query if one with the same id is in flight', (done) => {
+  it.skip('should not fire another query if one with the same id is in flight', (done) => {
     const query = gql`
       query {
         fortuneCookie

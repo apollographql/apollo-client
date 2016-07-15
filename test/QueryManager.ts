@@ -2367,8 +2367,8 @@ describe('QueryManager', () => {
         options: {
           query: query,
         },
-        queryManager: queryManager,
-      } as ObservableQuery;
+        scheduler: queryManager.scheduler,
+      } as any as ObservableQuery;
 
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery(queryId, mockObservableQuery);
@@ -2400,7 +2400,7 @@ describe('QueryManager', () => {
         },
         options,
         queryManager: queryManager,
-      } as ObservableQuery;
+      } as any as ObservableQuery;
 
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery(queryId, mockObservableQuery);

@@ -72,7 +72,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    const queryId = scheduler.startPollingQuery(queryOptions, (queryStoreValue) => {
+    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', true, (queryStoreValue) => {
       timesFired += 1;
     });
     setTimeout(() => {
@@ -115,7 +115,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    let queryId = scheduler.startPollingQuery(queryOptions, (queryStoreValue) => {
+    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', true, (queryStoreValue) => {
       timesFired += 1;
       scheduler.stopPollingQuery(queryId);
     });
@@ -252,7 +252,7 @@ describe('QueryScheduler', () => {
     });
   });
 
-  it.skip('should keep track of in flight queries', (done) => {
+  it('should keep track of in flight queries', (done) => {
     const query = gql`
       query {
         fortuneCookie
@@ -298,7 +298,7 @@ describe('QueryScheduler', () => {
     }, 100);
   });
 
-  it.skip('should not fire another query if one with the same id is in flight', (done) => {
+  it('should not fire another query if one with the same id is in flight', (done) => {
     const query = gql`
       query {
         fortuneCookie

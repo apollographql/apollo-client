@@ -95,23 +95,29 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
-  public queryManager: QueryManager;
   private queryId: string;
+  private scheduler: QueryScheduler;
+  private queryManager: QueryManager;
 
   constructor({
-    queryManager,
+    scheduler,
     options,
     shouldSubscribe = true,
   }: {
-    queryManager: QueryManager,
+    scheduler: QueryScheduler,
     options: WatchQueryOptions,
     shouldSubscribe?: boolean,
   }) {
-
+    const queryManager = scheduler.queryManager;
     const queryId = queryManager.generateQueryId();
+    const isPollingQuery = !!options.pollInterval;
+
     const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
       const retQuerySubscription = {
         unsubscribe: () => {
+          if (isPollingQuery) {
+            scheduler.stopPollingQuery(queryId);
+          }
           queryManager.stopQuery(queryId);
         },
       };
@@ -121,15 +127,23 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         queryManager.addQuerySubscription(queryId, retQuerySubscription);
       }
 
+      if (isPollingQuery) {
+        this.scheduler.startPollingQuery(
+          options,
+          queryId
+        );
+      }
       queryManager.startQuery(
         queryId,
         options,
         queryManager.queryListenerForObserver(options, observer)
       );
+
       return retQuerySubscription;
     };
     super(subscriberFunction);
     this.options = options;
+    this.scheduler = scheduler;
     this.queryManager = queryManager;
     this.queryId = queryId;
 
@@ -147,8 +161,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     };
 
     this.stopPolling = () => {
-      if (this.queryManager.pollingTimers[this.queryId]) {
-        clearInterval(this.queryManager.pollingTimers[this.queryId]);
+      this.queryManager.stopQuery(this.queryId);
+      if (isPollingQuery) {
+        this.scheduler.stopPollingQuery(this.queryId);
       }
     };
 
@@ -156,12 +171,12 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query polling.');
       }
-      this.queryManager.pollingTimers[this.queryId] = setInterval(() => {
-        const pollingOptions = assign({}, this.options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.queryManager.fetchQuery(this.queryId, pollingOptions);
-      }, pollInterval);
+
+      if (isPollingQuery) {
+        this.scheduler.stopPollingQuery(this.queryId);
+      }
+      options.pollInterval = pollInterval;
+      this.scheduler.startPollingQuery(this.options, this.queryId, false);
     };
   }
 
@@ -187,6 +202,8 @@ export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
+  public scheduler: QueryScheduler;
+
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
@@ -195,7 +212,6 @@ export class QueryManager {
 
   private idCounter = 0;
 
-  private scheduler: QueryScheduler;
   private batcher: QueryBatcher;
   private batchInterval: number;
 
@@ -410,7 +426,7 @@ export class QueryManager {
     getQueryDefinition(options.query);
 
     let observableQuery = new ObservableQuery({
-      queryManager: this,
+      scheduler: this.scheduler,
       options: options,
       shouldSubscribe: shouldSubscribe,
     });
@@ -542,18 +558,11 @@ export class QueryManager {
 
   public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.queryListeners[queryId] = listener;
-    this.fetchQuery(queryId, options);
 
-    if (options.pollInterval) {
-      if (options.noFetch) {
-        throw new Error('noFetch option should not use query polling.');
-      }
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, options.pollInterval);
+    // If the pollInterval is present, the scheduler has already taken care of firing the first
+    // fetch so we don't have to worry about it here.
+    if (!options.pollInterval) {
+      this.fetchQuery(queryId, options);
     }
 
     return queryId;
@@ -563,16 +572,7 @@ export class QueryManager {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
     delete this.queryListeners[queryId];
-
-    // if we have a polling interval running, stop it
-    if (this.pollingTimers[queryId]) {
-      clearInterval(this.pollingTimers[queryId]);
-    }
-
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_STOP',
-      queryId,
-    });
+    this.stopQueryInStore(queryId);
   }
 
   private fetchQueryOverInterface(

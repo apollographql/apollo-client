@@ -31,7 +31,7 @@ export class QueryScheduler {
 
   // We use this instance to actually fire queries (i.e. send them to the batching
   // mechanism).
-  private queryManager: QueryManager;
+  public queryManager: QueryManager;
 
   // Map going from polling interval widths to polling timers.
   private pollingTimers: { [interval: number]: NodeJS.Timer | any }; // oddity in Typescript
@@ -65,49 +65,43 @@ export class QueryScheduler {
     });
   }
 
+  // The firstFetch option is used to denote whether we want to fire off a
+  // "first fetch" before we start polling. If startPollingQuery() is being called
+  // from an existing ObservableQuery, the first fetch has already been fired which
+  // means that firstFetch should be false.
   public startPollingQuery(
     options: WatchQueryOptions,
-    listener: QueryListener,
-    queryId?: string
+    queryId?: string,
+    firstFetch: boolean = true,
+    listener?: QueryListener
   ): string {
     if (!queryId) {
       queryId = this.queryManager.generateQueryId();
     }
+
+    this.registeredQueries[queryId] = options;
+
     // Fire an initial fetch before we start the polling query
-    this.fetchQuery(queryId, options);
-    this.queryManager.addQueryListener(queryId, listener);
+    if (firstFetch) {
+      this.fetchQuery(queryId, options);
+    }
+
+    if (listener) {
+      this.queryManager.addQueryListener(queryId, listener);
+    }
     this.addQueryOnInterval(queryId, options);
 
     return queryId;
   }
 
   public stopPollingQuery(queryId: string) {
-    // TODO should cancel in flight request so that there is no
-    // further data returned.
-    this.queryManager.removeQueryListener(queryId);
-
     // Remove the query options from one of the registered queries.
     // The polling function will then take care of not firing it anymore.
     delete this.registeredQueries[queryId];
-
-    // Fire a APOLLO_STOP_QUERY state change to the underlying store.
-    this.queryManager.stopQueryInStore(queryId);
-  }
-
-  // Tell the QueryScheduler to schedule the queries fired by a polling query.
-  public registerPollingQuery(options: WatchQueryOptions): ObservableQuery {
-    if (!options.pollInterval) {
-      throw new Error('Tried to register a non-polling query with the scheduler.');
-    }
-
-    return new ObservableQuery({
-      queryManager: this.queryManager,
-      options: options,
-    });
   }
 
   // Fires the all of the queries on a particular interval. Called on a setInterval.
-  public fireQueriesOnInterval(interval: number) {
+  public fetchQueriesOnInterval(interval: number) {
     this.intervalQueries[interval] = this.intervalQueries[interval].filter((queryId) => {
       // If queryOptions can't be found from registeredQueries, it means that this queryId
       // is no longer registered and should be removed from the list of queries firing on this
@@ -148,9 +142,20 @@ export class QueryScheduler {
       this.intervalQueries[interval] = [queryId];
       // set up the timer for the function that will handle this interval
       this.pollingTimers[interval] = setInterval(() => {
-        this.fireQueriesOnInterval(interval);
+        this.fetchQueriesOnInterval(interval);
       }, interval);
     }
+  }
+
+  // Used only for unit testing.
+  public registerPollingQuery(queryOptions: WatchQueryOptions): ObservableQuery {
+    if (!queryOptions.pollInterval) {
+      throw new Error('Attempted to register a non-polling query with the scheduler.');
+    }
+    return new ObservableQuery({
+      scheduler: this,
+      options: queryOptions,
+    });
   }
 
   private addInFlight(queryId: string, options: WatchQueryOptions) {

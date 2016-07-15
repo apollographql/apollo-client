@@ -8,7 +8,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Stringify `storeObj` for error message in `diffFieldAgainstStore`.
 - Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)
 
-- Added a "noFetch" option to WatchQueryOptions that only returns available data from the local store (even it is incomplete). [Issue #225](https://github.com/apollostack/apollo-client/issues/225) and [PR #385](https://github.com/apollostack/apollo-client/pull/385).
+- Added a "noFetch" option to WatchQueryOptions that only returns available data from the local store (even it is incomplete). The `ObservableQuery` returned from calling `watchQuery` now has `options`, `queryManager`, and `queryId`. The `queryId` can be used to read directly from the state of `apollo.queries`. [Issue #225](https://github.com/apollostack/apollo-client/issues/225), [Issue #342](https://github.com/apollostack/apollo-client/issues/342), and [PR #385](https://github.com/apollostack/apollo-client/pull/385).
 
 ### v0.4.1
 

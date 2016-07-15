@@ -16,6 +16,8 @@ Expect active development and potentially significant breaking changes in the `0
   It can be used just as a `middleware` is used. Just pass an array of afterwares to the
   `useAfter` function.
 
+- Added a "noFetch" option to WatchQueryOptions that only returns available data from the local store (even it is incomplete). [Issue #225](https://github.com/apollostack/apollo-client/issues/225) and [PR #385](https://github.com/apollostack/apollo-client/pull/385).
+
 ### v0.4.1
 
 - Allow `client.mutate` to accept an `optimisticResponse` argument to update the cache immediately, then after the server responds replace the `optimisticResponse` with the real response. [Issue #287](https://github.com/apollostack/apollo-client/issues/287) [PR #336](https://github.com/apollostack/apollo-client/pull/336)
@@ -25,6 +27,7 @@ Expect active development and potentially significant breaking changes in the `0
 This release has a minor version bump, which means npm will not automatically update to this version. Consider the list of breaking changes below, then upgrade and update your app correspondingly.
 
 - **Breaking change** Remove backcompat shim for `import ... from 'apollo-client/gql'`. Instead, use the `graphql-tag` package as recommended in the docs and official examples. [Issue #324](https://github.com/apollostack/apollo-client/issues/324) [PR #387](https://github.com/apollostack/apollo-client/pull/387)
+
 - **Breaking change** Moved refetch(), startPolling(), and stopPolling() methods from QuerySubscription to ObservableQuery. This shouldn't affect anyone using `react-apollo`, but if you were calling those methods on the subscription directly, you need to call them on the query handle/observable instead. The benefit of this is that developers that want to use RxJS for their observable handling can now have access to these methods. [Issue #194] (https://github.com/apollostack/apollo-client/issues/194) and [PR #362] (https://github.com/apollostack/apollo-client/pull/362)
 - **Breaking change** Unified error handling for GraphQL errors and network errors. Both now result in rejected promises and passed as errors on observables through a new `ApolloError` type. This is a significant departure from the previous method of error handling which passed GraphQL errors in resolvers and `next` methods on subscriptions. [PR #352](https://github.com/apollostack/apollo-client/pull/352)
 

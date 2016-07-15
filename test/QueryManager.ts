@@ -1,6 +1,7 @@
 import {
   QueryManager,
   ObservableQuery,
+  WatchQueryOptions,
 } from '../src/QueryManager';
 
 import {
@@ -958,6 +959,61 @@ describe('QueryManager', () => {
       const handle = queryManager.watchQuery({
         query: complexQuery,
         returnPartialData: true,
+      });
+
+      return handle.result().then((result) => {
+        assert.equal(result.data['luke'].name, 'Luke Skywalker');
+        assert.notProperty(result.data, 'vader');
+      });
+    });
+  });
+
+  it('supports noFetch fetching only cached data', () => {
+    const primeQuery = gql`
+      query primeQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const complexQuery = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      luke: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: primeQuery },
+        result: { data: data1 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    // First, prime the cache
+    queryManager.query({
+      query: primeQuery,
+    }).then(() => {
+      const handle = queryManager.watchQuery({
+        query: complexQuery,
+        noFetch: true,
       });
 
       return handle.result().then((result) => {
@@ -2291,22 +2347,70 @@ describe('QueryManager', () => {
     });
 
     it('should call refetch on a mocked Observable if the store is reset', (done) => {
-      const mockObservableQuery: ObservableQuery = {
-        refetch(variables: any): Promise<GraphQLResult> {
-          done();
-          return null;
-        },
-      } as ObservableQuery;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
       const queryManager = new QueryManager({
         networkInterface: mockNetworkInterface(),
         store: createApolloStore(),
         reduxRootKey: 'apollo',
       });
+      const mockObservableQuery: ObservableQuery = {
+        refetch(variables: any): Promise<GraphQLResult> {
+          done();
+          return null;
+        },
+        options: {
+          query: query,
+        },
+        queryManager: queryManager,
+      } as ObservableQuery;
+
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery(queryId, mockObservableQuery);
       queryManager.resetStore();
     });
 
+    it('should not call refetch on a noFetch Observable if the store is reset', (done) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      const options = assign({}) as WatchQueryOptions;
+      options.noFetch = true;
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery = {
+        refetch(variables: any): Promise<GraphQLResult> {
+          refetchCount ++;
+          done();
+          return null;
+        },
+        options,
+        queryManager: queryManager,
+      } as ObservableQuery;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery(queryId, mockObservableQuery);
+      queryManager.resetStore();
+      setTimeout(() => {
+        assert.equal(refetchCount, 0);
+        done();
+      }, 400);
+
+    });
 
     it('should throw an error on an inflight query() if the store is reset', (done) => {
       let queryManager: QueryManager = null;

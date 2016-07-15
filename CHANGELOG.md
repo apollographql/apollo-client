@@ -4,11 +4,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Added the `batchInterval` option to ApolloClient that allows you to specify the width of the batching interval as per your app's needs. [Issue #394](https://github.com/apollostack/apollo-client/issues/394) and [PR #395](https://github.com/apollostack/apollo-client/pull/395).
-
 - Stringify `storeObj` for error message in `diffFieldAgainstStore`.
 - Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)
-
 - Added a "noFetch" option to WatchQueryOptions that only returns available data from the local store (even it is incomplete). [Issue #225](https://github.com/apollostack/apollo-client/issues/225) and [PR #385](https://github.com/apollostack/apollo-client/pull/385).
+- Integrated the scheduler so that polling queries on the same polling interval are batched together. [PR #403](https://github.com/apollostack/apollo-client/pull/403) and [Issue #401](https://github.com/apollostack/apollo-client/issues/401).
 
 ### v0.4.1
 

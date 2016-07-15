@@ -75,6 +75,10 @@ export class QueryScheduler {
     firstFetch: boolean = true,
     listener?: QueryListener
   ): string {
+    if (!options.pollInterval) {
+      throw new Error('Attempted to start a polling query without a polling interval.');
+    }
+
     if (!queryId) {
       queryId = this.queryManager.generateQueryId();
     }

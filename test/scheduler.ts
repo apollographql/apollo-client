@@ -11,7 +11,7 @@ import mockNetworkInterface from './mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
 
 describe('QueryScheduler', () => {
-  it('should throw an error if we try to register a non-polling query', () => {
+  it('should throw an error if we try to start polling a non-polling query', () => {
     const queryManager = new QueryManager({
       networkInterface: mockNetworkInterface(),
       store: createApolloStore(),
@@ -33,7 +33,7 @@ describe('QueryScheduler', () => {
       query,
     };
     assert.throws(() => {
-      scheduler.registerPollingQuery(queryOptions);
+      scheduler.startPollingQuery(queryOptions);
     });
   });
 

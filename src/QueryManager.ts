@@ -55,6 +55,7 @@ import {
 
 import {
   MutationBehavior,
+  MutationQueryReducersMap,
 } from './data/mutationResults';
 
 import {
@@ -96,7 +97,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
   public queryManager: QueryManager;
-  private queryId: string;
+  public queryId: string;
 
   constructor({
     queryManager,
@@ -285,12 +286,14 @@ export class QueryManager {
     resultBehaviors,
     fragments = [],
     optimisticResponse,
+    updateQueries,
   }: {
     mutation: Document,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
+    updateQueries?: MutationQueryReducersMap,
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
@@ -330,6 +333,10 @@ export class QueryManager {
 
     return this.networkInterface.query(request)
       .then((result) => {
+        const additionalResultBehaviors =
+          this.collectResultBehaviorsFromReducers(updateQueries, result);
+        resultBehaviors = resultBehaviors || [];
+        resultBehaviors = [...resultBehaviors, ...additionalResultBehaviors];
         this.store.dispatch({
           type: 'APOLLO_MUTATION_RESULT',
           result,
@@ -582,6 +589,47 @@ export class QueryManager {
       type: 'APOLLO_QUERY_STOP',
       queryId,
     });
+  }
+
+  private collectResultBehaviorsFromReducers(updateQueries, mutationResult) {
+    if (!updateQueries) {
+      return [];
+    }
+    const additionalResultBehaviors = [];
+
+    const observableQueriesByName: { [name: string]: ObservableQuery[] } = {};
+    Object.keys(this.observableQueries).forEach((key) => {
+      const observableQuery = this.observableQueries[key].observableQuery;
+      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+
+      observableQueriesByName[queryName] =
+        observableQueriesByName[queryName] || [];
+      observableQueriesByName[queryName].push(observableQuery);
+    });
+
+    Object.keys(updateQueries).forEach((queryName) => {
+      const reducer = updateQueries[queryName];
+      const queries = observableQueriesByName[queryName];
+      if (!queries) {
+        // XXX should throw an error?
+        return;
+      }
+
+      queries.forEach((observableQuery) => {
+        const queryOptions = observableQuery.options;
+        const previousResult = this.queryResults[observableQuery.queryId].data;
+        additionalResultBehaviors.push({
+          type: 'QUERY_RESULT',
+          newResult: reducer(previousResult, {
+            mutationResult,
+            queryVariables: queryOptions.variables,
+          }),
+          queryOptions,
+        });
+      });
+    });
+
+    return additionalResultBehaviors;
   }
 
   private fetchQueryOverInterface(

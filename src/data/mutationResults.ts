@@ -5,6 +5,7 @@ import {
 import {
   GraphQLResult,
   SelectionSet,
+  OperationDefinition,
 } from 'graphql';
 
 import mapValues = require('lodash.mapvalues');
@@ -14,6 +15,8 @@ import assign = require('lodash.assign');
 
 import {
   FragmentMap,
+  getQueryDefinition,
+  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -30,12 +33,17 @@ import {
   writeSelectionSetToStore,
 } from './writeToStore';
 
+import {
+  WatchQueryOptions,
+} from '../QueryManager';
+
 // Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 
 export type MutationBehavior =
   MutationArrayInsertBehavior |
   MutationArrayDeleteBehavior |
-  MutationDeleteBehavior;
+  MutationDeleteBehavior |
+  MutationQueryResultBehavior;
 
 export type MutationArrayInsertBehavior = {
   type: 'ARRAY_INSERT';
@@ -54,6 +62,12 @@ export type MutationArrayDeleteBehavior = {
   storePath: StorePath;
   dataId: string;
 }
+
+export type MutationQueryResultBehavior = {
+  type: 'QUERY_RESULT';
+  queryOptions: WatchQueryOptions;
+  newResult: Object;
+};
 
 export type ArrayInsertWhere =
   'PREPEND' |
@@ -254,10 +268,44 @@ function mutationResultArrayDeleteReducer(state: NormalizedCache, {
   }) as NormalizedCache;
 }
 
+function mutationResultQueryResultReducer(state: NormalizedCache, {
+  behavior,
+  config,
+}: MutationBehaviorReducerArgs) {
+  const {
+    queryOptions,
+    newResult,
+  } = behavior as MutationQueryResultBehavior;
+
+  const clonedState = assign({}, state) as NormalizedCache;
+  const queryDefinition: OperationDefinition = getQueryDefinition(queryOptions.query);
+
+  return writeSelectionSetToStore({
+    result: newResult,
+    dataId: 'ROOT_QUERY',
+    selectionSet: queryDefinition.selectionSet,
+    variables: queryOptions.variables,
+    store: clonedState,
+    dataIdFromObject: config.dataIdFromObject,
+    fragmentMap: createFragmentMap(queryOptions.fragments || []),
+  });
+}
+
+export type MutationQueryReducer = (previousResult: Object, options: {
+  mutationResult: Object,
+  queryName: Object,
+  queryVariables: Object,
+}) => Object;
+
+export type MutationQueryReducersMap = {
+  [queryName: string]: MutationQueryReducer;
+};
+
 // Combines all of the default reducers into a map based on the behavior type they accept
 // The behavior type is used to pick the right reducer when evaluating the result of the mutation
 export const defaultMutationBehaviorReducers: { [type: string]: MutationBehaviorReducer } = {
   'ARRAY_INSERT': mutationResultArrayInsertReducer,
   'DELETE': mutationResultDeleteReducer,
   'ARRAY_DELETE': mutationResultArrayDeleteReducer,
+  'QUERY_RESULT': mutationResultQueryResultReducer,
 };

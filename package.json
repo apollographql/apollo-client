@@ -19,7 +19,8 @@
     "lint": "grunt tslint",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
-    "testonly": "mocha --reporter spec --full-trace lib/test/tests.js"
+    "testonly": "mocha --reporter spec --full-trace lib/test/tests.js",
+    "docs": "typedoc -out docs src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -88,6 +89,7 @@
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "tslint": "3.13.0",
+    "typedoc": "^0.4.4",
     "typescript": "^1.8.9",
     "typings": "^1.0.0",
     "uglify-js": "^2.6.2"

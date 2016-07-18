@@ -38,6 +38,7 @@ export function optimistic(
       result: { data: action.optimisticResponse },
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
+      mutationStoreValue: store.mutations[action.mutationId],
     } as ApolloAction;
 
     const fakeStore = assign({}, store, { optimistic: previousState }) as Store;
@@ -45,8 +46,6 @@ export function optimistic(
     const fakeDataResultState = data(
       optimisticData,
       fakeMutationResultAction,
-      store.queries,
-      store.mutations,
       config
     );
 

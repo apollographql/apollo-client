@@ -325,6 +325,7 @@ export class QueryManager {
       resultBehaviors,
     });
 
+
     return this.networkInterface.query(request)
       .then((result) => {
         this.store.dispatch({
@@ -332,6 +333,7 @@ export class QueryManager {
           result,
           mutationId,
           resultBehaviors,
+          mutationStoreValue: this.getApolloState().mutations[mutationId],
         });
 
         return result;
@@ -710,6 +712,7 @@ export class QueryManager {
               result,
               queryId,
               requestId,
+              queryStoreValue: this.getApolloState().queries[queryId],
             });
 
             this.removeFetchQueryPromise(requestId);

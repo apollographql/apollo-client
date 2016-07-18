@@ -50,7 +50,7 @@ export function addTypenameToSelectionSet(selectionSet: SelectionSet) {
 function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: QueryTransformer[]) {
   if (selectionSet && selectionSet.selections) {
     queryTransformers.forEach((transformer) => {
-      (transformer as QueryTransformer)(selectionSet); // transforms in place
+      transformer(selectionSet); // transforms in place
       selectionSet.selections.forEach((selection) => {
         if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
           traverseSelectionSet((selection as Field | InlineFragment).selectionSet, queryTransformers);
@@ -60,7 +60,7 @@ function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: Que
   }
 }
 /**
- * Applies transformers to document in place.
+ * Applies transformers to document and returns a new transformed document.
  * @param {Document} doc - A GraphQL document that will be transformed
  * @param {QueryTranformer[]} queryTransformers - transformers to be applied to the document
  * @ return {Document} - a new transformed document
@@ -68,8 +68,8 @@ function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: Que
 export function applyTransformers(doc: Document, queryTransformers: QueryTransformer[]): Document {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
-    docClone.definitions.forEach((definition) => {
-      traverseSelectionSet((definition as (OperationDefinition | FragmentDefinition)).selectionSet, queryTransformers);
-    });
+  docClone.definitions.forEach((definition) => {
+    traverseSelectionSet((definition as (OperationDefinition | FragmentDefinition)).selectionSet, queryTransformers);
+  });
   return docClone;
 }

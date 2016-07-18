@@ -21,7 +21,6 @@ import {
 import {
   getMutationDefinition,
   getQueryDefinition,
-  replaceOperationDefinition,
   getFragmentDefinitions,
   createFragmentMap,
   getOperationName,
@@ -30,7 +29,7 @@ import {
 
 import {
   QueryTransformer,
-  applyTransformerToOperation,
+  applyTransformers,
 } from './queries/queryTransform';
 
 import {
@@ -298,17 +297,15 @@ export class QueryManager {
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
-    let mutationDef = getMutationDefinition(mutation);
-    if (this.queryTransformer) {
-      mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
-      mutation = replaceOperationDefinition(mutation, mutationDef);
-    }
-    mutation = replaceOperationDefinition(mutation, mutationDef);
-
     // Add the fragments that were passed in to the mutation document and then
     // construct the fragment map.
     mutation = addFragmentsToDocument(mutation, fragments);
 
+    if (this.queryTransformer) {
+      mutation = applyTransformers(mutation, [this.queryTransformer]);
+    }
+
+    let mutationDef = getMutationDefinition(mutation);
     const mutationString = print(mutation);
     const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
     const request = {
@@ -670,18 +667,16 @@ export class QueryManager {
       fragments = [],
     } = options;
 
-    let queryDef = getQueryDefinition(query);
+    let queryDoc = addFragmentsToDocument(query, fragments);
     // Apply the query transformer if one has been provided.
     if (this.queryTransformer) {
-      queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
+      queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
     }
-    let transformedQuery = replaceOperationDefinition(query, queryDef);
 
     // Add the fragments passed in into the query and then create the fragment map
-    transformedQuery = addFragmentsToDocument(transformedQuery, fragments);
-    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(transformedQuery));
-
-    const queryString = print(transformedQuery);
+    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(queryDoc));
+    const queryDef = getQueryDefinition(queryDoc);
+    const queryString = print(queryDoc);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -695,7 +690,7 @@ export class QueryManager {
     // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
-    let minimizedQueryDoc = transformedQuery;
+    let minimizedQueryDoc = queryDoc;
     let initialResult;
 
     if (!forceFetch) {

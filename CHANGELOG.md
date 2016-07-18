@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Make sure query transformers are also applied to named fragments, and new methods that allow transforming query document with multiple query transformers. [Issue #373](https://github.com/apollostack/apollo-client/issues/373) [PR #412](https://github.com/apollostack/apollo-client/pull/412)
+
 ### v0.4.3
 
 - Introduce a new (preferable) way to express how the mutation result should be incorporated into the store and update watched queries results: `updateQueries`. [PR #404](https://github.com/apollostack/apollo-client/pull/404).

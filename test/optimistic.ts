@@ -783,5 +783,57 @@ describe('optimistic mutation results', () => {
         assert.equal(newResult.data.todoList.todos[1].text, 'This one was created with a mutation.');
       });
     });
+
+    it('two mutations, one fails', () => {
+      return setup({
+        request: { query: mutation },
+        error: new Error('forbidden (test error)'),
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+      })
+      .then(() => {
+        const updateQueries = {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+
+            const state = clonedeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        } as MutationQueryReducersMap;
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+          updateQueries,
+        }).catch((err) => {
+          // it is ok to fail here
+          assert.instanceOf(err, Error);
+          assert.equal(err.message, 'forbidden (test error)');
+          return null;
+        });
+
+        const promise2 = client.mutate({
+          mutation,
+          optimisticResponse: optimisticResponse2,
+          updateQueries,
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+        assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+
+        return Promise.all([promise, promise2]);
+      })
+      .then(() => {
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.notProperty(dataInStore, 'Todo99');
+        assert.property(dataInStore, 'Todo66');
+        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
+        assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
+      });
+    });
   });
 });

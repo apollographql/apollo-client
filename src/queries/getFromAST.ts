@@ -143,6 +143,7 @@ export function createFragmentMap(fragments: FragmentDefinition[]): FragmentMap 
 // document.
 export function addFragmentsToDocument(queryDoc: Document,
   fragments: FragmentDefinition[]): Document {
+  checkDocument(queryDoc);
   queryDoc.definitions = queryDoc.definitions.concat(fragments);
   return queryDoc;
 }

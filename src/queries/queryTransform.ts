@@ -1,9 +1,15 @@
 import {
+  Document,
   SelectionSet,
   OperationDefinition,
+  FragmentDefinition,
   Field,
   InlineFragment,
 } from 'graphql';
+
+import {
+  checkDocument,
+} from './getFromAST';
 
 import cloneDeep = require('lodash.clonedeep');
 
@@ -13,10 +19,6 @@ export type QueryTransformer = (selectionSet: SelectionSet) => void
 // Adds a field with a given name to every node in the AST recursively.
 // Note: this mutates the AST passed in.
 export function addFieldToSelectionSet(fieldName: string, selectionSet: SelectionSet) {
-  if (selectionSet == null || selectionSet.selections == null) {
-    return selectionSet;
-  }
-
   const fieldAst: Field = {
     kind: 'Field',
     alias: null,
@@ -26,25 +28,17 @@ export function addFieldToSelectionSet(fieldName: string, selectionSet: Selectio
     },
   };
 
-  let alreadyHasThisField = false;
-  selectionSet.selections.map((selection) => {
-    // We use type assertions to make sure the selection isn't a FragmentSpread because
-    // that can't have a selectionSet.
-    if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
-      addTypenameToSelectionSet((selection as (Field | InlineFragment)).selectionSet);
+  if (selectionSet && selectionSet.selections) {
+    let alreadyHasThisField = false;
+    selectionSet.selections.forEach((selection) => {
+      if (selection.kind === 'Field' && (selection as Field).name.value === fieldName) {
+        alreadyHasThisField = true;
+      }
+    });
+    if (! alreadyHasThisField) {
+      selectionSet.selections.push(fieldAst);
     }
-
-    if (selection.kind === 'Field' && (selection as Field).name.value === fieldName) {
-      alreadyHasThisField = true;
-    }
-  });
-
-  if (! alreadyHasThisField) {
-    // Add the typename to this particular node's children
-    selectionSet.selections.push(fieldAst);
   }
-
-  return selectionSet;
 }
 
 // Adds typename fields to every node in the AST recursively.
@@ -61,12 +55,29 @@ export function addTypenameToQuery(queryDef: OperationDefinition): OperationDefi
   return queryClone;
 }
 
-// Apply a QueryTranformer to an OperationDefinition (extracted from a query
-// or a mutation.)
-// Returns a new query tree.
-export function applyTransformerToOperation(queryDef: OperationDefinition,
-  queryTransformer: QueryTransformer): OperationDefinition {
-    const queryClone = cloneDeep(queryDef);
-    queryTransformer(queryClone.selectionSet);
-    return queryClone;
+function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: QueryTransformer[]) {
+  if (selectionSet && selectionSet.selections) {
+    queryTransformers.forEach((transformer) => {
+      (transformer as QueryTransformer)(selectionSet); // transforms in place
+      selectionSet.selections.forEach((selection) => {
+        if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
+          traverseSelectionSet((selection as Field | InlineFragment).selectionSet, queryTransformers);
+        }
+      });
+    });
+  }
+}
+/**
+ * Applies transformers to document in place.
+ * @param {Document} doc - A GraphQL document that will be transformed
+ * @param {QueryTranformer[]} queryTransformers - transformers to be applied to the document
+ * @ return {Document} - a new transformed document
+ */
+export function applyTransformers(doc: Document, queryTransformers: QueryTransformer[]): Document {
+  checkDocument(doc);
+  const docClone = cloneDeep(doc);
+    docClone.definitions.forEach((definition) => {
+      traverseSelectionSet((definition as (OperationDefinition | FragmentDefinition)).selectionSet, queryTransformers);
+    });
+  return docClone;
 }

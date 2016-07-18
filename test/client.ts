@@ -15,6 +15,7 @@ import {
   GraphQLError,
   OperationDefinition,
   GraphQLResult,
+  Field,
 } from 'graphql';
 
 import {
@@ -62,6 +63,7 @@ import { getFragmentDefinitions } from '../src/queries/getFromAST';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors';
+import pick = require('lodash.pick');
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -1419,4 +1421,110 @@ describe('client', () => {
       assert.equal(fragmentDefinitionsMap['authorDetails'].length, 1);
     });
   });
+
+  describe('result transformation', () => {
+
+    class Task {
+      constructor(properties) {
+        (<any>Object).assign(this, properties);
+      }
+    }
+    class User {
+      constructor(properties) {
+        (<any>Object).assign(this, properties);
+      }
+    }
+
+    let task, client;
+    beforeEach(() => {
+      task = {
+        __typename: 'Task',
+        id: 'abc123',
+        name: 'Do stuff',
+        author: {
+          __typename: 'User',
+          id: 'def456',
+        },
+      };
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          return new Promise((resolve) => {
+            assert.equal(request.operationName, 'getTask');
+            const definition = <OperationDefinition>request.query.definitions[0];
+            const field = <Field>definition.selectionSet.selections[0];
+            const attributes = field.selectionSet.selections.map((s: Field) => s.name.value);
+            resolve({
+              data: {
+                task: pick(task, ...attributes),
+                __typename: 'RootQuery',
+              },
+            });
+          });
+        },
+      };
+      client = new ApolloClient({
+        networkInterface,
+        queryTransformer: addTypenameToSelectionSet,
+        resultTransformer: (diffResult) => {
+          if (!diffResult.isMissing && diffResult.result['__typename'] === 'Task') {
+            diffResult.result = new Task(diffResult.result);
+          } else if (!diffResult.isMissing && diffResult.result['__typename'] === 'User') {
+            diffResult.result = new User(diffResult.result);
+          }
+          return diffResult;
+        },
+      });
+    });
+
+    it('it transforms query results', () => {
+      return client.query({query: gql`
+        query getTask {
+          task {
+            id
+            name
+          }
+        }
+      `})
+      .then((actualResult) => {
+        const resultTask = actualResult.data.task;
+        assert.equal(resultTask.id, 'abc123');
+        assert.equal(resultTask.name, 'Do stuff');
+        assert.instanceOf(resultTask, Task);
+      });
+    });
+
+    it('it handles nested nodes', () => {
+      return client.query({query: gql`
+        query getTask {
+          task {
+            id
+            name
+          }
+        }
+      `})
+      .then((actualResult) => {
+        return client.query({query: gql`
+          query getTask {
+            task {
+              id
+              name
+              author {
+                id
+              }
+            }
+          }
+        `});
+      })
+      .then((actualResult) => {
+        const resultTask = actualResult.data.task;
+        assert.equal(resultTask.id, 'abc123');
+        assert.equal(resultTask.name, 'Do stuff');
+        assert.instanceOf(resultTask, Task);
+        assert.instanceOf(resultTask.author, User);
+        assert.equal(resultTask.author.id, 'def456');
+      });
+    });
+
+  });
+
 });

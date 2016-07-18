@@ -10,6 +10,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Added a "noFetch" option to WatchQueryOptions that only returns available data from the local store (even it is incomplete). [Issue #225](https://github.com/apollostack/apollo-client/issues/225) and [PR #385](https://github.com/apollostack/apollo-client/pull/385).
 
+- Added `resultTransformer`, which can be used to mutate results just before they are returned via the client's query interface. [PR #378](https://github.com/apollostack/apollo-client/pull/378)
+
 ### v0.4.1
 
 - Allow `client.mutate` to accept an `optimisticResponse` argument to update the cache immediately, then after the server responds replace the `optimisticResponse` with the real response. [Issue #287](https://github.com/apollostack/apollo-client/issues/287) [PR #336](https://github.com/apollostack/apollo-client/pull/336)

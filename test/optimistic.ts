@@ -3,7 +3,7 @@ const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient, { addTypename } from '../src';
-import { MutationBehaviorReducerArgs, MutationBehavior } from '../src/data/mutationResults';
+import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 
 import assign = require('lodash.assign');
@@ -745,7 +745,7 @@ describe('optimistic mutation results', () => {
             state.todoList.todos.unshift(mResult.data.createTodo);
             return state;
           },
-        };
+        } as MutationQueryReducersMap;
         const promise = client.mutate({
           mutation,
           optimisticResponse,

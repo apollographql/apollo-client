@@ -782,6 +782,93 @@ describe('writing to the store', () => {
     });
   });
 
+  describe('type escaping', () => {
+    const dataIdFromObject = (object) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+    };
+
+    it('should correctly escape ids', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            id
+            __typename
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          id: '129',
+          __typename: 'Author',
+        },
+      };
+      const expStore = {
+        ROOT_QUERY: {
+          author: {
+            type: 'id',
+            id: dataIdFromObject(data.author),
+            generated: false,
+          },
+        },
+        [dataIdFromObject(data.author)]: {
+          firstName: data.author.firstName,
+          id: data.author.id,
+          __typename: data.author.__typename,
+        },
+      };
+      assert.deepEqual(writeQueryToStore({
+        result: data,
+        query,
+        dataIdFromObject,
+      }), expStore);
+    });
+
+    it('should correctly escape json blobs', () => {
+      const query = gql`
+        query {
+          author {
+            info
+            id
+            __typename
+          }
+        }`;
+      const data = {
+        author: {
+          info: {
+            name: 'John',
+          },
+          id: '129',
+          __typename: 'Author',
+        }
+      };
+      const expStore = {
+        ROOT_QUERY: {
+          author: {
+            type: 'id',
+            id: dataIdFromObject(data.author),
+            generated: false,
+          },
+        },
+        [dataIdFromObject(data.author)]: {
+          __typename: data.author.__typename,
+          id: data.author.id,
+          info: {
+            type: 'json',
+            json: data.author.info,
+          },
+        },
+      };
+      assert.deepEqual(writeQueryToStore({
+        result: data,
+        query,
+        dataIdFromObject,
+      }), expStore);
+    });
+  });
+
   it('should merge objects when overwriting a generated id with a real id', () => {
     const dataWithoutId = {
       author: {

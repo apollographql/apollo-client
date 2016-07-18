@@ -41,7 +41,18 @@ export interface StoreObject {
   [storeFieldKey: string]: StoreValue;
 }
 
-export type StoreValue = number | string | string[];
+export interface IdValue {
+  type: "id";
+  id: string;
+  generated: boolean;
+}
+
+export interface JsonValue {
+  type: "json";
+  json: any;
+}
+
+export type StoreValue = number | string | string[] | IdValue | JsonValue ;
 
 export function data(
   previousState: NormalizedCache = {},

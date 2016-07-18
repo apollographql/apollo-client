@@ -247,9 +247,16 @@ function writeFieldToStore({
   // If we merge, this will be the generatedKey
   let generatedKey: string;
 
-  // If it's a scalar, just store it in the store
-  if (!field.selectionSet || isNull(value)) {
+  // If it's a scalar that's not a JSON blob, just store it in the store
+  if ((!field.selectionSet || isNull(value)) && !isObject(value)) {
     storeValue = value;
+  } else if ((!field.selectionSet || isNull(value)) && isObject(value)) {
+    // If it is a scalar that's a JSON blob, we have to "escape" it so it can't
+    // pretend to be an id
+    storeValue = {
+      type: "json",
+      json: value,
+    };
   } else if (isArray(value)) {
     // this is an array with sub-objects
     const thisIdList: Array<string> = [];
@@ -286,6 +293,7 @@ function writeFieldToStore({
   } else {
     // It's an object
     let valueDataId = `${dataId}.${storeFieldName}`;
+    let generated = true;
 
     // We only prepend the '$' if the valueDataId isn't already a generated
     // id.
@@ -306,6 +314,7 @@ function writeFieldToStore({
 
       if (semanticId) {
         valueDataId = semanticId;
+        generated = false;
       }
     }
 
@@ -319,7 +328,13 @@ function writeFieldToStore({
       fragmentMap,
     });
 
-    storeValue = valueDataId;
+    // We take the id and escape it (i.e. wrap it with an enclosing object).
+    // This allows us to distinguish IDs from normal scalars.
+    storeValue = {
+      type: 'id',
+      id: valueDataId,
+      generated,
+    };
 
     // check if there was a generated id at the location where we're
     // about to place this new id. If there was, we have to merge the

@@ -234,3 +234,35 @@ export default CategoryWithData;
 ```
 
 In this case, `CategoryWithData` gets two props: `category` and `selectedCategory`.
+
+<h2 id="usage-with-react-router">Usage with React Router</h2>
+
+```txt
+npm install react-router --save
+```
+
+In order to use [React Router](https://github.com/reactjs/react-router) with Apollo you need to render the `Router` component within an `ApolloProvider` component. That's all there is to it. You can find an introduction to React Router, advanced usage, and API documentation inside its [Github repository](https://github.com/reactjs/react-router/blob/master/docs/README.md).
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import ApolloClient from 'apollo-client';
+import { ApolloProvider } from 'react-apollo';
+import { Router, Route, browserHistory } from 'react-router';
+
+const client = new ApolloClient();
+
+const Home = () => (
+  <div>
+    The contents of your first route
+  </div>
+);
+
+ReactDOM.render(
+  <ApolloProvider client={client}>
+    <Router history={browserHistory}>
+      <Route path="/" component={Home}>
+    </Router>
+  </ApolloProvider>,
+  root
+);

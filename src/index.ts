@@ -48,6 +48,7 @@ import {
 import {
   MutationBehavior,
   MutationBehaviorReducerMap,
+  MutationQueryReducersMap,
 } from './data/mutationResults';
 
 import {
@@ -236,6 +237,7 @@ export default class ApolloClient {
     resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
+    updateQueries?: MutationQueryReducersMap,
   }): Promise<ApolloQueryResult> => {
     this.initStore();
     return this.queryManager.mutate(options);

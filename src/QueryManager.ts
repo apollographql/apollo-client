@@ -41,6 +41,7 @@ import {
   GraphQLResult,
   Document,
   FragmentDefinition,
+  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -55,6 +56,7 @@ import {
 
 import {
   MutationBehavior,
+  MutationQueryReducersMap,
 } from './data/mutationResults';
 
 import {
@@ -96,7 +98,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
   public queryManager: QueryManager;
-  private queryId: string;
+  public queryId: string;
 
   constructor({
     queryManager,
@@ -282,15 +284,17 @@ export class QueryManager {
   public mutate({
     mutation,
     variables,
-    resultBehaviors,
+    resultBehaviors = [],
     fragments = [],
     optimisticResponse,
+    updateQueries,
   }: {
     mutation: Document,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
+    updateQueries?: MutationQueryReducersMap,
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
@@ -313,6 +317,14 @@ export class QueryManager {
       operationName: getOperationName(mutation),
     } as Request;
 
+    // Right now the way `updateQueries` feature is implemented relies on using
+    // `resultBehaviors`, another feature that accomplishes the same goal but
+    // provides more verbose syntax.
+    // In the future we want to re-factor this part of code to avoid using
+    // `resultBehaviors` so we can remove `resultBehaviors` entirely.
+    const updateQueriesResultBehaviors = !optimisticResponse ? [] :
+      this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true);
+
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
@@ -325,7 +337,7 @@ export class QueryManager {
       mutationId,
       fragmentMap: queryFragmentMap,
       optimisticResponse,
-      resultBehaviors,
+      resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
     });
 
     return this.networkInterface.query(request)
@@ -334,7 +346,10 @@ export class QueryManager {
           type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
-          resultBehaviors,
+          resultBehaviors: [
+            ...resultBehaviors,
+            ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
+          ],
         });
 
         return result;
@@ -344,7 +359,6 @@ export class QueryManager {
           type: 'APOLLO_MUTATION_ERROR',
           error: err,
           mutationId,
-          resultBehaviors,
         });
 
         return Promise.reject(err);
@@ -582,6 +596,64 @@ export class QueryManager {
       type: 'APOLLO_QUERY_STOP',
       queryId,
     });
+  }
+
+  private collectResultBehaviorsFromUpdateQueries(
+    updateQueries: MutationQueryReducersMap,
+    mutationResult: Object,
+    isOptimistic = false
+  ): MutationBehavior[] {
+    if (!updateQueries) {
+      return [];
+    }
+    const resultBehaviors = [];
+
+    const observableQueriesByName: { [name: string]: ObservableQuery[] } = {};
+    Object.keys(this.observableQueries).forEach((key) => {
+      const observableQuery = this.observableQueries[key].observableQuery;
+      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+
+      observableQueriesByName[queryName] =
+        observableQueriesByName[queryName] || [];
+      observableQueriesByName[queryName].push(observableQuery);
+    });
+
+    Object.keys(updateQueries).forEach((queryName) => {
+      const reducer = updateQueries[queryName];
+      const queries = observableQueriesByName[queryName];
+      if (!queries) {
+        // XXX should throw an error?
+        return;
+      }
+
+      queries.forEach((observableQuery) => {
+        const queryOptions = observableQuery.options;
+        const queryDefinition: OperationDefinition = getQueryDefinition(queryOptions.query);
+        const previousResult = readSelectionSetFromStore({
+          // In case of an optimistic change, apply reducer on top of the
+          // results including previous optimistic updates. Otherwise, apply it
+          // on top of the real data only.
+          store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+          rootId: 'ROOT_QUERY',
+          selectionSet: queryDefinition.selectionSet,
+          variables: queryOptions.variables,
+          returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
+          fragmentMap: createFragmentMap(queryOptions.fragments || []),
+        });
+
+        resultBehaviors.push({
+          type: 'QUERY_RESULT',
+          newResult: reducer(previousResult, {
+            mutationResult,
+            queryName,
+            queryVariables: queryOptions.variables,
+          }),
+          queryOptions,
+        });
+      });
+    });
+
+    return resultBehaviors;
   }
 
   private fetchQueryOverInterface(

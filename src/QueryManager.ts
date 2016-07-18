@@ -41,6 +41,7 @@ import {
   GraphQLResult,
   Document,
   FragmentDefinition,
+  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -283,7 +284,7 @@ export class QueryManager {
   public mutate({
     mutation,
     variables,
-    resultBehaviors,
+    resultBehaviors = [],
     fragments = [],
     optimisticResponse,
     updateQueries,
@@ -316,6 +317,9 @@ export class QueryManager {
       operationName: getOperationName(mutation),
     } as Request;
 
+    const additionalResultBehaviors = !optimisticResponse ? [] :
+      this.collectResultBehaviorsFromReducers(updateQueries, { data: optimisticResponse }, true);
+
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
@@ -328,20 +332,19 @@ export class QueryManager {
       mutationId,
       fragmentMap: queryFragmentMap,
       optimisticResponse,
-      resultBehaviors,
+      resultBehaviors: [...resultBehaviors, ...additionalResultBehaviors],
     });
 
     return this.networkInterface.query(request)
       .then((result) => {
-        const additionalResultBehaviors =
-          this.collectResultBehaviorsFromReducers(updateQueries, result);
-        resultBehaviors = resultBehaviors || [];
-        resultBehaviors = [...resultBehaviors, ...additionalResultBehaviors];
         this.store.dispatch({
           type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
-          resultBehaviors,
+          resultBehaviors: [
+            ...resultBehaviors,
+            ...this.collectResultBehaviorsFromReducers(updateQueries, result),
+          ],
         });
 
         return result;
@@ -351,7 +354,6 @@ export class QueryManager {
           type: 'APOLLO_MUTATION_ERROR',
           error: err,
           mutationId,
-          resultBehaviors,
         });
 
         return Promise.reject(err);
@@ -591,7 +593,7 @@ export class QueryManager {
     });
   }
 
-  private collectResultBehaviorsFromReducers(updateQueries, mutationResult) {
+  private collectResultBehaviorsFromReducers(updateQueries, mutationResult, isOptimistic = false) {
     if (!updateQueries) {
       return [];
     }
@@ -617,7 +619,16 @@ export class QueryManager {
 
       queries.forEach((observableQuery) => {
         const queryOptions = observableQuery.options;
-        const previousResult = this.queryResults[observableQuery.queryId].data;
+        const queryDefinition: OperationDefinition = getQueryDefinition(queryOptions.query);
+        const previousResult = readSelectionSetFromStore({
+          store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+          rootId: 'ROOT_QUERY',
+          selectionSet: queryDefinition.selectionSet,
+          variables: queryOptions.variables,
+          returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
+          fragmentMap: createFragmentMap(queryOptions.fragments || []),
+        });
+
         additionalResultBehaviors.push({
           type: 'QUERY_RESULT',
           newResult: reducer(previousResult, {

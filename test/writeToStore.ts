@@ -16,6 +16,10 @@ import {
 } from '../src/data/extensions';
 
 import {
+  NormalizedCache,
+} from '../src/data/store';
+
+import {
   Selection,
   Field,
   Definition,
@@ -814,6 +818,38 @@ describe('writing to the store', () => {
           }
         }, expected);
       });
+    });
+  });
+
+  it('does not change object references if the value is the same', () => {
+    const fragment = gql`
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    };
+    const store = writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+    });
+
+    const newStore = writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+      store: _.assign({}, store) as NormalizedCache,
+    });
+
+    Object.keys(store).forEach((field) => {
+      assert.equal(store[field], newStore[field], 'references are the same');
     });
   });
 });

@@ -1,7 +1,6 @@
 import {
   addTypenameToSelectionSet,
   addFieldToSelectionSet,
-  addTypenameToQuery,
   applyTransformers,
 } from '../src/queries/queryTransform';
 
@@ -117,37 +116,6 @@ describe('query transforms', () => {
     const expectedQueryStr = print(expectedQuery);
 
     assert.equal(expectedQueryStr, print(newQueryDoc));
-  });
-
-  it('should correctly alter a query from the root', () => {
-    const testQuery = gql`
-      query {
-        testString
-      }`;
-    const expectedQuery = getQueryDefinition(gql`
-      query {
-        testString
-        __typename
-      }`);
-    const modifiedQuery = addTypenameToQuery(getQueryDefinition(testQuery));
-    const modifiedQueryStr = print(modifiedQuery);
-    const expectedQueryStr = print(expectedQuery);
-    assert.equal(expectedQueryStr, modifiedQueryStr);
-  });
-
-  it('should not alter the original query AST', () => {
-    const testQuery = gql`
-      query {
-        user {
-          firstName
-          lastName
-        }
-      }`;
-    const expectedQueryStr = print(testQuery);
-    addTypenameToQuery(getQueryDefinition(testQuery));
-
-    //make sure that producing the modified query has not changed the original query
-    assert.equal(expectedQueryStr, print(testQuery));
   });
 
   it('should not screw up on a FragmentSpread within the query AST', () => {

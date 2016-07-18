@@ -47,14 +47,6 @@ export function addTypenameToSelectionSet(selectionSet: SelectionSet) {
   return addFieldToSelectionSet('__typename', selectionSet);
 }
 
-// Add typename field to the root query node (i.e. OperationDefinition). Returns a new
-// query tree.
-export function addTypenameToQuery(queryDef: OperationDefinition): OperationDefinition {
-  const queryClone = cloneDeep(queryDef);
-  this.addTypenameToSelectionSet(queryClone.selectionSet);
-  return queryClone;
-}
-
 function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: QueryTransformer[]) {
   if (selectionSet && selectionSet.selections) {
     queryTransformers.forEach((transformer) => {

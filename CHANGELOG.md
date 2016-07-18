@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Introduce a new (preferable) way to express how the mutation result should be incorporated into the store and update watched queries results: `updateQueries`. [PR #404](https://github.com/apollostack/apollo-client/pull/404).
+- Writing query results to store no longer creates new objects (and new references) in cases when the new value is identical to the old value in the store.
 
 ### v0.4.2
 

@@ -317,8 +317,13 @@ export class QueryManager {
       operationName: getOperationName(mutation),
     } as Request;
 
-    const additionalResultBehaviors = !optimisticResponse ? [] :
-      this.collectResultBehaviorsFromReducers(updateQueries, { data: optimisticResponse }, true);
+    // Right now the way `updateQueries` feature is implemented relies on using
+    // `resultBehaviors`, another feature that accomplishes the same goal but
+    // provides more verbose syntax.
+    // In the future we want to re-factor this part of code to avoid using
+    // `resultBehaviors` so we can remove `resultBehaviors` entirely.
+    const updateQueriesResultBehaviors = !optimisticResponse ? [] :
+      this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true);
 
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
@@ -332,7 +337,7 @@ export class QueryManager {
       mutationId,
       fragmentMap: queryFragmentMap,
       optimisticResponse,
-      resultBehaviors: [...resultBehaviors, ...additionalResultBehaviors],
+      resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
     });
 
     return this.networkInterface.query(request)
@@ -343,7 +348,7 @@ export class QueryManager {
           mutationId,
           resultBehaviors: [
             ...resultBehaviors,
-            ...this.collectResultBehaviorsFromReducers(updateQueries, result),
+            ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
           ],
         });
 
@@ -593,11 +598,15 @@ export class QueryManager {
     });
   }
 
-  private collectResultBehaviorsFromReducers(updateQueries, mutationResult, isOptimistic = false) {
+  private collectResultBehaviorsFromUpdateQueries(
+    updateQueries: MutationQueryReducersMap,
+    mutationResult: Object,
+    isOptimistic = false
+  ): MutationBehavior[] {
     if (!updateQueries) {
       return [];
     }
-    const additionalResultBehaviors = [];
+    const resultBehaviors = [];
 
     const observableQueriesByName: { [name: string]: ObservableQuery[] } = {};
     Object.keys(this.observableQueries).forEach((key) => {
@@ -621,6 +630,9 @@ export class QueryManager {
         const queryOptions = observableQuery.options;
         const queryDefinition: OperationDefinition = getQueryDefinition(queryOptions.query);
         const previousResult = readSelectionSetFromStore({
+          // In case of an optimistic change, apply reducer on top of the
+          // results including previous optimistic updates. Otherwise, apply it
+          // on top of the real data only.
           store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
           rootId: 'ROOT_QUERY',
           selectionSet: queryDefinition.selectionSet,
@@ -629,10 +641,11 @@ export class QueryManager {
           fragmentMap: createFragmentMap(queryOptions.fragments || []),
         });
 
-        additionalResultBehaviors.push({
+        resultBehaviors.push({
           type: 'QUERY_RESULT',
           newResult: reducer(previousResult, {
             mutationResult,
+            queryName,
             queryVariables: queryOptions.variables,
           }),
           queryOptions,
@@ -640,7 +653,7 @@ export class QueryManager {
       });
     });
 
-    return additionalResultBehaviors;
+    return resultBehaviors;
   }
 
   private fetchQueryOverInterface(

@@ -358,7 +358,11 @@ describe('client', () => {
             people: [ 'ROOT_QUERY.allPeople({"first":"1"}).people.0' ],
           },
           ROOT_QUERY: {
-            'allPeople({"first":1})': 'ROOT_QUERY.allPeople({"first":1})',
+            'allPeople({"first":1})': {
+              type: 'id',
+              id: 'ROOT_QUERY.allPeople({"first":1})',
+              generated: true,
+            },
           },
         },
         optimistic: [],

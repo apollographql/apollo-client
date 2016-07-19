@@ -1,7 +1,6 @@
 import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isUndefined = require('lodash.isundefined');
-import isString = require('lodash.isstring');
 import isObject = require('lodash.isobject');
 import assign = require('lodash.assign');
 
@@ -30,6 +29,7 @@ import {
   NormalizedCache,
   StoreObject,
   IdValue,
+  isIdValue,
 } from './store';
 
 import {
@@ -211,15 +211,17 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
   if (!isObject(generated) || !isObject(real)) {
     return;
   }
+
   Object.keys(generated).forEach((key) => {
     const value = generated[key];
-    if (isString(value)
-        && isGeneratedId(value)
-        && isString(real[key])) {
-      mergeWithGenerated(value, real[key] as string, cache);
+    const realValue = real[key];
+    if (isIdValue(value)
+        && isGeneratedId(value.id)
+        && isIdValue(realValue)) {
+      mergeWithGenerated(value.id, realValue.id, cache);
     }
-    cache[realKey] = assign({}, generated, real) as StoreObject;
     delete cache[generatedKey];
+    cache[realKey] = assign({}, generated, real) as StoreObject;
   });
 }
 
@@ -255,7 +257,7 @@ function writeFieldToStore({
     // If it is a scalar that's a JSON blob, we have to "escape" it so it can't
     // pretend to be an id
     storeValue = {
-      type: "json",
+      type: 'json',
       json: value,
     };
   } else if (isArray(value)) {
@@ -340,14 +342,9 @@ function writeFieldToStore({
     // check if there was a generated id at the location where we're
     // about to place this new id. If there was, we have to merge the
     // data from that id with the data we're about to write in the store.
-    if (store[dataId]) {
-      console.log('store[dataId][storeFieldName]: ', store[dataId][storeFieldName]);
-      console.log('store value: ', storeValue);
-    }
-
     if (store[dataId] && store[dataId][storeFieldName] !== storeValue) {
       const escapedId = store[dataId][storeFieldName] as IdValue;
-      if (escapedId && escapedId.type == 'id' && isGeneratedId(escapedId.id)) {
+      if (isIdValue(escapedId) && isGeneratedId(escapedId.id)) {
         generatedKey = escapedId.id as string;
         shouldMerge = true;
       }

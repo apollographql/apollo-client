@@ -564,10 +564,10 @@ describe('QueryManager', () => {
         result: { data: data2 },
       }
     );
-
+    const store = createApolloStore();
     const queryManager = new QueryManager({
       networkInterface,
-      store: createApolloStore(),
+      store: store,
       reduxRootKey: 'apollo',
     });
 
@@ -2963,7 +2963,7 @@ describe('QueryManager', () => {
     const dataWithId = {
       author: {
         name: {
-          firstName: 'John',
+          firstName: 'Jane',
         },
         id: '129',
         __typename: 'Author',
@@ -3016,7 +3016,7 @@ describe('QueryManager', () => {
       assert.equal(withoutIdResultsReceived, 2);
       assert.equal(withIdResultsReceived, 1);
       done();
-    }, 60);
+    }, 120);
   });
 });
 

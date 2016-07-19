@@ -902,7 +902,7 @@ describe('writing to the store', () => {
           },
           id: '129',
           __typename: 'Author',
-        }
+        },
       };
       const expStore = {
         ROOT_QUERY: {

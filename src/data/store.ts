@@ -10,6 +10,7 @@ import {
 } from './writeToStore';
 
 import assign = require('lodash.assign');
+import isObject = require('lodash.isobject');
 
 import {
   QueryStore,
@@ -53,6 +54,14 @@ export interface JsonValue {
 }
 
 export type StoreValue = number | string | string[] | IdValue | JsonValue ;
+
+export function isIdValue(idObject: StoreValue): idObject is IdValue {
+  return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
+}
+
+export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
+  return (isObject(jsonObject) && (jsonObject as (IdValue | JsonValue)).type === 'json');
+}
 
 export function data(
   previousState: NormalizedCache = {},

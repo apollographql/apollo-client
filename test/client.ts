@@ -1095,6 +1095,29 @@ describe('client', () => {
       assert.deepEqual(fragmentDefs.map(print), expFragmentDefs.map(print));
     });
 
+    it('should always return a flat array of fragment defs', () => {
+      const fragmentDoc1 = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+          ...otherAuthorDetails
+        }`;
+      const fragmentDoc2 = gql`
+        fragment otherAuthorDetails on Author {
+          address
+        }`;
+      const fragmentDoc3 = gql`
+        fragment personDetails on Person {
+          personDetails
+        }`;
+      const fragments1 = createFragment(fragmentDoc1);
+      const fragments2 = createFragment(fragmentDoc2, fragments1);
+      const fragments3 = createFragment(fragmentDoc3, fragments2);
+      assert.equal(fragments1.length, 1);
+      assert.equal(fragments2.length, 2);
+      assert.equal(fragments3.length, 3);
+    });
+
     it('should add a fragment to the fragmentDefinitionsMap', () => {
       const fragmentDoc = gql`
         fragment authorDetails on Author {

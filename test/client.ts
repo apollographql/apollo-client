@@ -3,7 +3,7 @@ const { assert } = chai;
 import * as sinon from 'sinon';
 
 import ApolloClient, {
-  createFragment
+  createFragment,
   fragmentDefinitionsMap,
   clearFragmentDefinitions,
   disableFragmentWarnings,
@@ -1107,7 +1107,15 @@ describe('client', () => {
           address
         }`;
       const fragmentDoc3 = gql`
-        fragment
+        fragment personDetails on Person {
+          personDetails
+        }`;
+      const fragments1 = createFragment(fragmentDoc1);
+      const fragments2 = createFragment(fragmentDoc2, fragments1);
+      const fragments3 = createFragment(fragmentDoc3, fragments2);
+      assert.equal(fragments1.length, 1);
+      assert.equal(fragments2.length, 2);
+      assert.equal(fragments3.length, 3);
     });
 
     it('should add a fragment to the fragmentDefinitionsMap', () => {

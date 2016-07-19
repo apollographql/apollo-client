@@ -179,13 +179,13 @@ const subscription = queryObservable.subscribe({
 });
 
 // Refetch the query if we want an updated result
-subscription.refetch();
+queryObservable.refetch();
 
 // Stop polling this query
-subscription.stopPolling();
+queryObservable.stopPolling();
 
 // Start polling this query
-subscription.startPolling(100);
+queryObservable.startPolling(100);
 
 // Call when we're done watching this query
 subscription.unsubscribe();

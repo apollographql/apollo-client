@@ -2722,7 +2722,7 @@ describe('QueryManager', () => {
         done(new Error('Returned a result when it was not supposed to.'));
       }).catch((error) => {
         // make that the error thrown doesn't empty the state
-        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data['author']);
+        assert.deepEqual(store.getState().apollo.data['$ROOT_QUERY.author'], data['author']);
         done();
       });
     }).catch((error) => {
@@ -2764,11 +2764,11 @@ describe('QueryManager', () => {
     const subscription = handle.subscribe({
       next(result) {
         assert.deepEqual(result, { data });
-        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data.author);
+        assert.deepEqual(store.getState().apollo.data['$ROOT_QUERY.author'], data.author);
       },
 
       error(error) {
-        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data.author);
+        assert.deepEqual(store.getState().apollo.data['$ROOT_QUERY.author'], data.author);
         subscription.unsubscribe();
       },
     });

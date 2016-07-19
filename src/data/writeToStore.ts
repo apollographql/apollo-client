@@ -208,10 +208,6 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
   const generated = cache[generatedKey];
   const real = cache[realKey];
 
-  if (!isObject(generated) || !isObject(real)) {
-    return;
-  }
-
   Object.keys(generated).forEach((key) => {
     const value = generated[key];
     const realValue = real[key];

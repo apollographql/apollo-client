@@ -355,11 +355,11 @@ function writeFieldToStore({
     [storeFieldName]: storeValue,
   }) as StoreObject;
 
-  if (!store[dataId] || storeValue !== store[dataId][storeFieldName]) {
-    store[dataId] = newStoreObj;
-  }
   if (shouldMerge) {
     mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);
   }
-  store[dataId] = newStoreObj;
+  if (!store[dataId] || storeValue !== store[dataId][storeFieldName]) {
+    store[dataId] = newStoreObj;
+  }
+
 }

@@ -11,6 +11,12 @@ import clonedeep = require('lodash.clonedeep');
 
 import gql from 'graphql-tag';
 
+import { print } from 'graphql-tag/printer';
+
+import {
+  applyTransformers,
+} from '../src/queries/queryTransform';
+
 describe('optimistic mutation results', () => {
   const query = gql`
     query todoList {
@@ -834,6 +840,149 @@ describe('optimistic mutation results', () => {
         assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
         assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
       });
+    });
+  });
+});
+
+describe('optimistic mutation - githunt comments', () => {
+  const query = gql`
+    query Comment($repoName: String!) {
+      entry(repoFullName: $repoName) {
+        id
+        postedBy {
+          login
+          html_url
+        }
+        createdAt
+        comments {
+          postedBy {
+            login
+            html_url
+          }
+          createdAt
+          content
+        }
+      }
+    }
+  `;
+  const variables = {
+    repoName: 'org/repo',
+  };
+  const userDoc = {
+    __typename: 'User',
+    login: 'stubailo',
+    html_url: 'http://avatar.com/stubailo.png',
+  };
+
+  const result = {
+    data: {
+      __typename: 'Query',
+      entry: {
+        __typename: 'Entry',
+        id: '5',
+        postedBy: userDoc,
+        createdAt: 123456,
+        comments: [
+          {
+            __typename: 'Comment',
+            createdAt: 123456,
+            content: 'Comment content',
+            postedBy: userDoc,
+          }
+        ],
+      },
+    },
+  };
+
+  let client: ApolloClient;
+  let networkInterface;
+
+  function setup(...mockedResponses) {
+    networkInterface = mockNetworkInterface({
+      request: { query: applyTransformers(query, [addTypename]), variables, },
+      result,
+    }, ...mockedResponses);
+
+    client = new ApolloClient({
+      networkInterface,
+      queryTransformer: addTypename,
+      dataIdFromObject: (obj: any) => {
+        if (obj.id && obj.__typename) {
+          return obj.__typename + obj.id;
+        }
+        return null;
+      },
+    });
+
+    const obsHandle = client.watchQuery({
+      query,
+      variables,
+    });
+
+    return obsHandle.result();
+  };
+
+  const mutation = gql`
+    mutation submitComment($repoFullName: String!, $commentContent: String!) {
+      submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+        postedBy {
+          login
+          html_url
+        }
+        createdAt
+        content
+      }
+    }
+  `;
+
+  const mutationResult = {
+    data: {
+      __typename: 'Mutation',
+      submitComment: {
+        __typename: 'Comment',
+        createdAt: 12346,
+        postedBy: userDoc,
+        content: 'New comment',
+      },
+    },
+  };
+  const updateQueries = {
+    Comment: (prev, { mutationResult }) => {
+      const newComment = (mutationResult as any).data.submitComment;
+      const state = clonedeep(prev);
+      (state as any).entry.comments.unshift(newComment);
+      return state;
+    },
+  } as MutationQueryReducersMap;
+  const optimisticResponse = {
+    __typename: 'Mutation',
+    submitComment: {
+      __typename: 'Comment',
+      postedBy: userDoc,
+      createdAt: 123456,
+      content: 'Comment',
+    },
+  };
+
+  it('can post a new comment', () => {
+    return setup({
+      request: { query: mutation },
+      result: mutationResult,
+    }).then(() => {
+      return client.mutate({
+        mutation,
+        optimisticResponse,
+        variables: {
+          repoFullName: 'org/repo',
+          commentContent: 'New Comment',
+        },
+        updateQueries,
+      });
+    }).then(() => {
+      return client.query({ query, variables, });
+    }).then((newResult: any) => {
+      assert.equal(newResult.data.comments.length, 2);
+      assert.equal(newResult.data.comments[0].content, 'New Comment');
     });
   });
 });

@@ -69,7 +69,7 @@ export type MutationArrayDeleteBehavior = {
 
 export type MutationQueryResultBehavior = {
   type: 'QUERY_RESULT';
-  queryOptions: WatchQueryOptions;
+  queryVariables: any;
   querySelectionSet: SelectionSet;
   queryFragmentMap: FragmentMap;
   newResult: Object;
@@ -279,20 +279,19 @@ function mutationResultQueryResultReducer(state: NormalizedCache, {
   config,
 }: MutationBehaviorReducerArgs) {
   const {
-    queryOptions,
+    queryVariables,
     newResult,
     queryFragmentMap,
     querySelectionSet,
   } = behavior as MutationQueryResultBehavior;
 
   const clonedState = assign({}, state) as NormalizedCache;
-  const queryDefinition: OperationDefinition = getQueryDefinition(queryOptions.query);
 
   return writeSelectionSetToStore({
     result: newResult,
     dataId: 'ROOT_QUERY',
     selectionSet: querySelectionSet,
-    variables: queryOptions.variables,
+    variables: queryVariables,
     store: clonedState,
     dataIdFromObject: config.dataIdFromObject,
     fragmentMap: queryFragmentMap,

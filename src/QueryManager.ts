@@ -564,9 +564,9 @@ export class QueryManager {
             queryName,
             queryVariables: queryOptions.variables,
           }),
-          queryOptions,
+          queryVariables: queryOptions.variables,
           querySelectionSet: queryDefinition.selectionSet,
-          queryFragmentMap: createFragmentMap(queryOptions.fragments || []),
+          queryFragmentMap: createFragmentMap(fragments || []),
         });
       });
     });

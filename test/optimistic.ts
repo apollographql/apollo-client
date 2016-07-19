@@ -848,19 +848,11 @@ describe('optimistic mutation - githunt comments', () => {
   const query = gql`
     query Comment($repoName: String!) {
       entry(repoFullName: $repoName) {
-        id
-        postedBy {
-          login
-          html_url
-        }
-        createdAt
         comments {
           postedBy {
             login
             html_url
           }
-          createdAt
-          content
         }
       }
     }
@@ -879,9 +871,6 @@ describe('optimistic mutation - githunt comments', () => {
       __typename: 'Query',
       entry: {
         __typename: 'Entry',
-        id: '5',
-        postedBy: userDoc,
-        createdAt: 123456,
         comments: [
           {
             __typename: 'Comment',

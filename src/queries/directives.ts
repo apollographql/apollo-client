@@ -6,10 +6,6 @@ import {
   SelectionSet,
   Field,
   InlineFragment,
-  Document,
-  Definition,
-  OperationDefinition,
-  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -19,6 +15,10 @@ import {
 import {
   argsToKeyValueMap,
 } from '../data/storeUtils';
+
+import {
+  applyTransformers,
+} from './queryTransform';
 
 import isEqual = require('lodash.isequal');
 import isBoolean = require('lodash.isboolean');
@@ -102,47 +102,29 @@ export function shouldInclude(
   return evaledValue;
 }
 
-function stripApolloDirectivesFromSelectionSet(selectionSet: SelectionSet): SelectionSet {
+export function stripApolloDirectivesTransformer(selectionSet: SelectionSet): SelectionSet {
   if (selectionSet == null || selectionSet.selections == null) {
     return selectionSet;
   }
-  return assign({}, selectionSet, {
-    selections: selectionSet.selections.map((selection) => {
-      const subSelectionSet = (selection as Field|InlineFragment).selectionSet;
-      const directives = selection.directives;
-      return assign({}, selection,
-        directives ? {
-          directives: directives.filter(dir =>
-            APOLLO_CLIENT_DIRECTIVES.indexOf(dir.name.value) < 0
-          ),
-        } : {},
-        subSelectionSet ? {
-          selectionSet: stripApolloDirectivesFromSelectionSet(subSelectionSet),
-        } : {}
-      );
-    }),
-  }) as SelectionSet;
-}
-
-function stripApolloDirectivesFromDefinition(definition: Definition): Definition {
-  const selectionSet = (definition as OperationDefinition|FragmentDefinition).selectionSet;
-  if (selectionSet) {
-    return assign({}, definition, {
-      selectionSet: stripApolloDirectivesFromSelectionSet(selectionSet),
-    }) as Definition;
-  } else {
-    return definition;
-  }
-}
-
-export function stripApolloDirectivesFromDocument(document: Document): Document {
-  return assign({}, document, {
-    definitions: document.definitions.map(stripApolloDirectivesFromDefinition),
-  }) as Document;
+  selectionSet.selections = selectionSet.selections.map((selection) => {
+    const subSelectionSet = (selection as Field|InlineFragment).selectionSet;
+    const directives = selection.directives;
+    return assign({}, selection,
+      directives ? {
+        directives: directives.filter(dir =>
+          APOLLO_CLIENT_DIRECTIVES.indexOf(dir.name.value) < 0
+        ),
+      } : {},
+      subSelectionSet ? {
+        selectionSet: stripApolloDirectivesTransformer(subSelectionSet),
+      } : {}
+    ) as Selection;
+  });
+  return selectionSet;
 }
 
 export function stripApolloDirectivesFromRequest(request: Request): Request {
   return assign({}, request, {
-    query: stripApolloDirectivesFromDocument(request.query),
-  }) as Request;
+    query: applyTransformers(request.query, [stripApolloDirectivesTransformer]),
+  });
 }

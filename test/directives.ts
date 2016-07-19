@@ -3,8 +3,12 @@ const { assert } = chai;
 
 import {
   shouldInclude,
-  stripApolloDirectivesFromDocument,
+  stripApolloDirectivesTransformer,
 } from '../src/queries/directives';
+
+import {
+  applyTransformers,
+} from '../src/queries/queryTransform';
 
 import {
   getQueryDefinition,
@@ -187,7 +191,7 @@ describe('query directives', () => {
           fortuneCookie @apolloFetchMore
         }
       `;
-      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      const strippedDoc = applyTransformers(doc, [stripApolloDirectivesTransformer]);
       assert.notDeepEqual(doc, strippedDoc);
       assert.deepPropertyVal(strippedDoc,
         'definitions.0.selectionSet.selections.0.directives.length', 0);
@@ -201,7 +205,7 @@ describe('query directives', () => {
           }
         }
       `;
-      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      const strippedDoc = applyTransformers(doc, [stripApolloDirectivesTransformer]);
       assert.notDeepEqual(doc, strippedDoc);
       assert.deepPropertyVal(strippedDoc,
         'definitions.0.selectionSet.selections.0.selectionSet.selections.0.directives.length', 0);
@@ -215,7 +219,7 @@ describe('query directives', () => {
           }
         }
       `;
-      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      const strippedDoc = applyTransformers(doc, [stripApolloDirectivesTransformer]);
       assert.notDeepEqual(doc, strippedDoc);
       assert.deepPropertyVal(strippedDoc,
         'definitions.0.selectionSet.selections.0.directives.length', 0);
@@ -231,7 +235,7 @@ describe('query directives', () => {
           fortuneCookie
         }
       `;
-      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      const strippedDoc = applyTransformers(doc, [stripApolloDirectivesTransformer]);
       assert.notDeepEqual(doc, strippedDoc);
       assert.deepPropertyVal(strippedDoc,
         'definitions.0.selectionSet.selections.0.directives.length', 0);
@@ -247,7 +251,7 @@ describe('query directives', () => {
           fortuneCookie @apolloFetchMore
         }
       `;
-      const strippedDoc = stripApolloDirectivesFromDocument(doc);
+      const strippedDoc = applyTransformers(doc, [stripApolloDirectivesTransformer]);
       assert.notDeepEqual(doc, strippedDoc);
       assert.deepPropertyVal(strippedDoc,
         'definitions.1.selectionSet.selections.0.directives.length', 0);

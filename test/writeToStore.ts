@@ -196,7 +196,11 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     }), {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
-        nestedObj: result.nestedObj.id,
+        nestedObj: {
+          type: 'id',
+          id: result.nestedObj.id,
+          generated: false,
+        },
       }),
       [result.nestedObj.id]: result.nestedObj,
     });
@@ -234,7 +238,11 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     }), {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
-        nestedObj: `$${result.id}.nestedObj`,
+        nestedObj: {
+          type: 'id',
+          id: `$${result.id}.nestedObj`,
+          generated: true,
+        },
       }),
       [`$${result.id}.nestedObj`]: result.nestedObj,
     });
@@ -272,7 +280,11 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     }), {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
-        'nestedObj({"arg":"val"})': `$${result.id}.nestedObj({"arg":"val"})`,
+        'nestedObj({"arg":"val"})': {
+          type: 'id',
+          id: `$${result.id}.nestedObj({"arg":"val"})`,
+          generated: true,
+        },
       }),
       [`$${result.id}.nestedObj({"arg":"val"})`]: result.nestedObj,
     });
@@ -499,11 +511,14 @@ describe('writing to the store', () => {
 
     assert.deepEqual(normalized, {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
-        simpleArray: [
-          result.simpleArray[0],
-          result.simpleArray[1],
-          result.simpleArray[2],
-        ],
+        simpleArray: {
+          type: 'json',
+          'json': [
+            result.simpleArray[0],
+            result.simpleArray[1],
+            result.simpleArray[2],
+          ],
+        },
       }),
     });
   });
@@ -534,11 +549,14 @@ describe('writing to the store', () => {
 
     assert.deepEqual(normalized, {
       [result.id]: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
-        simpleArray: [
-          result.simpleArray[0],
-          result.simpleArray[1],
-          result.simpleArray[2],
-        ],
+        simpleArray: {
+          type: 'json',
+          json: [
+            result.simpleArray[0],
+            result.simpleArray[1],
+            result.simpleArray[2],
+          ],
+        },
       }),
     });
   });
@@ -646,7 +664,11 @@ describe('writing to the store', () => {
       result: _.cloneDeep(result),
     }), {
       'ROOT_QUERY': {
-        'people_one({"id":"5"})': '$ROOT_QUERY.people_one({"id":"5"})',
+        'people_one({"id":"5"})': {
+          type: 'id',
+          id: '$ROOT_QUERY.people_one({"id":"5"})',
+          generated: true,
+        },
       },
       '$ROOT_QUERY.people_one({"id":"5"})': {
         'id': 'abcd',
@@ -771,8 +793,16 @@ describe('writing to the store', () => {
           dataIdFromObject: () => '5',
         }), {
           '5': {
-            'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': '5',
-            'some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': '5',
+            'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
+              type: 'id',
+              id: '5',
+              generated: false,
+            },
+            'some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
+              type: 'id',
+              id: '5',
+              generated: false,
+            },
             'id': 'id',
           },
         });
@@ -789,7 +819,37 @@ describe('writing to the store', () => {
       }
     };
 
-    it('should correctly escape ids', () => {
+    it('should correctly escape generated ids', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const expStore = {
+        ROOT_QUERY: {
+          author: {
+            type: 'id',
+            id: '$ROOT_QUERY.author',
+            generated: true,
+          },
+        },
+        '$ROOT_QUERY.author': data.author,
+      };
+      assert.deepEqual(writeQueryToStore({
+        result: data,
+        query,
+      }), expStore);
+    });
+
+    it('should correctly escape real ids', () => {
       const query = gql`
         query {
           author {
@@ -910,7 +970,11 @@ describe('writing to the store', () => {
         lastName: 'Smith',
       },
       ROOT_QUERY: {
-        'author': '$ROOT_QUERY.author',
+        'author': {
+          type: 'id',
+          id: '$ROOT_QUERY.author',
+          generated: true,
+        },
       },
     };
     const expStoreWithId = {
@@ -921,7 +985,11 @@ describe('writing to the store', () => {
         __typename: 'Author',
       },
       ROOT_QUERY: {
-        'author': 'Author__129',
+        author: {
+          type: 'id',
+          id: 'Author__129',
+          generated: false,
+        },
       },
     };
     const storeWithoutId = writeQueryToStore({

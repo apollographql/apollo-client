@@ -29,6 +29,7 @@ import {
 import {
   NormalizedCache,
   StoreObject,
+  IdValue,
 } from './store';
 
 import {
@@ -339,9 +340,15 @@ function writeFieldToStore({
     // check if there was a generated id at the location where we're
     // about to place this new id. If there was, we have to merge the
     // data from that id with the data we're about to write in the store.
+    if (store[dataId]) {
+      console.log('store[dataId][storeFieldName]: ', store[dataId][storeFieldName]);
+      console.log('store value: ', storeValue);
+    }
+
     if (store[dataId] && store[dataId][storeFieldName] !== storeValue) {
-      generatedKey = store[dataId][storeFieldName] as string;
-      if (generatedKey && isGeneratedId(generatedKey)) {
+      const escapedId = store[dataId][storeFieldName] as IdValue;
+      if (escapedId && escapedId.type == 'id' && isGeneratedId(escapedId.id)) {
+        generatedKey = escapedId.id as string;
         shouldMerge = true;
       }
     }
@@ -355,7 +362,7 @@ function writeFieldToStore({
     store[dataId] = newStoreObj;
   }
   if (shouldMerge) {
-    mergeWithGenerated(generatedKey, storeValue, store);
+    mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);
   }
   store[dataId] = newStoreObj;
 }

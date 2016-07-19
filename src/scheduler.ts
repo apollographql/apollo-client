@@ -79,10 +79,6 @@ export class QueryScheduler {
       throw new Error('Attempted to start a polling query without a polling interval.');
     }
 
-    if (!queryId) {
-      queryId = this.queryManager.generateQueryId();
-    }
-
     this.registeredQueries[queryId] = options;
 
     // Fire an initial fetch before we start the polling query

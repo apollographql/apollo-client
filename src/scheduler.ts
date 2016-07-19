@@ -9,11 +9,13 @@
 // adds queries to the QueryBatcher queue.
 
 import {
-  ObservableQuery,
-  WatchQueryOptions,
   QueryManager,
   QueryListener,
 } from './QueryManager';
+
+import { ObservableQuery } from './ObservableQuery';
+
+import { WatchQueryOptions } from './watchQueryOptions';
 
 import assign = require('lodash.assign');
 

@@ -22,9 +22,15 @@ import {
 
 import {
   QueryManager,
-  WatchQueryOptions,
-  ObservableQuery,
 } from './QueryManager';
+
+import {
+    ObservableQuery,
+} from '../src/ObservableQuery';
+
+import {
+  WatchQueryOptions,
+} from '../src/watchQueryOptions';
 
 import {
   readQueryFromStore,

@@ -3,11 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Added the `batchInterval` option to ApolloClient that allows you to specify the width of the batching interval as per your app's needs. [Issue #394](https://github.com/apollostack/apollo-client/issues/394) and [PR #395](https://github.com/apollostack/apollo-client/pull/395).
-- Stringify `storeObj` for error message in `diffFieldAgainstStore`.
-- Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)
-- Added a "noFetch" option to WatchQueryOptions that only returns available data from the local store (even it is incomplete). [Issue #225](https://github.com/apollostack/apollo-client/issues/225) and [PR #385](https://github.com/apollostack/apollo-client/pull/385).
-- Integrated the scheduler so that polling queries on the same polling interval are batched together. [PR #403](https://github.com/apollostack/apollo-client/pull/403) and [Issue #401](https://github.com/apollostack/apollo-client/issues/401).
+- - Integrated the scheduler so that polling queries on the same polling interval are batched together. [PR #403](https://github.com/apollostack/apollo-client/pull/403) and [Issue #401](https://github.com/apollostack/apollo-client/issues/401).
 
 ### v0.4.4
 
@@ -25,7 +21,6 @@ Expect active development and potentially significant breaking changes in the `0
 - Fix map function returning `undefined` in `removeRefsFromStoreObj`. [PR #393](https://github.com/apollostack/apollo-client/pull/393)
 - Added deep result comparison so that observers are only fired when the data associated with a particular query changes. This change eliminates unnecessary re-renders and improves UI performance. [PR #402](https://github.com/apollostack/apollo-client/pull/402) and [Issue #400](https://github.com/apollostack/apollo-client/issues/400).
 - Added a "noFetch" option to WatchQueryOptions that only returns available data from the local store (even it is incomplete). The `ObservableQuery` returned from calling `watchQuery` now has `options`, `queryManager`, and `queryId`. The `queryId` can be used to read directly from the state of `apollo.queries`. [Issue #225](https://github.com/apollostack/apollo-client/issues/225), [Issue #342](https://github.com/apollostack/apollo-client/issues/342), and [PR #385](https://github.com/apollostack/apollo-client/pull/385).
->>>>>>> 378cbbe6054d0bae2b4ede2387d19dc2d1927567
 
 ### v0.4.1
 

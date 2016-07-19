@@ -784,13 +784,19 @@ export class QueryManager {
         return this.batcher.enqueueRequest(fetchRequest)
           .then((result: GraphQLResult) => {
             // XXX handle multiple ApolloQueryResults
-            this.store.dispatch({
-              type: 'APOLLO_QUERY_RESULT',
-              result,
-              queryId,
-              requestId,
-              queryStoreValue: this.getApolloState().queries[queryId],
-            });
+            // Ignore results from old requests
+            if (this.getApolloState().queries[queryId] && requestId >= this.getApolloState().queries[queryId].lastRequestId) {
+                this.store.dispatch({
+                type: 'APOLLO_QUERY_RESULT',
+                result,
+                queryId,
+                requestId,
+                minimizedQuery,
+                fragmentMap: queryFragmentMap,
+                variables,
+              });
+            }
+
 
             this.removeFetchQueryPromise(requestId);
             if (result.errors) {

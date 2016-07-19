@@ -22,7 +22,9 @@ export interface QueryResultAction {
   result: GraphQLResult;
   queryId: string;
   requestId: number;
-  queryStoreValue: QueryStoreValue;
+  minimizedQuery: SelectionSetWithRoot;
+  fragmentMap: FragmentMap;
+  variables: Object;
 
 }
 

@@ -41,32 +41,21 @@ export function data(
   config: ApolloReducerConfig
 ): NormalizedCache {
   if (isQueryResultAction(action)) {
-    if (!action.queryStoreValue) {
-      return previousState;
-    }
-
-    // Ignore results from old requests
-    // XXX this means that if you have a refetch interval which is shorter than your roundtrip time,
-    // your query will be in the loading state forever!
-    if (action.requestId < action.queryStoreValue.lastRequestId) {
-      return previousState;
-    }
 
     // XXX handle partial result due to errors
     if (! graphQLResultHasError(action.result)) {
-      const queryStoreValue = action.queryStoreValue;
 
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
       const newState = writeSelectionSetToStore({
         result: action.result.data,
-        dataId: queryStoreValue.minimizedQuery.id,
-        selectionSet: queryStoreValue.minimizedQuery.selectionSet,
-        variables: queryStoreValue.variables,
+        dataId: action.minimizedQuery.id,
+        selectionSet: action.minimizedQuery.selectionSet,
+        variables: action.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
+        fragmentMap: action.fragmentMap,
       });
 
       return newState;

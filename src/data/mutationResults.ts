@@ -5,12 +5,7 @@ import {
 import {
   GraphQLResult,
   SelectionSet,
-  OperationDefinition,
 } from 'graphql';
-
-import {
-  print,
-} from 'graphql-tag/printer';
 
 import mapValues = require('lodash.mapvalues');
 import isArray = require('lodash.isarray');
@@ -19,8 +14,6 @@ import assign = require('lodash.assign');
 
 import {
   FragmentMap,
-  getQueryDefinition,
-  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -36,10 +29,6 @@ import {
 import {
   writeSelectionSetToStore,
 } from './writeToStore';
-
-import {
-  WatchQueryOptions,
-} from '../watchQueryOptions';
 
 // Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 

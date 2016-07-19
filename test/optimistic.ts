@@ -11,8 +11,6 @@ import clonedeep = require('lodash.clonedeep');
 
 import gql from 'graphql-tag';
 
-import { print } from 'graphql-tag/printer';
-
 import {
   applyTransformers,
 } from '../src/queries/queryTransform';

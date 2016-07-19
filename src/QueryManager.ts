@@ -40,7 +40,6 @@ import {
   GraphQLResult,
   Document,
   FragmentDefinition,
-  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';

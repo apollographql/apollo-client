@@ -1,9 +1,9 @@
 import { QueryScheduler } from '../src/scheduler';
 import { assert } from 'chai';
 import {
-  WatchQueryOptions,
   QueryManager,
 } from '../src/QueryManager';
+import { WatchQueryOptions } from '../src/watchQueryOptions';
 import {
   createApolloStore,
 } from '../src/store';

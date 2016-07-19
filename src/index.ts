@@ -22,9 +22,15 @@ import {
 
 import {
   QueryManager,
-  WatchQueryOptions,
-  ObservableQuery,
 } from './QueryManager';
+
+import {
+    ObservableQuery,
+} from '../src/ObservableQuery';
+
+import {
+  WatchQueryOptions,
+} from '../src/watchQueryOptions';
 
 import {
   readQueryFromStore,
@@ -48,6 +54,7 @@ import {
 import {
   MutationBehavior,
   MutationBehaviorReducerMap,
+  MutationQueryReducersMap,
 } from './data/mutationResults';
 
 import {
@@ -117,7 +124,6 @@ this in the docs: http://docs.apollostack.com/`);
       fragmentDefinitionsMap[fragmentName] = [fragmentDefinition];
     }
   });
-
   return fragments.concat(fragmentDefinitions);
 }
 
@@ -236,6 +242,7 @@ export default class ApolloClient {
     resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
+    updateQueries?: MutationQueryReducersMap,
   }): Promise<ApolloQueryResult> => {
     this.initStore();
     return this.queryManager.mutate(options);

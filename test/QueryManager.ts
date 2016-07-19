@@ -1,8 +1,10 @@
 import {
   QueryManager,
-  ObservableQuery,
-  WatchQueryOptions,
 } from '../src/QueryManager';
+
+import { ObservableQuery } from '../src/ObservableQuery';
+
+import { WatchQueryOptions } from '../src/watchQueryOptions';
 
 import {
   createApolloStore,

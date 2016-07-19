@@ -35,7 +35,7 @@ import {
 
 import {
   WatchQueryOptions,
-} from '../QueryManager';
+} from '../watchQueryOptions';
 
 // Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 

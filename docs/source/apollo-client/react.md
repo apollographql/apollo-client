@@ -266,3 +266,4 @@ ReactDOM.render(
   </ApolloProvider>,
   root
 );
+```

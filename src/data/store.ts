@@ -50,6 +50,10 @@ export function data(
   mutations: MutationStore,
   config: ApolloReducerConfig
 ): NormalizedCache {
+  // XXX This is hopefully a temporary binding to get around
+  // https://github.com/Microsoft/TypeScript/issues/7719
+  const constAction = action;
+
   if (isQueryResultAction(action)) {
     if (!queries[action.queryId]) {
       return previousState;
@@ -81,16 +85,16 @@ export function data(
 
       return newState;
     }
-  } else if (isMutationResultAction(action)) {
+  } else if (isMutationResultAction(constAction)) {
     // Incorporate the result from this mutation into the store
-    if (!action.result.errors) {
-      const queryStoreValue = mutations[action.mutationId];
+    if (!constAction.result.errors) {
+      const queryStoreValue = mutations[constAction.mutationId];
 
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
       let newState = writeSelectionSetToStore({
-        result: action.result.data,
+        result: constAction.result.data,
         dataId: queryStoreValue.mutation.id,
         selectionSet: queryStoreValue.mutation.selectionSet,
         variables: queryStoreValue.variables,
@@ -99,11 +103,11 @@ export function data(
         fragmentMap: queryStoreValue.fragmentMap,
       });
 
-      if (action.resultBehaviors) {
-        action.resultBehaviors.forEach((behavior) => {
+      if (constAction.resultBehaviors) {
+        constAction.resultBehaviors.forEach((behavior) => {
           const args: MutationBehaviorReducerArgs = {
             behavior,
-            result: action.result,
+            result: constAction.result,
             variables: queryStoreValue.variables,
             fragmentMap: queryStoreValue.fragmentMap,
             selectionSet: queryStoreValue.mutation.selectionSet,

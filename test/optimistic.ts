@@ -874,8 +874,6 @@ describe('optimistic mutation - githunt comments', () => {
         comments: [
           {
             __typename: 'Comment',
-            createdAt: 123456,
-            content: 'Comment content',
             postedBy: userDoc,
           }
         ],
@@ -918,8 +916,6 @@ describe('optimistic mutation - githunt comments', () => {
           login
           html_url
         }
-        createdAt
-        content
       }
     }
   `;
@@ -929,9 +925,7 @@ describe('optimistic mutation - githunt comments', () => {
       __typename: 'Mutation',
       submitComment: {
         __typename: 'Comment',
-        createdAt: 12346,
         postedBy: userDoc,
-        content: 'New comment',
       },
     },
   };
@@ -948,30 +942,29 @@ describe('optimistic mutation - githunt comments', () => {
     submitComment: {
       __typename: 'Comment',
       postedBy: userDoc,
-      createdAt: 123456,
-      content: 'Comment',
     },
   };
 
   it('can post a new comment', () => {
+    const mutationVariables = {
+      repoFullName: 'org/repo',
+      commentContent: 'New Comment',
+    };
+
     return setup({
-      request: { query: mutation },
+      request: { query: applyTransformers(mutation, [addTypename]), variables: mutationVariables, },
       result: mutationResult,
     }).then(() => {
       return client.mutate({
         mutation,
         optimisticResponse,
-        variables: {
-          repoFullName: 'org/repo',
-          commentContent: 'New Comment',
-        },
+        variables: mutationVariables,
         updateQueries,
       });
     }).then(() => {
       return client.query({ query, variables, });
     }).then((newResult: any) => {
-      assert.equal(newResult.data.comments.length, 2);
-      assert.equal(newResult.data.comments[0].content, 'New Comment');
+      assert.equal(newResult.data.entry.comments.length, 2);
     });
   });
 });

@@ -8,6 +8,10 @@ import {
   OperationDefinition,
 } from 'graphql';
 
+import {
+  print,
+} from 'graphql-tag/printer';
+
 import mapValues = require('lodash.mapvalues');
 import isArray = require('lodash.isarray');
 import cloneDeep = require('lodash.clonedeep');
@@ -66,6 +70,8 @@ export type MutationArrayDeleteBehavior = {
 export type MutationQueryResultBehavior = {
   type: 'QUERY_RESULT';
   queryOptions: WatchQueryOptions;
+  querySelectionSet: SelectionSet;
+  queryFragmentMap: FragmentMap;
   newResult: Object;
 };
 
@@ -275,6 +281,8 @@ function mutationResultQueryResultReducer(state: NormalizedCache, {
   const {
     queryOptions,
     newResult,
+    queryFragmentMap,
+    querySelectionSet,
   } = behavior as MutationQueryResultBehavior;
 
   const clonedState = assign({}, state) as NormalizedCache;
@@ -283,11 +291,11 @@ function mutationResultQueryResultReducer(state: NormalizedCache, {
   return writeSelectionSetToStore({
     result: newResult,
     dataId: 'ROOT_QUERY',
-    selectionSet: queryDefinition.selectionSet,
+    selectionSet: querySelectionSet,
     variables: queryOptions.variables,
     store: clonedState,
     dataIdFromObject: config.dataIdFromObject,
-    fragmentMap: createFragmentMap(queryOptions.fragments || []),
+    fragmentMap: queryFragmentMap,
   });
 }
 

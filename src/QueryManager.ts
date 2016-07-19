@@ -526,7 +526,25 @@ export class QueryManager {
 
       queries.forEach((observableQuery) => {
         const queryOptions = observableQuery.options;
-        const queryDefinition: OperationDefinition = getQueryDefinition(queryOptions.query);
+
+        let fragments = queryOptions.fragments;
+        let queryDefinition = getQueryDefinition(queryOptions.query);
+
+        if (this.queryTransformer) {
+          const doc = {
+            kind: 'Document',
+            definitions: [
+              queryDefinition,
+              ...(fragments || []),
+            ],
+          };
+
+          const transformedDoc = applyTransformers(doc, [this.queryTransformer]);
+
+          queryDefinition = getQueryDefinition(transformedDoc);
+          fragments = getFragmentDefinitions(transformedDoc);
+        }
+
         const previousResult = readSelectionSetFromStore({
           // In case of an optimistic change, apply reducer on top of the
           // results including previous optimistic updates. Otherwise, apply it
@@ -547,6 +565,8 @@ export class QueryManager {
             queryVariables: queryOptions.variables,
           }),
           queryOptions,
+          querySelectionSet: queryDefinition.selectionSet,
+          queryFragmentMap: createFragmentMap(queryOptions.fragments || []),
         });
       });
     });

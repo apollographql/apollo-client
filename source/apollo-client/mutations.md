@@ -62,28 +62,78 @@ In many cases, it's beneficial to have the mutation result return the _parent_ o
 
 Sometimes, you might need to define a new type just for the result of a specific mutation. For example, in the todo list case, it might make sense for the result of the mutation to have two fields, and include _both_ the inserted task and the associated todo list. That way, the client can more easily refetch related data.
 
-<h2 id="mutation-behaviors">Mutation behaviors</h2>
+<h2 id="updating-queries-results">Updating Queries Results</h2>
 
-In Apollo Client, there is a special system for handling mutation results and incorporating them back into the store. Then, any queries you have bound to your UI components via `watchQuery` or any of the view integrations will automatically update.
+In Apollo Client, there is a special system that allows mutations to update the results of the active queries. Active queries are bound to your UI components via `watchQuery` or any of the view integrations. These UI components will automatically re-render as updated queries are updated.
 
-This section is still under construction, the tests can give some indication of how it works: [apollo-client/test/mutationResults](https://github.com/apollostack/apollo-client/blob/22f038de8d64c50f86aa152714288f51dd674ac9/test/mutationResults.ts)
+<h3 id="new-object-or-updated-fields">New Object Or Updated Fields</h3>
 
-<h3 id="update-fields">Default: update fields</h3>
+In the simplest case, your mutation returns either a completely new object (with a uniquely new `id`) or a new value for an existing object with some fields updated.
 
-...
+If the new object doesn't appear in any relations to other objects, and the Apollo Client has [`dataIdFromObject`](/apollo-client/index.html#ApolloClient) option defined, the occurrences of the object in the active queries will be updated automatically without any extra code.
 
-<h3 id="ARRAY_INSERT">ARRAY_INSERT</h3>
+For example, say you have a query with a flat list list of `TodoList`s. Later, after clicking a "new todo-list" button the mutation `createNewTodoList(name: String!)` was fired. If `createNewTodoList` mutation returns a new `TodoList` object, then it will be incorporated into store and updated in active queries automatically.
 
-...
+<h2 id="update-queries">Updating Complicated Queries With `updateQueries`</h2>
 
-<h3 id="ARRAY_INSERT">DELETE</h3>
+For more complicated queries you might want to apply more sophisticated logic.
 
-...
+For example, let's say you have a mutation `addNewTask(text: String!, list_id: ID!)` that adds a new task of type `Task` to a `TodoList` currently displayed on the screen. In this example, to update a query with the new task returned by the mutation, it is required to insert the new task into the correct place in the list of tasks.
 
-<h3 id="ARRAY_INSERT">ARRAY_DELETE</h3>
+For cases like these, use the special option `updateQueries`. `updateQueries` is a mapping from query name to a reducer function.
 
-...
+Each reducer function accepts the old result of the query and the new information such that the mutation result. The job of the reducer function is to return a new query result.
 
-<h3 id="custom-behaviors">Custom mutation behaviors</h3>
+```js
 
-...
+client.watchQuery({
+  query: gql`
+    query todos($list_id: ID!) {
+      todo_list(id: $list_id) {
+        title
+        tasks {
+          id
+          text
+          completed
+          createdAt
+        }
+      }
+    }
+  `,
+  variables: {
+    list_id: '123,
+  },
+});
+
+client.mutate({
+  mutation: gql`
+    mutation ($text: String!, $list_id: ID!) {
+      addNewTask(text: $text, list_id: $list_id) {
+        id
+        text
+        completed
+        createdAt
+      }
+    }
+  `,
+  variables: {
+    text: 'walk the dog',
+    list_id: '123',
+  },
+  updateQueries: {
+    todos: (previousQueryResult, { mutationResult, queryVariables }) => {
+      return {
+        title: previousQueryResult.title,
+        tasks: [...previousQueryResult.tasks, mutationResult],
+      };
+    },
+  },
+});
+```
+
+The `updateQueries` reducer functions are similar to [Redux](http://redux.js.org/docs/basics/Reducers.html) reducers, if you are familiar with Redux.
+
+This means that reducer functions:
+- must return an updated query result that incorporates `mutationResult`
+- must avoid mutating the arguments, such that previous query result, and prefer cloning
+- should have no side effects

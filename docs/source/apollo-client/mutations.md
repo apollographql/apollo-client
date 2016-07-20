@@ -52,7 +52,7 @@ client.mutate({
 Mutations can get a bit verbose because you often need to pass in variables for a lot of different arguments, and those need to be declared in several places. This is inherent to the design of GraphQL itself, but future versions of Apollo Client may contain helpers to reduce the necessary boilerplate. In an ideal world, GraphQL itself would make variable type declarations optional.
 
 
-<h2 id="updating-queries-results">Updating Query results</h2>
+<h2 id="updating-query-results">Updating Query results</h2>
 
 In Apollo Client, there is a special system that allows mutations to update the results of the active queries. Active queries are bound to your UI components via `watchQuery` or any of the view integrations. These UI components will automatically re-render as updated queries are updated.
 

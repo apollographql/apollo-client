@@ -7,6 +7,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Fixed a bug where fetching a query without an id and then later with an id resulted in an orphaned node within the store. [Issue #344](https://github.com/apollostack/apollo-client/issues/344) and [PR #389](https://github.com/apollostack/apollo-client/pull/389).
 - Fix typings for some refactored types, `ObservableQuery` and `WatchQueryOptions`. [PR #428](https://github.com/apollostack/apollo-client/pull/428)
+- Added flattening of fragments within `createFragment`. [PR #437](https://github.com/apollostack/apollo-client/pull/437) and [Issue #421](https://github.com/apollostack/apollo-client/issues/421).
 
 ### v0.4.5
 

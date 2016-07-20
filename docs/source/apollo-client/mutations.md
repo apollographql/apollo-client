@@ -101,7 +101,7 @@ client.watchQuery({
     }
   `,
   variables: {
-    list_id: '123,
+    list_id: '123',
   },
 });
 

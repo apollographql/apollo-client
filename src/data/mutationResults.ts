@@ -5,6 +5,7 @@ import {
 import {
   GraphQLResult,
   SelectionSet,
+  FragmentDefinition,
 } from 'graphql';
 
 import mapValues = require('lodash.mapvalues');
@@ -14,6 +15,7 @@ import assign = require('lodash.assign');
 
 import {
   FragmentMap,
+  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -60,7 +62,7 @@ export type MutationQueryResultBehavior = {
   type: 'QUERY_RESULT';
   queryVariables: any;
   querySelectionSet: SelectionSet;
-  queryFragmentMap: FragmentMap;
+  queryFragments: FragmentDefinition[];
   newResult: Object;
 };
 
@@ -270,7 +272,7 @@ function mutationResultQueryResultReducer(state: NormalizedCache, {
   const {
     queryVariables,
     newResult,
-    queryFragmentMap,
+    queryFragments,
     querySelectionSet,
   } = behavior as MutationQueryResultBehavior;
 
@@ -283,7 +285,7 @@ function mutationResultQueryResultReducer(state: NormalizedCache, {
     variables: queryVariables,
     store: clonedState,
     dataIdFromObject: config.dataIdFromObject,
-    fragmentMap: queryFragmentMap,
+    fragmentMap: createFragmentMap(queryFragments),
   });
 }
 

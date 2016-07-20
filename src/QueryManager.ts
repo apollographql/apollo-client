@@ -565,7 +565,7 @@ export class QueryManager {
           }),
           queryVariables: queryOptions.variables,
           querySelectionSet: queryDefinition.selectionSet,
-          queryFragmentMap: createFragmentMap(fragments || []),
+          queryFragments: fragments,
         });
       });
     });

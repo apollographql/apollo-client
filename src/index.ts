@@ -7,6 +7,7 @@ import {
 import {
   Document,
   FragmentDefinition,
+  SelectionSet,
 } from 'graphql';
 
 import {

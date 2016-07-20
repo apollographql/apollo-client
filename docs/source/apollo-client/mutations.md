@@ -74,7 +74,7 @@ If the new object doesn't appear in any relations to other objects, and the Apol
 
 For example, say you have a query with a flat list list of `TodoList`s. Later, after clicking a "new todo-list" button the mutation `createNewTodoList(name: String!)` was fired. If `createNewTodoList` mutation returns a new `TodoList` object, then it will be incorporated into store and updated in active queries automatically.
 
-<h2 id="update-queries">Updating Complicated Queries With `updateQueries`</h2>
+<h3 id="update-queries">Updating Complicated Queries With `updateQueries`</h3>
 
 For more complicated queries you might want to apply more sophisticated logic.
 

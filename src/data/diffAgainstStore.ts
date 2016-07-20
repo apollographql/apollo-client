@@ -1,6 +1,5 @@
 import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
-import isString = require('lodash.isstring');
 import has = require('lodash.has');
 import assign = require('lodash.assign');
 
@@ -13,6 +12,8 @@ import {
 
 import {
   NormalizedCache,
+  isJsonValue,
+  isIdValue,
 } from './store';
 
 import {
@@ -269,9 +270,17 @@ Perhaps you want to use the \`returnPartialData\` option?`);
 
   // Handle all scalar types here
   if (! field.selectionSet) {
-    return {
-      result: storeValue,
-    };
+    if (isJsonValue(storeValue)) {
+      // if this is an object scalar, it must be a json blob and we have to unescape it
+      return {
+        result: storeValue.json,
+      };
+    } else {
+      // if this is a non-object scalar, we can return it immediately
+      return {
+        result: storeValue,
+      };
+    }
   }
 
   // From here down, the field has a selection set, which means it's trying to
@@ -315,18 +324,21 @@ Perhaps you want to use the \`returnPartialData\` option?`);
     };
   }
 
-  if (isString(storeValue)) {
+  // If the store value is an object and it has a selection set, it must be
+  // an escaped id.
+  if (isIdValue(storeValue)) {
+    const unescapedId = storeValue.id;
     return diffSelectionSetAgainstStore({
       store,
       throwOnMissingField,
-      rootId: storeValue,
+      rootId: unescapedId,
       selectionSet: field.selectionSet,
       variables,
       fragmentMap,
     });
   }
 
-  throw new Error('Unexpected number value in the store where the query had a subselection.');
+  throw new Error('Unexpected value in the store where the query had a subselection.');
 }
 
 interface FieldDiffResult {

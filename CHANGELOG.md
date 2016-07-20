@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Fixed a bug where fetching a query without an id and then later with an id resulted in an orphaned node within the store. [Issue #344](https://github.com/apollostack/apollo-client/issues/344) and [PR #389](https://github.com/apollostack/apollo-client/pull/389).
+
 ### v0.4.5
 
 - Fix the issue of using query transformers with mutations containing `optimisticResponse` or `updateQueries`. [PR #426](https://github.com/apollostack/apollo-client/pull/426).

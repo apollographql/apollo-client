@@ -565,9 +565,10 @@ describe('QueryManager', () => {
       }
     );
 
+    const store = createApolloStore();
     const queryManager = new QueryManager({
       networkInterface,
-      store: createApolloStore(),
+      store: store,
       reduxRootKey: 'apollo',
     });
 
@@ -2612,6 +2613,50 @@ describe('QueryManager', () => {
     });
   });
 
+  it('should error when we attempt to give an id beginning with $', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+          id
+          __typename
+        }
+      }`;
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const reducerConfig = {
+      dataIdFromObject: (object) => {
+        if (object.__typename && object.id) {
+          return '$' + object.__typename + '__' + object.id;
+        }
+      },
+    };
+    const store = createApolloStore({ config: reducerConfig, reportCrashes: false });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      reduxRootKey: 'apollo',
+    });
+
+    queryManager.query({ query }).then((result) => {
+      done(new Error('Returned a result when it should not have.'));
+    }).catch((error) => {
+      done();
+    });
+  });
+
   it('should reject a fetchQuery promise given a GraphQL error', (done) => {
     const query = gql`
       query {
@@ -2678,7 +2723,7 @@ describe('QueryManager', () => {
         done(new Error('Returned a result when it was not supposed to.'));
       }).catch((error) => {
         // make that the error thrown doesn't empty the state
-        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data['author']);
+        assert.deepEqual(store.getState().apollo.data['$ROOT_QUERY.author'], data['author']);
         done();
       });
     }).catch((error) => {
@@ -2720,11 +2765,11 @@ describe('QueryManager', () => {
     const subscription = handle.subscribe({
       next(result) {
         assert.deepEqual(result, { data });
-        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data.author);
+        assert.deepEqual(store.getState().apollo.data['$ROOT_QUERY.author'], data.author);
       },
 
       error(error) {
-        assert.deepEqual(store.getState().apollo.data['ROOT_QUERY.author'], data.author);
+        assert.deepEqual(store.getState().apollo.data['$ROOT_QUERY.author'], data.author);
         subscription.unsubscribe();
       },
     });
@@ -2777,6 +2822,289 @@ describe('QueryManager', () => {
       assert.equal(timesFired, 1);
       done();
     });
+  });
+
+  it('should error when we orphan a real-id node in the store with a real-id node', (done) => {
+    const query1 = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+          age
+          id
+          __typename
+        }
+      }
+    `;
+    const query2 = gql`
+      query {
+        author {
+          name {
+            firstName
+          }
+          id
+          __typename
+        }
+      }`;
+    const data1 = {
+      author: {
+        name: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        age: 18,
+        id: '187',
+        __typename: 'Author',
+      },
+    };
+    const data2 = {
+      author: {
+        name: {
+          firstName: 'John',
+        },
+        age: 18,
+        id: '197',
+        __typename: 'Author',
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: query1 },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query2 },
+        result: { data: data2 },
+      }
+    );
+    const reducerConfig = {
+      dataIdFromObject: (object) => {
+        if (object.__typename && object.id) {
+          return object.__typename + '__' + object.id;
+        }
+      },
+    };
+    const store = createApolloStore({ config: reducerConfig, reportCrashes: false });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      reduxRootKey: 'apollo',
+    });
+
+    let resultsReceived1 = 0;
+    let resultsReceived2 = 0;
+    let errorsReceived1 = 0;
+
+    const handle1 = queryManager.watchQuery({ query: query1 });
+    const handle2 = queryManager.watchQuery({ query: query2 });
+    handle1.subscribe({
+      next(result) {
+        resultsReceived1 += 1;
+      },
+
+      error(error) {
+        assert(error);
+        errorsReceived1 += 1;
+      },
+    });
+
+    handle2.subscribe({
+      next(result) {
+        resultsReceived2 += 1;
+      },
+
+      error(error) {
+        done(new Error('Erorred on the second handler.'));
+      },
+    });
+
+    setTimeout(() => {
+      assert.equal(resultsReceived1, 1);
+      assert.equal(resultsReceived2, 1);
+      assert.equal(errorsReceived1, 1);
+      done();
+    }, 60);
+  });
+
+
+  it('should error if we replace a real id node in the store with a generated id node', (done) => {
+    const queryWithId = gql`
+      query {
+        author {
+          firstName
+          lastName
+          __typename
+          id
+        }
+      }`;
+    const dataWithId = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const queryWithoutId = gql`
+      query {
+        author {
+          address
+        }
+      }`;
+    const dataWithoutId = {
+      author: {
+        address: 'fake address',
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: queryWithId },
+        result: { data: dataWithId },
+      },
+      {
+        request: { query: queryWithoutId },
+        result: { data: dataWithoutId },
+      }
+    );
+    const reducerConfig = {
+      dataIdFromObject: (object) => {
+        if (object.__typename && object.id) {
+          return object.__typename + '__' + object.id;
+        }
+      },
+    };
+    const store = createApolloStore({ config: reducerConfig, reportCrashes: false });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      reduxRootKey: 'apollo',
+    });
+    const handleWithId = queryManager.watchQuery({ query: queryWithId });
+    const handleWithoutId = queryManager.watchQuery({ query: queryWithoutId });
+    let withIdResults = 0;
+    let withIdErrors = 0;
+    let withoutIdResults = 0;
+    let withoutIdErrors = 0;
+
+    handleWithId.subscribe({
+      next(result) {
+        withIdResults += 1;
+      },
+      error(error) {
+        withIdErrors += 1;
+      },
+    });
+
+    handleWithoutId.subscribe({
+      next(result) {
+        withoutIdResults += 1;
+      },
+      error(error) {
+        assert.include(error.message, 'Store error: ');
+        withoutIdErrors += 1;
+      },
+    });
+
+    setTimeout(() => {
+      assert.equal(withIdResults, 1);
+      assert.equal(withIdErrors, 0);
+      assert.equal(withoutIdResults, 0);
+      assert.equal(withoutIdErrors, 1);
+      done();
+    }, 60);
+  });
+
+  it('should not error when merging a generated id store node  with a real id node', (done) => {
+    const queryWithoutId = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+          age
+          __typename
+        }
+      }`;
+    const queryWithId = gql`
+      query {
+        author {
+          name {
+            firstName
+          }
+          id
+          __typename
+        }
+      }`;
+    const dataWithoutId = {
+      author: {
+        name: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        age: '124',
+        __typename: 'Author',
+      },
+    };
+    const dataWithId = {
+      author: {
+        name: {
+          firstName: 'Jane',
+        },
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: queryWithoutId },
+        result: { data: dataWithoutId },
+      },
+      {
+        request: { query: queryWithId },
+        result: { data: dataWithId },
+      }
+    );
+
+    const reducerConfig = {
+      dataIdFromObject: (object) => {
+        if (object.__typename && object.id) {
+          return object.__typename + '__' + object.id;
+        }
+      },
+    };
+    const store = createApolloStore({ config: reducerConfig });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      reduxRootKey: 'apollo',
+    });
+    let withoutIdResultsReceived = 0;
+    let withIdResultsReceived = 0;
+    const handleWithoutId = queryManager.watchQuery({ query: queryWithoutId });
+    const handleWithId = queryManager.watchQuery({ query: queryWithId });
+
+    handleWithoutId.subscribe({
+      next(result) {
+        withoutIdResultsReceived += 1;
+        assert.deepEqual(result, { data: dataWithoutId } );
+      },
+    });
+
+    handleWithId.subscribe({
+      next(result) {
+        withIdResultsReceived += 1;
+        assert.deepEqual(result, { data: dataWithId });
+      },
+    });
+
+    setTimeout(() => {
+      assert.equal(withoutIdResultsReceived, 2);
+      assert.equal(withIdResultsReceived, 1);
+      done();
+    }, 120);
   });
 });
 

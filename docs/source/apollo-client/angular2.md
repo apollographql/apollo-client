@@ -75,23 +75,21 @@ class postsList {
 
 <h4 id="angular2apollo-queries">Queries</h4>
 
-To bind to query you can use `watchQuery` method with the same arguments as [`ApolloClient#watchQuery`](core.html#watchQuery). In this case as the result you will receive the [`QueryObservable`](core.html#watchQuery).
+To bind to query you can use `watchQuery` method with the same arguments as [`ApolloClient#watchQuery`](queries.html#watchQuery). In this case as the result you will receive the `ApolloQueryObservable`. It is an enhanced version of [`QueryObservable`](queries.html#watchQuery) that can be used with RxJS's operators.
 
 Here's how you could run a query:
 
 ```ts
+import 'rxjs';
+
 import {
-  Component,
-  Injectable
+  Component
 } from '@angular/core';
 
 import {
-  Angular2Apollo
+  Angular2Apollo,
+  ApolloQueryObservable
 } from 'angular2-apollo';
-
-import {
-  Observable
-} from 'rxjs/Observable';
 
 import gql from 'graphql-tag';
 
@@ -99,9 +97,8 @@ import gql from 'graphql-tag';
   selector: 'postsList',
   templateUrl: 'client/postsList.html'
 })
-@Injectable()
 class postsList {
-  posts: Observable<any[]>;
+  posts: ApolloQueryObservable<any[]>;
 
   constructor(private angularApollo : Angular2Apollo) {
     this.posts = angularApollo.watchQuery({
@@ -115,14 +112,60 @@ class postsList {
       variables: {
         tag: '1234'
       }
-    });
+    })
+      .map((post) => {
+        post.title = post.title.toUpperCase();
+        return post;
+      });
+  }
+}
+```
+
+If you just want to fetch a query you can use `query` method with the same arguments as [`ApolloClient#query`](queries.html#query). In this case as the result you will receive the Promise that resolves to a [`ApolloQueryResult`](queries.html#query).
+
+Here's how you could run a query:
+
+```ts
+import {
+  Component
+} from '@angular/core';
+
+import {
+  Angular2Apollo
+} from 'angular2-apollo';
+
+import gql from 'graphql-tag';
+
+@Component({
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
+})
+class postsList {
+  posts: any[] = [];
+
+  constructor(private angularApollo : Angular2Apollo) {
+    angularApollo.query({
+      query: gql`
+        query getPosts($tag: String) {
+          posts(tag: $tag) {
+            title
+          }
+        }
+      `,
+      variables: {
+        tag: '1234'
+      }
+    })
+      .then(({ data }) => {
+        this.posts = data;
+      });
   }
 }
 ```
 
 <h4 id="angular2apollo-mutations">Mutations</h4>
 
-To call a mutation you can use `mutate` method with the same arguments as [`ApolloClient#mutate`](core.html#mutate). In this case as the result you will receive a promise that resolves to a GraphQLResult.
+To call a mutation you can use `mutate` method with the same arguments as [`ApolloClient#mutate`](mutations.html#mutate). In this case as the result you will receive a promise that resolves to a GraphQLResult.
 
 Here's how you would call a mutation and pass in arguments via variables:
 
@@ -210,9 +253,9 @@ It allows you to define queries and mutations and to make them reactive. You can
 
 <h4 id="apollo-queries">Queries</h4>
 
-Each key on the object returned by `queries` function should be made up of the same possible arguments as [`ApolloClient#watchQuery`](core.html#watchQuery).
+Each key on the object returned by `queries` function should be made up of the same possible arguments as [`ApolloClient#watchQuery`](queries.html#watchQuery).
 
-The result of each query contains the same API as [`QuerySubscription`](core.html#QuerySubscription) and has the following form:
+The result of each query contains the same API as [`QuerySubscription`](queries.html#QuerySubscription) and has the following form:
 
 ```js
 {
@@ -287,7 +330,7 @@ class postsList {
 
 <h4 id="apollo-mutations">Mutations</h4>
 
-`mutations` function returns an object made up of keys and values that are custom functions to call the mutation. The resulting function must return the same possible arguments as [`ApolloClient#mutate`](core.html#mutate)
+`mutations` function returns an object made up of keys and values that are custom functions to call the mutation. The resulting function must return the same possible arguments as [`ApolloClient#mutate`](mutations.html#mutate)
 
 Since `mutations` function receives one argument which is a component's context you can use it to inside variables.
 It is also reactive so your variables will be always up to date.

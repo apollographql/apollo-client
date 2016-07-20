@@ -1115,10 +1115,10 @@ describe('client', () => {
           personDetails
         }`;
       const fragments1 = createFragment(fragmentDoc1);
-      const fragments2 = createFragment(fragmentDoc2, fragments1);
-      const fragments3 = createFragment(fragmentDoc3, fragments2);
+      const fragments2 = createFragment(fragmentDoc2);
+      const fragments3 = createFragment(fragmentDoc3, [fragments1, fragments2]);
       assert.equal(fragments1.length, 1);
-      assert.equal(fragments2.length, 2);
+      assert.equal(fragments2.length, 1);
       assert.equal(fragments3.length, 3);
     });
 

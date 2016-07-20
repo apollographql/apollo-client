@@ -90,6 +90,16 @@ declare module 'lodash.identity' {
   export = main.identity;
 }
 
+declare module 'lodash.flatten' {
+  import main = require('~lodash/index');
+  export = main.flatten;
+}
+
+declare module 'lodash.pick' {
+  import main = require('~lodash/index');
+  export = main.pick;
+}
+
 /*
 
   GRAPHQL

@@ -75,6 +75,7 @@ import {
 
 import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
+import flatten = require('lodash.flatten');
 
 // We expose the print method from GraphQL so that people that implement
 // custom network interfaces can turn query ASTs into query strings as needed.
@@ -113,7 +114,11 @@ let printFragmentWarnings = true;
 // that the fragment in the document depends on. The fragment definition array from the document
 // is concatenated with the fragment definition array passed as the second argument and this
 // concatenated array is returned.
-export function createFragment(doc: Document, fragments: FragmentDefinition[] = []): FragmentDefinition[] {
+export function createFragment(
+  doc: Document,
+  fragments: (FragmentDefinition[] | FragmentDefinition[][]) = []
+): FragmentDefinition[] {
+  fragments = flatten(fragments) as FragmentDefinition[] ;
   const fragmentDefinitions = getFragmentDefinitions(doc);
   fragmentDefinitions.forEach((fragmentDefinition) => {
     const fragmentName = fragmentDefinition.name.value;

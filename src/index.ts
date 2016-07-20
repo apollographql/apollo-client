@@ -7,6 +7,14 @@ import {
 import {
   Document,
   FragmentDefinition,
+
+  // We need to import this here to allow TypeScript to include it in the definition file even
+  // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
+  // We need to disable the linter here because TSLint rightfully complains that this is unused.
+  /* tslint:disable */
+  SelectionSet,
+  /* tslint:enable */
+
 } from 'graphql';
 
 import {

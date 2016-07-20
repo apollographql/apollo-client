@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Fix the issue of using query transformers with mutations containing `optimisticResponse` or `updateQueries`. [PR #426](https://github.com/apollostack/apollo-client/pull/426).
+
 ### v0.4.4
 
 - Make sure query transformers are also applied to named fragments, and new methods that allow transforming query document with multiple query transformers. [Issue #373](https://github.com/apollostack/apollo-client/issues/373) [PR #412](https://github.com/apollostack/apollo-client/pull/412)

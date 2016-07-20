@@ -40,6 +40,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import {
+  ApolloError,
+} from '../errors';
+
 // import {
 //   printAST,
 // } from './debug';
@@ -340,8 +344,19 @@ function writeFieldToStore({
     // data from that id with the data we're about to write in the store.
     if (store[dataId] && store[dataId][storeFieldName] !== storeValue) {
       const escapedId = store[dataId][storeFieldName] as IdValue;
-      if (isIdValue(escapedId) && isGeneratedId(escapedId.id)) {
-        generatedKey = escapedId.id as string;
+
+      // If there is already a real id in the store and the current id we
+      // are dealing with is generated, we throw an error.
+      if (isIdValue(storeValue) && storeValue.generated
+          && isIdValue(escapedId) && !escapedId.generated) {
+        throw new ApolloError({
+          errorMessage: `Store error: the application attempted to write an object with no provided id` +
+            ` but the store already contains an id of ${escapedId.id} for this object.`,
+        });
+      }
+
+      if (isIdValue(escapedId) && escapedId.generated) {
+        generatedKey = escapedId.id;
         shouldMerge = true;
       }
     }

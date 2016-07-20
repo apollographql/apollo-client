@@ -12,8 +12,6 @@ import {
 
 import {
   NormalizedCache,
-  IdValue,
-  JsonValue,
   isJsonValue,
   isIdValue,
 } from './store';
@@ -272,15 +270,15 @@ Perhaps you want to use the \`returnPartialData\` option?`);
 
   // Handle all scalar types here
   if (! field.selectionSet) {
-    if (!isJsonValue(storeValue)) {
+    if (isJsonValue(storeValue)) {
+      // if this is an object scalar, it must be a json blob and we have to unescape it
+      return {
+        result: storeValue.json,
+      };
+    } else {
       // if this is a non-object scalar, we can return it immediately
       return {
         result: storeValue,
-      };
-    } else {
-      // if this is an object scalar, it must be a json blob and we have to unescape it
-      return {
-        result: (storeValue as JsonValue).json,
       };
     }
   }
@@ -329,7 +327,7 @@ Perhaps you want to use the \`returnPartialData\` option?`);
   // If the store value is an object and it has a selection set, it must be
   // an escaped id.
   if (isIdValue(storeValue)) {
-    const unescapedId = (storeValue as IdValue).id;
+    const unescapedId = storeValue.id;
     return diffSelectionSetAgainstStore({
       store,
       throwOnMissingField,
@@ -340,7 +338,7 @@ Perhaps you want to use the \`returnPartialData\` option?`);
     });
   }
 
-  throw new Error('Unexpected value in the store where the query had a subselction.');
+  throw new Error('Unexpected value in the store where the query had a subselection.');
 }
 
 interface FieldDiffResult {

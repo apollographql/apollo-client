@@ -2928,7 +2928,94 @@ describe('QueryManager', () => {
   });
 
 
-  it('should not error when we orphan a no-id node in the store with a real-id node', (done) => {
+  it('should error if we replace a real id node in the store with a generated id node', (done) => {
+    const queryWithId = gql`
+      query {
+        author {
+          firstName
+          lastName
+          __typename
+          id
+        }
+      }`;
+    const dataWithId = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const queryWithoutId = gql`
+      query {
+        author {
+          address
+        }
+      }`;
+    const dataWithoutId = {
+      author: {
+        address: 'fake address',
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: queryWithId },
+        result: { data: dataWithId },
+      },
+      {
+        request: { query: queryWithoutId },
+        result: { data: dataWithoutId },
+      }
+    );
+    const reducerConfig = {
+      dataIdFromObject: (object) => {
+        if (object.__typename && object.id) {
+          return object.__typename + '__' + object.id;
+        }
+      },
+    };
+    const store = createApolloStore({ config: reducerConfig, reportCrashes: false });
+    const queryManager = new QueryManager({
+      networkInterface,
+      store,
+      reduxRootKey: 'apollo',
+    });
+    const handleWithId = queryManager.watchQuery({ query: queryWithId });
+    const handleWithoutId = queryManager.watchQuery({ query: queryWithoutId });
+    let withIdResults = 0;
+    let withIdErrors = 0;
+    let withoutIdResults = 0;
+    let withoutIdErrors = 0;
+
+    handleWithId.subscribe({
+      next(result) {
+        withIdResults += 1;
+      },
+      error(error) {
+        withIdErrors += 1;
+      },
+    });
+
+    handleWithoutId.subscribe({
+      next(result) {
+        withoutIdResults += 1;
+      },
+      error(error) {
+        assert.include(error.message, 'Store error: ');
+        withoutIdErrors += 1;
+      },
+    });
+
+    setTimeout(() => {
+      assert.equal(withIdResults, 1);
+      assert.equal(withIdErrors, 0);
+      assert.equal(withoutIdResults, 0);
+      assert.equal(withoutIdErrors, 1);
+      done();
+    }, 60);
+  });
+
+  it('should not error when merging a generated id store node  with a real id node', (done) => {
     const queryWithoutId = gql`
       query {
         author {

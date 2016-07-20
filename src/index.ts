@@ -34,11 +34,11 @@ import {
 
 import {
     ObservableQuery,
-} from '../src/ObservableQuery';
+} from './ObservableQuery';
 
 import {
   WatchQueryOptions,
-} from '../src/watchQueryOptions';
+} from './watchQueryOptions';
 
 import {
   readQueryFromStore,

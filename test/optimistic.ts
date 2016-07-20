@@ -889,7 +889,7 @@ describe('optimistic mutation - githunt comments', () => {
           {
             __typename: 'Comment',
             postedBy: userDoc,
-          }
+          },
         ],
       },
     },
@@ -900,7 +900,10 @@ describe('optimistic mutation - githunt comments', () => {
 
   function setup(...mockedResponses) {
     networkInterface = mockNetworkInterface({
-      request: { query: applyTransformers(query, [addTypename]), variables, },
+      request: {
+        query: applyTransformers(query, [addTypename]),
+        variables,
+      },
       result,
     }, {
       request: { query: applyTransformers(queryWithFragment, [addTypename]), variables, },
@@ -962,8 +965,8 @@ describe('optimistic mutation - githunt comments', () => {
     },
   };
   const updateQueries = {
-    Comment: (prev, { mutationResult }) => {
-      const newComment = (mutationResult as any).data.submitComment;
+    Comment: (prev, { mutationResult: mutationResultArg }) => {
+      const newComment = (mutationResultArg as any).data.submitComment;
       const state = clonedeep(prev);
       (state as any).entry.comments.unshift(newComment);
       return state;
@@ -984,7 +987,10 @@ describe('optimistic mutation - githunt comments', () => {
     };
 
     return setup({
-      request: { query: applyTransformers(mutation, [addTypename]), variables: mutationVariables, },
+      request: {
+        query: applyTransformers(mutation, [addTypename]),
+        variables: mutationVariables,
+      },
       result: mutationResult,
     }).then(() => {
       return client.mutate({
@@ -994,7 +1000,7 @@ describe('optimistic mutation - githunt comments', () => {
         updateQueries,
       });
     }).then(() => {
-      return client.query({ query, variables, });
+      return client.query({ query, variables });
     }).then((newResult: any) => {
       assert.equal(newResult.data.entry.comments.length, 2);
     });

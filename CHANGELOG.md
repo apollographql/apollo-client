@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
 - Fixed a bug where fetching a query without an id and then later with an id resulted in an orphaned node within the store. [Issue #344](https://github.com/apollostack/apollo-client/issues/344) and [PR #389](https://github.com/apollostack/apollo-client/pull/389).
 
 ### v0.4.5

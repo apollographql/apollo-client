@@ -855,6 +855,22 @@ describe('optimistic mutation - githunt comments', () => {
       }
     }
   `;
+  const queryWithFragment = gql`
+    query Comment($repoName: String!) {
+      entry(repoFullName: $repoName) {
+        comments {
+          ...authorFields
+        }
+      }
+    }
+
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
+      }
+    }
+  `;
   const variables = {
     repoName: 'org/repo',
   };
@@ -886,6 +902,9 @@ describe('optimistic mutation - githunt comments', () => {
     networkInterface = mockNetworkInterface({
       request: { query: applyTransformers(query, [addTypename]), variables, },
       result,
+    }, {
+      request: { query: applyTransformers(queryWithFragment, [addTypename]), variables, },
+      result,
     }, ...mockedResponses);
 
     client = new ApolloClient({
@@ -914,6 +933,21 @@ describe('optimistic mutation - githunt comments', () => {
           login
           html_url
         }
+      }
+    }
+  `;
+
+  const mutationWithFragment = gql`
+    mutation submitComment($repoFullName: String!, $commentContent: String!) {
+      submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+        ...authorFields
+      }
+    }
+
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
       }
     }
   `;
@@ -961,6 +995,29 @@ describe('optimistic mutation - githunt comments', () => {
       });
     }).then(() => {
       return client.query({ query, variables, });
+    }).then((newResult: any) => {
+      assert.equal(newResult.data.entry.comments.length, 2);
+    });
+  });
+
+  it('can post a new comment (with fragments)', () => {
+    const mutationVariables = {
+      repoFullName: 'org/repo',
+      commentContent: 'New Comment',
+    };
+
+    return setup({
+      request: { query: applyTransformers(mutationWithFragment, [addTypename]), variables: mutationVariables, },
+      result: mutationResult,
+    }).then(() => {
+      return client.mutate({
+        mutation: mutationWithFragment,
+        optimisticResponse,
+        variables: mutationVariables,
+        updateQueries,
+      });
+    }).then(() => {
+      return client.query({ query: queryWithFragment, variables, });
     }).then((newResult: any) => {
       assert.equal(newResult.data.entry.comments.length, 2);
     });

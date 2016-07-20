@@ -2,9 +2,10 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename } from '../src';
+import ApolloClient, { addTypename, createFragment } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
+import { addFragmentsToDocument } from '../src/queries/getFromAST';
 
 import assign = require('lodash.assign');
 import clonedeep = require('lodash.clonedeep');
@@ -855,19 +856,30 @@ describe('optimistic mutation - githunt comments', () => {
       }
     }
   `;
+  const fragment = createFragment(gql`
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
+      }
+    }
+  `);
+  const fragmentWithTypenames = createFragment(gql`
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
+        __typename
+      }
+      __typename
+    }
+  `);
   const queryWithFragment = gql`
     query Comment($repoName: String!) {
       entry(repoFullName: $repoName) {
         comments {
           ...authorFields
         }
-      }
-    }
-
-    fragment authorFields on User {
-      postedBy {
-        login
-        html_url
       }
     }
   `;
@@ -906,7 +918,10 @@ describe('optimistic mutation - githunt comments', () => {
       },
       result,
     }, {
-      request: { query: applyTransformers(queryWithFragment, [addTypename]), variables, },
+      request: {
+        query: addFragmentsToDocument(applyTransformers(queryWithFragment, [addTypename]), fragment),
+        variables,
+      },
       result,
     }, ...mockedResponses);
 
@@ -944,13 +959,6 @@ describe('optimistic mutation - githunt comments', () => {
     mutation submitComment($repoFullName: String!, $commentContent: String!) {
       submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
         ...authorFields
-      }
-    }
-
-    fragment authorFields on User {
-      postedBy {
-        login
-        html_url
       }
     }
   `;
@@ -1013,7 +1021,10 @@ describe('optimistic mutation - githunt comments', () => {
     };
 
     return setup({
-      request: { query: applyTransformers(mutationWithFragment, [addTypename]), variables: mutationVariables, },
+      request: {
+        query: addFragmentsToDocument(applyTransformers(mutationWithFragment, [addTypename]), fragmentWithTypenames),
+        variables: mutationVariables,
+      },
       result: mutationResult,
     }).then(() => {
       return client.mutate({
@@ -1021,9 +1032,10 @@ describe('optimistic mutation - githunt comments', () => {
         optimisticResponse,
         variables: mutationVariables,
         updateQueries,
+        fragments: fragment,
       });
     }).then(() => {
-      return client.query({ query: queryWithFragment, variables, });
+      return client.query({ query: queryWithFragment, variables, fragments: fragment });
     }).then((newResult: any) => {
       assert.equal(newResult.data.entry.comments.length, 2);
     });

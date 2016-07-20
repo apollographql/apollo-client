@@ -553,7 +553,7 @@ export class QueryManager {
           selectionSet: queryDefinition.selectionSet,
           variables: queryOptions.variables,
           returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
-          fragmentMap: createFragmentMap(queryOptions.fragments || []),
+          fragmentMap: createFragmentMap(fragments || []),
         });
 
         resultBehaviors.push({

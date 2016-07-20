@@ -5,6 +5,12 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - - Integrated the scheduler so that polling queries on the same polling interval are batched together. [PR #403](https://github.com/apollostack/apollo-client/pull/403) and [Issue #401](https://github.com/apollostack/apollo-client/issues/401).
 
+- Fixed a bug where fetching a query without an id and then later with an id resulted in an orphaned node within the store. [Issue #344](https://github.com/apollostack/apollo-client/issues/344) and [PR #389](https://github.com/apollostack/apollo-client/pull/389).
+
+### v0.4.5
+
+- Fix the issue of using query transformers with mutations containing `optimisticResponse` or `updateQueries`. [PR #426](https://github.com/apollostack/apollo-client/pull/426).
+
 ### v0.4.4
 
 - Make sure query transformers are also applied to named fragments, and new methods that allow transforming query document with multiple query transformers. [Issue #373](https://github.com/apollostack/apollo-client/issues/373) [PR #412](https://github.com/apollostack/apollo-client/pull/412)

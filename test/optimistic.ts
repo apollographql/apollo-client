@@ -2,14 +2,19 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename } from '../src';
+import ApolloClient, { addTypename, createFragment } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
+import { addFragmentsToDocument } from '../src/queries/getFromAST';
 
 import assign = require('lodash.assign');
 import clonedeep = require('lodash.clonedeep');
 
 import gql from 'graphql-tag';
+
+import {
+  applyTransformers,
+} from '../src/queries/queryTransform';
 
 describe('optimistic mutation results', () => {
   const query = gql`
@@ -834,6 +839,205 @@ describe('optimistic mutation results', () => {
         assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
         assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
       });
+    });
+  });
+});
+
+describe('optimistic mutation - githunt comments', () => {
+  const query = gql`
+    query Comment($repoName: String!) {
+      entry(repoFullName: $repoName) {
+        comments {
+          postedBy {
+            login
+            html_url
+          }
+        }
+      }
+    }
+  `;
+  const fragment = createFragment(gql`
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
+      }
+    }
+  `);
+  const fragmentWithTypenames = createFragment(gql`
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
+        __typename
+      }
+      __typename
+    }
+  `);
+  const queryWithFragment = gql`
+    query Comment($repoName: String!) {
+      entry(repoFullName: $repoName) {
+        comments {
+          ...authorFields
+        }
+      }
+    }
+  `;
+  const variables = {
+    repoName: 'org/repo',
+  };
+  const userDoc = {
+    __typename: 'User',
+    login: 'stubailo',
+    html_url: 'http://avatar.com/stubailo.png',
+  };
+
+  const result = {
+    data: {
+      __typename: 'Query',
+      entry: {
+        __typename: 'Entry',
+        comments: [
+          {
+            __typename: 'Comment',
+            postedBy: userDoc,
+          },
+        ],
+      },
+    },
+  };
+
+  let client: ApolloClient;
+  let networkInterface;
+
+  function setup(...mockedResponses) {
+    networkInterface = mockNetworkInterface({
+      request: {
+        query: applyTransformers(query, [addTypename]),
+        variables,
+      },
+      result,
+    }, {
+      request: {
+        query: addFragmentsToDocument(applyTransformers(queryWithFragment, [addTypename]), fragment),
+        variables,
+      },
+      result,
+    }, ...mockedResponses);
+
+    client = new ApolloClient({
+      networkInterface,
+      queryTransformer: addTypename,
+      dataIdFromObject: (obj: any) => {
+        if (obj.id && obj.__typename) {
+          return obj.__typename + obj.id;
+        }
+        return null;
+      },
+    });
+
+    const obsHandle = client.watchQuery({
+      query,
+      variables,
+    });
+
+    return obsHandle.result();
+  };
+
+  const mutation = gql`
+    mutation submitComment($repoFullName: String!, $commentContent: String!) {
+      submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+        postedBy {
+          login
+          html_url
+        }
+      }
+    }
+  `;
+
+  const mutationWithFragment = gql`
+    mutation submitComment($repoFullName: String!, $commentContent: String!) {
+      submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+        ...authorFields
+      }
+    }
+  `;
+
+  const mutationResult = {
+    data: {
+      __typename: 'Mutation',
+      submitComment: {
+        __typename: 'Comment',
+        postedBy: userDoc,
+      },
+    },
+  };
+  const updateQueries = {
+    Comment: (prev, { mutationResult: mutationResultArg }) => {
+      const newComment = (mutationResultArg as any).data.submitComment;
+      const state = clonedeep(prev);
+      (state as any).entry.comments.unshift(newComment);
+      return state;
+    },
+  } as MutationQueryReducersMap;
+  const optimisticResponse = {
+    __typename: 'Mutation',
+    submitComment: {
+      __typename: 'Comment',
+      postedBy: userDoc,
+    },
+  };
+
+  it('can post a new comment', () => {
+    const mutationVariables = {
+      repoFullName: 'org/repo',
+      commentContent: 'New Comment',
+    };
+
+    return setup({
+      request: {
+        query: applyTransformers(mutation, [addTypename]),
+        variables: mutationVariables,
+      },
+      result: mutationResult,
+    }).then(() => {
+      return client.mutate({
+        mutation,
+        optimisticResponse,
+        variables: mutationVariables,
+        updateQueries,
+      });
+    }).then(() => {
+      return client.query({ query, variables });
+    }).then((newResult: any) => {
+      assert.equal(newResult.data.entry.comments.length, 2);
+    });
+  });
+
+  it('can post a new comment (with fragments)', () => {
+    const mutationVariables = {
+      repoFullName: 'org/repo',
+      commentContent: 'New Comment',
+    };
+
+    return setup({
+      request: {
+        query: addFragmentsToDocument(applyTransformers(mutationWithFragment, [addTypename]), fragmentWithTypenames),
+        variables: mutationVariables,
+      },
+      result: mutationResult,
+    }).then(() => {
+      return client.mutate({
+        mutation: mutationWithFragment,
+        optimisticResponse,
+        variables: mutationVariables,
+        updateQueries,
+        fragments: fragment,
+      });
+    }).then(() => {
+      return client.query({ query: queryWithFragment, variables, fragments: fragment });
+    }).then((newResult: any) => {
+      assert.equal(newResult.data.entry.comments.length, 2);
     });
   });
 });

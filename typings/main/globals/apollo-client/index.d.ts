@@ -40,11 +40,6 @@ declare module 'lodash.merge' {
   export = main.merge;
 }
 
-declare module 'lodash.pick' {
-  import main = require('~lodash/index');
-  export = main.pick;
-}
-
 declare module 'lodash.includes' {
   import main = require('~lodash/index');
   export = main.includes;
@@ -93,6 +88,16 @@ declare module 'lodash.countby' {
 declare module 'lodash.identity' {
   import main = require('~lodash/index');
   export = main.identity;
+}
+
+declare module 'lodash.flatten' {
+  import main = require('~lodash/index');
+  export = main.flatten;
+}
+
+declare module 'lodash.pick' {
+  import main = require('~lodash/index');
+  export = main.pick;
 }
 
 /*

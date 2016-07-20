@@ -18290,10 +18290,10 @@ export = _;
 interface Map<K, V> {}
 }
 declare module 'lodash/index' {
-import main = require('~lodash/index');
-export = main;
+import alias = require('~lodash/index');
+export = alias;
 }
 declare module 'lodash' {
-import main = require('~lodash/index');
-export = main;
+import alias = require('~lodash/index');
+export = alias;
 }

@@ -4,7 +4,6 @@ import {
 } from './networkInterface';
 
 import forOwn = require('lodash.forown');
-import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
 
 import {
@@ -88,6 +87,8 @@ export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
+  public scheduler: QueryScheduler;
+
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
@@ -99,7 +100,6 @@ export class QueryManager {
 
   private idCounter = 0;
 
-  private scheduler: QueryScheduler;
   private batcher: QueryBatcher;
   private batchInterval: number;
 
@@ -336,7 +336,7 @@ export class QueryManager {
     getQueryDefinition(options.query);
 
     let observableQuery = new ObservableQuery({
-      queryManager: this,
+      scheduler: this.scheduler,
       options: options,
       shouldSubscribe: shouldSubscribe,
     });
@@ -468,18 +468,11 @@ export class QueryManager {
 
   public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.queryListeners[queryId] = listener;
-    this.fetchQuery(queryId, options);
 
-    if (options.pollInterval) {
-      if (options.noFetch) {
-        throw new Error('noFetch option should not use query polling.');
-      }
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, options.pollInterval);
+    // If the pollInterval is present, the scheduler has already taken care of firing the first
+    // fetch so we don't have to worry about it here.
+    if (!options.pollInterval) {
+      this.fetchQuery(queryId, options);
     }
 
     return queryId;
@@ -489,16 +482,7 @@ export class QueryManager {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
     delete this.queryListeners[queryId];
-
-    // if we have a polling interval running, stop it
-    if (this.pollingTimers[queryId]) {
-      clearInterval(this.pollingTimers[queryId]);
-    }
-
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_STOP',
-      queryId,
-    });
+    this.stopQueryInStore(queryId);
   }
 
   private collectResultBehaviorsFromUpdateQueries(

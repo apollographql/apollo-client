@@ -2368,8 +2368,8 @@ describe('QueryManager', () => {
         options: {
           query: query,
         },
-        queryManager: queryManager,
-      } as ObservableQuery;
+        scheduler: queryManager.scheduler,
+      } as any as ObservableQuery;
 
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery(queryId, mockObservableQuery);
@@ -2401,7 +2401,7 @@ describe('QueryManager', () => {
         },
         options,
         queryManager: queryManager,
-      } as ObservableQuery;
+      } as any as ObservableQuery;
 
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery(queryId, mockObservableQuery);
@@ -2729,6 +2729,46 @@ describe('QueryManager', () => {
     }).catch((error) => {
       done(new Error('Threw an error on the first query.'));
     });
+  });
+
+  it('should be able to unsubscribe from a polling query subscription', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data },
+      }
+    );
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const observableQuery = queryManager.watchQuery({ query, pollInterval: 20 });
+    let timesFired = 0;
+    const subscription = observableQuery.subscribe({
+      next(result) {
+        timesFired += 1;
+        subscription.unsubscribe();
+      },
+    });
+
+    setTimeout(() => {
+      assert.equal(timesFired, 1);
+      done();
+    }, 60);
   });
 
   it('should not empty the store when a polling query fails due to a network error', (done) => {

@@ -54,6 +54,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       }
 
       if (isPollingQuery) {
+        if (options.noFetch) {
+          throw new Error('noFetch option should not use query polling.');
+        }
+
         this.scheduler.startPollingQuery(
           options,
           queryId

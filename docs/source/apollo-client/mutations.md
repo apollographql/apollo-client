@@ -62,7 +62,7 @@ In many cases, it's beneficial to have the mutation result return the _parent_ o
 
 Sometimes, you might need to define a new type just for the result of a specific mutation. For example, in the todo list case, it might make sense for the result of the mutation to have two fields, and include _both_ the inserted task and the associated todo list. That way, the client can more easily refetch related data.
 
-<h2 id="updating-queries-results">Updating Queries Results</h2>
+<h2 id="updating-queries-results">Updating Queries results</h2>
 
 In Apollo Client, there is a special system that allows mutations to update the results of the active queries. Active queries are bound to your UI components via `watchQuery` or any of the view integrations. These UI components will automatically re-render as updated queries are updated.
 
@@ -74,7 +74,7 @@ If the new object doesn't appear in any relations to other objects, and the Apol
 
 For example, say you have a query with a flat list list of `TodoList`s. Later, after clicking a "new todo-list" button the mutation `createNewTodoList(name: String!)` was fired. If `createNewTodoList` mutation returns a new `TodoList` object, then it will be incorporated into store and updated in active queries automatically.
 
-<h3 id="update-queries">Updating Complicated Queries With `updateQueries`</h3>
+<h3 id="update-queries">Updating complicated queries with `updateQueries`</h3>
 
 For more complicated queries you might want to apply more sophisticated logic.
 

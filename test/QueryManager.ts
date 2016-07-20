@@ -564,6 +564,7 @@ describe('QueryManager', () => {
         result: { data: data2 },
       }
     );
+
     const store = createApolloStore();
     const queryManager = new QueryManager({
       networkInterface,

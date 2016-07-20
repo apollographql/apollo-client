@@ -971,6 +971,34 @@ describe('QueryManager', () => {
     });
   });
 
+  it('should error if we pass noFetch on a polling query', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const queryManager = new QueryManager({
+      networkInterface: mockNetworkInterface(),
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const handle = queryManager.watchQuery({
+      query,
+      pollInterval: 200,
+      noFetch: true,
+    });
+    assert.throws(() => {
+      handle.subscribe({
+        next(result) {
+          done(new Error('Returned a result when it should not have.'));
+        },
+      });
+    });
+    done();
+  });
+
   it('supports noFetch fetching only cached data', () => {
     const primeQuery = gql`
       query primeQuery {

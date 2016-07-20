@@ -133,7 +133,7 @@ Sometimes your client code can easily predict the result of the mutation, if it 
 
 Apollo Client gives you a way to specify the `optimisticResponse` option, that will be used to update active queries immediately. Once the actual mutation response returns, the optimistic part will be thrown away and replaced with the real result.
 
-For the example above, it is easy to construct an optimistic response, since we know the text field of the new task, we know that it is created not completed, and can approximately predict the created date. The optimistic response doesn't have to be exactly correct, but should be close enough to trick users into thinking it is legitimate.
+For the example above, it is easy to construct an optimistic response, since we know the text field of the new task, we know that it is created not completed, and can approximately predict the created date. The optimistic response doesn't have to be exactly correct because it will always will be replaced with the real result from the server. But it should be close enough to make users feel like there is no delay.
 
 ```js
 client.mutate({

@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### v0.4.7
+
 - Added flattening of fragments within `createFragment`. [PR #437](https://github.com/apollostack/apollo-client/pull/437) and [Issue #421](https://github.com/apollostack/apollo-client/issues/421).
 
 ### v0.4.6

@@ -62,12 +62,11 @@ Depending on how complicated are your queries, the logic incorporating the mutat
 
 For example, let's say you have a mutation `addNewTask(text: String!, list_id: ID!)` that adds a new task of type `Task` to a `TodoList` currently displayed on the screen. In this example, to update a query with the new task returned by the mutation, it is required to insert the new task into the correct place in the list of tasks.
 
-For cases like these, use the special option `updateQueries`. `updateQueries` is a mapping from query name to a reducer function.
+For cases like these, use the special option `updateQueries`. `updateQueries` is a mapping from query name to a reducer function. The query name goes between the `query` keyword and the declaration of variables (in the example below it is `todos`).
 
 Each reducer function accepts the old result of the query and the new information such that the mutation result. The job of the reducer function is to return a new query result.
 
 ```js
-
 client.watchQuery({
   query: gql`
     query todos($list_id: ID!) {

@@ -128,6 +128,28 @@ If the new object doesn't appear in any relations to other objects, and the Apol
 
 For example, say you have a query with a flat list list of `TodoList`s. Later, after clicking a "new todo-list" button the mutation `createNewTodoList(name: String!)` was fired. If `createNewTodoList` mutation returns a new `TodoList` object, then it will be incorporated into store and updated in active queries automatically.
 
+<h2 id="optimistic-results">Optimistic Results</h2>
+
+Sometimes your client code can easily predict the result of the mutation, if it succeeds, even before the server responds with the result. When a user clicks a button "add new task", you want to add the new task to the list immediately, without waiting for the 300ms round-trip latency, giving the users the feeling of a snappy UI. This is what we call [Optimistic UI](http://info.meteor.com/blog/optimistic-ui-with-meteor-latency-compensation). This is possible if the client can predict an *Optimistic Response* for the mutation.
+
+Apollo Client gives you a way to specify the `optimisticResponse` option, that will be used to update active queries immediately. Once the actual mutation response returns, the optimistic part will be thrown away and replaced with the real result.
+
+For the example above, it is easy to construct an optimistic response, since we know the text field of the new task, we know that it is created not completed, and can approximately predict the created date. The optimistic response doesn't have to be exactly correct, but should be close enough to trick users into thinking it is legitimate.
+
+```js
+client.mutate({
+  mutation: ...,
+  variables: ...,
+  updateQueries: ...,
+  optimisticResponse: {
+    id: generatedId,
+    text: text,
+    createdAt: new Date,
+    completed: false,
+  },
+});
+```
+
 
 <h2 id="mutation-results">Designing mutation results</h2>
 

@@ -129,7 +129,7 @@ For example, say you have a query with a flat list list of `TodoList`s. Later, a
 
 <h2 id="optimistic-results">Optimistic Results</h2>
 
-Sometimes your client code can easily predict the result of the mutation, if it succeeds, even before the server responds with the result. When a user clicks a button "add new task", you want to add the new task to the list immediately, without waiting for the 300ms round-trip latency, giving the users the feeling of a snappy UI. This is what we call [Optimistic UI](http://info.meteor.com/blog/optimistic-ui-with-meteor-latency-compensation). This is possible if the client can predict an *Optimistic Response* for the mutation.
+Sometimes your client code can easily predict the result of the mutation, if it succeeds, even before the server responds with the result. When a user clicks a button "add new task", you want to add the new task to the list immediately, without waiting on the latency of a round trip to the server, giving the users the feeling of a snappy UI. This is what we call [Optimistic UI](http://info.meteor.com/blog/optimistic-ui-with-meteor-latency-compensation). This is possible if the client can predict an *Optimistic Response* for the mutation.
 
 Apollo Client gives you a way to specify the `optimisticResponse` option, that will be used to update active queries immediately. Once the actual mutation response returns, the optimistic part will be thrown away and replaced with the real result.
 

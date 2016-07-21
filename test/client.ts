@@ -1445,5 +1445,21 @@ describe('client', () => {
       assert(fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
       assert.equal(fragmentDefinitionsMap['authorDetails'].length, 1);
     });
+
+    it('should not mutate the input document when querying', () => {
+      const client = new ApolloClient();
+
+      const fragments = createFragment(gql`
+        fragment authorDetails on Author {
+          author {
+            firstName
+            lastName
+          }
+        }`);
+      const query = gql`{ author { ...authorDetails } }`;
+      const initialDefinitions = query.definitions;
+      client.query({query, fragments});
+      assert.equal(query.definitions, initialDefinitions);
+    });
   });
 });

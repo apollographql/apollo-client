@@ -4,6 +4,7 @@ import {
   FragmentDefinition,
 } from 'graphql';
 
+import assign = require('lodash.assign');
 import countBy = require('lodash.countby');
 import identity = require('lodash.identity');
 
@@ -124,6 +125,7 @@ export function createFragmentMap(fragments: FragmentDefinition[]): FragmentMap 
 export function addFragmentsToDocument(queryDoc: Document,
   fragments: FragmentDefinition[]): Document {
   checkDocument(queryDoc);
-  queryDoc.definitions = queryDoc.definitions.concat(fragments);
-  return queryDoc;
+  return <Document>assign({}, queryDoc, {
+    definitions: queryDoc.definitions.concat(fragments),
+  });
 }

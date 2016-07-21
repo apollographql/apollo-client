@@ -3,14 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Add `useAfter` function that accepts `afterwares`. Afterwares runs after
-  a request is made (after middlewares). It will return you the whole response,
-  so you can handle status codes and errors properly. It will for example ease
-  the use of checking if user is authenticated, i.e check if the request did
-  return an 401 response.
-
-  It can be used just as a `middleware` is used. Just pass an array of afterwares to the
-  `useAfter` function.
+- Add `useAfter` function that accepts `afterwares`. Afterwares run after a request is made (after middlewares). In the afterware function, you get the whole response and request options, so you can handle status codes and errors if you need to. For example, if your requests return a `401` in the case of user logout, you can use this to identify when that starts happening. It can be used just as a `middleware` is used. Just pass an array of afterwares to the `useAfter` function.
 
 ### v0.4.7
 

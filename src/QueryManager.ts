@@ -4,7 +4,6 @@ import {
 } from './networkInterface';
 
 import forOwn = require('lodash.forown');
-import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
 
 import {
@@ -21,7 +20,6 @@ import {
 import {
   getMutationDefinition,
   getQueryDefinition,
-  replaceOperationDefinition,
   getFragmentDefinitions,
   createFragmentMap,
   getOperationName,
@@ -30,7 +28,7 @@ import {
 
 import {
   QueryTransformer,
-  applyTransformerToOperation,
+  applyTransformers,
 } from './queries/queryTransform';
 
 import {
@@ -55,6 +53,7 @@ import {
 
 import {
   MutationBehavior,
+  MutationQueryReducersMap,
 } from './data/mutationResults';
 
 import {
@@ -74,133 +73,37 @@ import {
   ApolloQueryResult,
 } from './index';
 
-import { Observable, Observer, Subscription } from './util/Observable';
+import { Observer, Subscription } from './util/Observable';
 
 import {
   ApolloError,
 } from './errors';
 
-export interface WatchQueryOptions {
-  query: Document;
-  variables?: { [key: string]: any };
-  forceFetch?: boolean;
-  returnPartialData?: boolean;
-  noFetch?: boolean;
-  pollInterval?: number;
-  fragments?: FragmentDefinition[];
-}
+import { WatchQueryOptions } from './watchQueryOptions';
 
-export class ObservableQuery extends Observable<ApolloQueryResult> {
-  public refetch: (variables?: any) => Promise<ApolloQueryResult>;
-  public stopPolling: () => void;
-  public startPolling: (p: number) => void;
-  public options: WatchQueryOptions;
-  public queryManager: QueryManager;
-  private queryId: string;
-
-  constructor({
-    queryManager,
-    options,
-    shouldSubscribe = true,
-  }: {
-    queryManager: QueryManager,
-    options: WatchQueryOptions,
-    shouldSubscribe?: boolean,
-  }) {
-
-    const queryId = queryManager.generateQueryId();
-    const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
-      const retQuerySubscription = {
-        unsubscribe: () => {
-          queryManager.stopQuery(queryId);
-        },
-      };
-
-      if (shouldSubscribe) {
-        queryManager.addObservableQuery(queryId, this);
-        queryManager.addQuerySubscription(queryId, retQuerySubscription);
-      }
-
-      queryManager.startQuery(
-        queryId,
-        options,
-        queryManager.queryListenerForObserver(options, observer)
-      );
-      return retQuerySubscription;
-    };
-    super(subscriberFunction);
-    this.options = options;
-    this.queryManager = queryManager;
-    this.queryId = queryId;
-
-    this.refetch = (variables?: any) => {
-      // If no new variables passed, use existing variables
-      variables = variables || this.options.variables;
-      if (this.options.noFetch) {
-        throw new Error('noFetch option should not use query refetch.');
-      }
-      // Use the same options as before, but with new variables and forceFetch true
-      return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
-        forceFetch: true,
-        variables,
-      }) as WatchQueryOptions);
-    };
-
-    this.stopPolling = () => {
-      if (this.queryManager.pollingTimers[this.queryId]) {
-        clearInterval(this.queryManager.pollingTimers[this.queryId]);
-      }
-    };
-
-    this.startPolling = (pollInterval) => {
-      if (this.options.noFetch) {
-        throw new Error('noFetch option should not use query polling.');
-      }
-      this.queryManager.pollingTimers[this.queryId] = setInterval(() => {
-        const pollingOptions = assign({}, this.options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.queryManager.fetchQuery(this.queryId, pollingOptions);
-      }, pollInterval);
-    };
-  }
-
-  public result(): Promise<ApolloQueryResult> {
-    return new Promise((resolve, reject) => {
-      const subscription = this.subscribe({
-        next(result) {
-          resolve(result);
-          setTimeout(() => {
-            subscription.unsubscribe();
-          }, 0);
-        },
-        error(error) {
-          reject(error);
-        },
-      });
-    });
-  }
-
-}
+import { ObservableQuery } from './ObservableQuery';
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
+  public scheduler: QueryScheduler;
+
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
   private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
+  // A map going from queryId to the last result/state that the queryListener was told about.
+  private queryResults: { [queryId: string]: ApolloQueryResult };
+
   private idCounter = 0;
 
-  private scheduler: QueryScheduler;
   private batcher: QueryBatcher;
   private batchInterval: number;
 
-  // A map going from an index (i.e. just like an array index, except that we can remove
-  // some of them) to a promise that has not yet been resolved. We use this to keep
+  // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
   // destabalizing action occurs (e.g. reset of the Apollo store).
   private fetchQueryPromises: { [requestId: string]: {
@@ -241,6 +144,7 @@ export class QueryManager {
     this.pollingTimers = {};
     this.batchInterval = batchInterval;
     this.queryListeners = {};
+    this.queryResults = {};
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -279,29 +183,29 @@ export class QueryManager {
   public mutate({
     mutation,
     variables,
-    resultBehaviors,
+    resultBehaviors = [],
     fragments = [],
     optimisticResponse,
+    updateQueries,
   }: {
     mutation: Document,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
+    updateQueries?: MutationQueryReducersMap,
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
-
-    let mutationDef = getMutationDefinition(mutation);
-    if (this.queryTransformer) {
-      mutationDef = applyTransformerToOperation(mutationDef, this.queryTransformer);
-      mutation = replaceOperationDefinition(mutation, mutationDef);
-    }
-    mutation = replaceOperationDefinition(mutation, mutationDef);
 
     // Add the fragments that were passed in to the mutation document and then
     // construct the fragment map.
     mutation = addFragmentsToDocument(mutation, fragments);
 
+    if (this.queryTransformer) {
+      mutation = applyTransformers(mutation, [this.queryTransformer]);
+    }
+
+    let mutationDef = getMutationDefinition(mutation);
     const mutationString = print(mutation);
     const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
     const request = {
@@ -309,6 +213,14 @@ export class QueryManager {
       variables,
       operationName: getOperationName(mutation),
     } as Request;
+
+    // Right now the way `updateQueries` feature is implemented relies on using
+    // `resultBehaviors`, another feature that accomplishes the same goal but
+    // provides more verbose syntax.
+    // In the future we want to re-factor this part of code to avoid using
+    // `resultBehaviors` so we can remove `resultBehaviors` entirely.
+    const updateQueriesResultBehaviors = !optimisticResponse ? [] :
+      this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true);
 
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
@@ -322,7 +234,7 @@ export class QueryManager {
       mutationId,
       fragmentMap: queryFragmentMap,
       optimisticResponse,
-      resultBehaviors,
+      resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
     });
 
     return this.networkInterface.query(request)
@@ -331,7 +243,10 @@ export class QueryManager {
           type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
-          resultBehaviors,
+          resultBehaviors: [
+            ...resultBehaviors,
+            ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
+          ],
         });
 
         return result;
@@ -341,7 +256,6 @@ export class QueryManager {
           type: 'APOLLO_MUTATION_ERROR',
           error: err,
           mutationId,
-          resultBehaviors,
         });
 
         return Promise.reject(err);
@@ -351,6 +265,7 @@ export class QueryManager {
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
   public queryListenerForObserver(
+    queryId: string,
     options: WatchQueryOptions,
     observer: Observer<ApolloQueryResult>
   ): QueryListener {
@@ -378,17 +293,28 @@ export class QueryManager {
             console.error('Unhandled error', apolloError, apolloError.stack);
           }
         } else {
-          const resultFromStore = readSelectionSetFromStore({
-            store: this.getDataWithOptimisticResults(),
-            rootId: queryStoreValue.query.id,
-            selectionSet: queryStoreValue.query.selectionSet,
-            variables: queryStoreValue.variables,
-            returnPartialData: options.returnPartialData || options.noFetch,
-            fragmentMap: queryStoreValue.fragmentMap,
-          });
+          try {
+            const resultFromStore = {
+              data: readSelectionSetFromStore({
+                store: this.getDataWithOptimisticResults(),
+                rootId: queryStoreValue.query.id,
+                selectionSet: queryStoreValue.query.selectionSet,
+                variables: queryStoreValue.variables,
+                returnPartialData: options.returnPartialData || options.noFetch,
+                fragmentMap: queryStoreValue.fragmentMap,
+              }),
+            };
 
-          if (observer.next) {
-            observer.next({ data: resultFromStore });
+            if (observer.next) {
+              if (this.isDifferentResult(queryId, resultFromStore )) {
+                this.queryResults[queryId] = resultFromStore;
+                observer.next(resultFromStore);
+              }
+            }
+          } catch (error) {
+            if (observer.error) {
+              observer.error(error);
+            }
           }
         }
       }
@@ -410,7 +336,7 @@ export class QueryManager {
     getQueryDefinition(options.query);
 
     let observableQuery = new ObservableQuery({
-      queryManager: this,
+      scheduler: this.scheduler,
       options: options,
       shouldSubscribe: shouldSubscribe,
     });
@@ -542,18 +468,11 @@ export class QueryManager {
 
   public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.queryListeners[queryId] = listener;
-    this.fetchQuery(queryId, options);
 
-    if (options.pollInterval) {
-      if (options.noFetch) {
-        throw new Error('noFetch option should not use query polling.');
-      }
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, options.pollInterval);
+    // If the pollInterval is present, the scheduler has already taken care of firing the first
+    // fetch so we don't have to worry about it here.
+    if (!options.pollInterval) {
+      this.fetchQuery(queryId, options);
     }
 
     return queryId;
@@ -563,16 +482,85 @@ export class QueryManager {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
     delete this.queryListeners[queryId];
+    this.stopQueryInStore(queryId);
+  }
 
-    // if we have a polling interval running, stop it
-    if (this.pollingTimers[queryId]) {
-      clearInterval(this.pollingTimers[queryId]);
+  private collectResultBehaviorsFromUpdateQueries(
+    updateQueries: MutationQueryReducersMap,
+    mutationResult: Object,
+    isOptimistic = false
+  ): MutationBehavior[] {
+    if (!updateQueries) {
+      return [];
     }
+    const resultBehaviors = [];
 
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_STOP',
-      queryId,
+    const observableQueriesByName: { [name: string]: ObservableQuery[] } = {};
+    Object.keys(this.observableQueries).forEach((key) => {
+      const observableQuery = this.observableQueries[key].observableQuery;
+      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+
+      observableQueriesByName[queryName] =
+        observableQueriesByName[queryName] || [];
+      observableQueriesByName[queryName].push(observableQuery);
     });
+
+    Object.keys(updateQueries).forEach((queryName) => {
+      const reducer = updateQueries[queryName];
+      const queries = observableQueriesByName[queryName];
+      if (!queries) {
+        // XXX should throw an error?
+        return;
+      }
+
+      queries.forEach((observableQuery) => {
+        const queryOptions = observableQuery.options;
+
+        let fragments = queryOptions.fragments;
+        let queryDefinition = getQueryDefinition(queryOptions.query);
+
+        if (this.queryTransformer) {
+          const doc = {
+            kind: 'Document',
+            definitions: [
+              queryDefinition,
+              ...(fragments || []),
+            ],
+          };
+
+          const transformedDoc = applyTransformers(doc, [this.queryTransformer]);
+
+          queryDefinition = getQueryDefinition(transformedDoc);
+          fragments = getFragmentDefinitions(transformedDoc);
+        }
+
+        const previousResult = readSelectionSetFromStore({
+          // In case of an optimistic change, apply reducer on top of the
+          // results including previous optimistic updates. Otherwise, apply it
+          // on top of the real data only.
+          store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+          rootId: 'ROOT_QUERY',
+          selectionSet: queryDefinition.selectionSet,
+          variables: queryOptions.variables,
+          returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
+          fragmentMap: createFragmentMap(fragments || []),
+        });
+
+        resultBehaviors.push({
+          type: 'QUERY_RESULT',
+          newResult: reducer(previousResult, {
+            mutationResult,
+            queryName,
+            queryVariables: queryOptions.variables,
+          }),
+          queryVariables: queryOptions.variables,
+          querySelectionSet: queryDefinition.selectionSet,
+          queryFragments: fragments,
+        });
+      });
+    });
+
+    return resultBehaviors;
   }
 
   private fetchQueryOverInterface(
@@ -589,18 +577,16 @@ export class QueryManager {
       fragments = [],
     } = options;
 
-    let queryDef = getQueryDefinition(query);
+    let queryDoc = addFragmentsToDocument(query, fragments);
     // Apply the query transformer if one has been provided.
     if (this.queryTransformer) {
-      queryDef = applyTransformerToOperation(queryDef, this.queryTransformer);
+      queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
     }
-    let transformedQuery = replaceOperationDefinition(query, queryDef);
 
     // Add the fragments passed in into the query and then create the fragment map
-    transformedQuery = addFragmentsToDocument(transformedQuery, fragments);
-    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(transformedQuery));
-
-    const queryString = print(transformedQuery);
+    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(queryDoc));
+    const queryDef = getQueryDefinition(queryDoc);
+    const queryString = print(queryDoc);
 
     // Parse the query passed in -- this could also be done by a build plugin or tagged
     // template string
@@ -614,7 +600,7 @@ export class QueryManager {
     // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
-    let minimizedQueryDoc = transformedQuery;
+    let minimizedQueryDoc = queryDoc;
     let initialResult;
 
     if (!forceFetch) {
@@ -764,6 +750,12 @@ export class QueryManager {
     return new Promise((resolve) => {
       resolve({ data: initialResult });
     });
+  }
+
+  // Given a query id and a new result, this checks if the old result is
+  // the same as the last result for that particular query id.
+  private isDifferentResult(queryId: string, result: ApolloQueryResult): boolean {
+    return !isEqual(this.queryResults[queryId], result);
   }
 
   private broadcastQueries() {

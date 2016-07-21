@@ -1,6 +1,6 @@
 import {
   WatchQueryOptions,
-} from './QueryManager';
+} from './watchQueryOptions';
 
 import {
   NetworkInterface,

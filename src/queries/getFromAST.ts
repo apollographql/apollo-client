@@ -6,7 +6,6 @@ import {
 
 import countBy = require('lodash.countby');
 import identity = require('lodash.identity');
-import cloneDeep = require('lodash.clonedeep');
 
 export function getMutationDefinition(doc: Document): OperationDefinition {
   checkDocument(doc);
@@ -105,25 +104,6 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   return fragmentDef as FragmentDefinition;
 }
 
-// Modifies a document in order to replace the operation definition with another
-// operation definition. Returns a new copy of the document.
-export function replaceOperationDefinition(doc: Document,
-  newOpDef: OperationDefinition): Document {
-  checkDocument(doc);
-
-  const docCopy = cloneDeep(doc);
-
-  docCopy.definitions = doc.definitions.map((definition) => {
-    if (definition.kind === 'OperationDefinition') {
-      return newOpDef;
-    } else {
-      return definition;
-    }
-  });
-
-  return docCopy;
-}
-
 export interface FragmentMap {
   [fragmentName: string]: FragmentDefinition;
 }
@@ -143,6 +123,7 @@ export function createFragmentMap(fragments: FragmentDefinition[]): FragmentMap 
 // document.
 export function addFragmentsToDocument(queryDoc: Document,
   fragments: FragmentDefinition[]): Document {
+  checkDocument(queryDoc);
   queryDoc.definitions = queryDoc.definitions.concat(fragments);
   return queryDoc;
 }

@@ -48,7 +48,7 @@ export interface HTTPNetworkInterface extends BatchedNetworkInterface {
   _middlewares: MiddlewareInterface[];
   _afterwares: AfterwareInterface[];
   use(middlewares: MiddlewareInterface[]);
-  useAfter(afterwares?: AfterwareInterface[]);
+  useAfter(afterwares: AfterwareInterface[]);
 }
 
 export interface RequestAndOptions {

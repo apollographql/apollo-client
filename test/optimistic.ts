@@ -2,13 +2,19 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename } from '../src';
-import { MutationBehaviorReducerArgs, MutationBehavior } from '../src/data/mutationResults';
+import ApolloClient, { addTypename, createFragment } from '../src';
+import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
+import { addFragmentsToDocument } from '../src/queries/getFromAST';
 
 import assign = require('lodash.assign');
+import clonedeep = require('lodash.clonedeep');
 
 import gql from 'graphql-tag';
+
+import {
+  applyTransformers,
+} from '../src/queries/queryTransform';
 
 describe('optimistic mutation results', () => {
   const query = gql`
@@ -138,9 +144,11 @@ describe('optimistic mutation results', () => {
       },
     });
 
-    return client.query({
+    const obsHandle = client.watchQuery({
       query,
     });
+
+    return obsHandle.result();
   };
 
   describe('ARRAY_INSERT', () => {
@@ -627,6 +635,409 @@ describe('optimistic mutation results', () => {
       .then(() => {
         checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
       });
+    });
+  });
+
+  describe('optimistic updates using updateQueries', () => {
+    const mutation = gql`
+      mutation createTodo {
+        # skipping arguments in the test since they don't matter
+        createTodo {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          id: '99',
+          __typename: 'Todo',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
+    const optimisticResponse = {
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '99',
+        text: 'Optimistically generated',
+        completed: true,
+      },
+    };
+
+    const mutationResult2 = {
+      data: assign({}, mutationResult.data, {
+        createTodo: assign({}, mutationResult.data.createTodo, {
+          id: '66',
+          text: 'Second mutation.',
+        }),
+      }),
+    };
+
+    const optimisticResponse2 = {
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '66',
+        text: 'Optimistically generated 2',
+        completed: true,
+      },
+    };
+
+    it('analogous of ARRAY_INSERT', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              assert.equal(mResult.data.createTodo.id, '99');
+
+              const state = clonedeep(prev) as any;
+              state.todoList.todos.unshift(mResult.data.createTodo);
+              return state;
+            },
+          },
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+
+        return promise;
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('two ARRAY_INSERT like mutations', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+        delay: 50,
+      })
+      .then(() => {
+        const updateQueries = {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+
+            const state = clonedeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        } as MutationQueryReducersMap;
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+          updateQueries,
+        }).then((res) => {
+          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
+          assert.equal((dataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
+          assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+          return res;
+        });
+
+        const promise2 = client.mutate({
+          mutation,
+          optimisticResponse: optimisticResponse2,
+          updateQueries,
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+        assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+
+        return Promise.all([promise, promise2]);
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 5);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'Second mutation.');
+        assert.equal(newResult.data.todoList.todos[1].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('two mutations, one fails', () => {
+      return setup({
+        request: { query: mutation },
+        error: new Error('forbidden (test error)'),
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+      })
+      .then(() => {
+        const updateQueries = {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+
+            const state = clonedeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        } as MutationQueryReducersMap;
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+          updateQueries,
+        }).catch((err) => {
+          // it is ok to fail here
+          assert.instanceOf(err, Error);
+          assert.equal(err.message, 'forbidden (test error)');
+          return null;
+        });
+
+        const promise2 = client.mutate({
+          mutation,
+          optimisticResponse: optimisticResponse2,
+          updateQueries,
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+        assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+
+        return Promise.all([promise, promise2]);
+      })
+      .then(() => {
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.notProperty(dataInStore, 'Todo99');
+        assert.property(dataInStore, 'Todo66');
+        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
+        assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
+      });
+    });
+  });
+});
+
+describe('optimistic mutation - githunt comments', () => {
+  const query = gql`
+    query Comment($repoName: String!) {
+      entry(repoFullName: $repoName) {
+        comments {
+          postedBy {
+            login
+            html_url
+          }
+        }
+      }
+    }
+  `;
+  const fragment = createFragment(gql`
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
+      }
+    }
+  `);
+  const fragmentWithTypenames = createFragment(gql`
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
+        __typename
+      }
+      __typename
+    }
+  `);
+  const queryWithFragment = gql`
+    query Comment($repoName: String!) {
+      entry(repoFullName: $repoName) {
+        comments {
+          ...authorFields
+        }
+      }
+    }
+  `;
+  const variables = {
+    repoName: 'org/repo',
+  };
+  const userDoc = {
+    __typename: 'User',
+    login: 'stubailo',
+    html_url: 'http://avatar.com/stubailo.png',
+  };
+
+  const result = {
+    data: {
+      __typename: 'Query',
+      entry: {
+        __typename: 'Entry',
+        comments: [
+          {
+            __typename: 'Comment',
+            postedBy: userDoc,
+          },
+        ],
+      },
+    },
+  };
+
+  let client: ApolloClient;
+  let networkInterface;
+
+  function setup(...mockedResponses) {
+    networkInterface = mockNetworkInterface({
+      request: {
+        query: applyTransformers(query, [addTypename]),
+        variables,
+      },
+      result,
+    }, {
+      request: {
+        query: addFragmentsToDocument(applyTransformers(queryWithFragment, [addTypename]), fragment),
+        variables,
+      },
+      result,
+    }, ...mockedResponses);
+
+    client = new ApolloClient({
+      networkInterface,
+      queryTransformer: addTypename,
+      dataIdFromObject: (obj: any) => {
+        if (obj.id && obj.__typename) {
+          return obj.__typename + obj.id;
+        }
+        return null;
+      },
+    });
+
+    const obsHandle = client.watchQuery({
+      query,
+      variables,
+    });
+
+    return obsHandle.result();
+  };
+
+  const mutation = gql`
+    mutation submitComment($repoFullName: String!, $commentContent: String!) {
+      submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+        postedBy {
+          login
+          html_url
+        }
+      }
+    }
+  `;
+
+  const mutationWithFragment = gql`
+    mutation submitComment($repoFullName: String!, $commentContent: String!) {
+      submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+        ...authorFields
+      }
+    }
+  `;
+
+  const mutationResult = {
+    data: {
+      __typename: 'Mutation',
+      submitComment: {
+        __typename: 'Comment',
+        postedBy: userDoc,
+      },
+    },
+  };
+  const updateQueries = {
+    Comment: (prev, { mutationResult: mutationResultArg }) => {
+      const newComment = (mutationResultArg as any).data.submitComment;
+      const state = clonedeep(prev);
+      (state as any).entry.comments.unshift(newComment);
+      return state;
+    },
+  } as MutationQueryReducersMap;
+  const optimisticResponse = {
+    __typename: 'Mutation',
+    submitComment: {
+      __typename: 'Comment',
+      postedBy: userDoc,
+    },
+  };
+
+  it('can post a new comment', () => {
+    const mutationVariables = {
+      repoFullName: 'org/repo',
+      commentContent: 'New Comment',
+    };
+
+    return setup({
+      request: {
+        query: applyTransformers(mutation, [addTypename]),
+        variables: mutationVariables,
+      },
+      result: mutationResult,
+    }).then(() => {
+      return client.mutate({
+        mutation,
+        optimisticResponse,
+        variables: mutationVariables,
+        updateQueries,
+      });
+    }).then(() => {
+      return client.query({ query, variables });
+    }).then((newResult: any) => {
+      assert.equal(newResult.data.entry.comments.length, 2);
+    });
+  });
+
+  it('can post a new comment (with fragments)', () => {
+    const mutationVariables = {
+      repoFullName: 'org/repo',
+      commentContent: 'New Comment',
+    };
+
+    return setup({
+      request: {
+        query: addFragmentsToDocument(applyTransformers(mutationWithFragment, [addTypename]), fragmentWithTypenames),
+        variables: mutationVariables,
+      },
+      result: mutationResult,
+    }).then(() => {
+      return client.mutate({
+        mutation: mutationWithFragment,
+        optimisticResponse,
+        variables: mutationVariables,
+        updateQueries,
+        fragments: fragment,
+      });
+    }).then(() => {
+      return client.query({ query: queryWithFragment, variables, fragments: fragment });
+    }).then((newResult: any) => {
+      assert.equal(newResult.data.entry.comments.length, 2);
     });
   });
 });

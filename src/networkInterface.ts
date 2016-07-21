@@ -10,6 +10,7 @@ import {
 import { print } from 'graphql-tag/printer';
 
 import { MiddlewareInterface } from './middleware';
+import { AfterwareInterface } from './afterware';
 
 import {
   mergeRequests,
@@ -45,11 +46,18 @@ export interface HTTPNetworkInterface extends BatchedNetworkInterface {
   _uri: string;
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[];
+  _afterwares: AfterwareInterface[];
   use(middlewares: MiddlewareInterface[]);
+  useAfter(afterwares: AfterwareInterface[]);
 }
 
 export interface RequestAndOptions {
   request: Request;
+  options: RequestInit;
+}
+
+export interface ResponseAndOptions {
+  response: IResponse;
   options: RequestInit;
 }
 
@@ -97,6 +105,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
   const _uri: string = uri;
   const _opts: RequestInit = assign({}, opts);
   const _middlewares: MiddlewareInterface[] = [];
+  const _afterwares: AfterwareInterface[] = [];
 
   function applyMiddlewares({
     request,
@@ -123,6 +132,31 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     });
   }
 
+  function applyAfterwares({
+    response,
+    options,
+  }: ResponseAndOptions): Promise<ResponseAndOptions> {
+    return new Promise((resolve, reject) => {
+      const queue = (funcs, scope) => {
+        const next = () => {
+          if (funcs.length > 0) {
+            const f = funcs.shift();
+            f.applyAfterware.apply(scope, [{ response, options }, next]);
+          } else {
+            resolve({
+              response,
+              options,
+            });
+          }
+        };
+        next();
+      };
+
+      // iterate through afterwares using next callback
+      queue([..._afterwares], this);
+    });
+  }
+
   function fetchFromRemoteEndpoint({
     request,
     options,
@@ -144,6 +178,13 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
       request,
       options,
     }).then(fetchFromRemoteEndpoint)
+      .then(response => {
+        applyAfterwares({
+          response,
+          options,
+        });
+        return response;
+      })
       .then(result => result.json())
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
@@ -166,13 +207,25 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     });
   }
 
+  function useAfter(afterwares: AfterwareInterface[]) {
+    afterwares.map(afterware => {
+      if (typeof afterware.applyAfterware === 'function') {
+        _afterwares.push(afterware);
+      } else {
+        throw new Error('Afterware must implement the applyAfterware function');
+      }
+    });
+  }
+
   // createNetworkInterface has batching ability by default, which is not used unless the
   // `shouldBatch` option is passed to apollo-client
   return addQueryMerging({
     _uri,
     _opts,
     _middlewares,
+    _afterwares,
     query,
     use,
+    useAfter,
   }) as HTTPNetworkInterface;
 }

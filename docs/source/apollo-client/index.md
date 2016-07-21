@@ -188,6 +188,84 @@ const client = new ApolloClient({
 
 Given the above code, the header's `Authorization` value will be that of `token2`.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware, passed to `.use()` as an array.
 
+<h3 id="networkInterfaceAfterware" title="Afterware">Afterware</h3>
+A afterware is very similar to a middleware, except that a afterware runs after a request has been made,
+that is when a response is going to get processed.
+
+It is possible to use afterware with the network interface created via `createNetworkInterface`.
+In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.
+Each object must contain an `applyAfterware` method with the following parameters:
+
+- `response: object` The HTTP response object that a response resturns.
+- `next: function` This function pushes the HTTP response onward through the afterware.
+
+This example shows how you'd create a afterware.
+It can be done either by providing the required object directly to `.useAfter()`
+or by creating an object and passing it to `.useAfter()`.
+In both cases all afterware objects have to be wrapped inside an array.
+
+Below are some examples of using afterwares.
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import {logout} from './logout';
+
+const networkInterface = createNetworkInterface('/graphql');
+
+networkInterface.useAfter([{
+  applyAfterware(response, next) {
+    if (response.status === 401) {
+      logout();
+    }
+    next();
+  }
+}]);
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+The above example shows the use of a single afterware passed directly to `.useAfter()`.
+It checks to see if the response status code is equal to 401 and if it is then we will
+logout the user from the application.
+
+The following example shows the use of multiple afterwares passed as an array:
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import {redirectTo} from './redirect';
+
+const networkInterface = createNetworkInterface('/graphql');
+
+const exampleWare1 = {
+  applyAfterware(response, next) {
+    if (response.status === 500) {
+      console.error('Server returned an error');
+    }
+    next();
+  }
+}
+
+const exampleWare2 = {
+  applyAfterware(response, next) {
+    if (response.status === 200) {
+      redirectTo('/');
+    }
+    next();
+  }
+}
+
+networkInterface.useAfter([exampleWare1, exampleWare2]);
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+This example shows how you can use more than one afterware to make multiple/separate
+modifications to the response being processed in the form of a chain.
+
 <h3 id="corsSupport">CORS support</h3>
 
 If your GraphQL server and client application are running on different origins, you will get HTTP 405 errors thrown by the client. This happens when receiving the response from the server which is denying the request because of CORS. The client is working as designed. CORS support should be enabled in the apollo-server instance. How to do this is documented in the [apollo-server section](/apollo-server/tools.html#corsSupport).

@@ -3,7 +3,6 @@ import {
   getFragmentDefinitions,
   getQueryDefinition,
   getMutationDefinition,
-  replaceOperationDefinition,
   createFragmentMap,
   FragmentMap,
   getOperationName,
@@ -99,7 +98,6 @@ describe('AST utility functions', () => {
       expectedDoc.definitions[0] as FragmentDefinition,
       expectedDoc.definitions[1] as FragmentDefinition,
     ];
-
     const actualResult = getFragmentDefinitions(multipleFragmentDefinitions);
     assert.deepEqual(actualResult.map(print), expectedResult.map(print));
   });
@@ -169,42 +167,6 @@ describe('AST utility functions', () => {
     const expectedResult: OperationDefinition = expectedDoc.definitions[0] as OperationDefinition;
     const actualResult = getMutationDefinition(mutationWithFragments);
     assert.equal(print(actualResult), print(expectedResult));
-  });
-
-  it('should replace the operation definition correctly', () => {
-    const queryWithFragments = gql`
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
-      query {
-        author {
-          ...authorDetails
-        }
-      }`;
-    const newQueryDef = getQueryDefinition(gql`
-      query {
-        author {
-          ...authorDetails
-          __typename
-        }
-        __typename
-      }`);
-    const expectedNewQuery = gql`
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
-
-      query {
-        author {
-          ...authorDetails
-          __typename
-        }
-        __typename
-      }`;
-    const newDoc = replaceOperationDefinition(queryWithFragments, newQueryDef);
-    assert.equal(print(newDoc), print(expectedNewQuery));
   });
 
   it('should create the fragment map correctly', () => {

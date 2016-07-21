@@ -5,9 +5,16 @@ import {
 } from './networkInterface';
 
 import {
-  GraphQLResult,
   Document,
   FragmentDefinition,
+
+  // We need to import this here to allow TypeScript to include it in the definition file even
+  // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
+  // We need to disable the linter here because TSLint rightfully complains that this is unused.
+  /* tslint:disable */
+  SelectionSet,
+  /* tslint:enable */
+
 } from 'graphql';
 
 import {
@@ -23,9 +30,15 @@ import {
 
 import {
   QueryManager,
-  WatchQueryOptions,
-  ObservableQuery,
 } from './QueryManager';
+
+import {
+    ObservableQuery,
+} from './ObservableQuery';
+
+import {
+  WatchQueryOptions,
+} from './watchQueryOptions';
 
 import {
   readQueryFromStore,
@@ -49,6 +62,7 @@ import {
 import {
   MutationBehavior,
   MutationBehaviorReducerMap,
+  MutationQueryReducersMap,
 } from './data/mutationResults';
 
 import {
@@ -61,6 +75,7 @@ import {
 
 import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
+import flatten = require('lodash.flatten');
 
 // We expose the print method from GraphQL so that people that implement
 // custom network interfaces can turn query ASTs into query strings as needed.
@@ -77,6 +92,12 @@ export {
   print as printAST,
 };
 
+export type ApolloQueryResult = {
+  data: any;
+  // Right now only has one property, but will later include loading state, and possibly other info
+  // This is different from the GraphQLResult type because it doesn't include errors - those are
+  // thrown via the standard promise/observer catch mechanism
+}
 
 // A map going from the name of a fragment to that fragment's definition.
 // The point is to keep track of fragments that exist and print a warning if we encounter two
@@ -93,7 +114,11 @@ let printFragmentWarnings = true;
 // that the fragment in the document depends on. The fragment definition array from the document
 // is concatenated with the fragment definition array passed as the second argument and this
 // concatenated array is returned.
-export function createFragment(doc: Document, fragments: FragmentDefinition[] = []): FragmentDefinition[] {
+export function createFragment(
+  doc: Document,
+  fragments: (FragmentDefinition[] | FragmentDefinition[][]) = []
+): FragmentDefinition[] {
+  fragments = flatten(fragments) as FragmentDefinition[] ;
   const fragmentDefinitions = getFragmentDefinitions(doc);
   fragmentDefinitions.forEach((fragmentDefinition) => {
     const fragmentName = fragmentDefinition.name.value;
@@ -112,7 +137,6 @@ this in the docs: http://docs.apollostack.com/`);
       fragmentDefinitionsMap[fragmentName] = [fragmentDefinition];
     }
   });
-
   return fragments.concat(fragmentDefinitions);
 }
 
@@ -145,6 +169,7 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+  public batchInterval: number;
 
   constructor({
     networkInterface,
@@ -156,6 +181,7 @@ export default class ApolloClient {
     ssrMode = false,
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
+    batchInterval,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -166,6 +192,7 @@ export default class ApolloClient {
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
+    batchInterval?: number,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
@@ -176,6 +203,7 @@ export default class ApolloClient {
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.batchInterval = batchInterval;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -204,7 +232,7 @@ export default class ApolloClient {
     return this.queryManager.watchQuery(options);
   };
 
-  public query = (options: WatchQueryOptions): Promise<GraphQLResult> => {
+  public query = (options: WatchQueryOptions): Promise<ApolloQueryResult> => {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -223,10 +251,12 @@ export default class ApolloClient {
 
   public mutate = (options: {
     mutation: Document,
-    resultBehaviors?: MutationBehavior[],
     variables?: Object,
+    resultBehaviors?: MutationBehavior[],
     fragments?: FragmentDefinition[],
-  }): Promise<GraphQLResult> => {
+    optimisticResponse?: Object,
+    updateQueries?: MutationQueryReducersMap,
+  }): Promise<ApolloQueryResult> => {
     this.initStore();
     return this.queryManager.mutate(options);
   };
@@ -275,6 +305,7 @@ export default class ApolloClient {
       store,
       queryTransformer: this.queryTransformer,
       shouldBatch: this.shouldBatch,
+      batchInterval: this.batchInterval,
     });
   };
 }

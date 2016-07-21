@@ -1,11 +1,15 @@
 language: node_js
 node_js:
   - "6"
-  - "5"
   - "4"
+cache:
+  directories:
+    # cache node modules
+    - node_modules
 install:
   - npm install -g coveralls
   - npm install
+  - npm prune
 
 script:
   - npm test

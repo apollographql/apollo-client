@@ -38,6 +38,11 @@ declare module 'lodash.assign' {
   export = main.assign;
 }
 
+declare module 'lodash.merge' {
+  import main = require('~lodash/index');
+  export = main.merge;
+}
+
 declare module 'lodash.includes' {
   import main = require('~lodash/index');
   export = main.includes;
@@ -91,6 +96,16 @@ declare module 'lodash.identity' {
 declare module 'lodash.find' {
   import main = require('~lodash/index');
   export = main.find;
+}
+
+declare module 'lodash.flatten' {
+  import main = require('~lodash/index');
+  export = main.flatten;
+}
+
+declare module 'lodash.pick' {
+  import main = require('~lodash/index');
+  export = main.pick;
 }
 
 /*

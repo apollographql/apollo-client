@@ -61,6 +61,8 @@ import { getFragmentDefinitions } from '../src/queries/getFromAST';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
+import { ApolloError } from '../src/errors';
+
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
@@ -151,6 +153,7 @@ describe('client', () => {
           queries: {},
           mutations: {},
           data: {},
+          optimistic: [],
         },
       }
     );
@@ -171,6 +174,7 @@ describe('client', () => {
           queries: {},
           mutations: {},
           data: {},
+          optimistic: [],
         },
       }
     );
@@ -354,9 +358,14 @@ describe('client', () => {
             people: [ 'ROOT_QUERY.allPeople({"first":"1"}).people.0' ],
           },
           ROOT_QUERY: {
-            'allPeople({"first":1})': 'ROOT_QUERY.allPeople({"first":1})',
+            'allPeople({"first":1})': {
+              type: 'id',
+              id: 'ROOT_QUERY.allPeople({"first":1})',
+              generated: true,
+            },
           },
         },
+        optimistic: [],
       },
     };
 
@@ -447,8 +456,9 @@ describe('client', () => {
     });
 
     return client.query({ query })
-      .then((result) => {
-        assert.deepEqual(result, { errors });
+      .catch((error) => {
+        const apolloError = error as ApolloError;
+        assert.deepEqual(apolloError.graphQLErrors, errors);
       });
   });
 
@@ -1087,6 +1097,29 @@ describe('client', () => {
       const expFragmentDefs = getFragmentDefinitions(otherFragmentDoc)
         .concat(getFragmentDefinitions(fragmentDoc));
       assert.deepEqual(fragmentDefs.map(print), expFragmentDefs.map(print));
+    });
+
+    it('should always return a flat array of fragment defs', () => {
+      const fragmentDoc1 = gql`
+        fragment authorDetails on Author {
+          firstName
+          lastName
+          ...otherAuthorDetails
+        }`;
+      const fragmentDoc2 = gql`
+        fragment otherAuthorDetails on Author {
+          address
+        }`;
+      const fragmentDoc3 = gql`
+        fragment personDetails on Person {
+          personDetails
+        }`;
+      const fragments1 = createFragment(fragmentDoc1);
+      const fragments2 = createFragment(fragmentDoc2);
+      const fragments3 = createFragment(fragmentDoc3, [fragments1, fragments2]);
+      assert.equal(fragments1.length, 1);
+      assert.equal(fragments2.length, 1);
+      assert.equal(fragments3.length, 3);
     });
 
     it('should add a fragment to the fragmentDefinitionsMap', () => {

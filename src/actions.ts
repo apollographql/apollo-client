@@ -79,6 +79,8 @@ export interface MutationInitAction {
   variables: Object;
   mutationId: string;
   fragmentMap: FragmentMap;
+  optimisticResponse: Object;
+  resultBehaviors?: MutationBehavior[];
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
@@ -94,6 +96,16 @@ export interface MutationResultAction {
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {
   return action.type === 'APOLLO_MUTATION_RESULT';
+}
+
+export interface MutationErrorAction {
+  type: 'APOLLO_MUTATION_ERROR';
+  error: Error;
+  mutationId: string;
+};
+
+export function isMutationErrorAction(action: ApolloAction): action is MutationErrorAction {
+  return action.type === 'APOLLO_MUTATION_ERROR';
 }
 
 export interface StoreResetAction {
@@ -113,4 +125,5 @@ export type ApolloAction =
   QueryStopAction |
   MutationInitAction |
   MutationResultAction |
+  MutationErrorAction |
   StoreResetAction;

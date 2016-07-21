@@ -2611,7 +2611,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('should reject a fetchQuery promise given a network error', (done) => {
+  it('should reject a query promise given a network error', (done) => {
     const query = gql`
       query {
         author {
@@ -2629,7 +2629,7 @@ describe('QueryManager', () => {
       store: createApolloStore(),
       reduxRootKey: 'apollo',
     });
-    queryManager.fetchQuery('fake-id', { query }).then((result) => {
+    queryManager.query({ query }).then((result) => {
       done(new Error('Returned result on an errored fetchQuery'));
     }).catch((error) => {
       const apolloError = error as ApolloError;
@@ -2685,7 +2685,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('should reject a fetchQuery promise given a GraphQL error', (done) => {
+  it('should reject a query promise given a GraphQL error', (done) => {
     const query = gql`
       query {
         author {
@@ -2703,7 +2703,7 @@ describe('QueryManager', () => {
       store: createApolloStore(),
       reduxRootKey: 'apollo',
     });
-    queryManager.fetchQuery('fake-id', { query }).then((result) => {
+    queryManager.query({ query }).then((result) => {
       done(new Error('Returned result on an errored fetchQuery'));
     }).catch((error) => {
       const apolloError = error as ApolloError;

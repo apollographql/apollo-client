@@ -5,6 +5,7 @@ import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../sr
 import { NormalizedCache, StoreObject } from '../src/data/store';
 
 import assign = require('lodash.assign');
+import clonedeep = require('lodash.clonedeep');
 
 import gql from 'graphql-tag';
 
@@ -136,9 +137,11 @@ describe('mutation results', () => {
       },
     });
 
-    return client.query({
+    const obsHandle = client.watchQuery({
       query,
     });
+
+    return obsHandle.result();
   };
 
   it('correctly primes cache for tests', () => {
@@ -580,6 +583,66 @@ describe('mutation results', () => {
 
       assert.isTrue(cleanArray(array, 11) === array);
       assert.isFalse(cleanArray(array, 5) === array);
+    });
+  });
+
+  describe('query result reducers', () => {
+    const mutation = gql`
+      mutation createTodo {
+        # skipping arguments in the test since they don't matter
+        createTodo {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          id: '99',
+          __typename: 'Todo',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
+    it('analogous of ARRAY_INSERT', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              assert.equal(mResult.data.createTodo.id, '99');
+              assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+              const state = clonedeep(prev) as any;
+              state.todoList.todos.unshift(mResult.data.createTodo);
+              return state;
+            },
+          },
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
     });
   });
 });

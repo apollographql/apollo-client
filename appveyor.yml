@@ -11,6 +11,8 @@ install:
   - ps: Install-Product node $env:nodejs_version
   # install modules
   - npm install
+  # remove unused modules from node_modules directory
+  - npm prune
 
 # Post-install test scripts.
 test_script:
@@ -24,3 +26,6 @@ test_script:
 # nothing to compile in this project
 build: off
 deploy: off
+
+cache:
+  - node_modules

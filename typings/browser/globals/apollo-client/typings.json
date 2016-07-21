@@ -1,8 +1,8 @@
 {
   "resolution": "browser",
   "tree": {
-    "src": "/Users/sashko/git/apollo-client/ambient.d.ts",
+    "src": "/Users/dhaivatpandya/dev/apollo-client/ambient.d.ts",
     "raw": "file:./ambient.d.ts",
-    "typings": "/Users/sashko/git/apollo-client/ambient.d.ts"
+    "typings": "/Users/dhaivatpandya/dev/apollo-client/ambient.d.ts"
   }
 }

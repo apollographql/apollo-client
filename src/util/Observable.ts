@@ -15,7 +15,6 @@ export class Observable<T> {
 
   constructor(subscriberFunction: SubscriberFunction<T>) {
     this.subscriberFunction = subscriberFunction;
-
   }
 
   public [$$observable]() {

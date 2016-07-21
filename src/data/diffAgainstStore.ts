@@ -86,6 +86,26 @@ export function diffFragmentAgainstStore({
   });
 }
 
+// Takes a map of errors for fragments of each type. If all of the types have
+// thrown an error, this function will throw the error associated with one
+// of the types.
+function handleFragmentErrors(fragmentErrors: { [typename: string]: Error }) {
+  const typenames = Object.keys(fragmentErrors);
+
+  // This is a no-op.
+  if (typenames.length == 0) {
+    return;
+  }
+
+  const errorTypes = typenames.filter((typename) => {
+    return (fragmentErrors[typename] !== null)
+  });
+
+  if (errorTypes.length === Object.keys(fragmentErrors).length) {
+    throw fragmentErrors[errorTypes[0]];
+  }
+}
+
 /**
  * Given a store, a root ID, and a selection set, return as much of the result as possible and
  * identify which selection sets and root IDs need to be fetched to get the rest of the requested
@@ -123,7 +143,15 @@ export function diffSelectionSetAgainstStore({
   const result = {};
   const missingFields: Selection[] = [];
 
-  let fragmentErrors = {};
+  // A map going from a typename to missing field errors thrown on that
+  // typename This is needed to support union types. For example, if we have
+  // a union type (Apple | Orange) and we only receive fields for fragments on
+  // "Apple", that should not result in an error. But, if at least one of the fragments
+  // for each of "Apple" and "Orange" is missing a field, that should return an error.
+  // (i.e. we manage to handle missing fields correclty without knowing what the schema
+  // is at all).
+  let fragmentErrors: { [typename: string]: Error } = {};
+
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
@@ -138,7 +166,6 @@ export function diffSelectionSetAgainstStore({
     const included = shouldInclude(selection, variables);
 
     if (isField(selection)) {
-
       const {
         result: fieldResult,
         isMissing: fieldIsMissing,
@@ -159,11 +186,12 @@ export function diffSelectionSetAgainstStore({
         // fields that is missing.
         pushMissingField(selection);
       }
+
       if (included && fieldResult !== undefined) {
         result[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {
-      const typeName = selection.typeCondition.name.value;
+      const typename = selection.typeCondition.name.value;
 
       if (included) {
         try {
@@ -184,11 +212,12 @@ export function diffSelectionSetAgainstStore({
           } else {
             assign(result, fieldResult);
           }
-          if (!fragmentErrors[typeName]) {
-            fragmentErrors[typeName] = null;
+
+          if (!fragmentErrors[typename]) {
+            fragmentErrors[typename] = null;
           }
         } catch (e) {
-          fragmentErrors[typeName] = e;
+          fragmentErrors[typename] = e;
         }
       }
     } else {
@@ -198,7 +227,7 @@ export function diffSelectionSetAgainstStore({
         throw new Error(`No fragment named ${selection.name.value}`);
       }
 
-      const typeName = fragment.typeCondition.name.value;
+      const typename = fragment.typeCondition.name.value;
 
       if (included) {
         try {
@@ -220,15 +249,17 @@ export function diffSelectionSetAgainstStore({
             assign(result, fieldResult);
           }
 
-          if (!fragmentErrors[typeName]) {
-            fragmentErrors[typeName] = null;
+          if (!fragmentErrors[typename]) {
+            fragmentErrors[typename] = null;
           }
         } catch (e) {
-          fragmentErrors[typeName] = e;
+          fragmentErrors[typename] = e;
         }
       }
     }
   });
+
+  handleFragmentErrors(fragmentErrors);
 
   const errors = Object.keys(fragmentErrors).map(type => fragmentErrors[type]);
   if (errors.length > 0 && errors.filter(err => !!err).length === errors.length) {

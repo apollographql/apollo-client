@@ -3,6 +3,7 @@ import {
   isQueryResultAction,
   isMutationResultAction,
   isStoreResetAction,
+  MutationResultAction,
 } from '../actions';
 
 import {
@@ -103,7 +104,7 @@ export function data(
         action.resultBehaviors.forEach((behavior) => {
           const args: MutationBehaviorReducerArgs = {
             behavior,
-            result: action.result,
+            result: (action as MutationResultAction).result,
             variables: queryStoreValue.variables,
             fragmentMap: queryStoreValue.fragmentMap,
             selectionSet: queryStoreValue.mutation.selectionSet,

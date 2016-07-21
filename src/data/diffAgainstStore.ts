@@ -2,7 +2,6 @@ import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import has = require('lodash.has');
 import assign = require('lodash.assign');
-import find = require('lodash.find');
 
 import {
   storeKeyNameFromField,
@@ -93,12 +92,12 @@ function handleFragmentErrors(fragmentErrors: { [typename: string]: Error }) {
   const typenames = Object.keys(fragmentErrors);
 
   // This is a no-op.
-  if (typenames.length == 0) {
+  if (typenames.length === 0) {
     return;
   }
 
   const errorTypes = typenames.filter((typename) => {
-    return (fragmentErrors[typename] !== null)
+    return (fragmentErrors[typename] !== null);
   });
 
   if (errorTypes.length === Object.keys(fragmentErrors).length) {
@@ -155,6 +154,8 @@ export function diffSelectionSetAgainstStore({
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
+    let fieldResult: any;
+    let fieldIsMissing: string;
 
     function pushMissingField(missingField: Selection) {
       if (!missingFieldPushed) {
@@ -166,10 +167,7 @@ export function diffSelectionSetAgainstStore({
     const included = shouldInclude(selection, variables);
 
     if (isField(selection)) {
-      const {
-        result: fieldResult,
-        isMissing: fieldIsMissing,
-      } = diffFieldAgainstStore({
+      const diffResult = diffFieldAgainstStore({
         field: selection,
         throwOnMissingField,
         variables,
@@ -178,6 +176,8 @@ export function diffSelectionSetAgainstStore({
         fragmentMap,
         included,
       });
+      fieldIsMissing = diffResult.isMissing;
+      fieldResult = diffResult.result;
 
       const resultFieldKey = resultKeyNameFromField(selection);
       if (fieldIsMissing) {
@@ -195,10 +195,7 @@ export function diffSelectionSetAgainstStore({
 
       if (included) {
         try {
-          const {
-            result: fieldResult,
-            isMissing: fieldIsMissing,
-          } = diffSelectionSetAgainstStore({
+          const diffResult = diffSelectionSetAgainstStore({
             selectionSet: selection.selectionSet,
             throwOnMissingField,
             variables,
@@ -206,6 +203,8 @@ export function diffSelectionSetAgainstStore({
             store,
             fragmentMap,
           });
+          fieldIsMissing = diffResult.isMissing;
+          fieldResult = diffResult.result;
 
           if (fieldIsMissing) {
             pushMissingField(selection);
@@ -217,7 +216,9 @@ export function diffSelectionSetAgainstStore({
             fragmentErrors[typename] = null;
           }
         } catch (e) {
-          fragmentErrors[typename] = e;
+          if (fieldIsMissing && throwOnMissingField) {
+            fragmentErrors[typename] = e;
+          }
         }
       }
     } else {
@@ -231,10 +232,7 @@ export function diffSelectionSetAgainstStore({
 
       if (included) {
         try {
-          const {
-            result: fieldResult,
-            isMissing: fieldIsMissing,
-          } = diffSelectionSetAgainstStore({
+          const diffResult = diffSelectionSetAgainstStore({
             selectionSet: fragment.selectionSet,
             throwOnMissingField,
             variables,
@@ -242,6 +240,8 @@ export function diffSelectionSetAgainstStore({
             store,
             fragmentMap,
           });
+          fieldIsMissing = diffResult.isMissing;
+          fieldResult = diffResult.result;
 
           if (fieldIsMissing) {
             pushMissingField(selection);
@@ -253,18 +253,15 @@ export function diffSelectionSetAgainstStore({
             fragmentErrors[typename] = null;
           }
         } catch (e) {
-          fragmentErrors[typename] = e;
+          if (fieldIsMissing && throwOnMissingField) {
+            fragmentErrors[typename] = e;
+          }
         }
       }
     }
   });
 
   handleFragmentErrors(fragmentErrors);
-
-  const errors = Object.keys(fragmentErrors).map(type => fragmentErrors[type]);
-  if (errors.length > 0 && errors.filter(err => !!err).length === errors.length) {
-    throw find(errors, err => !!err);
-  }
 
   // Set this to true if we don't have enough information at this level to generate a refetch
   // query, so we need to merge the selection set with the parent, rather than appending

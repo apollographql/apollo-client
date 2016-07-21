@@ -3,7 +3,6 @@ import {
   isQueryResultAction,
   isMutationResultAction,
   isStoreResetAction,
-  MutationResultAction,
 } from '../actions';
 
 import {

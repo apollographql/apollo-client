@@ -9,7 +9,6 @@
     "rootDir": ".",
     "outDir": "lib",
     "allowSyntheticDefaultImports": true,
-    "pretty": true,
     "removeComments": true
   },
   "files": [

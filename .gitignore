@@ -34,3 +34,6 @@ npm
 
 # webstorm
 .idea/
+
+# alm editor
+.alm

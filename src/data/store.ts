@@ -101,6 +101,7 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMap: queryStoreValue.fragmentMap,
+        paginationArguments: queryStoreValue.paginationArguments,
       });
 
       return newState;
@@ -121,6 +122,7 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMap: queryStoreValue.fragmentMap,
+        paginationArguments: queryStoreValue.paginationArguments,
       });
 
       if (constAction.resultBehaviors) {

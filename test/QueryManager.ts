@@ -104,6 +104,73 @@ describe('QueryManager', () => {
     });
   });
 
+  it('properly ignores pagination arguments in store for two similar queries', (done) => {
+    const query1 = gql`
+      query people {
+        allPeople(cursor: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const query2 = gql`
+      query people {
+        allPeople(cursor: 2) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: query1 },
+        result: { data },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle1 = queryManager.watchQuery({
+      query: query1,
+      paginationArguments: ['cursor'],
+    });
+
+    const handle2 = queryManager.watchQuery({
+      query: query2,
+      paginationArguments: ['cursor'],
+    });
+
+    handle1.subscribe({
+      next(result1) {
+        assert.deepEqual(result1.data, data);
+        handle2.subscribe({
+          next(result2) {
+            assert.deepEqual(result2.data, data);
+            done();
+          },
+        });
+      },
+    });
+  });
+
   it('runs multiple root queries', () => {
     const query = gql`
       query people {

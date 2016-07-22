@@ -106,6 +106,48 @@ describe('reading from the store', () => {
     });
   });
 
+  it('runs a basic fragment with arguments and paginationArguments', () => {
+    const fragment = gql`
+      fragment Item on ItemType {
+        id,
+        stringField(arg: $stringArg, cur: $cur),
+        numberField(intArg: $intArg, floatArg: $floatArg, cur: $cur),
+        nullField
+      }
+    `;
+
+    const variables = {
+      intArg: 5,
+      floatArg: 3.14,
+      stringArg: 'This is a string!',
+      cur: 1,
+    };
+
+    const store = {
+      abcd: {
+        id: 'abcd',
+        nullField: null,
+        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'stringField({"arg":"This is a string!"})': 'Heyo',
+      },
+    } as NormalizedCache;
+
+    const result = readFragmentFromStore({
+      store,
+      fragment,
+      variables,
+      rootId: 'abcd',
+      paginationArguments: ['cur'],
+    });
+
+    assert.deepEqual(result, {
+      id: 'abcd',
+      nullField: null,
+      numberField: 5,
+      stringField: 'Heyo',
+    });
+  });
+
   it('runs a nested fragment', () => {
     const result = {
       id: 'abcd',

@@ -347,6 +347,7 @@ describe('client', () => {
             fragmentMap: {},
             returnPartialData: false,
             lastRequestId: 1,
+            paginationArguments: undefined,
           },
         },
         mutations: {},

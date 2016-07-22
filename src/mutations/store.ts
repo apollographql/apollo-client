@@ -27,6 +27,7 @@ export interface MutationStoreValue {
   loading: boolean;
   error: Error;
   fragmentMap: FragmentMap;
+  paginationArguments?: string[];
 }
 
 export interface SelectionSetWithRoot {
@@ -49,6 +50,7 @@ export function mutations(
       loading: true,
       error: null,
       fragmentMap: action.fragmentMap,
+      paginationArguments: action.paginationArguments,
     };
 
     return newState;

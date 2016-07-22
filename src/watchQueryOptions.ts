@@ -11,4 +11,5 @@ export interface WatchQueryOptions {
   noFetch?: boolean;
   pollInterval?: number;
   fragments?: FragmentDefinition[];
+  paginationArguments?: string[];
 }

@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Add `paginationArguments` to the query options in order to control the way keys are written in the normalized store for the upcoming pagination system. This `paginationArguments` sytsem spans to the whole normalized store management system.
+
 ### v0.4.8
 
 - Add `useAfter` function that accepts `afterwares`. Afterwares run after a request is made (after middlewares). In the afterware function, you get the whole response and request options, so you can handle status codes and errors if you need to. For example, if your requests return a `401` in the case of user logout, you can use this to identify when that starts happening. It can be used just as a `middleware` is used. Just pass an array of afterwares to the `useAfter` function.

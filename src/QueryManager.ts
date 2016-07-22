@@ -671,6 +671,7 @@ export class QueryManager {
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
+      fetchMoreLocations: options.fetchMoreLocations,
     });
 
     if (! minimizedQuery || returnPartialData || noFetch) {

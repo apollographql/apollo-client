@@ -46,6 +46,7 @@ export interface QueryInitAction {
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;
+  fetchMoreLocations: string[];
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {

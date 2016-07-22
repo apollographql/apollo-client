@@ -57,11 +57,16 @@ import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
-import { getFragmentDefinitions } from '../src/queries/getFromAST';
+import {
+  getFragmentDefinitions,
+  addFragmentsToDocument,
+} from '../src/queries/getFromAST';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors';
+
+import cloneDeep = require('lodash.clonedeep');
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -1444,6 +1449,52 @@ describe('client', () => {
         }`);
       assert(fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
       assert.equal(fragmentDefinitionsMap['authorDetails'].length, 1);
+    });
+  });
+
+  it('should not throw an error on fetching a fragment with an id', (done) => {
+    const shipmentInfoFragment = createFragment(gql`
+      fragment shipmentInfo on Shipment {
+        name
+        revenue
+        captain
+      }`);
+    const query = gql`
+      query getShipmentInfo($id: Int!) {
+        shipment(id: $id) {
+          ...shipmentInfo
+        }
+      }`;
+    let queryWithFragment = cloneDeep(query);
+    queryWithFragment = addFragmentsToDocument(queryWithFragment, shipmentInfoFragment);
+
+    const data = {
+      shipment: {
+        name: 'Cookies',
+        revenue: 1000,
+        captain: 'Cookie Monster',
+      },
+    };
+    const variables = { id: 12 };
+    const networkInterface = mockNetworkInterface({
+      request: { query: queryWithFragment, variables },
+      result: { data },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+    });
+    const handle = client.watchQuery({
+      query,
+      variables,
+      fragments: shipmentInfoFragment,
+    });
+    assert.doesNotThrow(() => {
+      handle.subscribe({
+        next(result) {
+          assert.deepEqual(result, { data });
+          done();
+        },
+      });
     });
   });
 });

@@ -68,4 +68,14 @@ describe('ApolloError', () => {
     assert.include(messages[1], 'Network error');
     assert.include(messages[1], 'network error message');
   });
+
+  it('should contain a stack trace', () => {
+    const graphQLErrors = [ new Error('graphql error message') ];
+    const networkError = new Error('network error message');
+    const apolloError = new ApolloError({
+      graphQLErrors,
+      networkError,
+    });
+    assert(apolloError.stack, 'Does not contain a stack trace.');
+  });
 });

@@ -290,6 +290,49 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes a nested object with arguments but with paginationArguments', () => {
+    const fragment = gql`
+      fragment Item on ItemType {
+        id,
+        stringField,
+        numberField,
+        nullField,
+        nestedObj(arg: "val", cur: 1) {
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedObj: {
+        stringField: 'This is a string too!',
+        numberField: 6,
+        nullField: null,
+      },
+    };
+
+    assert.deepEqual(writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result),
+      paginationArguments: ['cur'],
+    }), {
+      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+        'nestedObj({"arg":"val"})': {
+          type: 'id',
+          id: `$${result.id}.nestedObj({"arg":"val"})`,
+          generated: true,
+        },
+      }),
+      [`$${result.id}.nestedObj({"arg":"val"})`]: result.nestedObj,
+    });
+  });
+
   it('properly normalizes a nested array with IDs', () => {
     const fragment = gql`
       fragment Item on ItemType {

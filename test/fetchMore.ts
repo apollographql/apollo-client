@@ -91,4 +91,334 @@ describe('fetchMore-kind queries on QueryManager', () => {
       },
     });
   });
+
+  it('just concatenates on the selected directives', (done) => {
+    const query = gql`
+      query people {
+        allPeople {
+          people @apolloFetchMore(name: "people") {
+            name
+          }
+        }
+        allFilms {
+          films @apolloFetchMore(name: "films") {
+            name
+          }
+        }
+      }
+    `;
+
+    const strippedQuery = gql`
+      query people {
+        allPeople {
+          people {
+            name
+          }
+        }
+        allFilms {
+          films {
+            name
+          }
+        }
+      }
+    `;
+
+    const data1 = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+      allFilms: {
+        films: [
+          {
+            name: 'A New Hope',
+          },
+        ],
+      },
+    };
+
+    const data2 = {
+      allPeople: {
+        people: [
+          {
+            name: 'Jar Jar binks',
+          },
+        ],
+      },
+      allFilms: {
+        films: [
+          {
+            name: 'The Phantom Menace',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: strippedQuery },
+        result: { data: data1 },
+      },
+      {
+        request: { query: strippedQuery },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    let handleCount = 0;
+    handle.subscribe({
+      next(result) {
+        handleCount ++;
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          handle.fetchMore(['people']);
+        } else {
+          assert.deepEqual(
+            result.data.allPeople.people,
+            [].concat(data1.allPeople.people, data2.allPeople.people)
+          );
+          assert.deepEqual(
+            result.data.allFilms,
+            data2.allFilms
+          );
+          done();
+        }
+      },
+    });
+  });
+
+  it('takes the most current results for equal IDs', (done) => {
+    const query = gql`
+      query people {
+        allPeople {
+          people @apolloFetchMore(name: "people") {
+            id
+            name
+            height
+          }
+        }
+      }
+    `;
+
+    const strippedQuery = gql`
+      query people {
+        allPeople {
+          people {
+            id
+            name
+            height
+          }
+        }
+      }
+    `;
+
+    const data1 = {
+      allPeople: {
+        people: [
+          {
+            id: 'luke',
+            name: 'Luke Skywalker',
+            height: 170,
+          },
+        ],
+      },
+    };
+
+    const data2 = {
+      allPeople: {
+        people: [
+          {
+            id: 'luke',
+            name: 'Luke Skywalker',
+            height: 172,
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: strippedQuery },
+        result: { data: data1 },
+      },
+      {
+        request: { query: strippedQuery },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    let handleCount = 0;
+    handle.subscribe({
+      next(result) {
+        handleCount ++;
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          handle.fetchMore(['people']);
+        } else {
+          assert.deepEqual(result.data, data2);
+          done();
+        }
+      },
+    });
+  });
+
+  it('properly selects multiple directives for update', (done) => {
+    const query = gql`
+      query people {
+        allPeople {
+          people @apolloFetchMore(name: "people") {
+            id
+            name
+            filmConnection {
+              films @apolloFetchMore(name: "nestedFilms") {
+                id
+                title
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const strippedQuery = gql`
+      query people {
+        allPeople {
+          people {
+            id
+            name
+            filmConnection {
+              films {
+                id
+                title
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const data1 = {
+      allPeople: {
+        people: [
+          {
+            id: 'luke',
+            name: 'Luke Skywalker',
+            filmConnection: {
+              films: [
+                { id: 'hope', title: 'A New Hope' },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const data2 = {
+      allPeople: {
+        people: [
+          {
+            id: 'luke',
+            name: 'Luke Skywalker',
+            filmConnection: {
+              films: [
+                { id: 'empire', title: 'The Empire Strikes Back' },
+              ],
+            },
+          },
+          {
+            id: 'jarjar',
+            name: 'Jar Jar binks',
+            filmConnection: {
+              films: [
+                { id: 'phantom', title: 'The Phantom Menace' },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: strippedQuery },
+        result: { data: data1 },
+      },
+      {
+        request: { query: strippedQuery },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+    });
+
+    let handleCount = 0;
+    handle.subscribe({
+      next(result) {
+        handleCount ++;
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          handle.fetchMore(['people', 'nestedFilms']);
+        } else {
+          assert.deepEqual(
+            result.data, {
+            allPeople: {
+              people: [
+                {
+                  id: 'luke',
+                  name: 'Luke Skywalker',
+                  filmConnection: {
+                    films: [
+                      { id: 'hope', title: 'A New Hope' },
+                      { id: 'empire', title: 'The Empire Strikes Back' },
+                    ],
+                  },
+                },
+                {
+                  id: 'jarjar',
+                  name: 'Jar Jar binks',
+                  filmConnection: {
+                    films: [
+                      { id: 'phantom', title: 'The Phantom Menace' },
+                    ],
+                  },
+                },
+              ],
+            },
+          });
+          done();
+        }
+      },
+    });
+  });
 });

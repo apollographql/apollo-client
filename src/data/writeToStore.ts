@@ -360,7 +360,7 @@ function writeFieldToStore({
         fragmentMap,
         included: true,
       });
-      value = [].concat(oldValue, value);
+      value = defaultListMerging(oldValue, value);
     }
 
     value.forEach((item, index) => {
@@ -474,4 +474,10 @@ function writeFieldToStore({
     store[dataId] = newStoreObj;
   }
 
+}
+
+function defaultListMerging(oldValues: any[], newValues: any[]): any[] {
+  const newIds = newValues.map(value => value.id ? value.id : null) .filter(id => id !== null);
+  const filteredOldValues = oldValues.filter(value => !value.id || newIds.indexOf(value.id) < 0);
+  return [].concat(filteredOldValues, newValues);
 }

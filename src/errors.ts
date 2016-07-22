@@ -5,8 +5,9 @@ export class ApolloError extends Error {
   public graphQLErrors: GraphQLError[];
   public networkError: Error;
 
-  // an object that can be used to provide some additional information
-  // about an error, e.g. specifying a type of error.
+  // An object that can be used to provide some additional information
+  // about an error, e.g. specifying the type of error this is. Used
+  // internally within Apollo Client.
   public extraInfo: any;
 
   // Constructs an instance of ApolloError given a GraphQLError

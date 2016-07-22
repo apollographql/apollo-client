@@ -147,12 +147,12 @@ export function diffSelectionSetAgainstStore({
   const missingFields: Selection[] = [];
 
   // A map going from a typename to missing field errors thrown on that
-  // typename This is needed to support union types. For example, if we have
+  // typename. This data structure is needed to support union types. For example, if we have
   // a union type (Apple | Orange) and we only receive fields for fragments on
   // "Apple", that should not result in an error. But, if at least one of the fragments
   // for each of "Apple" and "Orange" is missing a field, that should return an error.
-  // (i.e. we manage to handle missing fields correclty without knowing what the schema
-  // is at all).
+  // (i.e. with this approach, we manage to handle missing fields correctly even for
+  // union types without any knowledge of the GraphQL schema).
   let fragmentErrors: { [typename: string]: Error } = {};
 
   selectionSet.selections.forEach((selection) => {
@@ -190,7 +190,6 @@ export function diffSelectionSetAgainstStore({
         // fields that is missing.
         pushMissingField(selection);
       }
-
       if (included && fieldResult !== undefined) {
         result[resultFieldKey] = fieldResult;
       }

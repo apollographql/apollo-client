@@ -63,19 +63,18 @@ export function data(
   } else if (isMutationResultAction(action)) {
     // Incorporate the result from this mutation into the store
     if (!action.result.errors) {
-      const queryStoreValue = action.mutationStoreValue;
 
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
       let newState = writeSelectionSetToStore({
         result: action.result.data,
-        dataId: queryStoreValue.mutation.id,
-        selectionSet: queryStoreValue.mutation.selectionSet,
-        variables: queryStoreValue.variables,
+        dataId: action.mutation.id,
+        selectionSet: action.mutation.selectionSet,
+        variables: action.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
+        fragmentMap: action.fragmentMap,
       });
 
       if (action.resultBehaviors) {
@@ -83,9 +82,9 @@ export function data(
           const args: MutationBehaviorReducerArgs = {
             behavior,
             result: action.result,
-            variables: queryStoreValue.variables,
-            fragmentMap: queryStoreValue.fragmentMap,
-            selectionSet: queryStoreValue.mutation.selectionSet,
+            variables: action.variables,
+            fragmentMap: action.fragmentMap,
+            selectionSet: action.mutation.selectionSet,
             config,
           };
 

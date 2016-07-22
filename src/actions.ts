@@ -4,12 +4,7 @@ import {
 
 import {
   SelectionSetWithRoot,
-  QueryStoreValue,
 } from './queries/store';
-
-import {
-  MutationStoreValue,
-} from './mutations/store';
 
 import {
   MutationBehavior,
@@ -102,7 +97,9 @@ export interface MutationResultAction {
   result: GraphQLResult;
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
-  mutationStoreValue: MutationStoreValue;
+  mutation: SelectionSetWithRoot;
+  fragmentMap: FragmentMap;
+  variables: Object;
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

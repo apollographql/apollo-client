@@ -245,7 +245,13 @@ export class QueryManager {
           type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
-          mutationStoreValue: this.getApolloState().mutations[mutationId],
+          mutation: {
+            id: 'ROOT_MUTATION',
+            typeName: 'Mutation',
+            selectionSet: mutationDef.selectionSet,
+          },
+          fragmentMap: queryFragmentMap,
+          variables,
           resultBehaviors: [
             ...resultBehaviors,
             ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),

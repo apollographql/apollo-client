@@ -119,13 +119,11 @@ This means that reducer functions:
 - must avoid mutating the arguments, such that previous query result, and prefer cloning
 - should have no side effects
 
-<h3 id="new-object-or-updated-fields">New Object Or Updated Fields</h3>
+<h3 id="new-object-or-updated-fields">Updated Fields</h3>
 
-In cases when your mutation returns either a completely new object (with a uniquely new `id`) or a new value for an existing object with some fields updated, you might avoid writing any queries updating code at all.
+In cases when your mutation returns a new value for an existing object with some fields updated, you might avoid writing any queries updating code at all. As long as your instance of Apollo Client has [`dataIdFromObject`](/apollo-client/index.html#ApolloClient) option defined, the occurrences of the object (matching by the generated id) in the active queries will be updated automatically without any extra code.
 
-If the new object doesn't appear in any relations to other objects, and the Apollo Client has [`dataIdFromObject`](/apollo-client/index.html#ApolloClient) option defined, the occurrences of the object in the active queries will be updated automatically without any extra code.
-
-For example, say you have a query with a flat list list of `TodoList`s. Later, after clicking a "new todo-list" button the mutation `createNewTodoList(name: String!)` was fired. If `createNewTodoList` mutation returns a new `TodoList` object, then it will be incorporated into store and updated in active queries automatically.
+For example, say you have a query with a flat list list of `TodoList`s. Later, after editing the name of one of lists, the mutation `changeTodoListName(list_id: ID!, name: String!)` was fired. If `changeTodoListName` mutation returns the `TodoList` object with the same id and updated fields, then it will be incorporated into store and updated in active queries automatically.
 
 <h2 id="optimistic-results">Optimistic Results</h2>
 
@@ -143,7 +141,7 @@ client.mutate({
   optimisticResponse: {
     id: generatedId,
     text: text,
-    createdAt: new Date,
+    createdAt: +(new Date),
     completed: false,
   },
 });

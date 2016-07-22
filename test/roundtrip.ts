@@ -141,8 +141,8 @@ describe('roundtrip', () => {
       });
     });
 
-    it('should throw on error on two of the same inline fragment types', () => {
-      assert.throws(() =>
+    it('should throw an error on two of the same inline fragment types', () => {
+      assert.throws(() => {
         storeRoundtrip(gql`
           query {
             all_people {
@@ -161,8 +161,8 @@ describe('roundtrip', () => {
               side: 'bright',
             },
           ],
-        })
-      , /Can\'t find field rank on result object/);
+          });
+      }, /Can\'t find field rank on result object/);
     });
 
     it('should resolve on union types with spread fragments', () => {

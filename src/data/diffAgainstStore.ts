@@ -37,6 +37,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import {
+  ApolloError,
+} from '../errors';
+
 export interface DiffResult {
   result: any;
   isMissing?: 'true';
@@ -88,7 +92,7 @@ export function diffFragmentAgainstStore({
 // Takes a map of errors for fragments of each type. If all of the types have
 // thrown an error, this function will throw the error associated with one
 // of the types.
-function handleFragmentErrors(fragmentErrors: { [typename: string]: Error }) {
+export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error }) {
   const typenames = Object.keys(fragmentErrors);
 
   // This is a no-op.
@@ -216,8 +220,10 @@ export function diffSelectionSetAgainstStore({
             fragmentErrors[typename] = null;
           }
         } catch (e) {
-          if (fieldIsMissing && throwOnMissingField) {
+          if (e.extraInfo && e.extraInfo.isFieldError) {
             fragmentErrors[typename] = e;
+          } else {
+            throw e;
           }
         }
       }
@@ -253,15 +259,19 @@ export function diffSelectionSetAgainstStore({
             fragmentErrors[typename] = null;
           }
         } catch (e) {
-          if (fieldIsMissing && throwOnMissingField) {
+          if (e.extraInfo && e.extraInfo.isFieldError) {
             fragmentErrors[typename] = e;
+          } else {
+            throw e;
           }
         }
       }
     }
   });
 
-  handleFragmentErrors(fragmentErrors);
+  if (throwOnMissingField) {
+    handleFragmentErrors(fragmentErrors);
+  }
 
   // Set this to true if we don't have enough information at this level to generate a refetch
   // query, so we need to merge the selection set with the parent, rather than appending
@@ -318,8 +328,13 @@ function diffFieldAgainstStore({
 
   if (! has(storeObj, storeFieldKey)) {
     if (throwOnMissingField && included) {
-      throw new Error(`Can't find field ${storeFieldKey} on object ${JSON.stringify(storeObj)}.
-Perhaps you want to use the \`returnPartialData\` option?`);
+      throw new ApolloError({
+        errorMessage: `Can't find field ${storeFieldKey} on object ${JSON.stringify(storeObj)}.
+Perhaps you want to use the \`returnPartialData\` option?`,
+        extraInfo: {
+          isFieldError: true,
+        },
+      });
     }
 
     return {

@@ -9,6 +9,10 @@ import {
 } from './networkInterface';
 
 import {
+  stripApolloDirectivesFromRequest,
+} from './queries/directives';
+
+import {
   GraphQLResult,
 } from 'graphql';
 
@@ -81,7 +85,7 @@ export class QueryBatcher {
         variables: queuedRequest.options.variables,
         operationName: queuedRequest.operationName,
       };
-    });
+    }).map(stripApolloDirectivesFromRequest);
 
     const promises: Promise<GraphQLResult>[] = [];
     const resolvers = [];

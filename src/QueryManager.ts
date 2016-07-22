@@ -61,6 +61,10 @@ import {
 } from './queryPrinting';
 
 import {
+  stripApolloDirectivesFromRequest,
+} from './queries/directives';
+
+import {
   QueryFetchRequest,
   QueryBatcher,
 } from './batching';
@@ -187,6 +191,7 @@ export class QueryManager {
     fragments = [],
     optimisticResponse,
     updateQueries,
+    paginationArguments = [],
   }: {
     mutation: Document,
     variables?: Object,
@@ -194,6 +199,7 @@ export class QueryManager {
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
+    paginationArguments?: string[],
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
@@ -220,7 +226,7 @@ export class QueryManager {
     // In the future we want to re-factor this part of code to avoid using
     // `resultBehaviors` so we can remove `resultBehaviors` entirely.
     const updateQueriesResultBehaviors = !optimisticResponse ? [] :
-      this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true);
+      this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true, paginationArguments);
 
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
@@ -235,9 +241,10 @@ export class QueryManager {
       fragmentMap: queryFragmentMap,
       optimisticResponse,
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
+      paginationArguments,
     });
 
-    return this.networkInterface.query(request)
+    return this.networkInterface.query(stripApolloDirectivesFromRequest(request))
       .then((result) => {
         this.store.dispatch({
           type: 'APOLLO_MUTATION_RESULT',
@@ -302,6 +309,7 @@ export class QueryManager {
                 variables: queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
                 fragmentMap: queryStoreValue.fragmentMap,
+                paginationArguments: options.paginationArguments,
               }),
             };
 
@@ -488,7 +496,8 @@ export class QueryManager {
   private collectResultBehaviorsFromUpdateQueries(
     updateQueries: MutationQueryReducersMap,
     mutationResult: Object,
-    isOptimistic = false
+    isOptimistic = false,
+    paginationArguments: string[] = []
   ): MutationBehavior[] {
     if (!updateQueries) {
       return [];
@@ -544,6 +553,7 @@ export class QueryManager {
           variables: queryOptions.variables,
           returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
           fragmentMap: createFragmentMap(fragments || []),
+          paginationArguments,
         });
 
         resultBehaviors.push({
@@ -614,6 +624,7 @@ export class QueryManager {
         rootId: querySS.id,
         variables,
         fragmentMap: queryFragmentMap,
+        paginationArguments: options.paginationArguments,
       });
 
       initialResult = result;
@@ -657,6 +668,7 @@ export class QueryManager {
       queryId,
       requestId,
       fragmentMap: queryFragmentMap,
+      paginationArguments: options.paginationArguments,
     });
 
     if (! minimizedQuery || returnPartialData || noFetch) {
@@ -714,6 +726,7 @@ export class QueryManager {
                 variables,
                 returnPartialData: returnPartialData || noFetch,
                 fragmentMap: queryFragmentMap,
+                paginationArguments: options.paginationArguments,
               });
               // ensure multiple errors don't get thrown
               /* tslint:disable */

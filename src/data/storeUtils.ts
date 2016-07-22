@@ -12,6 +12,7 @@ import {
   Selection,
   GraphQLResult,
   Name,
+  Argument,
 } from 'graphql';
 
 import includes = require('lodash.includes');
@@ -69,11 +70,12 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
   }
 }
 
-export function storeKeyNameFromField(field: Field, variables?: Object): string {
+export function storeKeyNameFromField(field: Field, variables?: Object, paginationArguments: string[] = []): string {
   if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
 
-    field.arguments.forEach(({name, value}) => valueToObjectRepresentation(
+    field.arguments.filter(({name}) => paginationArguments.indexOf(name.value) < 0)
+    .forEach(({name, value}) => valueToObjectRepresentation(
       argObj, name, value, variables));
 
     return storeKeyNameFromFieldNameAndArgs(field.name.value, argObj);
@@ -104,4 +106,14 @@ export function isInlineFragment(selection: Selection): selection is InlineFragm
 
 export function graphQLResultHasError(result: GraphQLResult) {
   return result.errors && result.errors.length;
+}
+
+export function argsToKeyValueMap(graphQLArgs: Argument[], variables: Object): Object {
+  const args = {};
+
+  graphQLArgs.forEach(arg => {
+    valueToObjectRepresentation(args, arg.name, arg.value, variables);
+  });
+
+  return args;
 }

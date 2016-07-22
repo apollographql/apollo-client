@@ -90,11 +90,6 @@ declare module 'lodash.identity' {
   export = main.identity;
 }
 
-declare module 'lodash.find' {
-  import main = require('~lodash/index');
-  export = main.find;
-}
-
 declare module 'lodash.flatten' {
   import main = require('~lodash/index');
   export = main.flatten;

@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Basic infinite pagination support via the `fetchMore` method and the `@apolloFetchMore` directive. By naming an array field with the directive and by calling the method with this name, you can complete the array with new retrieved data. If an element with the same ID field is re-added, the last value will be kept.
+
 ### v0.4.8
 
 - Add `useAfter` function that accepts `afterwares`. Afterwares run after a request is made (after middlewares). In the afterware function, you get the whole response and request options, so you can handle status codes and errors if you need to. For example, if your requests return a `401` in the case of user logout, you can use this to identify when that starts happening. It can be used just as a `middleware` is used. Just pass an array of afterwares to the `useAfter` function.

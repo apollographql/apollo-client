@@ -68,12 +68,14 @@ export function writeFragmentToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
+  paginationArguments = [],
 }: {
   result: Object,
   fragment: Document,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
+  paginationArguments?: string[],
 }): NormalizedCache {
   // Argument validation
   if (!fragment) {
@@ -94,6 +96,7 @@ export function writeFragmentToStore({
     store,
     variables,
     dataIdFromObject,
+    paginationArguments,
   });
 }
 
@@ -104,6 +107,7 @@ export function writeQueryToStore({
   variables,
   dataIdFromObject = null,
   fragmentMap,
+  paginationArguments = [],
 }: {
   result: Object,
   query: Document,
@@ -111,6 +115,7 @@ export function writeQueryToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   fragmentMap?: FragmentMap,
+  paginationArguments?: string[],
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
@@ -122,6 +127,7 @@ export function writeQueryToStore({
     variables,
     dataIdFromObject,
     fragmentMap,
+    paginationArguments,
   });
 }
 
@@ -133,6 +139,7 @@ export function writeSelectionSetToStore({
   variables,
   dataIdFromObject,
   fragmentMap,
+  paginationArguments = [],
 }: {
   dataId: string,
   result: any,
@@ -141,6 +148,7 @@ export function writeSelectionSetToStore({
   variables: Object,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
+  paginationArguments?: string[],
 }): NormalizedCache {
 
   if (!fragmentMap) {
@@ -189,6 +197,7 @@ export function writeSelectionSetToStore({
           field: selection,
           dataIdFromObject,
           fragmentMap,
+          paginationArguments,
         });
       }
     } else if (isInlineFragment(selection)) {
@@ -205,6 +214,7 @@ export function writeSelectionSetToStore({
             dataId,
             dataIdFromObject,
             fragmentMap,
+            paginationArguments,
           });
 
           if (!fragmentErrors[typename]) {
@@ -238,6 +248,7 @@ export function writeSelectionSetToStore({
             dataId,
             dataIdFromObject,
             fragmentMap,
+            paginationArguments,
           });
 
           if (!fragmentErrors[typename]) {
@@ -291,6 +302,7 @@ function writeFieldToStore({
   dataId,
   dataIdFromObject,
   fragmentMap,
+  paginationArguments = [],
 }: {
   field: Field,
   value: any,
@@ -299,10 +311,11 @@ function writeFieldToStore({
   dataId: string,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
+  paginationArguments?: string[],
 }) {
   let storeValue;
 
-  const storeFieldName: string = storeKeyNameFromField(field, variables);
+  const storeFieldName: string = storeKeyNameFromField(field, variables, paginationArguments);
   // specifies if we need to merge existing keys in the store
   let shouldMerge = false;
   // If we merge, this will be the generatedKey
@@ -346,6 +359,7 @@ function writeFieldToStore({
           variables,
           dataIdFromObject,
           fragmentMap,
+          paginationArguments,
         });
       }
     });
@@ -387,6 +401,7 @@ function writeFieldToStore({
       variables,
       dataIdFromObject,
       fragmentMap,
+      paginationArguments,
     });
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).

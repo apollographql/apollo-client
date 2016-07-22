@@ -4,7 +4,6 @@ import {
 } from './networkInterface';
 
 import forOwn = require('lodash.forown');
-import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
 
 import {
@@ -40,7 +39,6 @@ import {
   GraphQLResult,
   Document,
   FragmentDefinition,
-  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -89,6 +87,8 @@ export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
+  public scheduler: QueryScheduler;
+
   private networkInterface: NetworkInterface;
   private store: ApolloStore;
   private reduxRootKey: string;
@@ -100,7 +100,6 @@ export class QueryManager {
 
   private idCounter = 0;
 
-  private scheduler: QueryScheduler;
   private batcher: QueryBatcher;
   private batchInterval: number;
 
@@ -303,21 +302,27 @@ export class QueryManager {
             console.error('Unhandled error', apolloError, apolloError.stack);
           }
         } else {
-          const resultFromStore = {
-            data: readSelectionSetFromStore({
-              store: this.getDataWithOptimisticResults(),
-              rootId: queryStoreValue.query.id,
-              selectionSet: queryStoreValue.query.selectionSet,
-              variables: queryStoreValue.variables,
-              returnPartialData: options.returnPartialData || options.noFetch,
-              fragmentMap: queryStoreValue.fragmentMap,
-            }),
-          };
+          try {
+            const resultFromStore = {
+              data: readSelectionSetFromStore({
+                store: this.getDataWithOptimisticResults(),
+                rootId: queryStoreValue.query.id,
+                selectionSet: queryStoreValue.query.selectionSet,
+                variables: queryStoreValue.variables,
+                returnPartialData: options.returnPartialData || options.noFetch,
+                fragmentMap: queryStoreValue.fragmentMap,
+              }),
+            };
 
-          if (observer.next) {
-            if (this.isDifferentResult(queryId, resultFromStore )) {
-              this.queryResults[queryId] = resultFromStore;
-              observer.next(resultFromStore);
+            if (observer.next) {
+              if (this.isDifferentResult(queryId, resultFromStore )) {
+                this.queryResults[queryId] = resultFromStore;
+                observer.next(resultFromStore);
+              }
+            }
+          } catch (error) {
+            if (observer.error) {
+              observer.error(error);
             }
           }
         }
@@ -340,7 +345,7 @@ export class QueryManager {
     getQueryDefinition(options.query);
 
     let observableQuery = new ObservableQuery({
-      queryManager: this,
+      scheduler: this.scheduler,
       options: options,
       shouldSubscribe: shouldSubscribe,
     });
@@ -472,18 +477,11 @@ export class QueryManager {
 
   public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.queryListeners[queryId] = listener;
-    this.fetchQuery(queryId, options);
 
-    if (options.pollInterval) {
-      if (options.noFetch) {
-        throw new Error('noFetch option should not use query polling.');
-      }
-      this.pollingTimers[queryId] = setInterval(() => {
-        const pollingOptions = assign({}, options) as WatchQueryOptions;
-        // subsequent fetches from polling always reqeust new data
-        pollingOptions.forceFetch = true;
-        this.fetchQuery(queryId, pollingOptions);
-      }, options.pollInterval);
+    // If the pollInterval is present, the scheduler has already taken care of firing the first
+    // fetch so we don't have to worry about it here.
+    if (!options.pollInterval) {
+      this.fetchQuery(queryId, options);
     }
 
     return queryId;
@@ -493,16 +491,7 @@ export class QueryManager {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
     delete this.queryListeners[queryId];
-
-    // if we have a polling interval running, stop it
-    if (this.pollingTimers[queryId]) {
-      clearInterval(this.pollingTimers[queryId]);
-    }
-
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_STOP',
-      queryId,
-    });
+    this.stopQueryInStore(queryId);
   }
 
   private collectResultBehaviorsFromUpdateQueries(
@@ -535,7 +524,25 @@ export class QueryManager {
 
       queries.forEach((observableQuery) => {
         const queryOptions = observableQuery.options;
-        const queryDefinition: OperationDefinition = getQueryDefinition(queryOptions.query);
+
+        let fragments = queryOptions.fragments;
+        let queryDefinition = getQueryDefinition(queryOptions.query);
+
+        if (this.queryTransformer) {
+          const doc = {
+            kind: 'Document',
+            definitions: [
+              queryDefinition,
+              ...(fragments || []),
+            ],
+          };
+
+          const transformedDoc = applyTransformers(doc, [this.queryTransformer]);
+
+          queryDefinition = getQueryDefinition(transformedDoc);
+          fragments = getFragmentDefinitions(transformedDoc);
+        }
+
         const previousResult = readSelectionSetFromStore({
           // In case of an optimistic change, apply reducer on top of the
           // results including previous optimistic updates. Otherwise, apply it
@@ -545,7 +552,7 @@ export class QueryManager {
           selectionSet: queryDefinition.selectionSet,
           variables: queryOptions.variables,
           returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
-          fragmentMap: createFragmentMap(queryOptions.fragments || []),
+          fragmentMap: createFragmentMap(fragments || []),
         });
 
         resultBehaviors.push({
@@ -555,7 +562,9 @@ export class QueryManager {
             queryName,
             queryVariables: queryOptions.variables,
           }),
-          queryOptions,
+          queryVariables: queryOptions.variables,
+          querySelectionSet: queryDefinition.selectionSet,
+          queryFragments: fragments,
         });
       });
     });
@@ -706,11 +715,6 @@ export class QueryManager {
 
 
             this.removeFetchQueryPromise(requestId);
-            if (result.errors) {
-              reject(new ApolloError({
-                graphQLErrors: result.errors,
-              }));
-            }
             return result;
           }).then(() => {
 
@@ -745,9 +749,6 @@ export class QueryManager {
 
             this.removeFetchQueryPromise(requestId);
 
-            reject(new ApolloError({
-              networkError: error,
-            }));
           });
       });
       return retPromise;

@@ -121,7 +121,13 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: 'abcde' }) as StoreObject,
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+        nestedObj: {
+          type: 'id',
+          id: 'abcde',
+          generated: false,
+        },
+      }) as StoreObject,
       abcde: result.nestedObj,
     } as NormalizedCache;
 
@@ -422,7 +428,10 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: result.simpleArray }) as StoreObject,
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: {
+        type: 'json',
+        json: result.simpleArray,
+      }}) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readFragmentFromStore({
@@ -455,7 +464,10 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: result.simpleArray }) as StoreObject,
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: {
+        type: 'json',
+        json: result.simpleArray,
+      }}) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readFragmentFromStore({

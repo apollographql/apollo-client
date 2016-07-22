@@ -10,6 +10,7 @@ import {
 } from './writeToStore';
 
 import assign = require('lodash.assign');
+import isObject = require('lodash.isobject');
 
 import {
   ApolloReducerConfig,
@@ -33,13 +34,36 @@ export interface StoreObject {
   [storeFieldKey: string]: StoreValue;
 }
 
-export type StoreValue = number | string | string[];
+export interface IdValue {
+  type: "id";
+  id: string;
+  generated: boolean;
+}
+
+export interface JsonValue {
+  type: "json";
+  json: any;
+}
+
+export type StoreValue = number | string | string[] | IdValue | JsonValue ;
+
+export function isIdValue(idObject: StoreValue): idObject is IdValue {
+  return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
+}
+
+export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
+  return (isObject(jsonObject) && (jsonObject as (IdValue | JsonValue)).type === 'json');
+}
 
 export function data(
   previousState: NormalizedCache = {},
   action: ApolloAction,
   config: ApolloReducerConfig
 ): NormalizedCache {
+  // XXX This is hopefully a temporary binding to get around
+  // https://github.com/Microsoft/TypeScript/issues/7719
+  const constAction = action;
+
   if (isQueryResultAction(action)) {
 
     // XXX handle partial result due to errors
@@ -60,31 +84,30 @@ export function data(
 
       return newState;
     }
-  } else if (isMutationResultAction(action)) {
+  } else if (isMutationResultAction(constAction)) {
     // Incorporate the result from this mutation into the store
-    if (!action.result.errors) {
-
+    if (!constAction.result.errors) {
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
       let newState = writeSelectionSetToStore({
-        result: action.result.data,
-        dataId: action.mutation.id,
-        selectionSet: action.mutation.selectionSet,
-        variables: action.variables,
+        result: constAction.result.data,
+        dataId: constAction.mutation.id,
+        selectionSet: constAction.mutation.selectionSet,
+        variables: constAction.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: action.fragmentMap,
+        fragmentMap: constAction.fragmentMap,
       });
 
-      if (action.resultBehaviors) {
-        action.resultBehaviors.forEach((behavior) => {
+      if (constAction.resultBehaviors) {
+        constAction.resultBehaviors.forEach((behavior) => {
           const args: MutationBehaviorReducerArgs = {
             behavior,
-            result: action.result,
-            variables: action.variables,
-            fragmentMap: action.fragmentMap,
-            selectionSet: action.mutation.selectionSet,
+            result: constAction.result,
+            variables: constAction.variables,
+            fragmentMap: constAction.fragmentMap,
+            selectionSet: constAction.mutation.selectionSet,
             config,
           };
 

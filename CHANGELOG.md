@@ -3,6 +3,25 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Add `useAfter` function that accepts `afterwares`. Afterwares run after a request is made (after middlewares). In the afterware function, you get the whole response and request options, so you can handle status codes and errors if you need to. For example, if your requests return a `401` in the case of user logout, you can use this to identify when that starts happening. It can be used just as a `middleware` is used. Just pass an array of afterwares to the `useAfter` function.
+- Add a stack trace to `ApolloError`. [PR #445](https://github.com/apollostack/apollo-client/pull/445) and [Issue #434](https://github.com/apollostack/apollo-client/issues/434).
+- Fixed an extra log of errors on `query` calls. [PR #445](https://github.com/apollostack/apollo-client/pull/445) and [Issue #423](https://github.com/apollostack/apollo-client/issues/423).
+
+### v0.4.7
+
+- Added flattening of fragments within `createFragment`. [PR #437](https://github.com/apollostack/apollo-client/pull/437) and [Issue #421](https://github.com/apollostack/apollo-client/issues/421).
+
+### v0.4.6
+
+- Integrated the scheduler so that polling queries on the same polling interval are batched together. [PR #403](https://github.com/apollostack/apollo-client/pull/403) and [Issue #401](https://github.com/apollostack/apollo-client/issues/401).
+- Fixed a bug where fetching a query without an id and then later with an id resulted in an orphaned node within the store. [Issue #344](https://github.com/apollostack/apollo-client/issues/344) and [PR #389](https://github.com/apollostack/apollo-client/pull/389).
+- Fix typings for some refactored types, `ObservableQuery` and `WatchQueryOptions`. [PR #428](https://github.com/apollostack/apollo-client/pull/428)
+
+### v0.4.5
+
+- Fix the issue of using query transformers with mutations containing `optimisticResponse` or `updateQueries`. [PR #426](https://github.com/apollostack/apollo-client/pull/426).
+
+### v0.4.4
 
 - Make sure query transformers are also applied to named fragments, and new methods that allow transforming query document with multiple query transformers. [Issue #373](https://github.com/apollostack/apollo-client/issues/373) [PR #412](https://github.com/apollostack/apollo-client/pull/412)
 

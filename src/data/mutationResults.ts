@@ -5,7 +5,7 @@ import {
 import {
   GraphQLResult,
   SelectionSet,
-  OperationDefinition,
+  FragmentDefinition,
 } from 'graphql';
 
 import mapValues = require('lodash.mapvalues');
@@ -15,7 +15,6 @@ import assign = require('lodash.assign');
 
 import {
   FragmentMap,
-  getQueryDefinition,
   createFragmentMap,
 } from '../queries/getFromAST';
 
@@ -32,10 +31,6 @@ import {
 import {
   writeSelectionSetToStore,
 } from './writeToStore';
-
-import {
-  WatchQueryOptions,
-} from '../watchQueryOptions';
 
 // Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 
@@ -65,7 +60,9 @@ export type MutationArrayDeleteBehavior = {
 
 export type MutationQueryResultBehavior = {
   type: 'QUERY_RESULT';
-  queryOptions: WatchQueryOptions;
+  queryVariables: any;
+  querySelectionSet: SelectionSet;
+  queryFragments: FragmentDefinition[];
   newResult: Object;
 };
 
@@ -273,21 +270,22 @@ function mutationResultQueryResultReducer(state: NormalizedCache, {
   config,
 }: MutationBehaviorReducerArgs) {
   const {
-    queryOptions,
+    queryVariables,
     newResult,
+    queryFragments,
+    querySelectionSet,
   } = behavior as MutationQueryResultBehavior;
 
   const clonedState = assign({}, state) as NormalizedCache;
-  const queryDefinition: OperationDefinition = getQueryDefinition(queryOptions.query);
 
   return writeSelectionSetToStore({
     result: newResult,
     dataId: 'ROOT_QUERY',
-    selectionSet: queryDefinition.selectionSet,
-    variables: queryOptions.variables,
+    selectionSet: querySelectionSet,
+    variables: queryVariables,
     store: clonedState,
     dataIdFromObject: config.dataIdFromObject,
-    fragmentMap: createFragmentMap(queryOptions.fragments || []),
+    fragmentMap: createFragmentMap(queryFragments),
   });
 }
 

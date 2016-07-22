@@ -19,6 +19,10 @@ import {
   MiddlewareRequest,
 } from '../src/middleware';
 
+import {
+  AfterwareResponse,
+} from '../src/afterware';
+
 import gql from 'graphql-tag';
 
 import { print } from 'graphql-tag/printer';
@@ -259,6 +263,44 @@ describe('network interface', () => {
     });
   });
 
+  describe('afterware', () => {
+    it('should throw an error if you pass something bad', () => {
+      const malWare = new TestAfterWare();
+      delete malWare.applyAfterware;
+      const networkInterface = createNetworkInterface('/graphql');
+
+      try {
+        networkInterface.useAfter([malWare]);
+        expect.fail();
+      } catch (error) {
+        assert.equal(
+          error.message,
+          'Afterware must implement the applyAfterware function'
+        );
+      }
+
+    });
+
+    it('should take a afterware and assign it', () => {
+      const testWare = new TestAfterWare();
+
+      const networkInterface = createNetworkInterface('/graphql');
+      networkInterface.useAfter([testWare]);
+
+      assert.equal(networkInterface._afterwares[0], testWare);
+    });
+
+    it('should take more than one afterware and assign it', () => {
+      const testWare1 = new TestAfterWare();
+      const testWare2 = new TestAfterWare();
+
+      const networkInterface = createNetworkInterface('/graphql');
+      networkInterface.useAfter([testWare1, testWare2]);
+
+      assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
+    });
+  });
+
   describe('making a request', () => {
     it('should fetch remote data', () => {
       const swapi = createNetworkInterface('http://graphql-swapi.test/');
@@ -451,6 +493,21 @@ function TestWare(
 
     options.map((variable) => {
       request.options[variable.key] = variable.val;
+    });
+
+    next();
+  };
+
+}
+
+// simulate afterware by altering variables and options
+function TestAfterWare(
+  options: Array<{ key: string, val: any }> = []
+) {
+
+  this.applyAfterware = (response: AfterwareResponse, next: Function): void => {
+    options.map((variable) => {
+      response.options[variable.key] = variable.val;
     });
 
     next();

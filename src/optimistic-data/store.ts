@@ -38,6 +38,9 @@ export function optimistic(
       result: { data: action.optimisticResponse },
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
+      mutation: action.mutation,
+      fragmentMap: action.fragmentMap,
+      variables: action.variables,
     } as ApolloAction;
 
     const fakeStore = assign({}, store, { optimistic: previousState }) as Store;
@@ -45,8 +48,6 @@ export function optimistic(
     const fakeDataResultState = data(
       optimisticData,
       fakeMutationResultAction,
-      store.queries,
-      store.mutations,
       config
     );
 

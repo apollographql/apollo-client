@@ -237,16 +237,25 @@ export class QueryManager {
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
     });
 
+
     return this.networkInterface.query(request)
       .then((result) => {
         this.store.dispatch({
           type: 'APOLLO_MUTATION_RESULT',
           result,
           mutationId,
+          mutation: {
+            id: 'ROOT_MUTATION',
+            typeName: 'Mutation',
+            selectionSet: mutationDef.selectionSet,
+          },
+          fragmentMap: queryFragmentMap,
+          variables,
           resultBehaviors: [
             ...resultBehaviors,
             ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
           ],
+
         });
 
         return result;
@@ -691,12 +700,19 @@ export class QueryManager {
         return this.batcher.enqueueRequest(fetchRequest)
           .then((result: GraphQLResult) => {
             // XXX handle multiple ApolloQueryResults
-            this.store.dispatch({
-              type: 'APOLLO_QUERY_RESULT',
-              result,
-              queryId,
-              requestId,
-            });
+            // Ignore results from old requests
+            if (this.getApolloState().queries[queryId] && requestId >= this.getApolloState().queries[queryId].lastRequestId) {
+                this.store.dispatch({
+                type: 'APOLLO_QUERY_RESULT',
+                result,
+                queryId,
+                requestId,
+                minimizedQuery,
+                fragmentMap: queryFragmentMap,
+                variables,
+              });
+            }
+
 
             this.removeFetchQueryPromise(requestId);
             return result;

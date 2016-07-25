@@ -17,6 +17,10 @@ export interface QueryResultAction {
   result: GraphQLResult;
   queryId: string;
   requestId: number;
+  minimizedQuery: SelectionSetWithRoot;
+  fragmentMap: FragmentMap;
+  variables: Object;
+
 }
 
 export function isQueryResultAction(action: ApolloAction): action is QueryResultAction {
@@ -28,6 +32,7 @@ export interface QueryErrorAction {
   error: Error;
   queryId: string;
   requestId: number;
+
 }
 
 export function isQueryErrorAction(action: ApolloAction): action is QueryErrorAction {
@@ -92,6 +97,9 @@ export interface MutationResultAction {
   result: GraphQLResult;
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
+  mutation: SelectionSetWithRoot;
+  fragmentMap: FragmentMap;
+  variables: Object;
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

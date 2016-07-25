@@ -13,14 +13,6 @@ import assign = require('lodash.assign');
 import isObject = require('lodash.isobject');
 
 import {
-  QueryStore,
-} from '../queries/store';
-
-import {
-  MutationStore,
-} from '../mutations/store';
-
-import {
   ApolloReducerConfig,
 } from '../store';
 
@@ -66,8 +58,6 @@ export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
 export function data(
   previousState: NormalizedCache = {},
   action: ApolloAction,
-  queries: QueryStore,
-  mutations: MutationStore,
   config: ApolloReducerConfig
 ): NormalizedCache {
   // XXX This is hopefully a temporary binding to get around
@@ -75,32 +65,21 @@ export function data(
   const constAction = action;
 
   if (isQueryResultAction(action)) {
-    if (!queries[action.queryId]) {
-      return previousState;
-    }
-
-    // Ignore results from old requests
-    // XXX this means that if you have a refetch interval which is shorter than your roundtrip time,
-    // your query will be in the loading state forever!
-    if (action.requestId < queries[action.queryId].lastRequestId) {
-      return previousState;
-    }
 
     // XXX handle partial result due to errors
     if (! graphQLResultHasError(action.result)) {
-      const queryStoreValue = queries[action.queryId];
 
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
       const newState = writeSelectionSetToStore({
         result: action.result.data,
-        dataId: queryStoreValue.minimizedQuery.id,
-        selectionSet: queryStoreValue.minimizedQuery.selectionSet,
-        variables: queryStoreValue.variables,
+        dataId: action.minimizedQuery.id,
+        selectionSet: action.minimizedQuery.selectionSet,
+        variables: action.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
+        fragmentMap: action.fragmentMap,
       });
 
       return newState;
@@ -108,19 +87,17 @@ export function data(
   } else if (isMutationResultAction(constAction)) {
     // Incorporate the result from this mutation into the store
     if (!constAction.result.errors) {
-      const queryStoreValue = mutations[constAction.mutationId];
-
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
       let newState = writeSelectionSetToStore({
         result: constAction.result.data,
-        dataId: queryStoreValue.mutation.id,
-        selectionSet: queryStoreValue.mutation.selectionSet,
-        variables: queryStoreValue.variables,
+        dataId: constAction.mutation.id,
+        selectionSet: constAction.mutation.selectionSet,
+        variables: constAction.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
+        fragmentMap: constAction.fragmentMap,
       });
 
       if (constAction.resultBehaviors) {
@@ -128,9 +105,9 @@ export function data(
           const args: MutationBehaviorReducerArgs = {
             behavior,
             result: constAction.result,
-            variables: queryStoreValue.variables,
-            fragmentMap: queryStoreValue.fragmentMap,
-            selectionSet: queryStoreValue.mutation.selectionSet,
+            variables: constAction.variables,
+            fragmentMap: constAction.fragmentMap,
+            selectionSet: constAction.mutation.selectionSet,
             config,
           };
 

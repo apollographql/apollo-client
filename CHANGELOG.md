@@ -8,6 +8,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Fixed an extra log of errors on `query` calls. [PR #445](https://github.com/apollostack/apollo-client/pull/445) and [Issue #423](https://github.com/apollostack/apollo-client/issues/423).
 - Fix repeat calls to a query that includes fragments [PR #447](https://github.com/apollostack/apollo-client/pull/447).
 - GraphQL errors on mutation results now result in a rejected promise and are no longer a part of returned results. [PR #465](https://github.com/apollostack/apollo-client/pull/465) and [Issue #458](https://github.com/apollostack/apollo-client/issues/458).
+- Don't add fields to root mutations and root queries [PR #463](https://github.com/apollostack/apollo-client/pull/463) and [Issue #413](https://github.com/apollostack/apollo-client/issues/413).
 
 ### v0.4.7
 

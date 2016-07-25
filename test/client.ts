@@ -213,7 +213,7 @@ describe('client', () => {
 
     return client.query({ query })
       .then((result) => {
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
       });
   });
 
@@ -257,7 +257,7 @@ describe('client', () => {
 
     return client.query({ query })
       .then((result) => {
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
       });
   });
 
@@ -296,7 +296,7 @@ describe('client', () => {
 
     return client.query({ query })
       .then((result) => {
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
       });
   });
 
@@ -376,7 +376,7 @@ describe('client', () => {
 
     return client.query({ query })
       .then((result) => {
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
         assert.deepEqual(initialState, client.store.getState());
       });
   });
@@ -424,7 +424,7 @@ describe('client', () => {
 
     return client.query({ query })
       .then((result) => {
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
       });
   });
   it('should return errors correctly for a single query', () => {
@@ -860,7 +860,7 @@ describe('client', () => {
 
       return client.query({ query })
         .then((result) => {
-          assert.deepEqual(result, { data });
+          assert.deepEqual(result.data, data);
           assert.deepEqual(client.store.getState()['apollo'].data['1'],
             {
               id: '1',
@@ -891,7 +891,7 @@ describe('client', () => {
 
       return client.query({ query })
         .then((result) => {
-          assert.deepEqual(result, { data });
+          assert.deepEqual(result.data, data);
           assert.deepEqual(store.getState()['apollo'].data['1'],
             {
               id: '1',
@@ -1260,7 +1260,7 @@ describe('client', () => {
         }`);
 
       client.query({ query: queryDoc, fragments: fragmentDefs }).then((result) => {
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
         done();
       });
     });
@@ -1346,7 +1346,7 @@ describe('client', () => {
       const observer = client.watchQuery({ query: queryDoc, fragments: fragmentDefs });
       observer.subscribe({
         next(result) {
-          assert.deepEqual(result, { data });
+          assert.deepEqual(result.data, data);
           done();
         },
       });
@@ -1392,7 +1392,7 @@ describe('client', () => {
         { query: queryDoc, pollInterval: 30, fragments: fragmentDefs});
       const subscription = observer.subscribe({
         next(result) {
-          assert.deepEqual(result, { data });
+          assert.deepEqual(result.data, data);
           subscription.unsubscribe();
           done();
         },

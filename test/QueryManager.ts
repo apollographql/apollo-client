@@ -2533,7 +2533,7 @@ describe('QueryManager', () => {
       });
 
       queryManager.fetchQuery('bad-id', { query, fragments }).then((result) => {
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
         done();
       });
     });
@@ -2741,7 +2741,7 @@ describe('QueryManager', () => {
       reduxRootKey: 'apollo',
     });
     queryManager.query({ query }).then((result) => {
-      assert.deepEqual(result, { data });
+      assert.deepEqual(result.data, data);
 
       queryManager.query({ query, forceFetch: true }).then(() => {
         done(new Error('Returned a result when it was not supposed to.'));
@@ -2878,11 +2878,11 @@ describe('QueryManager', () => {
      handle.subscribe({
       next(result) {
         timesFired += 1;
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
       },
     });
     queryManager.query({ query }).then((result) => {
-      assert.deepEqual(result, { data });
+      assert.deepEqual(result.data, data);
       assert.equal(timesFired, 1);
       done();
     });
@@ -3169,6 +3169,113 @@ describe('QueryManager', () => {
       assert.equal(withIdResultsReceived, 1);
       done();
     }, 120);
+  });
+
+  describe('loading state', () => {
+    it('should be passed as false if we are not watching a query', (done) => {
+      const query = gql`
+        query {
+          fortuneCookie
+        }`;
+      const data = {
+        fortuneCookie: 'Buy it',
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface({
+          request: { query },
+          result: { data },
+        }),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.query({ query }).then((result) => {
+        assert(!result.loading);
+        assert.deepEqual(result.data, data);
+        done();
+      });
+    });
+
+    it('should be passed to the observer as false if we are returning partial data', () => {
+      const primeQuery = gql`
+        query {
+          fortuneCookie
+        }`;
+      const primeData = {
+        fortuneCookie: 'You must stick to your goal but rethink your approach',
+      };
+      const query = gql`
+        query {
+          fortuneCookie
+          author {
+            name
+          }
+        }`;
+      const diffQuery = gql`
+        query {
+          author {
+            name
+          }
+        }`;
+      const diffData = {
+        author: {
+          name: 'John',
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(
+          {
+            request: { query: diffQuery },
+            result: { data: diffData },
+            delay: 5,
+          },
+          {
+            request: { query: primeQuery },
+            result: { data: primeData },
+          }
+        ),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.query({ query: primeQuery }).then((primeResult) => {
+        const handle = queryManager.watchQuery({ query, returnPartialData: true });
+
+        handle.subscribe({
+          next(result) {
+            assert(result.loading);
+            assert.deepEqual(result.data, { data: diffData } );
+          },
+        });
+      });
+    });
+
+    it('should be passed to the observer as true if we are returning all the data', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(
+          {
+            request: { query },
+            result: { data },
+          }
+        ),
+        store: createApolloStore(),
+        reduxRootKey: 'apollo',
+      });
+      queryManager.query({ query }).then((result) => {
+        assert(!result.loading);
+      });
+    });
   });
 });
 

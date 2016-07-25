@@ -319,6 +319,7 @@ export class QueryManager {
                 returnPartialData: options.returnPartialData || options.noFetch,
                 fragmentMap: queryStoreValue.fragmentMap,
               }),
+              loading: queryStoreValue.loading,
             };
 
             if (observer.next) {
@@ -760,7 +761,7 @@ export class QueryManager {
 
             // return a chainable promise
             this.removeFetchQueryPromise(requestId);
-            resolve({ data: resultFromStore });
+            resolve({ data: resultFromStore, loading: false });
           }).catch((error: Error) => {
             this.store.dispatch({
               type: 'APOLLO_QUERY_ERROR',

@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Fixed issue with alias names in batched queries. [PR #493](https://github.com/apollostack/apollo-client/pull/493) and [Issue #490](https://github.com/apollostack/apollo-client/issues).
+- Add loading state tracking within Apollo Client in order to simplify the handling of loading state within the view layers. [Issue #342](https://github.com/apollostack/apollo-client/issues/342) and [PR #467](https://github.com/apollostack/apollo-client/pull/467)
 
 ### v0.4.9
 

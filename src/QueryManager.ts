@@ -237,29 +237,39 @@ export class QueryManager {
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
     });
 
-    return this.networkInterface.query(request)
-      .then((result) => {
-        this.store.dispatch({
-          type: 'APOLLO_MUTATION_RESULT',
-          result,
-          mutationId,
-          resultBehaviors: [
-            ...resultBehaviors,
-            ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
-          ],
-        });
+    return new Promise((resolve, reject) => {
+      this.networkInterface.query(request)
+        .then((result) => {
+          if (result.errors) {
+            reject(new ApolloError({
+              graphQLErrors: result.errors,
+            }));
+          }
 
-        return result;
-      })
-      .catch((err) => {
-        this.store.dispatch({
-          type: 'APOLLO_MUTATION_ERROR',
-          error: err,
-          mutationId,
-        });
+          this.store.dispatch({
+            type: 'APOLLO_MUTATION_RESULT',
+            result,
+            mutationId,
+            resultBehaviors: [
+                ...resultBehaviors,
+                ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
+            ],
+          });
 
-        return Promise.reject(err);
-      });
+          resolve(result);
+        })
+        .catch((err) => {
+          this.store.dispatch({
+            type: 'APOLLO_MUTATION_ERROR',
+            error: err,
+            mutationId,
+          });
+
+          reject(new ApolloError({
+            networkError: err,
+          }));
+        });
+    });
   }
 
   // Returns a query listener that will update the given observer based on the

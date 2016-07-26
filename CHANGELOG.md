@@ -7,6 +7,8 @@ Expect active development and potentially significant breaking changes in the `0
 - Fix issues with union type handling for inline and named fragments. [PR #356](https://github.com/apollostack/apollo-client/pull/356/files), [Issue #354](https://github.com/apollostack/apollo-client/issues/354) [Issue #355](https://github.com/apollostack/apollo-client/issues/355).
 - Add a stack trace to `ApolloError`. [PR #445](https://github.com/apollostack/apollo-client/pull/445) and [Issue #434](https://github.com/apollostack/apollo-client/issues/434).
 - Fixed an extra log of errors on `query` calls. [PR #445](https://github.com/apollostack/apollo-client/pull/445) and [Issue #423](https://github.com/apollostack/apollo-client/issues/423).
+- Fix repeat calls to a query that includes fragments [PR #447](https://github.com/apollostack/apollo-client/pull/447).
+- GraphQL errors on mutation results now result in a rejected promise and are no longer a part of returned results. [PR #465](https://github.com/apollostack/apollo-client/pull/465) and [Issue #458](https://github.com/apollostack/apollo-client/issues/458).
 
 ### v0.4.7
 

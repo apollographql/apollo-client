@@ -503,7 +503,7 @@ describe('optimistic mutation results', () => {
       })
       .catch((err) => {
         assert.instanceOf(err, Error);
-        assert.equal(err.message, 'forbidden (test error)');
+        assert.equal(err.message, 'Network error: forbidden (test error)');
 
         const dataInStore = client.queryManager.getDataWithOptimisticResults();
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 3);
@@ -539,7 +539,7 @@ describe('optimistic mutation results', () => {
         }).catch((err) => {
           // it is ok to fail here
           assert.instanceOf(err, Error);
-          assert.equal(err.message, 'forbidden (test error)');
+          assert.equal(err.message, 'Network error: forbidden (test error)');
           return null;
         });
 
@@ -814,7 +814,7 @@ describe('optimistic mutation results', () => {
         }).catch((err) => {
           // it is ok to fail here
           assert.instanceOf(err, Error);
-          assert.equal(err.message, 'forbidden (test error)');
+          assert.equal(err.message, 'Network error: forbidden (test error)');
           return null;
         });
 

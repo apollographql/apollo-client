@@ -424,6 +424,7 @@ Perhaps you want to use the \`returnPartialData\` option?`,
       selectionSet: field.selectionSet,
       variables,
       fragmentMap,
+      paginationArguments,
     });
   }
 

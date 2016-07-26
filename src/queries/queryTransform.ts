@@ -47,10 +47,13 @@ export function addTypenameToSelectionSet(selectionSet: SelectionSet) {
   return addFieldToSelectionSet('__typename', selectionSet);
 }
 
-function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: QueryTransformer[]) {
+function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: QueryTransformer[], isRoot = false) {
+
   if (selectionSet && selectionSet.selections) {
     queryTransformers.forEach((transformer) => {
-      transformer(selectionSet); // transforms in place
+      if (! isRoot) {
+        transformer(selectionSet); // transforms in place
+      }
       selectionSet.selections.forEach((selection) => {
         if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
           traverseSelectionSet((selection as Field | InlineFragment).selectionSet, queryTransformers);
@@ -69,7 +72,12 @@ export function applyTransformers(doc: Document, queryTransformers: QueryTransfo
   checkDocument(doc);
   const docClone = cloneDeep(doc);
   docClone.definitions.forEach((definition) => {
-    traverseSelectionSet((definition as (OperationDefinition | FragmentDefinition)).selectionSet, queryTransformers);
+    if (definition.kind === 'OperationDefinition') { // query or mutation
+      traverseSelectionSet((definition as OperationDefinition).selectionSet, queryTransformers, true);
+    } else {
+      traverseSelectionSet((definition as FragmentDefinition).selectionSet, queryTransformers);
+    }
+
   });
   return docClone;
 }

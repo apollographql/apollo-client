@@ -2091,7 +2091,6 @@ describe('QueryManager', () => {
           lastName
           __typename
         }
-        __typename
       }`;
     const unmodifiedQueryResult = {
       'author': {
@@ -2105,7 +2104,6 @@ describe('QueryManager', () => {
         'lastName': 'Smith',
         '__typename': 'Author',
       },
-      '__typename': 'RootQuery',
     };
 
     const networkInterface = mockNetworkInterface(
@@ -2149,7 +2147,6 @@ describe('QueryManager', () => {
           lastName
           __typename
         }
-        __typename
       }`;
     const unmodifiedMutationResult = {
       'createAuthor': {
@@ -2163,7 +2160,6 @@ describe('QueryManager', () => {
         'lastName': 'It works!',
         '__typename': 'Author',
       },
-      '__typename': 'RootMutation',
     };
 
     const networkInterface = mockNetworkInterface(

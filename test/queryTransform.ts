@@ -58,8 +58,8 @@ describe('query transforms', () => {
         }
       }
     `;
-    function addBirthdayField(selectionSet: SelectionSet) {
-      return addFieldToSelectionSet('birthday', selectionSet);
+    function addBirthdayField(selectionSet: SelectionSet, isRoot?: boolean) {
+      return addFieldToSelectionSet('birthday', selectionSet, isRoot);
     }
     const newQueryDoc = applyTransformers(testQuery, [addBirthdayField]);
     const queryDef = getQueryDefinition(newQueryDoc);
@@ -210,8 +210,8 @@ describe('query transforms', () => {
       firstName
       lastName
     }`;
-    function addBirthdayField(selectionSet: SelectionSet) {
-      return addFieldToSelectionSet('birthday', selectionSet);
+    function addBirthdayField(selectionSet: SelectionSet, isRoot?: boolean) {
+      return addFieldToSelectionSet('birthday', selectionSet, isRoot);
     }
     const newQueryDoc = applyTransformers(testQuery, [addTypenameToSelectionSet, addBirthdayField]);
 

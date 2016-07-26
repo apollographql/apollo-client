@@ -14,11 +14,16 @@ import {
 import cloneDeep = require('lodash.clonedeep');
 
 // A QueryTransformer takes a SelectionSet and transforms it in someway (in place).
-export type QueryTransformer = (selectionSet: SelectionSet) => void
+export type QueryTransformer = (selectionSet: SelectionSet, isRoot?: boolean) => void
 
 // Adds a field with a given name to every node in the AST recursively.
 // Note: this mutates the AST passed in.
-export function addFieldToSelectionSet(fieldName: string, selectionSet: SelectionSet) {
+export function addFieldToSelectionSet(
+  fieldName: string, selectionSet: SelectionSet, isRoot?: boolean
+) {
+  if (isRoot) {
+    return;
+  }
   const fieldAst: Field = {
     kind: 'Field',
     alias: null,
@@ -43,17 +48,16 @@ export function addFieldToSelectionSet(fieldName: string, selectionSet: Selectio
 
 // Adds typename fields to every node in the AST recursively.
 // Note: This muates the AST passed in.
-export function addTypenameToSelectionSet(selectionSet: SelectionSet) {
-  return addFieldToSelectionSet('__typename', selectionSet);
+export function addTypenameToSelectionSet(selectionSet: SelectionSet, isRoot?: boolean) {
+  return addFieldToSelectionSet('__typename', selectionSet, isRoot);
 }
 
 function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: QueryTransformer[], isRoot = false) {
 
   if (selectionSet && selectionSet.selections) {
     queryTransformers.forEach((transformer) => {
-      if (! isRoot) {
-        transformer(selectionSet); // transforms in place
-      }
+      transformer(selectionSet, isRoot); // transforms in place
+
       selectionSet.selections.forEach((selection) => {
         if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
           traverseSelectionSet((selection as Field | InlineFragment).selectionSet, queryTransformers);

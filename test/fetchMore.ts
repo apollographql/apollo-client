@@ -92,6 +92,104 @@ describe('fetchMore-kind queries on QueryManager', () => {
     });
   });
 
+  it.skip('properly fetches more data with a targeted directive and paginationArgs', (done) => {
+    const query = gql`
+      query people($cur: ID!) {
+        allPeople(after: $cur, limit: 1) {
+          people @apolloFetchMore(name: "people") {
+            name
+          }
+        }
+      }
+    `;
+
+    const strippedQuery = gql`
+      query people($cur: ID!) {
+        allPeople(after: $cur, limit: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const paginationArguments = ['before', 'after', 'first', 'last'];
+
+    const data1 = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const variables1 = {
+      cur: 'start',
+    };
+
+    const data2 = {
+      allPeople: {
+        people: [
+          {
+            name: 'Jar Jar binks',
+          },
+        ],
+      },
+    };
+
+    const variables2 = {
+      cur: 'after-luke',
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: {
+          query: strippedQuery,
+          variables: variables1,
+        },
+        result: { data: data1 },
+      },
+      {
+        request: {
+          query: strippedQuery,
+          variables: variables2,
+        },
+        result: { data: data2 },
+      }
+    );
+
+    const queryManager = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+
+    const handle = queryManager.watchQuery({
+      query,
+      variables: variables1,
+      paginationArguments,
+    });
+
+    let handleCount = 0;
+    handle.subscribe({
+      next(result) {
+        handleCount ++;
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data1);
+          handle.fetchMore(['people'], variables2);
+        } else {
+          assert.deepEqual(
+            result.data.allPeople.people,
+            [].concat(data1.allPeople.people, data2.allPeople.people)
+          );
+          done();
+        }
+      },
+    });
+  });
+
   it('just concatenates on the selected directives', (done) => {
     const query = gql`
       query people {

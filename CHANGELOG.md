@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Add `useAfter` function that accepts `afterwares`. Afterwares run after a request is made (after middlewares). In the afterware function, you get the whole response and request options, so you can handle status codes and errors if you need to. For example, if your requests return a `401` in the case of user logout, you can use this to identify when that starts happening. It can be used just as a `middleware` is used. Just pass an array of afterwares to the `useAfter` function.
+- Fix issues with union type handling for inline and named fragments. [PR #356](https://github.com/apollostack/apollo-client/pull/356/files), [Issue #354](https://github.com/apollostack/apollo-client/issues/354) [Issue #355](https://github.com/apollostack/apollo-client/issues/355).
 - Add a stack trace to `ApolloError`. [PR #445](https://github.com/apollostack/apollo-client/pull/445) and [Issue #434](https://github.com/apollostack/apollo-client/issues/434).
 - Fixed an extra log of errors on `query` calls. [PR #445](https://github.com/apollostack/apollo-client/pull/445) and [Issue #423](https://github.com/apollostack/apollo-client/issues/423).
 - Fix repeat calls to a query that includes fragments [PR #447](https://github.com/apollostack/apollo-client/pull/447).

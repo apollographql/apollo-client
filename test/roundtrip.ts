@@ -2,6 +2,10 @@ import { assert } from 'chai';
 
 import { writeQueryToStore } from '../src/data/writeToStore';
 import { readQueryFromStore } from '../src/data/readFromStore';
+import {
+  getFragmentDefinitions,
+  createFragmentMap,
+} from '../src/queries/getFromAST';
 
 import {
   Document,
@@ -109,19 +113,176 @@ describe('roundtrip', () => {
       `, {fortuneCookie: 'live long and prosper'});
     });
   });
+
+  describe('fragments', () => {
+    it('should resolve on union types with inline fragments', () => {
+      storeRoundtrip(gql`
+        query {
+          all_people {
+            name
+            ... on Jedi {
+              side
+            }
+            ... on Droid {
+              model
+            }
+          }
+        }`, {
+        all_people: [
+          {
+            name: 'Luke Skywalker',
+            side: 'bright',
+          },
+          {
+            name: 'R2D2',
+            model: 'astromech',
+          },
+        ],
+      });
+    });
+
+    it('should throw an error on two of the same inline fragment types', () => {
+      assert.throws(() => {
+        storeRoundtrip(gql`
+          query {
+            all_people {
+              name
+              ... on Jedi {
+                side
+              }
+              ... on Jedi {
+                rank
+              }
+            }
+          }`, {
+          all_people: [
+            {
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+          ],
+          });
+      }, /Can\'t find field rank on result object/);
+    });
+
+    it('should resolve on union types with spread fragments', () => {
+      storeRoundtrip(gql`
+        fragment jediFragment on Jedi {
+          side
+        }
+
+        fragment droidFragment on Droid {
+          model
+        }
+
+        query {
+          all_people {
+            name
+            ...jediFragment
+            ...droidFragment
+          }
+        }`, {
+        all_people: [
+          {
+            name: 'Luke Skywalker',
+            side: 'bright',
+          },
+          {
+            name: 'R2D2',
+            model: 'astromech',
+          },
+        ],
+      });
+    });
+
+    it('should throw on error on two of the same spread fragment types', () => {
+      assert.throws(() =>
+        storeRoundtrip(gql`
+          fragment jediSide on Jedi {
+            side
+          }
+
+          fragment jediRank on Jedi {
+            rank
+          }
+
+          query {
+            all_people {
+              name
+              ...jediSide
+              ...jediRank
+            }
+          }`, {
+          all_people: [
+            {
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+          ],
+        })
+      , /Can\'t find field rank on result object/);
+    });
+
+    it('should resolve on @include and @skip with inline fragments', () => {
+      storeRoundtrip(gql`
+        query {
+          person {
+            name
+            ... on Jedi @include(if: true) {
+              side
+            }
+            ... on Droid @skip(if: true) {
+              model
+            }
+          }
+        }`, {
+        person: {
+          name: 'Luke Skywalker',
+          side: 'bright',
+        },
+      });
+    });
+
+    it('should resolve on @include and @skip with spread fragments', () => {
+      storeRoundtrip(gql`
+        fragment jediFragment on Jedi {
+          side
+        }
+
+        fragment droidFragment on Droid {
+          model
+        }
+
+        query {
+          person {
+            name
+            ...jediFragment @include(if: true)
+            ...droidFragment @skip(if: true)
+          }
+        }`, {
+        person: {
+          name: 'Luke Skywalker',
+          side: 'bright',
+        },
+      });
+    });
+  });
 });
 
 function storeRoundtrip(query: Document, result, variables = {}) {
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
   const store = writeQueryToStore({
     result,
     query,
     variables,
+    fragmentMap,
   });
 
   const reconstructedResult = readQueryFromStore({
     store,
     query,
     variables,
+    fragmentMap,
   });
 
   assert.deepEqual(result, reconstructedResult);

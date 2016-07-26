@@ -1046,6 +1046,23 @@ describe('writing to the store', () => {
     });
   });
 
+  it('does not swallow errors other than field errors', () => {
+    const query = gql`
+      query {
+        ...notARealFragment
+        fortuneCookie
+      }`;
+    const result = {
+      fortuneCookie: 'Star Wars unit tests are boring',
+    };
+    assert.throws(() => {
+      writeQueryToStore({
+        result,
+        query,
+      });
+    }, /No fragment/);
+  });
+
   it('does not change object references if the value is the same', () => {
     const fragment = gql`
       fragment Item on ItemType {

@@ -5,6 +5,11 @@ export class ApolloError extends Error {
   public graphQLErrors: GraphQLError[];
   public networkError: Error;
 
+  // An object that can be used to provide some additional information
+  // about an error, e.g. specifying the type of error this is. Used
+  // internally within Apollo Client.
+  public extraInfo: any;
+
   // Constructs an instance of ApolloError given a GraphQLError
   // or a network error. Note that one of these has to be a valid
   // value or the constructed error will be meaningless.
@@ -12,10 +17,12 @@ export class ApolloError extends Error {
     graphQLErrors,
     networkError,
     errorMessage,
+    extraInfo,
   }: {
     graphQLErrors?: GraphQLError[],
     networkError?: Error,
     errorMessage?: string,
+    extraInfo?: any,
   }) {
     super(errorMessage);
     this.graphQLErrors = graphQLErrors;
@@ -29,6 +36,8 @@ export class ApolloError extends Error {
     } else {
       this.message = errorMessage;
     }
+
+    this.extraInfo = extraInfo;
   }
 
   // Sets the error message on this error according to the

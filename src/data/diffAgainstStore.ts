@@ -37,6 +37,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import {
+  ApolloError,
+} from '../errors';
+
 export interface DiffResult {
   result: any;
   isMissing?: 'true';
@@ -85,6 +89,26 @@ export function diffFragmentAgainstStore({
   });
 }
 
+// Takes a map of errors for fragments of each type. If all of the types have
+// thrown an error, this function will throw the error associated with one
+// of the types.
+export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error }) {
+  const typenames = Object.keys(fragmentErrors);
+
+  // This is a no-op.
+  if (typenames.length === 0) {
+    return;
+  }
+
+  const errorTypes = typenames.filter((typename) => {
+    return (fragmentErrors[typename] !== null);
+  });
+
+  if (errorTypes.length === Object.keys(fragmentErrors).length) {
+    throw fragmentErrors[errorTypes[0]];
+  }
+}
+
 /**
  * Given a store, a root ID, and a selection set, return as much of the result as possible and
  * identify which selection sets and root IDs need to be fetched to get the rest of the requested
@@ -122,9 +146,20 @@ export function diffSelectionSetAgainstStore({
   const result = {};
   const missingFields: Selection[] = [];
 
+  // A map going from a typename to missing field errors thrown on that
+  // typename. This data structure is needed to support union types. For example, if we have
+  // a union type (Apple | Orange) and we only receive fields for fragments on
+  // "Apple", that should not result in an error. But, if at least one of the fragments
+  // for each of "Apple" and "Orange" is missing a field, that should return an error.
+  // (i.e. with this approach, we manage to handle missing fields correctly even for
+  // union types without any knowledge of the GraphQL schema).
+  let fragmentErrors: { [typename: string]: Error } = {};
+
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
     let missingFieldPushed = false;
+    let fieldResult: any;
+    let fieldIsMissing: string;
 
     function pushMissingField(missingField: Selection) {
       if (!missingFieldPushed) {
@@ -133,20 +168,20 @@ export function diffSelectionSetAgainstStore({
       }
     }
 
+    const included = shouldInclude(selection, variables);
+
     if (isField(selection)) {
-        const includeField = shouldInclude(selection, variables);
-        const {
-          result: fieldResult,
-          isMissing: fieldIsMissing,
-        } = diffFieldAgainstStore({
-          field: selection,
-          throwOnMissingField,
-          variables,
-          rootId,
-          store,
-          fragmentMap,
-          included: includeField,
-        });
+      const diffResult = diffFieldAgainstStore({
+        field: selection,
+        throwOnMissingField,
+        variables,
+        rootId,
+        store,
+        fragmentMap,
+        included,
+      });
+      fieldIsMissing = diffResult.isMissing;
+      fieldResult = diffResult.result;
 
       const resultFieldKey = resultKeyNameFromField(selection);
       if (fieldIsMissing) {
@@ -155,52 +190,87 @@ export function diffSelectionSetAgainstStore({
         // fields that is missing.
         pushMissingField(selection);
       }
-      if (includeField && fieldResult !== undefined) {
+      if (included && fieldResult !== undefined) {
         result[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {
-      const {
-        result: fieldResult,
-        isMissing: fieldIsMissing,
-      } = diffSelectionSetAgainstStore({
-        selectionSet: selection.selectionSet,
-        throwOnMissingField,
-        variables,
-        rootId,
-        store,
-        fragmentMap,
-      });
+      const typename = selection.typeCondition.name.value;
 
-      if (fieldIsMissing) {
-        pushMissingField(selection);
-      } else {
-        assign(result, fieldResult);
+      if (included) {
+        try {
+          const diffResult = diffSelectionSetAgainstStore({
+            selectionSet: selection.selectionSet,
+            throwOnMissingField,
+            variables,
+            rootId,
+            store,
+            fragmentMap,
+          });
+          fieldIsMissing = diffResult.isMissing;
+          fieldResult = diffResult.result;
+
+          if (fieldIsMissing) {
+            pushMissingField(selection);
+          } else {
+            assign(result, fieldResult);
+          }
+
+          if (!fragmentErrors[typename]) {
+            fragmentErrors[typename] = null;
+          }
+        } catch (e) {
+          if (e.extraInfo && e.extraInfo.isFieldError) {
+            fragmentErrors[typename] = e;
+          } else {
+            throw e;
+          }
+        }
       }
     } else {
       const fragment = fragmentMap[selection.name.value];
+
       if (!fragment) {
         throw new Error(`No fragment named ${selection.name.value}`);
       }
 
-      const {
-        result: fieldResult,
-        isMissing: fieldIsMissing,
-      } = diffSelectionSetAgainstStore({
-        selectionSet: fragment.selectionSet,
-        throwOnMissingField,
-        variables,
-        rootId,
-        store,
-        fragmentMap,
-      });
+      const typename = fragment.typeCondition.name.value;
 
-      if (fieldIsMissing) {
-        pushMissingField(selection);
-      } else {
-        assign(result, fieldResult);
+      if (included) {
+        try {
+          const diffResult = diffSelectionSetAgainstStore({
+            selectionSet: fragment.selectionSet,
+            throwOnMissingField,
+            variables,
+            rootId,
+            store,
+            fragmentMap,
+          });
+          fieldIsMissing = diffResult.isMissing;
+          fieldResult = diffResult.result;
+
+          if (fieldIsMissing) {
+            pushMissingField(selection);
+          } else {
+            assign(result, fieldResult);
+          }
+
+          if (!fragmentErrors[typename]) {
+            fragmentErrors[typename] = null;
+          }
+        } catch (e) {
+          if (e.extraInfo && e.extraInfo.isFieldError) {
+            fragmentErrors[typename] = e;
+          } else {
+            throw e;
+          }
+        }
       }
     }
   });
+
+  if (throwOnMissingField) {
+    handleFragmentErrors(fragmentErrors);
+  }
 
   // Set this to true if we don't have enough information at this level to generate a refetch
   // query, so we need to merge the selection set with the parent, rather than appending
@@ -257,8 +327,13 @@ function diffFieldAgainstStore({
 
   if (! has(storeObj, storeFieldKey)) {
     if (throwOnMissingField && included) {
-      throw new Error(`Can't find field ${storeFieldKey} on object ${JSON.stringify(storeObj)}.
-Perhaps you want to use the \`returnPartialData\` option?`);
+      throw new ApolloError({
+        errorMessage: `Can't find field ${storeFieldKey} on object ${JSON.stringify(storeObj)}.
+Perhaps you want to use the \`returnPartialData\` option?`,
+        extraInfo: {
+          isFieldError: true,
+        },
+      });
     }
 
     return {

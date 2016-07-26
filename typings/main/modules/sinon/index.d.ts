@@ -437,10 +437,10 @@ var Sinon: Sinon.SinonStatic;
 export = Sinon;
 }
 declare module 'sinon/lib/sinon' {
-import main = require('~sinon/lib/sinon');
-export = main;
+import alias = require('~sinon/lib/sinon');
+export = alias;
 }
 declare module 'sinon' {
-import main = require('~sinon/lib/sinon');
-export = main;
+import alias = require('~sinon/lib/sinon');
+export = alias;
 }

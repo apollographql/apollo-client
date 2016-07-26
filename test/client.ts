@@ -518,7 +518,6 @@ describe('client', () => {
           lastName
           __typename
         }
-        __typename
       }`;
 
     const result = {
@@ -533,7 +532,6 @@ describe('client', () => {
         'lastName': 'Smith',
         '__typename': 'Author',
       },
-      '__typename': 'RootQuery',
     };
 
     const networkInterface = mockNetworkInterface(
@@ -572,7 +570,6 @@ describe('client', () => {
           lastName
           __typename
         }
-        __typename
       }`;
     const result = {
       'author': {
@@ -586,7 +583,6 @@ describe('client', () => {
         'lastName': 'Smith',
         '__typename': 'Author',
       },
-      '__typename': 'RootQuery',
     };
     const networkInterface = mockNetworkInterface(
     {

@@ -40,7 +40,6 @@ describe('query transforms', () => {
           }
           __typename
         }
-        __typename
       }
     `;
     const expectedQueryStr = print(expectedQuery);
@@ -78,7 +77,6 @@ describe('query transforms', () => {
           }
           birthday
         }
-        birthday
       }
     `);
     const expectedQueryStr = print(expectedQuery);
@@ -110,7 +108,6 @@ describe('query transforms', () => {
           }
           __typename
         }
-        __typename
       }
     `;
     const expectedQueryStr = print(expectedQuery);
@@ -136,7 +133,6 @@ describe('query transforms', () => {
         }
         __typename
       }
-      __typename
     }
     `);
     const modifiedQuery = applyTransformers(testQuery, [addTypenameToSelectionSet]);
@@ -168,7 +164,6 @@ describe('query transforms', () => {
         }
         __typename
       }
-      __typename
     }
     fragment friendFields on User {
       firstName
@@ -195,7 +190,6 @@ describe('query transforms', () => {
         lastName
         __typename
       }
-      __typename
     }
     `);
 
@@ -232,8 +226,6 @@ describe('query transforms', () => {
         __typename
         birthday
       }
-      __typename
-      birthday
     }
     fragment friendFields on User {
       firstName
@@ -260,7 +252,6 @@ describe('query transforms', () => {
           lastName
           __typename
         }
-        __typename
       }`;
 
     const modifiedQuery = applyTransformers(testQuery, [addTypenameToSelectionSet]);
@@ -334,7 +325,6 @@ describe('query transforms', () => {
             }
             __typename
           }
-          __typename
         }`);
     const modifiedQuery = applyTransformers(testQuery, [addTypenameToSelectionSet]);
     assert.equal(print(expectedQuery), print(getQueryDefinition(modifiedQuery)));

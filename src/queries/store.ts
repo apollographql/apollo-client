@@ -41,6 +41,7 @@ export interface QueryStoreValue {
   returnPartialData: boolean;
   lastRequestId: number;
   fragmentMap: FragmentMap;
+  fetchMoreLocations: string[];
 }
 
 export interface SelectionSetWithRoot {
@@ -72,6 +73,7 @@ export function queries(
       returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,
       fragmentMap: action.fragmentMap,
+      fetchMoreLocations: action.fetchMoreLocations,
     };
 
     return newState;

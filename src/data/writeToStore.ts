@@ -18,6 +18,10 @@ import {
 } from './storeUtils';
 
 import {
+  diffFieldAgainstStore,
+} from './diffAgainstStore';
+
+import {
   OperationDefinition,
   SelectionSet,
   FragmentDefinition,
@@ -42,6 +46,7 @@ import {
 
 import {
   shouldInclude,
+  getDirectiveArgs,
 } from '../queries/directives';
 
 import {
@@ -68,12 +73,14 @@ export function writeFragmentToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
+  fetchMoreLocations = [],
 }: {
   result: Object,
   fragment: Document,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
+  fetchMoreLocations?: string[],
 }): NormalizedCache {
   // Argument validation
   if (!fragment) {
@@ -94,6 +101,7 @@ export function writeFragmentToStore({
     store,
     variables,
     dataIdFromObject,
+    fetchMoreLocations,
   });
 }
 
@@ -104,6 +112,7 @@ export function writeQueryToStore({
   variables,
   dataIdFromObject = null,
   fragmentMap,
+  fetchMoreLocations = [],
 }: {
   result: Object,
   query: Document,
@@ -111,6 +120,7 @@ export function writeQueryToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   fragmentMap?: FragmentMap,
+  fetchMoreLocations?: string[],
 }): NormalizedCache {
   const queryDefinition: OperationDefinition = getQueryDefinition(query);
 
@@ -133,6 +143,7 @@ export function writeSelectionSetToStore({
   variables,
   dataIdFromObject,
   fragmentMap,
+  fetchMoreLocations = [],
 }: {
   dataId: string,
   result: any,
@@ -141,6 +152,7 @@ export function writeSelectionSetToStore({
   variables: Object,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
+  fetchMoreLocations?: string[],
 }): NormalizedCache {
 
   if (!fragmentMap) {
@@ -189,6 +201,7 @@ export function writeSelectionSetToStore({
           field: selection,
           dataIdFromObject,
           fragmentMap,
+          fetchMoreLocations,
         });
       }
     } else if (isInlineFragment(selection)) {
@@ -238,6 +251,7 @@ export function writeSelectionSetToStore({
             dataId,
             dataIdFromObject,
             fragmentMap,
+            fetchMoreLocations,
           });
 
           if (!fragmentErrors[typename]) {
@@ -291,6 +305,7 @@ function writeFieldToStore({
   dataId,
   dataIdFromObject,
   fragmentMap,
+  fetchMoreLocations = [],
 }: {
   field: Field,
   value: any,
@@ -299,6 +314,7 @@ function writeFieldToStore({
   dataId: string,
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
+  fetchMoreLocations?: string[],
 }) {
   let storeValue;
 
@@ -321,6 +337,23 @@ function writeFieldToStore({
   } else if (isArray(value)) {
     // this is an array with sub-objects
     const thisIdList: Array<string> = [];
+
+    const fetchMoreArgs = getDirectiveArgs(field, 'apolloFetchMore');
+    if (
+      fetchMoreArgs && fetchMoreArgs.name &&
+      fetchMoreLocations.indexOf(fetchMoreArgs.name) >= 0
+    ) {
+      const { result: oldValue = [] } = diffFieldAgainstStore({
+        field,
+        throwOnMissingField: false,
+        variables,
+        rootId: dataId,
+        store,
+        fragmentMap,
+        included: true,
+      });
+      value = defaultListMerging(oldValue, value);
+    }
 
     value.forEach((item, index) => {
       if (isNull(item)) {
@@ -346,6 +379,7 @@ function writeFieldToStore({
           variables,
           dataIdFromObject,
           fragmentMap,
+          fetchMoreLocations,
         });
       }
     });
@@ -387,6 +421,7 @@ function writeFieldToStore({
       variables,
       dataIdFromObject,
       fragmentMap,
+      fetchMoreLocations,
     });
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).
@@ -431,4 +466,10 @@ function writeFieldToStore({
     store[dataId] = newStoreObj;
   }
 
+}
+
+function defaultListMerging(oldValues: any[], newValues: any[]): any[] {
+  const newIds = newValues.map(value => value.id ? value.id : null) .filter(id => id !== null);
+  const filteredOldValues = oldValues.filter(value => !value.id || newIds.indexOf(value.id) < 0);
+  return [].concat(filteredOldValues, newValues);
 }

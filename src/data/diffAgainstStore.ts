@@ -305,7 +305,7 @@ export function diffSelectionSetAgainstStore({
   };
 }
 
-function diffFieldAgainstStore({
+export function diffFieldAgainstStore({
   field,
   throwOnMissingField,
   variables,
@@ -416,7 +416,7 @@ Perhaps you want to use the \`returnPartialData\` option?`,
   throw new Error('Unexpected value in the store where the query had a subselection.');
 }
 
-interface FieldDiffResult {
+export interface FieldDiffResult {
   result?: any;
   isMissing?: 'true';
 }

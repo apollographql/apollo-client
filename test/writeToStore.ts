@@ -484,6 +484,65 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes a nested array with a fetchMoreDirective', () => {
+    const fragment = gql`
+      fragment Item on ItemType {
+        id,
+        nestedArray @apolloFetchMore(name: "nested") {
+          stringField,
+          numberField,
+          nullField
+        }
+      }
+    `;
+
+    const result1 = {
+      id: 'abcd',
+      nestedArray: [
+        {
+          stringField: 'This is a string also!',
+          numberField: 7,
+          nullField: null,
+        },
+      ],
+    };
+
+    const result2 = {
+      id: 'abcd',
+      nestedArray: [
+        {
+          stringField: 'This is a different string!',
+          numberField: 8,
+          nullField: null,
+        },
+      ],
+    };
+
+    let normalized = writeFragmentToStore({
+      fragment,
+      result: _.cloneDeep(result1),
+      fetchMoreLocations: ['nested'],
+    });
+
+    normalized = writeFragmentToStore({
+      fragment,
+      store: normalized,
+      result: _.cloneDeep(result2),
+      fetchMoreLocations: ['nested'],
+    });
+
+    assert.deepEqual(normalized, {
+      [result1.id]: _.assign({}, _.assign({}, _.omit(result1, 'nestedArray')), {
+        nestedArray: [
+          `${result1.id}.nestedArray.0`,
+          `${result2.id}.nestedArray.1`,
+        ],
+      }),
+      [`${result1.id}.nestedArray.0`]: result1.nestedArray[0],
+      [`${result2.id}.nestedArray.1`]: result2.nestedArray[0],
+    });
+  });
+
   it('properly normalizes an array of non-objects', () => {
     const fragment = gql`
       fragment Item on ItemType {

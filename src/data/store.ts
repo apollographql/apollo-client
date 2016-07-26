@@ -101,6 +101,7 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMap: queryStoreValue.fragmentMap,
+        fetchMoreLocations: queryStoreValue.fetchMoreLocations,
       });
 
       return newState;

@@ -18,6 +18,7 @@ import assign = require('lodash.assign');
 
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
+  public fetchMore: (fetchMoreLocations: string[], variables?: any) => Promise<ApolloQueryResult>;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
@@ -86,6 +87,17 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       // Use the same options as before, but with new variables and forceFetch true
       return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
         forceFetch: true,
+        variables,
+      }) as WatchQueryOptions);
+    };
+
+    this.fetchMore = (fetchMoreLocations: string[], variables?: any) => {
+      if (options.pollInterval) {
+        throw new Error('fetchMore is incompatible with polling.');
+      }
+      return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
+        forceFetch: true,
+        fetchMoreLocations,
         variables,
       }) as WatchQueryOptions);
     };

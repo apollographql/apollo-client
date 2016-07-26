@@ -26,3 +26,4 @@ import './mutationResults';
 import './optimistic';
 import './scopeQuery';
 import './errors';
+import './storeUtils'

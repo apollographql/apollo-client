@@ -46,6 +46,7 @@ export interface QueryInitAction {
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;
+  paginationArguments?: string[];
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {
@@ -81,6 +82,7 @@ export interface MutationInitAction {
   fragmentMap: FragmentMap;
   optimisticResponse: Object;
   resultBehaviors?: MutationBehavior[];
+  paginationArguments?: string[];
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {

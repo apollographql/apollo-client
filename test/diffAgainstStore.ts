@@ -223,6 +223,52 @@ describe('diffing queries against the store', () => {
     assert.deepEqual(store['1'], result.people_one);
   });
 
+  it('does not diffs root queries if IDs are paginationArguments', () => {
+    const firstQuery = gql`
+      {
+        people_one(id: "1") {
+          __typename,
+          id,
+          name
+        }
+      }
+    `;
+
+    const result = {
+      people_one: {
+        __typename: 'Person',
+        id: '1',
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const store = writeQueryToStore({
+      result,
+      query: firstQuery,
+      dataIdFromObject: getIdField,
+      paginationArguments: ['id'],
+    });
+
+    const secondQuery = gql`
+      {
+        people_one(id: "2") {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const { missingSelectionSets } = diffQueryAgainstStore({
+      store,
+      query: secondQuery,
+      paginationArguments: ['id'],
+    });
+
+    assert.isUndefined(missingSelectionSets);
+    assert.deepEqual(store['1'], result.people_one);
+  });
+
   it('works with inline fragments', () => {
     const firstQuery = gql`
       {

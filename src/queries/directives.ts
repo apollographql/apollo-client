@@ -4,8 +4,6 @@ import {
   Selection,
   Directive,
   SelectionSet,
-  Field,
-  InlineFragment,
 } from 'graphql';
 
 import {
@@ -107,16 +105,12 @@ export function stripApolloDirectivesTransformer(selectionSet: SelectionSet): Se
     return selectionSet;
   }
   selectionSet.selections = selectionSet.selections.map((selection) => {
-    const subSelectionSet = (selection as Field|InlineFragment).selectionSet;
     const directives = selection.directives;
     return assign({}, selection,
       directives ? {
         directives: directives.filter(dir =>
           APOLLO_CLIENT_DIRECTIVES.indexOf(dir.name.value) < 0
         ),
-      } : {},
-      subSelectionSet ? {
-        selectionSet: stripApolloDirectivesTransformer(subSelectionSet),
       } : {}
     ) as Selection;
   });

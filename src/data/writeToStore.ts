@@ -240,15 +240,6 @@ export function writeSelectionSetToStore({
       }
 
       const typename = fragment.typeCondition.name.value;
-        result,
-        selectionSet: fragment.selectionSet,
-        store,
-        variables,
-        dataId,
-        dataIdFromObject,
-        fragmentMap,
-        fetchMoreLocations,
-      });
 
       if (included) {
         try {
@@ -260,6 +251,7 @@ export function writeSelectionSetToStore({
             dataId,
             dataIdFromObject,
             fragmentMap,
+            fetchMoreLocations,
           });
 
           if (!fragmentErrors[typename]) {

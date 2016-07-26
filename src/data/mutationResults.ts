@@ -13,9 +13,14 @@ import isArray = require('lodash.isarray');
 import cloneDeep = require('lodash.clonedeep');
 import assign = require('lodash.assign');
 
+import { replaceQueryResults } from './replaceQueryResults';
+
+import {
+  writeSelectionSetToStore,
+} from './writeToStore';
+
 import {
   FragmentMap,
-  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -27,10 +32,6 @@ import {
 import {
   ApolloReducerConfig,
 } from '../store';
-
-import {
-  writeSelectionSetToStore,
-} from './writeToStore';
 
 // Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 
@@ -265,28 +266,11 @@ function mutationResultArrayDeleteReducer(state: NormalizedCache, {
   }) as NormalizedCache;
 }
 
-function mutationResultQueryResultReducer(state: NormalizedCache, {
+export function mutationResultQueryResultReducer(state: NormalizedCache, {
   behavior,
   config,
 }: MutationBehaviorReducerArgs) {
-  const {
-    queryVariables,
-    newResult,
-    queryFragments,
-    querySelectionSet,
-  } = behavior as MutationQueryResultBehavior;
-
-  const clonedState = assign({}, state) as NormalizedCache;
-
-  return writeSelectionSetToStore({
-    result: newResult,
-    dataId: 'ROOT_QUERY',
-    selectionSet: querySelectionSet,
-    variables: queryVariables,
-    store: clonedState,
-    dataIdFromObject: config.dataIdFromObject,
-    fragmentMap: createFragmentMap(queryFragments),
-  });
+  return replaceQueryResults(state, behavior as MutationQueryResultBehavior, config);
 }
 
 export type MutationQueryReducer = (previousResult: Object, options: {

@@ -16,8 +16,13 @@ import {
 
 import assign = require('lodash.assign');
 
+export interface FetchMoreOptions {
+  updateQuery: (previousQueryResult: any, options: any) => any;
+}
+
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
+  public fetchMore: (options: WatchQueryOptions & FetchMoreOptions) => Promise<any>;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
@@ -88,6 +93,50 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         forceFetch: true,
         variables,
       }) as WatchQueryOptions);
+    };
+
+    this.fetchMore = (fetchMoreOptions: WatchQueryOptions & FetchMoreOptions) => {
+      return Promise.resolve()
+        .then(() => {
+          let combinedOptions = null;
+          let qid = null;
+
+          if (fetchMoreOptions.query) {
+            // fetch a new query
+            qid = this.queryManager.generateQueryId();
+            combinedOptions = fetchMoreOptions;
+          } else {
+            // fetch the same query with a possibly new variables
+            combinedOptions =
+              assign({}, this.options, fetchMoreOptions);
+            qid = this.queryId;
+          }
+
+          combinedOptions = assign({}, combinedOptions, {
+            forceFetch: true,
+          }) as WatchQueryOptions;
+          return this.queryManager.fetchQuery(qid, combinedOptions);
+        })
+        .then((fetchMoreResult) => {
+          const reducer = fetchMoreOptions.updateQuery;
+          const {
+            previousResult,
+            queryVariables,
+            querySelectionSet,
+            queryFragments,
+          } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+
+          this.queryManager.store.dispatch({
+            type: 'APOLLO_UPDATE_QUERY_RESULT',
+            newResult: reducer(previousResult, {
+              fetchMoreResult,
+              queryVariables,
+            }),
+            queryVariables,
+            querySelectionSet,
+            queryFragments,
+          });
+        });
     };
 
     this.stopPolling = () => {

@@ -137,6 +137,7 @@ this in the docs: http://docs.apollostack.com/`);
       fragmentDefinitionsMap[fragmentName] = [fragmentDefinition];
     }
   });
+
   return fragments.concat(fragmentDefinitions);
 }
 

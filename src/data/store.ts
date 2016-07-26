@@ -2,6 +2,7 @@ import {
   ApolloAction,
   isQueryResultAction,
   isMutationResultAction,
+  isUpdateQueryResultAction,
   isStoreResetAction,
 } from '../actions';
 
@@ -32,6 +33,10 @@ import {
   defaultMutationBehaviorReducers,
   MutationBehaviorReducerArgs,
 } from './mutationResults';
+
+import {
+  replaceQueryResults,
+} from './replaceQueryResults';
 
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
@@ -146,6 +151,8 @@ export function data(
 
       return newState;
     }
+  } else if (isUpdateQueryResultAction(constAction)) {
+    return replaceQueryResults(previousState, constAction, config) as NormalizedCache;
   } else if (isStoreResetAction(action)) {
     // If we are resetting the store, we no longer need any of the data that is currently in
     // the store so we can just throw it all away.

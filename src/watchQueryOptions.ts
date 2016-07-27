@@ -12,3 +12,8 @@ export interface WatchQueryOptions {
   pollInterval?: number;
   fragments?: FragmentDefinition[];
 }
+
+export interface FetchMoreQueryOptions {
+  query?: Document;
+  variables?: { [key: string]: any };
+}

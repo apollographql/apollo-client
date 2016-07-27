@@ -1,4 +1,4 @@
-import { WatchQueryOptions } from './watchQueryOptions';
+import { WatchQueryOptions, FetchMoreQueryOptions } from './watchQueryOptions';
 
 import { Observable, Observer } from './util/Observable';
 
@@ -17,12 +17,15 @@ import {
 import assign = require('lodash.assign');
 
 export interface FetchMoreOptions {
-  updateQuery: (previousQueryResult: any, options: any) => any;
+  updateQuery: (previousQueryResult: Object, options: {
+    fetchMoreResult: Object,
+    queryVariables: Object,
+  }) => Object;
 }
 
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
-  public fetchMore: (options: WatchQueryOptions & FetchMoreOptions) => Promise<any>;
+  public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;

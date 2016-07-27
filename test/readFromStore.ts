@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 
 import {
   readFragmentFromStore,
+  readObjectByIdFromStore,
 } from '../src/data/readFromStore';
 
 import {
@@ -10,7 +11,15 @@ import {
   StoreObject,
 } from '../src/data/store';
 
+import {
+  writeQueryToStore,
+} from '../src/data/writeToStore';
+
 import gql from 'graphql-tag';
+
+import {
+  Document,
+} from 'graphql';
 
 describe('reading from the store', () => {
   it('rejects malformed queries', () => {
@@ -487,6 +496,173 @@ describe('reading from the store', () => {
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: [null, 'two', 'three'],
+    });
+  });
+
+  describe('read object by id', () => {
+    const dataIdFromObject = (obj: any) => {
+      if (obj.id && obj.__typename) {
+        return obj.__typename + '__' + obj.id;
+      }
+    };
+
+    const setupStore = (query: Document, result: Object) => {
+      return writeQueryToStore({
+        query,
+        result,
+        dataIdFromObject,
+      });
+    };
+
+    it('with a generated id', () => {
+      const primeQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const primeResult = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const store = setupStore(primeQuery, primeResult);
+      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.author' });
+      assert.deepEqual(object, primeResult.author);
+    });
+
+    it('with a real id', () => {
+      const primeQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+            id
+            __typename
+          }
+        }`;
+      const primeResult = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+          id: '129',
+          __typename: 'Author',
+        },
+      };
+      const store = setupStore(primeQuery, primeResult);
+      const object = readObjectByIdFromStore({ store, id: dataIdFromObject(primeResult.author) });
+      assert.deepEqual(object, primeResult.author);
+    });
+
+    it('with nested data', () => {
+      const primeQuery = gql`
+        query {
+          author {
+            name {
+              first
+              last
+            }
+          }
+        }`;
+      const primeResult = {
+        author: {
+          name: {
+            first: 'John',
+            last: 'Smith',
+          },
+        },
+      };
+      const store = setupStore(primeQuery, primeResult);
+      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.author' });
+      assert.deepEqual(object, primeResult.author);
+    });
+
+    it('with arrays of nested data', () => {
+      const primeQuery = gql`
+        query {
+          person {
+            name
+            friends {
+              name
+            }
+          }
+        }`;
+      const primeResult = {
+        person: {
+          name: 'John Smith',
+          friends: [
+            {
+              name: 'Jane Smith',
+            },
+            {
+              name: 'Jack Smith',
+            },
+          ],
+        },
+      };
+      const store = setupStore(primeQuery, primeResult);
+      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.person' });
+      assert.deepEqual(object, primeResult.person);
+    });
+
+    it('with arrays of scalars', () => {
+      const primeQuery = gql`
+        query {
+          person {
+            name
+            friendNames
+          }
+        }`;
+      const primeResult = {
+        person: {
+          name: 'John Smith',
+          friendNames: ['Jane Smith', 'Jack Smith'],
+        },
+      };
+      const store = setupStore(primeQuery, primeResult);
+      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.person' });
+      assert.deepEqual(object, primeResult.person);
+    });
+
+    it('with json blobs', () => {
+      const primeQuery = gql`
+        query {
+          user {
+            info
+          }
+        }`;
+      const primeResult = {
+        user: {
+          info: {
+            name: 'John Smith',
+            address: '1337 10th Street',
+          },
+        },
+      };
+      const store = setupStore(primeQuery, primeResult);
+      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.user' });
+      assert.deepEqual(object, primeResult.user);
+    });
+
+    it('with aliases', () => {
+      const primeQuery = gql`
+        query {
+          someAlias: author {
+            firstName
+            lastName
+          }
+        }`;
+      const primeResult = {
+        someAlias: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const store = setupStore(primeQuery, primeResult);
+      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.author' });
+      assert.deepEqual(object, primeResult.someAlias);
     });
   });
 });

@@ -502,11 +502,11 @@ export class QueryManager {
   }
 
   public getQueryWithPreviousResult(queryId: string, isOptimistic = false) {
-    const observableQuery = this.observableQueries[queryId].observableQuery;
-
-    if (!observableQuery) {
+    if (!this.observableQueries[queryId]) {
       throw new Error(`ObservableQuery with this id doesn't exist: ${queryId}`);
     }
+
+    const observableQuery = this.observableQueries[queryId].observableQuery;
 
     const queryOptions = observableQuery.options;
 

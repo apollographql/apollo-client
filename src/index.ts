@@ -29,6 +29,10 @@ import {
 } from './store';
 
 import {
+  readObjectByIdFromStore,
+} from './data/readFromStore';
+
+import {
   QueryManager,
 } from './QueryManager';
 
@@ -290,6 +294,15 @@ export default class ApolloClient {
       config: this.reducerConfig,
     }));
   };
+
+  // Given a particular id, this method returns a deep read in the normalized
+  // store starting from that id.
+  public readObjectById(id: string) {
+    return readObjectByIdFromStore({
+      store: this.store.getState().data,
+      id,
+    });
+  }
 
   private setStore = (store: ApolloStore) => {
     // ensure existing store has apolloReducer

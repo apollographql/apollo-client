@@ -1525,4 +1525,29 @@ describe('client', () => {
       done();
     });
   });
+
+  it('should be able to read an object from the store by its id', () => {
+    const primeQuery = gql`
+      query {
+        person {
+          name
+        }
+      }`;
+    const primeResult = {
+      person: {
+        name: 'John Smith',
+      },
+    };
+    const client = new ApolloClient({
+      networkInterface: mockNetworkInterface({
+        request: { query: primeQuery },
+        result: { data: primeResult },
+      }),
+    });
+    client.query({ query: primeQuery }).then((result) => {
+      assert.deepEqual(result.data, primeResult);
+      const person = client.readObjectById('$ROOT_QUERY.person');
+      assert.deepEqual(person, primeResult.person);
+    });
+  });
 });

@@ -558,19 +558,19 @@ export class QueryManager {
     }
     const resultBehaviors = [];
 
-    const quieryIdsByName: { [name: string]: string[] } = {};
+    const queryIdsByName: { [name: string]: string[] } = {};
     Object.keys(this.observableQueries).forEach((queryId) => {
       const observableQuery = this.observableQueries[queryId].observableQuery;
       const queryName = getQueryDefinition(observableQuery.options.query).name.value;
 
-      quieryIdsByName[queryName] =
-        quieryIdsByName[queryName] || [];
-      quieryIdsByName[queryName].push(queryId);
+      queryIdsByName[queryName] =
+        queryIdsByName[queryName] || [];
+      queryIdsByName[queryName].push(queryId);
     });
 
     Object.keys(updateQueries).forEach((queryName) => {
       const reducer = updateQueries[queryName];
-      const queries = quieryIdsByName[queryName];
+      const queries = queryIdsByName[queryName];
       if (!queries) {
         // XXX should throw an error?
         return;

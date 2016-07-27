@@ -98,18 +98,16 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.fetchMore = (fetchMoreOptions: WatchQueryOptions & FetchMoreOptions) => {
       return Promise.resolve()
         .then(() => {
+          const qid = this.queryManager.generateQueryId();
           let combinedOptions = null;
-          let qid = null;
 
           if (fetchMoreOptions.query) {
             // fetch a new query
-            qid = this.queryManager.generateQueryId();
             combinedOptions = fetchMoreOptions;
           } else {
             // fetch the same query with a possibly new variables
             combinedOptions =
               assign({}, this.options, fetchMoreOptions);
-            qid = this.queryId;
           }
 
           combinedOptions = assign({}, combinedOptions, {
@@ -123,7 +121,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
             previousResult,
             queryVariables,
             querySelectionSet,
-            queryFragments,
+            queryFragments = [],
           } = this.queryManager.getQueryWithPreviousResult(this.queryId);
 
           this.queryManager.store.dispatch({

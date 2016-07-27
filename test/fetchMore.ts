@@ -2,7 +2,7 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename, createFragment } from '../src';
+import ApolloClient from '../src';
 
 import assign = require('lodash.assign');
 import clonedeep = require('lodash.clonedeep');
@@ -24,7 +24,7 @@ describe('fetchMore on an observable query', () => {
     start: 0,
     limit: 10,
   };
-  const variablesMore = assign({}, variables, { start: 10 });
+  const variablesMore = assign({}, variables, { start: 10, limit: 10 });
 
   const result = {
     data: {
@@ -33,9 +33,15 @@ describe('fetchMore on an observable query', () => {
       },
     },
   };
+  const resultMore = clonedeep(result);
   for (let i = 1; i <= 10; i++) {
     result.data.entry.comments.push({ text: `comment ${i}` });
   }
+  for (let i = 11; i <= 20; i++) {
+    resultMore.data.entry.comments.push({ text: `comment ${i}` });
+  }
+
+  let latestResult = null;
 
   let client: ApolloClient;
   let networkInterface;
@@ -58,9 +64,10 @@ describe('fetchMore on an observable query', () => {
       variables,
     });
     obsHandle.subscribe({
-      next(result) {
+      next(queryResult) {
         // do nothing
-      }
+        latestResult = queryResult;
+      },
     });
 
     return Promise.resolve(obsHandle);
@@ -72,18 +79,22 @@ describe('fetchMore on an observable query', () => {
         query,
         variables: variablesMore,
       },
-      result,
+      result: resultMore,
     }).then((watchedQuery) => {
       return watchedQuery.fetchMore({
         variables: variablesMore,
-      }).then(() => {
-        return watchedQuery;
+        updateQuery: (prev, options) => {
+          const state = clonedeep(prev) as any;
+          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];
+          return state;
+        },
       });
-    }).then((watchedQuery) => {
-      return watchedQuery.result();
-    }).then((result) => {
-      console.log(result);
-      assert.equal(result, 'asdf');
+    }).then(() => {
+      const comments = latestResult.data.entry.comments;
+      assert.lengthOf(comments, 20);
+      for (let i = 1; i <= 20; i++) {
+        assert.equal(comments[i - 1].text, `comment ${i}`);
+      }
     });
   });
 });

@@ -15,14 +15,7 @@ import {
 
 import {
   NormalizedCache,
-  isIdValue,
-  isJsonValue,
-  IdValue,
-  JsonValue,
 } from './store';
-
-import isObject = require('lodash.isobject');
-import isArray = require('lodash.isarray');
 
 // Read an object from the store given that object's id.
 // This function performs a deep read, i.e. it will read the fields of the object
@@ -30,30 +23,20 @@ import isArray = require('lodash.isarray');
 export function readObjectByIdFromStore({
   store,
   id,
+  fragment,
+  variables,
 }: {
   store: NormalizedCache,
   id: string,
+  fragment: Document,
+  variables?: Object,
 }): any {
-  const value = store[id];
-  if (isObject(value)) {
-    // If this is an object, it must have other properties that we have to
-    // read in as well.
-    Object.keys(value).forEach((key) => {
-      const insideValue = value[key];
-      if (isIdValue(insideValue)) {
-        value[key] = readObjectByIdFromStore({ store, id: (insideValue as IdValue).id });
-      } else if (isArray(insideValue)) {
-        // If this is an array, we have to recursively read each of the ids.
-        value[key] = insideValue.map((idVal) => {
-          return readObjectByIdFromStore({ store, id: idVal });
-        });
-      } else if (isJsonValue(insideValue)) {
-        value[key] = (insideValue as JsonValue).json;
-      }
-    });
-  }
-
-  return value;
+  return readFragmentFromStore({
+    store,
+    fragment,
+    rootId: id,
+    variables,
+  });
 }
 
 

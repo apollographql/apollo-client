@@ -297,10 +297,11 @@ export default class ApolloClient {
 
   // Given a particular id, this method returns a deep read in the normalized
   // store starting from that id.
-  public readObjectById(id: string) {
+  public readObjectById(id: string, fragment: Document) {
     return readObjectByIdFromStore({
-      store: this.store.getState().data,
+      store: this.store.getState().apollo.data,
       id,
+      fragment,
     });
   }
 

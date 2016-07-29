@@ -529,7 +529,15 @@ describe('reading from the store', () => {
         },
       };
       const store = setupStore(primeQuery, primeResult);
-      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.author' });
+      const object = readObjectByIdFromStore({
+        store,
+        id: '$ROOT_QUERY.author',
+        fragment: gql`
+          fragment author on Author {
+            firstName
+            lastName
+          }`,
+      });
       assert.deepEqual(object, primeResult.author);
     });
 
@@ -552,7 +560,18 @@ describe('reading from the store', () => {
         },
       };
       const store = setupStore(primeQuery, primeResult);
-      const object = readObjectByIdFromStore({ store, id: dataIdFromObject(primeResult.author) });
+      const object = readObjectByIdFromStore({
+        store,
+        id: dataIdFromObject(primeResult.author),
+        fragment: gql`
+          fragment author on Author {
+            firstName
+            lastName
+            id
+            __typename
+        }`,
+      });
+
       assert.deepEqual(object, primeResult.author);
     });
 
@@ -575,7 +594,19 @@ describe('reading from the store', () => {
         },
       };
       const store = setupStore(primeQuery, primeResult);
-      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.author' });
+      const object = readObjectByIdFromStore({
+        store,
+        id: '$ROOT_QUERY.author',
+        fragment: gql`
+          fragment author on Author {
+            author {
+              name {
+                first
+                last
+              }
+            }
+        }`,
+      });
       assert.deepEqual(object, primeResult.author);
     });
 
@@ -603,7 +634,17 @@ describe('reading from the store', () => {
         },
       };
       const store = setupStore(primeQuery, primeResult);
-      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.person' });
+      const object = readObjectByIdFromStore({
+        store,
+        id: '$ROOT_QUERY.person',
+        fragment: gql`
+          fragment person on Person {
+            name
+            friends {
+              name
+            }
+          }`,
+      });
       assert.deepEqual(object, primeResult.person);
     });
 
@@ -622,7 +663,16 @@ describe('reading from the store', () => {
         },
       };
       const store = setupStore(primeQuery, primeResult);
-      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.person' });
+      const object = readObjectByIdFromStore({
+        store,
+        id: '$ROOT_QUERY.person',
+        fragment: gql`
+          fragment person on Person {
+            name
+            friendNames
+          }
+        `,
+      });
       assert.deepEqual(object, primeResult.person);
     });
 
@@ -642,7 +692,14 @@ describe('reading from the store', () => {
         },
       };
       const store = setupStore(primeQuery, primeResult);
-      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.user' });
+      const object = readObjectByIdFromStore({
+        store,
+        id: '$ROOT_QUERY.user',
+        fragment: gql`
+          fragment user on User {
+            info
+          }`,
+      });
       assert.deepEqual(object, primeResult.user);
     });
 
@@ -661,8 +718,63 @@ describe('reading from the store', () => {
         },
       };
       const store = setupStore(primeQuery, primeResult);
-      const object = readObjectByIdFromStore({ store, id: '$ROOT_QUERY.author' });
+      const object = readObjectByIdFromStore({
+        store,
+        id: '$ROOT_QUERY.author',
+        fragment: gql`
+          fragment author on Author {
+            firstName
+            lastName
+        }`,
+      });
       assert.deepEqual(object, primeResult.someAlias);
+    });
+
+    it('with variables', () => {
+      const primeQuery = gql`
+        query pickAuthor($id: Int, $var: String) {
+          author(id: $id) {
+            name(var: $var) {
+              firstName
+              lastName
+            }
+            __typename
+            id
+          }
+        }`;
+      const primeResult = {
+        author: {
+          name: {
+            firstName: 'John',
+            lastName: 'Smith',
+          },
+          __typename: 'Author',
+          id: '129',
+        },
+      };
+      const store = writeQueryToStore({
+        query: primeQuery,
+        result: primeResult,
+        dataIdFromObject,
+        variables: { id: '129', var: 'idk' },
+      });
+      const object = readObjectByIdFromStore({
+        store,
+        id: 'Author__129',
+        fragment: gql`
+          fragment author on Author {
+            name(var: $var) {
+              firstName
+              lastName
+            }
+            __typename
+            id
+          }`,
+        variables: {
+          var: 'idk',
+        },
+      });
+      assert.deepEqual(object, primeResult.author);
     });
   });
 });

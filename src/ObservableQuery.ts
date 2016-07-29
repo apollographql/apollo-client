@@ -29,7 +29,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
-  private queryId: string;
+  public queryId: string;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
 

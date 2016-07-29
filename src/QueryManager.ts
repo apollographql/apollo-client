@@ -129,7 +129,7 @@ export class QueryManager {
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
   // generally used to refetches for invalidateQueries and to update mutation results through
   // updateQueries.
-  private observableQueriesByName: { [queryName: string]: ObservableQuery[] };
+  private queryIdsByName: { [queryName: string]: string[] };
 
   constructor({
     networkInterface,
@@ -169,7 +169,7 @@ export class QueryManager {
     this.batcher.start(this.batchInterval);
     this.fetchQueryPromises = {};
     this.observableQueries = {};
-    this.observableQueriesByName = {};
+    this.queryIdsByName = {};
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
@@ -452,8 +452,8 @@ export class QueryManager {
       const queryName = getQueryDefinition(observableQuery.options.query).name.value;
 
       // XXX we may we want to warn the user about query name conflicts in the future
-      this.observableQueriesByName[queryName] = this.observableQueriesByName[queryName] || [];
-      this.observableQueriesByName[queryName].push(observableQuery);
+      this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
+      this.queryIdsByName[queryName].push(observableQuery.queryId);
     }
   }
 
@@ -473,8 +473,8 @@ export class QueryManager {
     const observableQuery = this.observableQueries[queryId].observableQuery;
     const queryName = getQueryDefinition(observableQuery.options.query).name.value;
     delete this.observableQueries[queryId];
-    this.observableQueriesByName[queryName] = this.observableQueriesByName[queryName].filter((val) => {
-      return !(observableQuery === val);
+    this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter((val) => {
+      return !(observableQuery.queryId === val);
     });
   }
 
@@ -586,13 +586,13 @@ export class QueryManager {
 
     Object.keys(updateQueries).forEach((queryName) => {
       const reducer = updateQueries[queryName];
-      const queries = this.observableQueriesByName[queryName];
-      if (!queries) {
+      const queryIds = this.queryIdsByName[queryName];
+      if (!queryIds) {
         // XXX should throw an error?
         return;
       }
 
-      queries.forEach((queryId) => {
+      queryIds.forEach((queryId) => {
         const {
           previousResult,
           queryVariables,

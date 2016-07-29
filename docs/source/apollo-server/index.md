@@ -4,7 +4,7 @@ order: 301
 description: How to install Apollo Server
 ---
 
-Apollo Server is a GraphQL server for Node.js built to be run in production. It has integrations for Express, HAPI and Koa.
+Apollo Server is a GraphQL server for Node.js built to be run in production. It has integrations for Express, Connect, HAPI and Koa.
 
 
 ```txt

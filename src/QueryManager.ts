@@ -199,10 +199,7 @@ export class QueryManager {
     fragments = [],
     optimisticResponse,
     updateQueries,
-<<<<<<< HEAD
-=======
     invalidateQueries = [],
->>>>>>> 0a013b1... moved observableQueriesByName construction out of the updateQueries code'
   }: {
     mutation: Document,
     variables?: Object,
@@ -272,6 +269,7 @@ export class QueryManager {
             ],
           });
 
+          invalidateQueries.forEach((name) => { this.refetchQueryByName(name); });
           resolve(result);
         })
         .catch((err) => {
@@ -795,6 +793,14 @@ export class QueryManager {
     // return a chainable promise
     return new Promise((resolve) => {
       resolve({ data: initialResult });
+    });
+  }
+
+  // Refetches a query given that query's name. Refetches
+  // all ObservableQuery instances associated with the query name.
+  private refetchQueryByName(queryName: string) {
+    this.queryIdsByName[queryName].forEach((queryId) => {
+      this.observableQueries[queryId].observableQuery.refetch();
     });
   }
 

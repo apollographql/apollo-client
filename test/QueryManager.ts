@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import {
   QueryManager,
 } from '../src/QueryManager';
@@ -3278,6 +3280,75 @@ describe('QueryManager', () => {
           assert(!result.loading);
         },
       });
+    });
+  });
+
+  describe('invalidateQueries', () => {
+    const mutation = gql`
+      mutation changeAuthorName {
+        changeAuthorName(newName: "Jack Smith") {
+          firstName
+          lastName
+        }
+      }`;
+    const mutationData = {
+      changeAuthorName: {
+        firstName: 'Jack',
+        lastName: 'Smith',
+      },
+    };
+
+    it('should refetch the right query when a result is successfully returned', (done) => {
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Smith',
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          }
+        ),
+        reduxRootKey: 'apollo',
+        store: createApolloStore(),
+      });
+      let resultsReceived = 0;
+      queryManager.watchQuery({ query }).subscribe({
+        next(result) {
+          if (resultsReceived === 0) {
+            assert.deepEqual(result.data, data);
+          } else if (resultsReceived === 1) {
+            assert.deepEqual(result.data, secondReqData);
+            done();
+          }
+          resultsReceived++;
+        },
+      });
+      queryManager.mutate({ mutation, invalidateQueries: [ 'getAuthors' ] });
     });
   });
 });

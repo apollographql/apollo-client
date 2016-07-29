@@ -599,11 +599,9 @@ describe('reading from the store', () => {
         id: '$ROOT_QUERY.author',
         fragment: gql`
           fragment author on Author {
-            author {
-              name {
-                first
-                last
-              }
+            name {
+              first
+              last
             }
         }`,
       });

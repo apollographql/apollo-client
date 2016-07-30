@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 import {
   QueryManager,
 } from '../src/QueryManager';

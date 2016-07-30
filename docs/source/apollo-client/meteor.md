@@ -1,6 +1,6 @@
 ---
 title: Meteor integration
-order: 112
+order: 152
 description: Specifics about using Apollo in your Meteor application.
 ---
 
@@ -95,4 +95,3 @@ Returns an [`options` object](http://0.0.0.0:4000/apollo-client/index.html#Apoll
   - `maxAccountsCacheSizeInMB`: User account ids are cached in memory to reduce the response latency on multiple requests from the same user. Default: `1`.
 
 It will use the same port as your Meteor server. Don't put a route or static asset at the same path as the Apollo server (default is `/graphql`).
-

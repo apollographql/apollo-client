@@ -14,16 +14,19 @@ versions:
 sidebar_categories:
   null:
     - index
-  Apollo Client:
+  Apollo Client Core:
     - apollo-client/index
-    - apollo-client/core
+    - apollo-client/queries
+    - apollo-client/mutations
+    - apollo-client/fragments
+    - apollo-client/network
+    - apollo-client/devtools
+    - apollo-client/how-it-works
+  Apollo Client Integrations:
     - apollo-client/react
     - apollo-client/angular2
     - apollo-client/meteor
     - apollo-client/redux
-    - apollo-client/network
-    - apollo-client/devtools
-    - apollo-client/how-it-works
   Apollo Server:
     - apollo-server/index
     - apollo-server/setup

@@ -158,7 +158,7 @@ export default mocks;
 ```
 Go ahead and give the server a try with the new mocks. If all went well, you should be able to run the following query and get a similar result.
 
-**TODO:** Screenshot here
+![Mock author data with casual](graphiql-casual-mocks.png)
 
 You can tell `apolloServer` to mock a scalar type, such as Int or String in a specific way. In this case, we told it to return an integer between 1 and 1000 every time an Int field is requested by the client.
 

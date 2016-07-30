@@ -4,7 +4,9 @@ order: 302
 description: How to set up Apollo Server
 ---
 
-Apollo Server exports `apolloExpress`, which can be used as a drop-in Express middleware to turn your server into a GraphQL server.
+Apollo Server exports `apolloExpress`, `apolloConnect`, `apolloHAPI` and `apolloKoa` which can be used as a drop-in to turn your Express, Connect, HAPI or Koa server into a GraphQL server.
+
+The example below uses `apolloExpress`, but the options object is the same for all other integrations.
 
 <h2 id="apolloServer">ApolloExpress(options)</h2>
 
@@ -29,7 +31,6 @@ apolloExpress({
   rootValue?: any,
   formatError?: Function, // function used to format errors before returning them to clients
   validationRules?: Array<ValidationRule>, // additional validation rules to be applied to client-specified queries
-  logFunction?: Function, // function called for logging errors and info
   formatParams?: Function, // function applied for each query in a batch to format parameters before passing them to `runQuery`
   formatResponse?: Function, // function applied to each response before returning data to clients
 })

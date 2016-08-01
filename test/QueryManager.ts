@@ -1758,7 +1758,7 @@ describe('QueryManager', () => {
       },
     });
 
-    handle2.subscribe({
+    const subscription2 = handle2.subscribe({
       next(result) {
         handleCount++;
       },
@@ -1766,6 +1766,9 @@ describe('QueryManager', () => {
 
     setTimeout(() => {
       assert.equal(handleCount, 3);
+      subscription1.unsubscribe();
+      subscription2.unsubscribe();
+
       done();
     }, 400);
   });
@@ -3282,21 +3285,20 @@ describe('QueryManager', () => {
   });
 
   describe('invalidateQueries', () => {
-    const mutation = gql`
-      mutation changeAuthorName {
-        changeAuthorName(newName: "Jack Smith") {
-          firstName
-          lastName
-        }
-      }`;
-    const mutationData = {
-      changeAuthorName: {
-        firstName: 'Jack',
-        lastName: 'Smith',
-      },
-    };
-
     it('should refetch the right query when a result is successfully returned', (done) => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }`;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
       const query = gql`
         query getAuthors {
           author {
@@ -3313,7 +3315,7 @@ describe('QueryManager', () => {
       const secondReqData = {
         author: {
           firstName: 'Jane',
-          lastName: 'Smith',
+          lastName: 'Johnson',
         },
       };
       const queryManager = new QueryManager({
@@ -3339,6 +3341,7 @@ describe('QueryManager', () => {
         next(result) {
           if (resultsReceived === 0) {
             assert.deepEqual(result.data, data);
+            queryManager.mutate({ mutation, invalidateQueries: ['getAuthors'] });
           } else if (resultsReceived === 1) {
             assert.deepEqual(result.data, secondReqData);
             done();
@@ -3346,7 +3349,6 @@ describe('QueryManager', () => {
           resultsReceived++;
         },
       });
-      queryManager.mutate({ mutation, invalidateQueries: [ 'getAuthors' ] });
     });
   });
 });

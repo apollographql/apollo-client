@@ -788,4 +788,54 @@ describe('Query merging', () => {
     const mergedRequest = mergeRequests([{query: query1}, {query: query2}]);
     assert.equal(print(mergedRequest.query), print(expQuery));
   });
+
+  it('should be able to correctly merge queries with aliases', () => {
+    const query = gql`
+      query firstQuery {
+        someAlias: author {
+          firstName
+          lastName
+        }
+      }`;
+    const secondQuery = gql`
+      query secondQuery {
+        person {
+          name
+        }
+      }`;
+    const expQuery = gql`
+      query ___composed {
+        ___firstQuery___requestIndex_0___fieldIndex_0: author {
+          firstName
+          lastName
+        }
+
+        ___secondQuery___requestIndex_1___fieldIndex_0: person {
+          name
+        }
+     }`;
+    const firstResult = {
+      someAlias: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const secondResult = {
+      person: {
+        name: 'Jane Smith',
+      },
+    };
+    const composedResult = {
+      ___firstQuery___requestIndex_0___fieldIndex_0: firstResult.someAlias,
+      ___secondQuery___requestIndex_1___fieldIndex_0: secondResult.person,
+    };
+    const requests = [{ query }, { query: secondQuery }];
+    const mergedRequest = mergeRequests(requests);
+    assert.equal(print(mergedRequest.query), print(expQuery));
+
+    const unpackedResults = unpackMergedResult({ data: composedResult }, requests);
+    assert.equal(unpackedResults.length, 2);
+    assert.deepEqual(unpackedResults[0], { data: firstResult });
+    assert.deepEqual(unpackedResults[1], { data: secondResult });
+  });
 });

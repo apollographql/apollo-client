@@ -49,6 +49,10 @@ import {
   Request,
 } from '../networkInterface';
 
+import {
+  resultKeyNameFromField,
+} from '../data/storeUtils';
+
 import assign = require('lodash.assign');
 import cloneDeep = require('lodash.clonedeep');
 
@@ -96,7 +100,7 @@ export function unpackMergedResult(result: GraphQLResult,
     const childRequestIndex = mergeInfo.requestIndex;
     const fieldMap = fieldMaps[childRequestIndex];
     const field = fieldMap[mergeInfo.fieldIndex];
-    data[field.name.value] = result.data[dataKey];
+    data[resultKeyNameFromField(field)] = result.data[dataKey];
 
     if (resultArray[childRequestIndex]) {
       assign(resultArray[childRequestIndex].data, data);

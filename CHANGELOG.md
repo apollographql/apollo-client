@@ -3,8 +3,10 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Fixed issue with `fragments` array for `updateQueries`. [PR #475](https://github.com/apollostack/apollo-client/pull/475) and [Issue #470](https://github.com/apollostack/apollo-client/issues/470).
 
+### v0.4.9
+
+- Fixed issue with `fragments` array for `updateQueries`. [PR #475](https://github.com/apollostack/apollo-client/pull/475) and [Issue #470](https://github.com/apollostack/apollo-client/issues/470).
 - Add a new experimental feature to observable queries called `fetchMore`. It allows application developers to update the results of a query in the store by issuing new queries. We are currently testing this feature internally and we will document it once it is stable.
 
 ### v0.4.8

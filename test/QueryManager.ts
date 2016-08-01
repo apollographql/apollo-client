@@ -3174,6 +3174,7 @@ describe('QueryManager', () => {
     }, 120);
   });
 
+<<<<<<< HEAD
   describe('loading state', () => {
     it('should be passed as false if we are not watching a query', (done) => {
       const query = gql`
@@ -3284,7 +3285,7 @@ describe('QueryManager', () => {
     });
   });
 
-  describe('invalidateQueries', () => {
+  describe('refetchQueries', () => {
     it('should refetch the right query when a result is successfully returned', (done) => {
       const mutation = gql`
         mutation changeAuthorName {
@@ -3341,7 +3342,7 @@ describe('QueryManager', () => {
         next(result) {
           if (resultsReceived === 0) {
             assert.deepEqual(result.data, data);
-            queryManager.mutate({ mutation, invalidateQueries: ['getAuthors'] });
+            queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
           } else if (resultsReceived === 1) {
             assert.deepEqual(result.data, secondReqData);
             done();

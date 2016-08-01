@@ -258,7 +258,7 @@ export default class ApolloClient {
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
-    invalidateQueries?: string[],
+    refetchQueries?: string[],
   }): Promise<ApolloQueryResult> => {
     this.initStore();
     return this.queryManager.mutate(options);

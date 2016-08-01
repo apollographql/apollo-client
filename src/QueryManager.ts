@@ -127,7 +127,7 @@ export class QueryManager {
   } };
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
-  // generally used to refetches for invalidateQueries and to update mutation results through
+  // generally used to refetches for refetchQueries and to update mutation results through
   // updateQueries.
   private queryIdsByName: { [queryName: string]: string[] };
 
@@ -199,7 +199,7 @@ export class QueryManager {
     fragments = [],
     optimisticResponse,
     updateQueries,
-    invalidateQueries = [],
+    refetchQueries = [],
   }: {
     mutation: Document,
     variables?: Object,
@@ -207,6 +207,7 @@ export class QueryManager {
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
+    refetchQueries?: string[],
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
@@ -269,7 +270,7 @@ export class QueryManager {
             ],
           });
 
-          invalidateQueries.forEach((name) => { this.refetchQueryByName(name); });
+          refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
           resolve(result);
         })
         .catch((err) => {

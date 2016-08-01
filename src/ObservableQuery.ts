@@ -1,4 +1,4 @@
-import { WatchQueryOptions } from './watchQueryOptions';
+import { WatchQueryOptions, FetchMoreQueryOptions } from './watchQueryOptions';
 
 import { Observable, Observer } from './util/Observable';
 
@@ -16,8 +16,16 @@ import {
 
 import assign = require('lodash.assign');
 
+export interface FetchMoreOptions {
+  updateQuery: (previousQueryResult: Object, options: {
+    fetchMoreResult: Object,
+    queryVariables: Object,
+  }) => Object;
+}
+
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
+  public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
@@ -88,6 +96,48 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         forceFetch: true,
         variables,
       }) as WatchQueryOptions);
+    };
+
+    this.fetchMore = (fetchMoreOptions: WatchQueryOptions & FetchMoreOptions) => {
+      return Promise.resolve()
+        .then(() => {
+          const qid = this.queryManager.generateQueryId();
+          let combinedOptions = null;
+
+          if (fetchMoreOptions.query) {
+            // fetch a new query
+            combinedOptions = fetchMoreOptions;
+          } else {
+            // fetch the same query with a possibly new variables
+            combinedOptions =
+              assign({}, this.options, fetchMoreOptions);
+          }
+
+          combinedOptions = assign({}, combinedOptions, {
+            forceFetch: true,
+          }) as WatchQueryOptions;
+          return this.queryManager.fetchQuery(qid, combinedOptions);
+        })
+        .then((fetchMoreResult) => {
+          const reducer = fetchMoreOptions.updateQuery;
+          const {
+            previousResult,
+            queryVariables,
+            querySelectionSet,
+            queryFragments = [],
+          } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+
+          this.queryManager.store.dispatch({
+            type: 'APOLLO_UPDATE_QUERY_RESULT',
+            newResult: reducer(previousResult, {
+              fetchMoreResult,
+              queryVariables,
+            }),
+            queryVariables,
+            querySelectionSet,
+            queryFragments,
+          });
+        });
     };
 
     this.stopPolling = () => {

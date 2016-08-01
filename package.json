@@ -80,7 +80,7 @@
     "lodash.mapvalues": "^4.3.0",
     "lodash.omit": "^4.2.1",
     "minimist": "^1.2.0",
-    "mocha": "^2.3.3",
+    "mocha": "^3.0.0",
     "nodemon": "^1.9.2",
     "pretty-bytes": "^3.0.1",
     "remap-istanbul": "^0.5.1",

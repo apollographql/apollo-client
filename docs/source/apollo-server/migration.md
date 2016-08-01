@@ -1,6 +1,6 @@
 ---
 title: Migrating from v0.1
-order: 304
+order: 305
 description: How to migrate from an older version of Apollo Server
 ---
 

@@ -30,6 +30,7 @@ sidebar_categories:
   Apollo Server:
     - apollo-server/index
     - apollo-server/setup
+    - apollo-server/requests
     - apollo-server/graphiql
     - apollo-server/migration
   GraphQL Tools:

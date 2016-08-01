@@ -11,7 +11,7 @@ Apollo Server is a community driven, hackable GraphQL server for production use.
 npm install apollo-server
 ```
 
-Apollo Server differs from express-graphql in the following ways:
+Here are the main differences between Apollo Server and express-graphql:
 - It has a simpler interface and allows only POST requests, which makes it a bit easier to reason about what's going on.
 - Apollo Server serves GraphiQL on a separate route, giving you more flexibility to decide when and how to expose it.
 - Apollo Server supports query batching which can help reduce load on your server.

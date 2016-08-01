@@ -6,26 +6,14 @@ description: How to set up Apollo Server
 
 Apollo Server exports `apolloExpress`, `apolloConnect`, `apolloHAPI` and `apolloKoa` which can be used as a drop-in to turn your Express, Connect, HAPI or Koa server into a GraphQL server.
 
-The example below uses `apolloExpress`, but the options object is the same for all other integrations.
 
-<h2 id="apolloServer">ApolloExpress(options)</h2>
+<h2 id="apolloOptions">ApolloOptions</h2>
 
-```js
-import { apolloExpress } from 'apollo-server';
-
-var app = express();
-
-app.use('/graphql', bodyParser.json(), apolloExpress({ schema: myGraphQLSchema}));
-```
-
-The `options` may be either:
-- an ApolloOptions object object with the parameters specified below
-- a function that, given an Express [`request`](http://expressjs.com/en/4x/api.html#req), returns an ApolloOptions object
-- a function that, given an Express [`request`](http://expressjs.com/en/4x/api.html#req), returns a promise for an ApolloOptions object
+Apollo Server accepts an ApolloOptions object as its single argument:
 
 ```js
 // options object
-apolloExpress({
+const options = {
   schema: GraphQLSchema,
   context?: any, // value to be used as context in resolvers
   rootValue?: any,
@@ -34,76 +22,114 @@ apolloExpress({
   formatParams?: Function, // function applied for each query in a batch to format parameters before passing them to `runQuery`
   formatResponse?: Function, // function applied to each response before returning data to clients
 })
+```
+
+
+Alternatively, Apollo Server accepts a function which takes the request as input and returns a promise for an ApolloOptions object:
+
+```js
 
 // example options function
-apolloExpress(request => ({
+apollo<Express/Connect/HAPI/Koa>(request => ({
   schema: typeDefinitionArray,
   context: { user: request.session.user }
 }))
 ```
 
-<h2 id="sendingRequests">Sending Requests</h2>
+<h2 id="apolloExpress">Using with Express</h2>
 
-ApolloExpress accepts only JSON-encoded POST requests. A valid request must contain eiter a `query` or an `operationName`, and may include `variables.` For example:
-
-```js
-{
-  "query": "query aTest{ test(who: $arg1) }",
-  "operationName": "aTest",
-  "variables": { "arg1": "me" }
-}
-```
-
-Variables can be an object or a JSON-encoded string. I.e. the following is equivalent to the previous query:
+The following code snippet shows how to use Apollo Server with Express:
 
 ```js
-{
-  "query": "query aTest{ test(who: $arg1) }",
-  "operationName": "aTest",
-  "variables": "{ \"arg1\": \"me\" }"
-}
-```
-
-A batch of queries can be sent by simply sending a JSON-encoded array of queries, e.g.
-
-```js
-[
-  { "query": "{ testString }" },
-  { "query": "query q2{ test(who: \"you\" ) }" }
-]
-```
-
-If a batch of queries is sent, the response will be an array of GraphQL responses.
-
-<h2 id="corsSupport">CORS support</h2>
-
-If Apollo Server runs under a different origin than the frontend app, then CORS support must be configured on the server. For example, if apollo server is running under `graphql.example.com` and the website is served from `www.example.com`, CORS needs to be configured in the express app. [CORS](https://github.com/expressjs/cors) is a node.js package for providing a Connect/Express middleware that can be used to enable CORS with various options.
-
-```javascript
+import express from 'express';
 import { apolloExpress } from 'apollo-server';
-import cors from 'cors';
 
-var app = express().use('*', cors());;
+const PORT = 3000;
+
+var app = express();
+
+app.use('/graphql', bodyParser.json(), apolloExpress({ schema: myGraphQLSchema }));
+
+app.listen(PORT);
 ```
 
-Ensure you have npm installed cors. The * value allows access from any third-party site. It should probably be updated to reflect your specific environment. Simple usage details to [Enable All CORS Requests](https://github.com/expressjs/cors#simple-usage-enable-all-cors-requests) More complex configuration options are available including the ability to [Enable CORS for a Single Route](https://github.com/expressjs/cors#enable-cors-for-a-single-route).
+The `options` passed to `apolloExpress` may be either:
+- an ApolloOptions object object with the parameters specified above
+- a function that, given an Express [`request`](http://expressjs.com/en/4x/api.html#req), returns an ApolloOptions object
+- a function that, given an Express [`request`](http://expressjs.com/en/4x/api.html#req), returns a promise for an ApolloOptions object
 
-The information contained in the apolloClient re: CORS configuration did not effect on the server.
+<h2 id="apolloConnect">Using with Connect</h2>
 
-<h2 id="auth-tokens">Authentication Tokens</h2>
+The following code snippet shows how to use Apollo Server with Connect:
 
-Authentication tokens sent from the client can be retrieved, processed, and then passed into context to be accessed by resolvers like so:
-```javascript
-app.use('/graphql', apolloExpress(async (req) => {
-  // Retrieve token from authorization header and lookup user in DB
-  const user = await models.mongoose.users.fromToken(req.headers.authorization);
+```js
+import connect from 'express';
+import { apolloConnect } from 'apollo-server';
 
-  return {
-    context: {
-      // Attach user data to context
-      user,
-    }
-  }
-}));
-// ...
+const PORT = 3000;
+
+var app = connect();
+
+app.use('/graphql', bodyParser.json(), apolloConnect({ schema: myGraphQLSchema }));
+
+app.listen(PORT);
 ```
+
+The `options` passed to `apolloConnect` are the same as those passed to `apolloExpress`.
+
+
+<h2 id="apolloHAPI">Using with HAPI</h2>
+
+The following code snippet shows how to use Apollo Server with HAPI:
+
+```js
+import hapi from 'hapi';
+
+const server = new hapi.Server();
+
+const HOST = 'localhost';
+const PORT = 3000;
+
+server.connection({
+    host: HOST,
+    port: PORT,
+});
+
+server.register({
+    register: new ApolloHAPI(),
+    options: { schema: myGraphQLSchema },
+    routes: { prefix: '/graphql' },
+});
+```
+
+The `options` passed to `apolloHAPI` may be either:
+- an ApolloOptions object object with the parameters specified above
+- a function that, given a Node.js request object, returns an ApolloOptions object
+- a function that, given a Node.js request object, returns a promise for an ApolloOptions object
+
+
+<h2 id="apolloKoa">Using with Koa</h2>
+
+The following code snippet shows how to use Apollo Server with Koa:
+
+```js
+import koa from 'koa';
+import koaRouter from 'koa-router';
+import { apolloKoa } from 'apollo-server';
+
+const app = new koa();
+const router = new koaRouter();
+const PORT = 3000;
+
+app.use(koaBody());
+
+router.post('/graphql', apolloKoa({ schema: myGraphQLSchema }));
+app.use(router.routes());
+app.use(router.allowedMethods());
+app.listen(PORT);
+```
+
+The `options` passed to `apolloKoa` may be either:
+- an ApolloOptions object object with the parameters specified above
+- a function that, given a Node.js request object, returns an ApolloOptions object
+- a function that, given a Node.js request object, returns a promise for an ApolloOptions object

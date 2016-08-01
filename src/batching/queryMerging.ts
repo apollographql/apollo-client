@@ -49,6 +49,10 @@ import {
   Request,
 } from '../networkInterface';
 
+import {
+  resultKeyNameFromField,
+} from '../data/storeUtils';
+
 import assign = require('lodash.assign');
 import cloneDeep = require('lodash.clonedeep');
 
@@ -96,12 +100,7 @@ export function unpackMergedResult(result: GraphQLResult,
     const childRequestIndex = mergeInfo.requestIndex;
     const fieldMap = fieldMaps[childRequestIndex];
     const field = fieldMap[mergeInfo.fieldIndex];
-
-    // If this field has been aliased, then we need the alias name
-    // (as opposed to the field name) as the key of the result
-    // structure that we return.
-    const keyName = field.alias ? field.alias.value : field.name.value;
-    data[keyName] = result.data[dataKey];
+    data[resultKeyNameFromField(field)] = result.data[dataKey];
 
     if (resultArray[childRequestIndex]) {
       assign(resultArray[childRequestIndex].data, data);

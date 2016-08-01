@@ -1,5 +1,7 @@
 import {
   GraphQLResult,
+  SelectionSet,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -108,6 +110,18 @@ export function isMutationErrorAction(action: ApolloAction): action is MutationE
   return action.type === 'APOLLO_MUTATION_ERROR';
 }
 
+export interface UpdateQueryResultAction {
+  type: 'APOLLO_UPDATE_QUERY_RESULT';
+  queryVariables: any;
+  querySelectionSet: SelectionSet;
+  queryFragments: FragmentDefinition[];
+  newResult: Object;
+}
+
+export function isUpdateQueryResultAction(action: ApolloAction): action is UpdateQueryResultAction {
+  return action.type === 'APOLLO_UPDATE_QUERY_RESULT';
+}
+
 export interface StoreResetAction {
   type: 'APOLLO_STORE_RESET';
   observableQueryIds: string[];
@@ -126,4 +140,5 @@ export type ApolloAction =
   MutationInitAction |
   MutationResultAction |
   MutationErrorAction |
+  UpdateQueryResultAction |
   StoreResetAction;

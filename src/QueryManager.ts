@@ -39,6 +39,12 @@ import {
   GraphQLResult,
   Document,
   FragmentDefinition,
+  // We need to import this here to allow TypeScript to include it in the definition file even
+  // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
+  // We need to disable the linter here because TSLint rightfully complains that this is unused.
+  /* tslint:disable */
+  SelectionSet,
+  /* tslint:enable */
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -88,9 +94,9 @@ export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   public scheduler: QueryScheduler;
+  public store: ApolloStore;
 
   private networkInterface: NetworkInterface;
-  private store: ApolloStore;
   private reduxRootKey: string;
   private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
@@ -495,6 +501,53 @@ export class QueryManager {
     this.stopQueryInStore(queryId);
   }
 
+  public getQueryWithPreviousResult(queryId: string, isOptimistic = false) {
+    if (!this.observableQueries[queryId]) {
+      throw new Error(`ObservableQuery with this id doesn't exist: ${queryId}`);
+    }
+
+    const observableQuery = this.observableQueries[queryId].observableQuery;
+
+    const queryOptions = observableQuery.options;
+
+    let fragments = queryOptions.fragments;
+    let queryDefinition = getQueryDefinition(queryOptions.query);
+
+    if (this.queryTransformer) {
+      const doc = {
+        kind: 'Document',
+        definitions: [
+          queryDefinition,
+            ...(fragments || []),
+        ],
+      };
+
+      const transformedDoc = applyTransformers(doc, [this.queryTransformer]);
+
+      queryDefinition = getQueryDefinition(transformedDoc);
+      fragments = getFragmentDefinitions(transformedDoc);
+    }
+
+    const previousResult = readSelectionSetFromStore({
+      // In case of an optimistic change, apply reducer on top of the
+      // results including previous optimistic updates. Otherwise, apply it
+      // on top of the real data only.
+      store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+      rootId: 'ROOT_QUERY',
+      selectionSet: queryDefinition.selectionSet,
+      variables: queryOptions.variables,
+      returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
+      fragmentMap: createFragmentMap(fragments || []),
+    });
+
+    return {
+      previousResult,
+      queryVariables: queryOptions.variables,
+      querySelectionSet: queryDefinition.selectionSet,
+      queryFragments: fragments,
+    };
+  }
+
   private collectResultBehaviorsFromUpdateQueries(
     updateQueries: MutationQueryReducersMap,
     mutationResult: Object,
@@ -505,67 +558,42 @@ export class QueryManager {
     }
     const resultBehaviors = [];
 
-    const observableQueriesByName: { [name: string]: ObservableQuery[] } = {};
-    Object.keys(this.observableQueries).forEach((key) => {
-      const observableQuery = this.observableQueries[key].observableQuery;
+    const queryIdsByName: { [name: string]: string[] } = {};
+    Object.keys(this.observableQueries).forEach((queryId) => {
+      const observableQuery = this.observableQueries[queryId].observableQuery;
       const queryName = getQueryDefinition(observableQuery.options.query).name.value;
 
-      observableQueriesByName[queryName] =
-        observableQueriesByName[queryName] || [];
-      observableQueriesByName[queryName].push(observableQuery);
+      queryIdsByName[queryName] =
+        queryIdsByName[queryName] || [];
+      queryIdsByName[queryName].push(queryId);
     });
 
     Object.keys(updateQueries).forEach((queryName) => {
       const reducer = updateQueries[queryName];
-      const queries = observableQueriesByName[queryName];
+      const queries = queryIdsByName[queryName];
       if (!queries) {
         // XXX should throw an error?
         return;
       }
 
-      queries.forEach((observableQuery) => {
-        const queryOptions = observableQuery.options;
-
-        let fragments = queryOptions.fragments;
-        let queryDefinition = getQueryDefinition(queryOptions.query);
-
-        if (this.queryTransformer) {
-          const doc = {
-            kind: 'Document',
-            definitions: [
-              queryDefinition,
-              ...(fragments || []),
-            ],
-          };
-
-          const transformedDoc = applyTransformers(doc, [this.queryTransformer]);
-
-          queryDefinition = getQueryDefinition(transformedDoc);
-          fragments = getFragmentDefinitions(transformedDoc);
-        }
-
-        const previousResult = readSelectionSetFromStore({
-          // In case of an optimistic change, apply reducer on top of the
-          // results including previous optimistic updates. Otherwise, apply it
-          // on top of the real data only.
-          store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
-          rootId: 'ROOT_QUERY',
-          selectionSet: queryDefinition.selectionSet,
-          variables: queryOptions.variables,
-          returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
-          fragmentMap: createFragmentMap(fragments),
-        });
+      queries.forEach((queryId) => {
+        const {
+          previousResult,
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
+        } = this.getQueryWithPreviousResult(queryId, isOptimistic);
 
         resultBehaviors.push({
           type: 'QUERY_RESULT',
           newResult: reducer(previousResult, {
             mutationResult,
             queryName,
-            queryVariables: queryOptions.variables,
+            queryVariables,
           }),
-          queryVariables: queryOptions.variables,
-          querySelectionSet: queryDefinition.selectionSet,
-          queryFragments: fragments,
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
         });
       });
     });

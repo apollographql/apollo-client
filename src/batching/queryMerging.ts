@@ -96,7 +96,12 @@ export function unpackMergedResult(result: GraphQLResult,
     const childRequestIndex = mergeInfo.requestIndex;
     const fieldMap = fieldMaps[childRequestIndex];
     const field = fieldMap[mergeInfo.fieldIndex];
-    data[field.name.value] = result.data[dataKey];
+
+    // If this field has been aliased, then we need the alias name
+    // (as opposed to the field name) as the key of the result
+    // structure that we return.
+    const keyName = field.alias ? field.alias.value : field.name.value;
+    data[keyName] = result.data[dataKey];
 
     if (resultArray[childRequestIndex]) {
       assign(resultArray[childRequestIndex].data, data);

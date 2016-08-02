@@ -691,6 +691,84 @@ export class QueryManager {
     };
   }
 
+  // Takes a request id, query id a query document and a set of variables
+  // associated with that query and send it to the network interface.
+  private fetchRequest(
+    requestId: number,
+    queryId: string,
+    query: Document,
+    querySS: SelectionSetWithRoot,
+    noFetch: boolean,
+    variables: Object,
+    fragmentMap: FragmentMap,
+    returnPartialData: boolean,
+    networkInterface: NetworkInterface
+  ): Promise<GraphQLResult> {
+    const request: Request = {
+      query,
+      variables,
+      operationName: getOperationName(query),
+    };
+
+    const fetchRequest: QueryFetchRequest = {
+      options: { query, variables },
+      queryId,
+      operationName: request.operationName,
+    };
+
+    const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
+      this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
+
+      return this.batcher.enqueueRequest(fetchRequest)
+        .then((result: GraphQLResult) => {
+          // XXX handle multiple ApolloQueryResults
+          this.store.dispatch({
+            type: 'APOLLO_QUERY_RESULT',
+            result,
+            queryId,
+            requestId,
+          });
+
+          this.removeFetchQueryPromise(requestId);
+          return result;
+        }).then(() => {
+
+          let resultFromStore;
+          try {
+            // ensure result is combined with data already in store
+            // this will throw an error if there are missing fields in
+            // the results if returnPartialData is false.
+            resultFromStore = readSelectionSetFromStore({
+              store: this.getApolloState().data,
+              rootId: querySS.id,
+              selectionSet: querySS.selectionSet,
+              variables,
+              returnPartialData: returnPartialData || noFetch,
+              fragmentMap,
+            });
+            // ensure multiple errors don't get thrown
+            /* tslint:disable */
+          } catch (e) {}
+          /* tslint:enable */
+
+          // return a chainable promise
+          this.removeFetchQueryPromise(requestId);
+          resolve({ data: resultFromStore, loading: false });
+        }).catch((error: Error) => {
+          this.store.dispatch({
+            type: 'APOLLO_QUERY_ERROR',
+            error,
+            queryId,
+            requestId,
+          });
+
+          this.removeFetchQueryPromise(requestId);
+
+        });
+    });
+    return retPromise;
+  }
+
   private fetchQueryOverInterface(
     queryId: string,
     options: WatchQueryOptions,
@@ -722,7 +800,7 @@ export class QueryManager {
     if (!forceFetch) {
       const {
         diffedQuery,
-        initialResult
+        initialResult,
       } = this.handleDiffQuery(
         {
           queryDef,
@@ -782,69 +860,17 @@ export class QueryManager {
     }
 
     if (minimizedQuery) {
-      const request: Request = {
-        query: minimizedQueryDoc,
+      return this.fetchRequest(
+        requestId,
+        queryId,
+        minimizedQueryDoc,
+        minimizedQuery,
+        noFetch,
         variables,
-        operationName: getOperationName(minimizedQueryDoc),
-      };
-
-      const fetchRequest: QueryFetchRequest = {
-        options: { query: minimizedQueryDoc, variables },
-        queryId: queryId,
-        operationName: request.operationName,
-      };
-
-      const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
-        this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
-
-        return this.batcher.enqueueRequest(fetchRequest)
-          .then((result: GraphQLResult) => {
-            // XXX handle multiple ApolloQueryResults
-            this.store.dispatch({
-              type: 'APOLLO_QUERY_RESULT',
-              result,
-              queryId,
-              requestId,
-            });
-
-            this.removeFetchQueryPromise(requestId);
-            return result;
-          }).then(() => {
-
-            let resultFromStore;
-            try {
-              // ensure result is combined with data already in store
-              // this will throw an error if there are missing fields in
-              // the results if returnPartialData is false.
-              resultFromStore = readSelectionSetFromStore({
-                store: this.getApolloState().data,
-                rootId: querySS.id,
-                selectionSet: querySS.selectionSet,
-                variables,
-                returnPartialData: returnPartialData || noFetch,
-                fragmentMap,
-              });
-              // ensure multiple errors don't get thrown
-              /* tslint:disable */
-            } catch (e) {}
-            /* tslint:enable */
-
-            // return a chainable promise
-            this.removeFetchQueryPromise(requestId);
-            resolve({ data: resultFromStore, loading: false });
-          }).catch((error: Error) => {
-            this.store.dispatch({
-              type: 'APOLLO_QUERY_ERROR',
-              error,
-              queryId,
-              requestId,
-            });
-
-            this.removeFetchQueryPromise(requestId);
-
-          });
-      });
-      return retPromise;
+        fragmentMap,
+        returnPartialData,
+        network
+      );
     }
 
     // return a chainable promise

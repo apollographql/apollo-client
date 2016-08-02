@@ -126,6 +126,11 @@ export class QueryManager {
     subscriptions: Subscription[];
   } };
 
+  // A map going from the name of a query to an observer issued for it by watchQuery. This is
+  // generally used to refetches for refetchQueries and to update mutation results through
+  // updateQueries.
+  private queryIdsByName: { [queryName: string]: string[] };
+
   constructor({
     networkInterface,
     store,
@@ -164,6 +169,7 @@ export class QueryManager {
     this.batcher.start(this.batchInterval);
     this.fetchQueryPromises = {};
     this.observableQueries = {};
+    this.queryIdsByName = {};
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
@@ -193,6 +199,7 @@ export class QueryManager {
     fragments = [],
     optimisticResponse,
     updateQueries,
+    refetchQueries = [],
   }: {
     mutation: Document,
     variables?: Object,
@@ -200,6 +207,7 @@ export class QueryManager {
     fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
+    refetchQueries?: string[],
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
@@ -262,6 +270,7 @@ export class QueryManager {
             ],
           });
 
+          refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
           resolve(result);
         })
         .catch((err) => {
@@ -432,9 +441,19 @@ export class QueryManager {
     delete this.fetchQueryPromises[requestId.toString()];
   }
 
-  // Adds an ObservableQuery to this.observableQueries
+  // Adds an ObservableQuery to this.observableQueries and to this.observableQueriesByName.
   public addObservableQuery(queryId: string, observableQuery: ObservableQuery) {
     this.observableQueries[queryId] = { observableQuery, subscriptions: [] };
+
+    // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
+    const queryDef = getQueryDefinition(observableQuery.options.query);
+    if (queryDef.name && queryDef.name.value) {
+      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+
+      // XXX we may we want to warn the user about query name conflicts in the future
+      this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
+      this.queryIdsByName[queryName].push(observableQuery.queryId);
+    }
   }
 
   // Associates a query subscription with an ObservableQuery in this.observableQueries
@@ -450,7 +469,12 @@ export class QueryManager {
   }
 
   public removeObservableQuery(queryId: string) {
+    const observableQuery = this.observableQueries[queryId].observableQuery;
+    const queryName = getQueryDefinition(observableQuery.options.query).name.value;
     delete this.observableQueries[queryId];
+    this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter((val) => {
+      return !(observableQuery.queryId === val);
+    });
   }
 
   public resetStore(): void {
@@ -559,25 +583,15 @@ export class QueryManager {
     }
     const resultBehaviors = [];
 
-    const queryIdsByName: { [name: string]: string[] } = {};
-    Object.keys(this.observableQueries).forEach((queryId) => {
-      const observableQuery = this.observableQueries[queryId].observableQuery;
-      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
-
-      queryIdsByName[queryName] =
-        queryIdsByName[queryName] || [];
-      queryIdsByName[queryName].push(queryId);
-    });
-
     Object.keys(updateQueries).forEach((queryName) => {
       const reducer = updateQueries[queryName];
-      const queries = queryIdsByName[queryName];
-      if (!queries) {
+      const queryIds = this.queryIdsByName[queryName];
+      if (!queryIds) {
         // XXX should throw an error?
         return;
       }
 
-      queries.forEach((queryId) => {
+      queryIds.forEach((queryId) => {
         const {
           previousResult,
           queryVariables,
@@ -780,6 +794,14 @@ export class QueryManager {
     // return a chainable promise
     return new Promise((resolve) => {
       resolve({ data: initialResult });
+    });
+  }
+
+  // Refetches a query given that query's name. Refetches
+  // all ObservableQuery instances associated with the query name.
+  private refetchQueryByName(queryName: string) {
+    this.queryIdsByName[queryName].forEach((queryId) => {
+      this.observableQueries[queryId].observableQuery.refetch();
     });
   }
 

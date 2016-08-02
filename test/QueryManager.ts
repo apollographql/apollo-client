@@ -1758,7 +1758,7 @@ describe('QueryManager', () => {
       },
     });
 
-    handle2.subscribe({
+    const subscription2 = handle2.subscribe({
       next(result) {
         handleCount++;
       },
@@ -1766,6 +1766,9 @@ describe('QueryManager', () => {
 
     setTimeout(() => {
       assert.equal(handleCount, 3);
+      subscription1.unsubscribe();
+      subscription2.unsubscribe();
+
       done();
     }, 400);
   });
@@ -3276,6 +3279,74 @@ describe('QueryManager', () => {
       handle.subscribe({
         next(result) {
           assert(!result.loading);
+        },
+      });
+    });
+  });
+
+  describe('refetchQueries', () => {
+    it('should refetch the right query when a result is successfully returned', (done) => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }`;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface(
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          }
+        ),
+        reduxRootKey: 'apollo',
+        store: createApolloStore(),
+      });
+      let resultsReceived = 0;
+      queryManager.watchQuery({ query }).subscribe({
+        next(result) {
+          if (resultsReceived === 0) {
+            assert.deepEqual(result.data, data);
+            queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
+          } else if (resultsReceived === 1) {
+            assert.deepEqual(result.data, secondReqData);
+            done();
+          }
+          resultsReceived++;
         },
       });
     });

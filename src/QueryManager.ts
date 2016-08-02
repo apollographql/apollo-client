@@ -689,8 +689,9 @@ export class QueryManager {
     };
   }
 
-  // Takes a request id, query id a query document and a set of variables
-  // associated with that query and send it to the network interface.
+  // Takes a request id, query id, a query document and information asscoaiated with the query
+  // (e.g. variables, fragment map, etc.) and send it to the network interface. Returns
+  // a promise for the result associated with that request.
   private fetchRequest({
     requestId,
     queryId,
@@ -706,7 +707,7 @@ export class QueryManager {
     querySS: SelectionSetWithRoot,
     options: WatchQueryOptions,
     fragmentMap: FragmentMap,
-    networkInterface: NetworkInterface
+    networkInterface: NetworkInterface,
   }): Promise<GraphQLResult> {
     const {
       variables,
@@ -772,7 +773,6 @@ export class QueryManager {
           });
 
           this.removeFetchQueryPromise(requestId);
-
         });
     });
     return retPromise;
@@ -816,12 +816,12 @@ export class QueryManager {
         diffedQuery,
         initialResult,
       } = this.handleDiffQuery({
-          queryDef,
-          rootId: querySS.id,
-          variables,
-          fragmentMap,
-          noFetch,
-        });
+        queryDef,
+        rootId: querySS.id,
+        variables,
+        fragmentMap,
+        noFetch,
+      });
       storeResult = initialResult;
       if (diffedQuery) {
         minimizedQueryDoc = diffedQuery;
@@ -860,9 +860,7 @@ export class QueryManager {
     if (! minimizedQuery || returnPartialData || noFetch) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
-        result: {
-          data: storeResult,
-        },
+        result: { data: storeResult },
         variables,
         query: querySS,
         complete: !! minimizedQuery,
@@ -870,7 +868,7 @@ export class QueryManager {
       });
     }
 
-    if (minimizedQuery) {
+    if (minimizedQuery && !noFetch) {
       return this.fetchRequest({
         requestId,
         queryId,
@@ -882,7 +880,8 @@ export class QueryManager {
       });
     }
 
-    // return a chainable promise
+    // If we have no query to send to the server, we should return the result
+    // found within the store.
     return Promise.resolve({ data: storeResult });
   }
 

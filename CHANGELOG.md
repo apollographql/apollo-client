@@ -3,6 +3,9 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
+### v0.4.10
+
 - Fixed issue with alias names in batched queries. [PR #493](https://github.com/apollostack/apollo-client/pull/493) and [Issue #490](https://github.com/apollostack/apollo-client/issues).
 - Add loading state tracking within Apollo Client in order to simplify the handling of loading state within the view layers. [Issue #342](https://github.com/apollostack/apollo-client/issues/342) and [PR #467](https://github.com/apollostack/apollo-client/pull/467)
 

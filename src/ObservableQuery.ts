@@ -86,15 +86,17 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.queryId = queryId;
 
     this.refetch = (variables?: any) => {
-      // If no new variables passed, use existing variables
-      variables = variables || this.options.variables;
+      // Extend variables if available
+      variables = variables || this.options.variables ?
+        assign({}, this.options.variables, variables) : undefined;
+
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query refetch.');
       }
       // Use the same options as before, but with new variables and forceFetch true
       return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
         forceFetch: true,
-        variables: assign({}, this.options.variables, variables),
+        variables,
       }) as WatchQueryOptions);
     };
 
@@ -109,8 +111,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
             combinedOptions = fetchMoreOptions;
           } else {
             // fetch the same query with a possibly new variables
+            const variables = this.options.variables || fetchMoreOptions.variables ?
+              assign({}, this.options.variables, fetchMoreOptions.variables) : undefined;
+
             combinedOptions = assign({}, this.options, fetchMoreOptions, {
-              variables: assign({}, this.options.variables, fetchMoreOptions.variables),
+              variables,
             });
           }
 

@@ -46,7 +46,7 @@ function templateArgs(rawData) {
 
   return {
     name: rawData.name,
-    signature: _signature(rawData),
+    signature: _signature(rawData, parameters),
     paramsNoOptions: split[1],
     options: split[0][0] && split[0][0].properties,
     repo: 'apollostack/apollo-client',
@@ -57,7 +57,7 @@ function templateArgs(rawData) {
 
 // XXX: not sure whether to use the 'kind' enum from TS or just run with the
 // strings. Strings seem safe enough I guess
-function _signature(rawData, parameters, options) {
+function _signature(rawData, parameters) {
   var escapedName = _.escape(rawData.name);
 
   var signature = rawData.signatures[0];

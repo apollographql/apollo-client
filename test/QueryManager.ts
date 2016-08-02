@@ -3174,7 +3174,6 @@ describe('QueryManager', () => {
     }, 120);
   });
 
-<<<<<<< HEAD
   describe('loading state', () => {
     it('should be passed as false if we are not watching a query', (done) => {
       const query = gql`

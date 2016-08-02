@@ -53,8 +53,11 @@ const Author = `
   }
 `;
 
+// we export have to export Author and all types it depends on in order to make it reusable
 export default () => [Author, Book];
+```
 
+```js
 // in book.js -----------------------
 import Author from './author';
 
@@ -66,7 +69,9 @@ const Book = `
 `;
 
 export default () => [Book, Author];
+```
 
+```js
 // in schema.js ----------------------
 import Author from './author.js';
 

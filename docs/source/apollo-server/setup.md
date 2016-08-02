@@ -9,11 +9,11 @@ Apollo Server exports `apolloExpress`, `apolloConnect`, `apolloHAPI` and `apollo
 
 <h2 id="apolloOptions">ApolloOptions</h2>
 
-Apollo Server accepts an ApolloOptions object as its single argument:
+Apollo Server accepts an ApolloOptions object as its single argument. An ApolloOptions object has the following properties:
 
 ```js
 // options object
-const options = {
+const ApolloOptions = {
   schema: GraphQLSchema,
   context?: any, // value to be used as context in resolvers
   rootValue?: any,
@@ -25,12 +25,12 @@ const options = {
 ```
 
 
-Alternatively, Apollo Server accepts a function which takes the request as input and returns a promise for an ApolloOptions object:
+Alternatively, Apollo Server accepts a function which takes the request as input and returns an ApolloOptions object (or a promise for one):
 
 ```js
 
-// example options function
-apollo<Express/Connect/HAPI/Koa>(request => ({
+// example options function (for express)
+apolloExpress(request => ({
   schema: typeDefinitionArray,
   context: { user: request.session.user }
 }))
@@ -52,11 +52,6 @@ app.use('/graphql', bodyParser.json(), apolloExpress({ schema: myGraphQLSchema }
 
 app.listen(PORT);
 ```
-
-The `options` passed to `apolloExpress` may be either:
-- an ApolloOptions object object with the parameters specified above
-- a function that, given an Express [`request`](http://expressjs.com/en/4x/api.html#req), returns an ApolloOptions object
-- a function that, given an Express [`request`](http://expressjs.com/en/4x/api.html#req), returns a promise for an ApolloOptions object
 
 <h2 id="apolloConnect">Using with Connect</h2>
 
@@ -102,11 +97,6 @@ server.register({
 });
 ```
 
-The `options` passed to `apolloHAPI` may be either:
-- an ApolloOptions object object with the parameters specified above
-- a function that, given a Node.js request object, returns an ApolloOptions object
-- a function that, given a Node.js request object, returns a promise for an ApolloOptions object
-
 
 <h2 id="apolloKoa">Using with Koa</h2>
 
@@ -128,8 +118,3 @@ app.use(router.routes());
 app.use(router.allowedMethods());
 app.listen(PORT);
 ```
-
-The `options` passed to `apolloKoa` may be either:
-- an ApolloOptions object object with the parameters specified above
-- a function that, given a Node.js request object, returns an ApolloOptions object
-- a function that, given a Node.js request object, returns a promise for an ApolloOptions object

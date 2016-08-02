@@ -24,6 +24,7 @@ import {
   createFragmentMap,
   getOperationName,
   addFragmentsToDocument,
+  FragmentMap,
 } from './queries/getFromAST';
 
 import {
@@ -38,6 +39,7 @@ import {
 import {
   GraphQLResult,
   Document,
+  OperationDefinition,
   FragmentDefinition,
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
@@ -602,39 +604,65 @@ export class QueryManager {
     return resultBehaviors;
   }
 
+  // Takes a set of WatchQueryOptions and transforms the query document
+  // accordingly. Specifically, it does the following:
+  // 1. Adds the fragments to the document
+  // 2. Applies the queryTransformer (if there is one defined)
+  // 3. Creates a fragment map out of all of the fragment definitions within the query
+  //    document.
+  // 4. Returns the final query document and the fragment map associated with the
+  //    query.
+  private transformQueryDocument(options: WatchQueryOptions): {
+    queryDoc: Document,
+    fragmentMap: FragmentMap,
+    queryDef: OperationDefinition,
+    queryString: string,
+    querySS: SelectionSetWithRoot,
+  } {
+    const {
+      query,
+      fragments = [],
+    } = options;
+    let queryDoc = addFragmentsToDocument(query, fragments);
+
+    // Apply the query transformer if one has been provided
+    if (this.queryTransformer) {
+      queryDoc = applyTransformers(queryDoc, [ this.queryTransformer ]);
+    }
+
+    const queryDef = getQueryDefinition(queryDoc);
+    return {
+      queryDoc,
+      fragmentMap: createFragmentMap(getFragmentDefinitions(queryDoc)),
+      queryDef,
+      queryString: print(queryDoc),
+      querySS: {
+        id: 'ROOT_QUERY',
+        typeName: 'Query',
+        selectionSet: queryDef.selectionSet,
+      } as SelectionSetWithRoot,
+    };
+  }
+
   private fetchQueryOverInterface(
     queryId: string,
     options: WatchQueryOptions,
     network: NetworkInterface
   ): Promise<ApolloQueryResult> {
     const {
-      query,
       variables,
       forceFetch = false,
       returnPartialData = false,
       noFetch = false,
-      fragments = [],
     } = options;
 
-    let queryDoc = addFragmentsToDocument(query, fragments);
-    // Apply the query transformer if one has been provided.
-    if (this.queryTransformer) {
-      queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
-    }
-
-    // Add the fragments passed in into the query and then create the fragment map
-    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(queryDoc));
-    const queryDef = getQueryDefinition(queryDoc);
-    const queryString = print(queryDoc);
-
-    // Parse the query passed in -- this could also be done by a build plugin or tagged
-    // template string
-    const querySS = {
-      id: 'ROOT_QUERY',
-      typeName: 'Query',
-      selectionSet: queryDef.selectionSet,
-    } as SelectionSetWithRoot;
-
+    const {
+      queryDoc,
+      fragmentMap,
+      queryDef,
+      queryString,
+      querySS,
+    } = this.transformQueryDocument(options);
     // If we don't use diffing, then these will be the same as the original query, other than
     // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
@@ -652,7 +680,7 @@ export class QueryManager {
         throwOnMissingField: false,
         rootId: querySS.id,
         variables,
-        fragmentMap: queryFragmentMap,
+        fragmentMap,
       });
 
       initialResult = result;
@@ -662,7 +690,7 @@ export class QueryManager {
           missingSelectionSets,
           variableDefinitions: queryDef.variableDefinitions,
           name: queryDef.name,
-          fragmentMap: queryFragmentMap,
+          fragmentMap,
         });
         const diffedQueryDef = getQueryDefinition(diffedQuery);
 
@@ -695,7 +723,7 @@ export class QueryManager {
       returnPartialData: returnPartialData || noFetch,
       queryId,
       requestId,
-      fragmentMap: queryFragmentMap,
+      fragmentMap,
     });
 
     if (! minimizedQuery || returnPartialData || noFetch) {
@@ -752,7 +780,7 @@ export class QueryManager {
                 selectionSet: querySS.selectionSet,
                 variables,
                 returnPartialData: returnPartialData || noFetch,
-                fragmentMap: queryFragmentMap,
+                fragmentMap,
               });
               // ensure multiple errors don't get thrown
               /* tslint:disable */

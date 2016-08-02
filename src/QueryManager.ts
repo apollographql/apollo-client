@@ -649,14 +649,12 @@ export class QueryManager {
   // that must be fetched from the server and as well as the  data returned from the store.
   private handleDiffQuery({
     queryDef,
-    selectionSet,
     rootId,
     variables,
     fragmentMap,
     noFetch,
   }: {
     queryDef: OperationDefinition,
-    selectionSet: SelectionSet,
     rootId: string,
     variables: Object,
     fragmentMap: FragmentMap,
@@ -666,7 +664,7 @@ export class QueryManager {
     initialResult: Object,
   } {
     const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
-      selectionSet,
+      selectionSet: queryDef.selectionSet,
       store: this.store.getState()[this.reduxRootKey].data,
       throwOnMissingField: false,
       rootId,
@@ -693,17 +691,28 @@ export class QueryManager {
 
   // Takes a request id, query id a query document and a set of variables
   // associated with that query and send it to the network interface.
-  private fetchRequest(
+  private fetchRequest({
+    requestId,
+    queryId,
+    query,
+    querySS,
+    options,
+    fragmentMap,
+    networkInterface,
+  }: {
     requestId: number,
     queryId: string,
     query: Document,
     querySS: SelectionSetWithRoot,
-    noFetch: boolean,
-    variables: Object,
+    options: WatchQueryOptions,
     fragmentMap: FragmentMap,
-    returnPartialData: boolean,
     networkInterface: NetworkInterface
-  ): Promise<GraphQLResult> {
+  }): Promise<GraphQLResult> {
+    const {
+      variables,
+      noFetch,
+      returnPartialData,
+    } = options;
     const request: Request = {
       query,
       variables,
@@ -772,7 +781,7 @@ export class QueryManager {
   private fetchQueryOverInterface(
     queryId: string,
     options: WatchQueryOptions,
-    network: NetworkInterface
+    networkInterface: NetworkInterface
   ): Promise<ApolloQueryResult> {
     const {
       variables,
@@ -784,10 +793,15 @@ export class QueryManager {
     const {
       queryDoc,
       fragmentMap,
-      queryDef,
-      queryString,
-      querySS,
     } = this.transformQueryDocument(options);
+    const queryDef = getQueryDefinition(queryDoc);
+    const queryString = print(queryDoc);
+    const querySS = {
+      id: 'ROOT_QUERY',
+      typeName: 'Query',
+      selectionSet: queryDef.selectionSet,
+    } as SelectionSetWithRoot;
+
     // If we don't use diffing, then these will be the same as the original query, other than
     // the queryTransformer that could have been applied.
     let minimizedQueryString = queryString;
@@ -801,16 +815,13 @@ export class QueryManager {
       const {
         diffedQuery,
         initialResult,
-      } = this.handleDiffQuery(
-        {
+      } = this.handleDiffQuery({
           queryDef,
-          selectionSet: querySS.selectionSet,
           rootId: querySS.id,
           variables,
           fragmentMap,
           noFetch,
-        }
-      );
+        });
       storeResult = initialResult;
       if (diffedQuery) {
         minimizedQueryDoc = diffedQuery;
@@ -860,23 +871,19 @@ export class QueryManager {
     }
 
     if (minimizedQuery) {
-      return this.fetchRequest(
+      return this.fetchRequest({
         requestId,
         queryId,
-        minimizedQueryDoc,
-        minimizedQuery,
-        noFetch,
-        variables,
+        query: minimizedQueryDoc,
+        querySS: minimizedQuery,
+        options,
         fragmentMap,
-        returnPartialData,
-        network
-      );
+        networkInterface,
+      });
     }
 
     // return a chainable promise
-    return new Promise((resolve) => {
-      resolve({ data: storeResult });
-    });
+    return Promise.resolve({ data: storeResult });
   }
 
   // Given a query id and a new result, this checks if the old result is

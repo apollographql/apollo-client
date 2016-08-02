@@ -644,5 +644,33 @@ describe('mutation results', () => {
         assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
       });
     });
+
+    it('error handling in reducer functions', () => {
+      const oldError = console.error;
+      const errors = [];
+      console.error = (msg) => {
+        errors.push(msg);
+      };
+
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          updateQueries: {
+            todoList: (prev, options) => {
+              throw new Error(`Hello... It's me.`);
+            },
+          },
+        });
+      })
+      .then(() => {
+        assert.lengthOf(errors, 1);
+        assert.equal(errors[0].message, `Hello... It's me.`);
+        console.error = oldError;
+      });
+    });
   });
 });

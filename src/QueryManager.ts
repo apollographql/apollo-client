@@ -80,6 +80,7 @@ import {
 } from './index';
 
 import { Observer, Subscription } from './util/Observable';
+import { tryFunctionOrLogError } from './util/errorHandling';
 
 import {
   ApolloError,
@@ -599,17 +600,22 @@ export class QueryManager {
           queryFragments,
         } = this.getQueryWithPreviousResult(queryId, isOptimistic);
 
-        resultBehaviors.push({
-          type: 'QUERY_RESULT',
-          newResult: reducer(previousResult, {
+        const newResult = tryFunctionOrLogError(() => reducer(
+          previousResult, {
             mutationResult,
             queryName,
             queryVariables,
-          }),
-          queryVariables,
-          querySelectionSet,
-          queryFragments,
-        });
+          }));
+
+        if (newResult) {
+          resultBehaviors.push({
+            type: 'QUERY_RESULT',
+            newResult,
+            queryVariables,
+            querySelectionSet,
+            queryFragments,
+          });
+        }
       });
     });
 

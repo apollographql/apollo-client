@@ -109,8 +109,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
             combinedOptions = fetchMoreOptions;
           } else {
             // fetch the same query with a possibly new variables
-            combinedOptions =
-              assign({}, this.options, fetchMoreOptions);
+            combinedOptions = assign({}, this.options, fetchMoreOptions, {
+              variables: assign({}, this.options.variables, fetchMoreOptions.variables),
+            });
           }
 
           combinedOptions = assign({}, combinedOptions, {

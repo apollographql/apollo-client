@@ -106,7 +106,7 @@ describe('fetchMore on an observable query', () => {
       result: resultMore,
     }).then((watchedQuery) => {
       return watchedQuery.fetchMore({
-        variables: variablesMore,
+        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
         updateQuery: (prev, options) => {
           const state = clonedeep(prev) as any;
           state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];

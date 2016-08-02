@@ -615,9 +615,6 @@ export class QueryManager {
   private transformQueryDocument(options: WatchQueryOptions): {
     queryDoc: Document,
     fragmentMap: FragmentMap,
-    queryDef: OperationDefinition,
-    queryString: string,
-    querySS: SelectionSetWithRoot,
   } {
     const {
       query,
@@ -630,17 +627,9 @@ export class QueryManager {
       queryDoc = applyTransformers(queryDoc, [ this.queryTransformer ]);
     }
 
-    const queryDef = getQueryDefinition(queryDoc);
     return {
       queryDoc,
       fragmentMap: createFragmentMap(getFragmentDefinitions(queryDoc)),
-      queryDef,
-      queryString: print(queryDoc),
-      querySS: {
-        id: 'ROOT_QUERY',
-        typeName: 'Query',
-        selectionSet: queryDef.selectionSet,
-      } as SelectionSetWithRoot,
     };
   }
 

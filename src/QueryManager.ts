@@ -644,6 +644,53 @@ export class QueryManager {
     };
   }
 
+  // Takes a selection set for a query and diffs it against the store.
+  // Returns a query document of selection sets
+  // that must be fetched from the server and as well as the  data returned from the store.
+  private handleDiffQuery({
+    queryDef,
+    selectionSet,
+    rootId,
+    variables,
+    fragmentMap,
+    noFetch,
+  }: {
+    queryDef: OperationDefinition,
+    selectionSet: SelectionSet,
+    rootId: string,
+    variables: Object,
+    fragmentMap: FragmentMap,
+    noFetch: boolean,
+  }): {
+    diffedQuery: Document,
+    initialResult: Object,
+  } {
+    const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
+      selectionSet,
+      store: this.store.getState()[this.reduxRootKey].data,
+      throwOnMissingField: false,
+      rootId,
+      variables,
+      fragmentMap,
+    });
+
+    const initialResult = result;
+    let diffedQuery: Document;
+    if (missingSelectionSets && missingSelectionSets.length && !noFetch) {
+      diffedQuery = queryDocument({
+        missingSelectionSets,
+        variableDefinitions: queryDef.variableDefinitions,
+        name: queryDef.name,
+        fragmentMap,
+      });
+    }
+
+    return {
+      diffedQuery,
+      initialResult,
+    };
+  }
+
   private fetchQueryOverInterface(
     queryId: string,
     options: WatchQueryOptions,
@@ -668,44 +715,37 @@ export class QueryManager {
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
     let minimizedQueryDoc = queryDoc;
-    let initialResult;
+    let storeResult;
 
+    // If this is not a force fetch, we want to diff the query against the
+    // store before we fetch it from the network interface.
     if (!forceFetch) {
-      // If the developer has specified they want to use the existing data in the store for this
-      // query, use the query diff algorithm to get as much of a result as we can, and identify
-      // what data is missing from the store
-      const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
-        selectionSet: querySS.selectionSet,
-        store: this.store.getState()[this.reduxRootKey].data,
-        throwOnMissingField: false,
-        rootId: querySS.id,
-        variables,
-        fragmentMap,
-      });
-
-      initialResult = result;
-
-      if (missingSelectionSets && missingSelectionSets.length && !noFetch) {
-        const diffedQuery = queryDocument({
-          missingSelectionSets,
-          variableDefinitions: queryDef.variableDefinitions,
-          name: queryDef.name,
+      const {
+        diffedQuery,
+        initialResult
+      } = this.handleDiffQuery(
+        {
+          queryDef,
+          selectionSet: querySS.selectionSet,
+          rootId: querySS.id,
+          variables,
           fragmentMap,
-        });
-        const diffedQueryDef = getQueryDefinition(diffedQuery);
-
-        minimizedQuery = {
-          id: 'ROOT_QUERY',
-          typeName: 'Query',
-          selectionSet: diffedQueryDef.selectionSet,
-        };
-
-        minimizedQueryString = print(diffedQuery);
+          noFetch,
+        }
+      );
+      storeResult = initialResult;
+      if (diffedQuery) {
         minimizedQueryDoc = diffedQuery;
+        minimizedQueryString = print(minimizedQueryDoc);
+        minimizedQuery = {
+          id: querySS.id,
+          typeName: 'Query',
+          selectionSet: getQueryDefinition(diffedQuery).selectionSet,
+        } as SelectionSetWithRoot;
       } else {
-        minimizedQuery = null;
-        minimizedQueryString = null;
         minimizedQueryDoc = null;
+        minimizedQueryString = null;
+        minimizedQuery = null;
       }
     }
 
@@ -726,11 +766,13 @@ export class QueryManager {
       fragmentMap,
     });
 
+    // If there is no part of the query we need to fetch from the server (or,
+    // noFetch is turned on), we just write the store result as the final result.
     if (! minimizedQuery || returnPartialData || noFetch) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: {
-          data: initialResult,
+          data: storeResult,
         },
         variables,
         query: querySS,
@@ -807,7 +849,7 @@ export class QueryManager {
 
     // return a chainable promise
     return new Promise((resolve) => {
-      resolve({ data: initialResult });
+      resolve({ data: storeResult });
     });
   }
 

@@ -42,7 +42,9 @@ import * as Rx from 'rxjs';
 
 import assign = require('lodash.assign');
 
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import mockNetworkInterface, {
+  MockedResponse,
+} from './mocks/mockNetworkInterface';
 
 import {
   BatchedNetworkInterface,
@@ -58,8 +60,44 @@ import {
 } from '../src/errors';
 
 describe('QueryManager', () => {
+  // Helper method for these tests that constructs a query manager out of a
+  // a list of mocked responses for a mocked network interface.
+  const mockQueryManager = (...mockedResponses: MockedResponse[]) => {
+    return new QueryManager({
+      networkInterface: mockNetworkInterface(...mockedResponses),
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+  };
+
+  // Helper method that asserts whether a particular query correctly returns
+  // a given piece of data.
+  const assertRoundtrip = ({
+    query,
+    data,
+    variables = {},
+    done,
+  }: {
+    query: Document,
+    data: Object,
+    variables?: Object,
+    done
+  }) => {
+    const queryManager = mockQueryManager({
+      request: { query, variables },
+      result: { data },
+    });
+    queryManager.watchQuery({ query, variables }).subscribe({
+      next(result) {
+        assert.deepEqual(result.data, data, 'Roundtrip assertion failed.');
+        done();
+      },
+    });
+  };
+
   it('properly roundtrips through a Redux store', (done) => {
-    const query = gql`
+    assertRoundtrip({
+      query: gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -67,45 +105,23 @@ describe('QueryManager', () => {
           }
         }
       }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
+`,
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
       },
-    };
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        result: { data },
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({
-      query,
-    });
-
-    handle.subscribe({
-      next(result) {
-        assert.deepEqual(result.data, data);
-        done();
-      },
+      done,
     });
   });
 
-  it('runs multiple root queries', () => {
-    const query = gql`
+  it('runs multiple root queries', (done) => {
+    assertRoundtrip({
+      query: gql`
       query people {
         allPeople(first: 1) {
           people {
@@ -116,89 +132,48 @@ describe('QueryManager', () => {
           name
         }
       }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
+    `,
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
+        person: {
+          name: 'Luke Skywalker',
+        },
       },
-      person: {
-        name: 'Luke Skywalker',
-      },
-    };
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        result: { data },
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    return queryManager.query({
-      query,
-    }).then((result) => {
-      assert.deepEqual(result.data, data);
+      done,
     });
   });
 
   it('properly roundtrips through a Redux store with variables', (done) => {
-    const query = gql`
+    assertRoundtrip({
+      query: gql`
       query people($firstArg: Int) {
         allPeople(first: $firstArg) {
           people {
             name
           }
         }
-      }
-    `;
+      }`,
 
-    const variables = {
-      firstArg: 1,
-    };
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
+      variables: {
+        firstArg: 1,
       },
-    };
 
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query, variables },
-        result: { data },
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({
-      query,
-      variables,
-    });
-
-    handle.subscribe({
-      next(result) {
-        assert.deepEqual(result.data, data);
-        done();
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
       },
+      done,
     });
   });
 

@@ -39,6 +39,9 @@ logo:
   mobile: logo/icon-apollo-white-200x200.png
 favicon: logo/favicon.png
 
+typescript_api_box:
+  data_file: docs.json
+
 nav_links:
   'Apollo Project':
     url: http://www.apollostack.com/

@@ -1,0 +1,51 @@
+<div class="api {{bare}} new-api-box">
+  <div class="api-heading">
+    <h2 title="{{name}}" class="title-api selflink" id={{id}}>
+      <a href="#{{id}}" class="link primary">{{{signature}}}</a>
+    </h2>
+
+    <div class="subtext-api">
+      {{#if filepath}}
+        <a class="src-code link secondary" href="https://github.com/{{repo}}/blob/master/{{filepath}}#L{{lineno}}" target="_blank">
+          ({{filepath}}, line {{lineno}})
+        </a>
+      {{/if}}
+    </div>
+  </div>
+
+  <div class="api-body">
+    <div class="desc">
+      {{{markdown summary}}}
+    </div>
+
+    {{#if paramsNoOptions}}
+      <h4 class="subheading">Arguments</h4>
+      <dl class="args">
+        {{#each paramsNoOptions}}
+          <dt>
+            <span class="name">{{name}}</span>
+            <span class="type">{{type}}</span>
+          </dt>
+          <dd>
+            {{{description}}}
+          </dd>
+        {{/each}}
+      </dl>
+    {{/if}}
+
+    {{#if options}}
+      <h4 class="subheading">Options</h4>
+      <dl class="args">
+        {{#each options}}
+          <dt>
+            <span class="name">{{name}}</span>
+            <span class="type">{{type}}</span>
+          </dt>
+          <dd>
+            {{{description}}}
+          </dd>
+        {{/each}}
+      </dl>
+    {{/if}}
+  </div>
+</div>

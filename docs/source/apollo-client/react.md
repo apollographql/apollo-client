@@ -151,7 +151,7 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
   loading: boolean,
   errors: Error[],
   refetch: Function(variables),
-  getCategory: Data // only when the query has returned
+  category: Data // only when the query has returned
 }
 ```
 
@@ -161,7 +161,7 @@ Each key on the object returned by mapQueriesToProps should be made up of the sa
 {
   loading: boolean,
   errors: Error[],
-  postReply: Data, // only when the mutation has returned
+  createPost: Data, // only when the mutation has returned
 }
 ```
 

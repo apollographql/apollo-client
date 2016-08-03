@@ -19,6 +19,7 @@ sidebar_categories:
     - apollo-client/queries
     - apollo-client/mutations
     - apollo-client/fragments
+    - apollo-client/pagination
     - apollo-client/network
     - apollo-client/devtools
     - apollo-client/how-it-works

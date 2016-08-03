@@ -89,7 +89,7 @@ graphQLServer.use('/graphql', bodyParser.json(), apolloExpress({
   schema: executableSchema,
 }));
 
-graphqlServer.use('/graphiql', graphiqlExpress({
+graphQLServer.use('/graphiql', graphiqlExpress({
   endpointURL: '/graphql',
 }));
 

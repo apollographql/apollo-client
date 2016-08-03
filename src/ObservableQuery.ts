@@ -14,6 +14,8 @@ import {
   ApolloQueryResult,
 } from './index';
 
+import { tryFunctionOrLogError } from './util/errorHandling';
+
 import assign = require('lodash.assign');
 
 export interface FetchMoreOptions {
@@ -133,16 +135,21 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
             queryFragments = [],
           } = this.queryManager.getQueryWithPreviousResult(this.queryId);
 
-          this.queryManager.store.dispatch({
-            type: 'APOLLO_UPDATE_QUERY_RESULT',
-            newResult: reducer(previousResult, {
+          const newResult = tryFunctionOrLogError(() => reducer(
+            previousResult, {
               fetchMoreResult,
               queryVariables,
-            }),
-            queryVariables,
-            querySelectionSet,
-            queryFragments,
-          });
+            }));
+
+          if (newResult) {
+            this.queryManager.store.dispatch({
+              type: 'APOLLO_UPDATE_QUERY_RESULT',
+              newResult,
+              queryVariables,
+              querySelectionSet,
+              queryFragments,
+            });
+          }
         });
     };
 

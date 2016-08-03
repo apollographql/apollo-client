@@ -4,12 +4,34 @@ order: 103
 description: How to run mutations to modify data with Apollo Client.
 ---
 
-In addition to fetching data using queries, the Apollo Client also handles GraphQL mutations. GraphQL mutations consist of two parts:
+In addition to fetching data using queries, the Apollo Client also handles GraphQL mutations. Mutation strings are identical to query strings in syntax, the only difference is that you use the keyword `mutation` instead of `query` to indicate that the operation is used to change the dataset behind the schema. Basically, a query is the GraphQL equivalent of an HTTP GET and a mutation is the equivalent of an HTTP POST.
 
-1. The root field with arguments, which represents the actual operation to be done on the server
-2. The rest of the query, which describes the results to fetch to update the client
+```js
+mutation {
+  createUser(name: "Jane Doe", email: "jane@apollostack.com") {
+    id
+    name
+  }
+}
+```
 
-Apollo Client handles both of these requirements.
+GraphQL mutations consist of two parts:
+
+1. The mutation name with arguments (`createUser`), which represents the actual operation to be done on the server
+2. The fields you want back from the result of the mutation to update the client (`id` and `name`)
+
+The result of the above mutation would be:
+
+```
+{
+  "data": {
+    "createUser": {
+      "id": "123",
+      "name": "Jane Doe"
+    }
+  }
+}
+```
 
 <h2 id="mutate" title="ApolloClient#mutate">ApolloClient#mutate(options)</h2>
 
@@ -56,21 +78,48 @@ Mutations can get a bit verbose because you often need to pass in variables for 
 
 In Apollo Client, there is a special system that allows mutations to update the results of the active queries. Active queries are bound to your UI components via `watchQuery` or any of the view integrations. These UI components will automatically re-render as updated queries are updated.
 
+
+<h3 id="new-object-or-updated-fields">Updated Fields</h3>
+
+In cases when your mutation returns a new value for an existing object with some fields updated, you might avoid writing any queries updating code at all. As long as your instance of Apollo Client has [`dataIdFromObject`](/apollo-client/index.html#ApolloClient) option defined, the occurrences of the object (matching by the generated id) in the active queries will be updated automatically without any extra code.
+
+For example, say you have a query with a flat list of `TodoList`s. Later, after editing the name of one of lists, the mutation `changeTodoListName(list_id: ID!, name: String!)` was fired. If `changeTodoListName` mutation returns the `TodoList` object with the same id and updated fields, then it will be incorporated into store and updated in active queries automatically.
+
+
 <h3 id="update-queries">Updating query results with `updateQueries`</h3>
 
 Depending on how complicated are your queries, the logic incorporating the mutation result could be sophisticated.
 
 For example, let's say you have a mutation `addNewTask(text: String!, list_id: ID!)` that adds a new task of type `Task` to a `TodoList` currently displayed on the screen. In this example, to update a query with the new task returned by the mutation, it is required to insert the new task into the correct place in the list of tasks.
 
-For cases like these, use the special option `updateQueries`. `updateQueries` is a mapping from query name to a reducer function. The query name goes between the `query` keyword and the declaration of variables (in the example below it is `todos`).
+For cases like these, use the special option `updateQueries`. `updateQueries` is a mapping from query name to a reducer function to update that query. The query name goes between the `query` keyword and the declaration of variables (in the example below it is `todos`).
 
-Each reducer function accepts the old result of the query and the new information such that the mutation result. The job of the reducer function is to return a new query result.
+---
+
+The `updateQueries` functions are similar to [Redux](http://redux.js.org/docs/basics/Reducers.html) reducers. This means that they:
+
+- must return an updated query result that incorporates the result of the mutation
+- must avoid mutating the arguments and should return new objects instead
+- should have no side effects
+- should take the following form:
+
+
+```
+(previousQueryResult, { mutationResult, queryVariables }) => updatedQueryResult
+```
+
+Each reducer function accepts the old result of the query, the `mutationResult`, and optionally a `queryVariables` object that contains the variables that were passed into the original query. `queryVariables` is useful when you have multiple queries of the same name but with different variables and you only want to update a certain one (i.e. fetching multiple todo lists with different id's).
+
+<h3 id="example">Example</h3>
+
+Let's say we have the following query that is fetching a list of `todos`:
 
 ```js
 client.watchQuery({
   query: gql`
-    query todos($list_id: ID!) {
-      todo_list(id: $list_id) {
+    query todos($id: ID!) {
+      todo_list(id: $id) {
+        id
         title
         tasks {
           id
@@ -82,10 +131,14 @@ client.watchQuery({
     }
   `,
   variables: {
-    list_id: '123',
+    id: '123',
   },
 });
+```
 
+We can then call the following mutation to add an item to the list and update the query result:
+
+```js
 client.mutate({
   mutation: gql`
     mutation ($text: String!, $list_id: ID!) {
@@ -103,27 +156,35 @@ client.mutate({
   },
   updateQueries: {
     todos: (previousQueryResult, { mutationResult, queryVariables }) => {
+      if (queryVariables.id !== '123') {
+        // this isn't the query we updated, so just return the previous result
+        return previousQueryResult
+      }
+      // otherwise, create a new object with the same shape as the
+      // previous result with the mutationResult incorporated
+      const originalList = previousQueryResult.todo_list;
+      const newTask = mutationResult.data.addNewTask
       return {
-        title: previousQueryResult.title,
-        tasks: [...previousQueryResult.tasks, mutationResult],
+        todo_list: {
+          ...originalList,
+          tasks: [...originalList.tasks, newTask]
+        }
       };
     },
   },
 });
 ```
 
-The `updateQueries` reducer functions are similar to [Redux](http://redux.js.org/docs/basics/Reducers.html) reducers, if you are familiar with Redux.
+If there are multiple active queries of the same name, the reducer function will be run for each one of them. In the example above, you can see how we used the `queryVariables` to check the id passed into the original query and update the correct list. Alternatively, if the field you want to check isn't a part of the `queryVariables`, you can also check the previous result itself:
 
-This means that reducer functions:
-- must return an updated query result that incorporates `mutationResult`
-- must avoid mutating the arguments, such that previous query result, and prefer cloning
-- should have no side effects
-
-<h3 id="new-object-or-updated-fields">Updated Fields</h3>
-
-In cases when your mutation returns a new value for an existing object with some fields updated, you might avoid writing any queries updating code at all. As long as your instance of Apollo Client has [`dataIdFromObject`](/apollo-client/index.html#ApolloClient) option defined, the occurrences of the object (matching by the generated id) in the active queries will be updated automatically without any extra code.
-
-For example, say you have a query with a flat list list of `TodoList`s. Later, after editing the name of one of lists, the mutation `changeTodoListName(list_id: ID!, name: String!)` was fired. If `changeTodoListName` mutation returns the `TodoList` object with the same id and updated fields, then it will be incorporated into store and updated in active queries automatically.
+```js
+(previousQueryResult, { mutationResult }) => {
+  if (previousQueryResult.todo_list.id !== '123') {
+    return previousQueryResult
+  }
+  ...
+}
+```
 
 <h2 id="optimistic-results">Optimistic Results</h2>
 

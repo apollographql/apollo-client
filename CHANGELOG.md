@@ -77,6 +77,7 @@ This release has a minor version bump, which means npm will not automatically up
 
 ### v0.3.30
 
+- Strip away apollo-specific directives before they reach the network interface. This is useful to implement apollo-client only directives such as the upcoming `@apolloFetchMore`. [PR #374](https://github.com/apollostack/apollo-client/pull/374)
 - Don't throw on unknown directives, instead just pass them through. This can open the door to implementing `@live`, `@defer`, and `@stream`, if coupled with some changes in the network layer. [PR #372](https://github.com/apollostack/apollo-client/pull/372)
 
 ### v0.3.29

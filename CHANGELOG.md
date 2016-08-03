@@ -3,6 +3,9 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
+### v0.4.11
+
 - Added an `refetchQueries` option to `mutate`. The point is to just refetch certain queries on a mutation rather than having to manually specify how the result should be incorporated for each of them with `updateQueries`. [PR #482](https://github.com/apollostack/apollo-client/pull/482) and [Issue #448](https://github.com/apollostack/apollo-client/issues/448).
 - Print errors produced by application-supplied reducer functions passed to `updateQueries` or `updateQuery` options for `mutate` or `fetchMore` respectively. [PR #500](https://github.com/apollostack/apollo-client/pull/500) and [Issue #479](https://github.com/apollostack/apollo-client/issues/479).
 

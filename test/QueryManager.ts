@@ -59,6 +59,10 @@ import {
   ApolloError,
 } from '../src/errors';
 
+import {
+  Observer,
+} from '../src/util/Observable';
+
 describe('QueryManager', () => {
   // Helper method for these tests that constructs a query manager out of a
   // a list of mocked responses for a mocked network interface.
@@ -68,6 +72,16 @@ describe('QueryManager', () => {
       store: createApolloStore(),
       reduxRootKey: 'apollo',
     });
+  };
+
+  // Helper method that sets up a mockQueryManager and then passes on the
+  // results to an observer.
+  const assertWithObserver = (mockedResponse: MockedResponse, ) => {
+    const queryManager = mockQueryManager({
+      request: { query, variables },
+      result: { data },
+    });
+    queryManager.watchQuery({ query, variables }).subscribe(assertWithObserver);
   };
 
   // Helper method that asserts whether a particular query correctly returns
@@ -83,14 +97,13 @@ describe('QueryManager', () => {
     variables?: Object,
     done
   }) => {
-    const queryManager = mockQueryManager({
-      request: { query, variables },
-      result: { data },
-    });
-    queryManager.watchQuery({ query, variables }).subscribe({
-      next(result) {
-        assert.deepEqual(result.data, data, 'Roundtrip assertion failed.');
-        done();
+    assertWithObserver({
+      query, data, variables,
+      observer: {
+        next(result) {
+            assert.deepEqual(result.data, data, 'Roundtrip assertion failed.');
+            done();
+        },
       },
     });
   };
@@ -104,8 +117,7 @@ describe('QueryManager', () => {
             name
           }
         }
-      }
-`,
+      }`,
       data: {
         allPeople: {
           people: [
@@ -178,34 +190,23 @@ describe('QueryManager', () => {
   });
 
   it('handles GraphQL errors', (done) => {
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        result: {
-          errors: [
-            {
-              name: 'Name',
-              message: 'This is an error message.',
-            },
-          ],
-        },
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
+    assertWithObserver(
+        query: gql`
+          query people {
+            allPeople(first: 1) {
+              people {
+                name
+              }
+            }
+          }`,
+      result: {
+        errors: [
+          {
+            name: 'Name',
+            message: 'This is an error message.',
+          },
+        ],
+      },
     });
 
     const handle = queryManager.watchQuery({

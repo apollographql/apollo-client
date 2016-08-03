@@ -6,7 +6,7 @@ description: Generate a GraphQL schema from the concise type definition language
 
 The graphql-tools package allows you to create a GraphQLSchema instance from GraphQL schema language by using the function `makeExecutableSchema`.
 
-<h3 id="generateSchema" title="generateSchema">makeExecutableSchema(typeDefs, resolvers)</h3>
+<h3 id="generateSchema" title="generateSchema">makeExecutableSchema(option)</h3>
 
 ```
 import { makeExecutableSchema } from 'graphql-tools';

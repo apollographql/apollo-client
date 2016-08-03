@@ -25,9 +25,14 @@ export interface FetchMoreOptions {
   }) => Object;
 }
 
+export interface UpdateQueryOptions {
+  queryVariables: Object;
+}
+
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
+  public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
@@ -128,29 +133,37 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         })
         .then((fetchMoreResult) => {
           const reducer = fetchMoreOptions.updateQuery;
-          const {
-            previousResult,
-            queryVariables,
-            querySelectionSet,
-            queryFragments = [],
-          } = this.queryManager.getQueryWithPreviousResult(this.queryId);
-
-          const newResult = tryFunctionOrLogError(() => reducer(
-            previousResult, {
-              fetchMoreResult,
-              queryVariables,
-            }));
-
-          if (newResult) {
-            this.queryManager.store.dispatch({
-              type: 'APOLLO_UPDATE_QUERY_RESULT',
-              newResult,
-              queryVariables,
-              querySelectionSet,
-              queryFragments,
-            });
-          }
+          const mapFn = (previousResult, { queryVariables }) => {
+            return reducer(
+              previousResult, {
+                fetchMoreResult,
+                queryVariables,
+              });
+          };
+          this.updateQuery(mapFn);
         });
+    };
+
+    this.updateQuery = (mapFn) => {
+      const {
+        previousResult,
+        queryVariables,
+        querySelectionSet,
+        queryFragments = [],
+      } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+
+      const newResult = tryFunctionOrLogError(
+        () => mapFn(previousResult, { queryVariables }));
+
+      if (newResult) {
+        this.queryManager.store.dispatch({
+          type: 'APOLLO_UPDATE_QUERY_RESULT',
+          newResult,
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
+        });
+      }
     };
 
     this.stopPolling = () => {

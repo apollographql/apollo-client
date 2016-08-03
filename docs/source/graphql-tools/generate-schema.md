@@ -11,21 +11,21 @@ The graphql-tools package allows you to create a GraphQLSchema instance from Gra
 ```
 import { makeExecutableSchema } from 'graphql-tools';
 
-const jsSchema = makeExecutableSchema(
+const jsSchema = makeExecutableSchema({
   typeDefinitions,
   resolveFunctions,
   connectors,
   logger,
   allowUndefinedInResolve = false, //optional
   resolverValidationOptions = {}, //optional
-);
+});
 ```
 
 `typeDefinitions` is a required argument and should be an array of GraphQL schema language strings or a function that takes no arguments and returns an array of GraphQL schema language strings. The order of the strings in the array is not important, but it must include a schema definition.
 
 `resolveFunctions` is a required argument and should be an object that follows the pattern explained in the guide [section on resolvers](http://docs.apollostack.com/apollo-server/resolvers.html).
 
-`connectors` is an optional argument, which will take the connectors object provided and attach them to the context of every resolve function. See the [connector docs](http://docs.apollostack.com/graphql-tools/connectors.html) for more information.
+`connectors` is an optional argument, which will take an object with connectors and attach them to the context of every resolve function. See the [connector docs](http://docs.apollostack.com/graphql-tools/connectors.html) for more information.
 
 `logger` is an optional argument, which can be used to print errors to the server console that are usually swallowed by GraphQL. The `logger` argument should be an object with a `log` function, eg. `const logger = { log: (e) => console.log(e) }`
 

@@ -65,16 +65,23 @@ function templateArgs(rawData) {
     });
   }
 
-  if (_.includes(['Type alias', 'Interface'], rawData.kindString)) {
+
+  if ('Interface' === rawData.kindString) {
     groups.push({
       name: 'Properties',
       members: _interfaceProperties(rawData),
     });
   }
 
+  var type;
+  if ('Type alias' === rawData.kindString) {
+    type = _type(rawData);
+  }
+
   return {
     id: _typeId(rawData),
     name: rawData.name,
+    type: type,
     signature: _signature(rawData, parameters),
     groups: groups,
     repo: 'apollostack/apollo-client',
@@ -141,15 +148,19 @@ function _parameter(parameter) {
 function _interfaceProperties(rawData) {
   return [].concat(
     _.map(rawData.indexSignature, function(signature) {
-      var parameterNamesAndTypes = _.map(signature.parameters, function(parameter) {
-        return parameter.name + ':' + _typeName(parameter.type);
-      });
-      var parameterString = _parameterString(parameterNamesAndTypes, '[', ']');
+      var parameterString = _indexParameterString(signature);
       return _.extend(_parameter(signature), { name: parameterString });
     }),
     _.map(rawData.children, _parameter)
   );
 };
+
+function _indexParameterString(signature) {
+  var parameterNamesAndTypes = _.map(signature.parameters, function(parameter) {
+    return parameter.name + ':' + _typeName(parameter.type);
+  });
+  return _parameterString(parameterNamesAndTypes, '[', ']');
+}
 
 function _parameterString(names, leftDelim, rightDelim) {
   leftDelim = leftDelim || '(';
@@ -157,7 +168,20 @@ function _parameterString(names, leftDelim, rightDelim) {
   return leftDelim + names.join(', ') + rightDelim;
 }
 
+// Render the type of a data object. It's pretty confusing, to say the least
 function _type(data, skipSignature) {
+  if (data.kindString === 'Type alias') {
+    var declaration = data.type.declaration
+    if (declaration.signatures) {
+      return _type(declaration.signatures[0]);
+    }
+
+    if (declaration.indexSignature) {
+      var signature = declaration.indexSignature[0]
+      return _indexParameterString(signature) + ':' + _type(signature);
+    }
+  }
+
   if (data.kindString === 'Method') {
     return _type(data.signatures[0])
   }

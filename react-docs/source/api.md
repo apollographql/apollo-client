@@ -27,4 +27,10 @@ order: 6
 {% tsapibox ApolloReducerConfig %}
 {% tsapibox IdGetter %}
 {% tsapibox MutationBehaviorReducerMap %}
+{% tsapibox MutationBehaviorReducer %}
+{% tsapibox MutationBehaviorReducerArgs %}
 {% tsapibox Request %}
+{% tsapibox RequestInit %}
+{% tsapibox SelectionSet %}
+{% tsapibox StoreObject %}
+{% tsapibox StoreValue %}

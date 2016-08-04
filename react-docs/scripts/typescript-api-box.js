@@ -71,13 +71,21 @@ function templateArgs(rawData) {
   if ('Interface' === rawData.kindString) {
     groups.push({
       name: 'Properties',
-      members: _interfaceProperties(rawData),
+      members: _objectProperties(rawData),
     });
   }
 
   var type;
   if ('Type alias' === rawData.kindString) {
-    type = _type(rawData);
+    // this means it's an object type
+    if (rawData.type.declaration && rawData.type.declaration.children) {
+      groups.push({
+        name: 'Properties',
+        members: _objectProperties(rawData.type.declaration),
+      });
+    } else {
+      type = _type(rawData);
+    }
   }
 
   return {
@@ -147,7 +155,7 @@ function _parameter(parameter) {
   };
 }
 
-function _interfaceProperties(rawData) {
+function _objectProperties(rawData) {
   return [].concat(
     _.map(rawData.indexSignature, function(signature) {
       var parameterString = _indexParameterString(signature);
@@ -212,6 +220,8 @@ function _typeName(type) {
     return _.map(type.types, _typeName).join(' | ');
   } else if (type.type === 'reference') {
     return '<a href="#' + _typeId(type) + '">' + type.name + '</a>';
+  } else if (type.type === 'stringLiteral') {
+    return '"' + type.value + '"';
   } else {
     var signatures = type.declaration.indexSignature || type.declaration.signatures;
     if (signatures) {

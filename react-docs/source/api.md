@@ -29,8 +29,15 @@ order: 6
 {% tsapibox MutationBehaviorReducerMap %}
 {% tsapibox MutationBehaviorReducer %}
 {% tsapibox MutationBehaviorReducerArgs %}
+{% tsapibox MutationBehavior %}
+{% tsapibox MutationArrayInsertBehavior %}
+{% tsapibox MutationArrayDeleteBehavior %}
+{% tsapibox MutationDeleteBehavior %}
+{% tsapibox ArrayInsertWhere %}
 {% tsapibox Request %}
 {% tsapibox RequestInit %}
 {% tsapibox SelectionSet %}
+{% tsapibox StorePath %}
 {% tsapibox StoreObject %}
 {% tsapibox StoreValue %}
+{% tsapibox FragmentMap %}

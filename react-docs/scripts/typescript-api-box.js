@@ -5,6 +5,7 @@ var fs = require('fs');
 var handlebars = require('handlebars');
 var _ = require('lodash');
 var showdown  = require('showdown');
+var parseTagOptions = require('./parseTagOptions');
 var converter = new showdown.Converter();
 
 // can't put this file in this folder annoyingly
@@ -35,15 +36,16 @@ traverse(allData);
 
 hexo.extend.tag.register('tsapibox', function(args) {
   var name = args.shift();
+  var options = parseTagOptions(args)
+
   var rawData = dataByKey[name];
 
   if (!rawData) {
     console.error("Couldn't find '" + name + "' in data");
     return '';
   }
-  console.log(name, rawData);
 
-  return template(templateArgs(rawData));
+  return template(_.extend(templateArgs(rawData), options));
 });
 
 function templateArgs(rawData) {
@@ -236,4 +238,10 @@ function getFirst(data, kindString) {
 
 handlebars.registerHelper('markdown', function(text) {
   return converter.makeHtml(text);
+});
+
+// All h3s for now, will revisit
+handlebars.registerHelper('hTag', function() {
+  // return this.nested ? 'h3' : 'h2';
+  return 'h3';
 });

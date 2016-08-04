@@ -19,6 +19,7 @@ sidebar_categories:
     - advanced-queries
     - mutations
     - subscriptions
+    - api
   Integrations:
     - react
     - angular

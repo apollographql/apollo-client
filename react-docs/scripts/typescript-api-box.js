@@ -37,6 +37,12 @@ hexo.extend.tag.register('tsapibox', function(args) {
   var name = args.shift();
   var rawData = dataByKey[name];
 
+  if (!rawData) {
+    console.error("Couldn't find '" + name + "' in data");
+    return '';
+  }
+  console.log(name, rawData);
+
   return template(templateArgs(rawData));
 });
 
@@ -44,11 +50,33 @@ function templateArgs(rawData) {
   var parameters = _parameters(rawData);
   var split = _.partition(parameters, 'isOptions');
 
+  var groups = [];
+  if (split[1].length > 0) {
+    groups.push({
+      name: 'Arguments',
+      members: split[1]
+    });
+  }
+  if (split[0].length > 0) {
+    groups.push({
+      name: 'Options',
+      // the properties of the options parameter are the things listed in this group
+      members: split[0][0].properties
+    });
+  }
+
+  if (_.includes(['Type alias', 'Interface'], rawData.kindString)) {
+    groups.push({
+      name: 'Properties',
+      members: _interfaceProperties(rawData),
+    });
+  }
+
   return {
+    id: _typeId(rawData),
     name: rawData.name,
     signature: _signature(rawData, parameters),
-    paramsNoOptions: split[1],
-    options: split[0][0] && split[0][0].properties,
+    groups: groups,
     repo: 'apollostack/apollo-client',
     filepath: rawData.sources[0].fileName,
     lineno: rawData.sources[0].line,
@@ -60,11 +88,10 @@ function templateArgs(rawData) {
 function _signature(rawData, parameters) {
   var escapedName = _.escape(rawData.name);
 
-  var signature = rawData.signatures[0];
-
   // if it is a function, and therefore has arguments
   if (_.includes(['Function', 'Constructor'], rawData.kindString)) {
-    return signature.name + '(' + _.map(parameters, 'name').join(', ') + ')';
+    var signature = rawData.signatures && rawData.signatures[0];
+    return signature.name + _parameterString(_.map(parameters, 'name'));
   }
 
   return escapedName;
@@ -73,7 +100,10 @@ function _signature(rawData, parameters) {
 
 // Takes the data about a function / constructor and parses out the named params
 function _parameters(rawData) {
-  var signature = rawData.signatures[0];
+  var signature = rawData.signatures && rawData.signatures[0];
+  if (!signature) {
+    return [];
+  }
 
   return _.map(signature.parameters, function (param) {
     var name;
@@ -103,16 +133,53 @@ function _parameters(rawData) {
 function _parameter(parameter) {
   return {
     name: parameter.name,
-    type: _type(parameter.type),
+    type: _type(parameter),
     description: parameter.comment && parameter.comment.text
   };
 }
 
-function _type(type) {
+function _interfaceProperties(rawData) {
+  return [].concat(
+    _.map(rawData.indexSignature, function(signature) {
+      var parameterNamesAndTypes = _.map(signature.parameters, function(parameter) {
+        return parameter.name + ':' + _typeName(parameter.type);
+      });
+      var parameterString = _parameterString(parameterNamesAndTypes, '[', ']');
+      return _.extend(_parameter(signature), { name: parameterString });
+    }),
+    _.map(rawData.children, _parameter)
+  );
+};
+
+function _parameterString(names, leftDelim, rightDelim) {
+  leftDelim = leftDelim || '(';
+  rightDelim = rightDelim || ')';
+  return leftDelim + names.join(', ') + rightDelim;
+}
+
+function _type(data, skipSignature) {
+  if (data.kindString === 'Method') {
+    return _type(data.signatures[0])
+  }
+
+  if (data.kindString === 'Call signature' && !skipSignature) {
+    var args = '(' + _.map(data.parameters, _type).join(', ') + ')';
+    return args + ' => ' + _type(data, true);
+  }
+
+  var type = data.type;
+  var typeName = _typeName(type);
+  if (type.typeArguments) {
+    return typeName + _parameterString(_.map(type.typeArguments, _typeName), '<', '>');
+  }
+  return typeName;
+}
+
+function _typeName(type) {
   if (type.type === 'instrinct') {
     return type.name;
   } if (type.type === 'reference') {
-    return type.name
+    return '<a href="#' + _typeId(type) + '">' + type.name + '</a>';
   } else {
     var signatures = type.declaration.indexSignature || type.declaration.signatures;
     if (signatures) {
@@ -122,6 +189,10 @@ function _type(type) {
       return 'object';
     }
   }
+}
+
+function _typeId(type) {
+  return type.name;
 }
 
 function isReadableName(name) {

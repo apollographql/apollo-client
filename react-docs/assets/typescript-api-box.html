@@ -1,4 +1,4 @@
-<div class="api {{bare}} new-api-box">
+<div class="api new-api-box">
   <div class="api-heading">
     <h2 title="{{name}}" class="title-api selflink" id={{id}}>
       <a href="#{{id}}" class="link primary">{{{signature}}}</a>
@@ -18,34 +18,19 @@
       {{{markdown summary}}}
     </div>
 
-    {{#if paramsNoOptions}}
-      <h4 class="subheading">Arguments</h4>
+    {{#each groups}}
+      <h4 class="subheading">{{name}}</h4>
       <dl class="args">
-        {{#each paramsNoOptions}}
+        {{#each members}}
           <dt>
             <span class="name">{{name}}</span>
-            <span class="type">{{type}}</span>
+            <span class="type">{{{type}}}</span>
           </dt>
           <dd>
             {{{description}}}
           </dd>
         {{/each}}
       </dl>
-    {{/if}}
-
-    {{#if options}}
-      <h4 class="subheading">Options</h4>
-      <dl class="args">
-        {{#each options}}
-          <dt>
-            <span class="name">{{name}}</span>
-            <span class="type">{{type}}</span>
-          </dt>
-          <dd>
-            {{{description}}}
-          </dd>
-        {{/each}}
-      </dl>
-    {{/if}}
+    {{/each}}
   </div>
 </div>

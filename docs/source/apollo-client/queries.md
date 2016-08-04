@@ -131,8 +131,10 @@ This is the object you get when you call `watchQuery`. The most important method
 
 - `subscribe(observer: QueryObserver)` Pass an observer object which gets called when there is new data. Returns a `QuerySubscription` object which you can use to unsubscribe or refetch.
 - `refetch(variables: Object)` Refetch this query from the server. Think of it like a refresh button. This can take an object of new variables
+- `fetchMore(options)` update results of the query by fetching a new query and combining the results. See [pagination](./pagination.html) for more info.
 - `stopPolling()` Stop an actively polling query.
 - `startPolling(pollInterval: number)` Start polling a query
+- `updateQuery(transformFn: function)` Updates results of the query in store, by transforming its previous result. The transform function takes the previous result and options containing information about the original query. The function must return a new value of the query result. 
 
 <h3 id="QueryObserver" title="QueryObserver">interface QueryObserver</h3>
 

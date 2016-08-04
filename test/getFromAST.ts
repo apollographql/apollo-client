@@ -186,6 +186,10 @@ describe('AST utility functions', () => {
     assert.deepEqual(fragmentMap, expectedTable);
   });
 
+  it('should return an empty fragment map if passed undefined argument', () => {
+    assert.deepEqual(createFragmentMap(undefined), {});
+  });
+
   it('should get the operation name out of a query', () => {
     const query = gql`
       query nameOfQuery {

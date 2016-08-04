@@ -4,6 +4,7 @@ import {
   FragmentDefinition,
 } from 'graphql';
 
+import assign = require('lodash.assign');
 import countBy = require('lodash.countby');
 import identity = require('lodash.identity');
 
@@ -110,7 +111,7 @@ export interface FragmentMap {
 
 // Utility function that takes a list of fragment definitions and makes a hash out of them
 // that maps the name of the fragment to the fragment definition.
-export function createFragmentMap(fragments: FragmentDefinition[]): FragmentMap {
+export function createFragmentMap(fragments: FragmentDefinition[] = []): FragmentMap {
   const symTable: FragmentMap = {};
   fragments.forEach((fragment) => {
     symTable[fragment.name.value] = fragment;
@@ -124,6 +125,7 @@ export function createFragmentMap(fragments: FragmentDefinition[]): FragmentMap 
 export function addFragmentsToDocument(queryDoc: Document,
   fragments: FragmentDefinition[]): Document {
   checkDocument(queryDoc);
-  queryDoc.definitions = queryDoc.definitions.concat(fragments);
-  return queryDoc;
+  return assign({}, queryDoc, {
+    definitions: queryDoc.definitions.concat(fragments),
+  }) as Document;
 }

@@ -163,7 +163,7 @@ describe('QueryScheduler', () => {
     let subscription = observableQuery.subscribe({
       next(result) {
         timesFired += 1;
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
         subscription.unsubscribe();
       },
     });
@@ -472,7 +472,7 @@ describe('QueryScheduler', () => {
     const subscription = observable.subscribe({
       next(result) {
         timesFired += 1;
-        assert.deepEqual(result, { data });
+        assert.deepEqual(result.data, data);
         subscription.unsubscribe();
         assert.equal(Object.keys(scheduler.registeredQueries).length, 0);
       },

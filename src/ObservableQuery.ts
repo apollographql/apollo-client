@@ -1,4 +1,4 @@
-import { WatchQueryOptions } from './watchQueryOptions';
+import { WatchQueryOptions, FetchMoreQueryOptions } from './watchQueryOptions';
 
 import { Observable, Observer } from './util/Observable';
 
@@ -14,14 +14,29 @@ import {
   ApolloQueryResult,
 } from './index';
 
+import { tryFunctionOrLogError } from './util/errorHandling';
+
 import assign = require('lodash.assign');
+
+export interface FetchMoreOptions {
+  updateQuery: (previousQueryResult: Object, options: {
+    fetchMoreResult: Object,
+    queryVariables: Object,
+  }) => Object;
+}
+
+export interface UpdateQueryOptions {
+  queryVariables: Object;
+}
 
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
+  public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
+  public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
-  private queryId: string;
+  public queryId: string;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
 
@@ -78,8 +93,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.queryId = queryId;
 
     this.refetch = (variables?: any) => {
-      // If no new variables passed, use existing variables
-      variables = variables || this.options.variables;
+      // Extend variables if available
+      variables = variables || this.options.variables ?
+        assign({}, this.options.variables, variables) : undefined;
+
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query refetch.');
       }
@@ -88,6 +105,65 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         forceFetch: true,
         variables,
       }) as WatchQueryOptions);
+    };
+
+    this.fetchMore = (fetchMoreOptions: WatchQueryOptions & FetchMoreOptions) => {
+      return Promise.resolve()
+        .then(() => {
+          const qid = this.queryManager.generateQueryId();
+          let combinedOptions = null;
+
+          if (fetchMoreOptions.query) {
+            // fetch a new query
+            combinedOptions = fetchMoreOptions;
+          } else {
+            // fetch the same query with a possibly new variables
+            const variables = this.options.variables || fetchMoreOptions.variables ?
+              assign({}, this.options.variables, fetchMoreOptions.variables) : undefined;
+
+            combinedOptions = assign({}, this.options, fetchMoreOptions, {
+              variables,
+            });
+          }
+
+          combinedOptions = assign({}, combinedOptions, {
+            forceFetch: true,
+          }) as WatchQueryOptions;
+          return this.queryManager.fetchQuery(qid, combinedOptions);
+        })
+        .then((fetchMoreResult) => {
+          const reducer = fetchMoreOptions.updateQuery;
+          const mapFn = (previousResult, { queryVariables }) => {
+            return reducer(
+              previousResult, {
+                fetchMoreResult,
+                queryVariables,
+              });
+          };
+          this.updateQuery(mapFn);
+        });
+    };
+
+    this.updateQuery = (mapFn) => {
+      const {
+        previousResult,
+        queryVariables,
+        querySelectionSet,
+        queryFragments = [],
+      } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+
+      const newResult = tryFunctionOrLogError(
+        () => mapFn(previousResult, { queryVariables }));
+
+      if (newResult) {
+        this.queryManager.store.dispatch({
+          type: 'APOLLO_UPDATE_QUERY_RESULT',
+          newResult,
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
+        });
+      }
     };
 
     this.stopPolling = () => {

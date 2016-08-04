@@ -162,6 +162,9 @@ export function writeSelectionSetToStore({
       // derives from the Javascript Error type, the end-user doesn't notice the
       // fact that we're doing this.
 
+      console.log('Result: ');
+      console.log(result);
+
       if (isUndefined(value) && included) {
         throw new ApolloError({
           errorMessage: `Can't find field ${resultFieldKey} on result object ${dataId}.`,

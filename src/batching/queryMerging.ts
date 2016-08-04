@@ -43,6 +43,7 @@ import {
 import {
   getQueryDefinition,
   getFragmentDefinitions,
+  FragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -88,8 +89,10 @@ export function mergeRequests(requests: Request[]): Request {
   return rootRequest;
 }
 
-export function unpackMergedResult(result: GraphQLResult,
-  childRequests: Request[]): GraphQLResult[] {
+export function unpackMergedResult(
+  result: GraphQLResult,
+  childRequests: Request[]
+): GraphQLResult[] {
 
   const resultArray: GraphQLResult[] = new Array(childRequests.length);
   const fieldMaps = createFieldMapsForRequests(childRequests);
@@ -118,12 +121,108 @@ export function createFieldMapsForRequests(requests: Request[]): { [ index: numb
     const operationDef = getQueryDefinition(request.query);
     const fragmentDefs = getFragmentDefinitions(request.query);
     const fieldMap = {};
+
+    let startIndex = 0;
     [operationDef, ...fragmentDefs].forEach((def) => {
-      assign(fieldMap, createFieldMap(def.selectionSet.selections).fieldMap);
+      const createdMapRes = createFieldMap(def.selectionSet.selections, startIndex);
+      assign(fieldMap, createdMapRes.fieldMap);
+      startIndex = createdMapRes.newIndex;
     });
     res[requestIndex] = fieldMap;
   });
   return res;
+}
+
+export function createResultKeyMap({
+  request,
+  selectionSet,
+  queryIndex,
+  startIndex,
+  fragmentMap,
+  topLevel,
+}: {
+  request: Request,
+  selectionSet?: SelectionSet,
+  queryIndex: number,
+  startIndex: number,
+  fragmentMap: FragmentMap,
+  topLevel: boolean,
+}): { resultKeyMap: { [ resultKey: string]: string }, newIndex: number } {
+  // This is the base case of the the recursion. If there's no selection set, we
+  // just return an empty result key map.
+  if (!selectionSet) {
+    return {
+      resultKeyMap: {},
+      newIndex: startIndex,
+    };
+  }
+
+  const resultKeyMap: { [ resultKey: string]: string } = {};
+  let currIndex = startIndex;
+  selectionSet.selections.forEach((selection) => {
+    if (selection.kind == 'Field' && topLevel) {
+      // If this is a field, then the data key is just the aliased field name and the unpacked
+      // result key is the name of the field.
+      const field = selection as Field;
+      const aliasName = getOperationDefinitionName(getQueryDefinition(request.query), queryIndex);
+      const dataKey = JSON.stringify(`${aliasName}___fieldIndex_${currIndex}`);
+      resultKeyMap[dataKey] = field.name.value;
+
+      const selectionRet = createResultKeyMap({
+        request,
+        selectionSet: field.selectionSet,
+        queryIndex,
+        startIndex: currIndex,
+        fragmentMap,
+        topLevel: false,
+      });
+
+      // Create keys for internal fragments
+      Object.keys(selectionRet.resultKeyMap).forEach((internalKey) => {
+        const internalDataKey = JSON.stringify({
+          [dataKey]: internalKey,
+        });
+        resultKeyMap[dataKey] = selectionRet.resultKeyMap[internalKey];
+      });
+
+      currIndex += 1;
+    } else if (selection.kind == 'InlineFragment' && topLevel) {
+      // If this is an inline fragment, then we recursively resolve the fields within the
+      // inline fragment.
+      const inlineFragment = selection as InlineFragment;
+      const ret = createResultKeyMap({
+        request,
+        selectionSet: inlineFragment.selectionSet,
+        queryIndex,
+        startIndex: currIndex,
+        fragmentMap,
+        topLevel,
+      });
+      assign(resultKeyMap, ret.resultKeyMap);
+      currIndex = ret.newIndex;
+    } else if (selection.kind == 'FragmentSpread') {
+      // if this is a fragment spread, then we look up the fragment within the fragment map.
+      // Then, we recurse on the fragment's selection set. Finally, the data key will be a
+      // serialized version of the fragment name to the new result keys.
+      const fragmentSpread = (selection as FragmentSpread);
+      const fragment = fragmentMap[fragmentSpread.name.value];
+      const fragmentRet = createResultKeyMap({
+        request,
+        selectionSet: fragment.selectionSet,
+        queryIndex,
+        startIndex: currIndex,
+        fragmentMap,
+        topLevel: true,
+      });
+      assign(resultKeyMap, fragmentRet.resultKeyMap);
+      currIndex = fragmentRet.newIndex;
+    }
+  });
+
+  return {
+    resultKeyMap,
+    newIndex: currIndex,
+  };
 }
 
 // Returns a map that goes from a field index to a particular selection within a
@@ -131,12 +230,13 @@ export function createFieldMapsForRequests(requests: Request[]): { [ index: numb
 // can't just index into the SelectionSet.selections array given the field index.
 // Also returns the next index to be used (this is used internally since the function
 // is recursive).
-export function createFieldMap(selections: (Field | InlineFragment | FragmentSpread)[],
-  startIndex?: number): { fieldMap: { [ index: number ]: Field }, newIndex: number } {
+export function createFieldMap(
+  selections: (Field | InlineFragment | FragmentSpread)[],
+  startIndex: number
+): { fieldMap: { [ index: number ]: Field }, newIndex: number } {
+  console.log('Start index: ');
+  console.log(startIndex);
 
-  if (!startIndex) {
-    startIndex = 0;
-  }
   let fieldMap: { [ index: number ]: Field } = {};
   let currIndex = startIndex;
   selections.forEach((selection) => {

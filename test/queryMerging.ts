@@ -843,9 +843,10 @@ describe('Query merging', () => {
   });
 
   describe('createResultKeyMap', () => {
-    const createMapForQuery = (query: Document) => {
+    const createMapForQuery = (query: Document, result: Object) => {
       return createResultKeyMap({
         request: { query },
+        result,
         selectionSet: getQueryDefinition(query).selectionSet,
         queryIndex: 0,
         startIndex: 0,
@@ -860,14 +861,21 @@ describe('Query merging', () => {
             name
           }
         }`;
+      const result = {
+        author: {
+          name: 'Dhaivat Pandya',
+        },
+      };
       const {
-        resultKeyMap,
         newIndex,
-      } = createMapForQuery(query);
-      assert.equal(newIndex, 1);
-      assert.deepEqual(resultKeyMap, {
-        '"___authorNames___requestIndex_0___fieldIndex_0"': 'author',
+        unpackedResult,
+      } = createMapForQuery(query, {
+        ___authorNames___requestIndex_0___fieldIndex_0: {
+          name: 'Dhaivat Pandya',
+        },
       });
+      assert.equal(newIndex, 1);
+      assert.deepEqual(unpackedResult, result);
     });
 
     it('should work for a query with an internal inline fragment', () => {
@@ -880,14 +888,159 @@ describe('Query merging', () => {
             }
           }
         }`;
+      const result = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
       const {
-        resultKeyMap,
         newIndex,
-      } = createMapForQuery(query);
-      assert.equal(newIndex, 1);
-      assert.deepEqual(resultKeyMap, {
-        '"___authorNames___requestIndex_0___fieldIndex_0"': 'author',
+        unpackedResult,
+      } = createMapForQuery(query, {
+        ___authorNames___requestIndex_0___fieldIndex_0: result.author,
       });
+      assert.equal(newIndex, 1);
+      assert.deepEqual(unpackedResult, result);
+    });
+
+    it('should work for a query with a toplevel inline fragment', () => {
+      const query = gql`
+        query authorNames {
+          ... on RootQuery {
+            author {
+              firstName
+              lastName
+            }
+          }
+        }`;
+      const result = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const {
+        newIndex,
+        unpackedResult,
+      } = createMapForQuery(query, {
+        ___authorNames___requestIndex_0___fieldIndex_0: result.author,
+      });
+      assert.equal(newIndex, 1);
+      assert.deepEqual(unpackedResult, result);
+    });
+
+    it('should work for a query with an internal named fragment', () => {
+      const query = gql`
+        query authorNames {
+          author {
+            ...authorInfo
+          }
+        }
+        fragment authorInfo on Author {
+          firstName
+          lastName
+        }`;
+      const result = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const {
+        newIndex,
+        unpackedResult,
+      } = createMapForQuery(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': {
+          '___authorNames___requestIndex_0___fieldIndex_1': 'John',
+          '___authorNames___requestIndex_0___fieldIndex_2': 'Smith',
+        },
+      });
+      assert.equal(newIndex, 3);
+      assert.deepEqual(unpackedResult, result);
+    });
+
+    it('should work for a query with a toplevel named fragment', () => {
+      const query = gql`
+        query authorNames {
+          ...authorInfo
+        }
+        fragment authorInfo on RootQuery {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const result = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const {
+        newIndex,
+        unpackedResult
+      } = createMapForQuery(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': {
+          'firstName': 'John',
+          'lastName': 'Smith',
+        },
+      });
+      // assert.equal(newIndex, 3);
+      assert.deepEqual(unpackedResult, result);
+    });
+
+    it('should work for a query with a fragment referencing a fragment', () => {
+      const query = gql`
+        query authorNames {
+          ...authorInfo
+        }
+        fragment authorInfo on RootQuery {
+          author {
+            ...nameProperty
+          }
+        }
+        fragment nameProperty on Author {
+          name
+        }`;
+      const result = {
+        author: {
+          name: 'John Smith',
+        },
+      };
+      const {
+        unpackedResult,
+      } = createMapForQuery(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': {
+          '___authorNames___requestIndex_0___fieldIndex_1': 'John Smith',
+        }
+      });
+      assert.deepEqual(unpackedResult, result);
+    });
+
+    it('should work for a query with a json blob request', () => {
+      const query = gql`
+        query authorNames {
+          author {
+            info
+          }
+        }`;
+      const result = {
+        author: {
+          info: {
+            name: 'John Smith',
+            address: '404 Http St',
+          },
+        },
+      };
+      const {
+        unpackedResult,
+      } = createMapForQuery(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': {
+          info: result.author.info,
+        },
+      });
+      assert.deepEqual(unpackedResult, result);
     });
   });
 });

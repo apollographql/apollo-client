@@ -135,6 +135,7 @@ export function createFieldMapsForRequests(requests: Request[]): { [ index: numb
 
 export function createResultKeyMap({
   request,
+  result,
   selectionSet,
   queryIndex,
   startIndex,
@@ -142,63 +143,73 @@ export function createResultKeyMap({
   topLevel,
 }: {
   request: Request,
+  result: Object,
   selectionSet?: SelectionSet,
   queryIndex: number,
   startIndex: number,
   fragmentMap: FragmentMap,
   topLevel: boolean,
-}): { resultKeyMap: { [ resultKey: string]: string }, newIndex: number } {
+}): {
+  newIndex: number,
+  unpackedResult: Object,
+} {
   // This is the base case of the the recursion. If there's no selection set, we
   // just return an empty result key map.
   if (!selectionSet) {
     return {
-      resultKeyMap: {},
       newIndex: startIndex,
+      unpackedResult: {},
     };
   }
 
-  const resultKeyMap: { [ resultKey: string]: string } = {};
+  console.log('Result: ');
+  console.log(result);
+  console.log('Toplevel: ');
+  console.log(topLevel);
+
+  const unpackedResult = {};
+
   let currIndex = startIndex;
   selectionSet.selections.forEach((selection) => {
-    if (selection.kind == 'Field' && topLevel) {
+    if (selection.kind == 'Field') {
+      const field = selection as Field;
       // If this is a field, then the data key is just the aliased field name and the unpacked
       // result key is the name of the field.
-      const field = selection as Field;
       const aliasName = getOperationDefinitionName(getQueryDefinition(request.query), queryIndex);
-      const dataKey = JSON.stringify(`${aliasName}___fieldIndex_${currIndex}`);
-      resultKeyMap[dataKey] = field.name.value;
+      const stringKey = topLevel ? `${aliasName}___fieldIndex_${currIndex}` : field.name.value;
+      unpackedResult[field.name.value] = result[stringKey];
+      if (topLevel)
+        currIndex += 1;
 
-      const selectionRet = createResultKeyMap({
-        request,
-        selectionSet: field.selectionSet,
-        queryIndex,
-        startIndex: currIndex,
-        fragmentMap,
-        topLevel: false,
-      });
-
-      // Create keys for internal fragments
-      Object.keys(selectionRet.resultKeyMap).forEach((internalKey) => {
-        const internalDataKey = JSON.stringify({
-          [dataKey]: internalKey,
+      if (field.selectionSet && field.selectionSet.selections.length > 0) {
+        const selectionRet = createResultKeyMap({
+          request,
+          result: result[stringKey],
+          selectionSet: field.selectionSet,
+          queryIndex,
+          startIndex: currIndex,
+          fragmentMap,
+          topLevel: false,
         });
-        resultKeyMap[dataKey] = selectionRet.resultKeyMap[internalKey];
-      });
 
-      currIndex += 1;
-    } else if (selection.kind == 'InlineFragment' && topLevel) {
+        // Create keys for internal fragments
+        unpackedResult[field.name.value] = selectionRet.unpackedResult;
+        currIndex = selectionRet.newIndex;
+      }
+    } else if (selection.kind == 'InlineFragment') {
       // If this is an inline fragment, then we recursively resolve the fields within the
       // inline fragment.
       const inlineFragment = selection as InlineFragment;
       const ret = createResultKeyMap({
         request,
+        result,
         selectionSet: inlineFragment.selectionSet,
         queryIndex,
         startIndex: currIndex,
         fragmentMap,
         topLevel,
       });
-      assign(resultKeyMap, ret.resultKeyMap);
+      assign(unpackedResult, ret.unpackedResult);
       currIndex = ret.newIndex;
     } else if (selection.kind == 'FragmentSpread') {
       // if this is a fragment spread, then we look up the fragment within the fragment map.
@@ -208,20 +219,21 @@ export function createResultKeyMap({
       const fragment = fragmentMap[fragmentSpread.name.value];
       const fragmentRet = createResultKeyMap({
         request,
+        result,
         selectionSet: fragment.selectionSet,
         queryIndex,
         startIndex: currIndex,
         fragmentMap,
         topLevel: true,
       });
-      assign(resultKeyMap, fragmentRet.resultKeyMap);
+      assign(unpackedResult, fragmentRet.unpackedResult);
       currIndex = fragmentRet.newIndex;
     }
   });
 
   return {
-    resultKeyMap,
     newIndex: currIndex,
+    unpackedResult,
   };
 }
 

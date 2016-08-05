@@ -96,9 +96,9 @@ export function unpackMergedResult(
 ): GraphQLResult[] {
 
   const resultArray: GraphQLResult[] = childRequests.map((request, index) => {
-    const { unpackedResult } = unpackResultForRequest({
+    const { unpackedData } = unpackDataForRequest({
       request,
-      result: result.data,
+      data: result.data,
       selectionSet: getQueryDefinition(request.query).selectionSet,
       queryIndex: index,
       startIndex: 0,
@@ -106,33 +106,21 @@ export function unpackMergedResult(
       topLevel: true,
     });
 
-    return { data: unpackedResult };
+    return { data: unpackedData };
   });
 
   return resultArray;
 }
 
-export function createFieldMapsForRequests(requests: Request[]): { [ index: number ]: Field }[] {
-  const res = new Array(requests.length);
-  requests.forEach((request, requestIndex) => {
-    const operationDef = getQueryDefinition(request.query);
-    const fragmentDefs = getFragmentDefinitions(request.query);
-    const fieldMap = {};
-
-    let startIndex = 0;
-    [operationDef, ...fragmentDefs].forEach((def) => {
-      const createdMapRes = createFieldMap(def.selectionSet.selections, startIndex);
-      assign(fieldMap, createdMapRes.fieldMap);
-      startIndex = createdMapRes.newIndex;
-    });
-    res[requestIndex] = fieldMap;
-  });
-  return res;
-}
-
-export function unpackResultForRequest({
+// This method takes a particular request and extracts the fields that the query asks for out of
+// a merged request. It does this by recursively stepping through the query, figuring out what
+// the names of fields would be aliased to and then reading those fields out of of the merged result.
+//
+// Because of the way we do aliasing, each query only gets the data it asks for and there's never
+// any confusion as to which piece of data belongs to which query.
+export function unpackDataForRequest({
   request,
-  result,
+  data,
   selectionSet,
   queryIndex,
   startIndex,
@@ -140,7 +128,7 @@ export function unpackResultForRequest({
   topLevel,
 }: {
   request: Request,
-  result: Object,
+  data: Object,
   selectionSet?: SelectionSet,
   queryIndex: number,
   startIndex: number,
@@ -148,19 +136,18 @@ export function unpackResultForRequest({
   topLevel: boolean,
 }): {
   newIndex: number,
-  unpackedResult: Object,
+  unpackedData: Object,
 } {
   // This is the base case of the the recursion. If there's no selection set, we
   // just return an empty result key map.
   if (!selectionSet) {
     return {
       newIndex: startIndex,
-      unpackedResult: {},
+      unpackedData: {},
     };
   }
 
-  const unpackedResult = {};
-
+  const unpackedData = {};
   let currIndex = startIndex;
   selectionSet.selections.forEach((selection) => {
     if (selection.kind === 'Field') {
@@ -170,15 +157,15 @@ export function unpackResultForRequest({
       const realName = resultKeyNameFromField(field);
       const aliasName = getOperationDefinitionName(getQueryDefinition(request.query), queryIndex);
       const stringKey = topLevel ? `${aliasName}___fieldIndex_${currIndex}` : realName;
-      unpackedResult[realName] = result[stringKey];
+      unpackedData[realName] = data[stringKey];
       if (topLevel) {
         currIndex += 1;
       }
 
       if (field.selectionSet && field.selectionSet.selections.length > 0) {
-        const selectionRet = unpackResultForRequest({
+        const selectionRet = unpackDataForRequest({
           request,
-          result: result[stringKey],
+          data: data[stringKey],
           selectionSet: field.selectionSet,
           queryIndex,
           startIndex: currIndex,
@@ -187,23 +174,23 @@ export function unpackResultForRequest({
         });
 
         // Create keys for internal fragments
-        unpackedResult[realName] = selectionRet.unpackedResult;
+        unpackedData[realName] = selectionRet.unpackedData;
         currIndex = selectionRet.newIndex;
       }
     } else if (selection.kind === 'InlineFragment') {
       // If this is an inline fragment, then we recursively resolve the fields within the
       // inline fragment.
       const inlineFragment = selection as InlineFragment;
-      const ret = unpackResultForRequest({
+      const ret = unpackDataForRequest({
         request,
-        result,
+        data,
         selectionSet: inlineFragment.selectionSet,
         queryIndex,
         startIndex: currIndex,
         fragmentMap,
         topLevel,
       });
-      assign(unpackedResult, ret.unpackedResult);
+      assign(unpackedData, ret.unpackedData);
       currIndex = ret.newIndex;
     } else if (selection.kind === 'FragmentSpread') {
       // if this is a fragment spread, then we look up the fragment within the fragment map.
@@ -211,65 +198,23 @@ export function unpackResultForRequest({
       // serialized version of the fragment name to the new result keys.
       const fragmentSpread = (selection as FragmentSpread);
       const fragment = fragmentMap[fragmentSpread.name.value];
-      const fragmentRet = unpackResultForRequest({
+      const fragmentRet = unpackDataForRequest({
         request,
-        result,
+        data,
         selectionSet: fragment.selectionSet,
         queryIndex,
         startIndex: currIndex,
         fragmentMap,
         topLevel: true,
       });
-      assign(unpackedResult, fragmentRet.unpackedResult);
+      assign(unpackedData, fragmentRet.unpackedData);
       currIndex = fragmentRet.newIndex;
     }
   });
 
   return {
     newIndex: currIndex,
-    unpackedResult,
-  };
-}
-
-// Returns a map that goes from a field index to a particular selection within a
-// request. We need this thing because inline fragments make it so that we
-// can't just index into the SelectionSet.selections array given the field index.
-// Also returns the next index to be used (this is used internally since the function
-// is recursive).
-export function createFieldMap(
-  selections: (Field | InlineFragment | FragmentSpread)[],
-  startIndex: number
-): { fieldMap: { [ index: number ]: Field }, newIndex: number } {
-  let fieldMap: { [ index: number ]: Field } = {};
-  let currIndex = startIndex;
-  selections.forEach((selection) => {
-    if (selection.kind === 'Field') {
-      fieldMap[currIndex] = (selection as Field);
-      currIndex += 1;
-    } else if (selection.kind === 'InlineFragment') {
-      const inlineFragment = selection as InlineFragment;
-      const ret = createFieldMap(inlineFragment.selectionSet.selections, currIndex);
-      assign(fieldMap, ret.fieldMap);
-      currIndex = ret.newIndex;
-    }
-  });
-
-  return {
-    fieldMap,
-    newIndex: currIndex,
-  };
-}
-
-// Takes a key that looks like this: ___queryName___requestIndex_0___fieldIndex_1: __typename
-// And turns it into information like this { requestIndex: 0, fieldIndex: 1 }
-export function parseMergedKey(key: string): { requestIndex: number, fieldIndex: number } {
-  const pieces = key.split('___');
-  const requestIndexPiece = pieces[2].split('_');
-  const fieldIndexPiece = pieces[3].split('_');
-
-  return {
-    requestIndex: parseInt(requestIndexPiece[1], 10),
-    fieldIndex: parseInt(fieldIndexPiece[1], 10),
+    unpackedData,
   };
 }
 

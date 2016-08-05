@@ -10,9 +10,8 @@ import {
   renameFragmentSpreads,
   mergeQueryDocuments,
   mergeRequests,
-  parseMergedKey,
   unpackMergedResult,
-  unpackResultForRequest,
+  unpackDataForRequest,
 } from '../src/batching/queryMerging';
 
 import {
@@ -554,16 +553,6 @@ describe('Query merging', () => {
   });
 
   describe('merged query unpacking', () => {
-    it('should split data keys correctly', () => {
-      const dataKey = '___queryName___requestIndex_0___fieldIndex_1';
-      const parsedInfo = parseMergedKey(dataKey);
-      const exp = {
-        requestIndex: 0,
-        fieldIndex: 1,
-      };
-      assert.deepEqual(parsedInfo, exp);
-    });
-
     it('should unpack the merged result correctly for a single query', () => {
       const query = gql`
         query authorStuff {
@@ -842,11 +831,11 @@ describe('Query merging', () => {
     assert.deepEqual(unpackedResults[1], { data: secondResult });
   });
 
-  describe('unpackResultForRequest', () => {
-    const unpackQueryResult = (query: Document, result: Object) => {
-      return unpackResultForRequest({
+  describe('unpackDataForRequest', () => {
+    const unpackQueryResult = (query: Document, data: Object) => {
+      return unpackDataForRequest({
         request: { query },
-        result,
+        data,
         selectionSet: getQueryDefinition(query).selectionSet,
         queryIndex: 0,
         startIndex: 0,
@@ -869,14 +858,14 @@ describe('Query merging', () => {
       };
       const {
         newIndex,
-        unpackedResult,
+        unpackedData,
       } = unpackQueryResult(query, {
         ___authorNames___requestIndex_0___fieldIndex_0: {
           name: 'Dhaivat Pandya',
         },
       });
       assert.equal(newIndex, 1);
-      assert.deepEqual(unpackedResult, result);
+      assert.deepEqual(unpackedData, result);
     });
 
     it('should work for a query with an internal inline fragment', () => {
@@ -897,12 +886,12 @@ describe('Query merging', () => {
       };
       const {
         newIndex,
-        unpackedResult,
+        unpackedData,
       } = unpackQueryResult(query, {
         ___authorNames___requestIndex_0___fieldIndex_0: result.author,
       });
       assert.equal(newIndex, 1);
-      assert.deepEqual(unpackedResult, result);
+      assert.deepEqual(unpackedData, result);
     });
 
     it('should work for a query with a toplevel inline fragment', () => {
@@ -923,12 +912,12 @@ describe('Query merging', () => {
       };
       const {
         newIndex,
-        unpackedResult,
+        unpackedData,
       } = unpackQueryResult(query, {
         ___authorNames___requestIndex_0___fieldIndex_0: result.author,
       });
       assert.equal(newIndex, 1);
-      assert.deepEqual(unpackedResult, result);
+      assert.deepEqual(unpackedData, result);
     });
 
     it('should work for a query with an internal named fragment', () => {
@@ -950,7 +939,7 @@ describe('Query merging', () => {
       };
       const {
         newIndex,
-        unpackedResult,
+        unpackedData,
       } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           '___authorNames___requestIndex_0___fieldIndex_1': 'John',
@@ -958,7 +947,7 @@ describe('Query merging', () => {
         },
       });
       assert.equal(newIndex, 3);
-      assert.deepEqual(unpackedResult, result);
+      assert.deepEqual(unpackedData, result);
     });
 
     it('should work for a query with a toplevel named fragment', () => {
@@ -980,7 +969,7 @@ describe('Query merging', () => {
       };
       const {
         newIndex,
-        unpackedResult,
+        unpackedData,
       } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           'firstName': 'John',
@@ -988,7 +977,7 @@ describe('Query merging', () => {
         },
       });
       assert.equal(newIndex, 1);
-      assert.deepEqual(unpackedResult, result);
+      assert.deepEqual(unpackedData, result);
     });
 
     it('should work for a query with a fragment referencing a fragment', () => {
@@ -1010,13 +999,13 @@ describe('Query merging', () => {
         },
       };
       const {
-        unpackedResult,
+        unpackedData,
       } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           '___authorNames___requestIndex_0___fieldIndex_1': 'John Smith',
         },
       });
-      assert.deepEqual(unpackedResult, result);
+      assert.deepEqual(unpackedData, result);
     });
 
     it('should work for a query with a json blob request', () => {
@@ -1035,13 +1024,13 @@ describe('Query merging', () => {
         },
       };
       const {
-        unpackedResult,
+        unpackedData,
       } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           info: result.author.info,
         },
       });
-      assert.deepEqual(unpackedResult, result);
+      assert.deepEqual(unpackedData, result);
     });
   });
 });

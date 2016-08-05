@@ -44,6 +44,7 @@ import {
   getQueryDefinition,
   getFragmentDefinitions,
   FragmentMap,
+  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -94,23 +95,22 @@ export function unpackMergedResult(
   childRequests: Request[]
 ): GraphQLResult[] {
 
-  const resultArray: GraphQLResult[] = new Array(childRequests.length);
-  const fieldMaps = createFieldMapsForRequests(childRequests);
+  const resultArray: GraphQLResult[] = childRequests.map((request, index) => {
+    const { unpackedResult } = unpackResultForRequest({
+      request,
+      result: result.data,
+      selectionSet: getQueryDefinition(request.query).selectionSet,
+      queryIndex: index,
+      startIndex: 0,
+      fragmentMap: createFragmentMap(getFragmentDefinitions(request.query)),
+      topLevel: true,
+    });
 
-  Object.keys(result.data).forEach((dataKey) => {
-    const data: { [key: string]: any } = {};
-    const mergeInfo = parseMergedKey(dataKey);
-    const childRequestIndex = mergeInfo.requestIndex;
-    const fieldMap = fieldMaps[childRequestIndex];
-    const field = fieldMap[mergeInfo.fieldIndex];
-    data[resultKeyNameFromField(field)] = result.data[dataKey];
-
-    if (resultArray[childRequestIndex]) {
-      assign(resultArray[childRequestIndex].data, data);
-    } else {
-      resultArray[childRequestIndex] = { data };
-    }
+    return { data: unpackedResult };
   });
+
+  console.log('Result array: ');
+  console.log(resultArray);
 
   return resultArray;
 }
@@ -170,9 +170,10 @@ export function unpackResultForRequest({
       const field = selection as Field;
       // If this is a field, then the data key is just the aliased field name and the unpacked
       // result key is the name of the field.
+      const realName = resultKeyNameFromField(field);
       const aliasName = getOperationDefinitionName(getQueryDefinition(request.query), queryIndex);
-      const stringKey = topLevel ? `${aliasName}___fieldIndex_${currIndex}` : field.name.value;
-      unpackedResult[field.name.value] = result[stringKey];
+      const stringKey = topLevel ? `${aliasName}___fieldIndex_${currIndex}` : realName;
+      unpackedResult[realName] = result[stringKey];
       if (topLevel) {
         currIndex += 1;
       }
@@ -189,7 +190,7 @@ export function unpackResultForRequest({
         });
 
         // Create keys for internal fragments
-        unpackedResult[field.name.value] = selectionRet.unpackedResult;
+        unpackedResult[realName] = selectionRet.unpackedResult;
         currIndex = selectionRet.newIndex;
       }
     } else if (selection.kind === 'InlineFragment') {

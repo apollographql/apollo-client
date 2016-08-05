@@ -670,10 +670,10 @@ describe('Query merging', () => {
         }`;
       const result = {
         data: {
-          ___authorStuff___requestIndex_0___itemIndex_0: {
+          ___authorStuff___requestIndex_0___fieldIndex_0: {
             firstName: 'John',
           },
-          ___otherStuff___requestIndex_1___itemIndex_0: {
+          ___otherStuff___requestIndex_1___fieldIndex_0: {
             lastName: 'Smith',
           },
         },

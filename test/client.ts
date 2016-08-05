@@ -1403,7 +1403,7 @@ describe('client', () => {
           ___personInfo___requestIndex_0___fieldIndex_1: 'John',
           ___personInfo___requestIndex_0___fieldIndex_2: 'Smith',
         },
-        ___personInfo___requestIndex_1___fieldIndex_0: data2.author,
+        ___authorPopularity___requestIndex_1___fieldIndex_0: data2.author,
       };
       const networkInterface = addQueryMerging(mockNetworkInterface({
         request: { query: composedQuery, debugName: '___composed' },

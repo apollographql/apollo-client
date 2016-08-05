@@ -133,7 +133,7 @@ export function createFieldMapsForRequests(requests: Request[]): { [ index: numb
   return res;
 }
 
-export function createResultKeyMap({
+export function unpackResultForRequest({
   request,
   result,
   selectionSet,
@@ -162,27 +162,23 @@ export function createResultKeyMap({
     };
   }
 
-  console.log('Result: ');
-  console.log(result);
-  console.log('Toplevel: ');
-  console.log(topLevel);
-
   const unpackedResult = {};
 
   let currIndex = startIndex;
   selectionSet.selections.forEach((selection) => {
-    if (selection.kind == 'Field') {
+    if (selection.kind === 'Field') {
       const field = selection as Field;
       // If this is a field, then the data key is just the aliased field name and the unpacked
       // result key is the name of the field.
       const aliasName = getOperationDefinitionName(getQueryDefinition(request.query), queryIndex);
       const stringKey = topLevel ? `${aliasName}___fieldIndex_${currIndex}` : field.name.value;
       unpackedResult[field.name.value] = result[stringKey];
-      if (topLevel)
+      if (topLevel) {
         currIndex += 1;
+      }
 
       if (field.selectionSet && field.selectionSet.selections.length > 0) {
-        const selectionRet = createResultKeyMap({
+        const selectionRet = unpackResultForRequest({
           request,
           result: result[stringKey],
           selectionSet: field.selectionSet,
@@ -196,11 +192,11 @@ export function createResultKeyMap({
         unpackedResult[field.name.value] = selectionRet.unpackedResult;
         currIndex = selectionRet.newIndex;
       }
-    } else if (selection.kind == 'InlineFragment') {
+    } else if (selection.kind === 'InlineFragment') {
       // If this is an inline fragment, then we recursively resolve the fields within the
       // inline fragment.
       const inlineFragment = selection as InlineFragment;
-      const ret = createResultKeyMap({
+      const ret = unpackResultForRequest({
         request,
         result,
         selectionSet: inlineFragment.selectionSet,
@@ -211,13 +207,13 @@ export function createResultKeyMap({
       });
       assign(unpackedResult, ret.unpackedResult);
       currIndex = ret.newIndex;
-    } else if (selection.kind == 'FragmentSpread') {
+    } else if (selection.kind === 'FragmentSpread') {
       // if this is a fragment spread, then we look up the fragment within the fragment map.
       // Then, we recurse on the fragment's selection set. Finally, the data key will be a
       // serialized version of the fragment name to the new result keys.
       const fragmentSpread = (selection as FragmentSpread);
       const fragment = fragmentMap[fragmentSpread.name.value];
-      const fragmentRet = createResultKeyMap({
+      const fragmentRet = unpackResultForRequest({
         request,
         result,
         selectionSet: fragment.selectionSet,
@@ -246,9 +242,6 @@ export function createFieldMap(
   selections: (Field | InlineFragment | FragmentSpread)[],
   startIndex: number
 ): { fieldMap: { [ index: number ]: Field }, newIndex: number } {
-  console.log('Start index: ');
-  console.log(startIndex);
-
   let fieldMap: { [ index: number ]: Field } = {};
   let currIndex = startIndex;
   selections.forEach((selection) => {

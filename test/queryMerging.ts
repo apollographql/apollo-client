@@ -12,7 +12,7 @@ import {
   mergeRequests,
   parseMergedKey,
   unpackMergedResult,
-  createResultKeyMap,
+  unpackResultForRequest,
 } from '../src/batching/queryMerging';
 
 import {
@@ -842,9 +842,9 @@ describe('Query merging', () => {
     assert.deepEqual(unpackedResults[1], { data: secondResult });
   });
 
-  describe('createResultKeyMap', () => {
-    const createMapForQuery = (query: Document, result: Object) => {
-      return createResultKeyMap({
+  describe('unpackResultForRequest', () => {
+    const unpackQueryResult = (query: Document, result: Object) => {
+      return unpackResultForRequest({
         request: { query },
         result,
         selectionSet: getQueryDefinition(query).selectionSet,
@@ -853,7 +853,8 @@ describe('Query merging', () => {
         fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
         topLevel: true,
       });
-    }
+    };
+
     it('should work for a simple query', () => {
       const query = gql`
         query authorNames {
@@ -869,7 +870,7 @@ describe('Query merging', () => {
       const {
         newIndex,
         unpackedResult,
-      } = createMapForQuery(query, {
+      } = unpackQueryResult(query, {
         ___authorNames___requestIndex_0___fieldIndex_0: {
           name: 'Dhaivat Pandya',
         },
@@ -897,7 +898,7 @@ describe('Query merging', () => {
       const {
         newIndex,
         unpackedResult,
-      } = createMapForQuery(query, {
+      } = unpackQueryResult(query, {
         ___authorNames___requestIndex_0___fieldIndex_0: result.author,
       });
       assert.equal(newIndex, 1);
@@ -923,7 +924,7 @@ describe('Query merging', () => {
       const {
         newIndex,
         unpackedResult,
-      } = createMapForQuery(query, {
+      } = unpackQueryResult(query, {
         ___authorNames___requestIndex_0___fieldIndex_0: result.author,
       });
       assert.equal(newIndex, 1);
@@ -950,7 +951,7 @@ describe('Query merging', () => {
       const {
         newIndex,
         unpackedResult,
-      } = createMapForQuery(query, {
+      } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           '___authorNames___requestIndex_0___fieldIndex_1': 'John',
           '___authorNames___requestIndex_0___fieldIndex_2': 'Smith',
@@ -979,14 +980,14 @@ describe('Query merging', () => {
       };
       const {
         newIndex,
-        unpackedResult
-      } = createMapForQuery(query, {
+        unpackedResult,
+      } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           'firstName': 'John',
           'lastName': 'Smith',
         },
       });
-      // assert.equal(newIndex, 3);
+      assert.equal(newIndex, 1);
       assert.deepEqual(unpackedResult, result);
     });
 
@@ -1010,10 +1011,10 @@ describe('Query merging', () => {
       };
       const {
         unpackedResult,
-      } = createMapForQuery(query, {
+      } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           '___authorNames___requestIndex_0___fieldIndex_1': 'John Smith',
-        }
+        },
       });
       assert.deepEqual(unpackedResult, result);
     });
@@ -1035,7 +1036,7 @@ describe('Query merging', () => {
       };
       const {
         unpackedResult,
-      } = createMapForQuery(query, {
+      } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           info: result.author.info,
         },

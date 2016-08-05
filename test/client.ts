@@ -56,9 +56,7 @@ import {
 
 import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
-import mockNetworkInterface, {
-  mockBatchedNetworkInterface,
-} from './mocks/mockNetworkInterface';
+import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 import { getFragmentDefinitions } from '../src/queries/getFromAST';
 
@@ -1368,16 +1366,6 @@ describe('client', () => {
             ...personDetails
           }
         }`;
-      const query1WithFragment = gql`
-        query personInfo {
-          person {
-            ...personDetails
-          }
-        }
-        fragment personDetails on Person {
-          firstName
-          lastName
-        }`;
       const query2 = gql`
         query authorPopularity {
           author {
@@ -1417,9 +1405,6 @@ describe('client', () => {
         },
         ___personInfo___requestIndex_1___fieldIndex_0: data2.author,
       };
-      console.log('Expecting query: ');
-      console.log(print(composedQuery));
-
       const networkInterface = addQueryMerging(mockNetworkInterface({
         request: { query: composedQuery, debugName: '___composed' },
         result: { data: composedResult },
@@ -1431,8 +1416,6 @@ describe('client', () => {
       const promise1 = client.query({ query: query1, fragments: personDetails });
       client.query({ query: query2 });
       promise1.then((result) => {
-        console.log('Result: ');
-        console.log(result);
         assert.deepEqual(result.data, data1);
         done();
       });

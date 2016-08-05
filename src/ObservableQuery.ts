@@ -164,6 +164,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           queryFragments,
         });
       }
+      return newResult;
     };
 
     this.stopPolling = () => {

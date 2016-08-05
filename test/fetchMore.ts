@@ -166,7 +166,9 @@ describe('fetchMore on an observable query', () => {
           return state;
         },
       });
-    }).then(() => {
+    }).then(data => {
+      assert.lengthOf(data.data.entry.comments, 10); // this is the server result
+      assert.isFalse(data.loading);
       const comments = latestResult.data.entry.comments;
       assert.lengthOf(comments, 20);
       for (let i = 1; i <= 20; i++) {

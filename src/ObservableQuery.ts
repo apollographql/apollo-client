@@ -141,6 +141,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
               });
           };
           this.updateQuery(mapFn);
+          return fetchMoreResult;
         });
     };
 
@@ -164,7 +165,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           queryFragments,
         });
       }
-      return newResult;
     };
 
     this.stopPolling = () => {

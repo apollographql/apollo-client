@@ -183,17 +183,7 @@ function _parameterString(names, leftDelim, rightDelim) {
 
 // Render the type of a data object. It's pretty confusing, to say the least
 function _type(data, skipSignature) {
-  if (data.kindString === 'Type alias' && data.type.declaration) {
-    var declaration = data.type.declaration
-    if (declaration.signatures) {
-      return _type(declaration.signatures[0]);
-    }
-
-    if (declaration.indexSignature) {
-      var signature = declaration.indexSignature[0]
-      return _indexParameterString(signature) + ':' + _type(signature);
-    }
-  }
+  var type = data.type;
 
   if (data.kindString === 'Method') {
     return _type(data.signatures[0])
@@ -204,15 +194,33 @@ function _type(data, skipSignature) {
     return args + ' => ' + _type(data, true);
   }
 
-  var type = data.type;
+  var isReflected = data.kindString === 'Type alias' || type.type === 'reflection';
+  if (isReflected && type.declaration) {
+    var declaration = type.declaration;
+    if (declaration.signatures) {
+      return _type(declaration.signatures[0]);
+    }
+
+    if (declaration.indexSignature) {
+      var signature = declaration.indexSignature[0]
+      return _indexParameterString(signature) + ':' + _type(signature);
+    }
+  }
 
   var typeName = _typeName(type);
+  if (!typeName) {
+    console.error("unknown type name for ", data.name);
+    // console.trace();
+    typeName = 'XXXX: unknown';
+  }
+
   if (type.typeArguments) {
     return typeName + _parameterString(_.map(type.typeArguments, _typeName), '<', '>');
   }
   return typeName;
 }
 
+// This is just literally the name of the type, nothing fancy, except for references
 function _typeName(type) {
   if (type.type === 'instrinct') {
     if (type.isArray) {
@@ -237,14 +245,6 @@ function _typeName(type) {
     return '<a href="#' + _typeId(type) + '">' + type.name + '</a>';
   } else if (type.type === 'stringLiteral') {
     return '"' + type.value + '"';
-  } else {
-    var signatures = type.declaration.indexSignature || type.declaration.signatures;
-    if (signatures) {
-      return signatures[0].type.name;
-    } else {
-      // XXX: ?
-      return 'object';
-    }
   }
 }
 

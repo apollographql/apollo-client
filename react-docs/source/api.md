@@ -3,15 +3,22 @@ title: API
 order: 6
 ---
 
-<h2 id="core">Core API</h2>
+<h2 id="apollo-client">ApolloClient</h2>
 
 {% tsapibox ApolloClient.constructor %}
-{% tsapibox createNetworkInterface %}
-{% tsapibox createApolloStore %}
-{% tsapibox createApolloReducer %}
+{% tsapibox ApolloClient.watchQuery %}
+{% tsapibox ApolloClient.query %}
+{% tsapibox ApolloClient.mutate %}
+{% tsapibox ApolloClient.reducer %}
+{% tsapibox ApolloClient.middleware %}
+{% tsapibox ApolloClient.initStore %}
+{% tsapibox ApolloClient.setStore %}
 
 <h2 id="utilities">Utilities</h2>
 
+{% tsapibox createNetworkInterface %}
+{% tsapibox createApolloStore %}
+{% tsapibox createApolloReducer %}
 {% tsapibox addQueryMerging %}
 {% tsapibox readQueryFromStore %}
 <!--  XXX: fix aliasing-->
@@ -25,7 +32,6 @@ order: 6
 {% tsapibox NetworkInterface %}
 {% tsapibox NormalizedCache %}
 {% tsapibox ApolloReducerConfig %}
-{% tsapibox IdGetter %}
 {% tsapibox MutationBehaviorReducerMap %}
 {% tsapibox MutationBehaviorReducer %}
 {% tsapibox MutationBehaviorReducerArgs %}

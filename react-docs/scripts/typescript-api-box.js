@@ -106,7 +106,7 @@ function _signature(rawData, parameters) {
   var escapedName = _.escape(rawData.name);
 
   // if it is a function, and therefore has arguments
-  if (_.includes(['Function', 'Constructor'], rawData.kindString)) {
+  if (_.includes(['Function', 'Constructor', 'Method'], rawData.kindString)) {
     var signature = rawData.signatures && rawData.signatures[0];
     return signature.name + _parameterString(_.map(parameters, 'name'));
   }
@@ -219,6 +219,12 @@ function _typeName(type) {
   } else if (type.type === 'union') {
     return _.map(type.types, _typeName).join(' | ');
   } else if (type.type === 'reference') {
+    // check to see if the reference type is a simple type alias
+    var referencedData = dataByKey[type.name];
+    if (referencedData && referencedData.kindString === "Type alias") {
+      console.log(type.name, referencedData)
+      return _type(referencedData);
+    }
     return '<a href="#' + _typeId(type) + '">' + type.name + '</a>';
   } else if (type.type === 'stringLiteral') {
     return '"' + type.value + '"';

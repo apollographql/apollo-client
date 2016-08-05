@@ -219,11 +219,17 @@ function _typeName(type) {
   } else if (type.type === 'union') {
     return _.map(type.types, _typeName).join(' | ');
   } else if (type.type === 'reference') {
+
     // check to see if the reference type is a simple type alias
     var referencedData = dataByKey[type.name];
     if (referencedData && referencedData.kindString === "Type alias") {
-      console.log(type.name, referencedData)
-      return _type(referencedData);
+
+      // Is it an "objecty" type? We can't display it in one line if so
+      if (!referencedData.type.declaration ||
+          !referencedData.type.declaration.children) {
+        return _type(referencedData);
+      }
+
     }
     return '<a href="#' + _typeId(type) + '">' + type.name + '</a>';
   } else if (type.type === 'stringLiteral') {

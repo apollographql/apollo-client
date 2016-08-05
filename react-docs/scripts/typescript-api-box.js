@@ -133,9 +133,12 @@ function _parameters(rawData) {
       name = 'options';
     }
 
-    var properties = [];
+    var properties = []
     if (param.type && param.type.declaration) {
       properties = _.map(param.type.declaration.children, _parameter);
+    } else if (param.type && param.type.type === 'reference') {
+      dataForProperties = dataByKey[param.type.name] || {};
+      properties = _.map(dataForProperties.children, _parameter);
     }
 
     return _.extend(_parameter(param), {

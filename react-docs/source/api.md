@@ -29,6 +29,7 @@ order: 6
 
 <h2 id="types">Types</h2>
 
+{% tsapibox ApolloStore %}
 {% tsapibox NetworkInterface %}
 {% tsapibox NormalizedCache %}
 {% tsapibox ApolloReducerConfig %}
@@ -37,7 +38,5 @@ order: 6
 {% tsapibox MutationArrayDeleteBehavior %}
 {% tsapibox MutationDeleteBehavior %}
 {% tsapibox Request %}
-{% tsapibox RequestInit %}
-{% tsapibox SelectionSet %}
 {% tsapibox StoreObject %}
 {% tsapibox FragmentMap %}

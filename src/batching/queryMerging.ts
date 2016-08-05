@@ -109,9 +109,6 @@ export function unpackMergedResult(
     return { data: unpackedResult };
   });
 
-  console.log('Result array: ');
-  console.log(resultArray);
-
   return resultArray;
 }
 

@@ -220,6 +220,58 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
         throw new Error('Afterware must implement the applyAfterware function');
       }
     });
+
+    function batchedFetchFromRemoteEndpoint(
+      requestsAndOptions: RequestAndOptions[]
+    ): Promise<IResponse> {
+      const options: RequestInit = {};
+
+      // Combine all of the options given by the middleware into one object.
+      requestsAndOptions.forEach((requestAndOptions) => {
+        assign(options, requestAndOptions.options);
+      });
+
+      // Serialize the requests to strings of JSON
+      const printedRequests = requestsAndOptions.map(({ request }) => {
+        return printRequest(request);
+      });
+
+      return fetch(uri, assign({}, _opts, options, {
+        body: JSON.stringify(printedRequests),
+        headers: assign({}, options.headers, {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        }),
+        method: 'POST',
+      }));
+    };
+
+    function batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+      const options = assign({}, _opts);
+
+      // Apply the middlewares to each of the requests
+      const middlewarePromises: Promise<RequestAndOptions>[] = [];
+      requests.forEach((request) => {
+        middlewarePromises.push(applyMiddlewares({
+          request,
+          options,
+        }));
+      });
+
+      Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
+        this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
+          .then(result => result.json())
+          .then(responses => {
+            responses.map((response, index) => {
+              return applyAfterwares({
+                response,
+                options: requestsAndOptions[index].options,
+              });
+            })
+          });
+      });
+      return null;
+    }
   }
 
   // createNetworkInterface has batching ability by default, which is not used unless the

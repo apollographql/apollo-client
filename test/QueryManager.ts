@@ -76,12 +76,25 @@ describe('QueryManager', () => {
 
   // Helper method that sets up a mockQueryManager and then passes on the
   // results to an observer.
-  const assertWithObserver = (mockedResponse: MockedResponse, ) => {
+  const assertWithObserver = ({
+    query,
+    variables = {},
+    result,
+    error,
+    observer
+  }: {
+    query: Document,
+    variables?: Object,
+    error?: Error,
+    result?: GraphQLResult,
+    observer: Observer<GraphQLResult>,
+  }) => {
     const queryManager = mockQueryManager({
       request: { query, variables },
-      result: { data },
+      result,
+      error,
     });
-    queryManager.watchQuery({ query, variables }).subscribe(assertWithObserver);
+    queryManager.watchQuery({ query, variables }).subscribe(observer);
   };
 
   // Helper method that asserts whether a particular query correctly returns
@@ -98,7 +111,9 @@ describe('QueryManager', () => {
     done
   }) => {
     assertWithObserver({
-      query, data, variables,
+      query,
+      result: { data },
+      variables,
       observer: {
         next(result) {
             assert.deepEqual(result.data, data, 'Roundtrip assertion failed.');
@@ -190,8 +205,8 @@ describe('QueryManager', () => {
   });
 
   it('handles GraphQL errors', (done) => {
-    assertWithObserver(
-        query: gql`
+    assertWithObserver({
+      query: gql`
           query people {
             allPeople(first: 1) {
               people {
@@ -199,6 +214,7 @@ describe('QueryManager', () => {
               }
             }
           }`,
+      variables: {},
       result: {
         errors: [
           {
@@ -207,202 +223,134 @@ describe('QueryManager', () => {
           },
         ],
       },
-    });
+      observer: {
+        next(result) {
+          done(new Error('Returned a result when it was supposed to error out'));
+        },
 
-    const handle = queryManager.watchQuery({
-      query,
-    });
-
-    handle.subscribe({
-      next(result) {
-        done(new Error('Returned a result when it was supposed to error out'));
-      },
-
-      error(apolloError) {
-        assert(apolloError);
-        done();
+        error(apolloError) {
+          assert(apolloError);
+          done();
+        },
       },
     });
   });
 
   it('handles GraphQL errors with data returned', (done) => {
-    const query = gql`
+    assertWithObserver({
+      query: gql`
       query people {
         allPeople(first: 1) {
           people {
             name
           }
         }
-      }
-    `;
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: {query },
-        result: {
-          data: {
-            allPeople: {
-              people: {
-                name: 'Ada Lovelace',
-              },
+      }`,
+      result: {
+        data: {
+          allPeople: {
+            people: {
+              name: 'Ada Lovelace',
             },
           },
-          errors: [
-            {
-              name: 'Name',
-              message: 'This is an error message.',
-            },
-          ],
         },
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({
-      query,
-    });
-
-    handle.subscribe({
-      next(result) {
-        done(new Error('Returned data when it was supposed to error out.'));
+        errors: [
+          {
+            name: 'Name',
+            message: 'This is an error message.',
+          },
+        ],
       },
+      observer: {
+        next(result) {
+          done(new Error('Returned data when it was supposed to error out.'));
+        },
 
-      error(apolloError) {
-        assert(apolloError);
-        done();
+        error(apolloError) {
+          assert(apolloError);
+          done();
+        },
       },
     });
+
   });
 
   it('empty error array (handle non-spec-compliant server) #156', (done) => {
-    const query = gql`
+    assertWithObserver({
+      query: gql`
       query people {
         allPeople(first: 1) {
           people {
             name
           }
         }
-      }
-    `;
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: {query },
-        result: {
-          data: {
-            allPeople: {
-              people: {
-                name: 'Ada Lovelace',
-              },
+      }`,
+      result: {
+        data: {
+          allPeople: {
+            people: {
+              name: 'Ada Lovelace',
             },
           },
-          errors: [],
         },
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({
-      query,
-    });
-
-    handle.subscribe({
-      next(result) {
-        assert.equal(result.data['allPeople'].people.name, 'Ada Lovelace');
-        assert.notProperty(result, 'errors');
-        done();
+        errors: [],
+      },
+      observer: {
+        next(result) {
+          assert.equal(result.data['allPeople'].people.name, 'Ada Lovelace');
+          assert.notProperty(result, 'errors');
+          done();
+        },
       },
     });
   });
 
   it('handles network errors', (done) => {
-    const query = gql`
+    assertWithObserver({
+      query: gql`
       query people {
         allPeople(first: 1) {
           people {
             name
           }
         }
-      }
-    `;
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        error: new Error('Network error'),
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({
-      query,
-    });
-
-    handle.subscribe({
-      next: (result) => {
-        done(new Error('Should not deliver result'));
-      },
-      error: (error) => {
-        const apolloError = error as ApolloError;
-        assert(apolloError.networkError);
-        assert.include(apolloError.networkError.message, 'Network error');
-        done();
+      }`,
+      error: new Error('Network error'),
+      observer: {
+        next: (result) => {
+          done(new Error('Should not deliver result'));
+        },
+        error: (error) => {
+          const apolloError = error as ApolloError;
+          assert(apolloError.networkError);
+          assert.include(apolloError.networkError.message, 'Network error');
+          done();
+        },
       },
     });
   });
 
   it('uses console.error to log unhandled errors', (done) => {
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        error: new Error('Network error'),
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({
-      query,
-    });
-
     const oldError = console.error;
     let printed;
     console.error = (...args) => {
       printed = args;
     };
 
-    handle.subscribe({
-      next: (result) => {
-        done(new Error('Should not deliver result'));
+    assertWithObserver({
+      query: gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }`,
+      error: new Error('Network error'),
+      observer: {
+        next: (result) => {
+          done(new Error('Should not deliver result'));
+        },
       },
     });
 

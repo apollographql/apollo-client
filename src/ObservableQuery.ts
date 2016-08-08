@@ -18,6 +18,8 @@ import {
   ApolloQueryResult,
 } from './index';
 
+import { tryFunctionOrLogError } from './util/errorHandling';
+
 import assign = require('lodash.assign');
 
 export interface FetchMoreOptions {
@@ -27,10 +29,15 @@ export interface FetchMoreOptions {
   }) => Object;
 }
 
+export interface UpdateQueryOptions {
+  queryVariables: Object;
+}
+
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
   public startGraphQLSubscription: () => number;
+  public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
@@ -131,23 +138,14 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         })
         .then((fetchMoreResult) => {
           const reducer = fetchMoreOptions.updateQuery;
-          const {
-            previousResult,
-            queryVariables,
-            querySelectionSet,
-            queryFragments = [],
-          } = this.queryManager.getQueryWithPreviousResult(this.queryId);
-
-          this.queryManager.store.dispatch({
-            type: 'APOLLO_UPDATE_QUERY_RESULT',
-            newResult: reducer(previousResult, {
-              fetchMoreResult,
-              queryVariables,
-            }),
-            queryVariables,
-            querySelectionSet,
-            queryFragments,
-          });
+          const mapFn = (previousResult, { queryVariables }) => {
+            return reducer(
+              previousResult, {
+                fetchMoreResult,
+                queryVariables,
+              });
+          };
+          this.updateQuery(mapFn);
         });
     };
 
@@ -168,7 +166,28 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       };
 
       return this.queryManager.startSubscription(subOptions);
+    };
 
+    this.updateQuery = (mapFn) => {
+      const {
+        previousResult,
+        queryVariables,
+        querySelectionSet,
+        queryFragments = [],
+      } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+
+      const newResult = tryFunctionOrLogError(
+        () => mapFn(previousResult, { queryVariables }));
+
+      if (newResult) {
+        this.queryManager.store.dispatch({
+          type: 'APOLLO_UPDATE_QUERY_RESULT',
+          newResult,
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
+        });
+      }
     };
 
     this.stopPolling = () => {

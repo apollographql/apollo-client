@@ -25,6 +25,7 @@ import {
   Field,
   Document,
   Selection,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -40,6 +41,8 @@ import {
 import {
   ApolloError,
 } from '../errors';
+
+import flatten = require('lodash.flatten');
 
 export interface DiffResult {
   result: any;
@@ -419,4 +422,82 @@ Perhaps you want to use the \`returnPartialData\` option?`,
 interface FieldDiffResult {
   result?: any;
   isMissing?: 'true';
+}
+
+function collectUsedVariablesFromQuery(query: Document) {
+  const queryDef = getQueryDefinition(query);
+
+  return collectUsedVariablesFromSelectionSet(queryDef.selectionSet);
+}
+
+function collectUsedVariablesFromSelectionSet(selectionSet: SelectionSet) {
+  return uniq(flatten(selectionSet.selections.map((selection) => {
+    if (isField(selection)) {
+      return collectUsedVariablesFromField(selection);
+    } else if (isInlineFragment(selection)) {
+      return collectUsedVariablesFromSelectionSet(selection.selectionSet);
+    } else {
+      // Some named fragment. Don't handle it here, rely on the caller
+      // to process fragments separately with collectUsedVariablesFromFragment.
+      return [];
+    }
+  })));
+}
+
+function collectUsedVariablesFromField(field: Field) {
+  let variables = [];
+
+  if (field.arguments) {
+    variables = flatten(field.arguments.map((arg) => {
+      if (arg.value.kind === 'Variable') {
+        return [(arg.value as any).name.value];
+      }
+
+      return [];
+    }));
+  }
+
+  if (field.selectionSet) {
+    variables = [
+        ...variables,
+        ...collectUsedVariablesFromSelectionSet(field.selectionSet),
+    ];
+  }
+
+  return uniq(variables);
+}
+
+export function removeUnusedVariablesFromDiffedQuery (
+  query: Document
+): void {
+  const queryDef = getQueryDefinition(query);
+  const usedVariables = collectUsedVariablesFromQuery(query);
+
+  query.definitions.forEach((definition) => {
+    if (definition.kind !== 'FragmentDefinition') {
+      return;
+    }
+
+    usedVariables.push(...collectUsedVariablesFromSelectionSet(
+      (definition as FragmentDefinition).selectionSet
+    ));
+  });
+
+  if (!queryDef.variableDefinitions) {
+    return;
+  }
+
+  const diffedVariableDefinitions =
+    queryDef.variableDefinitions.filter((variableDefinition) => {
+      return usedVariables.indexOf(
+        variableDefinition.variable.name.value) !== -1;
+    });
+
+  queryDef.variableDefinitions = diffedVariableDefinitions;
+}
+
+function uniq(array) {
+  return array.filter(
+    (item, index, arr) =>
+      arr.indexOf(item) === index);
 }

@@ -17,3 +17,9 @@ export interface FetchMoreQueryOptions {
   query?: Document;
   variables?: { [key: string]: any };
 }
+ export interface SubscriptionOptions {
+  query: Document;
+  variables?: { [key: string]: any };
+  fragments?: FragmentDefinition[];
+  handler: (error, result) => void;
+};

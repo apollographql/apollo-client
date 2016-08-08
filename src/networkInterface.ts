@@ -38,6 +38,11 @@ export interface NetworkInterface {
   query(request: Request): Promise<GraphQLResult>;
 }
 
+export interface SubscriptionNetworkInterface extends NetworkInterface {
+  subscribe(request: Request, handler: (error, result) => void): number;
+  unsubscribe(id: Number): void;
+}
+
 export interface BatchedNetworkInterface extends NetworkInterface {
   batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
 }
@@ -81,6 +86,20 @@ export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetw
       });
     },
   }) as BatchedNetworkInterface;
+}
+
+export function addGraphQLSubscriptions(networkInterface: NetworkInterface, wsClient: any): SubscriptionNetworkInterface {
+  return assign(networkInterface, {
+    subscribe(request: Request, handler: (error, result) => void) {
+      wsClient.subscribe({
+        query: print(request.query),
+        variables: request.variables,
+      }, handler);
+    },
+    unsubscribe(id: number) {
+      wsClient.unsubscribe(id);
+    },
+  }) as SubscriptionNetworkInterface;
 }
 
 export function printRequest(request: Request): PrintedRequest {

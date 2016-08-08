@@ -74,7 +74,7 @@ describe('QueryManager', () => {
     if (object.__typename && object.id) {
       return object.__typename + '__' + object.id;
     }
-  }
+  };
 
   // Helper method for these tests that constructs a query manager out of a
   // a list of mocked responses for a mocked network interface.
@@ -100,7 +100,7 @@ describe('QueryManager', () => {
     result,
     error,
     delay,
-    observer
+    observer,
   }: {
     query: Document,
     variables?: Object,
@@ -153,7 +153,7 @@ describe('QueryManager', () => {
     store,
   }: {
     mutation: Document,
-    data:Object,
+    data: Object,
     variables?: Object,
     store?: ApolloStore,
   }) => {
@@ -479,7 +479,7 @@ describe('QueryManager', () => {
   });
 
   it('supports interoperability with other Observable implementations like RxJS', (done) => {
-    const result = {
+    const expResult = {
       data: {
         allPeople: {
           people: [
@@ -502,7 +502,7 @@ describe('QueryManager', () => {
           }
         }`,
       },
-      result,
+      result: expResult,
     });
 
     const observable = Rx.Observable.from(handle);
@@ -510,9 +510,9 @@ describe('QueryManager', () => {
     observable
       .map(result => (assign({ fromRx: true }, result)))
       .subscribe({
-      next(result) {
-        const expectedResult = assign({ fromRx: true }, result);
-        assert.deepEqual(result, expectedResult);
+      next(newResult) {
+        const expectedResult = assign({ fromRx: true, loading: false }, expResult);
+        assert.deepEqual(newResult, expectedResult);
         done();
       },
     });
@@ -1445,7 +1445,7 @@ describe('QueryManager', () => {
       }
     );
     let handleCount = 0;
-    const subscription =queryManager.watchQuery({
+    const subscription = queryManager.watchQuery({
       query,
       variables,
       pollInterval: 50,
@@ -2380,7 +2380,7 @@ describe('QueryManager', () => {
         __typename: 'Author',
       },
     };
-    const reducerConfig = { dataIdFromObject: (x) => "$" + dataIdFromObject(x) };
+    const reducerConfig = { dataIdFromObject: (x) => '$' + dataIdFromObject(x) };
     const store = createApolloStore({ config: reducerConfig, reportCrashes: false });
     new QueryManager({
       networkInterface: mockNetworkInterface({
@@ -2513,7 +2513,7 @@ describe('QueryManager', () => {
         request: { query },
         error: new Error('Network error occurred.'),
       }
-    )
+    );
     const subscription = queryManager.watchQuery({ query, pollInterval: 20 })
       .subscribe({
         next(result) {

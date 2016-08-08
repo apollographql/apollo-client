@@ -44,6 +44,7 @@ import assign = require('lodash.assign');
 
 import mockNetworkInterface, {
   MockedResponse,
+  ParsedRequest,
 } from './mocks/mockNetworkInterface';
 
 import {
@@ -74,6 +75,11 @@ describe('QueryManager', () => {
     });
   };
 
+  const mockWatchQuery = (mockedResponse: MockedResponse) => {
+    const queryManager = mockQueryManager(mockedResponse);
+    return queryManager.watchQuery({ query: mockedResponse.request.query });
+  };
+
   // Helper method that sets up a mockQueryManager and then passes on the
   // results to an observer.
   const assertWithObserver = ({
@@ -81,20 +87,23 @@ describe('QueryManager', () => {
     variables = {},
     result,
     error,
+    delay,
     observer
   }: {
     query: Document,
     variables?: Object,
     error?: Error,
     result?: GraphQLResult,
+    delay?: number,
     observer: Observer<GraphQLResult>,
   }) => {
     const queryManager = mockQueryManager({
       request: { query, variables },
       result,
       error,
+      delay,
     });
-    queryManager.watchQuery({ query, variables }).subscribe(observer);
+    return queryManager.watchQuery({ query, variables }).subscribe(observer);
   };
 
   // Helper method that asserts whether a particular query correctly returns
@@ -121,6 +130,29 @@ describe('QueryManager', () => {
         },
       },
     });
+  };
+
+  // Helper method that takes a query with a first response and a second response.
+  // Used to assert stuff about refetches.
+  const mockRefetch = ({
+    request,
+    firstResult,
+    secondResult,
+  }: {
+    request: ParsedRequest,
+    firstResult: GraphQLResult,
+    secondResult: GraphQLResult,
+  }) => {
+    return mockQueryManager(
+      {
+        request,
+        result: firstResult,
+      },
+      {
+        request,
+        result: secondResult,
+      }
+    );
   };
 
   it('properly roundtrips through a Redux store', (done) => {
@@ -362,39 +394,23 @@ describe('QueryManager', () => {
   });
 
   it('handles an unsubscribe action that happens before data returns', (done) => {
-    const query = gql`
+    const subscription = assertWithObserver({
+      query: gql`
       query people {
         allPeople(first: 1) {
           people {
             name
           }
         }
-      }
-    `;
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        delay: 1000,
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({
-      query,
-    });
-
-    const subscription = handle.subscribe({
-      next: (result) => {
-        done(new Error('Should not deliver result'));
-      },
-      error: (error) => {
-        done(new Error('Should not deliver result'));
+      }`,
+      delay: 1000,
+      observer: {
+        next: (result) => {
+          done(new Error('Should not deliver result'));
+        },
+        error: (error) => {
+          done(new Error('Should not deliver result'));
+        },
       },
     });
 
@@ -403,41 +419,30 @@ describe('QueryManager', () => {
   });
 
   it('supports interoperability with other Observable implementations like RxJS', (done) => {
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
+    const result = {
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
       },
     };
 
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        result: { data },
-      }
-    );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
-
-    const handle = queryManager.watchQuery({
-      query,
+    const handle = mockWatchQuery({
+      request: {
+        query: gql`
+          query people {
+            allPeople(first: 1) {
+              people {
+              name
+            }
+          }
+        }`,
+      },
+      result,
     });
 
     const observable = Rx.Observable.from(handle);
@@ -454,6 +459,7 @@ describe('QueryManager', () => {
   });
 
   it('allows you to refetch queries', (done) => {
+
     const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
@@ -478,7 +484,7 @@ describe('QueryManager', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface(
+    const queryManager = mockQueryManager(
       {
         request: { query, variables },
         result: { data: data1 },
@@ -488,13 +494,6 @@ describe('QueryManager', () => {
         result: { data: data2 },
       }
     );
-
-    const store = createApolloStore();
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: store,
-      reduxRootKey: 'apollo',
-    });
 
     let handleCount = 0;
 
@@ -539,7 +538,7 @@ describe('QueryManager', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface(
+    const queryManager = mockQueryManager(
       {
         request: { query },
         result: { data: data1 },
@@ -549,12 +548,6 @@ describe('QueryManager', () => {
         result: { data: data2 },
       }
     );
-
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootKey: 'apollo',
-    });
 
     const handle = queryManager.watchQuery({
       query,

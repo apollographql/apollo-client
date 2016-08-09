@@ -98,21 +98,28 @@ export function printRequest(request: Request): PrintedRequest {
   return printedRequest;
 }
 
-export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {
-  if (!uri) {
-    throw new Error('A remote enpdoint is required for a network layer');
+export class HTTPFetchNetworkInterface implements HTTPNetworkInterface {
+  public _uri: string;
+  public _opts: RequestInit;
+  public _middlewares: MiddlewareInterface[];
+  public _afterwares: AfterwareInterface[];
+
+  constructor(uri: string, opts: RequestInit = {}) {
+    if (!uri) {
+      throw new Error('A remote enpdoint is required for a network layer');
+    }
+
+    if (!isString(uri)) {
+      throw new Error('Remote endpoint must be a string');
+    }
+
+    this._uri = uri;
+    this._opts = assign({}, opts);
+    this._middlewares = [];
+    this._afterwares = [];
   }
 
-  if (!isString(uri)) {
-    throw new Error('Remote endpoint must be a string');
-  }
-
-  const _uri: string = uri;
-  const _opts: RequestInit = assign({}, opts);
-  const _middlewares: MiddlewareInterface[] = [];
-  const _afterwares: AfterwareInterface[] = [];
-
-  function applyMiddlewares({
+  public applyMiddlewares({
     request,
     options,
   }: RequestAndOptions): Promise<RequestAndOptions> {
@@ -133,11 +140,11 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
       };
 
       // iterate through middlewares using next callback
-      queue([..._middlewares], this);
+      queue([...this._middlewares], this);
     });
   }
 
-  function applyAfterwares({
+  public applyAfterwares({
     response,
     options,
   }: ResponseAndOptions): Promise<ResponseAndOptions> {
@@ -158,15 +165,15 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
       };
 
       // iterate through afterwares using next callback
-      queue([..._afterwares], this);
+      queue([...this._afterwares], this);
     });
   }
 
-  function fetchFromRemoteEndpoint({
+  public fetchFromRemoteEndpoint({
     request,
     options,
   }: RequestAndOptions): Promise<IResponse> {
-    return fetch(uri, assign({}, _opts, options, {
+    return fetch(this._uri, assign({}, this._opts, options, {
       body: JSON.stringify(printRequest(request)),
       headers: assign({}, options.headers, {
         Accept: '*/*',
@@ -176,21 +183,21 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     }));
   };
 
-  function query(request: Request): Promise<GraphQLResult> {
-    const options = assign({}, _opts);
+  public query(request: Request): Promise<GraphQLResult> {
+    const options = assign({}, this._opts);
 
-    return applyMiddlewares({
+    return this.applyMiddlewares({
       request,
       options,
-    }).then(fetchFromRemoteEndpoint)
+    }).then(this.fetchFromRemoteEndpoint.bind(this))
       .then(response => {
-        applyAfterwares({
-          response,
+        this.applyAfterwares({
+          response: response as IResponse,
           options,
         });
         return response;
       })
-      .then(result => result.json())
+      .then(result => (result as IResponse).json())
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
@@ -202,87 +209,81 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
       });
   };
 
-  function use(middlewares: MiddlewareInterface[]) {
+  public use(middlewares: MiddlewareInterface[]) {
     middlewares.map((middleware) => {
       if (typeof middleware.applyMiddleware === 'function') {
-        _middlewares.push(middleware);
+        this._middlewares.push(middleware);
       } else {
         throw new Error('Middleware must implement the applyMiddleware function');
       }
     });
   }
 
-  function useAfter(afterwares: AfterwareInterface[]) {
+  public useAfter(afterwares: AfterwareInterface[]) {
     afterwares.map(afterware => {
       if (typeof afterware.applyAfterware === 'function') {
-        _afterwares.push(afterware);
+        this._afterwares.push(afterware);
       } else {
         throw new Error('Afterware must implement the applyAfterware function');
       }
     });
-
-    function batchedFetchFromRemoteEndpoint(
-      requestsAndOptions: RequestAndOptions[]
-    ): Promise<IResponse> {
-      const options: RequestInit = {};
-
-      // Combine all of the options given by the middleware into one object.
-      requestsAndOptions.forEach((requestAndOptions) => {
-        assign(options, requestAndOptions.options);
-      });
-
-      // Serialize the requests to strings of JSON
-      const printedRequests = requestsAndOptions.map(({ request }) => {
-        return printRequest(request);
-      });
-
-      return fetch(uri, assign({}, _opts, options, {
-        body: JSON.stringify(printedRequests),
-        headers: assign({}, options.headers, {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        }),
-        method: 'POST',
-      }));
-    };
-
-    function batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
-      const options = assign({}, _opts);
-
-      // Apply the middlewares to each of the requests
-      const middlewarePromises: Promise<RequestAndOptions>[] = [];
-      requests.forEach((request) => {
-        middlewarePromises.push(applyMiddlewares({
-          request,
-          options,
-        }));
-      });
-
-      Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
-        this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
-          .then(result => result.json())
-          .then(responses => {
-            responses.map((response, index) => {
-              return applyAfterwares({
-                response,
-                options: requestsAndOptions[index].options,
-              });
-            })
-          });
-      });
-      return null;
-    }
   }
 
+  public batchedFetchFromRemoteEndpoint(
+    requestsAndOptions: RequestAndOptions[]
+  ): Promise<IResponse> {
+    const options: RequestInit = {};
+
+    // Combine all of the options given by the middleware into one object.
+    requestsAndOptions.forEach((requestAndOptions) => {
+      assign(options, requestAndOptions.options);
+    });
+
+    // Serialize the requests to strings of JSON
+    const printedRequests = requestsAndOptions.map(({ request }) => {
+      return printRequest(request);
+    });
+
+    return fetch(this._uri, assign({}, this._opts, options, {
+      body: JSON.stringify(printedRequests),
+      headers: assign({}, options.headers, {
+        Accept: '*/*',
+        'Content-Type': 'application/json',
+      }),
+      method: 'POST',
+    }));
+  };
+
+  public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+    const options = assign({}, this._opts);
+
+    // Apply the middlewares to each of the requests
+    const middlewarePromises: Promise<RequestAndOptions>[] = [];
+    requests.forEach((request) => {
+      middlewarePromises.push(this.applyMiddlewares({
+        request,
+        options,
+      }));
+    });
+
+    Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
+      this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
+        .then(result => result.json())
+        .then(responses => {
+          responses.map((response, index) => {
+            return this.applyAfterwares({
+              response,
+              options: requestsAndOptions[index].options,
+            });
+          })
+        });
+    });
+    return null;
+  }
+}
+
+export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {
   // createNetworkInterface has batching ability by default, which is not used unless the
-  // `shouldBatch` option is passed to apollo-client
-  return addQueryMerging({
-    _uri,
-    _opts,
-    _middlewares,
-    _afterwares,
-    query,
-    use,
-    useAfter,
-  }) as HTTPNetworkInterface;
+  // `shouldBatch` option is passed to apollo-clietn
+  return addQueryMerging(new HTTPFetchNetworkInterface(uri, opts)) as HTTPNetworkInterface;
 }

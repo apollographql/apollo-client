@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.4.11",
+  "version": "0.0.1",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "apollostack/apollo-client"
+    "url": "apollostack/apollo-client/tree/subscription-integration"
   },
   "keywords": [
     "ecmascript",
@@ -34,7 +34,7 @@
     "npm",
     "react"
   ],
-  "author": "Sashko Stubailo <sashko@stubailo.com>",
+  "author": "Amanda Liu",
   "license": "MIT",
   "dependencies": {
     "es6-promise": "^3.1.2",

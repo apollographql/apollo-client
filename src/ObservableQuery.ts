@@ -3,6 +3,10 @@ import { WatchQueryOptions, FetchMoreQueryOptions } from './watchQueryOptions';
 import { Observable, Observer } from './util/Observable';
 
 import {
+  getQueryDefinition,
+} from './queries/getFromAST';
+
+import {
   QueryScheduler,
 } from './scheduler';
 
@@ -32,6 +36,7 @@ export interface UpdateQueryOptions {
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
+  public startGraphQLSubscription: () => number;
   public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
@@ -142,6 +147,25 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           };
           this.updateQuery(mapFn);
         });
+    };
+
+    this.startGraphQLSubscription = () => {
+      const subOptions = {
+        query: this.options.query,
+        variables: this.options.variables,
+        fragments: this.options.fragments,
+        handler: (error, result) => {
+          this.queryManager.store.dispatch({
+            type: 'APOLLO_UPDATE_QUERY_RESULT',
+            newResult: result.data,
+            queryVariables: this.options.variables,
+            querySelectionSet: getQueryDefinition(this.options.query).selectionSet,
+            queryFragments: this.options.fragments,
+          });
+        },
+      };
+
+      return this.queryManager.startSubscription(subOptions);
     };
 
     this.updateQuery = (mapFn) => {

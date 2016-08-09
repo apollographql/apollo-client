@@ -361,7 +361,7 @@ export class QueryManager {
   // The fragments option within WatchQueryOptions specifies a list of fragments that can be
   // referenced by the query.
   // These fragments are used to compose queries out of a bunch of fragments for UI components.
-  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
+  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true, graphQLSubscription = false): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
@@ -369,6 +369,7 @@ export class QueryManager {
       scheduler: this.scheduler,
       options: options,
       shouldSubscribe: shouldSubscribe,
+      graphQLSubscription: graphQLSubscription,
     });
 
     return observableQuery;

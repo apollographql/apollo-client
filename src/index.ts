@@ -217,7 +217,7 @@ export default class ApolloClient {
     };
   }
 
-  public watchQuery = (options: WatchQueryOptions): ObservableQuery => {
+  public watchQuery = (options: WatchQueryOptions, graphQLSubscription = false): ObservableQuery => {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -231,7 +231,7 @@ export default class ApolloClient {
     // document itself.
     createFragment(options.query);
 
-    return this.queryManager.watchQuery(options);
+    return this.queryManager.watchQuery(options, true, graphQLSubscription);
   };
 
   public query = (options: WatchQueryOptions): Promise<ApolloQueryResult> => {

@@ -49,10 +49,12 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     scheduler,
     options,
     shouldSubscribe = true,
+    graphQLSubscription = false,
   }: {
     scheduler: QueryScheduler,
     options: WatchQueryOptions,
     shouldSubscribe?: boolean,
+    graphQLSubscription?: boolean,
   }) {
     const queryManager = scheduler.queryManager;
     const queryId = queryManager.generateQueryId();
@@ -165,7 +167,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         },
       };
 
-      return this.queryManager.startSubscription(subOptions);
+      if (graphQLSubscription) {
+        return this.queryManager.startSubscription(subOptions);
+      };
+      return null;
     };
 
     this.updateQuery = (mapFn) => {

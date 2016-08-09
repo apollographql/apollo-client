@@ -168,7 +168,7 @@ describe('GraphQL Subscriptions', () => {
     const client = new ApolloClient({
       networkInterface: network,
     });
-    const obsHandle = client.watchQuery(watchQueryOptions);
+    const obsHandle = client.watchQuery(watchQueryOptions, true);
     let numResults = 0;
     obsHandle.subscribe({
       next(result) {

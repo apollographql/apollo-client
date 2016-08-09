@@ -161,7 +161,6 @@ export function writeSelectionSetToStore({
       // that allows us to use fragmentErrors correctly. Since the ApolloError type
       // derives from the Javascript Error type, the end-user doesn't notice the
       // fact that we're doing this.
-
       if (isUndefined(value) && included) {
         throw new ApolloError({
           errorMessage: `Can't find field ${resultFieldKey} on result object ${dataId}.`,

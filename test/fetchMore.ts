@@ -9,6 +9,59 @@ import clonedeep = require('lodash.clonedeep');
 
 import gql from 'graphql-tag';
 
+describe('updateQuery on a simple query', () => {
+  const query = gql`
+    query thing {
+      entry {
+        value
+      }
+    }
+  `;
+  const result = {
+    data: {
+      entry: {
+        value: 1,
+      },
+    },
+  };
+
+  it('triggers new result from updateQuery', () => {
+    let latestResult = null;
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result,
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    const obsHandle = client.watchQuery({
+      query,
+    });
+    const sub = obsHandle.subscribe({
+      next(queryResult) {
+        // do nothing
+        latestResult = queryResult;
+      },
+    });
+
+    return new Promise((resolve) => setTimeout(resolve))
+      .then(() => obsHandle)
+      .then((watchedQuery) => {
+        assert.equal(latestResult.data.entry.value, 1);
+        watchedQuery.updateQuery((prevResult) => {
+          const res = clonedeep(prevResult);
+          res.entry.value = 2;
+          return res;
+        });
+
+        assert.equal(latestResult.data.entry.value, 2);
+      })
+      .then(() => sub.unsubscribe());
+  });
+});
+
 describe('fetchMore on an observable query', () => {
   const query = gql`
     query Comment($repoName: String!, $start: Int!, $limit: Int!) {
@@ -106,7 +159,7 @@ describe('fetchMore on an observable query', () => {
       result: resultMore,
     }).then((watchedQuery) => {
       return watchedQuery.fetchMore({
-        variables: variablesMore,
+        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
         updateQuery: (prev, options) => {
           const state = clonedeep(prev) as any;
           state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];

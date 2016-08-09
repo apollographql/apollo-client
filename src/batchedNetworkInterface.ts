@@ -1,5 +1,4 @@
 import {
-  HTTPNetworkInterface,
   HTTPFetchNetworkInterface,
   RequestAndOptions,
   Request,
@@ -58,32 +57,33 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
 
     return new Promise((resolve, reject) => {
       Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
-      return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
-        .then(result => {
-          return result.json()
-        })
-        .then(responses => {
-          const afterwaresPromises = responses.map((response, index) => {
-            return this.applyAfterwares({
-              response,
-              options: requestsAndOptions[index].options,
-            });
+        return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
+          .then(result => {
+            return result.json()
           })
+          .then(responses => {
+            const afterwaresPromises = responses.map((response, index) => {
+              return this.applyAfterwares({
+                response,
+                options: requestsAndOptions[index].options,
+              });
+            })
 
-          Promise.all(afterwaresPromises).then((responsesAndOptions: {
-            response: IResponse,
-            options: RequestInit,
-          }[]) => {
-            const results = [];
-            responsesAndOptions.forEach(({ response }) => {
-              results.push(response);
+            Promise.all(afterwaresPromises).then((responsesAndOptions: {
+              response: IResponse,
+              options: RequestInit,
+            }[]) => {
+              const results = [];
+              responsesAndOptions.forEach(({ response }) => {
+                results.push(response);
+              });
+              resolve(results);
+            }).catch((error) => {
+              reject(error);
             });
-            resolve(results);
-          }).catch((error) => {
-            reject(error);
           });
-
-        });
+      }).catch((error) => {
+        reject(error);
       });
     });
   }

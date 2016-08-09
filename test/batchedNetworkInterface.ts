@@ -1,11 +1,22 @@
 import { assert } from 'chai';
 
+import assign = require('lodash.assign');
+import merge = require('lodash.merge');
+
 import { HTTPBatchedNetworkInterface } from '../src/batchedNetworkInterface';
+
+import {
+  createMockFetch,
+  createMockedIResponse,
+} from './mocks/mockFetch';
 
 import {
   Request,
   printRequest,
 } from '../src/networkInterface';
+
+import { MiddlewareInterface } from '../src/middleware';
+import { AfterwareInterface } from '../src/afterware';
 
 import { GraphQLResult } from 'graphql';
 
@@ -13,101 +24,31 @@ import 'whatwg-fetch';
 
 import gql from 'graphql-tag';
 
-// This is a hack to let Typescript let us tack stuff onto the global scope.
-interface Window {
-  fetch: any;
-}
-
-export interface MockedIResponse {
-  json(): Promise<JSON>;
-}
-
-export interface MockedFetchResponse {
-  url: string;
-  opts: RequestInit;
-  result: MockedIResponse;
-  delay?: number;
-}
-
-export function createMockedIResponse(result: Object): MockedIResponse {
-  return {
-    json() {
-      return Promise.resolve(result);
-    },
-  };
-}
-
-export class MockFetch {
-  private mockedResponsesByKey : { [key: string]: MockedFetchResponse[] };
-
-  constructor(...mockedResponses: MockedFetchResponse[]) {
-    this.mockedResponsesByKey = {};
-
-    mockedResponses.forEach((mockedResponse) => {
-      this.addMockedResponse(mockedResponse);
-    });
-  }
-
-  public addMockedResponse(mockedResponse: MockedFetchResponse) {
-    const key = this.fetchParamsToKey(mockedResponse.url, mockedResponse.opts);
-    let mockedResponses = this.mockedResponsesByKey[key];
-
-    if (!mockedResponses) {
-      mockedResponses = [];
-      this.mockedResponsesByKey[key] = mockedResponses;
-    }
-
-    mockedResponses.push(mockedResponse);
-  }
-
-  public fetch(url: string, opts: RequestInit) {
-    const key = this.fetchParamsToKey(url, opts);
-    const responses = this.mockedResponsesByKey[key];
-
-    if (!responses || responses.length === 0) {
-      throw new Error(`No more mocked fetch responses for the params ${url} and ${opts}`);
-    }
-
-    const { result, delay } = responses.shift();
-
-    if (!result) {
-      throw new Error(`Mocked fetch response should contain a result.`);
-    }
-
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve(result);
-      }, delay ? delay: 0);
-    });
-  }
-
-  public fetchParamsToKey(url: string, opts: RequestInit): string {
-    return JSON.stringify({
-      url,
-      opts,
-    });
-  }
-
-  // Returns a "fetch" function equivalent that mocks the given responses.
-  // The function by returned by this should be tacked onto the global scope
-  // inorder to test functions that use "fetch".
-  public getFetch() {
-    return this.fetch.bind(this);
-  }
-}
-
-
 describe('HTTPBatchedNetworkInterface', () => {
   // Helper method that tests a roundtrip given a particular set of requests to the
   // batched network interface and the
-  const assertRoundtrip = (...requestResultPairs: {
-    request: Request,
-    result: GraphQLResult,
-  }[]) => {
+  const assertRoundtrip = ({
+    requestResultPairs,
+    fetchFunc,
+    middlewares = [],
+    afterwares = [],
+    opts = {},
+  }: {
+    requestResultPairs: {
+      request: Request,
+      result: GraphQLResult,
+    }[];
+    fetchFunc?: any;
+    middlewares?: MiddlewareInterface[];
+    afterwares?: AfterwareInterface[];
+    opts?: RequestInit,
+  }) => {
     const url = 'http://fake.com/graphql';
-    const opts = {};
-
     const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, opts);
+
+    batchedNetworkInterface.use(middlewares);
+    batchedNetworkInterface.useAfter(afterwares);
+
     const printedRequests = [];
     const resultList = [];
     requestResultPairs.forEach(({ request, result }) => {
@@ -115,24 +56,55 @@ describe('HTTPBatchedNetworkInterface', () => {
       resultList.push(result);
     });
 
-    const mockedFetch = new MockFetch({
+    fetch = fetchFunc || createMockFetch({
       url,
-      opts: {
+      opts: merge(opts, {
         body: JSON.stringify(printedRequests),
         headers:  {
           Accept: '*/*',
           'Content-Type': 'application/json',
         },
         method: 'POST',
-      },
+      }),
       result: createMockedIResponse(resultList),
     });
-    fetch = mockedFetch.getFetch();
 
     return batchedNetworkInterface.batchQuery(requestResultPairs.map(({ request }) => request))
       .then((results) => {
         assert.deepEqual(results, resultList);
       });
+  };
+
+  // Some helper queries + results
+  const authorQuery = gql`
+    query {
+      author {
+        firstName
+        lastName
+      }
+    }`;
+
+  const authorResult = {
+    data: {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    },
+  };
+
+  const personQuery = gql`
+    query {
+      person {
+        name
+      }
+    }`;
+  const personResult = {
+    data: {
+      person: {
+        name: 'John Smith',
+      },
+    },
   };
 
   it('should construct itself correctly', () => {
@@ -146,22 +118,110 @@ describe('HTTPBatchedNetworkInterface', () => {
   });
 
   it('should correctly return the result for a single request', () => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-    const result = {
-      data: {
-        firstName: 'John',
-        lastName: 'Smith',
+    return assertRoundtrip({
+      requestResultPairs: [{
+        request: { query: authorQuery },
+        result: authorResult,
+      }],
+    });
+  });
+
+  it('should correctly return the results for multiple requests', () => {
+    return assertRoundtrip({
+      requestResultPairs: [
+        {
+          request: { query: authorQuery },
+          result: authorResult,
+        },
+        {
+          request: { query: personQuery },
+          result: personResult,
+        },
+      ],
+    });
+  });
+
+  describe('errors', () => {
+    it('should return errors thrown by fetch', (done) => {
+      const err = new Error('Error of some kind thrown by fetch.');
+      const fetchFunc = () => { throw err };
+      assertRoundtrip({
+        requestResultPairs: [{
+          request: { query: authorQuery },
+          result: authorResult,
+        }],
+        fetchFunc,
+      }).then(() => {
+        done(new Error('Assertion passed when it should not have.'));
+      }).catch((error) => {
+        assert(error);
+        assert.deepEqual(error, err);
+        done();
+      });
+    });
+
+    it('should return errors thrown by middleware', (done) => {
+      const err = new Error('Error of some kind thrown by middleware.');
+      const errorMiddleware: MiddlewareInterface = {
+        applyMiddleware() {
+          throw err;
+        },
+      };
+      assertRoundtrip({
+        requestResultPairs: [{
+          request: { query: authorQuery },
+          result: authorResult,
+        }],
+        middlewares: [ errorMiddleware ],
+      }).then(() => {
+        done(new Error('Returned a result when it should not have.'));
+      }).catch((error) => {
+        assert.deepEqual(error, err);
+        done();
+      });
+    });
+
+    it('should return errors thrown by afterware', (done) => {
+      const err = new Error('Error of some kind thrown by afterware.');
+      const errorAfterware: AfterwareInterface = {
+        applyAfterware() {
+          throw err;
+        },
+      };
+      assertRoundtrip({
+        requestResultPairs: [{
+          request: { query: authorQuery },
+          result: authorResult,
+        }],
+        afterwares: [ errorAfterware ],
+      }).then(() => {
+        done(new Error('Returned a result when it should not have.'));
+      }).catch((error) => {
+        assert.deepEqual(error, err);
+        done();
+      });
+    });
+  });
+
+  it('middleware should be able to modify requests/options', () => {
+    const changeMiddleware: MiddlewareInterface = {
+      applyMiddleware({ request, options }, next) {
+        options.headers['Content-Length'] = '18';
+        next();
       },
     };
+
+    const customHeaders: { [index: string]: string } = {
+      'Content-Length': '18',
+    };
+    const options = { headers: customHeaders };
     return assertRoundtrip({
-      request: { query },
-      result,
+      requestResultPairs: [{
+        request: { query: authorQuery },
+        result: authorResult,
+      }],
+      opts: options,
+      middlewares: [ changeMiddleware ],
     });
   });
 });

@@ -3478,7 +3478,7 @@ function testDiffing(
   config: {
     dataIdFromObject?: IdGetter,
   },
-  done: () => void
+  done: (err?: Error) => void
 ) {
   const mockedResponses = queryArray.map(({
     diffedQuery,
@@ -3508,21 +3508,11 @@ function testDiffing(
       }).then((result) => {
         assert.deepEqual(result.data, fullResponse);
         cb();
-      }).catch((err) => {
-        /* tslint:disable */
-        console.log(err.graphQLErrors);
-        console.log(err.networkError);
-        /* tslint:enable */
-        throw err;
       });
     };
   });
 
   series(steps, (err, res) => {
-    if (err) {
-      throw err;
-    }
-
-    done();
+    done(err);
   });
 }

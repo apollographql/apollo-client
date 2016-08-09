@@ -26,6 +26,7 @@ import {
   Document,
   Selection,
   FragmentDefinition,
+  OperationDefinition,
 } from 'graphql';
 
 import {
@@ -424,12 +425,6 @@ interface FieldDiffResult {
   isMissing?: 'true';
 }
 
-function collectUsedVariablesFromQuery(query: Document) {
-  const queryDef = getQueryDefinition(query);
-
-  return collectUsedVariablesFromSelectionSet(queryDef.selectionSet);
-}
-
 function collectUsedVariablesFromSelectionSet(selectionSet: SelectionSet) {
   return uniq(flatten(selectionSet.selections.map((selection) => {
     if (isField(selection)) {
@@ -438,7 +433,7 @@ function collectUsedVariablesFromSelectionSet(selectionSet: SelectionSet) {
       return collectUsedVariablesFromSelectionSet(selection.selectionSet);
     } else {
       // Some named fragment. Don't handle it here, rely on the caller
-      // to process fragments separately with collectUsedVariablesFromFragment.
+      // to process fragments separately.
       return [];
     }
   })));
@@ -467,21 +462,13 @@ function collectUsedVariablesFromField(field: Field) {
   return uniq(variables);
 }
 
-export function removeUnusedVariablesFromDiffedQuery (
+export function removeUnusedVariablesFromQuery (
   query: Document
 ): void {
   const queryDef = getQueryDefinition(query);
-  const usedVariables = collectUsedVariablesFromQuery(query);
-
-  query.definitions.forEach((definition) => {
-    if (definition.kind !== 'FragmentDefinition') {
-      return;
-    }
-
-    usedVariables.push(...collectUsedVariablesFromSelectionSet(
-      (definition as FragmentDefinition).selectionSet
-    ));
-  });
+  const usedVariables = flatten(
+    query.definitions.map((def) => collectUsedVariablesFromSelectionSet(
+      (def as FragmentDefinition | OperationDefinition).selectionSet)));
 
   if (!queryDef.variableDefinitions) {
     return;

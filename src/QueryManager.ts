@@ -57,7 +57,7 @@ import {
 
 import {
   diffSelectionSetAgainstStore,
-  removeUnusedVariablesFromDiffedQuery,
+  removeUnusedVariablesFromQuery,
 } from './data/diffAgainstStore';
 
 import {
@@ -692,7 +692,7 @@ export class QueryManager {
         fragmentMap,
       });
 
-      removeUnusedVariablesFromDiffedQuery(diffedQuery);
+      removeUnusedVariablesFromQuery(diffedQuery);
     }
 
     return {

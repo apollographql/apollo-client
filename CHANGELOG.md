@@ -3,7 +3,8 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Fixed an issue with named fragments in batched queries. [PR #509](https://github.com/apollostack/apollo-client/pull/509) and [Issue #https://github.com/apollostack/apollo-client/issues/501](https://github.com/apollostack/apollo-client/issues/501).
+- Fixed an issue with named fragments in batched queries. [PR #509](https://github.com/apollostack/apollo-client/pull/509) and [Issue #501](https://github.com/apollostack/apollo-client/issues/501).
+- Fixed an issue with unused variables in queries after diffing queries against information available in the store. [PR #518](https://github.com/apollostack/apollo-client/pull/518) and [Issue #496](https://github.com/apollostack/apollo-client/issues/496).
 
 - Add code that support GraphQL subscription over websockets. [PR #517](https://github.com/apollostack/apollo-client/pull/517).
 

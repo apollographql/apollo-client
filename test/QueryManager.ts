@@ -1173,7 +1173,7 @@ describe('QueryManager', () => {
           }
         `,
         diffedQuery: gql`
-          query getSeveralPeople($lukeId: String!, $vaderId: String!) {
+          query getSeveralPeople($vaderId: String!) {
             vader: people_one(id: $vaderId) {
               __typename
               id
@@ -1203,6 +1203,111 @@ describe('QueryManager', () => {
         variables: {
           lukeId: '1',
           vaderId: '4',
+        },
+      },
+    ], {}, done);
+  });
+
+  it('diffs queries with fragments, removing unused variables', (done) => {
+    testDiffing([
+      {
+        query: gql`
+          query one ($fullName: String!) {
+            people_one(id: "1") {
+              ...personInfo
+            }
+          }
+
+          fragment personInfo on Person {
+            __typename,
+            id,
+            name(fullName: $fullName)
+          }
+        `,
+        diffedQuery: gql`
+          query one ($fullName: String!) {
+            people_one(id: "1") {
+              ...personInfo
+            }
+          }
+
+          fragment personInfo on Person {
+            __typename,
+            id,
+            name(fullName: $fullName)
+          }
+        `,
+        diffedQueryResponse: {
+          people_one: {
+            __typename: 'Person',
+            id: '1',
+            name: 'Luke Skywalker',
+          },
+        },
+        fullResponse: {
+          people_one: {
+            __typename: 'Person',
+            id: '1',
+            name: 'Luke Skywalker',
+          },
+        },
+        variables: {
+          fullName: 'Edmonds Karp',
+        },
+      },
+      {
+        query: gql`
+          query getSeveralPeople($lukeId: String!, $vaderId: String!, $fullName: String!) {
+            luke: people_one(id: $lukeId) {
+              ...personInfo
+            }
+            vader: people_one(id: $vaderId) {
+              ...personInfo
+            }
+          }
+
+          fragment personInfo on Person {
+            __typename,
+            id,
+            name(fullName: $fullName)
+          }
+        `,
+        diffedQuery: gql`
+          query getSeveralPeople($vaderId: String!, $fullName: String!) {
+            vader: people_one(id: $vaderId) {
+              ...personInfo
+            }
+          }
+
+          fragment personInfo on Person {
+            __typename,
+            id,
+            name(fullName: $fullName)
+          }
+        `,
+        diffedQueryResponse: {
+          vader: {
+            __typename: 'Person',
+            id: '4',
+            name: 'Darth Vader',
+          },
+        },
+        fullResponse: {
+          luke: {
+            __typename: 'Person',
+            id: '1',
+            name: 'Luke Skywalker',
+          },
+          vader: {
+            __typename: 'Person',
+            id: '4',
+            name: 'Darth Vader',
+          },
+        },
+        variables: {
+          lukeId: '1',
+          vaderId: '4',
+          fullName: 'Edmonds Karp',
         },
       },
     ], {}, done);
@@ -2984,7 +3089,7 @@ function testDiffing(
   config: {
     dataIdFromObject?: IdGetter,
   },
-  done: () => void
+  done: (err?: Error) => void
 ) {
   const mockedResponses = queryArray.map(({
     diffedQuery,
@@ -3019,10 +3124,6 @@ function testDiffing(
   });
 
   series(steps, (err, res) => {
-    if (err) {
-      throw err;
-    }
-
-    done();
+    done(err);
   });
 }

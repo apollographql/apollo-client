@@ -27,6 +27,7 @@ import {
   Selection,
   FragmentDefinition,
   OperationDefinition,
+  Variable,
 } from 'graphql';
 
 import {
@@ -445,7 +446,7 @@ function collectUsedVariablesFromField(field: Field) {
   if (field.arguments) {
     variables = flatten(field.arguments.map((arg) => {
       if (arg.value.kind === 'Variable') {
-        return [(arg.value as any).name.value];
+        return [(arg.value as Variable).name.value];
       }
 
       return [];

@@ -2,6 +2,7 @@ import {
   NetworkInterface,
   createNetworkInterface,
   addQueryMerging,
+  addGraphQLSubscriptions,
 } from './networkInterface';
 
 import {
@@ -82,6 +83,7 @@ import flatten = require('lodash.flatten');
 export {
   createNetworkInterface,
   addQueryMerging,
+  addGraphQLSubscriptions,
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,
@@ -172,6 +174,7 @@ export default class ApolloClient {
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public batchInterval: number;
+  public wsClient: any;
 
   constructor({
     networkInterface,
@@ -184,6 +187,7 @@ export default class ApolloClient {
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
     batchInterval,
+    wsClient,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -195,6 +199,7 @@ export default class ApolloClient {
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
     batchInterval?: number,
+    wsClient?: any,
   } = {}) {
     this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
     this.initialState = initialState ? initialState : {};
@@ -206,6 +211,7 @@ export default class ApolloClient {
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.batchInterval = batchInterval;
+    this.wsClient = wsClient;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -309,6 +315,7 @@ export default class ApolloClient {
       queryTransformer: this.queryTransformer,
       shouldBatch: this.shouldBatch,
       batchInterval: this.batchInterval,
+      wsClient: this.wsClient,
     });
   };
 }

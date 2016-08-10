@@ -89,6 +89,7 @@ export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetw
 }
 
 export function addGraphQLSubscriptions(networkInterface: NetworkInterface, wsClient: any): SubscriptionNetworkInterface {
+  console.log("adding graphql subs to network");
   return assign(networkInterface, {
     subscribe(request: Request, handler: (error, result) => void) {
       wsClient.subscribe({

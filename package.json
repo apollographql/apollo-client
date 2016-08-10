@@ -1,6 +1,6 @@
 {
-  "name": "amandas-dummy-package",
-  "version": "0.0.3",
+  "name": "apollo-client",
+  "version": "0.4.11",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",

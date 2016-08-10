@@ -2,6 +2,7 @@ import {
   NetworkInterface,
   SubscriptionNetworkInterface,
   Request,
+  addGraphQLSubscriptions,
 } from './networkInterface';
 
 import forOwn = require('lodash.forown');
@@ -143,6 +144,7 @@ export class QueryManager {
     queryTransformer,
     shouldBatch = false,
     batchInterval = 10,
+    wsClient,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -150,6 +152,7 @@ export class QueryManager {
     queryTransformer?: QueryTransformer,
     shouldBatch?: Boolean,
     batchInterval?: number,
+    wsClient?: any,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -165,6 +168,10 @@ export class QueryManager {
     this.scheduler = new QueryScheduler({
       queryManager: this,
     });
+
+    if (wsClient) {
+      this.networkInterface = addGraphQLSubscriptions(this.networkInterface, wsClient);
+    }
 
     this.batcher = new QueryBatcher({
       shouldBatch,
@@ -363,6 +370,7 @@ export class QueryManager {
   // referenced by the query.
   // These fragments are used to compose queries out of a bunch of fragments for UI components.
   public watchQuery(options: WatchQueryOptions, shouldSubscribe = true, graphQLSubscription = false): ObservableQuery {
+    console.log('watchQuery graphQLSub:', graphQLSubscription);
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
@@ -613,6 +621,8 @@ export class QueryManager {
       return [];
     }
     const resultBehaviors = [];
+    console.log('updateQueries', updateQueries);
+    console.log('mutationResult', mutationResult);
 
     Object.keys(updateQueries).forEach((queryName) => {
       const reducer = updateQueries[queryName];

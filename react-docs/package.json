@@ -16,6 +16,7 @@
     "hexo-renderer-less": "^0.2.0",
     "hexo-renderer-marked": "^0.2.4",
     "hexo-server": "^0.1.2",
+    "hexo-typescript-api-box": "^0.5.0",
     "lodash": "^4.13.1",
     "showdown": "^1.4.2",
     "typedoc": "github:tmeasday/typedoc#add-source-to-json-built"

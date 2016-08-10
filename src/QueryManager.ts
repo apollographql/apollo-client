@@ -57,6 +57,7 @@ import {
 
 import {
   diffSelectionSetAgainstStore,
+  removeUnusedVariablesFromQuery,
 } from './data/diffAgainstStore';
 
 import {
@@ -690,6 +691,8 @@ export class QueryManager {
         name: queryDef.name,
         fragmentMap,
       });
+
+      removeUnusedVariablesFromQuery(diffedQuery);
     }
 
     return {
@@ -698,7 +701,7 @@ export class QueryManager {
     };
   }
 
-  // Takes a request id, query id, a query document and information asscoaiated with the query
+  // Takes a request id, query id, a query document and information associated with the query
   // (e.g. variables, fragment map, etc.) and send it to the network interface. Returns
   // a promise for the result associated with that request.
   private fetchRequest({

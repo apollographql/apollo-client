@@ -84,6 +84,7 @@ import {
 
 import { Observer, Subscription } from './util/Observable';
 import { tryFunctionOrLogError } from './util/errorHandling';
+import { checkVariablesTypes } from './util/queryVariablesTypeChecking';
 
 import {
   ApolloError,
@@ -224,6 +225,9 @@ export class QueryManager {
     }
 
     let mutationDef = getMutationDefinition(mutation);
+
+    checkVariablesTypes(mutationDef, variables);
+
     const mutationString = print(mutation);
     const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
     const request = {
@@ -807,6 +811,9 @@ export class QueryManager {
       fragmentMap,
     } = this.transformQueryDocument(options);
     const queryDef = getQueryDefinition(queryDoc);
+
+    checkVariablesTypes(queryDef, variables);
+
     const queryString = print(queryDoc);
     const querySS = {
       id: 'ROOT_QUERY',

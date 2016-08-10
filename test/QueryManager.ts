@@ -624,6 +624,47 @@ describe('QueryManager', () => {
     });
   });
 
+  it('exposes errors on a refetch as a rejection', (done) => {
+    const request = {
+      query: gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }`,
+    };
+    const firstResult = {
+      data: {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      },
+    };
+    const secondResult = {
+      errors: [
+        {
+          name: 'PeopleError',
+          message: 'This is not the person you are looking for.',
+        },
+      ],
+    };
+
+    const queryManager = mockRefetch({ request, firstResult, secondResult });
+
+    const handle = queryManager.watchQuery(request);
+    handle.subscribe({});
+
+    handle.refetch().catch((error) => {
+      assert.deepEqual(error.graphQLErrors, [
+        {
+          name: 'PeopleError',
+          message: 'This is not the person you are looking for.',
+        },
+      ]);
+      done();
+    });
+  });
+
   it('allows you to refetch queries with new variables', (done) => {
     const query = gql`
       {

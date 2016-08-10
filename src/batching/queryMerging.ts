@@ -57,6 +57,8 @@ import {
 
 import assign = require('lodash.assign');
 import cloneDeep = require('lodash.clonedeep');
+import isArray = require('lodash.isarray');
+import isNull = require('lodash.isnull');
 
 // Merges requests together.
 // NOTE: This is pretty much the only function from this file that should be
@@ -112,6 +114,16 @@ export function unpackMergedResult(
   return resultArray;
 }
 
+export type UnpackOptions = {
+  request: Request,
+  data: Object,
+  selectionSet?: SelectionSet,
+  queryIndex: number,
+  startIndex: number,
+  fragmentMap: FragmentMap,
+  topLevel: boolean,
+}
+
 // This method takes a particular request and extracts the fields that the query asks for out of
 // a merged request. It does this by recursively stepping through the query, figuring out what
 // the names of fields would be aliased to and then reading those fields out of of the merged result.
@@ -126,15 +138,7 @@ export function unpackDataForRequest({
   startIndex,
   fragmentMap,
   topLevel,
-}: {
-  request: Request,
-  data: Object,
-  selectionSet?: SelectionSet,
-  queryIndex: number,
-  startIndex: number,
-  fragmentMap: FragmentMap,
-  topLevel: boolean,
-}): {
+}: UnpackOptions): {
   newIndex: number,
   unpackedData: Object,
 } {
@@ -157,26 +161,52 @@ export function unpackDataForRequest({
       const realName = resultKeyNameFromField(field);
       const aliasName = getOperationDefinitionName(getQueryDefinition(request.query), queryIndex);
       const stringKey = topLevel ? `${aliasName}___fieldIndex_${currIndex}` : realName;
-      unpackedData[realName] = data[stringKey];
       if (topLevel) {
         currIndex += 1;
       }
 
+      let childData = isNull(data) ? null : data[stringKey];
       if (field.selectionSet && field.selectionSet.selections.length > 0) {
-        const selectionRet = unpackDataForRequest({
+        const fieldOpts = {
           request,
-          data: data[stringKey],
+          data: childData,
           selectionSet: field.selectionSet,
           queryIndex,
-          startIndex: currIndex,
           fragmentMap,
+          startIndex: currIndex,
           topLevel: false,
-        });
+        };
 
-        // Create keys for internal fragments
-        unpackedData[realName] = selectionRet.unpackedData;
-        currIndex = selectionRet.newIndex;
+        if (isNull(childData)) {
+          childData = null;
+          const selectionRet = unpackDataForRequest(assign(fieldOpts, {
+            startIndex: currIndex,
+          }) as UnpackOptions);
+          currIndex = selectionRet.newIndex;
+        } else if (isArray(childData)) {
+          const resUnpacked = [];
+          let newIndex = 0;
+
+          data[stringKey].forEach((dataObject) => {
+            const selectionRet = unpackDataForRequest(assign(fieldOpts, {
+              data: dataObject,
+              startIndex: currIndex,
+            }) as UnpackOptions);
+
+            newIndex = selectionRet.newIndex;
+            resUnpacked.push(selectionRet.unpackedData);
+          });
+
+          currIndex = newIndex;
+          childData = resUnpacked;
+        } else {
+          const selectionRet = unpackDataForRequest(assign(fieldOpts, { startIndex: currIndex }) as UnpackOptions);
+          // Create keys for internal fragments
+          childData = selectionRet.unpackedData;
+          currIndex = selectionRet.newIndex;
+        }
       }
+      unpackedData[realName] = childData;
     } else if (selection.kind === 'InlineFragment') {
       // If this is an inline fragment, then we recursively resolve the fields within the
       // inline fragment.

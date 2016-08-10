@@ -1163,5 +1163,31 @@ describe('Query merging', () => {
       });
       assert.deepEqual(unpackedData, result);
     });
+
+    it('should work with a null response for a fragment field', () => {
+      const query = gql`
+        query authorNames {
+          author {
+            ...authorInfo
+          }
+        }
+        fragment authorInfo on Author {
+          firstName
+          lastName
+        }`;
+      const result = {
+        author: {
+          firstName: null,
+          lastName: 'Smith',
+        },
+      };
+      const { unpackedData } = unpackQueryResult(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': {
+          '___authorNames___requestIndex_0___fieldIndex_1': null,
+          '___authorNames___requestIndex_0___fieldIndex_2': 'Smith',
+        },
+      });
+      assert.deepEqual(unpackedData, result);
+    });
   });
 });

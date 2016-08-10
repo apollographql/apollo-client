@@ -4,9 +4,6 @@ const { assert } = chai;
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 
-import assign = require('lodash.assign');
-import clonedeep = require('lodash.clonedeep');
-
 import gql from 'graphql-tag';
 
 describe('simple type checking on variables', () => {

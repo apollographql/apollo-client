@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Fixed an issue with named fragments in batched queries. [PR #509](https://github.com/apollostack/apollo-client/pull/509) and [Issue #501](https://github.com/apollostack/apollo-client/issues/501).
 - Fixed an issue with unused variables in queries after diffing queries against information available in the store. [PR #518](https://github.com/apollostack/apollo-client/pull/518) and [Issue #496](https://github.com/apollostack/apollo-client/issues/496).
+- Added `resultTransformer` and `resultComparator` to `ApolloClient`/`QueryManager`, which afford the ability to transform result objects immediately before they are returned to the application. [PR #446](https://github.com/apollostack/apollo-client/pull/446)
 
 ### v0.4.11
 
@@ -23,8 +24,6 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Fixed issue with `fragments` array for `updateQueries`. [PR #475](https://github.com/apollostack/apollo-client/pull/475) and [Issue #470](https://github.com/apollostack/apollo-client/issues/470).
 - Add a new experimental feature to observable queries called `fetchMore`. It allows application developers to update the results of a query in the store by issuing new queries. We are currently testing this feature internally and we will document it once it is stable. [PR #472](https://github.com/apollostack/apollo-client/pull/472).
-
-- Added `resultTransformer` and `resultComparator` to `ApolloClient`/`QueryManager`, which afford the ability to transform result objects immediately before they are returned to the application. [PR #446](https://github.com/apollostack/apollo-client/pull/446)
 
 ### v0.4.8
 

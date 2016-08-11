@@ -370,7 +370,6 @@ export class QueryManager {
   // referenced by the query.
   // These fragments are used to compose queries out of a bunch of fragments for UI components.
   public watchQuery(options: WatchQueryOptions, shouldSubscribe = true, graphQLSubscription = false): ObservableQuery {
-    console.log('watchQuery graphQLSub:', graphQLSubscription);
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
@@ -540,7 +539,6 @@ export class QueryManager {
       query,
       variables,
       fragments = [],
-      handler,
     } = options;
 
     let queryDoc = addFragmentsToDocument(query, fragments);
@@ -548,13 +546,25 @@ export class QueryManager {
     if (this.queryTransformer) {
       queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
     }
-
     const request: Request = {
       query: queryDoc,
       variables,
       operationName: getOperationName(queryDoc),
     };
 
+    const handler = (error, result) => {
+      this.store.dispatch({
+        type: 'APOLLO_UPDATE_QUERY_RESULT',
+        newResult: result,
+        queryVariables: variables,
+        querySelectionSet: getQueryDefinition(queryDoc).selectionSet,
+        queryFragments: fragments,
+      });
+    };
+
+
+    // QueryManager sets up the handler so the query can be transformed. Alternatively,
+    // pass in the transformer to the ObservableQuery.
     return (this.networkInterface as SubscriptionNetworkInterface).subscribe(request, handler);
   };
 
@@ -621,8 +631,6 @@ export class QueryManager {
       return [];
     }
     const resultBehaviors = [];
-    console.log('updateQueries', updateQueries);
-    console.log('mutationResult', mutationResult);
 
     Object.keys(updateQueries).forEach((queryName) => {
       const reducer = updateQueries[queryName];

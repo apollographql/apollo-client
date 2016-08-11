@@ -156,15 +156,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         query: this.options.query,
         variables: this.options.variables,
         fragments: this.options.fragments,
-        handler: (error, result) => {
-          this.queryManager.store.dispatch({
-            type: 'APOLLO_UPDATE_QUERY_RESULT',
-            newResult: result.data,
-            queryVariables: this.options.variables,
-            querySelectionSet: getQueryDefinition(this.options.query).selectionSet,
-            queryFragments: this.options.fragments,
-          });
-        },
+        handler: null,
       };
 
       if (graphQLSubscription) {

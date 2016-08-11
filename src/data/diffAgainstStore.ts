@@ -25,6 +25,9 @@ import {
   Field,
   Document,
   Selection,
+  FragmentDefinition,
+  OperationDefinition,
+  Variable,
 } from 'graphql';
 
 import {
@@ -40,6 +43,8 @@ import {
 import {
   ApolloError,
 } from '../errors';
+
+import flatten = require('lodash.flatten');
 
 export interface DiffResult {
   result: any;
@@ -419,4 +424,68 @@ Perhaps you want to use the \`returnPartialData\` option?`,
 interface FieldDiffResult {
   result?: any;
   isMissing?: 'true';
+}
+
+function collectUsedVariablesFromSelectionSet(selectionSet: SelectionSet) {
+  return uniq(flatten(selectionSet.selections.map((selection) => {
+    if (isField(selection)) {
+      return collectUsedVariablesFromField(selection);
+    } else if (isInlineFragment(selection)) {
+      return collectUsedVariablesFromSelectionSet(selection.selectionSet);
+    } else {
+      // Some named fragment. Don't handle it here, rely on the caller
+      // to process fragments separately.
+      return [];
+    }
+  })));
+}
+
+function collectUsedVariablesFromField(field: Field) {
+  let variables = [];
+
+  if (field.arguments) {
+    variables = flatten(field.arguments.map((arg) => {
+      if (arg.value.kind === 'Variable') {
+        return [(arg.value as Variable).name.value];
+      }
+
+      return [];
+    }));
+  }
+
+  if (field.selectionSet) {
+    variables = [
+        ...variables,
+        ...collectUsedVariablesFromSelectionSet(field.selectionSet),
+    ];
+  }
+
+  return uniq(variables);
+}
+
+export function removeUnusedVariablesFromQuery (
+  query: Document
+): void {
+  const queryDef = getQueryDefinition(query);
+  const usedVariables = flatten(
+    query.definitions.map((def) => collectUsedVariablesFromSelectionSet(
+      (def as FragmentDefinition | OperationDefinition).selectionSet)));
+
+  if (!queryDef.variableDefinitions) {
+    return;
+  }
+
+  const diffedVariableDefinitions =
+    queryDef.variableDefinitions.filter((variableDefinition) => {
+      return usedVariables.indexOf(
+        variableDefinition.variable.name.value) !== -1;
+    });
+
+  queryDef.variableDefinitions = diffedVariableDefinitions;
+}
+
+function uniq(array) {
+  return array.filter(
+    (item, index, arr) =>
+      arr.indexOf(item) === index);
 }

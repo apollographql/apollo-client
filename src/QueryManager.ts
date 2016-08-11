@@ -675,6 +675,15 @@ export class QueryManager {
     };
   }
 
+  // Give the result transformer a chance to observe or modify result data before it is passed on.
+  public transformResult(result: ApolloQueryResult): ApolloQueryResult {
+    if (!this.resultTransformer) {
+      return result;
+    } else {
+      return this.resultTransformer(result);
+    }
+  }
+
   private collectResultBehaviorsFromUpdateQueries(
     updateQueries: MutationQueryReducersMap,
     mutationResult: Object,
@@ -1004,15 +1013,6 @@ export class QueryManager {
   private isDifferentResult(queryId: string, result: ApolloQueryResult): boolean {
     const comparator = this.resultComparator || isEqual;
     return !comparator(this.queryResults[queryId], result);
-  }
-
-  // Give the result transformer a chance to observe or modify result data before it is passed on.
-  private transformResult(result: ApolloQueryResult): ApolloQueryResult {
-    if (!this.resultTransformer) {
-      return result;
-    } else {
-      return this.resultTransformer(result);
-    }
   }
 
   private broadcastQueries() {

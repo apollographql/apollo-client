@@ -23,7 +23,7 @@ export default function mockNetworkInterface(
 
 export function mockBatchedNetworkInterface(
     ...mockedResponses: MockedResponse[]
-): NetworkInterface {
+): BatchedNetworkInterface {
   return new MockBatchedNetworkInterface(...mockedResponses);
 }
 
@@ -69,7 +69,6 @@ export class MockNetworkInterface implements NetworkInterface {
 
       const key = requestToKey(parsedRequest);
       const responses = this.mockedResponsesByKey[key];
-
       if (!responses || responses.length === 0) {
         throw new Error(`No more mocked responses for the query: ${print(request.query)}, variables: ${JSON.stringify(request.variables)}`);
       }

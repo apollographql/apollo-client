@@ -228,58 +228,6 @@ export class HTTPFetchNetworkInterface implements HTTPNetworkInterface {
       }
     });
   }
-
-  public batchedFetchFromRemoteEndpoint(
-    requestsAndOptions: RequestAndOptions[]
-  ): Promise<IResponse> {
-    const options: RequestInit = {};
-
-    // Combine all of the options given by the middleware into one object.
-    requestsAndOptions.forEach((requestAndOptions) => {
-      assign(options, requestAndOptions.options);
-    });
-
-    // Serialize the requests to strings of JSON
-    const printedRequests = requestsAndOptions.map(({ request }) => {
-      return printRequest(request);
-    });
-
-    return fetch(this._uri, assign({}, this._opts, options, {
-      body: JSON.stringify(printedRequests),
-      headers: assign({}, options.headers, {
-        Accept: '*/*',
-        'Content-Type': 'application/json',
-      }),
-      method: 'POST',
-    }));
-  };
-
-  public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
-    const options = assign({}, this._opts);
-
-    // Apply the middlewares to each of the requests
-    const middlewarePromises: Promise<RequestAndOptions>[] = [];
-    requests.forEach((request) => {
-      middlewarePromises.push(this.applyMiddlewares({
-        request,
-        options,
-      }));
-    });
-
-    Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
-      this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
-        .then(result => result.json())
-        .then(responses => {
-          responses.map((response, index) => {
-            return this.applyAfterwares({
-              response,
-              options: requestsAndOptions[index].options,
-            });
-          })
-        });
-    });
-    return null;
-  }
 }
 
 export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {

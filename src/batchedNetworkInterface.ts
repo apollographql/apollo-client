@@ -59,7 +59,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
         return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
           .then(result => {
-            return result.json()
+            return result.json();
           })
           .then(responses => {
             const afterwaresPromises = responses.map((response, index) => {
@@ -67,7 +67,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
                 response,
                 options: requestsAndOptions[index].options,
               });
-            })
+            });
 
             Promise.all(afterwaresPromises).then((responsesAndOptions: {
               response: IResponse,

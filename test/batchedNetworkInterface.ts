@@ -1,6 +1,5 @@
 import { assert } from 'chai';
 
-import assign = require('lodash.assign');
 import merge = require('lodash.merge');
 
 import { HTTPBatchedNetworkInterface } from '../src/batchedNetworkInterface';
@@ -144,7 +143,7 @@ describe('HTTPBatchedNetworkInterface', () => {
   describe('errors', () => {
     it('should return errors thrown by fetch', (done) => {
       const err = new Error('Error of some kind thrown by fetch.');
-      const fetchFunc = () => { throw err };
+      const fetchFunc = () => { throw err; };
       assertRoundtrip({
         requestResultPairs: [{
           request: { query: authorQuery },
@@ -205,7 +204,7 @@ describe('HTTPBatchedNetworkInterface', () => {
 
   it('middleware should be able to modify requests/options', () => {
     const changeMiddleware: MiddlewareInterface = {
-      applyMiddleware({ request, options }, next) {
+      applyMiddleware({ options }, next) {
         options.headers['Content-Length'] = '18';
         next();
       },

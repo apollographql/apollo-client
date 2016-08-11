@@ -10,7 +10,7 @@ To install `apollo`, run both of these commands:
 
 ```text
 meteor add apollo
-meteor npm install --save apollo-client apollo-server express
+meteor npm install --save apollo-client apollo-server express graphql
 ```
 
 ## Usage

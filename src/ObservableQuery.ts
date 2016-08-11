@@ -104,7 +104,8 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
         forceFetch: true,
         variables,
-      }) as WatchQueryOptions);
+      }) as WatchQueryOptions)
+      .then(result => this.queryManager.transformResult(result));
     };
 
     this.fetchMore = (fetchMoreOptions: WatchQueryOptions & FetchMoreOptions) => {

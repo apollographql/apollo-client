@@ -236,6 +236,7 @@ const MyComponentWithUpvoteAndDownvote = graphql(DOWNVOTE, {
 })(MyComponentWithUpvote);
 ```
 
+
 <h4 id="graphql-props">Using `props`</h4>
 
 If you want a greater level of control, use the `props` to map the query results (or mutation, as we'll see [below](#graphql-mutations)) to the props to be passed to the child component:
@@ -385,6 +386,25 @@ const MyComponentWithMutation = graphql(ADD_TASK, {
 ```
 
 > Note that in general you shouldn't attempt to use the results from the mutation callback directly, but instead write a [`updateQueries`](../apollo-client/mutations.html#updating-query-results) callback to update the result of relevant queries with your mutation results.
+
+
+<h4 name='with-ref'>withRef</h4>
+
+If you need to get access to the instance of the wrapped component, you can use `withRef` in the options.
+This will allow a `getWrappedInstance` method on the returned component which will return the wrapped instance.
+
+```js
+import React, { Component } from 'react';
+import { graphql } from 'react-apollo';
+
+class MyComponent extends Component { ... }
+
+const MyComponentWithUpvote = graphql(UPVOTE, {
+  withRef: 'true'
+})(MyComponent);
+
+// MyComponentWithUpvote.getWrappedInstance() returns MyComponent instance
+```
 
 <h2 id="withApollo">The `withApollo` container</h2>
 

@@ -59,6 +59,7 @@ import assign = require('lodash.assign');
 import cloneDeep = require('lodash.clonedeep');
 import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
+import isUndefined = require('lodash.isundefined');
 
 // Merges requests together.
 // NOTE: This is pretty much the only function from this file that should be
@@ -178,7 +179,6 @@ export function unpackDataForRequest({
         };
 
         if (isNull(childData)) {
-          childData = null;
           const selectionRet = unpackDataForRequest(assign(fieldOpts, {
             startIndex: currIndex,
           }) as UnpackOptions);
@@ -206,7 +206,10 @@ export function unpackDataForRequest({
           currIndex = selectionRet.newIndex;
         }
       }
-      unpackedData[realName] = childData;
+
+      if (!isUndefined(childData)) {
+        unpackedData[realName] = childData;
+      }
     } else if (selection.kind === 'InlineFragment') {
       // If this is an inline fragment, then we recursively resolve the fields within the
       // inline fragment.

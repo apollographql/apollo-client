@@ -1189,5 +1189,26 @@ describe('Query merging', () => {
       });
       assert.deepEqual(unpackedData, result);
     });
+
+    it('should work with directives', () => {
+      const query = gql`
+        query authorNames {
+          author {
+            firstName @skip(if: true)
+            lastName
+          }
+        }`;
+      const result = {
+        author: {
+          lastName: 'Pandya',
+        },
+      };
+      const { unpackedData } = unpackQueryResult(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': {
+          lastName: 'Pandya',
+        },
+      });
+      assert.deepEqual(unpackedData, result);
+    });
   });
 });

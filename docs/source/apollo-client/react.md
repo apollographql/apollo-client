@@ -60,7 +60,8 @@ const MyComponent = (props) => <div>...</div>;
 
 // MyComponentWithData provides the query or mutation defined by
 // QUERY_OR_MUTATION to MyComponent. We'll see how below.
-const MyComponentWithData = graphql(QUERY_OR_MUTATION, options)(MyComponent);
+const withData = graphql(QUERY_OR_MUTATION, options);
+const MyComponentWithData = withData(MyComponent);
 ```
 
 If you are using [ES2016 decorators](https://medium.com/google-developers/exploring-es7-decorators-76ecb65fb841#.nn723s5u2), you may prefer the decorator syntax, although we'll use the older syntax in this guide:
@@ -79,7 +80,7 @@ class MyComponent extends Component {
 
 <h3 id="graphql-queries">For Queries</h3>
 
-The first, and only required, argument of `graphql` is a [graphql](https://www.npmjs.com/package/graphql) document. You can compile such documents from query strings using the [graphql-tag](../apollo-client/index.html#gql) library.
+The first, and only required, argument of `graphql` is a [graphql](https://www.npmjs.com/package/graphql) document. Use the `gql` template literal you can get from [graphql-tag](../apollo-client/index.html#gql) which parses the query string.
 
 ```js
 import React, { Component } from 'react';
@@ -104,7 +105,8 @@ const GET_USER = gql`
   }
 `;
 
-const MyComponentWithData = graphql(GET_USER)(MyComponent);
+const withUser = graphql(GET_USER);
+const MyComponentWithData = withUser(MyComponent);
 ```
 
 <h4 id="default-result-props">Default Result Props</h4>
@@ -134,20 +136,13 @@ Using `graphql` with queries makes it easy to bind data to components. As seen a
 
   The subscription created on this query will be merged into the passed props so you can dynamically refetch, change polling settings, or even unsubscribe to this query. The methods include `stopPolling`, `startPolling`, `refetch`, and `fetchMore`.
 
-- [`query`](../apollo-client/queries.html#query)
-
-  Sometimes you may want to call a custom query within a component. To make this possible, `graphql` passes the query method from ApolloClient as a prop
-
-- [`mutate`](../apollo-client/mutations.html#mutate)
-
-  Sometimes you may want to call a custom mutation within a component. To make this possible, `graphql` passes the mutate method from ApolloClient as a prop
 
 <h3 id="graphql-options">Providing `options`</h3>
 
 If you want to configure the query (or the mutation, as we'll see below), you can provide an `options` function on the second argument to `graphql`:
 
 ```js
-const MyComponentWithData = graphql(GET_USER, {
+const withUser = graphql(GET_USER, {
   // Note ownProps here are the props that are passed into `MyComponentWithData`
   // when it is used
   options(ownProps) {
@@ -155,7 +150,9 @@ const MyComponentWithData = graphql(GET_USER, {
       // options for ApolloClient.watchQuery
     }
   }
-})(MyComponent);
+});
+
+const MyComponentWithData = withUser(MyComponent);
 ```
 
 By default, `graphql` will attempt to pick up any missing variables from the query from `ownProps`. For example:
@@ -174,34 +171,36 @@ const GET_USER_WITH_ID = gql`
 `;
 // Even though we haven't defined where `id` comes from, as long as we call
 // `<MyComponentWithData id={something} />`, the default options() will work.
-const MyComponentWithData = graphql(GET_USER_WITH_ID)(MyComponent);
+const withUserFromId = graphql(GET_USER_WITH_ID);
+const MyComponentWithData = withUserFromId(MyComponent);
 ```
 
 In general, you will probably want to be explicit about where the variables come from:
 
 ```js
 // If we'd prefer to call `<MyComponentWithData userId={something} />`
-const MyComponentWithData = graphql(GET_USER_WITH_ID, {
-  options: (ownProps) => ({
-    variables: { id: ownProps.userId }
-  })
-})(MyComponent);
+const withUserFromId = graphql(GET_USER_WITH_ID, {
+  options: (ownProps) => ({ variables: { id: ownProps.userId } })
+});
+const MyComponentWithData = withUserFromId(MyComponent);
 ```
 
 Also, you may want to configure the [watchQuery](../apollo-client/queries.html#watchQuery) behaviour using `options`:
 
 ```js
-const MyComponentWithData = graphql(GET_USER_WITH_ID, {
+const withPollingQuery = graphql(GET_USER_WITH_ID, {
   options: () => ({ pollInterval: 1000 })
-})(MyComponent);
+});
+const MyComponentWithData = withPollingQuery(MyComponent);
 ```
 
 Sometimes you may want to skip a query based on the available information, to do this you can pass `skip: true` as part of the options. This is useful if you want to ignore a query if a user isn't authenticated:
 
 ```js
-const MyComponentWithData = graphql(GET_USER_DATA, {
+const withUser = graphql(GET_USER_DATA, {
   options: (ownProps) => ({ skip: !ownProps.authenticated })
-})(MyComponent);
+});
+const MyComponentWithData = withUser(MyComponent);
 ```
 
 When the props change (a user logs in for instance), the query options will be rerun and `react-apollo` will start the watchQuery on the operation.
@@ -225,15 +224,13 @@ MyComponent.propTypes = {
 };
 
 // This provides an `upvote` callback prop to `MyComponent`
-const MyComponentWithUpvote = graphql(UPVOTE, {
-  name: 'upvote',
-})(MyComponent);
+const withUpVote = graphql(UPVOTE, { name: 'upvote' });
+const MyComponentWithUpvote = withUpVote(MyComponent);
 
 // This provides an `downvote` callback prop to `MyComponentWithUpvote`,
 // and subsequently `MyComponent`
-const MyComponentWithUpvoteAndDownvote = graphql(DOWNVOTE, {
-  name: 'downvote',
-})(MyComponentWithUpvote);
+const withDownVote = graphql(DOWNVOTE, { name: 'downvote' });
+const MyComponentWithUpvoteAndDownvote = withDownVote(MyComponentWithUpvote);
 ```
 
 
@@ -261,7 +258,7 @@ const GET_USER_WITH_ID = gql`
   }
 `;
 
-const MyComponentWithData = graphql(GET_USER_WITH_ID, {
+const withUserFromId = graphql(GET_USER_WITH_ID, {
   // `ownProps` are the props passed into `MyComponentWithData`
   // `data` is the result data (see above)
   props: ({ ownProps, data }) => {
@@ -273,6 +270,7 @@ const MyComponentWithData = graphql(GET_USER_WITH_ID, {
     };
   }
 });
+const MyComponentWithData = withUserFromId(MyComponent);
 ```
 
 This style of usage leads to the greatest decoupling between your presentational component (`MyComponent`) and Apollo.
@@ -305,7 +303,8 @@ const ADD_TASK = gql`
   }
 `;
 
-const MyComponentWithMutation = graphql(ADD_TASK)(MyComponent);
+const withAddTask = graphql(ADD_TASK);
+const MyComponentWithMutation = withAddTask(MyComponent);
 ```
 
 <h4 id="calling-mutations">Calling mutations</h4>
@@ -360,7 +359,7 @@ MyComponent.propTypes = {
 
 const ADD_TASK = ...;
 
-const MyComponentWithMutation = graphql(ADD_TASK, {
+const withAddTask = graphql(ADD_TASK, {
   props: ({ ownProps, mutate }) => ({
     addTask(text) {
       return mutate({
@@ -382,7 +381,8 @@ const MyComponentWithMutation = graphql(ADD_TASK, {
       });     
     },
   })
-})(MyComponent);
+});
+const MyComponentWithMutation = withAddTask(MyComponent);
 ```
 
 > Note that in general you shouldn't attempt to use the results from the mutation callback directly, but instead write a [`updateQueries`](../apollo-client/mutations.html#updating-query-results) callback to update the result of relevant queries with your mutation results.
@@ -399,9 +399,8 @@ import { graphql } from 'react-apollo';
 
 class MyComponent extends Component { ... }
 
-const MyComponentWithUpvote = graphql(UPVOTE, {
-  withRef: 'true'
-})(MyComponent);
+const withUpvoteAndRef = graphql(UPVOTE, { withRef: 'true' });
+const MyComponentWithUpvote = withUpvoteAndRef(MyComponent);
 
 // MyComponentWithUpvote.getWrappedInstance() returns MyComponent instance
 ```
@@ -434,14 +433,16 @@ class MyComponent extends Component {
 }
 ```
 
-<h2 id="server-methods">Server methods</h2>
+<h2 id="server-methods">Server-side rendering and hydration</h2>
 
 The `react-apollo` library supports integrated server side rendering for both store rehydration purposes, or fully rendered markup. No changes are required to client queries to support this, however, queries can be ignored during server rendering by passing `ssr: false` in the query options. For example:
 
 ```js
-const MyComponentWithData = graphql(GET_USER_WITH_ID, {
+const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
   options: () => ({ ssr: false }) // won't be called during SSR
-})(MyComponent);
+});
+
+const MyComponentWithData = withClientOnlyUser(MyComponent);
 ```
 
 
@@ -529,7 +530,7 @@ List.propTypes = {
   cloneList: React.PropType.function.isRequired,
 };
 
-const ListWithData = graphql(CLONE_LIST, {
+const withCloneList = graphql(CLONE_LIST, {
   props: ({ ownProps, mutate }) => ({
     cloneList() {
       return mutate()
@@ -538,7 +539,8 @@ const ListWithData = graphql(CLONE_LIST, {
         });
     },
   }),
-})(List);
+});
+const ListWithData = withCloneList(List);
 
 const ListWithDataAndState = connect(
   (state) => ({ listId: state.list.id }),

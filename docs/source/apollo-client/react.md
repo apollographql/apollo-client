@@ -4,15 +4,16 @@ order: 150
 description: How to use the Apollo Client to fetch GraphQL data in your React application.
 ---
 
-The `react-apollo` package gives a higher-order-component style interface to Apollo Client to allow you to easily integrated GraphQL data with your React components. This works for react applications using ReactDOM (web applications), and react-native applications.
+The `react-apollo` package gives a higher-order-component style interface to Apollo Client to allow you to easily integrated GraphQL data with your React components.
 
 ```txt
 npm install react-apollo --save
 ```
 
-[Follow apollostack/react-apollo on GitHub.](https://github.com/apollostack/react-apollo)
+> Note: You don't have to do anything special to get Apollo Client to work in React Native, just install and import it as usual.
 
-Note: You don't have to do anything special to get Apollo Client to work in React Native, just install and import it as usual.
+
+[Follow apollostack/react-apollo on GitHub.](https://github.com/apollostack/react-apollo)
 
 <h2 id="apollo-provider">ApolloProvider</h2>
 
@@ -195,7 +196,7 @@ const MyComponentWithData = graphql(GET_USER_WITH_ID, {
 })(MyComponent);
 ```
 
-Sometimes you may want to skip a query based on the available information, to do this, you can pass `skip: true` as part of the options. This is useful if you want to ignore a query if a user isn't authenticated:
+Sometimes you may want to skip a query based on the available information, to do this you can pass `skip: true` as part of the options. This is useful if you want to ignore a query if a user isn't authenticated:
 
 ```js
 const MyComponentWithData = graphql(GET_USER_DATA, {
@@ -426,7 +427,7 @@ const MyComponentWithData = graphql(GET_USER_WITH_ID, {
 
 <h3 id="getDataFromTree">Using `getDataFromTree`</h3>
 
-The `getDataFromTree` function takes your $eact tree and returns the context of you React tree. This can be used to get the initialState via `context.store.getState()`
+The `getDataFromTree` function takes your React tree and returns the context of you React tree. This can be used to get the initialState via `context.store.getState()`
 
 ```js
 // server application code (custom usage)
@@ -538,15 +539,15 @@ npm install mobx mobx-react --save
 In order to use [MobX](https://mobxjs.github.io/mobx/) with Apollo, you will need to place the `@observer` after the `@graphql` decoration. Then within your component, use `componentWillReact` to call `refetch` on the query when data changes.
 
 ```js
-import React from 'react';
+import { Component } from 'react';
 import ApolloClient from 'apollo-client';
 import { observer } from 'mobx-react';
 
-@graphql(query, {
+@graphql(MY_QUERY, {
   options: (props) => ({ variables: { first: props.appState.first } }),
 })
 @observer
-class Container extends React.Component<any, any> {
+class Container extends Component {
   componentWillReact() {
     this.props.data.refetch({ first: this.props.appState.first });
   }

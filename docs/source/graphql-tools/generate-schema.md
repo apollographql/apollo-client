@@ -25,7 +25,7 @@ const jsSchema = makeExecutableSchema({
 
 `resolvers` is a required argument and should be an object that follows the pattern explained in the guide [section on resolvers](http://docs.apollostack.com/apollo-server/resolvers.html).
 
-`connectors` is an optional argument, which will take an object with connectors and attach them to the context of every resolve function. See the [connector docs](http://docs.apollostack.com/graphql-tools/connectors.html) for more information.
+`connectors` is an optional argument, which will take an object with connectors and attach them to the context of every resolve function. If this argument is provided, a `context` object must be passed to the `apollo{Express/Connect/HAPI/Koa}` call. See the [connector docs](http://docs.apollostack.com/graphql-tools/connectors.html) for more information.
 
 `logger` is an optional argument, which can be used to print errors to the server console that are usually swallowed by GraphQL. The `logger` argument should be an object with a `log` function, eg. `const logger = { log: (e) => console.log(e) }`
 

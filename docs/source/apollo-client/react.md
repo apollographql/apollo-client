@@ -4,7 +4,7 @@ order: 150
 description: How to use the Apollo Client to fetch GraphQL data in your React application.
 ---
 
-The `react-apollo` package gives a higher-order-component style interface to Apollo Client to allow you to easily integrated GraphQL data with your React components.
+The `react-apollo` package gives a higher-order-component style interface to Apollo Client to allow you to easily integrated GraphQL data with your React components. This works for react applications using ReactDOM (web applications), and react-native applications.
 
 ```txt
 npm install react-apollo --save
@@ -131,9 +131,7 @@ Using `graphql` with queries makes it easy to bind data to components. As seen a
 
 - [`...QuerySubscription`](../apollo-client/queries.html#QuerySubscription)
 
-  The subscription created on this query will be merged into the passed props so you can dynamically refetch, change polling settings, or even unsubscribe to this query.
-
-  XXX: what does this end up getting called?
+  The subscription created on this query will be merged into the passed props so you can dynamically refetch, change polling settings, or even unsubscribe to this query. The methods include `stopPolling`, `startPolling`, `refetch`, and `fetchMore`.
 
 - [`query`](../apollo-client/queries.html#query)
 
@@ -183,7 +181,9 @@ In general, you will probably want to be explicit about where the variables come
 ```js
 // If we'd prefer to call `<MyComponentWithData userId={something} />`
 const MyComponentWithData = graphql(GET_USER_WITH_ID, {
-  options: (ownProps) => ({ id: ownProps.userId })
+  options: (ownProps) => ({
+    variables: { id: ownProps.userId }
+  })
 })(MyComponent);
 ```
 
@@ -194,6 +194,16 @@ const MyComponentWithData = graphql(GET_USER_WITH_ID, {
   options: () => ({ pollInterval: 1000 })
 })(MyComponent);
 ```
+
+Sometimes you may want to skip a query based on the available information, to do this, you can pass `skip: true` as part of the options. This is useful if you want to ignore a query if a user isn't authenticated:
+
+```js
+const MyComponentWithData = graphql(GET_USER_DATA, {
+  options: (ownProps) => ({ skip: !ownProps.authenticated })
+})(MyComponent);
+```
+
+When the props change (a user logs in for instance), the query options will be rerun and `react-apollo` will start the watchQuery on the operation.
 
 <h3 id="graphql-props">Controlling child props</h3>
 
@@ -263,9 +273,7 @@ const MyComponentWithData = graphql(GET_USER_WITH_ID, {
 });
 ```
 
-This style of usage leads to the greatest decoupling between your presentational component (`MyComponent`) and Apollo, and is recommended.
-
-XXX: do we want to say that?
+This style of usage leads to the greatest decoupling between your presentational component (`MyComponent`) and Apollo.
 
 <h3 id="graphql-mutations">For Mutations</h3>
 
@@ -407,7 +415,14 @@ class MyComponent extends Component {
 
 <h2 id="server-methods">Server methods</h2>
 
-The `react-apollo` library supports integrated server side rendering for both store rehydration purposes, or fully rendered markup.
+The `react-apollo` library supports integrated server side rendering for both store rehydration purposes, or fully rendered markup. No changes are required to client queries to support this, however, queries can be ignored during server rendering by passing `ssr: false` in the query options. For example:
+
+```js
+const MyComponentWithData = graphql(GET_USER_WITH_ID, {
+  options: () => ({ ssr: false }) // won't be called during SSR
+})(MyComponent);
+```
+
 
 <h3 id="getDataFromTree">Using `getDataFromTree`</h3>
 
@@ -477,8 +492,6 @@ ReactDOM.render(
 )
 ```
 
-XXX: do we want the example with a `<Provider>` as well? I'm not sure how it's different to the above (in practice)?
-
 You can continue to use `react-redux`'s `connect` higher order component to wire state into and out of your components. You can connect before or after (or both!) attaching GraphQL data to your component with `graphql`:
 
 ```js
@@ -514,6 +527,33 @@ const ListWithDataAndState = connect(
     }
   }),
 )(ListWithData);
+```
+
+<h2 id="usage-with-react-router">Usage with MobX</h2>
+
+```txt
+npm install mobx mobx-react --save
+```
+
+In order to use [MobX](https://mobxjs.github.io/mobx/) with Apollo, you will need to place the `@observer` after the `@graphql` decoration. Then within your component, use `componentWillReact` to call `refetch` on the query when data changes.
+
+```js
+import React from 'react';
+import ApolloClient from 'apollo-client';
+import { observer } from 'mobx-react';
+
+@graphql(query, {
+  options: (props) => ({ variables: { first: props.appState.first } }),
+})
+@observer
+class Container extends React.Component<any, any> {
+  componentWillReact() {
+    this.props.data.refetch({ first: this.props.appState.first });
+  }
+  render() {
+    return <div>{this.props.appState.first}</div>;
+  }
+};
 ```
 
 <h2 id="usage-with-react-router">Usage with React Router</h2>

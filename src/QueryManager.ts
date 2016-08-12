@@ -91,7 +91,7 @@ import {
   ApolloError,
 } from './errors';
 
-import { WatchQueryOptions, SubscriptionOptions } from './watchQueryOptions';
+import { WatchQueryOptions, SubscriptionOptions, GraphQLSubscriptionOptions } from './watchQueryOptions';
 
 import { ObservableQuery } from './ObservableQuery';
 
@@ -369,7 +369,7 @@ export class QueryManager {
   // The fragments option within WatchQueryOptions specifies a list of fragments that can be
   // referenced by the query.
   // These fragments are used to compose queries out of a bunch of fragments for UI components.
-  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true, graphQLSubscription = false): ObservableQuery {
+  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true, graphQLSubscription?: GraphQLSubscriptionOptions): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
@@ -539,6 +539,7 @@ export class QueryManager {
       query,
       variables,
       fragments = [],
+      handler,
     } = options;
 
     let queryDoc = addFragmentsToDocument(query, fragments);
@@ -551,17 +552,6 @@ export class QueryManager {
       variables,
       operationName: getOperationName(queryDoc),
     };
-
-    const handler = (error, result) => {
-      this.store.dispatch({
-        type: 'APOLLO_UPDATE_QUERY_RESULT',
-        newResult: result,
-        queryVariables: variables,
-        querySelectionSet: getQueryDefinition(queryDoc).selectionSet,
-        queryFragments: fragments,
-      });
-    };
-
 
     // QueryManager sets up the handler so the query can be transformed. Alternatively,
     // pass in the transformer to the ObservableQuery.

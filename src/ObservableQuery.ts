@@ -1,4 +1,4 @@
-import { WatchQueryOptions, FetchMoreQueryOptions } from './watchQueryOptions';
+import { WatchQueryOptions, FetchMoreQueryOptions, SubscriptionOptions, GraphQLSubscriptionOptions } from './watchQueryOptions';
 
 import { Observable, Observer } from './util/Observable';
 
@@ -18,6 +18,10 @@ import {
   ApolloQueryResult,
 } from './index';
 
+import {
+  Document,
+} from 'graphql';
+
 import { tryFunctionOrLogError } from './util/errorHandling';
 
 import assign = require('lodash.assign');
@@ -33,10 +37,12 @@ export interface UpdateQueryOptions {
   queryVariables: Object;
 }
 
+
+
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
-  public startGraphQLSubscription: () => number;
+  public startGraphQLSubscription: (graphQLSubscriptionOptions: GraphQLSubscriptionOptions) => number;
   public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
@@ -44,17 +50,18 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   public queryId: string;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
+  private graphQLSubscription: any;
 
   constructor({
     scheduler,
     options,
     shouldSubscribe = true,
-    graphQLSubscription = false,
+    graphQLSubscription,
   }: {
     scheduler: QueryScheduler,
     options: WatchQueryOptions,
     shouldSubscribe?: boolean,
-    graphQLSubscription?: boolean,
+    graphQLSubscription?: any,
   }) {
     const queryManager = scheduler.queryManager;
     const queryId = queryManager.generateQueryId();
@@ -98,6 +105,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.scheduler = scheduler;
     this.queryManager = queryManager;
     this.queryId = queryId;
+    this.graphQLSubscription = graphQLSubscription;
 
     this.refetch = (variables?: any) => {
       // Extend variables if available
@@ -151,15 +159,26 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         });
     };
 
-    this.startGraphQLSubscription = () => {
+    this.startGraphQLSubscription = (graphQLSubscriptionOptions: GraphQLSubscriptionOptions) => {
+
       const subOptions = {
-        query: this.options.query,
+        query: graphQLSubscriptionOptions.subscription,
         variables: this.options.variables,
         fragments: this.options.fragments,
-        handler: null,
+        handler: (error: Object, result: Object) => {
+          const reducer = graphQLSubscriptionOptions.updateFunction;
+          const mapFn = (previousResult, { queryVariables }) => {
+            return reducer(
+              previousResult, {
+                subscriptionResult: result,
+                queryVariables,
+              });
+          };
+          this.updateQuery(mapFn);
+        },
       };
 
-      if (graphQLSubscription) {
+      if (this.graphQLSubscription) {
         return this.queryManager.startSubscription(subOptions);
       };
       return null;
@@ -172,7 +191,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         querySelectionSet,
         queryFragments = [],
       } = this.queryManager.getQueryWithPreviousResult(this.queryId);
-
       const newResult = tryFunctionOrLogError(
         () => mapFn(previousResult, { queryVariables }));
 

@@ -39,6 +39,7 @@ import {
 
 import {
   WatchQueryOptions,
+  GraphQLSubscriptionOptions,
 } from './watchQueryOptions';
 
 import {
@@ -223,7 +224,7 @@ export default class ApolloClient {
     };
   }
 
-  public watchQuery = (options: WatchQueryOptions, graphQLSubscription = false): ObservableQuery => {
+  public watchQuery = (options: WatchQueryOptions, graphQLSubscription?: GraphQLSubscriptionOptions): ObservableQuery => {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {

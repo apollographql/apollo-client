@@ -148,7 +148,6 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
         variables: request.variables,
         debugName: request.debugName,
       };
-
     const key = requestToKey(parsedRequest);
     if (this.mockedSubscriptionsByKey.hasOwnProperty(key)) {
       const subscription = this.mockedSubscriptionsByKey[key].shift();

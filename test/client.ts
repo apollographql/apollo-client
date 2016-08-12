@@ -64,6 +64,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors';
 
+import {
+  createMockFetch,
+  createMockedIResponse,
+} from './mocks/mockFetch';
+
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
@@ -1603,5 +1608,65 @@ describe('client', () => {
       },
     } as QueryManager;
     client.resetStore();
+  });
+  it('should allow us to create a network interface with transport-level batching', (done) => {
+    const firstQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const firstResult = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const secondQuery = gql`
+      query {
+        person {
+          name
+        }
+      }`;
+    const secondResult = {
+      person: {
+        name: 'Jane Smith',
+      },
+    };
+    const url = 'http://not-a-real-url.com';
+    const oldFetch = fetch;
+    fetch = createMockFetch({
+      url,
+      opts: {
+        body: JSON.stringify([
+          {
+            query: print(firstQuery),
+          },
+          {
+            query: print(secondQuery),
+          },
+        ]),
+        headers: {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      },
+      result: createMockedIResponse([firstResult, secondResult]),
+    });
+    const networkInterface = createNetworkInterface('http://not-a-real-url.com', {}, true);
+    networkInterface.batchQuery([
+      {
+        query: firstQuery,
+      },
+      {
+        query: secondQuery,
+      },
+    ]).then((results) => {
+      assert.deepEqual(results, [firstResult, secondResult]);
+      fetch = oldFetch;
+      done();
+    });
   });
 });

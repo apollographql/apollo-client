@@ -3,6 +3,7 @@ import {
   RequestAndOptions,
   Request,
   printRequest,
+  BatchedNetworkInterface,
 } from './networkInterface';
 
 import {
@@ -17,7 +18,11 @@ import assign = require('lodash.assign');
 // together requests over the HTTP transport. Note that this implementation will only work correctly
 // for GraphQL server implementations that support batching. If such a server is not available, you
 // should see `addQueryMerging` instead.
-export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
+export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface implements BatchedNetworkInterface {
+  constructor(uri: string, opts: RequestInit) {
+    super(uri, opts);
+  };
+
   public batchedFetchFromRemoteEndpoint(
     requestsAndOptions: RequestAndOptions[]
   ): Promise<IResponse> {

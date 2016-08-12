@@ -230,8 +230,24 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
   }
 }
 
-export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {
-  // createNetworkInterface has batching ability by default, which is not used unless the
-  // `shouldBatch` option is passed to apollo-clietn
-  return addQueryMerging(new HTTPFetchNetworkInterface(uri, opts)) as HTTPNetworkInterface;
+// This import has to be placed here due to a bug in TypeScript:
+// https://github.com/Microsoft/TypeScript/issues/21
+import {
+  HTTPBatchedNetworkInterface,
+} from './batchedNetworkInterface';
+
+
+export function createNetworkInterface(
+  uri: string,
+  opts: RequestInit = {},
+  transportBatching = false
+): HTTPNetworkInterface {
+  if (transportBatching) {
+    // We can use transport batching rather than query merging.
+    return new HTTPBatchedNetworkInterface(uri, opts) as HTTPNetworkInterface;
+  } else {
+    // createNetworkInterface has batching ability by default through query merging,
+    // which is not used unless the `shouldBatch` option is passed to apollo-client.
+    return addQueryMerging(new HTTPFetchNetworkInterface(uri, opts)) as HTTPNetworkInterface;
+  }
 }

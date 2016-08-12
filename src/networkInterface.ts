@@ -98,7 +98,7 @@ export function printRequest(request: Request): PrintedRequest {
   return printedRequest;
 }
 
-export class HTTPFetchNetworkInterface implements HTTPNetworkInterface {
+export class HTTPFetchNetworkInterface implements NetworkInterface {
   public _uri: string;
   public _opts: RequestInit;
   public _middlewares: MiddlewareInterface[];

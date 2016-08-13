@@ -30,4 +30,4 @@ export interface GraphQLSubscriptionOptions {
     subscriptionResult: Object,
     queryVariables: Object,
   }) => Object;
-}
+};

@@ -1,6 +1,6 @@
 {
-  "name": "amandas-dummy-package",
-  "version": "0.0.26",
+  "name": "apollo-client",
+  "version": "0.4.11",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "apollostack/apollo-client/tree/subscription-integration"
+    "url": "apollostack/apollo-client"
   },
   "keywords": [
     "ecmascript",
@@ -34,7 +34,7 @@
     "npm",
     "react"
   ],
-  "author": "Amanda Liu",
+  "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
     "es6-promise": "^3.1.2",

@@ -1,10 +1,6 @@
-import { WatchQueryOptions, FetchMoreQueryOptions, SubscriptionOptions, GraphQLSubscriptionOptions } from './watchQueryOptions';
+import { WatchQueryOptions, FetchMoreQueryOptions, GraphQLSubscriptionOptions } from './watchQueryOptions';
 
 import { Observable, Observer } from './util/Observable';
-
-import {
-  getQueryDefinition,
-} from './queries/getFromAST';
 
 import {
   QueryScheduler,
@@ -17,10 +13,6 @@ import {
 import {
   ApolloQueryResult,
 } from './index';
-
-import {
-  Document,
-} from 'graphql';
 
 import { tryFunctionOrLogError } from './util/errorHandling';
 

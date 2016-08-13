@@ -5,6 +5,7 @@ import 'whatwg-fetch';
 import {
   GraphQLResult,
   Document,
+  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -95,6 +96,10 @@ export function addGraphQLSubscriptions(networkInterface: NetworkInterface, wsCl
       wsClient.subscribe({
         query: print(request.query),
         variables: request.variables,
+        // Here, we are assuming that there is only one operation
+        operationName: (request.query.definitions.filter((definition) => {
+          return definition.kind === 'OperationDefinition';
+        })[0] as OperationDefinition).name.value,
       }, handler);
     },
     unsubscribe(id: number) {

@@ -253,7 +253,7 @@ describe('GraphQL Subscriptions', () => {
         },
       });
 
-      const id = obsHandle.startGraphQLSubscription(graphQLSubscriptionOptions);
+      const id = obsHandle.startGraphQLSubscription();
       network.fireResult(id);
     });
   });

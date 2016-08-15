@@ -4,6 +4,8 @@ order: 150
 description: How to use the Apollo Client to fetch GraphQL data in your React application.
 ---
 
+> NOTE: this is the documentation for version 0.4 of the `react-apollo` package. The older version 0.3 documentation is available here: http://docs.apollostack.com/vreact-apollo-0.3/apollo-client/react.html
+
 The `react-apollo` package gives a higher-order-component style interface to Apollo Client to allow you to easily integrate GraphQL data with your React components.
 
 ```txt

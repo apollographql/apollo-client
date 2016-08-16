@@ -180,7 +180,7 @@ describe('MockSubscriptionNetworkInterface', () => {
   });
 
   it('correctly fires multiple results', (done) => {
-    let numResults = 0;
+    let allResults = [];
     const networkInterface = mockSubscriptionNetworkInterface([sub1]);
     networkInterface.subscribe(
       {
@@ -196,25 +196,22 @@ describe('MockSubscriptionNetworkInterface', () => {
         },
       },
       (error, result) => {
-        numResults ++;
-        if (numResults === 1) {
-          assert.deepEqual(result, result1.result);
-        } else if (numResults === 2) {
-          assert.deepEqual(result, result2.result);
-        } else if (numResults === 3) {
-          assert.deepEqual(result, result3.result);
-        } else if (numResults === 4) {
-          assert.deepEqual(result, result4.result);
-          done();
-        } else {
-          assert(false);
-        }
-
+        allResults.push(result);
       }
     );
-    for (let i = 0; i < 4; i++) {
-      networkInterface.fireResult(0);
-    }
+
+      for (let i = 0; i < 4; i++) {
+        networkInterface.fireResult(0);
+      }
+      setTimeout(() => {
+        assert.deepEqual(
+          allResults,
+          [result1.result, result2.result, result3.result, result4.result]
+        );
+        done();
+      }, 50);
+
+
   });
 
   it('correctly unsubscribes', () => {

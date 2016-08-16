@@ -29,8 +29,6 @@ export interface UpdateQueryOptions {
   queryVariables: Object;
 }
 
-
-
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;

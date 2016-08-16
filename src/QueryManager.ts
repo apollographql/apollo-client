@@ -2,7 +2,6 @@ import {
   NetworkInterface,
   SubscriptionNetworkInterface,
   Request,
-  addGraphQLSubscriptions,
 } from './networkInterface';
 
 import forOwn = require('lodash.forown');
@@ -144,7 +143,6 @@ export class QueryManager {
     queryTransformer,
     shouldBatch = false,
     batchInterval = 10,
-    wsClient,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -152,7 +150,6 @@ export class QueryManager {
     queryTransformer?: QueryTransformer,
     shouldBatch?: Boolean,
     batchInterval?: number,
-    wsClient?: any,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -168,10 +165,6 @@ export class QueryManager {
     this.scheduler = new QueryScheduler({
       queryManager: this,
     });
-
-    if (wsClient) {
-      this.networkInterface = addGraphQLSubscriptions(this.networkInterface, wsClient);
-    }
 
     this.batcher = new QueryBatcher({
       shouldBatch,

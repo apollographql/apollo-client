@@ -4,7 +4,7 @@ order: 303
 description: How to send requests to Apollo Server
 ---
 
-Apollo Server accepts only JSON-encoded POST requests. A valid request must contain eiter a `query` or an `operationName` (or both, in case of a named query), and may include `variables.` For example:
+Apollo Server accepts only JSON-encoded POST requests. A valid request must contain either a `query` or an `operationName` (or both, in case of a named query), and may include `variables.` For example:
 
 ```js
 {

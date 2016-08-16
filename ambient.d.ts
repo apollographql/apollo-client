@@ -103,6 +103,11 @@ declare module 'lodash.pick' {
   export = main.pick;
 }
 
+declare module 'lodash.every' {
+  import main = require('~lodash/index');
+  export = main.every;
+}
+
 /*
 
   GRAPHQL

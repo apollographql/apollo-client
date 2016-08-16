@@ -1,5 +1,6 @@
 import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
+import isUndefined = require('lodash.isundefined');
 import has = require('lodash.has');
 import assign = require('lodash.assign');
 
@@ -15,6 +16,10 @@ import {
   isJsonValue,
   isIdValue,
 } from './store';
+
+import {
+  StoreFetchMiddleware,
+} from './fetchMiddleware';
 
 import {
   SelectionSetWithRoot,
@@ -52,6 +57,14 @@ export interface DiffResult {
   missingSelectionSets?: SelectionSetWithRoot[];
 }
 
+// Contexual state and configuration that is used throught a request from the
+// store.
+export interface StoreContext {
+  store: NormalizedCache;
+  fragmentMap: FragmentMap;
+  fetchMiddleware?: StoreFetchMiddleware;
+}
+
 export function diffQueryAgainstStore({
   store,
   query,
@@ -64,7 +77,7 @@ export function diffQueryAgainstStore({
   const queryDef = getQueryDefinition(query);
 
   return diffSelectionSetAgainstStore({
-    store,
+    context: { store, fragmentMap: {} },
     rootId: 'ROOT_QUERY',
     selectionSet: queryDef.selectionSet,
     throwOnMissingField: false,
@@ -86,7 +99,7 @@ export function diffFragmentAgainstStore({
   const fragmentDef = getFragmentDefinition(fragment);
 
   return diffSelectionSetAgainstStore({
-    store,
+    context: { store, fragmentMap: {} },
     rootId,
     selectionSet: fragmentDef.selectionSet,
     throwOnMissingField: false,
@@ -126,26 +139,20 @@ export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error
  * @return {result: Object, missingSelectionSets: [SelectionSet]}
  */
 export function diffSelectionSetAgainstStore({
+  context,
   selectionSet,
-  store,
   rootId,
   throwOnMissingField = false,
   variables,
-  fragmentMap,
 }: {
+  context: StoreContext,
   selectionSet: SelectionSet,
-  store: NormalizedCache,
   rootId: string,
   throwOnMissingField: boolean,
   variables: Object,
-  fragmentMap?: FragmentMap,
 }): DiffResult {
   if (selectionSet.kind !== 'SelectionSet') {
     throw new Error('Must be a selection set.');
-  }
-
-  if (!fragmentMap) {
-    fragmentMap = {};
   }
 
   const result = {};
@@ -177,12 +184,11 @@ export function diffSelectionSetAgainstStore({
 
     if (isField(selection)) {
       const diffResult = diffFieldAgainstStore({
+        context,
         field: selection,
         throwOnMissingField,
         variables,
         rootId,
-        store,
-        fragmentMap,
         included,
       });
       fieldIsMissing = diffResult.isMissing;
@@ -204,12 +210,11 @@ export function diffSelectionSetAgainstStore({
       if (included) {
         try {
           const diffResult = diffSelectionSetAgainstStore({
+            context,
             selectionSet: selection.selectionSet,
             throwOnMissingField,
             variables,
             rootId,
-            store,
-            fragmentMap,
           });
           fieldIsMissing = diffResult.isMissing;
           fieldResult = diffResult.result;
@@ -232,7 +237,7 @@ export function diffSelectionSetAgainstStore({
         }
       }
     } else {
-      const fragment = fragmentMap[selection.name.value];
+      const fragment = context.fragmentMap[selection.name.value];
 
       if (!fragment) {
         throw new Error(`No fragment named ${selection.name.value}`);
@@ -243,12 +248,11 @@ export function diffSelectionSetAgainstStore({
       if (included) {
         try {
           const diffResult = diffSelectionSetAgainstStore({
+            context,
             selectionSet: fragment.selectionSet,
             throwOnMissingField,
             variables,
             rootId,
-            store,
-            fragmentMap,
           });
           fieldIsMissing = diffResult.isMissing;
           fieldResult = diffResult.result;
@@ -311,26 +315,34 @@ export function diffSelectionSetAgainstStore({
 }
 
 function diffFieldAgainstStore({
+  context,
   field,
   throwOnMissingField,
   variables,
   rootId,
-  store,
-  fragmentMap,
   included = true,
 }: {
+  context: StoreContext,
   field: Field,
   throwOnMissingField: boolean,
   variables: Object,
   rootId: string,
-  store: NormalizedCache,
-  fragmentMap?: FragmentMap,
   included?: Boolean,
 }): FieldDiffResult {
-  const storeObj = store[rootId] || {};
+  const storeObj = context.store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
 
-  if (! has(storeObj, storeFieldKey)) {
+  let storeValue, fieldMissing;
+  // Give the transformer a chance to yield a rewritten result.
+  if (context.fetchMiddleware) {
+    storeValue = context.fetchMiddleware(field, variables, context.store, () => storeObj[storeFieldKey]);
+    fieldMissing = isUndefined(storeValue);
+  } else {
+    storeValue = storeObj[storeFieldKey];
+    fieldMissing = !has(storeObj, storeFieldKey);
+  }
+
+  if (fieldMissing) {
     if (throwOnMissingField && included) {
       throw new ApolloError({
         errorMessage: `Can't find field ${storeFieldKey} on object (${rootId}) ${JSON.stringify(storeObj, null, 2)}.
@@ -345,8 +357,6 @@ Perhaps you want to use the \`returnPartialData\` option?`,
       isMissing: 'true',
     };
   }
-
-  const storeValue = storeObj[storeFieldKey];
 
   // Handle all scalar types here
   if (! field.selectionSet) {
@@ -382,12 +392,11 @@ Perhaps you want to use the \`returnPartialData\` option?`,
       }
 
       const itemDiffResult = diffSelectionSetAgainstStore({
-        store,
+        context,
         throwOnMissingField,
         rootId: id,
         selectionSet: field.selectionSet,
         variables,
-        fragmentMap,
       });
 
       if (itemDiffResult.isMissing) {
@@ -409,12 +418,11 @@ Perhaps you want to use the \`returnPartialData\` option?`,
   if (isIdValue(storeValue)) {
     const unescapedId = storeValue.id;
     return diffSelectionSetAgainstStore({
-      store,
+      context,
       throwOnMissingField,
       rootId: unescapedId,
       selectionSet: field.selectionSet,
       variables,
-      fragmentMap,
     });
   }
 

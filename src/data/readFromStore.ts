@@ -1,5 +1,6 @@
 import {
   diffSelectionSetAgainstStore,
+  StoreContext,
 } from './diffAgainstStore';
 
 import {
@@ -37,12 +38,14 @@ export function readQueryFromStore({
   const queryDef = getQueryDefinition(query);
 
   return readSelectionSetFromStore({
-    store,
+    context: {
+      store,
+      fragmentMap: fragmentMap || {},
+    },
     rootId: 'ROOT_QUERY',
     selectionSet: queryDef.selectionSet,
     variables,
     returnPartialData,
-    fragmentMap,
   });
 }
 
@@ -62,7 +65,7 @@ export function readFragmentFromStore({
   const fragmentDef = getFragmentDefinition(fragment);
 
   return readSelectionSetFromStore({
-    store,
+    context: { store, fragmentMap: {} },
     rootId,
     selectionSet: fragmentDef.selectionSet,
     variables,
@@ -71,29 +74,26 @@ export function readFragmentFromStore({
 }
 
 export function readSelectionSetFromStore({
-  store,
+  context,
   rootId,
   selectionSet,
   variables,
   returnPartialData = false,
-  fragmentMap,
 }: {
-  store: NormalizedCache,
+  context: StoreContext,
   rootId: string,
   selectionSet: SelectionSet,
   variables: Object,
   returnPartialData?: boolean,
-  fragmentMap?: FragmentMap,
 }): Object {
   const {
     result,
   } = diffSelectionSetAgainstStore({
+    context,
     selectionSet,
     rootId,
-    store,
     throwOnMissingField: !returnPartialData,
     variables,
-    fragmentMap,
   });
 
   return result;

@@ -56,6 +56,8 @@ import {
 
 import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
+import { cachedFetchById } from '../src/data/fetchMiddleware';
+
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 import { getFragmentDefinitions } from '../src/queries/getFromAST';
@@ -800,6 +802,132 @@ describe('client', () => {
       assert.deepEqual(actualResult.data, data);
       done();
     });
+  });
+
+  describe('store fetch middleware (with cachedFetchById)', () => {
+
+    let fetchAll, fetchOne, fetchMany, tasks, flatTasks, client, requests;
+    beforeEach(() => {
+      fetchAll = gql`
+        query fetchAll {
+          tasks {
+            id
+            name
+          }
+        }
+      `;
+      fetchOne = gql`
+        query fetchOne($taskId: ID!) {
+          task(id: $taskId) {
+            id
+            name
+          }
+        }
+      `;
+      fetchMany = gql`
+        query fetchMany($taskIds: [ID]!) {
+          tasks(ids: $taskIds) {
+            id
+            name
+          }
+        }
+      `;
+      tasks = {
+        abc123: {id: 'abc123', name: 'Do stuff'},
+        def456: {id: 'def456', name: 'Do things'},
+      };
+      flatTasks = Object.keys(tasks).map(k => tasks[k]);
+      requests = [];
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          return new Promise((resolve) => {
+            requests.push(request);
+            if (request.operationName === 'fetchAll') {
+              resolve({ data: { tasks: flatTasks } });
+            } else if (request.operationName === 'fetchMany') {
+              const ids = request.variables['taskIds'];
+              resolve({ data: { tasks: ids.map(i => tasks[i] || null) } });
+            } else if (request.operationName === 'fetchOne') {
+              resolve({ data: { task: tasks[request.variables['taskId']] || null } });
+            }
+          });
+        },
+      };
+      client = new ApolloClient({
+        networkInterface,
+        dataIdFromObject: (value) => (<any>value).id,
+        storeFetchMiddleware: cachedFetchById,
+      });
+    });
+
+    it('should support directly querying with an empty cache', () => {
+      return client.query({ query: fetchOne, variables: { taskId: 'abc123' } })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { task: tasks['abc123'] });
+          assert.deepEqual(requests.map(r => r.operationName), ['fetchOne']);
+        });
+    });
+
+    it('should support directly querying with cache lookups', () => {
+      return client.query({ query: fetchOne, variables: { taskId: 'abc123' } })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { task: tasks['abc123'] });
+          return client.query({ query: fetchOne, variables: { taskId: 'abc123' } });
+        })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { task: tasks['abc123'] });
+          assert.deepEqual(requests.map(r => r.operationName), ['fetchOne']);
+        });
+    });
+
+    it('should support rewrites from other queries', () => {
+      return client.query({ query: fetchAll })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { tasks: flatTasks });
+          return client.query({ query: fetchOne, variables: { taskId: 'abc123' } });
+        })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { task: tasks['abc123'] });
+          assert.deepEqual(requests.map(r => r.operationName), ['fetchAll']);
+        });
+    });
+
+    it('should handle cache misses when rewriting', () => {
+      return client.query({ query: fetchAll })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { tasks: flatTasks });
+          return client.query({ query: fetchOne, variables: { taskId: 'badid' } });
+        })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { task: null });
+          assert.deepEqual(requests.map(r => r.operationName), ['fetchAll', 'fetchOne']);
+        });
+    });
+
+    it('should handle bulk fetching from cache', () => {
+      return client.query({ query: fetchAll })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { tasks: flatTasks });
+          return client.query({ query: fetchMany, variables: { taskIds: ['def456', 'abc123'] } });
+        })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { tasks: [tasks['def456'], tasks['abc123']] });
+          assert.deepEqual(requests.map(r => r.operationName), ['fetchAll']);
+        });
+    });
+
+    it('should handle cache misses when bulk fetching', () => {
+      return client.query({ query: fetchAll })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { tasks: flatTasks });
+          return client.query({ query: fetchMany, variables: { taskIds: ['def456', 'badid'] } });
+        })
+        .then((actualResult) => {
+          assert.deepEqual(actualResult.data, { tasks: [tasks['def456'], null] });
+          assert.deepEqual(requests.map(r => r.operationName), ['fetchAll', 'fetchMany']);
+        });
+    });
+
   });
 
   it('should send operationName along with the mutation to the server', (done) => {

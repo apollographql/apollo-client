@@ -61,6 +61,10 @@ import {
 } from './data/diffAgainstStore';
 
 import {
+  StoreFetchMiddleware,
+} from './data/fetchMiddleware';
+
+import {
   MutationBehavior,
   MutationQueryReducersMap,
 } from './data/mutationResults';
@@ -103,6 +107,7 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private reduxRootKey: string;
   private queryTransformer: QueryTransformer;
+  private storeFetchMiddleware: StoreFetchMiddleware;
   private queryListeners: { [queryId: string]: QueryListener };
 
   // A map going from queryId to the last result/state that the queryListener was told about.
@@ -140,6 +145,7 @@ export class QueryManager {
     store,
     reduxRootKey,
     queryTransformer,
+    storeFetchMiddleware,
     shouldBatch = false,
     batchInterval = 10,
   }: {
@@ -147,6 +153,7 @@ export class QueryManager {
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
+    storeFetchMiddleware?: StoreFetchMiddleware,
     shouldBatch?: Boolean,
     batchInterval?: number,
   }) {
@@ -156,6 +163,7 @@ export class QueryManager {
     this.store = store;
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
+    this.storeFetchMiddleware = storeFetchMiddleware;
     this.pollingTimers = {};
     this.batchInterval = batchInterval;
     this.queryListeners = {};
@@ -325,12 +333,15 @@ export class QueryManager {
           try {
             const resultFromStore = {
               data: readSelectionSetFromStore({
-                store: this.getDataWithOptimisticResults(),
+                context: {
+                  store: this.getDataWithOptimisticResults(),
+                  fragmentMap: queryStoreValue.fragmentMap,
+                  fetchMiddleware: this.storeFetchMiddleware,
+                },
                 rootId: queryStoreValue.query.id,
                 selectionSet: queryStoreValue.query.selectionSet,
                 variables: queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
-                fragmentMap: queryStoreValue.fragmentMap,
               }),
               loading: queryStoreValue.loading,
             };
@@ -558,15 +569,17 @@ export class QueryManager {
     }
 
     const previousResult = readSelectionSetFromStore({
-      // In case of an optimistic change, apply reducer on top of the
-      // results including previous optimistic updates. Otherwise, apply it
-      // on top of the real data only.
-      store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+      context: {
+        // In case of an optimistic change, apply reducer on top of the
+        // results including previous optimistic updates. Otherwise, apply it
+        // on top of the real data only.
+        store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+        fragmentMap: createFragmentMap(fragments || []),
+      },
       rootId: 'ROOT_QUERY',
       selectionSet: queryDefinition.selectionSet,
       variables: queryOptions.variables,
       returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
-      fragmentMap: createFragmentMap(fragments || []),
     });
 
     return {
@@ -674,12 +687,15 @@ export class QueryManager {
     initialResult: Object,
   } {
     const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
+      context: {
+        store: this.store.getState()[this.reduxRootKey].data,
+        fragmentMap,
+        fetchMiddleware: this.storeFetchMiddleware,
+      },
       selectionSet: queryDef.selectionSet,
-      store: this.store.getState()[this.reduxRootKey].data,
       throwOnMissingField: false,
       rootId,
       variables,
-      fragmentMap,
     });
 
     const initialResult = result;
@@ -761,12 +777,15 @@ export class QueryManager {
             // this will throw an error if there are missing fields in
             // the results if returnPartialData is false.
             resultFromStore = readSelectionSetFromStore({
-              store: this.getApolloState().data,
+              context: {
+                store: this.getApolloState().data,
+                fragmentMap,
+                fetchMiddleware: this.storeFetchMiddleware,
+              },
               rootId: querySS.id,
               selectionSet: querySS.selectionSet,
               variables,
               returnPartialData: returnPartialData || noFetch,
-              fragmentMap,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */

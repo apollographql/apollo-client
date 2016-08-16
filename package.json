@@ -44,7 +44,7 @@
     "lodash.countby": "^4.4.0",
     "lodash.flatten": "^4.2.0",
     "lodash.forown": "^4.1.0",
-    "lodash.has": "^4.3.1",
+    "lodash.has": "^4.5.2",
     "lodash.identity": "^3.0.0",
     "lodash.includes": "^4.1.2",
     "lodash.isarray": "^4.0.0",

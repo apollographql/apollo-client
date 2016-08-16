@@ -90,10 +90,10 @@ import { Component } from '@angular/core';
 import { Angular2Apollo } from 'angular2-apollo';
 
 @Component({
-  selector: 'posts-list',
-  templateUrl: 'client/posts-list.component.html'
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
 })
-class PostsListComponent {
+class postsList {
   constructor(private angularApollo : Angular2Apollo) {
   }
 }
@@ -114,10 +114,10 @@ import { Angular2Apollo, ApolloQueryObservable } from 'angular2-apollo';
 import gql from 'graphql-tag';
 
 @Component({
-  selector: 'posts-list',
-  templateUrl: 'client/posts-list.component.html'
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
 })
-class PostsListComponent {
+class postsList {
   posts: ApolloQueryObservable<any[]>;
 
   constructor(private angularApollo : Angular2Apollo) {
@@ -152,10 +152,10 @@ import { Angular2Apollo } from 'angular2-apollo';
 import gql from 'graphql-tag';
 
 @Component({
-  selector: 'posts-list',
-  templateUrl: 'client/posts-list.component.html'
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
 })
-class PostsListComponent {
+class postsList {
   posts: any[] = [];
 
   constructor(private angularApollo : Angular2Apollo) {
@@ -178,65 +178,6 @@ class PostsListComponent {
 }
 ```
 
-**Variables with observable values**
-
-You can specify variables values as observables. Every time those observables emit new values, the query is rebuild.
-
-```ts
-import { Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { Angular2Apollo, ApolloQueryObservable } from 'angular2-apollo';
-import { Subject } from 'rxjs/Subject';
-
-import gql from 'graphql-tag';
-
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/debounceTime';
-
-@Component({
-  selector: 'search',
-  template: `
-    <input type="search" placeholder="Search..." [formControl]="searchControl" />
-
-    <ul>
-      <li *ngFor="let result of results | async">
-        {{result.title}}
-      </li>
-    </ul>
-  `
-})
-class SearchComponent implements OnInit {
-  results: ApolloQueryObservable<any[]>;
-  searchControl = new FormControl();
-  search: Subject<string> = new Subject<string>();
-
-  constructor(private angularApollo : Angular2Apollo) {}
-
-  ngOnInit() {
-    this.results = angularApollo.query({
-      query: gql`
-        query getResults($search: String) {
-          results(title: $search) {
-            title
-          }
-        }
-      `,
-      variables: {
-        title: this.search
-      }
-    }).map(response => response.data.results);
-
-    this.searchControl.valueChanges
-      .debounceTime(300)
-      .subscribe(search => {
-        this.search.next(search);
-      });
-  }
-}
-```
-
-It is important to know that it is possible to mix observable values with primitive values.
-
 <h4 id="angular2apollo-mutations">Mutations</h4>
 
 To call a mutation you can use `mutate` method with the same arguments as [`ApolloClient#mutate`](mutations.html#mutate). In this case as the result you will receive a promise that resolves to a ApolloQueryResult.
@@ -250,10 +191,10 @@ import { Angular2Apollo } from 'angular2-apollo';
 import gql from 'graphql-tag';
 
 @Component({
-  selector: 'posts-list',
-  templateUrl: 'client/posts-list.component.html'
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
 })
-class PostsListComponent {
+class postsList {
   constructor(private angularApollo : Angular2Apollo) {
 
   }
@@ -290,7 +231,7 @@ class PostsListComponent {
         raw: raw,
       }
     }).then((result) => {
-      const { data } = result;
+      const { errors, data } = result;
 
       if (data) {
         console.log('got data', data);
@@ -347,12 +288,12 @@ const client = new ApolloClient({
 });
 
 @Component({
-  selector: 'posts-list',
-  templateUrl: 'client/posts-list.component.html'
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
 })
 @Apollo({
   client,
-  queries(context: PostsListComponent) {
+  queries(context) {
     return {
       data: {
         query: gql`
@@ -372,7 +313,7 @@ const client = new ApolloClient({
     };
   }
 })
-class PostsListComponent {
+class postsList {
   public tag: string = '1234';
   public data: any;
 }
@@ -400,12 +341,12 @@ const client = new ApolloClient({
 });
 
 @Component({
-  selector: 'posts-list',
-  templateUrl: 'client/posts-list.component.html'
+  selector: 'postsList',
+  templateUrl: 'client/postsList.html'
 })
 @Apollo({
   client,
-  mutations(context: PostsListComponent) {
+  mutations(context) {
     return {
       postReply: ({
         token,
@@ -441,7 +382,7 @@ const client = new ApolloClient({
     };
   }
 })
-class PostsListComponent {
+class postsList {
   public token: string = 'random';
 
   reply(reply) {

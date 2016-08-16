@@ -89,12 +89,15 @@ export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetw
 }
 
 export function printRequest(request: Request): PrintedRequest {
-  const printedRequest = {
-    debugName: request.debugName,
-    query: print(request.query),
-    variables: request.variables,
-    operationName: request.operationName,
-  };
+  let printedRequest = {};
+
+  for (let key in request) {
+    if (request.hasOwnProperty(key)) {
+      printedRequest[key] = key === 'query' ?
+          print(request[key]) : request[key];
+    }
+  }
+
   return printedRequest;
 }
 

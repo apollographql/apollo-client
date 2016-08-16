@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",

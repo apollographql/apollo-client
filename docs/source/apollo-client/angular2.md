@@ -14,67 +14,34 @@ npm install angular2-apollo --save
 
 <h2 id="bootstrap">Bootstrap</h2>
 
-*Angular Modules*, also known as *NgModules*, are the powerful new way to organize and bootstrap your Angular application.
-
-<h4 id="bootstrap-apollo-module">ApolloModule</h4>
-
 If you want to define the default *ApolloClient* to be used by `Angular2Apollo` service, you can use `defaultApolloClient` provider.
 
 ```ts
-import { NgModule } from '@angular/core';
-import { BrowserModule  } from '@angular/platform-browser';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import { ApolloModule, defaultApolloClient } from 'angular2-apollo';
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import {
+  bootstrap
+} from '@angular/platform-browser-dynamic';
 
-import { AppComponent } from './app.component';
+import {
+  defaultApolloClient,
+  APOLLO_PROVIDERS
+} from 'angular2-apollo';
 
-const client = new ApolloClient({
-  networkInterface: createNetworkInterface('http://localhost:8080')
-});
+import ApolloClient, {
+  createNetworkInterface
+} from 'apollo-client';
 
-@NgModule({
-  imports: [
-    BrowserModule,
-    ApolloModule,
-  ],
-  declarations: [ AppComponent ],
-  providers: [ defaultApolloClient(client) ],
-  bootstrap: [ AppComponent ],
-})
-class AppModule {}
-
-platformBrowserDynamic().bootstrapModule(AppModule);
-```
-
-<h4 id="bootstrap-apollo-module-with-client">ApolloModule.withClient</h4>
-
-You can also define the default *ApolloClient* to be used by `Angular2Apollo` service, by using `ApolloModule.withClient`.
-
-```ts
-import { NgModule } from '@angular/core';
-import { BrowserModule  } from '@angular/platform-browser';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import { ApolloModule } from 'angular2-apollo';
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
-
-import { AppComponent } from './app.component';
+import {
+  MyAppClass
+} from './app/<my-app-class>';
 
 const client = new ApolloClient({
   networkInterface: createNetworkInterface('http://localhost:8080')
 });
 
-@NgModule({
-  imports: [
-    BrowserModule,
-    ApolloModule.withClient(client),
-  ],
-  declarations: [ AppComponent ],
-  bootstrap: [ AppComponent ],
-})
-class AppModule {}
-
-platformBrowserDynamic().bootstrapModule(AppModule);
+bootstrap(<MyAppClass>, [
+  APOLLO_PROVIDERS,
+  defaultApolloClient(client)
+  ]);
 ```
 
 <h2 id="angular2apollo">Angular2Apollo service</h2>
@@ -86,13 +53,20 @@ This service allows you to bind queries and call mutations.
 Since you previously used `APOLLO_PROVIDERS` to bootstrap you app, it is possible now just to define `Angular2Apollo` service inside the constructor.
 
 ```ts
-import { Component } from '@angular/core';
-import { Angular2Apollo } from 'angular2-apollo';
+import {
+  Component,
+  Injectable
+} from '@angular/core';
+
+import {
+  Angular2Apollo
+} from 'angular2-apollo';
 
 @Component({
   selector: 'postsList',
   templateUrl: 'client/postsList.html'
 })
+@Injectable()
 class postsList {
   constructor(private angularApollo : Angular2Apollo) {
   }
@@ -108,8 +82,14 @@ Here's how you could run a query:
 ```ts
 import 'rxjs';
 
-import { Component } from '@angular/core';
-import { Angular2Apollo, ApolloQueryObservable } from 'angular2-apollo';
+import {
+  Component
+} from '@angular/core';
+
+import {
+  Angular2Apollo,
+  ApolloQueryObservable
+} from 'angular2-apollo';
 
 import gql from 'graphql-tag';
 
@@ -146,8 +126,13 @@ If you just want to fetch a query you can use `query` method with the same argum
 Here's how you could run a query:
 
 ```ts
-import { Component } from '@angular/core';
-import { Angular2Apollo } from 'angular2-apollo';
+import {
+  Component
+} from '@angular/core';
+
+import {
+  Angular2Apollo
+} from 'angular2-apollo';
 
 import gql from 'graphql-tag';
 
@@ -180,20 +165,31 @@ class postsList {
 
 <h4 id="angular2apollo-mutations">Mutations</h4>
 
-To call a mutation you can use `mutate` method with the same arguments as [`ApolloClient#mutate`](mutations.html#mutate). In this case as the result you will receive a promise that resolves to a ApolloQueryResult.
+To call a mutation you can use `mutate` method with the same arguments as [`ApolloClient#mutate`](mutations.html#mutate). In this case as the result you will receive a promise that resolves to a GraphQLResult.
 
 Here's how you would call a mutation and pass in arguments via variables:
 
 ```ts
-import { Component } from '@angular/core';
-import { Angular2Apollo } from 'angular2-apollo';
+import {
+  Component,
+  Injectable
+} from '@angular/core';
+
+import {
+  Angular2Apollo
+} from 'angular2-apollo';
 
 import gql from 'graphql-tag';
+
+import {
+  graphQLResult
+} from 'graphql';
 
 @Component({
   selector: 'postsList',
   templateUrl: 'client/postsList.html'
 })
+@Injectable()
 class postsList {
   constructor(private angularApollo : Angular2Apollo) {
 
@@ -230,11 +226,15 @@ class postsList {
         category_id: categoryId,
         raw: raw,
       }
-    }).then((result) => {
-      const { errors, data } = result;
+    }).then((graphQLResult) => {
+      const { errors, data } = graphQLResult;
 
       if (data) {
         console.log('got data', data);
+      }
+
+      if (errors) {
+        console.log('got some GraphQL execution errors', errors);
       }
     }).catch((error) => {
       console.log('there was an error sending the query', error);
@@ -277,9 +277,17 @@ It is also reactive so your variables will be always up to date.
 Here's how you could run a query:
 
 ```ts
-import { Component } from '@angular/core';
-import { Apollo } from 'angular2-apollo';
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import {
+  Component, Injectable
+} from '@angular/core';
+
+import {
+  Apollo
+} from 'angular2-apollo';
+
+import ApolloClient, {
+  createNetworkInterface
+} from 'apollo-client';
 
 import gql from 'graphql-tag';
 
@@ -291,6 +299,7 @@ const client = new ApolloClient({
   selector: 'postsList',
   templateUrl: 'client/postsList.html'
 })
+@Injectable()
 @Apollo({
   client,
   queries(context) {
@@ -329,10 +338,22 @@ It is also reactive so your variables will be always up to date.
 Here's how you could run a mutation:
 
 ```ts
-import { Component } from '@angular/core';
-import { Apollo } from 'angular2-apollo';
+import {
+  Component,
+  Injectable
+} from '@angular/core';
 
-import ApolloClient, { createNetworkInterface, ApolloQueryResult } from 'apollo-client';
+import {
+  Apollo
+} from 'angular2-apollo';
+
+import {
+  GraphQLResult
+} from 'graphql';
+
+import ApolloClient, {
+  createNetworkInterface
+} from 'apollo-client';
 
 import gql from 'graphql-tag';
 
@@ -344,6 +365,7 @@ const client = new ApolloClient({
   selector: 'postsList',
   templateUrl: 'client/postsList.html'
 })
+@Injectable()
 @Apollo({
   client,
   mutations(context) {
@@ -387,11 +409,15 @@ class postsList {
 
   reply(reply) {
     this.postReply(reply)
-      .then((result: ApolloQueryResult) => {
-        const { data } = result;
+      .then((result: GraphQLResult) => {
+        const { errors, data } = result;
 
         if (data) {
           console.log('got data', data);
+        }
+
+        if (errors) {
+          console.log('got some GraphQL execution errors', errors);
         }
       }).catch((error) => {
         console.log('there was an error sending the query', error);

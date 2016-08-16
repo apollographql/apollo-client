@@ -166,7 +166,8 @@ export function unpackDataForRequest({
         currIndex += 1;
       }
 
-      let childData = isNull(data) ? null : data[stringKey];
+      const childData = isNull(data) ? null : data[stringKey];
+      let resData = childData;
       if (field.selectionSet && field.selectionSet.selections.length > 0) {
         const fieldOpts = {
           request,
@@ -183,11 +184,12 @@ export function unpackDataForRequest({
             startIndex: currIndex,
           }) as UnpackOptions);
           currIndex = selectionRet.newIndex;
+          resData = childData;
         } else if (isArray(childData)) {
           const resUnpacked = [];
           let newIndex = 0;
 
-          data[stringKey].forEach((dataObject) => {
+          childData.forEach((dataObject) => {
             const selectionRet = unpackDataForRequest(assign(fieldOpts, {
               data: dataObject,
               startIndex: currIndex,
@@ -198,17 +200,17 @@ export function unpackDataForRequest({
           });
 
           currIndex = newIndex;
-          childData = resUnpacked;
+          resData = resUnpacked;
         } else {
           const selectionRet = unpackDataForRequest(assign(fieldOpts, { startIndex: currIndex }) as UnpackOptions);
           // Create keys for internal fragments
-          childData = selectionRet.unpackedData;
+          resData = selectionRet.unpackedData;
           currIndex = selectionRet.newIndex;
         }
       }
 
       if (!isUndefined(childData)) {
-        unpackedData[realName] = childData;
+        unpackedData[realName] = resData;
       }
     } else if (selection.kind === 'InlineFragment') {
       // If this is an inline fragment, then we recursively resolve the fields within the

@@ -95,6 +95,22 @@ import { ObservableQuery } from './ObservableQuery';
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
+// A result transformer is given the data that is to be returned from the store from a query or
+// mutation, and can modify or observe it before the value is provided to your application.
+//
+// For watched queries, the transformer is only called when the data retrieved from the server is
+// different from previous.
+//
+// If the transformer wants to mutate results (say, by setting the prototype of result data), it
+// will likely need to be paired with a custom resultComparator.  By default, Apollo performs a
+// deep equality comparsion on results, and skips those that are considered equal - reducing
+// re-renders.
+export type ResultTransformer = (resultData: ApolloQueryResult) => ApolloQueryResult;
+
+// Controls how Apollo compares two query results and considers their equality.  Two equal results
+// will not trigger re-renders.
+export type ResultComparator = (result1: ApolloQueryResult, result2: ApolloQueryResult) => boolean;
+
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   public scheduler: QueryScheduler;
@@ -103,6 +119,8 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private reduxRootKey: string;
   private queryTransformer: QueryTransformer;
+  private resultTransformer: ResultTransformer;
+  private resultComparator: ResultComparator;
   private queryListeners: { [queryId: string]: QueryListener };
 
   // A map going from queryId to the last result/state that the queryListener was told about.
@@ -140,6 +158,8 @@ export class QueryManager {
     store,
     reduxRootKey,
     queryTransformer,
+    resultTransformer,
+    resultComparator,
     shouldBatch = false,
     batchInterval = 10,
   }: {
@@ -147,6 +167,8 @@ export class QueryManager {
     store: ApolloStore,
     reduxRootKey: string,
     queryTransformer?: QueryTransformer,
+    resultTransformer?: ResultTransformer,
+    resultComparator?: ResultComparator,
     shouldBatch?: Boolean,
     batchInterval?: number,
   }) {
@@ -156,6 +178,8 @@ export class QueryManager {
     this.store = store;
     this.reduxRootKey = reduxRootKey;
     this.queryTransformer = queryTransformer;
+    this.resultTransformer = resultTransformer;
+    this.resultComparator = resultComparator;
     this.pollingTimers = {};
     this.batchInterval = batchInterval;
     this.queryListeners = {};
@@ -275,7 +299,7 @@ export class QueryManager {
           });
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
-          resolve(result);
+          resolve(this.transformResult(<ApolloQueryResult>result));
         })
         .catch((err) => {
           this.store.dispatch({
@@ -338,7 +362,7 @@ export class QueryManager {
             if (observer.next) {
               if (this.isDifferentResult(queryId, resultFromStore )) {
                 this.queryResults[queryId] = resultFromStore;
-                observer.next(resultFromStore);
+                observer.next(this.transformResult(resultFromStore));
               }
             }
           } catch (error) {
@@ -575,6 +599,15 @@ export class QueryManager {
       querySelectionSet: queryDefinition.selectionSet,
       queryFragments: fragments,
     };
+  }
+
+  // Give the result transformer a chance to observe or modify result data before it is passed on.
+  public transformResult(result: ApolloQueryResult): ApolloQueryResult {
+    if (!this.resultTransformer) {
+      return result;
+    } else {
+      return this.resultTransformer(result);
+    }
   }
 
   private collectResultBehaviorsFromUpdateQueries(
@@ -908,7 +941,8 @@ export class QueryManager {
   // Given a query id and a new result, this checks if the old result is
   // the same as the last result for that particular query id.
   private isDifferentResult(queryId: string, result: ApolloQueryResult): boolean {
-    return !isEqual(this.queryResults[queryId], result);
+    const comparator = this.resultComparator || isEqual;
+    return !comparator(this.queryResults[queryId], result);
   }
 
   private broadcastQueries() {

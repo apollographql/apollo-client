@@ -11,6 +11,7 @@ The most notable changes are:
 - `apolloExpress` no longer accepts shorthand type definitions
 - `apolloExpress` doesn't have the `resolvers`, `mocks` and `connectors` options.
 - `apolloExpress` doesn't include GraphiQL any more
+- `context` if you use connectors in your schema, don't forget to setup default `context` to at least an empty object, it can't be `undefined` in this case
 - Apollo Server no longer accepts GET requests or parameters in the URL
 - `apolloExpress` no longer parses the HTTP body automatically
 
@@ -85,8 +86,10 @@ addMockFunctionsToSchema({
   preserveResolvers: true,
 });
 
+// `context` must be an object and can't be undefined when using connectors
 graphQLServer.use('/graphql', bodyParser.json(), apolloExpress({
   schema: executableSchema,
+  context: {}, //at least(!) an empty object
 }));
 
 graphQLServer.use('/graphiql', graphiqlExpress({

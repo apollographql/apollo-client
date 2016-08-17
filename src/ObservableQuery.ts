@@ -157,14 +157,20 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         fragments: this.options.fragments,
         handler: (error: Object, result: Object) => {
           const reducer = graphQLSubscriptionOptions.updateFunction;
-          const mapFn = (previousResult, { queryVariables }) => {
-            return reducer(
-              previousResult, {
-                subscriptionResult: result,
-                queryVariables,
-              });
-          };
-          this.updateQuery(mapFn);
+          if (error) {
+            throw new Error(JSON.stringify(error));
+          } else {
+             const mapFn = (previousResult, { queryVariables }) => {
+              return reducer(
+                previousResult, {
+                  subscriptionResult: result,
+                  queryVariables,
+                }
+              );
+            };
+            this.updateQuery(mapFn);
+          }
+
         },
       };
 

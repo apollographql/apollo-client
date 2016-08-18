@@ -206,4 +206,28 @@ describe('fetchMore on an observable query', () => {
       unsetup();
     });
   });
+
+  it('fetchMore reducer returns bad shape', () => {
+    latestResult = null;
+    return setup({
+      request: {
+        query,
+        variables: variablesMore,
+      },
+      result: resultMore,
+    }).then((watchedQuery) => {
+      return watchedQuery.fetchMore({
+        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+        updateQuery: (prev, options) => {
+          return {}; // bad shape, missing keys
+        },
+      });
+    }).then(() => {
+      assert.isOk(false, 'should not happen');
+    })
+    .catch(err => {
+      assert.isTrue(err.message.match(/missing field/));
+      unsetup();
+    });
+  });
 });

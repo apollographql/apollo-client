@@ -205,8 +205,11 @@ export default class ApolloClient {
   * document. In fact, the @{addTypename} query transformer does exactly this.
   *
   * @param shouldBatch Determines whether multiple queries should be batched together in a single
-  * roundtrip. Note that if this is set to true, the {@link NetworkInterface} should implement
-  * {@link BatchedNetworkInterface}. Every time a query is fetched, it is placed into the queue of
+  * roundtrip.
+  * <p />
+  *
+  * Note that if this is set to true, the [[NetworkInterface]] should implement
+  * [[BatchedNetworkInterface]]. Every time a query is fetched, it is placed into the queue of
   * the batcher. At the end of each batcher time interval, the query batcher batches together
   * (if shouldBatch is true) each of the queries in the queue and sends them to the server.
   * This happens transparently: each query will still receive exactly the result it asked for,

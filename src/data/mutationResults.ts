@@ -288,8 +288,8 @@ export function mutationResultQueryResultReducer(state: NormalizedCache, {
     const extraField = err.extraInfo['extraField'];
     const dataId = err.extraInfo['dataId'];
     const errorMessage = missingField ?
-      `updateQuery function for a mutation returned a shape missing a field ${missingField} on object ${dataId}` :
-      `updateQuery function for a mutation returned a shape with an extra field ${extraField} on object ${dataId}`;
+      `updateQuery function by a mutation for query ${queryName} returned a shape missing a field ${missingField} on object ${dataId}` :
+      `updateQuery function by a mutation for query ${queryName} returned a shape with an extra field ${extraField} on object ${dataId}`;
 
     throw new ApolloError({
       errorMessage,

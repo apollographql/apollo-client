@@ -16,6 +16,14 @@ import {
 
 import { tryFunctionOrLogError } from './util/errorHandling';
 
+import {
+  getQueryDefinition,
+} from './queries/getFromAST';
+
+import {
+  ApolloError,
+} from './errors';
+
 import assign = require('lodash.assign');
 
 export interface FetchMoreOptions {
@@ -152,17 +160,40 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         queryFragments = [],
       } = this.queryManager.getQueryWithPreviousResult(this.queryId);
 
+      const queryDef = getQueryDefinition(this.options.query);
+      const queryName = (queryDef.name && queryDef.name.value) || '<anonymous query>';
+
       const newResult = tryFunctionOrLogError(
         () => mapFn(previousResult, { queryVariables }));
 
       if (newResult) {
-        this.queryManager.store.dispatch({
-          type: 'APOLLO_UPDATE_QUERY_RESULT',
-          newResult,
-          queryVariables,
-          querySelectionSet,
-          queryFragments,
-        });
+        try {
+          this.queryManager.store.dispatch({
+            type: 'APOLLO_UPDATE_QUERY_RESULT',
+            newResult,
+            queryVariables,
+            querySelectionSet,
+            queryFragments,
+          });
+        } catch (err) {
+          if ((err instanceof ApolloError) && err.extraInfo['isFieldError']) {
+            const missingField = err.extraInfo['missingField'];
+            const extraField = err.extraInfo['extraField'];
+            const dataId = err.extraInfo['dataId'];
+            const errorMessage = missingField ?
+              `updateQuery function for the query ${queryName} returned a shape missing a field ${missingField} on object ${dataId}` :
+              `updateQuery function for the query ${queryName} returned a shape with an extra field ${extraField} on object ${dataId}`;
+
+            throw new ApolloError({
+              errorMessage,
+              extraInfo: {
+                queryName,
+                queryVariables,
+                newResult,
+              },
+            });
+          }
+        }
       }
     };
 

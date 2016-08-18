@@ -163,7 +163,12 @@ export function clearFragmentDefinitions() {
   fragmentDefinitionsMap = {};
 }
 
-
+/**
+ * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
+ * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
+ * receive results from the server and cache the results in a Redux store. It also delivers updates
+ * to GraphQL queries through {@link Observable} instances.
+ */
 export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
@@ -178,6 +183,42 @@ export default class ApolloClient {
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public batchInterval: number;
 
+  /**
+  * Constructs an instance.
+  *
+  * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
+  * to a GraphQL spec-compliant server.
+  *
+  * @param reduxRootKey The root key within the Redux store in which data fetched from the server
+  * will be stored.
+  *
+  * @param initialState The initial state assigned to the store.
+  *
+  * @param dataIdFromObject A function that returns a object identifier given a particular result
+    object.
+  *
+  * @param queryTransformer A function that takes a {@link SelectionSet} and modifies it in place
+  * in some way. The query transformer is then applied to the every GraphQL document before it is
+  * sent to the server.
+  *
+  * For example, a query transformer can add the __typename field to every level of a GraphQL
+  * document. In fact, the @{addTypename} query transformer does exactly this.
+  *
+  * @param shouldBatch Determines whether multiple queries should be batched together in a single
+  * roundtrip. Note that if this is set to true, the {@link NetworkInterface} should implement
+  * {@link BatchedNetworkInterface}. Every time a query is fetched, it is placed into the queue of
+  * the batcher. At the end of each batcher time interval, the query batcher batches together
+  * (if shouldBatch is true) each of the queries in the queue and sends them to the server.
+  * This happens transparently: each query will still receive exactly the result it asked for,
+  * regardless of whether or not it is batched.
+  *
+  * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
+  *
+  * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
+  * server side render.
+  *
+  * @param batchInterval The time interval on which the query batcher operates.
+  **/
   constructor({
     networkInterface,
     reduxRootKey,

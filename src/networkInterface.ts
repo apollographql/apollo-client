@@ -47,8 +47,8 @@ export interface HTTPNetworkInterface extends BatchedNetworkInterface {
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[];
   _afterwares: AfterwareInterface[];
-  use(middlewares: MiddlewareInterface[]);
-  useAfter(afterwares: AfterwareInterface[]);
+  use(middlewares: MiddlewareInterface[]): any;
+  useAfter(afterwares: AfterwareInterface[]): any;
 }
 
 export interface RequestAndOptions {
@@ -70,13 +70,13 @@ export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetw
       // If we a have a single request, there is no point doing any merging
       // at all.
       if (requests.length === 1) {
-        return this.query(requests[0]).then((result) => {
+        return this.query(requests[0]).then((result: any) => {
           return Promise.resolve([result]);
         });
       }
 
       const composedRequest = mergeRequests(requests);
-      return this.query(composedRequest).then((composedResult) => {
+      return this.query(composedRequest).then((composedResult: any) => {
         return unpackMergedResult(composedResult, requests);
       });
     },
@@ -112,7 +112,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     options,
   }: RequestAndOptions): Promise<RequestAndOptions> {
     return new Promise((resolve, reject) => {
-      const queue = (funcs, scope) => {
+      const queue = (funcs: MiddlewareInterface[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();
@@ -137,7 +137,7 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     options,
   }: ResponseAndOptions): Promise<ResponseAndOptions> {
     return new Promise((resolve, reject) => {
-      const queue = (funcs, scope) => {
+      const queue = (funcs: any[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();

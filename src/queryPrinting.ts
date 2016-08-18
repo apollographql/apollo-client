@@ -62,9 +62,9 @@ export function queryDefinition({
     variableDefinitions = null,
     name = null,
 }: QueryDefinitionOptions): OperationDefinition {
-  const selections = [];
+  const selections: any[] = [];
 
-  missingSelectionSets.forEach((missingSelectionSet: SelectionSetWithRoot, ii) => {
+  missingSelectionSets.forEach((missingSelectionSet: SelectionSetWithRoot, ii: any) => {
     if (missingSelectionSet.id === 'CANNOT_REFETCH') {
       throw new Error('diffAgainstStore did not merge selection sets correctly');
     }

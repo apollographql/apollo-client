@@ -70,9 +70,9 @@ export class QueryBatcher {
 
   // Consumes the queue. Called on a polling interval.
   // Returns a list of promises (one for each query).
-  public consumeQueue(): Promise<GraphQLResult>[] {
+  public consumeQueue(): Promise<GraphQLResult>[] | undefined {
     if (this.queuedRequests.length < 1) {
-      return;
+      return undefined;
     }
 
     const requests: Request[] = this.queuedRequests.map((queuedRequest) => {
@@ -84,8 +84,8 @@ export class QueryBatcher {
     });
 
     const promises: Promise<GraphQLResult>[] = [];
-    const resolvers = [];
-    const rejecters = [];
+    const resolvers: any[] = [];
+    const rejecters: any[] = [];
     this.queuedRequests.forEach((fetchRequest, index) => {
       promises.push(fetchRequest.promise);
       resolvers.push(fetchRequest.resolve);

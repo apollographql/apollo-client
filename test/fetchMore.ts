@@ -26,7 +26,7 @@ describe('updateQuery on a simple query', () => {
   };
 
   it('triggers new result from updateQuery', () => {
-    let latestResult = null;
+    let latestResult: any = null;
     const networkInterface = mockNetworkInterface({
       request: { query },
       result,
@@ -90,7 +90,7 @@ describe('fetchMore on an observable query', () => {
     limit: 20,
   };
 
-  const result = {
+  const result: any = {
     data: {
       entry: {
         comments: [],
@@ -98,7 +98,7 @@ describe('fetchMore on an observable query', () => {
     },
   };
   const resultMore = clonedeep(result);
-  const result2 = {
+  const result2: any = {
     data: {
       comments: [],
     },
@@ -111,13 +111,13 @@ describe('fetchMore on an observable query', () => {
     result2.data.comments.push({ text: `new comment ${i}` });
   }
 
-  let latestResult = null;
+  let latestResult: any = null;
 
   let client: ApolloClient;
-  let networkInterface;
-  let sub;
+  let networkInterface: any;
+  let sub: any;
 
-  function setup(...mockedResponses) {
+  function setup(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: {
         query,

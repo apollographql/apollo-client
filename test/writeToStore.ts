@@ -40,7 +40,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -65,7 +65,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       aliasedField: 'This is a string!',
       numberField: 5,
@@ -98,7 +98,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       aliasedField1: 'The arg was 1!',
       aliasedField2: 'The arg was 2!',
@@ -138,7 +138,7 @@ describe('writing to the store', () => {
       stringArg: 'This is a string!',
     };
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'Heyo',
       numberField: 5,
@@ -177,7 +177,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -221,7 +221,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -263,7 +263,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -306,7 +306,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -356,7 +356,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -402,7 +402,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -453,7 +453,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -495,7 +495,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -534,7 +534,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -570,7 +570,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       numberField: 5,
       nullField: null,
@@ -590,7 +590,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result2 = {
+    const result2: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       nullField: null,
@@ -624,7 +624,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -652,7 +652,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       people_one: {
         id: 'abcd',
         stringField: 'This is a string!',
@@ -758,7 +758,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       some_mutation: {
         id: 'id',
       },
@@ -767,7 +767,7 @@ describe('writing to the store', () => {
       },
     };
 
-    const variables = {
+    const variables: any = {
       nil: null,
       in: {
         id: '5',
@@ -813,10 +813,11 @@ describe('writing to the store', () => {
   });
 
   describe('type escaping', () => {
-    const dataIdFromObject = (object) => {
+    const dataIdFromObject = (object: any) => {
       if (object.__typename && object.id) {
         return object.__typename + '__' + object.id;
       }
+      return undefined;
     };
 
     it('should correctly escape generated ids', () => {
@@ -944,10 +945,11 @@ describe('writing to the store', () => {
         __typename: 'Author',
       },
     };
-    const dataIdFromObject = (object) => {
+    const dataIdFromObject = (object: any) => {
       if (object.__typename && object.id) {
         return object.__typename + '__' + object.id;
       }
+      return undefined;
     };
     const queryWithoutId = gql`
       query {
@@ -1021,7 +1023,7 @@ describe('writing to the store', () => {
       },
     ];
 
-    const result = { mut: { id: '1' } };
+    const result: any = { mut: { id: '1' } };
 
     function isOperationDefinition(value: Node): value is OperationDefinition {
       return value.kind === 'OperationDefinition';
@@ -1052,7 +1054,7 @@ describe('writing to the store', () => {
         ...notARealFragment
         fortuneCookie
       }`;
-    const result = {
+    const result: any = {
       fortuneCookie: 'Star Wars unit tests are boring',
     };
     assert.throws(() => {
@@ -1073,7 +1075,7 @@ describe('writing to the store', () => {
       }
     `;
 
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,

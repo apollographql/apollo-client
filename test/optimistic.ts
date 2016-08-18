@@ -48,7 +48,7 @@ describe('optimistic mutation results', () => {
     }
   `;
 
-  const result = {
+  const result: any = {
     data: {
       __typename: 'Query',
       todoList: {
@@ -101,7 +101,7 @@ describe('optimistic mutation results', () => {
   };
 
   let client: ApolloClient;
-  let networkInterface;
+  let networkInterface: any;
 
   type CustomMutationBehavior = {
     type: 'CUSTOM_MUTATION_RESULT',
@@ -123,7 +123,7 @@ describe('optimistic mutation results', () => {
     return state;
   }
 
-  function setup(...mockedResponses) {
+  function setup(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: { query },
       result,
@@ -566,7 +566,7 @@ describe('optimistic mutation results', () => {
       });
     });
     it('can run 2 mutations concurrently and handles all intermediate states well', () => {
-      function checkBothMutationsAreApplied(expectedText1, expectedText2) {
+      function checkBothMutationsAreApplied(expectedText1: any, expectedText2: any) {
         const dataInStore = client.queryManager.getDataWithOptimisticResults();
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
         assert.property(dataInStore, 'Todo99');
@@ -908,9 +908,9 @@ describe('optimistic mutation - githunt comments', () => {
   };
 
   let client: ApolloClient;
-  let networkInterface;
+  let networkInterface: any;
 
-  function setup(...mockedResponses) {
+  function setup(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: {
         query: applyTransformers(query, [addTypename]),

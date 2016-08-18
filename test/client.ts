@@ -328,7 +328,7 @@ describe('client', () => {
       result: { data },
     });
 
-    const initialState = {
+    const initialState: any = {
       apollo: {
         queries: {
           '0': {
@@ -924,8 +924,8 @@ describe('client', () => {
     };
 
 
-    let networkInterface;
-    let clock;
+    let networkInterface: any;
+    let clock: any;
     beforeEach(() => {
       networkInterface = mockNetworkInterface({
         request: { query },

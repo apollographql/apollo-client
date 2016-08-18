@@ -255,8 +255,8 @@ describe('scoping selection set', () => {
   });
 });
 
-function extractMainSelectionSet(doc) {
-  let mainDefinition;
+function extractMainSelectionSet(doc: any) {
+  let mainDefinition: any;
 
   try {
     mainDefinition = getQueryDefinition(doc);
@@ -287,7 +287,7 @@ function scope(doc: Document, path: (string | number)[]) {
   });
 }
 
-function testScope(firstDoc, secondDoc, path) {
+function testScope(firstDoc: any, secondDoc: any, path: any) {
   assert.equal(
     print(scope(firstDoc, path)).trim(),
     print(secondDoc).trim()

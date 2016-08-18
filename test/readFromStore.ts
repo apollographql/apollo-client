@@ -107,7 +107,7 @@ describe('reading from the store', () => {
   });
 
   it('runs a nested fragment', () => {
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -158,7 +158,7 @@ describe('reading from the store', () => {
   });
 
   it('runs a nested fragment with an array without IDs', () => {
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -221,7 +221,7 @@ describe('reading from the store', () => {
   });
 
   it('runs a nested fragment with an array without IDs and a null', () => {
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -276,7 +276,7 @@ describe('reading from the store', () => {
   });
 
   it('runs a nested fragment with an array with IDs and a null', () => {
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -383,7 +383,7 @@ describe('reading from the store', () => {
   });
 
   it('runs a nested fragment where the reference is null', () => {
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -419,7 +419,7 @@ describe('reading from the store', () => {
   });
 
   it('runs an array of non-objects', () => {
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -455,7 +455,7 @@ describe('reading from the store', () => {
   });
 
   it('runs an array of non-objects with null', () => {
-    const result = {
+    const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,

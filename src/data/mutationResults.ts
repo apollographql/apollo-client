@@ -179,7 +179,7 @@ function mutationResultDeleteReducer(state: NormalizedCache, {
   return newState;
 }
 
-function removeRefsFromStoreObj(storeObj, dataId) {
+function removeRefsFromStoreObj(storeObj: any, dataId: any) {
   let affected = false;
 
   const cleanedObj = mapValues(storeObj, (value, key) => {
@@ -211,7 +211,7 @@ function removeRefsFromStoreObj(storeObj, dataId) {
 
 // Remove any occurrences of dataId in an arbitrarily nested array, and make sure that the old array
 // === the new array if nothing was changed
-export function cleanArray(originalArray, dataId) {
+export function cleanArray(originalArray: any[], dataId: any): any[] {
   if (originalArray.length && isArray(originalArray[0])) {
     // Handle arbitrarily nested arrays
     let modified = false;

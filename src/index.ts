@@ -144,7 +144,7 @@ this in the docs: http://docs.apollostack.com/`);
     }
   });
 
-  return fragments.concat(fragmentDefinitions);
+  return (fragments as FragmentDefinition[]).concat(fragmentDefinitions);
 }
 
 // This function disables the warnings printed about fragment names. One place where this chould be
@@ -164,11 +164,11 @@ export function clearFragmentDefinitions() {
 }
 
 /**
-* This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
-* and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
-* receive results from the server and cache the results in a Redux store. It also delivers updates
-* to GraphQL queries through {@link Observable} instances.
-**/
+ * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
+ * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
+ * receive results from the server and cache the results in a Redux store. It also delivers updates
+ * to GraphQL queries through {@link Observable} instances.
+ */
 export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;

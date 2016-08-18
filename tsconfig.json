@@ -5,11 +5,13 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
-    "noImplicitAny": false,
     "rootDir": ".",
     "outDir": "lib",
     "allowSyntheticDefaultImports": true,
-    "removeComments": true
+    "removeComments": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
   },
   "files": [
     "typings/main/index.d.ts",

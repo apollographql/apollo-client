@@ -31,9 +31,9 @@ import { GraphQLResult } from 'graphql';
 
 describe('network interface', () => {
   before(() => {
-    this.realFetch = global['fetch'];
+    this.realFetch = (<any>global)['fetch'];
 
-    global['fetch'] = ((url, opts) => {
+    (<any>global)['fetch'] = ((url: string, opts: any) => {
       this.lastFetchOpts = opts;
       if (url === 'http://does-not-exist.test/') {
         return Promise.reject('Network error');
@@ -48,7 +48,7 @@ describe('network interface', () => {
       //   return new Promise((resolve, reject) => {
       //     const request = JSON.parse(opts.body);
       //     graphql(swapiSchema, request.query, undefined, request.variables).then(result => {
-      //       const response = new global['Response'](JSON.stringify(result));
+      //       const response = new (<any>global)['Response'](JSON.stringify(result));
       //       resolve(response);
       //     }).catch(error => {
       //       reject(error);
@@ -61,7 +61,7 @@ describe('network interface', () => {
   });
 
   after(() => {
-    global['fetch'] = this.realFetch;
+    (<any>global)['fetch'] = this.realFetch;
   });
 
   describe('creating a network interface', () => {
@@ -104,8 +104,7 @@ describe('network interface', () => {
 
   describe('middleware', () => {
     it('should throw an error if you pass something bad', () => {
-      const malWare = new TestWare();
-      delete malWare.applyMiddleware;
+      const malWare: any = {};
       const networkInterface = createNetworkInterface('/graphql');
 
       try {
@@ -121,7 +120,7 @@ describe('network interface', () => {
     });
 
     it('should take a middleware and assign it', () => {
-      const testWare = new TestWare();
+      const testWare = TestWare();
 
       const networkInterface = createNetworkInterface('/graphql');
       networkInterface.use([testWare]);
@@ -130,8 +129,8 @@ describe('network interface', () => {
     });
 
     it('should take more than one middleware and assign it', () => {
-      const testWare1 = new TestWare();
-      const testWare2 = new TestWare();
+      const testWare1 = TestWare();
+      const testWare2 = TestWare();
 
       const networkInterface = createNetworkInterface('/graphql');
       networkInterface.use([testWare1, testWare2]);
@@ -140,7 +139,7 @@ describe('network interface', () => {
     });
 
     it('should alter the request', () => {
-      const testWare1 = new TestWare([
+      const testWare1 = TestWare([
         { key: 'personNum', val: 1 },
       ]);
 
@@ -178,7 +177,7 @@ describe('network interface', () => {
     });
 
     it('should alter the options but not overwrite defaults', () => {
-      const testWare1 = new TestWare([], [
+      const testWare1 = TestWare([], [
         { key: 'planet', val: 'mars' },
       ]);
 
@@ -201,15 +200,15 @@ describe('network interface', () => {
 
       return swapi.query(simpleRequest).then((data) => {
         assert.equal(this.lastFetchOpts.planet, 'mars');
-        assert.notOk(swapi._opts['planet']);
+        assert.notOk((<any>swapi._opts)['planet']);
       });
     });
 
     it('handle multiple middlewares', () => {
-      const testWare1 = new TestWare([
+      const testWare1 = TestWare([
         { key: 'personNum', val: 1 },
       ]);
-      const testWare2 = new TestWare([
+      const testWare2 = TestWare([
         { key: 'filmNum', val: 1 },
       ]);
 
@@ -265,7 +264,7 @@ describe('network interface', () => {
 
   describe('afterware', () => {
     it('should throw an error if you pass something bad', () => {
-      const malWare = new TestAfterWare();
+      const malWare = TestAfterWare();
       delete malWare.applyAfterware;
       const networkInterface = createNetworkInterface('/graphql');
 
@@ -282,7 +281,7 @@ describe('network interface', () => {
     });
 
     it('should take a afterware and assign it', () => {
-      const testWare = new TestAfterWare();
+      const testWare = TestAfterWare();
 
       const networkInterface = createNetworkInterface('/graphql');
       networkInterface.useAfter([testWare]);
@@ -291,8 +290,8 @@ describe('network interface', () => {
     });
 
     it('should take more than one afterware and assign it', () => {
-      const testWare1 = new TestAfterWare();
-      const testWare2 = new TestAfterWare();
+      const testWare1 = TestAfterWare();
+      const testWare2 = TestAfterWare();
 
       const networkInterface = createNetworkInterface('/graphql');
       networkInterface.useAfter([testWare1, testWare2]);
@@ -473,7 +472,7 @@ describe('network interface', () => {
       };
       const mergingNetworkInterface = addQueryMerging(myNetworkInterface);
       mergingNetworkInterface.batchQuery([request]).then((results) => {
-        assert.equal(results.length[0], 1);
+        assert.equal(results.length, 1);
         assert.deepEqual(results[0], { data });
       });
     });
@@ -486,31 +485,33 @@ function TestWare(
   options: Array<{ key: string, val: any }> = []
 ) {
 
-  this.applyMiddleware = (request: MiddlewareRequest, next: Function): void => {
-    variables.map((variable) => {
-      request.request.variables[variable.key] = variable.val;
-    });
+  return {
+    applyMiddleware: (request: MiddlewareRequest, next: Function): void => {
+      variables.map((variable) => {
+        (<any>request.request.variables)[variable.key] = variable.val;
+      });
 
-    options.map((variable) => {
-      request.options[variable.key] = variable.val;
-    });
+      options.map((variable) => {
+        (<any>request.options)[variable.key] = variable.val;
+      });
 
-    next();
+      next();
+    },
   };
-
-}
+};
 
 // simulate afterware by altering variables and options
 function TestAfterWare(
   options: Array<{ key: string, val: any }> = []
 ) {
 
-  this.applyAfterware = (response: AfterwareResponse, next: Function): void => {
-    options.map((variable) => {
-      response.options[variable.key] = variable.val;
-    });
+  return {
+    applyAfterware: (response: AfterwareResponse, next: Function): void => {
+      options.map((variable) => {
+        (<any>response.options)[variable.key] = variable.val;
+      });
 
-    next();
+      next();
+    },
   };
-
-}
+};

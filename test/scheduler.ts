@@ -364,7 +364,7 @@ describe('QueryScheduler', () => {
     scheduler.addQueryOnInterval(queryId, queryOptions);
     assert.equal(Object.keys(scheduler.intervalQueries).length, 1);
     assert.equal(Object.keys(scheduler.intervalQueries)[0], queryOptions.pollInterval.toString());
-    const queries = scheduler.intervalQueries[queryOptions.pollInterval.toString()];
+    const queries = (<any>scheduler.intervalQueries)[queryOptions.pollInterval.toString()];
     assert.equal(queries.length, 1);
     assert.equal(queries[0], queryId);
   });
@@ -434,7 +434,7 @@ describe('QueryScheduler', () => {
     assert.equal(keys.length, 1);
     assert.equal(keys[0], interval);
 
-    const queryIds = scheduler.intervalQueries[keys[0]];
+    const queryIds = (<any>scheduler.intervalQueries)[keys[0]];
     assert.equal(queryIds.length, 2);
     assert.deepEqual(scheduler.registeredQueries[queryIds[0]], queryOptions1);
     assert.deepEqual(scheduler.registeredQueries[queryIds[1]], queryOptions2);

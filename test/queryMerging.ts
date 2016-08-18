@@ -1094,7 +1094,7 @@ describe('Query merging', () => {
             name
           }
         }`;
-      const result = {
+      const result: any = {
         author: null,
         person: {
           name: 'John Smith',
@@ -1124,7 +1124,7 @@ describe('Query merging', () => {
           firstName
           lastName
         }`;
-      const result = {
+      const result: any = {
         author: null,
         person: {
           name: 'John Smith',
@@ -1175,7 +1175,7 @@ describe('Query merging', () => {
           firstName
           lastName
         }`;
-      const result = {
+      const result: any = {
         author: {
           firstName: null,
           lastName: 'Smith',

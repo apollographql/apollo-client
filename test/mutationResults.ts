@@ -41,7 +41,7 @@ describe('mutation results', () => {
     }
   `;
 
-  const result = {
+  const result: any = {
     data: {
       __typename: 'Query',
       todoList: {
@@ -94,7 +94,7 @@ describe('mutation results', () => {
   };
 
   let client: ApolloClient;
-  let networkInterface;
+  let networkInterface: any;
 
   type CustomMutationBehavior = {
     type: 'CUSTOM_MUTATION_RESULT',
@@ -116,7 +116,7 @@ describe('mutation results', () => {
     return state;
   }
 
-  function setup(...mockedResponses) {
+  function setup(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: { query },
       result,
@@ -647,7 +647,7 @@ describe('mutation results', () => {
 
     it('error handling in reducer functions', () => {
       const oldError = console.error;
-      const errors = [];
+      const errors: any[] = [];
       console.error = (msg) => {
         errors.push(msg);
       };

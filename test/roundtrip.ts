@@ -269,7 +269,7 @@ describe('roundtrip', () => {
   });
 });
 
-function storeRoundtrip(query: Document, result, variables = {}) {
+function storeRoundtrip(query: Document, result: any, variables = {}) {
   const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
   const store = writeQueryToStore({
     result,

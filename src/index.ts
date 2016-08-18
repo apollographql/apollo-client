@@ -277,7 +277,7 @@ export default class ApolloClient {
     return (store: ApolloStore) => {
       this.setStore(store);
 
-      return (next) => (action) => {
+      return (next: any) => (action: any) => {
         const returnValue = next(action);
         this.queryManager.broadcastNewStore(store.getState());
         return returnValue;

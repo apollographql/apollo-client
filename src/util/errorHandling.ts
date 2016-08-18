@@ -1,4 +1,4 @@
-export function tryFunctionOrLogError (f) {
+export function tryFunctionOrLogError (f: Function) {
   try {
     return f();
   } catch (e) {

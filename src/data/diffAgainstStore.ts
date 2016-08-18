@@ -197,7 +197,7 @@ export function diffSelectionSetAgainstStore({
         pushMissingField(selection);
       }
       if (included && fieldResult !== undefined) {
-        result[resultFieldKey] = fieldResult;
+        (<any>result)[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {
       const typename = selection.typeCondition.name.value;
@@ -280,8 +280,8 @@ export function diffSelectionSetAgainstStore({
 
   // Set this to true if we don't have enough information at this level to generate a refetch
   // query, so we need to merge the selection set with the parent, rather than appending
-  let isMissing;
-  let missingSelectionSets;
+  let isMissing: any;
+  let missingSelectionSets: any;
 
   // If we weren't able to resolve some selections from the store, construct them into
   // a query we can fetch from the server
@@ -374,7 +374,7 @@ Perhaps you want to use the \`returnPartialData\` option?`,
   }
 
   if (isArray(storeValue)) {
-    let isMissing;
+    let isMissing: any;
 
     const result = storeValue.map((id) => {
       // null value in array
@@ -427,7 +427,7 @@ interface FieldDiffResult {
   isMissing?: 'true';
 }
 
-function collectUsedVariablesFromSelectionSet(selectionSet: SelectionSet) {
+function collectUsedVariablesFromSelectionSet(selectionSet: SelectionSet): any[] {
   return uniq(flatten(selectionSet.selections.map((selection) => {
     if (isField(selection)) {
       return collectUsedVariablesFromField(selection);
@@ -458,7 +458,7 @@ function collectUsedVariablesFromDirectives(directives: Directive[]) {
 }
 
 function collectUsedVariablesFromField(field: Field) {
-  let variables = [];
+  let variables: any[] = [];
 
   if (field.arguments) {
     variables = flatten(field.arguments.map((arg) => {
@@ -508,7 +508,7 @@ export function removeUnusedVariablesFromQuery (
   queryDef.variableDefinitions = diffedVariableDefinitions;
 }
 
-function uniq(array) {
+function uniq(array: any[]): any[] {
   return array.filter(
     (item, index, arr) =>
       arr.indexOf(item) === index);

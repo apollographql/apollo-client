@@ -6,5 +6,5 @@ export interface MiddlewareRequest {
 }
 
 export interface MiddlewareInterface {
-  applyMiddleware(request: MiddlewareRequest, next: Function);
+  applyMiddleware(request: MiddlewareRequest, next: Function): void;
 }

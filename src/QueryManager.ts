@@ -185,9 +185,9 @@ export class QueryManager {
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
-    if (this.store['subscribe']) {
-      let currentStoreData;
-      this.store['subscribe'](() => {
+    if ((<any>this.store)['subscribe']) {
+      let currentStoreData: any;
+      (<any>this.store)['subscribe'](() => {
         let previousStoreData = currentStoreData || {};
         const previousStoreHasData = Object.keys(previousStoreData).length;
         currentStoreData = this.getApolloState();
@@ -619,7 +619,7 @@ export class QueryManager {
     if (!updateQueries) {
       return [];
     }
-    const resultBehaviors = [];
+    const resultBehaviors: any[] = [];
 
     Object.keys(updateQueries).forEach((queryName) => {
       const reducer = updateQueries[queryName];
@@ -787,7 +787,7 @@ export class QueryManager {
           return result;
         }).then(() => {
 
-          let resultFromStore;
+          let resultFromStore: any;
           try {
             // ensure result is combined with data already in store
             // this will throw an error if there are missing fields in
@@ -850,7 +850,7 @@ export class QueryManager {
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
     let minimizedQueryDoc = queryDoc;
-    let storeResult;
+    let storeResult: any;
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.

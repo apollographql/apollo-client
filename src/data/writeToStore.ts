@@ -83,12 +83,12 @@ export function writeFragmentToStore({
   const parsedFragment: FragmentDefinition = getFragmentDefinition(fragment);
   const selectionSet: SelectionSet = parsedFragment.selectionSet;
 
-  if (!result['id']) {
+  if (!(<any>result)['id']) {
     throw new Error('Result must have id when writing fragment to store.');
   }
 
   return writeSelectionSetToStore({
-    dataId: result['id'],
+    dataId: (<any>result)['id'],
     result,
     selectionSet,
     store,
@@ -299,7 +299,7 @@ function writeFieldToStore({
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
 }) {
-  let storeValue;
+  let storeValue: any;
 
   const storeFieldName: string = storeKeyNameFromField(field, variables);
   // specifies if we need to merge existing keys in the store
@@ -321,7 +321,7 @@ function writeFieldToStore({
     // this is an array with sub-objects
     const thisIdList: Array<string> = [];
 
-    value.forEach((item, index) => {
+    value.forEach((item: any, index: any) => {
       if (isNull(item)) {
         thisIdList.push(null);
       } else {

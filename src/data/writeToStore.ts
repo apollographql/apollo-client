@@ -166,6 +166,8 @@ export function writeSelectionSetToStore({
           errorMessage: `Can't find field ${resultFieldKey} on result object ${dataId}.`,
           extraInfo: {
             isFieldError: true,
+            missingField: resultFieldKey,
+            dataId,
           },
         });
       }
@@ -175,6 +177,8 @@ export function writeSelectionSetToStore({
           errorMessage: `Found extra field ${resultFieldKey} on result object ${dataId}.`,
           extraInfo: {
             isFieldError: true,
+            extraField: resultFieldKey,
+            dataId,
           },
         });
       }

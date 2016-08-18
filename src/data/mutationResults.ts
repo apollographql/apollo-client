@@ -33,6 +33,10 @@ import {
   ApolloReducerConfig,
 } from '../store';
 
+import {
+  ApolloError,
+} from '../errors';
+
 // Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 
 export type MutationBehavior =
@@ -64,7 +68,9 @@ export type MutationQueryResultBehavior = {
   queryVariables: any;
   querySelectionSet: SelectionSet;
   queryFragments: FragmentDefinition[];
+  queryName: string;
   newResult: Object;
+  mutationResult: Object;
 };
 
 export type ArrayInsertWhere =
@@ -270,7 +276,30 @@ export function mutationResultQueryResultReducer(state: NormalizedCache, {
   behavior,
   config,
 }: MutationBehaviorReducerArgs) {
-  return replaceQueryResults(state, behavior as MutationQueryResultBehavior, config);
+  try {
+    return replaceQueryResults(state, behavior as MutationQueryResultBehavior, config);
+  } catch (err) {
+    const {
+      queryName,
+      queryVariables,
+      mutationResult,
+    } = (behavior as MutationQueryResultBehavior);
+    const missingField = err.extraInfo['missingField'];
+    const extraField = err.extraInfo['extraField'];
+    const dataId = err.extraInfo['dataId'];
+    const errorMessage = missingField ?
+      `updateQuery function by a mutation for query ${queryName} returned a shape missing a field ${missingField} on object ${dataId}` :
+      `updateQuery function by a mutation for query ${queryName} returned a shape with an extra field ${extraField} on object ${dataId}`;
+
+    throw new ApolloError({
+      errorMessage,
+      extraInfo: {
+        queryName,
+        queryVariables,
+        mutationResult,
+      },
+    });
+  }
 }
 
 export type MutationQueryReducer = (previousResult: Object, options: {

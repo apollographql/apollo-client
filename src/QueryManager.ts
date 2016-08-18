@@ -269,8 +269,8 @@ export class QueryManager {
             result,
             mutationId,
             resultBehaviors: [
-                ...resultBehaviors,
-                ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
+              ...resultBehaviors,
+              ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
             ],
           });
 
@@ -283,6 +283,10 @@ export class QueryManager {
             error: err,
             mutationId,
           });
+
+          if (err instanceof ApolloError) {
+            return reject(err);
+          }
 
           reject(new ApolloError({
             networkError: err,
@@ -452,7 +456,7 @@ export class QueryManager {
     // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
     const queryDef = getQueryDefinition(observableQuery.options.query);
     if (queryDef.name && queryDef.name.value) {
-      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+      const queryName = queryDef.name.value;
 
       // XXX we may we want to warn the user about query name conflicts in the future
       this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
@@ -617,6 +621,8 @@ export class QueryManager {
             queryVariables,
             querySelectionSet,
             queryFragments,
+            queryName,
+            mutationResult,
           });
         }
       });

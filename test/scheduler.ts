@@ -483,4 +483,98 @@ describe('QueryScheduler', () => {
       done();
     }, 100);
   });
+
+  it('should correctly start polling queries', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+
+    const data = {
+      'author': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+      },
+    };
+    const queryOptions = {
+      query,
+      pollInterval: 80,
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: queryOptions,
+        result: { data },
+      }
+    );
+    const queryManager = new QueryManager({
+      networkInterface: networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    let timesFired = 0;
+    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', true, (queryStoreValue) => {
+      timesFired += 1;
+    });
+    setTimeout(() => {
+      assert.isAtLeast(timesFired, 0);
+      scheduler.stopPollingQuery(queryId);
+      done();
+    }, 120);
+  });
+
+  it('should correctly start new polling query after removing old one', (done) => {
+    const query = gql`
+      query {
+        someAlias: author {
+          firstName
+          lastName
+        }
+      }`;
+    const data = {
+      'someAlias': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+      },
+    };
+    const queryOptions = {
+      query,
+      pollInterval: 20,
+    };
+    const networkInterface = mockNetworkInterface(
+      {
+        request: queryOptions,
+        result: { data },
+      }
+    );
+    const queryManager = new QueryManager({
+      networkInterface: networkInterface,
+      store: createApolloStore(),
+      reduxRootKey: 'apollo',
+    });
+    const scheduler = new QueryScheduler({
+      queryManager,
+    });
+    let timesFired = 0;
+    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', true, (queryStoreValue) => {
+      scheduler.stopPollingQuery(queryId);
+    });
+    setTimeout(() => {
+      let queryId2 = scheduler.startPollingQuery(queryOptions, 'fake-id2', true, (queryStoreValue) => {
+        timesFired += 1;
+      });
+      assert.equal(scheduler.intervalQueries[20].length, 1);
+      setTimeout(() => {
+          assert.isAtLeast(timesFired, 1);
+          scheduler.stopPollingQuery(queryId2);
+          done();
+      }, 300);
+    }, 200);
+  });
 });

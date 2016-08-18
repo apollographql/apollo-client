@@ -21,33 +21,10 @@ import {
 } from '../src/store';
 
 describe('GraphQL Subscriptions', () => {
-  const result1 = {
-    result: {
-      user: {name: 'Dhaivat Pandya'},
-    },
-    delay: 10,
-  };
+  const results = ['Dahivat Pandya', 'Vyacheslav Kim', 'Changping Chen', 'Amanda Liu'].map(
+    name => ({ result: { user: { name: name } }, delay: 10 })
+  );
 
-  const result2 = {
-    result: {
-      user: {name: 'Vyacheslav Kim'},
-    },
-    delay: 10,
-  };
-
-  const result3 = {
-    result: {
-      user: {name: 'Changping Chen'},
-    },
-    delay: 10,
-  };
-
-  const result4 = {
-    result: {
-      user: {name: 'Amanda Liu'},
-    },
-    delay: 10,
-  };
   let sub1;
   let options;
   let watchQueryOptions;
@@ -74,7 +51,7 @@ describe('GraphQL Subscriptions', () => {
         },
       },
       id: 0,
-      results: [result1, result2, result3, result4],
+      results: [...results],
     };
 
     options = {
@@ -178,7 +155,7 @@ describe('GraphQL Subscriptions', () => {
       store: createApolloStore(),
     });
     options.handler = (error, result) => {
-      assert.deepEqual(result, result1.result);
+      assert.deepEqual(result, results[0].result);
       done();
     };
     const id = queryManager.startSubscription(options);
@@ -196,13 +173,13 @@ describe('GraphQL Subscriptions', () => {
     options.handler = (error, result) => {
       numResults++;
       if (numResults === 1) {
-        assert.deepEqual(result, result1.result);
+        assert.deepEqual(result, results[0].result);
       } else if (numResults === 2) {
-        assert.deepEqual(result, result2.result);
+        assert.deepEqual(result, results[1].result);
       } else if (numResults === 3) {
-        assert.deepEqual(result, result3.result);
+        assert.deepEqual(result, results[2].result);
       } else if (numResults === 4) {
-        assert.deepEqual(result, result4.result);
+        assert.deepEqual(result, results[3].result);
         done();
       } else {
         assert(false);
@@ -239,7 +216,7 @@ describe('GraphQL Subscriptions', () => {
           return state;
         },
       };
-      const obsHandle = client.watchQuery(commentsWatchQueryOptions, graphQLSubscriptionOptions);
+      const obsHandle = client.watchQuery(commentsWatchQueryOptions);
 
       obsHandle.subscribe({
         next(result) {
@@ -253,7 +230,7 @@ describe('GraphQL Subscriptions', () => {
         },
       });
 
-      const id = obsHandle.startGraphQLSubscription();
+      const id = obsHandle.startGraphQLSubscription(graphQLSubscriptionOptions);
       network.fireResult(id);
     });
   });

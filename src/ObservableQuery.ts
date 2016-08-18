@@ -32,7 +32,7 @@ export interface UpdateQueryOptions {
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
-  public startGraphQLSubscription: () => number;
+  public startGraphQLSubscription: (options: GraphQLSubscriptionOptions) => number;
   public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
@@ -40,18 +40,15 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   public queryId: string;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
-  private graphQLSubscriptionOptions: GraphQLSubscriptionOptions;
 
   constructor({
     scheduler,
     options,
     shouldSubscribe = true,
-    graphQLSubscriptionOptions,
   }: {
     scheduler: QueryScheduler,
     options: WatchQueryOptions,
     shouldSubscribe?: boolean,
-    graphQLSubscriptionOptions?: GraphQLSubscriptionOptions,
   }) {
     const queryManager = scheduler.queryManager;
     const queryId = queryManager.generateQueryId();
@@ -95,7 +92,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.scheduler = scheduler;
     this.queryManager = queryManager;
     this.queryId = queryId;
-    this.graphQLSubscriptionOptions = graphQLSubscriptionOptions;
 
     this.refetch = (variables?: any) => {
       // Extend variables if available
@@ -149,10 +145,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         });
     };
 
-    this.startGraphQLSubscription = () => {
+    this.startGraphQLSubscription = (graphQLSubscriptionOptions: GraphQLSubscriptionOptions) => {
 
       const subOptions = {
-        query: this.graphQLSubscriptionOptions.subscription,
+        query: graphQLSubscriptionOptions.subscription,
         variables: this.options.variables,
         fragments: this.options.fragments,
         handler: (error: Object, result: Object) => {
@@ -174,7 +170,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         },
       };
 
-      if (this.graphQLSubscriptionOptions) {
+      if (graphQLSubscriptionOptions) {
         return this.queryManager.startSubscription(subOptions);
       };
       return null;

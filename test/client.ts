@@ -1618,10 +1618,13 @@ describe('client', () => {
         }
       }`;
     const firstResult = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
+      data: {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
       },
+      loading: false,
     };
     const secondQuery = gql`
       query {
@@ -1630,8 +1633,10 @@ describe('client', () => {
         }
       }`;
     const secondResult = {
-      person: {
-        name: 'Jane Smith',
+      data: {
+        person: {
+          name: 'Jane Smith',
+        },
       },
     };
     const url = 'http://not-a-real-url.com';

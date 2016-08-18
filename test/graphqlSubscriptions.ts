@@ -171,18 +171,10 @@ describe('GraphQL Subscriptions', () => {
       store: createApolloStore(),
     });
     options.handler = (error, result) => {
+      assert.deepEqual(result, results[numResults].result);
       numResults++;
-      if (numResults === 1) {
-        assert.deepEqual(result, results[0].result);
-      } else if (numResults === 2) {
-        assert.deepEqual(result, results[1].result);
-      } else if (numResults === 3) {
-        assert.deepEqual(result, results[2].result);
-      } else if (numResults === 4) {
-        assert.deepEqual(result, results[3].result);
+      if (numResults === 4) {
         done();
-      } else {
-        assert(false);
       }
     };
     const id = queryManager.startSubscription(options);
@@ -234,4 +226,7 @@ describe('GraphQL Subscriptions', () => {
       network.fireResult(id);
     });
   });
+
+  // TODO: test that we can make two subscriptions one one watchquery.
+
 });

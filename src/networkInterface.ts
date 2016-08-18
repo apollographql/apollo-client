@@ -5,7 +5,6 @@ import 'whatwg-fetch';
 import {
   GraphQLResult,
   Document,
-  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -87,29 +86,6 @@ export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetw
       });
     },
   }) as BatchedNetworkInterface;
-}
-
-// Here, we are assuming that there is only one operation
-function getSingleOperationName(request: Request) {
-  return (request.query.definitions.filter((definition) => {
-    return definition.kind === 'OperationDefinition';
-  })[0] as OperationDefinition).name.value;
-}
-
-export function addGraphQLSubscriptions(networkInterface: NetworkInterface, wsClient: any): SubscriptionNetworkInterface {
-
-  return assign(networkInterface, {
-    subscribe(request: Request, handler: (error, result) => void) {
-      wsClient.subscribe({
-        query: print(request.query),
-        variables: request.variables,
-        operationName: getSingleOperationName(request),
-      }, handler);
-    },
-    unsubscribe(id: number) {
-      wsClient.unsubscribe(id);
-    },
-  }) as SubscriptionNetworkInterface;
 }
 
 export function printRequest(request: Request): PrintedRequest {

@@ -2,7 +2,6 @@ import {
   NetworkInterface,
   createNetworkInterface,
   addQueryMerging,
-  addGraphQLSubscriptions,
 } from './networkInterface';
 
 import {
@@ -83,7 +82,6 @@ import flatten = require('lodash.flatten');
 export {
   createNetworkInterface,
   addQueryMerging,
-  addGraphQLSubscriptions,
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,

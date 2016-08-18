@@ -672,5 +672,33 @@ describe('mutation results', () => {
         console.error = oldError;
       });
     });
+
+    it('error handling in case of bad shape of value from updateQuery', () => {
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              return {
+                todoList: {
+                  todos: [mResult.data.createTodo, ...(prev as any).todoList.todos],
+                },
+              };
+            },
+          },
+        });
+      })
+      .then(() => {
+        assert.isOk(false, 'should not get here');
+      })
+      .catch(err => {
+        assert.isTrue(err.message.match(/missing field/));
+      });
+    });
   });
 });

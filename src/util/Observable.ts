@@ -19,7 +19,7 @@ export class Observable<T> {
     this.subscriberFunction = subscriberFunction;
   }
 
-  public [observableValue]() {
+  public [observableValue as symbol]() {
     return this;
   }
 

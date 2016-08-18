@@ -6,6 +6,8 @@ import * as $$observable from 'symbol-observable';
 export type CleanupFunction = () => void;
 export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | CleanupFunction);
 
+const observableValue = $$observable;
+
 function isSubscription(subscription: Function | Subscription): subscription is Subscription {
   return (<Subscription>subscription).unsubscribe !== undefined;
 }
@@ -17,7 +19,7 @@ export class Observable<T> {
     this.subscriberFunction = subscriberFunction;
   }
 
-  public [$$observable]() {
+  public [observableValue]() {
     return this;
   }
 

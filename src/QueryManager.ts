@@ -269,8 +269,8 @@ export class QueryManager {
             result,
             mutationId,
             resultBehaviors: [
-                ...resultBehaviors,
-                ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
+              ...resultBehaviors,
+              ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
             ],
           });
 
@@ -283,6 +283,10 @@ export class QueryManager {
             error: err,
             mutationId,
           });
+
+          if (err instanceof ApolloError) {
+            return reject(err);
+          }
 
           reject(new ApolloError({
             networkError: err,
@@ -617,6 +621,8 @@ export class QueryManager {
             queryVariables,
             querySelectionSet,
             queryFragments,
+            queryName,
+            mutationResult,
           });
         }
       });

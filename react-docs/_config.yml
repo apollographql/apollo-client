@@ -15,6 +15,7 @@ sidebar_categories:
   null:
     - index
     - initialization
+    - example-schema
     - queries
     - mutations
     - receiving-updates

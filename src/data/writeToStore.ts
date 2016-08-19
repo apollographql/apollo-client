@@ -56,10 +56,10 @@ import {
  * Convert a nested GraphQL result into a normalized store, where each object from the schema
  * appears exactly once.
  * @param  {Object} result Arbitrary nested JSON, returned from the GraphQL server
- * @param  {String} [fragment] The GraphQL fragment used to fetch the data in result
- * @param  {SelectionSet} [selectionSet] The parsed selection set for the subtree of the query this
+ * @param  {String} fragment The GraphQL fragment used to fetch the data in result
+ * @param  {SelectionSet} selectionSet The parsed selection set for the subtree of the query this
  *                                       result represents
- * @param  {Object} [store] The store to merge into
+ * @param  {Object} store The store to merge into
  * @return {Object} The resulting store
  */
 export function writeFragmentToStore({
@@ -97,6 +97,24 @@ export function writeFragmentToStore({
   });
 }
 
+/**
+ * Writes the result of a query to the store.
+ *
+ * @param query The query document whose result we are writing to the store.
+ *
+ * @param result The result object returned for the query document.
+ *
+ * @param store The {@link NormalizedCache} used by Apollo for the `data` portion of the store.
+ *
+ * @param variables A map from the name of a variable to its value. These variables can be
+ * referenced by the query document.
+ *
+ * @param dataIdFromObject A function that returns an object identifier given a particular result
+ * object. See the store documentation for details and an example of this function.
+ *
+ * @param fragmentMap A map from the name of a fragment to its fragment definition. These fragments
+ * can be referenced within the query document.
+ */
 export function writeQueryToStore({
   result,
   query,

@@ -14,25 +14,25 @@ For example, continuing with the GitHunt schema, we may have the following compo
 
 ```javascript
 const FEED_QUERY = gql`
-    query Feed($type: FeedType!, $offset: Int, $limit: Int) {
-        feed($type: NEW, offset: $offset, limit: $limit) {
-            createdAt
-            commentCount
-            score
-            id
-            respository {
-                // etc.
-            }
-        }
-    }`;
+  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+    feed($type: NEW, offset: $offset, limit: $limit) {
+      createdAt
+      commentCount
+      score
+      id
+      respository {
+        // etc.
+      }
+    }
+  }`;
 
 @graphql(FEED_QUERY);
 class FeedComponent extends Component {
-    // ...
-    someFunction() {
-        this.props.data.refetch();
-    }
-    // ...
+  // ...
+  someFunction() {
+    this.props.data.refetch();
+  }
+  // ...
 }
 ```
 
@@ -49,13 +49,15 @@ Continuing with our refetch example, we can add a polling interval with an addit
 
 ```javascript
 @graphql(FEED_QUERY, {
-    options: { pollInterval: 5000 },
+  options: (props) => {
+    return { pollInterval: 5000 };
+  },
 });
 class FeedComponent extends Component {
-    // ...
+  // ...
 }
 ```
 
-By adding a key to the `options` object, we can set the polling interval in milliseconds. Apollo will then take care of refetching this query every five seconds and your UI will be updated with the newest information from the server every five seconds.
+By adding a function that returns the options for this particular component and setting a `pollInterval` key within the options, we can set the polling interval in milliseconds. Apollo will then take care of refetching this query every five seconds and your UI will be updated with the newest information from the server every five seconds.
 
 ## Subscriptions

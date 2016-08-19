@@ -1,6 +1,6 @@
 ---
-title: API
-order: 6
+title: apollo-client
+order: 20
 ---
 
 <h2 id="apollo-client">ApolloClient</h2>

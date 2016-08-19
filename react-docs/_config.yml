@@ -16,22 +16,19 @@ sidebar_categories:
     - index
     - initialization
     - queries
-    - advanced-queries
     - mutations
-    - subscriptions
-    - api
-  Integrations:
-    - react
-    - angular
-    - meteor
-    - redux
-  Advanced:
-    - developer-tools
-    - server-side-rendering
-    - data-flow
-    - batching
+    - receiving-updates
+    - cache-updates
   Recipes:
-    - recipes-index
+    - auth
+    - pagination
+    - optimistic-ui
+    - lists
+    - prefetching
+    - redux
+    - server-side-rendering
+  API:
+    - apollo-client-api
 github_repo: apollostack/client-docs
 content_root: source
 

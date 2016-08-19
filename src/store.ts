@@ -46,7 +46,10 @@ export interface Store {
   optimistic: OptimisticStore;
 }
 
-// This is our interface on top of Redux to get types in our actions
+/**
+ * This is an interface that describes the behavior of a Apollo store, which is currently
+ * implemented through redux.
+ */
 export interface ApolloStore {
   dispatch: (action: ApolloAction) => void;
 

@@ -288,9 +288,33 @@ export default class ApolloClient {
    * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
    * a description of store reactivity.
    *
-   * @param options An object of type {@link WatchQueryOptions} that allows us to describe how this
-   * query should be treated e.g. whether it is a polling query, whether it should hit the server
-   * at all or just resolve from the cache, etc.
+   * `watchQuery` takes an object of options, with the following keys and values:
+   *
+   * @param query A GraphQL document that consists of a single query to be sent down to the
+   * server.
+   *
+   * @param pollInterval The time interval (in milliseconds) on which this query should be
+   * refetched from the server.
+   *
+   * @param returnPartialData This specifies whether {@link Observer} instances for this query
+   * should be updated with partial results. For example, when a portion of a query can be resolved
+   * entirely from the cache, that result will be delivered to the Observer first and the
+   * rest of the result (as provided by the server) will be returned later.
+   *
+   * @param variables A map going from variable name to variable value, where the variables are used
+   * within the GraphQL query.
+   *
+   * @param fragments A list of fragments that are returned by {@link createFragment} which can be
+   * referenced from the query document.
+   *
+   * @param forceFetch Specifies whether the client should diff the query against the cache and only
+   * fetch the portions of it that aren't already available (it does this when forceFetch is
+   * false) or it should just fetch the entire query from the server and update the cache
+   * accordingly (it does this when forceFetch is true).
+   *
+   * @param noFetch If this is set to true, the query is resolved *only* within information
+   * available in the cache (i.e. we never hit the server). If a particular field is not available
+   * in the cache, it will not be available in the result.
    */
   public watchQuery(options: WatchQueryOptions): ObservableQuery {
     this.initStore();

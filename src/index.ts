@@ -184,44 +184,44 @@ export default class ApolloClient {
   public batchInterval: number;
 
   /**
-  * Constructs an instance of {@link ApolloClient}.
-  *
-  * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
-  * to a GraphQL spec-compliant server.
-  *
-  * @param reduxRootKey The root key within the Redux store in which data fetched from the server
-  * will be stored.
-  *
-  * @param initialState The initial state assigned to the store.
-  *
-  * @param dataIdFromObject A function that returns a object identifier given a particular result
-    object.
-  *
-  * @param queryTransformer A function that takes a {@link SelectionSet} and modifies it in place
-  * in some way. The query transformer is then applied to the every GraphQL document before it is
-  * sent to the server.
-  *
-  * For example, a query transformer can add the __typename field to every level of a GraphQL
-  * document. In fact, the @{addTypename} query transformer does exactly this.
-  *
-  * @param shouldBatch Determines whether multiple queries should be batched together in a single
-  * roundtrip.
-  * <p />
-  *
-  * Note that if this is set to true, the [[NetworkInterface]] should implement
-  * [[BatchedNetworkInterface]]. Every time a query is fetched, it is placed into the queue of
-  * the batcher. At the end of each batcher time interval, the query batcher batches together
-  * (if shouldBatch is true) each of the queries in the queue and sends them to the server.
-  * This happens transparently: each query will still receive exactly the result it asked for,
-  * regardless of whether or not it is batched.
-  *
-  * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
-  *
-  * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
-  * server side render.
-  *
-  * @param batchInterval The time interval on which the query batcher operates.
-  **/
+   * Constructs an instance of {@link ApolloClient}.
+   *
+   * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
+   * to a GraphQL spec-compliant server.
+   *
+   * @param reduxRootKey The root key within the Redux store in which data fetched from the server
+   * will be stored.
+   *
+   * @param initialState The initial state assigned to the store.
+   *
+   * @param dataIdFromObject A function that returns a object identifier given a particular result
+   * object.
+   *
+   * @param queryTransformer A function that takes a {@link SelectionSet} and modifies it in place
+   * in some way. The query transformer is then applied to the every GraphQL document before it is
+   * sent to the server.
+   *
+   * For example, a query transformer can add the __typename field to every level of a GraphQL
+   * document. In fact, the @{addTypename} query transformer does exactly this.
+   *
+   * @param shouldBatch Determines whether multiple queries should be batched together in a single
+   * roundtrip.
+   * <p />
+   *
+   * Note that if this is set to true, the [[NetworkInterface]] should implement
+   * [[BatchedNetworkInterface]]. Every time a query is fetched, it is placed into the queue of
+   * the batcher. At the end of each batcher time interval, the query batcher batches together
+   * (if shouldBatch is true) each of the queries in the queue and sends them to the server.
+   * This happens transparently: each query will still receive exactly the result it asked for,
+   * regardless of whether or not it is batched.
+   *
+   * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
+   *
+   * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
+   * server side render.
+   *
+   * @param batchInterval The time interval on which the query batcher operates.
+   */
   constructor({
     networkInterface,
     reduxRootKey,
@@ -408,6 +408,9 @@ export default class ApolloClient {
     return this.queryManager.startGraphQLSubscription(options);
   }
 
+  /**
+   * Returns a reducer function configured according to the `reducerConfig` instance variable.
+   */
   public reducer(): Function {
     return createApolloReducer(this.reducerConfig);
   }

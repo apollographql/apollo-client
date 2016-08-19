@@ -23,6 +23,7 @@ import {
 import {
   SelectionSet,
   Field,
+  Directive,
   Document,
   Selection,
   FragmentDefinition,
@@ -440,6 +441,22 @@ function collectUsedVariablesFromSelectionSet(selectionSet: SelectionSet) {
   })));
 }
 
+function collectUsedVariablesFromDirectives(directives: Directive[]) {
+  return flatten(directives.map(directive => {
+    if (directive.arguments) {
+      return flatten(directive.arguments.map(arg => {
+        if (arg.kind === 'Argument' && arg.value.kind === 'Variable') {
+          return [(arg.value as Variable).name.value];
+        }
+
+        return [];
+      }));
+    }
+
+    return [];
+  }));
+}
+
 function collectUsedVariablesFromField(field: Field) {
   let variables = [];
 
@@ -457,6 +474,13 @@ function collectUsedVariablesFromField(field: Field) {
     variables = [
         ...variables,
         ...collectUsedVariablesFromSelectionSet(field.selectionSet),
+    ];
+  }
+
+  if (field.directives) {
+    variables = [
+      ...variables,
+      ...collectUsedVariablesFromDirectives(field.directives),
     ];
   }
 

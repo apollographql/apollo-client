@@ -17,12 +17,6 @@ export interface FetchMoreQueryOptions {
   query?: Document;
   variables?: { [key: string]: any };
 }
- export interface SubscriptionOptions {
-  query: Document;
-  variables?: { [key: string]: any };
-  fragments?: FragmentDefinition[];
-  handler: (error: Object, result: Object) => void;
-};
 
 export interface GraphQLSubscriptionOptions {
   subscription: Document;

@@ -90,11 +90,18 @@ import {
   ApolloError,
 } from './errors';
 
-import { WatchQueryOptions, SubscriptionOptions } from './watchQueryOptions';
+import { WatchQueryOptions } from './watchQueryOptions';
 
 import { ObservableQuery } from './ObservableQuery';
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
+
+ export interface SubscriptionOptions {
+  query: Document;
+  variables?: { [key: string]: any };
+  fragments?: FragmentDefinition[];
+  handler: (error: Object, result: Object) => void;
+};
 
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript

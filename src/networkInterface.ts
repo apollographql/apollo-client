@@ -17,6 +17,18 @@ import {
   unpackMergedResult,
 } from './batching/queryMerging';
 
+/**
+ * This is an interface that describes an GraphQL document to be sent
+ * to the server.
+ *
+ * @param query The GraphQL document to be sent to the server. Note that this can
+ * be a mutation document or a query document.
+ *
+ * @param variables An object that maps from variable names to variable values. These variables
+ * can be referenced within the GraphQL document.
+ *
+ * @param operationName The name of the query or mutation, extracted from the GraphQL document.
+ */
 export interface Request {
   debugName?: string;
   query?: Document;

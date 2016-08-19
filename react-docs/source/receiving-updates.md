@@ -3,6 +3,59 @@ title: Getting updates from the server
 order: 6
 ---
 
+Apollo Client caches the results of queries and then uses this cache in order to resolve parts of queries. However, what happens if the information in our cache goes out of date, i.e. the cache becomes stale? How do we make sure that we can update the cache with information if information changes on the server? How will our existing queries get updates to the information they've asked for? These are questsions that this section should answer.
+
+A momentarily stale cache is an unavoidable problem. There's no feasible way to have a client-side cache and make sure that the cache will *always* reflect exactly the information that is available on the server. For pretty much any application, this isn't too much of a problem: your UI may be slightly out-of-date temporarily, but, it'll sync soon enough. There are a few strategies to make sure that Apollo Client is eventually consistent with the information available to your server. These are: refetches, polling queries and GraphQL subscriptions.
+
 ## Refetches
+Refetches are the simplest way to force a portion of your cache to reflect the information available to your server. Essentially, a refetch forces a query to hit the server, bypassing the cache entirely. The result of this query, just like all other query results, will update the information available in the cache.
+
+For example, continuing with the GitHunt schema, we may have the following on a component:
+
+```javascript
+const FEED_QUERY = gql`
+    query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+        feed($type: NEW, offset: $offset, lim) {
+            createdAt
+            commentCount
+            score
+            id
+            respository {
+                // etc.
+            }
+        }
+    }`;
+
+@graphql(FEED_QUERY);
+class FeedComponent extends Component {
+    // ...
+    someFunction() {
+        this.props.data.refetch();
+    }
+    // ...
+}
+```
+
+In particular, we have the method `this.props.refetch`, which allows us to refetch the query associated with the `FeedCompoment`. This means that instead of resolving information about the `feed` field from the cache (even if we have it!), the query will hit the server and will update the cache with new results from the server.
+
+So, if there's been some kind of update in the information that the query requests (e.g. a new repository added to the feed), the Apollo Client store will have the update and the UI will re-render as necessary.
+
+In order for refetches to be a viable strategy, you must have some idea as to when you should refetch the information (i.e. when information in the cache has gone stale). This is possible in many circumstances. For example, you could imagine refetching the whole feed when the client adds a new repository to it. But, there are cases in which this does not work, e.g. some *other* client decides to insert a repository into the GitHunt feed. Then, our client has no idea that this has happened and won't see the new feed item until the page is refreshed. One solution to that problem is polling.
+
 ## Polling
+If you have a query whose result can change pretty frequently, it probably makes sense to consider making a polling query. A polling query is a GraphQL query which is fired on a particular interval and every time it is fired, it is fired as a refetch, i.e. no part of it is resolved from the cache. By doing this, the portion of the cache that the query touches will be updated on the polling interval and will be consistent with the information that is on the server.
+
+Continuing with our refetch example, we can add a polling interval with an object key:
+
+```javascript
+@graphql(FEED_QUERY, {
+    options: { pollInterval: 5000 },
+});
+class FeedComponent extends Component {
+    // ...
+}
+```
+
+By adding a key to the `options` object, we can set the polling interval in milliseconds. Apollo will then take care of refetching this query every five seconds and your UI will be updated with the newest information from the server every five seconds.
+
 ## Subscriptions

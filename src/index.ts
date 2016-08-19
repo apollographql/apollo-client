@@ -231,7 +231,7 @@ export default class ApolloClient {
     // document itself.
     createFragment(options.query);
 
-    return this.queryManager.watchQuery(options, true);
+    return this.queryManager.watchQuery(options);
   };
 
   public query = (options: WatchQueryOptions): Promise<ApolloQueryResult> => {

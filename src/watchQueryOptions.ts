@@ -26,6 +26,8 @@ export interface FetchMoreQueryOptions {
 
 export interface GraphQLSubscriptionOptions {
   subscription: Document;
+  variables?: { [key: string]: any };
+  fragments?: FragmentDefinition[];
   updateFunction: (previousQueryResult: Object, options: {
     subscriptionResult: Object,
     queryVariables: Object,

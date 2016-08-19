@@ -149,8 +149,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
       const subOptions = {
         query: graphQLSubscriptionOptions.subscription,
-        variables: this.options.variables,
-        fragments: this.options.fragments,
+        // TODO: test variables and fragments?
+        variables: graphQLSubscriptionOptions.variables,
+        fragments: graphQLSubscriptionOptions.fragments,
         handler: (error: Object, result: Object) => {
           const reducer = graphQLSubscriptionOptions.updateFunction;
           if (error) {

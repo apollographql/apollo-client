@@ -138,7 +138,7 @@ export class QueryScheduler {
 
     // If there are other queries on this interval, this query will just fire with those
     // and we don't need to create a new timer.
-    if (this.intervalQueries.hasOwnProperty(interval.toString())) {
+    if (this.intervalQueries.hasOwnProperty(interval.toString()) && this.intervalQueries[interval].length > 0) {
       this.intervalQueries[interval].push(queryId);
     } else {
       this.intervalQueries[interval] = [queryId];

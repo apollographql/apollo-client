@@ -554,6 +554,109 @@ const ListWithDataAndState = connect(
 )(ListWithData);
 ```
 
+<h2 id="usage-with-immutable">Usage with ImmutableJs for redux store</h2>
+
+```txt
+npm install immutable redux-immutable --save
+```
+
+If you are using ImmutableJs or another form of immutable map as your redux store, `<ApolloProvider>` allows you to pass `immutable={true}` alongside your store to separate the apollo-client store. For example:
+
+```js
+import { Map } from 'immutable';
+import { combineReducers } from 'redux-immutable';
+
+const initialState = Map();
+const store = createStore(combineReducers({ counter }), initialState);
+const client = new ApolloClient();
+
+// include the provider like so
+<ApolloProvider store={store} client={client} immutable={true}><App></ApolloProvider>
+
+
+// then somewhere in your app
+const withConnect = connect((state) => ({ first: state.get('counter') }));
+const withQuery = graphql(query)
+
+class List extends Component { ... }
+const ListWithDataAndImmutableState = withConnect(withQuery(List));
+```
+
+<h2 id="usage-with-redux-form">Usage with redux-form</h2>
+
+```txt
+npm install redux-form --save
+```
+
+`graphql` can be used to prefill fields for a redux-form form, or use the values from the store to set variables in a query. Both methods are shown below for example:
+
+```js
+import { reducer as formReducer, reduxForm } from 'redux-form';
+
+// client and store setup
+const client = new ApolloClient();
+const store = createStore(
+  combineReducers({
+    apollo: client.reducer(),
+    form: formReducer, // from redux form
+  }),
+  applyMiddleware(client.middleware())
+);
+
+// generic form component
+class Container extends Component {
+  render() {
+    const { fields: { firstName }, handleSubmit } = this.props;
+    return (
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>First Name</label>
+          <input type='text' placeholder='First Name' {...firstName}/>
+        </div>
+        <button type='submit'>Submit</button>
+      </form>
+    );
+  }
+};
+
+/*
+
+  using the form to call a query
+
+*/
+const withForm = reduxForm({ form: 'contact', fields: ['firstName'] })
+
+const withQuery = graphql(query, {
+  options: ({ fields }) => ({
+    variables: { name: fields.firstName.value },
+    skip: !fields.firstName.value, // until the field is filled in, the query won't be called
+  }),
+});
+
+const ContainerWithFormAndQuery = withForm(withQuery(Container));
+
+
+/*
+
+  using the query to prefill the form
+
+*/
+const withQuery = graphql(query)
+
+const withForm = reduxForm({
+  form: 'contact',
+  fields: ['firstName'],
+}, (state, ownProps) => ({
+  initialValues: {
+    // ownProps.data is the result of the query
+    firstName: ownProps.data.loading ? '' : ownProps.data.allPeople.people[0].name,
+  },
+}))
+
+const ContainerWithQueryAndForm = withQuery(withFrom(Container));
+```
+
+
 <h2 id="usage-with-react-router">Usage with MobX</h2>
 
 ```txt

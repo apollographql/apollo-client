@@ -73,10 +73,6 @@ store.getState();
 // }
 ```
 
-<h2 id="react-redux">react-redux</h2>
-
-The `react-apollo` integration package is a drop-in replacement for `react-redux`, so if you are using Redux and Apollo together you don't need to have nested data containers. [Read the docs for `react-apollo` to see how to do this.](react.html)
-
 <h2 id="async-actions">Async Actions with thunk</h2>
 
 In Redux, we handle asynchronity via the `thunk` middleware. This allows you to dispatch a function, instead of an Action Object. To integrate `thunk` into your workflow, follow the steps below:

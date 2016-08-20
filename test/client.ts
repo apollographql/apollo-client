@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 import * as sinon from 'sinon';
+import * as _ from 'lodash';
 
 import ApolloClient, {
   createFragment,
@@ -15,6 +16,7 @@ import {
   GraphQLError,
   OperationDefinition,
   GraphQLResult,
+  Document,
 } from 'graphql';
 
 import {
@@ -1592,6 +1594,137 @@ describe('client', () => {
       assert.equal(apolloError.graphQLErrors.length, 1);
       assert.equal(apolloError.graphQLErrors[0].message, errors[0].message);
       done();
+    });
+  });
+
+  describe('read by id', () => {
+    const setupClient = (primeQuery: Document, primeResult: Object) => {
+      return new ApolloClient({
+        networkInterface: mockNetworkInterface({
+          request: { query: primeQuery },
+          result: { data: primeResult },
+        }),
+      });
+    };
+
+    it('should be able to read an object from the store by its id', (done) => {
+      const primeQuery = gql`
+        query {
+          person {
+            name
+          }
+        }`;
+      const primeResult = {
+        person: {
+          name: 'John Smith',
+        },
+      };
+      const client = setupClient(primeQuery, primeResult);
+      client.query({ query: primeQuery }).then((result) => {
+        const person = client.readObjectById('$ROOT_QUERY.person', gql`
+          fragment details on Person {
+            name
+          }`);
+        assert.deepEqual(person, primeResult.person);
+        done();
+      });
+    });
+
+    it('should be able to limit the fields it reads from the store by id', (done) => {
+      const primeQuery = gql`
+        query {
+          person {
+            firstName
+            lastName
+          }
+        }`;
+      const primeResult = {
+        person: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const client = setupClient(primeQuery, primeResult);
+      client.query({ query: primeQuery }).then((result) => {
+        const person = client.readObjectById('$ROOT_QUERY.person', gql`
+          fragment details on Person {
+            firstName
+          }`);
+        assert.deepEqual(person, _.omit(primeResult.person, 'lastName'));
+        done();
+      });
+    });
+
+    it('should be able to pick data from multiple past writes', (done) => {
+      const primeQuery = gql`
+        query {
+          person {
+            name
+            friend(id: 1) {
+              name
+            }
+          }
+        }`;
+
+      const primeResult = {
+        person: {
+          name: 'John Smith',
+          friend: {
+            name: 'Jane Smith',
+          },
+        },
+      };
+      const secondaryQuery = gql`
+        query {
+          person {
+            name
+            friend(id: 2) {
+              name
+            }
+          }
+        }`;
+      const secondaryResult = {
+        person: {
+          name: 'John Smith',
+          friend: {
+            name: 'Jack Smith',
+          },
+        },
+      };
+      const client = new ApolloClient({
+        networkInterface: mockNetworkInterface(
+          {
+            request: { query: primeQuery },
+            result: { data: primeResult },
+          },
+          {
+            request: { query: secondaryQuery },
+            result: { data: secondaryResult },
+          }
+        ),
+      });
+      client.query({ query: primeQuery }).then(() => {
+        client.query({ query: secondaryQuery }).then(() => {
+          let person = client.readObjectById('$ROOT_QUERY.person', gql`
+            fragment details on Person {
+              name
+              friend(id: 2) {
+                name
+              }
+            }`);
+          assert.deepEqual(person, secondaryResult.person);
+
+          person = client.readObjectById('$ROOT_QUERY.person', gql`
+            fragment details on Person {
+              name
+              friend(id: 1) {
+                name
+              }
+            }`);
+          assert.deepEqual(person, primeResult.person);
+          done();
+        });
+      });
     });
   });
 });

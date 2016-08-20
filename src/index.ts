@@ -29,6 +29,10 @@ import {
 } from './store';
 
 import {
+  readObjectByIdFromStore,
+} from './data/readFromStore';
+
+import {
   QueryManager,
 } from './QueryManager';
 
@@ -293,6 +297,17 @@ export default class ApolloClient {
       config: this.reducerConfig,
     }));
   };
+
+  // Given a particular id, this method returns a deep read in the normalized
+  // store starting from that id. The `fragment` is used to select the fields of the
+  // object with the given id that will be returned.
+  public readObjectById(id: string, fragment: Document) {
+    return readObjectByIdFromStore({
+      store: this.store.getState().apollo.data,
+      id,
+      fragment,
+    });
+  }
 
   private setStore = (store: ApolloStore) => {
     // ensure existing store has apolloReducer

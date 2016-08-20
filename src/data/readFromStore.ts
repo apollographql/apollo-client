@@ -17,9 +17,28 @@ import {
   NormalizedCache,
 } from './store';
 
-// import {
-//   printAST,
-// } from './debug';
+// Read an object from the store given that object's id.
+// This function performs a deep read, i.e. it will read the fields of the object
+// from the normalized store structure as well.
+export function readObjectByIdFromStore({
+  store,
+  id,
+  fragment,
+  variables,
+}: {
+  store: NormalizedCache,
+  id: string,
+  fragment: Document,
+  variables?: Object,
+}): any {
+  return readFragmentFromStore({
+    store,
+    fragment,
+    rootId: id,
+    variables,
+  });
+}
+
 
 export function readQueryFromStore({
   store,

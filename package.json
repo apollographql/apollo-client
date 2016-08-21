@@ -75,7 +75,7 @@
     "grunt-tslint": "3.2.0",
     "gzip-size": "^3.0.0",
     "isomorphic-fetch": "^2.2.1",
-    "istanbul": "^0.4.2",
+    "istanbul": "^0.4.5",
     "lodash": "^4.6.1",
     "lodash.mapvalues": "^4.3.0",
     "lodash.omit": "^4.2.1",

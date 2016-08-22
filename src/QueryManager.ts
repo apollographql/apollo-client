@@ -185,9 +185,9 @@ export class QueryManager {
 
     // this.store is usually the fake store we get from the Redux middleware API
     // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
-    if ((<any>this.store)['subscribe']) {
+    if ((this.store as any)['subscribe']) {
       let currentStoreData: any;
-      (<any>this.store)['subscribe'](() => {
+      (this.store as any)['subscribe'](() => {
         let previousStoreData = currentStoreData || {};
         const previousStoreHasData = Object.keys(previousStoreData).length;
         currentStoreData = this.getApolloState();

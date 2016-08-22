@@ -197,7 +197,7 @@ export function diffSelectionSetAgainstStore({
         pushMissingField(selection);
       }
       if (included && fieldResult !== undefined) {
-        (<any>result)[resultFieldKey] = fieldResult;
+        (result as any)[resultFieldKey] = fieldResult;
       }
     } else if (isInlineFragment(selection)) {
       const typename = selection.typeCondition.name.value;

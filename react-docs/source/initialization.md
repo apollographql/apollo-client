@@ -19,7 +19,12 @@ npm install react-apollo --save
 [Follow apollostack/react-apollo on GitHub.](https://github.com/apollostack/react-apollo)
 
 
-## Creating a client
+## Initialization
+
+### Creating a client
+
+
+### Creating a provider
 
 To get started, you should use an `ApolloProvider` to inject an [ApolloClient instance](../apollo-client/index.html#Initializing) into your React view heirarchy, *above* the point where you need GraphQL data.
 

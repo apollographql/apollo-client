@@ -166,7 +166,7 @@ export function unpackDataForRequest({
         currIndex += 1;
       }
 
-      const childData = isNull(data) ? null : (<any>data)[stringKey];
+      const childData = isNull(data) ? null : (data as any)[stringKey];
       let resData = childData;
       if (field.selectionSet && field.selectionSet.selections.length > 0) {
         const fieldOpts = {
@@ -210,7 +210,7 @@ export function unpackDataForRequest({
       }
 
       if (!isUndefined(childData)) {
-        (<any>unpackedData)[realName] = resData;
+        (unpackedData as any)[realName] = resData;
       }
     } else if (selection.kind === 'InlineFragment') {
       // If this is an inline fragment, then we recursively resolve the fields within the

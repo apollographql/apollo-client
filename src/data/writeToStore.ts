@@ -83,12 +83,12 @@ export function writeFragmentToStore({
   const parsedFragment: FragmentDefinition = getFragmentDefinition(fragment);
   const selectionSet: SelectionSet = parsedFragment.selectionSet;
 
-  if (!(<any>result)['id']) {
+  if (!(result as any)['id']) {
     throw new Error('Result must have id when writing fragment to store.');
   }
 
   return writeSelectionSetToStore({
-    dataId: (<any>result)['id'],
+    dataId: (result as any)['id'],
     result,
     selectionSet,
     store,

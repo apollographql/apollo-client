@@ -158,7 +158,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           if (error) {
             throw new Error(JSON.stringify(error));
           } else {
-             const mapFn = (previousResult, { queryVariables }) => {
+             const mapFn = (previousResult: any, { queryVariables }: {queryVariables: any }) => {
               return reducer(
                 previousResult, {
                   subscriptionResult: result,

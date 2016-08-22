@@ -204,7 +204,7 @@ describe('network interface', () => {
       });
     });
 
-    it.only('should alter the request body params', () => {
+    it('should alter the request body params', () => {
       const testWare1 = new TestWare([], [], [
         { key: 'newParam', val: '0123456789' },
       ]);

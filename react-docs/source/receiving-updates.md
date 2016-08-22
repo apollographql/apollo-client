@@ -29,14 +29,14 @@ const FEED_QUERY = gql`
 @graphql(FEED_QUERY);
 class FeedComponent extends Component {
   // ...
-  someFunction() {
+  onRefreshClicked() {
     this.props.data.refetch();
   }
   // ...
 }
 ```
 
-In particular, we have the method `this.props.refetch`, which allows us to refetch the query associated with the `FeedCompoment`. This means that instead of resolving information about the `feed` field from the cache (even if we have it!), the query will hit the server and will update the cache with new results from the server.
+In particular, suppose we have a "refresh" button somewhere on the page and when that button is clicked, the `onRefreshClicked` method is called on our component. We have the method `this.props.data.refetch`, which allows us to refetch the query associated with the `FeedCompoment`. This means that instead of resolving information about the `feed` field from the cache (even if we have it!), the query will hit the server and will update the cache with new results from the server.
 
 So, if there's been some kind of update in the information that the query requests (e.g. a new repository added to the feed), the Apollo Client store will have the update and the UI will re-render as necessary.
 
@@ -50,7 +50,7 @@ Continuing with our refetch example, we can add a polling interval with an addit
 ```javascript
 @graphql(FEED_QUERY, {
   options: (props) => {
-    return { pollInterval: 5000 };
+    return { pollInterval: 20000 };
   },
 });
 class FeedComponent extends Component {
@@ -58,6 +58,8 @@ class FeedComponent extends Component {
 }
 ```
 
-By adding a function that returns the options for this particular component and setting a `pollInterval` key within the options, we can set the polling interval in milliseconds. Apollo will then take care of refetching this query every five seconds and your UI will be updated with the newest information from the server every five seconds.
+By adding a function that returns the options for this particular component and setting a `pollInterval` key within the options, we can set the polling interval in milliseconds. Apollo will then take care of refetching this query every twenty seconds and your UI will be updated with the newest information from the server every twenty seconds.
+
+Generally, you shouldn't have polling intervals that are very small, say, less than 10 seconds. If you have data that changes this frequently and need those updates on your client that quickly, you should use GraphQL subscriptions.
 
 ## Subscriptions

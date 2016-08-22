@@ -465,6 +465,29 @@ getDataFromTree(app).then((context) => {
 });
 ```
 
+Your markup in this case can look something like:
+
+```js
+const dehydratedState =
+  `window.__APOLLO_STATE__=${JSON.stringify(context.store.getState())};`;
+
+ReactDOM.renderToStaticMarkup(
+  <html>
+    <body>
+      <div id="content" dangerouslySetInnerHTML={{ __html: markup }} />
+      <script dangerouslySetInnerHTML={{ __html: dehydratedState }} />
+    </body>
+  </html>
+);
+```
+
+> Server notes:
+  When creating the client on the server, it is best to use `ssrMode: true`. This prevents unneeded force refetching in the tree walking.
+
+> Client notes:
+  - When creating new client, you can pass `initialState: __APOLLO_STATE__` to [rehydrate](../apollo-client/index.html#store-rehydration) which will stop the client from trying to requery data.
+  - If you are using `forceFetch`, pass `ssrForceFetchDelay: 100` on the client constructor to avoid force-fetching as the app boots up with dehydrated data.
+
 <h3 id="renderToStringWithData">Using `renderToStringWithData`</h3>
 
 The `renderToStringWithData` function takes your react tree and returns the stringified tree with all data requirements. It also injects a script tag that includes `window. __APOLLO_STATE__ ` which equals the full redux store for hydration. This method returns a promise that eventually returns the markup
@@ -479,12 +502,11 @@ renderToStringWithData(app).then(markup => {
 });
 ```
 
-> Server notes:
-  When creating the client on the server, it is best to use `ssrMode: true`. This prevents unneeded force refetching in the tree walking.
+> See the notes above about `getDataFromTree`.
 
-> Client notes:
-  When creating new client, you can pass `initialState: __APOLLO_STATE__ ` to rehydrate which will stop the client from trying to requery data.
-
+> Extra Client notes:
+  - In this case, pass `initialState: JSON.parse(decodeURI(__APOLLO_STATE__))`
+  - As of this writing, this technique will lead to a React warning "Target node has markup rendered by React, but there are unrelated nodes as well"---we're working on a better solution to this, but in the meantime if you want to avoid the error, use `getDataFromTree` directly.
 
 <h2 id="redux">Using in concert with Redux</h2>
 

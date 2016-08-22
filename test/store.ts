@@ -41,7 +41,7 @@ describe('createApolloStore', () => {
   });
 
   it('can be rehydrated from the server', () => {
-    const initialState: any = {
+    const initialState = {
       apollo: {
         queries: {
           'test.0': true,
@@ -50,7 +50,7 @@ describe('createApolloStore', () => {
         data: {
           'test.0': true,
         },
-        optimistic: [],
+        optimistic: ([] as any[]),
       },
     };
 
@@ -74,11 +74,11 @@ describe('createApolloStore', () => {
       },
     };
 
-    const emptyState: any = {
+    const emptyState = {
       queries: { },
       mutations: { },
       data: { },
-      optimistic: [],
+      optimistic: ([] as any[]),
     };
 
     const store = createApolloStore({
@@ -94,7 +94,7 @@ describe('createApolloStore', () => {
   });
 
   it('can reset itself and keep the observable query ids', () => {
-    const initialState: any = {
+    const initialState = {
       apollo: {
         queries: {
           'test.0': true,
@@ -105,17 +105,17 @@ describe('createApolloStore', () => {
           'test.0': true,
           'test.1': true,
         },
-        optimistic: [],
+        optimistic: ([] as any[]),
       },
     };
 
-    const emptyState: any = {
+    const emptyState = {
       queries: {
         'test.0': true,
       },
       mutations: {},
       data: {},
-      optimistic: [],
+      optimistic: ([] as any[]),
     };
 
     const store = createApolloStore({

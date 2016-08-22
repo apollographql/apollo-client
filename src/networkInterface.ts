@@ -39,7 +39,7 @@ export interface NetworkInterface {
 }
 
 export interface SubscriptionNetworkInterface extends NetworkInterface {
-  subscribe(request: Request, handler: (error, result) => void): number;
+  subscribe(request: Request, handler: (error: any, result: any) => void): number;
   unsubscribe(id: Number): void;
 }
 

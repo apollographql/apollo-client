@@ -40,7 +40,7 @@ describe('MockSubscriptionNetworkInterface', () => {
     },
     delay: 50,
   };
-  let sub1;
+  let sub1: any;
 
   beforeEach(() => {
 
@@ -180,7 +180,7 @@ describe('MockSubscriptionNetworkInterface', () => {
   });
 
   it('correctly fires multiple results', (done) => {
-    let allResults = [];
+    let allResults: any[] = [];
     const networkInterface = mockSubscriptionNetworkInterface([sub1]);
     networkInterface.subscribe(
       {

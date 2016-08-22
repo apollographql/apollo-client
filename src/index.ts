@@ -215,9 +215,14 @@ export default class ApolloClient {
       dataIdFromObject,
       mutationBehaviorReducers,
     };
+
+    this.watchQuery = this.watchQuery.bind(this);
+    this.query = this.query.bind(this);
+    this.mutate = this.mutate.bind(this);
+    this.setStore = this.setStore.bind(this);
   }
 
-  public watchQuery = (options: WatchQueryOptions): ObservableQuery => {
+  public watchQuery(options: WatchQueryOptions): ObservableQuery {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -234,7 +239,7 @@ export default class ApolloClient {
     return this.queryManager.watchQuery(options);
   };
 
-  public query = (options: WatchQueryOptions): Promise<ApolloQueryResult> => {
+  public query(options: WatchQueryOptions): Promise<ApolloQueryResult> {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -251,7 +256,7 @@ export default class ApolloClient {
     return this.queryManager.query(options);
   };
 
-  public mutate = (options: {
+  public mutate(options: {
     mutation: Document,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
@@ -259,7 +264,7 @@ export default class ApolloClient {
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[],
-  }): Promise<ApolloQueryResult> => {
+  }): Promise<ApolloQueryResult> {
     this.initStore();
     return this.queryManager.mutate(options);
   };
@@ -294,7 +299,7 @@ export default class ApolloClient {
     }));
   };
 
-  private setStore = (store: ApolloStore) => {
+  private setStore(store: ApolloStore) {
     // ensure existing store has apolloReducer
     if (isUndefined(store.getState()[this.reduxRootKey])) {
       throw new Error(`Existing store does not use apolloReducer for ${this.reduxRootKey}`);

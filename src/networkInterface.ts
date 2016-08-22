@@ -38,6 +38,11 @@ export interface NetworkInterface {
   query(request: Request): Promise<GraphQLResult>;
 }
 
+export interface SubscriptionNetworkInterface extends NetworkInterface {
+  subscribe(request: Request, handler: (error, result) => void): number;
+  unsubscribe(id: Number): void;
+}
+
 export interface BatchedNetworkInterface extends NetworkInterface {
   batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
 }

@@ -1,4 +1,4 @@
-import { WatchQueryOptions, FetchMoreQueryOptions } from './watchQueryOptions';
+import { WatchQueryOptions, FetchMoreQueryOptions, GraphQLSubscriptionOptions } from './watchQueryOptions';
 
 import { Observable, Observer } from './util/Observable';
 
@@ -32,6 +32,7 @@ export interface UpdateQueryOptions {
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
+  public startGraphQLSubscription: (options: GraphQLSubscriptionOptions) => number;
   public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
@@ -144,6 +145,38 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         });
     };
 
+    this.startGraphQLSubscription = (graphQLSubscriptionOptions: GraphQLSubscriptionOptions) => {
+
+      const subOptions = {
+        query: graphQLSubscriptionOptions.subscription,
+        // TODO: test variables and fragments?
+        variables: graphQLSubscriptionOptions.variables,
+        fragments: graphQLSubscriptionOptions.fragments,
+        handler: (error: Object, result: Object) => {
+          const reducer = graphQLSubscriptionOptions.updateFunction;
+          if (error) {
+            throw new Error(JSON.stringify(error));
+          } else {
+             const mapFn = (previousResult, { queryVariables }) => {
+              return reducer(
+                previousResult, {
+                  subscriptionResult: result,
+                  queryVariables,
+                }
+              );
+            };
+            this.updateQuery(mapFn);
+          }
+
+        },
+      };
+
+      if (graphQLSubscriptionOptions) {
+        return this.queryManager.startSubscription(subOptions);
+      };
+      return null;
+    };
+
     this.updateQuery = (mapFn) => {
       const {
         previousResult,
@@ -151,7 +184,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         querySelectionSet,
         queryFragments = [],
       } = this.queryManager.getQueryWithPreviousResult(this.queryId);
-
       const newResult = tryFunctionOrLogError(
         () => mapFn(previousResult, { queryVariables }));
 

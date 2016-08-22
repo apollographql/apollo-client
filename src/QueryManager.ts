@@ -1,5 +1,6 @@
 import {
   NetworkInterface,
+  SubscriptionNetworkInterface,
   Request,
 } from './networkInterface';
 
@@ -94,6 +95,13 @@ import { WatchQueryOptions } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
+
+ export interface SubscriptionOptions {
+  query: Document;
+  variables?: { [key: string]: any };
+  fragments?: FragmentDefinition[];
+  handler: (error: Object, result: Object) => void;
+};
 
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
@@ -522,6 +530,32 @@ export class QueryManager {
 
     return queryId;
   }
+
+  public startSubscription(
+    options: SubscriptionOptions
+  ): number {
+    const {
+      query,
+      variables,
+      fragments = [],
+      handler,
+    } = options;
+
+    let queryDoc = addFragmentsToDocument(query, fragments);
+    // Apply the query transformer if one has been provided.
+    if (this.queryTransformer) {
+      queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
+    }
+    const request: Request = {
+      query: queryDoc,
+      variables,
+      operationName: getOperationName(queryDoc),
+    };
+
+    // QueryManager sets up the handler so the query can be transformed. Alternatively,
+    // pass in the transformer to the ObservableQuery.
+    return (this.networkInterface as SubscriptionNetworkInterface).subscribe(request, handler);
+  };
 
   public stopQuery(queryId: string) {
     // XXX in the future if we should cancel the request

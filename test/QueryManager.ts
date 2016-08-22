@@ -1213,9 +1213,10 @@ describe('QueryManager', () => {
     testDiffing([
       {
         query: gql`
-          query one ($fullName: String!) {
+          query one ($fullName: String!, $includeNick: Boolean!) {
             people_one(id: "1") {
               ...personInfo
+              nick @include(if: $includeNick)
             }
           }
 
@@ -1226,9 +1227,10 @@ describe('QueryManager', () => {
           }
         `,
         diffedQuery: gql`
-          query one ($fullName: String!) {
+          query one ($fullName: String!, $includeNick: Boolean!) {
             people_one(id: "1") {
               ...personInfo
+              nick @include(if: $includeNick)
             }
           }
 
@@ -1254,6 +1256,7 @@ describe('QueryManager', () => {
         },
         variables: {
           fullName: 'Edmonds Karp',
+          includeNick: false,
         },
       },
       {

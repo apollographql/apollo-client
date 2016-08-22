@@ -2,6 +2,10 @@
 
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
+### v0.4.12
+
+- Fixed an issue with middleware not being able to persist changes made to the `req.request` object. [PR #548](https://github.com/apollostack/apollo-client/pull/548) and [Issue #547](https://github.com/apollostack/apollo-client/issues/547).
+
 ### vNEXT
 
 - Fix issue where starting, stopping, then starting a polling query with the same interval wasn't handled correctly by the scheduler. Opened as [PR #555](https://github.com/apollostack/apollo-client/pull/555) and merged via [PR #568](https://github.com/apollostack/apollo-client/pull/568).

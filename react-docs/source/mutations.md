@@ -32,7 +32,7 @@ The result of the above mutation might be be:
 }
 ```
 
-When we use mutations in Apollo typically result is integrated into the cache automatically [based on the id of the result](link-to-cache-section), which is reflected in your UI automatically, and we don't explicitly handle the results ourselves. However, querying the fields that may have changed is important.
+When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](link-to-cache-section), which in turn updates UI automatically, so we don't explicitly handle the results ourselves. However, querying the fields that may have changed is important.
 
 <h2 id="basics">Basic Mutations</h2>
 
@@ -83,7 +83,7 @@ const NewEntry = function({ mutate }) {
 
 const SUBMIT_RESPOSITORY_MUTATION = gql`
   mutation submitRepository($repoFullName: String!) {
-    submitRepository(repoFullName: "apollostack/apollo-client") {
+    submitRepository(repoFullName: $repoFullName) {
       createdAt
     }
   }

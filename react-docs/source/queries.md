@@ -88,7 +88,7 @@ const withProfileData = graphql(PROFILE_QUERY, {
 });
 ```
 
-All of these function-based form of `options` will be recalculated whenever the props change.
+All of these function-based forms of `options` will be recalculated whenever the props change.
 
 <h2 id="graphql-props">Controlling child props</h2>
 

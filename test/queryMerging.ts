@@ -1008,6 +1008,137 @@ describe('Query merging', () => {
       assert.deepEqual(unpackedData, result);
     });
 
+    it('should work for an array response', () => {
+      const query = gql`
+        query authorNames {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const result = {
+        author: [
+          {
+            firstName: 'John',
+            lastName: 'Smith',
+          },
+          {
+            firstName: 'Jane',
+            lastName: 'Smith',
+          },
+        ],
+      };
+
+      const { unpackedData } = unpackQueryResult(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': [
+          {
+            firstName: 'John',
+            lastName: 'Smith',
+          },
+          {
+            firstName: 'Jane',
+            lastName: 'Smith',
+          },
+        ],
+      });
+      assert.deepEqual(unpackedData, result);
+    });
+
+    it('should work for an array response containing fragment responses', () => {
+      const query = gql`
+        query authorNames {
+          author {
+            firstName
+            ...authorInfo
+          }
+        }
+        fragment authorInfo on Author {
+          lastName
+        }`;
+      const result = {
+        author: [
+          {
+            firstName: 'John',
+            lastName: 'Smith',
+          },
+          {
+            firstName: 'Jane',
+            lastName: 'Smith',
+          },
+        ],
+      };
+      const { unpackedData } = unpackQueryResult(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': [
+          {
+            firstName: 'John',
+            '___authorNames___requestIndex_0___fieldIndex_1': 'Smith',
+          },
+          {
+            firstName: 'Jane',
+            '___authorNames___requestIndex_0___fieldIndex_1': 'Smith',
+          },
+        ],
+      });
+      assert.deepEqual(unpackedData, result);
+    });
+
+    it('should work if we have a null return value', () => {
+      const query = gql`
+        query randomStuff {
+          author {
+            firstName
+            lastName
+          }
+
+          person {
+            name
+          }
+        }`;
+      const result = {
+        author: null,
+        person: {
+          name: 'John Smith',
+        },
+      };
+      const { unpackedData } = unpackQueryResult(query, {
+        '___randomStuff___requestIndex_0___fieldIndex_0': null,
+        '___randomStuff___requestIndex_0___fieldIndex_1': {
+          name: 'John Smith',
+        },
+      });
+      assert.deepEqual(unpackedData, result);
+    });
+
+    it('should work if we have a null return value with fragments inside', () => {
+      const query = gql`
+        query randomStuff {
+          author {
+            ...authorInfo
+          }
+
+          person {
+            name
+          }
+        }
+        fragment authorInfo on Author {
+          firstName
+          lastName
+        }`;
+      const result = {
+        author: null,
+        person: {
+          name: 'John Smith',
+        },
+      };
+      const { unpackedData } = unpackQueryResult(query, {
+        '___randomStuff___requestIndex_0___fieldIndex_0': null,
+        '___randomStuff___requestIndex_0___fieldIndex_3': {
+          name: 'John Smith',
+        },
+      });
+      assert.deepEqual(unpackedData, result);
+    });
+
     it('should work for a query with a json blob request', () => {
       const query = gql`
         query authorNames {
@@ -1028,6 +1159,53 @@ describe('Query merging', () => {
       } = unpackQueryResult(query, {
         '___authorNames___requestIndex_0___fieldIndex_0': {
           info: result.author.info,
+        },
+      });
+      assert.deepEqual(unpackedData, result);
+    });
+
+    it('should work with a null response for a fragment field', () => {
+      const query = gql`
+        query authorNames {
+          author {
+            ...authorInfo
+          }
+        }
+        fragment authorInfo on Author {
+          firstName
+          lastName
+        }`;
+      const result = {
+        author: {
+          firstName: null,
+          lastName: 'Smith',
+        },
+      };
+      const { unpackedData } = unpackQueryResult(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': {
+          '___authorNames___requestIndex_0___fieldIndex_1': null,
+          '___authorNames___requestIndex_0___fieldIndex_2': 'Smith',
+        },
+      });
+      assert.deepEqual(unpackedData, result);
+    });
+
+    it('should work with directives', () => {
+      const query = gql`
+        query authorNames {
+          author {
+            firstName @skip(if: true)
+            lastName
+          }
+        }`;
+      const result = {
+        author: {
+          lastName: 'Pandya',
+        },
+      };
+      const { unpackedData } = unpackQueryResult(query, {
+        '___authorNames___requestIndex_0___fieldIndex_0': {
+          lastName: 'Pandya',
         },
       });
       assert.deepEqual(unpackedData, result);

@@ -19,11 +19,13 @@ To use this client in a web browser or mobile app, you'll need a build system ca
 
 ---
 
-## Contributing
+### Contributing
 
 [![Build status](https://travis-ci.org/apollostack/apollo-client.svg?branch=master)](https://travis-ci.org/apollostack/apollo-client)
 [![Build status](https://ci.appveyor.com/api/projects/status/ajdf70delshw2ire/branch/master?svg=true)](https://ci.appveyor.com/project/stubailo/apollo-client/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/apollostack/apollo-client/badge.svg?branch=master)](https://coveralls.io/github/apollostack/apollo-client?branch=master)
+
+[Read the Apollo Contributor Guidelines.](CONTRIBUTING.md)
 
 Running tests locally:
 

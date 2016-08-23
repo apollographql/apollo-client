@@ -14,6 +14,8 @@ Expect active development and potentially significant breaking changes in the `0
 - Fixed a couple of issues within query merging that caused issues with null values or arrays in responses. [PR #523](https://github.com/apollostack/apollo-client/pull/523).
 - Added an `updateQuery` method on observable queries. Allows application code to arbitrary change the result of a query normalized to store, without issuing any network requests. [PR #506](https://github.com/apollostack/apollo-client/pull/506) and [Issue #495](https://github.com/apollostack/apollo-client/issues/495).
 
+- Fixed issue where result of fetchMore from server wasn't being passed through [PR #508](https://github.com/apollostack/apollo-client/pull/508)
+
 ### v0.4.11
 
 - Added an `refetchQueries` option to `mutate`. The point is to just refetch certain queries on a mutation rather than having to manually specify how the result should be incorporated for each of them with `updateQueries`. [PR #482](https://github.com/apollostack/apollo-client/pull/482) and [Issue #448](https://github.com/apollostack/apollo-client/issues/448).

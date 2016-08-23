@@ -13,6 +13,7 @@ To integrate with your existing Redux store:
 1. Create an `ApolloClient` instance.
 2. Use [`combineReducers` from Redux](http://redux.js.org/docs/api/combineReducers.html) to combine `client.reducer()` with your other reducers. By default, the reducer expects to be attached under the `apollo` key in the store.
 3. Pass your reducers to [Redux's `createStore`](http://redux.js.org/docs/api/createStore.html), and make sure to use `applyMiddleware` to add `client.middleware()` to your store.
+4. Add `window.devToolsExtension` to your store if you would like to use the [Redux dev tools extension](https://github.com/zalmoxisus/redux-devtools-extension).
 
 Here's what it looks like all together:
 
@@ -29,7 +30,8 @@ const store = createStore(
     users: userReducer,
     apollo: client.reducer(),
   }),
-  applyMiddleware(client.middleware())
+  applyMiddleware(client.middleware()),
+  window.devToolsExtension ? window.devToolsExtension() : f => f,
 );
 
 store.getState();
@@ -60,7 +62,8 @@ const store = createStore(
     users: userReducer,
     myDifferentKey: client.reducer(),
   }),
-  applyMiddleware(client.middleware())
+  applyMiddleware(client.middleware()),
+  window.devToolsExtension ? window.devToolsExtension() : f => f,
 );
 
 store.getState();
@@ -93,7 +96,8 @@ const store = createStore(
     users: userReducer,
     myDifferentKey: client.reducer(),
   }),
-  applyMiddleware(client.middleware(), ReduxThunk)
+  applyMiddleware(client.middleware(), ReduxThunk),
+  window.devToolsExtension ? window.devToolsExtension() : f => f,
 );
 
 ```
@@ -115,7 +119,8 @@ const store = createStore(
     users: userReducer,
     myDifferentKey: client.reducer(),
   }),
-  applyMiddleware(client.middleware(), ReduxThunk.withExtraArgument(client))
+  applyMiddleware(client.middleware(), ReduxThunk.withExtraArgument(client)),
+  window.devToolsExtension ? window.devToolsExtension() : f => f,
 );
 
 ```

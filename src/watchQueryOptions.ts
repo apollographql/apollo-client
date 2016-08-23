@@ -22,7 +22,7 @@ export interface GraphQLSubscriptionOptions {
   subscription: Document;
   variables?: { [key: string]: any };
   fragments?: FragmentDefinition[];
-  updateFunction: (previousQueryResult: Object, options: {
+  updateQuery: (previousQueryResult: Object, options: {
     subscriptionResult: Object,
     queryVariables: Object,
   }) => Object;

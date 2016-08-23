@@ -154,7 +154,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         variables: graphQLSubscriptionOptions.variables,
         fragments: graphQLSubscriptionOptions.fragments,
         handler: (error: Object, result: Object) => {
-          const reducer = graphQLSubscriptionOptions.updateFunction;
+          const reducer = graphQLSubscriptionOptions.updateQuery;
           if (error) {
             throw new Error(JSON.stringify(error));
           } else {

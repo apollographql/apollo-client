@@ -6,6 +6,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Fix issue where starting, stopping, then starting a polling query with the same interval wasn't handled correctly by the scheduler. Opened as [PR #555](https://github.com/apollostack/apollo-client/pull/555) and merged via [PR #568](https://github.com/apollostack/apollo-client/pull/568).
 - Fixed an issue with used variables in directives related to unused variables stripping [PR #563](https://github.com/apollostack/apollo-client/pull/563) and [Issue #562](https://github.com/apollostack/apollo-client/issues/562)
+- Change subscription API to use `updateQuery`, like `fetchMore` does, instead of `updateFunction`. [PR #574](https://github.com/apollostack/apollo-client/pull/574)
 
 ### v0.4.12
 - Fixed an issue with named fragments in batched queries. [PR #509](https://github.com/apollostack/apollo-client/pull/509) and [Issue #501](https://github.com/apollostack/apollo-client/issues/501).

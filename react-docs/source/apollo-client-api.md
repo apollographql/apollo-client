@@ -29,6 +29,8 @@ order: 20
 
 <h2 id="types">Types</h2>
 
+{% tsapibox ApolloError %}
+{% tsapibox QuerySubscription %}
 {% tsapibox ApolloStore %}
 {% tsapibox NetworkInterface %}
 {% tsapibox NormalizedCache %}

@@ -90,5 +90,55 @@ class MyComponent extends Component {
 }
 ```
 
+XXX:?
+
+<h2 id="withApollo">The `withApollo` container</h2>
+
+`withApollo` is a simple higher order component which provides direct access to your `ApolloClient` instance as a prop to your wrapped component. This is useful if you want to do custom logic with apollo, without using the `graphql` container.
+
+```js
+import React, { Component } from 'react';
+import { withApollo } from 'react-apollo';
+import { ApolloClient } from 'apollo-client';
+
+const MyComponent = (props) => {
+  // this.props.client is the apollo client
+  return <div></div>
+}
+MyComponent.propTypes = {
+  client: React.PropTypes.instanceOf(ApolloClient).isRequired;
+}
+const MyComponentWithApollo = withApollo(MyComponent);
+
+// or, using ES2016 decorators:
+
+@withApollo
+class MyComponent extends Component {
+  render() {
+    return <div></div>
+  }
+}
+```
+
+XXX: do we need this bit:
+
+<h4 name='with-ref'>withRef</h4>
+
+If you need to get access to the instance of the wrapped component, you can use `withRef` in the options.
+This will allow a `getWrappedInstance` method on the returned component which will return the wrapped instance.
+
+```js
+import React, { Component } from 'react';
+import { graphql } from 'react-apollo';
+
+class MyComponent extends Component { ... }
+
+const withUpvoteAndRef = graphql(UPVOTE, { withRef: 'true' });
+const MyComponentWithUpvote = withUpvoteAndRef(MyComponent);
+
+// MyComponentWithUpvote.getWrappedInstance() returns MyComponent instance
+```
+
+
 
 ## Troubleshooting

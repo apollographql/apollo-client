@@ -76,7 +76,7 @@ Of course, you don't always want to use the existing data in the store - sometim
 
 <h2 id="query" title="ApolloClient#query">ApolloClient#query(options)</h2>
 
-Run a GraphQL query and return a promise that resolves to a `GraphQLResult`, or throws an [`ApolloError`](#ApolloError).
+Run a GraphQL query and return a promise that resolves to a [`GraphQLResult`](./network.html#GraphQLResult), or throws an [`ApolloError`](#ApolloError).
 
 - `query: string` A GraphQL query string to fetch.
 - `variables: Object` The variables to pass along with the query.

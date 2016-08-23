@@ -201,7 +201,7 @@ describe('GraphQL Subscriptions', () => {
       const graphQLSubscriptionOptions = {
         subscription: commentsSub,
         variables: commentsVariables,
-        updateFunction: (prev, updateOptions) => {
+        updateQuery: (prev, updateOptions) => {
           const state = clonedeep(prev) as any;
           // prev is that data field of the query result
           // updateOptions.subscriptionResult is the result entry from the subscription result

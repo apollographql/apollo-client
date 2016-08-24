@@ -583,7 +583,7 @@ export class QueryManager {
       }
 
       return {
-        unsubscribe() {
+        unsubscribe: () => {
           observers = observers.filter((obs) => obs !== observer);
 
           // If we removed the last observer, tear down the network subscription

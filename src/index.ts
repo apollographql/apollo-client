@@ -30,11 +30,16 @@ import {
 
 import {
   QueryManager,
+  SubscriptionOptions,
 } from './QueryManager';
 
 import {
-    ObservableQuery,
+  ObservableQuery,
 } from './ObservableQuery';
+
+import {
+  Observable,
+} from './util/Observable';
 
 import {
   WatchQueryOptions,
@@ -268,6 +273,11 @@ export default class ApolloClient {
     this.initStore();
     return this.queryManager.mutate(options);
   };
+
+  public subscribe(options: SubscriptionOptions): Observable<any> {
+    this.initStore();
+    return this.queryManager.startGraphQLSubscription(options);
+  }
 
   public reducer(): Function {
     return createApolloReducer(this.reducerConfig);

@@ -101,11 +101,10 @@ import { ObservableQuery } from './ObservableQuery';
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
- export interface SubscriptionOptions {
+export interface SubscriptionOptions {
   query: Document;
   variables?: { [key: string]: any };
   fragments?: FragmentDefinition[];
-  handler: (error: Object, result: Object) => void;
 };
 
 export class QueryManager {

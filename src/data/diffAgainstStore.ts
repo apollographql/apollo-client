@@ -1,5 +1,6 @@
 import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
+import isObject = require('lodash.isobject');
 import has = require('lodash.has');
 import assign = require('lodash.assign');
 
@@ -217,10 +218,11 @@ export function diffSelectionSetAgainstStore({
 
           if (fieldIsMissing) {
             pushMissingField(selection);
-          } else {
-            assign(result, fieldResult);
           }
 
+          if (isObject(fieldResult)) {
+            assign(result, fieldResult);
+          }
           if (!fragmentErrors[typename]) {
             fragmentErrors[typename] = null;
           }
@@ -256,7 +258,8 @@ export function diffSelectionSetAgainstStore({
 
           if (fieldIsMissing) {
             pushMissingField(selection);
-          } else {
+          }
+          if (isObject(fieldResult)) {
             assign(result, fieldResult);
           }
 

@@ -83,7 +83,12 @@ import {
   ApolloQueryResult,
 } from './index';
 
-import { Observer, Subscription } from './util/Observable';
+import {
+  Observer,
+  Subscription,
+  Observable,
+} from './util/Observable';
+
 import { tryFunctionOrLogError } from './util/errorHandling';
 
 import {
@@ -531,14 +536,13 @@ export class QueryManager {
     return queryId;
   }
 
-  public startSubscription(
+  public startGraphQLSubscription(
     options: SubscriptionOptions
-  ): number {
+  ): Observable<any> {
     const {
       query,
       variables,
       fragments = [],
-      handler,
     } = options;
 
     let queryDoc = addFragmentsToDocument(query, fragments);
@@ -552,9 +556,24 @@ export class QueryManager {
       operationName: getOperationName(queryDoc),
     };
 
-    // QueryManager sets up the handler so the query can be transformed. Alternatively,
-    // pass in the transformer to the ObservableQuery.
-    return (this.networkInterface as SubscriptionNetworkInterface).subscribe(request, handler);
+    return new Observable((observer) => {
+      const handler = (error, result) => {
+        if (error) {
+          observer.error(error);
+        } else {
+          observer.next(result);
+        }
+      };
+
+      // QueryManager sets up the handler so the query can be transformed. Alternatively,
+      // pass in the transformer to the ObservableQuery.
+      const subId = (this.networkInterface as SubscriptionNetworkInterface).subscribe(
+        request, handler);
+
+      return function unsub() {
+        (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(subId);
+      };
+    });
   };
 
   public stopQuery(queryId: string) {

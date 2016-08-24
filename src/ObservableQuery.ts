@@ -1,4 +1,7 @@
-import { WatchQueryOptions, FetchMoreQueryOptions, GraphQLSubscriptionOptions } from './watchQueryOptions';
+import {
+  WatchQueryOptions,
+  FetchMoreQueryOptions,
+} from './watchQueryOptions';
 
 import { Observable, Observer } from './util/Observable';
 

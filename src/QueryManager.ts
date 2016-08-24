@@ -556,23 +556,44 @@ export class QueryManager {
       operationName: getOperationName(queryDoc),
     };
 
+    let subId;
+    let observers = [];
+
     return new Observable((observer) => {
-      const handler = (error, result) => {
-        if (error) {
-          observer.error(error);
-        } else {
-          observer.next(result);
-        }
-      };
+      observers.push(observer);
 
-      // QueryManager sets up the handler so the query can be transformed. Alternatively,
-      // pass in the transformer to the ObservableQuery.
-      const subId = (this.networkInterface as SubscriptionNetworkInterface).subscribe(
-        request, handler);
+      // If this is the first observer, actually initiate the network subscription
+      if (observers.length === 1) {
+        const handler = (error, result) => {
+          if (error) {
+            observers.forEach((obs) => {
+              obs.error(error);
+            });
+          } else {
+            observers.forEach((obs) => {
+              obs.next(result);
+            });
+          }
+        };
 
-      return function unsub() {
-        (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(subId);
-      };
+        // QueryManager sets up the handler so the query can be transformed. Alternatively,
+        // pass in the transformer to the ObservableQuery.
+        subId = (this.networkInterface as SubscriptionNetworkInterface).subscribe(
+          request, handler);
+      }
+
+      return {
+        unsubscribe() {
+          observers = observers.filter((obs) => obs !== observer);
+
+          // If we removed the last observer, tear down the network subscription
+          if (observers.length === 0) {
+            (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(subId);
+          }
+        },
+        // Used in tests...
+        _networkSubscriptionId: subId,
+      } as Subscription;
     });
   };
 

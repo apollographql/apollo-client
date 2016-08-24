@@ -3,13 +3,13 @@ title: Modifying data on the server
 order: 4
 ---
 
-In addition to fetching data using queries, Apollo also handles [GraphQL mutations](link-to-guide). Mutation strings are identical to query strings in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the operation is used to change the dataset behind the schema. Basically, a query is the GraphQL equivalent of an HTTP GET and a mutation is the equivalent of an HTTP POST.
+In addition to fetching data using queries, Apollo also handles [GraphQL mutations](link-to-guide). Mutations are identical to queries in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the operation is used to change the dataset behind the schema.
 
 ```js
 mutation {
   submitRepository(repoFullName: "apollostack/apollo-client") {
     id
-    createdAt
+    repoName
   }
 }
 ```
@@ -17,7 +17,7 @@ mutation {
 GraphQL mutations consist of two parts:
 
 1. The mutation name with arguments (`submitRepository`), which represents the actual operation to be done on the server
-2. The fields you want back from the result of the mutation to update the client (`id` and `createdAt`)
+2. The fields you want back from the result of the mutation to update the client (`id` and `repoName`)
 
 The result of the above mutation might be be:
 
@@ -26,7 +26,7 @@ The result of the above mutation might be be:
   "data": {
     "submitRepository": {
       "id": "123",
-      "createdAt": 12345.43
+      "repoName": "apollostack/apollo-client"
     }
   }
 }
@@ -56,8 +56,6 @@ const SUBMIT_RESPOSITORY_MUTATION = gql`
 const withSubmitRepositoryMutation = graphql(SUBMIT_RESPOSITORY_MUTATION);
 const NewEntryWithData = withSubmitRepositoryMutation(NewEntry);
 ```
-
-The callback takes all the arguments
 
 <h3 id="calling-mutations">Calling mutations</h3>
 

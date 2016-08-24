@@ -459,9 +459,11 @@ class PostsListComponent {
 }
 ```
 
-<h2 id="apolloquerypipe">ApolloQueryPipe</h2>
+<h2 id="selectpipe">SelectPipe</h2>
 
-Each Apollo query can include few queries.
+> NOTE: Since v0.4.4 the `SelectPipe` has replaced the `ApolloQueryPipe`, which is now deprecated. Both share the same logic, but have different names.
+
+Each Apollo query can include few sub queries.
 
 [`Angular2Apollo#watchQuery`](angular2.html#angular2apollo-mutations) returns an Apollo observable.
 In combination with AsyncPipe the data comes in the following form:
@@ -469,8 +471,8 @@ In combination with AsyncPipe the data comes in the following form:
 ```ts
 {
   data: {
-    firstQuery: any
-    secondQuery: any
+    firstSubQuery: any
+    secondSubQuery: any
   }
 }
 ```
@@ -479,19 +481,35 @@ Using `@Apollo` decorator, queries come directly as properties of result object.
 
 ```ts
 {
-  firstQuery: any
-  secondQuery: any
+  firstSubQuery: any
+  secondSubQuery: any
 }
 ```
 
-To handle that more easily we've created the `ApolloQueryPipe`.
+To handle that more easily we've created the `SelectPipe`.
 It automatically knows where to look for the query. You don't have to worry about it.
 
 Here is how it works:
 
+```ts
+gql`
+  query allPosts {
+    posts {
+      title
+      author {
+        name
+      }
+    }
+    currentUser {
+      name
+    }
+  }
+`
+```
+
 ```html
 <ul>
-  <li *ngFor="let post of data | apolloQuery:'posts'">
+  <li *ngFor="let post of data | select:'posts'">
       {{ post.title }}
   </li>
 </ul>

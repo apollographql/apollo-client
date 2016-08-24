@@ -4,15 +4,23 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- ...
+
+### v0.4.13
+
 - Fix issue where starting, stopping, then starting a polling query with the same interval wasn't handled correctly by the scheduler. Opened as [PR #555](https://github.com/apollostack/apollo-client/pull/555) and merged via [PR #568](https://github.com/apollostack/apollo-client/pull/568).
 - Fixed an issue with used variables in directives related to unused variables stripping [PR #563](https://github.com/apollostack/apollo-client/pull/563) and [Issue #562](https://github.com/apollostack/apollo-client/issues/562)
+- Change subscription API to use `updateQuery`, like `fetchMore` does, instead of `updateFunction`. [PR #574](https://github.com/apollostack/apollo-client/pull/574)
 
 ### v0.4.12
+
 - Fixed an issue with named fragments in batched queries. [PR #509](https://github.com/apollostack/apollo-client/pull/509) and [Issue #501](https://github.com/apollostack/apollo-client/issues/501).
 - Fixed an issue with unused variables in queries after diffing queries against information available in the store. [PR #518](https://github.com/apollostack/apollo-client/pull/518) and [Issue #496](https://github.com/apollostack/apollo-client/issues/496).
 - Add code to support GraphQL subscriptions. [PR #540](https://github.com/apollostack/apollo-client/pull/540).
 - Fixed a couple of issues within query merging that caused issues with null values or arrays in responses. [PR #523](https://github.com/apollostack/apollo-client/pull/523).
 - Added an `updateQuery` method on observable queries. Allows application code to arbitrary change the result of a query normalized to store, without issuing any network requests. [PR #506](https://github.com/apollostack/apollo-client/pull/506) and [Issue #495](https://github.com/apollostack/apollo-client/issues/495).
+
+- Fixed issue where result of fetchMore from server wasn't being passed through [PR #508](https://github.com/apollostack/apollo-client/pull/508)
 
 ### v0.4.11
 

@@ -4,7 +4,7 @@ order: 302
 description: How to set up Apollo Server
 ---
 
-Apollo Server exports `apolloExpress`, `apolloConnect`, `ApolloHAPI` and `apolloKoa` which can be used as a drop-in to turn your Express, Connect, HAPI or Koa server into a GraphQL server.
+Apollo Server exports `apolloExpress`, `apolloConnect`, `ApolloHAPI` and `apolloKoa` which can be used as a drop-in to turn your Express, Connect, HAPI or Koa 2 server into a GraphQL server.
 
 
 <h2 id="apolloOptions">ApolloOptions</h2>
@@ -100,7 +100,7 @@ server.register({
 ```
 
 
-<h2 id="apolloKoa">Using with Koa</h2>
+<h2 id="apolloKoa">Using with Koa 2</h2>
 
 The following code snippet shows how to use Apollo Server with Koa:
 

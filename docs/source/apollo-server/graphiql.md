@@ -65,9 +65,9 @@ server.register({
 ```
 
 
-<h2 id="graphiqlKoa">Using with Koa</h2>
+<h2 id="graphiqlKoa">Using with Koa 2</h2>
 
-If you are using Koa, GraphiQL can be configured as follows:
+If you are using Koa 2, GraphiQL can be configured as follows:
 
 ```js
 import { graphiqlKoa } from 'apollo-server';

@@ -342,19 +342,33 @@ export function renameFragmentSpreads(selSet: SelectionSet, aliasName: string): 
   return selSet;
 }
 
+function renameVariablesInArgument(argument: Argument, aliasName: string): Argument {
+  if (argument.kind === 'Argument' &&
+      (argument as Argument).value.kind === 'Variable') {
+    const varx = argument.value as Variable;
+    (argument.value as Variable).name.value = getVariableAliasName(varx, aliasName);
+  }
+  return argument;
+}
+
 export function renameVariables(selSet: SelectionSet, aliasName: string): SelectionSet {
   if (selSet && selSet.selections) {
     selSet.selections = selSet.selections.map((selection) => {
       if (selection.kind === 'Field') {
         const field = selection as Field;
         if (field.arguments) {
-          field.arguments = field.arguments.map((argument) => {
-            if (argument.kind === 'Argument' &&
-               (argument as Argument).value.kind === 'Variable') {
-              const varx = argument.value as Variable;
-              (argument.value as Variable).name.value = getVariableAliasName(varx, aliasName);
+          field.arguments = field.arguments.map(argument =>
+            renameVariablesInArgument(argument, aliasName)
+          );
+        }
+        if (field.directives) {
+          field.directives = field.directives.map((directive) => {
+            if (directive.arguments) {
+              directive.arguments = directive.arguments.map(argument =>
+                renameVariablesInArgument(argument, aliasName)
+              );
             }
-            return argument;
+            return directive;
           });
         }
         field.selectionSet = renameVariables(field.selectionSet, aliasName);

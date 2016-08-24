@@ -7,6 +7,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Avoid extra `assign` when there are no optimistic updates present. [PR #597]((https://github.com/apollostack/apollo-client/pull/597)
 - Fixed issue with error passing with query merging. [PR #589](https://github.com/apollostack/apollo-client/pull/589) and [Issue #551](https://github.com/apollostack/apollo-client/issues/551).
 - [Experimental] Change subscription API to `subscribe` function on Apollo Client instance, and remove `fetchMore`-style API temporarily.
+- Fixed an issue with batching and variables used in directives. [PR #584](https://github.com/apollostack/apollo-client/pull/584) and [Issue #577](https://github.com/apollostack/apollo-client/issues/577).
 
 ### v0.4.13
 

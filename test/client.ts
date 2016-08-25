@@ -1594,4 +1594,14 @@ describe('client', () => {
       done();
     });
   });
+
+  it('has a resetStore method which calls QueryManager', (done) => {
+    const client = new ApolloClient();
+    client.queryManager = {
+      resetStore: () => {
+        done();
+      },
+    } as QueryManager;
+    client.resetStore();
+  });
 });

@@ -237,17 +237,39 @@ import {
 } from './batchedNetworkInterface';
 
 
+export interface NetworkInterfaceOptions {
+  uri: string;
+  opts?: RequestInit;
+  transportBatching?: boolean;
+}
+
+// This function is written to preserve backwards compatibility.
+// Specifically, there are two ways of calling `createNetworkInterface`:
+// 1. createNetworkInterface(uri: string, opts: RequestInit)
+// 2. createnetworkInterface({ uri: string, opts: RequestInit, transportBatching: boolean})
+// where the latter is preferred over the former.
+//
+// XXX remove this backward compatibility feature by 1.0
 export function createNetworkInterface(
-  uri: string,
-  opts: RequestInit = {},
-  transportBatching = false
+  interfaceOpts: (NetworkInterfaceOptions | string),
+  backOpts: RequestInit = {}
 ): HTTPNetworkInterface {
-  if (transportBatching) {
-    // We can use transport batching rather than query merging.
-    return new HTTPBatchedNetworkInterface(uri, opts) as HTTPNetworkInterface;
+  if (isString(interfaceOpts) || !interfaceOpts) {
+    const uri = interfaceOpts as string;
+    return addQueryMerging(new HTTPFetchNetworkInterface(uri, backOpts)) as HTTPNetworkInterface;
   } else {
-    // createNetworkInterface has batching ability by default through query merging,
-    // which is not used unless the `shouldBatch` option is passed to apollo-client.
-    return addQueryMerging(new HTTPFetchNetworkInterface(uri, opts)) as HTTPNetworkInterface;
+    const {
+      transportBatching = false,
+      opts = {},
+      uri,
+    } = interfaceOpts as NetworkInterfaceOptions;
+    if (transportBatching) {
+      // We can use transport batching rather than query merging.
+      return new HTTPBatchedNetworkInterface(uri, opts) as HTTPNetworkInterface;
+    } else {
+      // createNetworkInterface has batching ability by default through query merging,
+      // which is not used unless the `shouldBatch` option is passed to apollo-client.
+      return addQueryMerging(new HTTPFetchNetworkInterface(uri, opts)) as HTTPNetworkInterface;
+    }
   }
 }

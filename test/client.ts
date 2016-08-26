@@ -1660,7 +1660,11 @@ describe('client', () => {
       },
       result: createMockedIResponse([firstResult, secondResult]),
     });
-    const networkInterface = createNetworkInterface('http://not-a-real-url.com', {}, true);
+    const networkInterface = createNetworkInterface({
+      uri: 'http://not-a-real-url.com',
+      opts: {},
+      transportBatching: true,
+    });
     networkInterface.batchQuery([
       {
         query: firstQuery,

@@ -299,6 +299,10 @@ export default class ApolloClient {
     }));
   };
 
+  public resetStore() {
+    this.queryManager.resetStore();
+  };
+
   private setStore(store: ApolloStore) {
     // ensure existing store has apolloReducer
     if (isUndefined(store.getState()[this.reduxRootKey])) {

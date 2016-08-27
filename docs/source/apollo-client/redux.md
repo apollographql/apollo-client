@@ -30,8 +30,12 @@ const store = createStore(
     users: userReducer,
     apollo: client.reducer(),
   }),
-  applyMiddleware(client.middleware()),
-  window.devToolsExtension ? window.devToolsExtension() : f => f,
+  compose(
+    applyMiddleware(
+      client.middleware(),
+    ),
+    window.devToolsExtension ? window.devToolsExtension() : f => f,
+  )
 );
 
 store.getState();
@@ -62,8 +66,12 @@ const store = createStore(
     users: userReducer,
     myDifferentKey: client.reducer(),
   }),
-  applyMiddleware(client.middleware()),
-  window.devToolsExtension ? window.devToolsExtension() : f => f,
+  compose(
+    applyMiddleware(
+      client.middleware(),
+    ),
+    window.devToolsExtension ? window.devToolsExtension() : f => f,
+  )
 );
 
 store.getState();
@@ -96,8 +104,13 @@ const store = createStore(
     users: userReducer,
     myDifferentKey: client.reducer(),
   }),
-  applyMiddleware(client.middleware(), ReduxThunk),
-  window.devToolsExtension ? window.devToolsExtension() : f => f,
+  compose(
+    applyMiddleware(
+      client.middleware(),
+      ReduxThunk,
+    ),
+    window.devToolsExtension ? window.devToolsExtension() : f => f,
+  )
 );
 
 ```
@@ -119,8 +132,13 @@ const store = createStore(
     users: userReducer,
     myDifferentKey: client.reducer(),
   }),
-  applyMiddleware(client.middleware(), ReduxThunk.withExtraArgument(client)),
-  window.devToolsExtension ? window.devToolsExtension() : f => f,
+  compose(
+    applyMiddleware(
+      client.middleware(),
+      ReduxThunk.withExtraArgument(client),
+    ),
+    window.devToolsExtension ? window.devToolsExtension() : f => f,
+  )
 );
 
 ```

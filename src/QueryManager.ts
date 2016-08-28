@@ -408,7 +408,7 @@ export class QueryManager {
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<ApolloQueryResult> {
-    return this.fetchQueryOverInterface(queryId, options, this.networkInterface);
+    return this.fetchQueryOverInterface(queryId, options);
   }
 
   public generateQueryId() {
@@ -745,7 +745,6 @@ export class QueryManager {
     querySS,
     options,
     fragmentMap,
-    networkInterface,
   }: {
     requestId: number,
     queryId: string,
@@ -753,7 +752,6 @@ export class QueryManager {
     querySS: SelectionSetWithRoot,
     options: WatchQueryOptions,
     fragmentMap: FragmentMap,
-    networkInterface: NetworkInterface,
   }): Promise<GraphQLResult> {
     const {
       variables,
@@ -826,8 +824,7 @@ export class QueryManager {
 
   private fetchQueryOverInterface(
     queryId: string,
-    options: WatchQueryOptions,
-    networkInterface: NetworkInterface
+    options: WatchQueryOptions
   ): Promise<ApolloQueryResult> {
     const {
       variables,
@@ -922,7 +919,6 @@ export class QueryManager {
         querySS: minimizedQuery,
         options,
         fragmentMap,
-        networkInterface,
       });
     }
 

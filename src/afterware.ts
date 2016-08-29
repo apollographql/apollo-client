@@ -4,5 +4,5 @@ export interface AfterwareResponse {
 }
 
 export interface AfterwareInterface {
-  applyAfterware(response: AfterwareResponse, next: Function);
+  applyAfterware(response: AfterwareResponse, next: Function): any;
 }

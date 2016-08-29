@@ -25,16 +25,16 @@ describe('GraphQL Subscriptions', () => {
     name => ({ result: { user: { name: name } }, delay: 10 })
   );
 
-  let sub1;
-  let options;
-  let watchQueryOptions;
-  let sub2;
-  let commentsQuery;
-  let commentsVariables;
-  let commentsSub;
-  let commentsResult;
-  let commentsResultMore;
-  let commentsWatchQueryOptions;
+  let sub1: any;
+  let options: any;
+  let watchQueryOptions: any;
+  let sub2: any;
+  let commentsQuery: any;
+  let commentsVariables: any;
+  let commentsSub: any;
+  let commentsResult: any;
+  let commentsResultMore: any;
+  let commentsWatchQueryOptions: any;
   beforeEach(() => {
 
     sub1 = {
@@ -65,7 +65,7 @@ describe('GraphQL Subscriptions', () => {
       variables: {
           name: 'Changping Chen',
         },
-      handler: (error, result) => {
+      handler: (error: any, result: any) => {
         // do nothing
       },
     };
@@ -154,7 +154,7 @@ describe('GraphQL Subscriptions', () => {
       reduxRootKey: 'apollo',
       store: createApolloStore(),
     });
-    options.handler = (error, result) => {
+    options.handler = (error: any, result: any) => {
       assert.deepEqual(result, results[0].result);
       done();
     };
@@ -170,7 +170,7 @@ describe('GraphQL Subscriptions', () => {
       reduxRootKey: 'apollo',
       store: createApolloStore(),
     });
-    options.handler = (error, result) => {
+    options.handler = (error: any, result: any) => {
       assert.deepEqual(result, results[numResults].result);
       numResults++;
       if (numResults === 4) {
@@ -201,7 +201,7 @@ describe('GraphQL Subscriptions', () => {
       const graphQLSubscriptionOptions = {
         subscription: commentsSub,
         variables: commentsVariables,
-        updateQuery: (prev, updateOptions) => {
+        updateQuery: (prev: any, updateOptions: any) => {
           const state = clonedeep(prev) as any;
           // prev is that data field of the query result
           // updateOptions.subscriptionResult is the result entry from the subscription result
@@ -213,7 +213,7 @@ describe('GraphQL Subscriptions', () => {
 
       obsHandle.subscribe({
         next(result) {
-          let expectedComments = [];
+          let expectedComments: any[] = [];
           for (let i = 1; i <= 11; i++) {
             expectedComments.push({ text: `comment ${i}` });
           }

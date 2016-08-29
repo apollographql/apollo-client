@@ -85,7 +85,7 @@ function getMatchingFields(
   pathSegment: string,
   fragmentMap: FragmentMap
 ): Field[] {
-  let matching = [];
+  let matching: any[] = [];
 
   currSelSet.selections.forEach((selection) => {
     if (isField(selection)) {

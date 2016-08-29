@@ -3,9 +3,9 @@ title: Introduction
 order: 0
 ---
 
-This is the guide to using the [Apollo](http://apollostack.com) JavaScript client with the [React](https://facebook.github.io/react/) rendering library.
+This is the guide to using the [Apollo](http://apollostack.com) JavaScript GraphQL client with the [React](https://facebook.github.io/react/) rendering library.
 
-Apollo is a collection of utilities designed to make it easier to use [GraphQL](http://graphql.org) across a range of front-end and server technologies. Although this guide focuses on the integration with React, there is a similar guide available for [Angular 2](XXX: link), and the `apollo-client` JavaScript package can be used in many other contexts too.
+The Apollo team builds and maintains a collection of utilities designed to make it easier to use [GraphQL](http://graphql.org) across a range of front-end and server technologies. Although this guide focuses on the integration with React, there is a similar guide available for [Angular 2](XXX: link), and the `apollo-client` JavaScript package can be used in many other contexts too.
 
 If you are looking to use Apollo with a native mobile client, there is a [iOS Client](https://github.com/apollostack/apollo-ios) in development and plans for an Android client too. On the other hand, the React integration documented here works with [React Native](https://facebook.github.io/react-native/) on both platforms without changes.
 
@@ -19,7 +19,7 @@ The `apollo-client` npm module is a JavaScript client for GraphQL. The goal of t
 2. **Simple to get started with**, you can just read one guide and get going.
 3. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
 4. **Built for interactive apps**, so your users can make changes and see them reflected in the UI straight away.
-5. **Community driven**, many of the components of Apollo (including the `react-apollo` integration) were driven by our community and serve real-world use cases from the outset.
+5. **Community driven**, many of the components of Apollo (including the `react-apollo` integration) were driven by our community and serve real-world use cases from the outset, and all components are planned and developed in the open.
 
 The Apollo client does more than simply run your queries against your GraphQL server. It analyzes your queries and their results to construct a client-side cache of your data, which is updated as further queries, mutations are run and data is pushed to you from the server. This means that your UI can remain fully up-to-date with the state on the server with the minimum number of queries required.
 
@@ -31,9 +31,9 @@ React Apollo provides a idiomatic React API, and is known to work in a straightf
 
  - It works with React Native out of the box;
  - It can integrate naturally with routers, such as React Router;
- - Although it uses Redux internally (and you can [take advantage](redux.html) of this), you can easily use it with other state management tools like MobX.
+ - Uses Redux internally and you can [take advantage](redux.html) of this, but also can be used with any other client-side data library that integrates with React.
 
-If you want to use Apollo with a different type of client (for instance a different JavaScript framework, or a native mobile app), it is possible too! Please check out the links at the top of this document, or head to our [developer site](http://apollostack.com) to get started.
+If you want to use Apollo with a different front-end environment (for instance a different JavaScript framework, or a native mobile app), it is possible too! Please check out the links at the top of this document, or head to our [developer site](http://apollostack.com) to get started.
 
 <h2 id="comparison">How does Apollo compare to other GraphQL clients?</h2>
 

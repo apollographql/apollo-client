@@ -6,7 +6,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Avoid extra `assign` when there are no optimistic updates present. [PR #597]((https://github.com/apollostack/apollo-client/pull/597)
 - Fixed issue with error passing with query merging. [PR #589](https://github.com/apollostack/apollo-client/pull/589) and [Issue #551](https://github.com/apollostack/apollo-client/issues/551).
-- Fixed an issue with middleware not being able to persist changes made to the `req.request` object. [PR #548](https://github.com/apollostack/apollo-client/pull/548) and [Issue #547](https://github.com/apollostack/apollo-client/issues/547).
+- Allow network interface middlewares to change the `req.request` object to add additional fields to the request body. [PR #548](https://github.com/apollostack/apollo-client/pull/548) and [Issue #547](https://github.com/apollostack/apollo-client/issues/547).
 - [Experimental] Change subscription API to `subscribe` function on Apollo Client instance, and remove `fetchMore`-style API temporarily.
 - Fixed an issue with batching and variables used in directives. [PR #584](https://github.com/apollostack/apollo-client/pull/584) and [Issue #577](https://github.com/apollostack/apollo-client/issues/577).
 - Implemented transport-level batching the way it is currently supported within Apollo Server. [PR #531](https://github.com/apollostack/apollo-client/pull/531) and [Issue #505](https://github.com/apollostack/apollo-client/issues/505).

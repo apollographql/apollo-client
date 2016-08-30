@@ -109,7 +109,7 @@ export function unpackMergedResult(
       topLevel: true,
     });
 
-    return { data: unpackedData };
+    return assign({}, result, { data: unpackedData });
   });
 
   return resultArray;

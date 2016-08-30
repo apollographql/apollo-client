@@ -831,6 +831,39 @@ describe('Query merging', () => {
     assert.deepEqual(unpackedResults[1], { data: secondResult });
   });
 
+  it('should unpack with errors in the result', () => {
+    const query = gql`
+      query authorNames {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const graphQLError = new Error('This is some kind of graphql error.');
+    const result = {
+      data: {
+        author: {
+          firstName: 'Dhaivat',
+          lastName: 'Pandya',
+        },
+      },
+      errors: [ graphQLError ],
+    };
+    const composedResult = {
+      data: {
+        ___authorNames___requestIndex_0___fieldIndex_0: {
+          firstName: 'Dhaivat',
+          lastName: 'Pandya',
+        },
+      },
+      errors: [ graphQLError ],
+    };
+    const requests = [{ query }];
+    const unpackedResults = unpackMergedResult(composedResult, requests);
+    assert.equal(unpackedResults.length, 1);
+    assert.deepEqual(unpackedResults[0], result);
+  });
+
   describe('unpackDataForRequest', () => {
     const unpackQueryResult = (query: Document, data: Object) => {
       return unpackDataForRequest({
@@ -1210,5 +1243,6 @@ describe('Query merging', () => {
       });
       assert.deepEqual(unpackedData, result);
     });
+
   });
 });

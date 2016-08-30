@@ -67,7 +67,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface imple
             return result.json();
           })
           .then(responses => {
-            const afterwaresPromises = responses.map((response, index) => {
+            const afterwaresPromises = responses.map((response: IResponse, index: number) => {
               return this.applyAfterwares({
                 response,
                 options: requestsAndOptions[index].options,
@@ -78,7 +78,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface imple
               response: IResponse,
               options: RequestInit,
             }[]) => {
-              const results = [];
+              const results: Array<IResponse>  = [];
               responsesAndOptions.forEach(({ response }) => {
                 results.push(response);
               });

@@ -48,8 +48,8 @@ describe('HTTPBatchedNetworkInterface', () => {
     batchedNetworkInterface.use(middlewares);
     batchedNetworkInterface.useAfter(afterwares);
 
-    const printedRequests = [];
-    const resultList = [];
+    const printedRequests: Array<any> = [];
+    const resultList: Array<any> = [];
     requestResultPairs.forEach(({ request, result }) => {
       printedRequests.push(printRequest(request));
       resultList.push(result);
@@ -205,7 +205,7 @@ describe('HTTPBatchedNetworkInterface', () => {
   it('middleware should be able to modify requests/options', () => {
     const changeMiddleware: MiddlewareInterface = {
       applyMiddleware({ options }, next) {
-        options.headers['Content-Length'] = '18';
+        (options as any).headers['Content-Length'] = '18';
         next();
       },
     };

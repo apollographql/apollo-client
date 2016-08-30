@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Avoid extra `assign` when there are no optimistic updates present. [PR #597]((https://github.com/apollostack/apollo-client/pull/597)
 - ...
 
 ### v0.4.13

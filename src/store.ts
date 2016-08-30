@@ -134,6 +134,9 @@ export interface ApolloReducerConfig {
 }
 
 export function getDataWithOptimisticResults(store: Store): NormalizedCache {
+  if (store.optimistic.length === 0) {
+    return store.data;
+  }
   const patches = store.optimistic.map(opt => opt.data);
   return assign({}, store.data, ...patches) as NormalizedCache;
 }

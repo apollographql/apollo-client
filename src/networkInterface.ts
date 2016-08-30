@@ -98,21 +98,28 @@ export function printRequest(request: Request): PrintedRequest {
   return printedRequest;
 }
 
-export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTTPNetworkInterface {
-  if (!uri) {
-    throw new Error('A remote enpdoint is required for a network layer');
+export class HTTPFetchNetworkInterface implements NetworkInterface {
+  public _uri: string;
+  public _opts: RequestInit;
+  public _middlewares: MiddlewareInterface[];
+  public _afterwares: AfterwareInterface[];
+
+  constructor(uri: string, opts: RequestInit = {}) {
+    if (!uri) {
+      throw new Error('A remote enpdoint is required for a network layer');
+    }
+
+    if (!isString(uri)) {
+      throw new Error('Remote endpoint must be a string');
+    }
+
+    this._uri = uri;
+    this._opts = assign({}, opts);
+    this._middlewares = [];
+    this._afterwares = [];
   }
 
-  if (!isString(uri)) {
-    throw new Error('Remote endpoint must be a string');
-  }
-
-  const _uri: string = uri;
-  const _opts: RequestInit = assign({}, opts);
-  const _middlewares: MiddlewareInterface[] = [];
-  const _afterwares: AfterwareInterface[] = [];
-
-  function applyMiddlewares({
+  public applyMiddlewares({
     request,
     options,
   }: RequestAndOptions): Promise<RequestAndOptions> {
@@ -133,11 +140,11 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
       };
 
       // iterate through middlewares using next callback
-      queue([..._middlewares], this);
+      queue([...this._middlewares], this);
     });
   }
 
-  function applyAfterwares({
+  public applyAfterwares({
     response,
     options,
   }: ResponseAndOptions): Promise<ResponseAndOptions> {
@@ -158,15 +165,15 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
       };
 
       // iterate through afterwares using next callback
-      queue([..._afterwares], this);
+      queue([...this._afterwares], this);
     });
   }
 
-  function fetchFromRemoteEndpoint({
+  public fetchFromRemoteEndpoint({
     request,
     options,
   }: RequestAndOptions): Promise<IResponse> {
-    return fetch(uri, assign({}, _opts, options, {
+    return fetch(this._uri, assign({}, this._opts, options, {
       body: JSON.stringify(printRequest(request)),
       headers: assign({}, options.headers, {
         Accept: '*/*',
@@ -176,21 +183,21 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
     }));
   };
 
-  function query(request: Request): Promise<GraphQLResult> {
-    const options = assign({}, _opts);
+  public query(request: Request): Promise<GraphQLResult> {
+    const options = assign({}, this._opts);
 
-    return applyMiddlewares({
+    return this.applyMiddlewares({
       request,
       options,
-    }).then(fetchFromRemoteEndpoint)
+    }).then(this.fetchFromRemoteEndpoint.bind(this))
       .then(response => {
-        applyAfterwares({
-          response,
+        this.applyAfterwares({
+          response: response as IResponse,
           options,
         });
         return response;
       })
-      .then(result => result.json())
+      .then(result => (result as IResponse).json())
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
@@ -202,35 +209,67 @@ export function createNetworkInterface(uri: string, opts: RequestInit = {}): HTT
       });
   };
 
-  function use(middlewares: MiddlewareInterface[]) {
+  public use(middlewares: MiddlewareInterface[]) {
     middlewares.map((middleware) => {
       if (typeof middleware.applyMiddleware === 'function') {
-        _middlewares.push(middleware);
+        this._middlewares.push(middleware);
       } else {
         throw new Error('Middleware must implement the applyMiddleware function');
       }
     });
   }
 
-  function useAfter(afterwares: AfterwareInterface[]) {
+  public useAfter(afterwares: AfterwareInterface[]) {
     afterwares.map(afterware => {
       if (typeof afterware.applyAfterware === 'function') {
-        _afterwares.push(afterware);
+        this._afterwares.push(afterware);
       } else {
         throw new Error('Afterware must implement the applyAfterware function');
       }
     });
   }
+}
 
-  // createNetworkInterface has batching ability by default, which is not used unless the
-  // `shouldBatch` option is passed to apollo-client
-  return addQueryMerging({
-    _uri,
-    _opts,
-    _middlewares,
-    _afterwares,
-    query,
-    use,
-    useAfter,
-  }) as HTTPNetworkInterface;
+// This import has to be placed here due to a bug in TypeScript:
+// https://github.com/Microsoft/TypeScript/issues/21
+import {
+  HTTPBatchedNetworkInterface,
+} from './batchedNetworkInterface';
+
+
+export interface NetworkInterfaceOptions {
+  uri: string;
+  opts?: RequestInit;
+  transportBatching?: boolean;
+}
+
+// This function is written to preserve backwards compatibility.
+// Specifically, there are two ways of calling `createNetworkInterface`:
+// 1. createNetworkInterface(uri: string, opts: RequestInit)
+// 2. createnetworkInterface({ uri: string, opts: RequestInit, transportBatching: boolean})
+// where the latter is preferred over the former.
+//
+// XXX remove this backward compatibility feature by 1.0
+export function createNetworkInterface(
+  interfaceOpts: (NetworkInterfaceOptions | string),
+  backOpts: RequestInit = {}
+): HTTPNetworkInterface {
+  if (isString(interfaceOpts) || !interfaceOpts) {
+    const uri = interfaceOpts as string;
+    return addQueryMerging(new HTTPFetchNetworkInterface(uri, backOpts)) as HTTPNetworkInterface;
+  } else {
+    const {
+      transportBatching = false,
+      opts = {},
+      uri,
+    } = interfaceOpts as NetworkInterfaceOptions;
+    if (transportBatching) {
+      // We can use transport batching rather than query merging.
+      return new HTTPBatchedNetworkInterface(uri, opts) as HTTPNetworkInterface;
+    } else {
+      // createNetworkInterface has batching ability by default through query merging,
+      // which is not used unless the `shouldBatch` option is passed to apollo-client.
+      return addQueryMerging(new HTTPFetchNetworkInterface(uri, opts)) as HTTPNetworkInterface;
+    }
+  }
 }

@@ -358,6 +358,24 @@ describe('Query merging', () => {
     assert.equal(print(mergedQuery), print(exp));
   });
 
+  it('should be able to merge queries with variables in directives correctly', () => {
+    const query1 = gql`
+      query authorInfo($include: Boolean!) {
+        author @include(if: $include)
+      }`;
+    const query2 = gql`
+      query personInfo($include: Boolean!) {
+        person @include(if: $include)
+      }`;
+    const exp = gql`
+      query ___composed($___authorInfo___requestIndex_0___include: Boolean!, $___personInfo___requestIndex_1___include: Boolean!) {
+        ___authorInfo___requestIndex_0___fieldIndex_0: author @include(if: $___authorInfo___requestIndex_0___include)
+        ___personInfo___requestIndex_1___fieldIndex_0: person @include(if: $___personInfo___requestIndex_1___include)
+      }`;
+    const mergedQuery = mergeQueryDocuments([query1, query2]);
+    assert.equal(print(mergedQuery), print(exp));
+  });
+
   it('should be able to merge queries with inline fragments', () => {
     const query1 = gql`
       query nameOfQuery {

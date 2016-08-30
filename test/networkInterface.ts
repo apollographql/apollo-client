@@ -139,7 +139,7 @@ describe('network interface', () => {
     });
 
     it('should alter the request variables', () => {
-      const testWare1 = new TestWare([
+      const testWare1 = TestWare([
         { key: 'personNum', val: 1 },
       ]);
 
@@ -205,7 +205,7 @@ describe('network interface', () => {
     });
 
     it('should alter the request body params', () => {
-      const testWare1 = new TestWare([], [], [
+      const testWare1 = TestWare([], [], [
         { key: 'newParam', val: '0123456789' },
       ]);
 
@@ -532,7 +532,7 @@ function TestWare(
       });
 
       bodyParams.map((param) => {
-        request.request[param.key] = param.val;
+        request.request[param.key as string] = param.val;
       });
 
       next();

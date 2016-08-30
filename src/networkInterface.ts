@@ -1,5 +1,6 @@
 import isString = require('lodash.isstring');
 import assign = require('lodash.assign');
+import mapValues = require('lodash.mapvalues');
 import 'whatwg-fetch';
 
 import {
@@ -22,6 +23,7 @@ export interface Request {
   query?: Document;
   variables?: Object;
   operationName?: string;
+  [additionalKey: string]: any;
 }
 
 // The request representation just before it is converted to JSON
@@ -89,16 +91,9 @@ export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetw
 }
 
 export function printRequest(request: Request): PrintedRequest {
-  let printedRequest = {};
-
-  for (let key in request) {
-    if (request.hasOwnProperty(key)) {
-      printedRequest[key] = key === 'query' ?
-          print(request[key]) : request[key];
-    }
-  }
-
-  return printedRequest;
+  return mapValues(request, (val, key) => {
+    return key === 'query' ? print(val) : val;
+  }) as any as PrintedRequest;
 }
 
 export class HTTPFetchNetworkInterface implements NetworkInterface {

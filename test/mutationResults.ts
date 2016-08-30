@@ -1,7 +1,12 @@
 import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient, { addTypename } from '../src';
-import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../src/data/mutationResults';
+import {
+  MutationBehaviorReducerArgs,
+  MutationBehavior,
+  cleanArray,
+  MutationQueryReducersMap,
+} from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 
 import assign = require('lodash.assign');
@@ -661,9 +666,10 @@ describe('mutation results', () => {
           mutation,
           updateQueries: {
             todoList: (prev, options) => {
-              throw new Error(`Hello... It's me.`);
+              if(1) { throw new Error(`Hello... It's me.`); }
+              return {};
             },
-          },
+          } as MutationQueryReducersMap,
         });
       })
       .then(() => {

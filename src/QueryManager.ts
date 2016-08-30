@@ -555,15 +555,15 @@ export class QueryManager {
       operationName: getOperationName(queryDoc),
     };
 
-    let subId;
-    let observers = [];
+    let subId: number;
+    let observers: Observer<any>[] = [];
 
     return new Observable((observer) => {
       observers.push(observer);
 
       // If this is the first observer, actually initiate the network subscription
       if (observers.length === 1) {
-        const handler = (error, result) => {
+        const handler = (error: Error, result: any) => {
           if (error) {
             observers.forEach((obs) => {
               obs.error(error);

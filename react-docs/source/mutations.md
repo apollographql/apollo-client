@@ -32,7 +32,7 @@ The result of the above mutation might be be:
 }
 ```
 
-When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](link-to-cache-section), which in turn updates UI automatically, so we don't explicitly handle the results ourselves. However, querying the fields that may have changed is important.
+When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](link-to-cache-section), which in turn updates UI automatically, so we don't explicitly handle the results ourselves. In order for the client to correctly do this, we need to ensure we select the correct fields (as in all the fields that we care about that may have changed).
 
 <h2 id="basics">Basic Mutations</h2>
 
@@ -40,12 +40,16 @@ When we use mutations in Apollo, the result is typically integrated into the cac
 Using `graphql` with mutations makes it easy to bind actions to components. Unlike queries, mutations provide only a simple prop (the `mutate` function) to the wrapped component.
 
 ```js
+import React, { Component, PropTypes } from 'react';
 import { graphql } from 'react-apollo';
 import { gql } from 'graphql-tag';
 
-const NewEntry = function({ mutate }) { ... };
+class NewEntry extends Component { ... }
+NewEntry.propTypes = {
+  mutate: PropTypes.func.isRequired,
+};
 
-const SUBMIT_RESPOSITORY_MUTATION = gql`
+const submitRepository = gql`
   mutation submitRepository {
     submitRepository(repoFullName: "apollostack/apollo-client") {
       createdAt
@@ -53,8 +57,7 @@ const SUBMIT_RESPOSITORY_MUTATION = gql`
   }
 `;
 
-const withSubmitRepositoryMutation = graphql(SUBMIT_RESPOSITORY_MUTATION);
-const NewEntryWithData = withSubmitRepositoryMutation(NewEntry);
+const NewEntryWithData = graphql(submitRepository)(NewEntry);
 ```
 
 <h3 id="calling-mutations">Calling mutations</h3>
@@ -62,45 +65,57 @@ const NewEntryWithData = withSubmitRepositoryMutation(NewEntry);
 Most mutations will require arguments in the form of query variables, and you may wish to provide other options to [ApolloClient#mutate](apollo-client-api.html#mutate). You can directly pass options to `mutate` when you call it in the wrapped component:
 
 ```js
-import React from 'react';
+import React, { Component, PropTypes } from 'react';
 import { graphql } from 'react-apollo';
 import { gql } from 'graphql-tag';
 
-const NewEntry = function({ mutate }) {
-  const onClick = () => {
-    mutate({ variables: { repoFullName: 'apollostack/apollo-client' } })
+class NewEntry extends Component {
+  onClick() {
+    this.props.mutate({ variables: { repoFullName: 'apollostack/apollo-client' } })
       .then(({ data }) => {
         console.log('got data', data);
       }).catch((error) => {
         console.log('there was an error sending the query', error);
       });      
   }
-
-  return <div onClick={onClick}>Click me</div>;
+  render() {
+    return <div onClick={this.onClick.bind(this)}>Click me</div>;
+  }
+}
+NewEntry.propTypes = {
+  mutate: PropTypes.func.isRequired,
 };
 
-const SUBMIT_RESPOSITORY_MUTATION = gql`
-  mutation submitRepository($repoFullName: String!) {
-    submitRepository(repoFullName: $repoFullName) {
+const submitRepository = gql`
+  mutation submitRepository {
+    submitRepository(repoFullName: "apollostack/apollo-client") {
       createdAt
     }
   }
 `;
 
-const withSubmitRepositoryMutation = graphql(SUBMIT_RESPOSITORY_MUTATION);
-const NewEntryWithData = withSubmitRepositoryMutation(NewEntry);
+const NewEntryWithData = graphql(submitRepository)(NewEntry);
 ```
 
 However, typically you'd want to keep the concern of understanding the mutation's structure out of your presentational component. The best way to do this is to use the [`props`](queries.html#graphql-props) argument to bind your mutate function:
 
 ```js
-const NewEntry = function({ submit }) {
-  return <div onClick={submit('apollostack/apollo-client')}>Click me</div>;
-});
+import React, { Component, PropTypes } from 'react';
+import { graphql } from 'react-apollo';
+import { gql } from 'graphql-tag';
 
-const SUBMIT_RESPOSITORY_MUTATION = /* as above */;
+class NewEntry extends Component {
+  render() {
+    return <div onClick={this.props.submit('apollostack/apollo-client')}>Click me</div>;
+  }
+}
+NewEntry.propTypes = {
+  submit: PropTypes.func.isRequired,
+};
 
-const withSubmitRepositoryMutation = graphql(SUBMIT_RESPOSITORY_MUTATION, {
+const submitRepository = /* as above */;
+
+const NewEntryWithData = graphql(submitRepository, {
   props({ mutate }) {
     return {
       submit(repoFullName) {
@@ -108,8 +123,7 @@ const withSubmitRepositoryMutation = graphql(SUBMIT_RESPOSITORY_MUTATION, {
       },
     };
   },
-});
-const NewEntryWithData = withSubmitRepositoryMutation(NewEntry);
+})(NewEntry);
 ```
 
 > Note that in general you shouldn't attempt to use the results from the mutation callback directly, instead you can rely on Apollo's id-based cache updating to take care of it for you, or if necessary passing a [`updateQueries`](cache-updates.html#updateQueries) callback to update the result of relevant queries with your mutation results.
@@ -121,13 +135,17 @@ Sometimes your client code can easily predict the result of the mutation, if it 
 Apollo Client gives you a way to specify the `optimisticResponse` option, that will be used to update active queries immediately, in the same way that the server's mutation response will. Once the actual mutation response returns, the optimistic part will be thrown away and replaced with the real result.
 
 ```js
-import React from 'react';
+import React, { Component, PropTypes } from 'react';
 import { graphql } from 'react-apollo';
 import { gql } from 'graphql-tag';
 
-const commentPage = function({ submit }) { ... };
+class CommentPage extends Component { ... }
+CommentPage.propTypes = {
+  submit: PropTypes.func.isRequired,
+};
 
-const SUBMIT_COMMENT_MUTATION = gql`
+
+const submitComment = gql`
   mutation submitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
       postedBy {
@@ -140,7 +158,7 @@ const SUBMIT_COMMENT_MUTATION = gql`
   }
 `;
 
-const withSubmitCommentMutation = graphql(SUBMIT_COMMENT_MUTATION, {
+const CommentPageWithData = graphql(submitComment, {
   props: ({ ownProps, mutate }) => ({
     submit({ repoFullName, commentContent }) {
       return mutate({
@@ -158,10 +176,12 @@ const withSubmitCommentMutation = graphql(SUBMIT_COMMENT_MUTATION, {
       };
     });
   }),
-});
+})(CommentPage);
 ```
 
 For the example above, it is easy to construct an optimistic response, since we know the shape of the new comment and can approximately predict the created date. The optimistic response doesn't have to be exactly correct because it will always will be replaced with the real result from the server, but it should be close enough to make users feel like there is no delay.
+
+> As this comment is *new* and not visible in the UI before the mutation, it won't appear automatically on the screen as a result of the mutation. You can use [`updateQueries`](cache-updates.html#updateQueries) to make it appear in this case (and this is what we do in GitHunt).
 
 <h2 id="mutation-results">Designing mutation results</h2>
 

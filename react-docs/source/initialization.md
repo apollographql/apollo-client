@@ -4,7 +4,7 @@ order: 1
 ---
 <h2 id="installation">Installation</h2>
 
-To get started with Apollo and React, install the `apollo-client` npm package, as well as the `react-apollo` integration package and the `graphql-tag` library for constructing query documents:
+To get started with Apollo and React, install the `apollo-client` npm package, the `react-apollo` integration package, and the `graphql-tag` library for constructing query documents:
 
 ```bash
 npm install apollo-client react-apollo graphql-tag --save
@@ -14,7 +14,7 @@ npm install apollo-client react-apollo graphql-tag --save
 
 <h2 id="initialization">Initialization</h2>
 
-To get started using Apollo, we need to create an `ApolloClient`, which is a central store of query result data which caches and distributes the results of our queries, and an `ApolloProvider`, which wires that client into our React component heirarchy.
+To get started using Apollo, we need to create an `ApolloClient` and an `ApolloProvider`. `ApolloClient` serves as a central store of query result data which caches and distributes the results of our queries. `ApolloProvider` wires that client into our React component hierarchy.
 
 <h3 id="creating-client">Creating a client</h3>
 
@@ -42,7 +42,7 @@ The other options control the behavior of the client, and we'll see examples of 
 
 <h3 id="creating-provider">Creating a provider</h3>
 
-To connect your client instance to your component tree, use an `ApolloProvider` component. You should be sure to place the `ApolloProvider` somewhere high in your view heirarchy, above any places where you need to access GraphQL data.
+To connect your client instance to your component tree, use an `ApolloProvider` component. You should be sure to place the `ApolloProvider` somewhere high in your view hierarchy, above any places where you need to access GraphQL data.
 
 ```js
 import ApolloClient from 'apollo-client';
@@ -68,6 +68,7 @@ The basic usage of `graphql` is as follows:
 ```js
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 
 // MyComponent is a "presentational" or apollo-unaware component,
 // It could be a simple React class:
@@ -79,6 +80,9 @@ class MyComponent extends Component {
 // Or a stateless functional component:
 const MyComponent = (props) => <div>...</div>;
 
+const MyQuery = gql`query { todos { text } }`;
+const MyMutation = gql`mutation { addTodo(text: "Test 123") }`;
+
 // We then can use `graphql` to pass the query results returned by MyQuery
 // to MyComponent as a prop (and update them as the results change)
 const MyComponentWithData = graphql(MyQuery)(MyComponent);
@@ -87,7 +91,7 @@ const MyComponentWithData = graphql(MyQuery)(MyComponent);
 const MyComponentWithMutation = graphql(MyMutation)(MyComponent);
 ```
 
-If you are using [ES2016 decorators](https://medium.com/google-developers/exploring-es7-decorators-76ecb65fb841#.nn723s5u2), you may prefer the decorator syntax, although we'll use separate components in this guide:
+If you are using [ES2016 decorators](https://medium.com/google-developers/exploring-es7-decorators-76ecb65fb841#.nn723s5u2), you may prefer the decorator syntax:
 
 ```js
 import React, { Component } from 'react';
@@ -101,6 +105,7 @@ class MyComponent extends Component {
   }
 }
 ```
+In this guide, we'll use separate components for instructional purposes.
 
 <h3 id="withApollo">The `withApollo` container</h3>
 

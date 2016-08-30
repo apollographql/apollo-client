@@ -1,4 +1,7 @@
-import { WatchQueryOptions, FetchMoreQueryOptions, GraphQLSubscriptionOptions } from './watchQueryOptions';
+import {
+  WatchQueryOptions,
+  FetchMoreQueryOptions,
+} from './watchQueryOptions';
 
 import { Observable, Observer } from './util/Observable';
 
@@ -32,7 +35,6 @@ export interface UpdateQueryOptions {
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
-  public startGraphQLSubscription: (options: GraphQLSubscriptionOptions) => number;
   public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
@@ -144,38 +146,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           this.updateQuery(mapFn);
           return fetchMoreResult;
         });
-    };
-
-    this.startGraphQLSubscription = (graphQLSubscriptionOptions: GraphQLSubscriptionOptions) => {
-
-      const subOptions = {
-        query: graphQLSubscriptionOptions.subscription,
-        // TODO: test variables and fragments?
-        variables: graphQLSubscriptionOptions.variables,
-        fragments: graphQLSubscriptionOptions.fragments,
-        handler: (error: Object, result: Object) => {
-          const reducer = graphQLSubscriptionOptions.updateQuery;
-          if (error) {
-            throw new Error(JSON.stringify(error));
-          } else {
-             const mapFn = (previousResult: any, { queryVariables }: {queryVariables: any }) => {
-              return reducer(
-                previousResult, {
-                  subscriptionResult: result,
-                  queryVariables,
-                }
-              );
-            };
-            this.updateQuery(mapFn);
-          }
-
-        },
-      };
-
-      if (graphQLSubscriptionOptions) {
-        return this.queryManager.startSubscription(subOptions);
-      };
-      return null;
     };
 
     this.updateQuery = (mapFn) => {

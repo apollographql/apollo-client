@@ -83,7 +83,12 @@ import {
   ApolloQueryResult,
 } from './index';
 
-import { Observer, Subscription } from './util/Observable';
+import {
+  Observer,
+  Subscription,
+  Observable,
+} from './util/Observable';
+
 import { tryFunctionOrLogError } from './util/errorHandling';
 
 import {
@@ -96,11 +101,10 @@ import { ObservableQuery } from './ObservableQuery';
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
- export interface SubscriptionOptions {
+export interface SubscriptionOptions {
   query: Document;
   variables?: { [key: string]: any };
   fragments?: FragmentDefinition[];
-  handler: (error: Object, result: Object) => void;
 };
 
 export class QueryManager {
@@ -531,14 +535,13 @@ export class QueryManager {
     return queryId;
   }
 
-  public startSubscription(
+  public startGraphQLSubscription(
     options: SubscriptionOptions
-  ): number {
+  ): Observable<any> {
     const {
       query,
       variables,
       fragments = [],
-      handler,
     } = options;
 
     let queryDoc = addFragmentsToDocument(query, fragments);
@@ -552,9 +555,45 @@ export class QueryManager {
       operationName: getOperationName(queryDoc),
     };
 
-    // QueryManager sets up the handler so the query can be transformed. Alternatively,
-    // pass in the transformer to the ObservableQuery.
-    return (this.networkInterface as SubscriptionNetworkInterface).subscribe(request, handler);
+    let subId: number;
+    let observers: Observer<any>[] = [];
+
+    return new Observable((observer) => {
+      observers.push(observer);
+
+      // If this is the first observer, actually initiate the network subscription
+      if (observers.length === 1) {
+        const handler = (error: Error, result: any) => {
+          if (error) {
+            observers.forEach((obs) => {
+              obs.error(error);
+            });
+          } else {
+            observers.forEach((obs) => {
+              obs.next(result);
+            });
+          }
+        };
+
+        // QueryManager sets up the handler so the query can be transformed. Alternatively,
+        // pass in the transformer to the ObservableQuery.
+        subId = (this.networkInterface as SubscriptionNetworkInterface).subscribe(
+          request, handler);
+      }
+
+      return {
+        unsubscribe: () => {
+          observers = observers.filter((obs) => obs !== observer);
+
+          // If we removed the last observer, tear down the network subscription
+          if (observers.length === 0) {
+            (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(subId);
+          }
+        },
+        // Used in tests...
+        _networkSubscriptionId: subId,
+      } as Subscription;
+    });
   };
 
   public stopQuery(queryId: string) {

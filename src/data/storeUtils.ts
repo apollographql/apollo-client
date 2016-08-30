@@ -44,24 +44,24 @@ function isList(value: Value): value is ListValue {
 
 function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, variables?: Object) {
   if (isNumberValue(value)) {
-    argObj[name.value] = Number(value.value);
+    (argObj as any)[name.value] = Number(value.value);
   } else if (isScalarValue(value)) {
-    argObj[name.value] = value.value;
+    (argObj as any)[name.value] = value.value;
   } else if (isObject(value)) {
     const nestedArgObj = {};
     value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
-    argObj[name.value] = nestedArgObj;
+    (argObj as any)[name.value] = nestedArgObj;
   } else if (isVariable(value)) {
     if (! variables || !(value.name.value in variables)) {
       throw new Error(`The inline argument "${value.name.value}" is expected as a variable but was not provided.`);
     }
-    const variableValue = variables[value.name.value];
-    argObj[name.value] = variableValue;
+    const variableValue = (variables as any)[value.name.value];
+    (argObj as any)[name.value] = variableValue;
   } else if (isList(value)) {
-    argObj[name.value] = value.values.map((listValue) => {
+    (argObj as any)[name.value] = value.values.map((listValue) => {
       const nestedArgArrayObj = {};
       valueToObjectRepresentation(nestedArgArrayObj, name, listValue, variables);
-      return nestedArgArrayObj[name.value];
+      return (nestedArgArrayObj as any)[name.value];
     });
   } else {
     throw new Error(`The inline argument "${name.value}" of kind "${value.kind}" is not supported.

@@ -112,7 +112,7 @@ export class MockNetworkInterface implements NetworkInterface {
 export class MockSubscriptionNetworkInterface extends MockNetworkInterface implements SubscriptionNetworkInterface {
   public mockedSubscriptionsByKey: { [key: string ]: MockedSubscription[] } = {};
   public mockedSubscriptionsById: { [id: number]: MockedSubscription} = {};
-  public handlersById: {[id: number]: (error, result) => void} = {};
+  public handlersById: {[id: number]: (error: any, result: any) => void} = {};
   public subId: number;
 
   constructor(mockedSubscriptions: MockedSubscription[], mockedResponses: MockedResponse[]) {
@@ -142,7 +142,7 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
     mockedSubs.push(mockedSubscription);
   }
 
-  public subscribe(request: Request, handler: (error, result) => void): number {
+  public subscribe(request: Request, handler: (error: any, result: any) => void): number {
      const parsedRequest: ParsedRequest = {
         query: request.query,
         variables: request.variables,

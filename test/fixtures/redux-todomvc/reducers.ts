@@ -18,7 +18,7 @@ const initialState = [
   },
 ];
 
-function todos(state = initialState, action): any {
+function todos(state = initialState, action: any): any {
   switch (action.type) {
     case ADD_TODO:
       return [

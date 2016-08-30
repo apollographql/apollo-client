@@ -71,10 +71,11 @@ import {
 describe('QueryManager', () => {
 
   // Standard "get id from object" method.
-  const dataIdFromObject = (object) => {
+  const dataIdFromObject = (object: any) => {
     if (object.__typename && object.id) {
       return object.__typename + '__' + object.id;
     }
+    return undefined;
   };
 
   // Helper method that serves as the constructor method for
@@ -157,7 +158,7 @@ describe('QueryManager', () => {
     query: Document,
     data: Object,
     variables?: Object,
-    done
+    done: any
   }) => {
     assertWithObserver({
       query,
@@ -204,7 +205,7 @@ describe('QueryManager', () => {
     mutation: Document,
     data: Object,
     variables?: Object,
-    done
+    done: any
   }) => {
     mockMutation(opts).then(({ result }) => {
       assert.deepEqual(result.data, opts.data);
@@ -446,8 +447,8 @@ describe('QueryManager', () => {
 
   it('uses console.error to log unhandled errors', (done) => {
     const oldError = console.error;
-    let printed;
-    console.error = (...args) => {
+    let printed: any;
+    console.error = (...args: any[]) => {
       printed = args;
     };
 
@@ -1341,7 +1342,7 @@ describe('QueryManager', () => {
       },
     };
 
-    function testReducer (state = false, action) {
+    function testReducer (state = false, action: any): boolean {
       if (action.type === 'TOGGLE') {
         return true;
       }
@@ -1384,6 +1385,7 @@ describe('QueryManager', () => {
         }
         assert.equal(handleCount, 2);
         done();
+        return undefined;
       },
     });
 
@@ -2133,7 +2135,7 @@ describe('QueryManager', () => {
 
       queryManager.resetStore();
       const currentState = queryManager.getApolloState();
-      const expectedState = {
+      const expectedState: any = {
         data: {},
         mutations: {},
         queries: {},
@@ -2467,7 +2469,7 @@ describe('QueryManager', () => {
         __typename: 'Author',
       },
     };
-    const reducerConfig = { dataIdFromObject: (x) => '$' + dataIdFromObject(x) };
+    const reducerConfig = { dataIdFromObject: (x: any) => '$' + dataIdFromObject(x) };
     const store = createApolloStore({ config: reducerConfig, reportCrashes: false });
     createQueryManager({
       networkInterface: mockNetworkInterface({
@@ -3115,7 +3117,7 @@ function testDiffing(
   });
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {
-    return (cb) => {
+    return (cb: Function) => {
       queryManager.query({
         query,
         variables,

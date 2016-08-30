@@ -24,13 +24,13 @@ export type OptimisticStore = {
   data: NormalizedCache,
 }[];
 
-const optimisticDefaultState = [];
+const optimisticDefaultState: any[] = [];
 
 export function optimistic(
   previousState = optimisticDefaultState,
-  action,
-  store,
-  config
+  action: any,
+  store: any,
+  config: any
 ): OptimisticStore {
   if (isMutationInitAction(action) && action.optimisticResponse) {
     const fakeMutationResultAction = {

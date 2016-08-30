@@ -5,7 +5,7 @@ import 'isomorphic-fetch';
 
 process.env.NODE_ENV = 'test';
 
-declare function require(name: string);
+declare function require(name: string): any;
 require('source-map-support').install();
 
 import './writeToStore';

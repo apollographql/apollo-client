@@ -138,7 +138,7 @@ describe('network interface', () => {
       assert.deepEqual(networkInterface._middlewares, [testWare1, testWare2]);
     });
 
-    it('should alter the request', () => {
+    it('should alter the request variables', () => {
       const testWare1 = TestWare([
         { key: 'personNum', val: 1 },
       ]);
@@ -201,6 +201,41 @@ describe('network interface', () => {
       return swapi.query(simpleRequest).then((data) => {
         assert.equal(this.lastFetchOpts.planet, 'mars');
         assert.notOk((<any>swapi._opts)['planet']);
+      });
+    });
+
+    it('should alter the request body params', () => {
+      const testWare1 = TestWare([], [], [
+        { key: 'newParam', val: '0123456789' },
+      ]);
+
+      const swapi = createNetworkInterface('http://graphql-swapi.test/');
+      swapi.use([testWare1]);
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: gql`
+          query people($personNum: Int!) {
+            allPeople(first: $personNum) {
+              people {
+                name
+              }
+            }
+          }
+        `,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return swapi.query(simpleRequest).then((data) => {
+        return assert.deepEqual(
+          JSON.parse(this.lastFetchOpts.body),
+          {
+            query: 'query people($personNum: Int!) {\n  allPeople(first: $personNum) {\n    people {\n      name\n    }\n  }\n}\n',
+            variables: {},
+            debugName: 'People query',
+            newParam: '0123456789',
+          }
+        );
       });
     });
 
@@ -482,7 +517,8 @@ describe('network interface', () => {
 // simulate middleware by altering variables and options
 function TestWare(
   variables: Array<{ key: string, val: any }> = [],
-  options: Array<{ key: string, val: any }> = []
+  options: Array<{ key: string, val: any }> = [],
+  bodyParams: Array<{ key: string, val: any }> = []
 ) {
 
   return {
@@ -493,6 +529,10 @@ function TestWare(
 
       options.map((variable) => {
         (<any>request.options)[variable.key] = variable.val;
+      });
+
+      bodyParams.map((param) => {
+        request.request[param.key as string] = param.val;
       });
 
       next();

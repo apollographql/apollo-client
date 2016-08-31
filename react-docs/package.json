@@ -19,7 +19,7 @@
     "hexo-typescript-api-box": "^0.5.0",
     "lodash": "^4.13.1",
     "showdown": "^1.4.2",
-    "typedoc": "github:tmeasday/typedoc#add-source-to-json-built"
+    "typedoc": "github:tmeasday/typedoc#ts-2.0"
   },
   "devDependencies": {
     "hexo-s3-deploy": "^1.2.1"

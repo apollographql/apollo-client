@@ -1,6 +1,6 @@
 ---
 title: Querying for data
-order: 3
+order: 10
 ---
 
 To fetch data from the server in a GraphQL system, we use GraphQL queries (you can read about the structure of GraphQL queries in detail at [graphql.org](XXX)).

@@ -14,8 +14,10 @@ versions:
 sidebar_categories:
   null:
     - index
+    - example
     - initialization
     - example-schema
+  Usage:
     - queries
     - mutations
     - receiving-updates

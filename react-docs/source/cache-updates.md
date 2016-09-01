@@ -1,6 +1,6 @@
 ---
 title: Updating your UI
-order: 7
+order: 13
 ---
 
 In most cases, your UI will be updated automatically as entries in Apollo Client's cache are updated. The function specified in the `dataIdFromObject` option can be used to assign a globally unique id to every object in the cache. These ids allow Apollo Client to reactively tell your queries about update your queries with results when new information becomes available. But, in some cases, just using `dataIdFromObject` is not enough for your application UI to get these updates. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that you can't assign an object identifier to, Apollo Client cannot update existing queries for you. In those cases you have to use `fetchMore` in order to make sure that the queries on your page are updated with the right information and your UI updates correctly.

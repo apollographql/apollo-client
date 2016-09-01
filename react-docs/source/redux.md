@@ -1,6 +1,6 @@
 ---
 title: Integrating with Redux
-order: 15
+order: 25
 ---
 
 

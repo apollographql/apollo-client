@@ -1,6 +1,6 @@
 ---
 title: Modifying data on the server
-order: 4
+order: 11
 ---
 
 In addition to fetching data using queries, Apollo also handles [GraphQL mutations](link-to-guide). Mutations are identical to queries in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the operation is used to change the dataset behind the schema.

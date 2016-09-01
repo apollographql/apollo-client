@@ -1,6 +1,6 @@
 ---
 title: Server Side Rendering
-order: 16
+order: 26
 ---
 
 

@@ -1,6 +1,6 @@
 ---
 title: Example Schema
-order: 2
+order: 3
 ---
 
 In the documentation we'll use GitHunt...

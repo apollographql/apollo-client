@@ -1,6 +1,6 @@
 ---
 title: Getting updates from the server
-order: 6
+order: 12
 ---
 
 Apollo Client caches the results of queries and then uses this cache in order to resolve parts of queries. However, what happens if the information in our cache goes out of date, i.e. the cache becomes stale? How do we make sure that we can update the cache if information changes on the server? How will our UI update to reflect this new information? These are questsions that this section should answer.

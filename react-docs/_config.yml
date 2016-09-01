@@ -3,8 +3,8 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Apollo Client Guide
-subtitle: A guide to using the Apollo GraphQL Client.
+title: Apollo React Guide
+subtitle: A guide to using the Apollo GraphQL Client with React.
 description:
 author:
 language:
@@ -30,41 +30,33 @@ sidebar_categories:
     - prefetching
     - redux
     - server-side-rendering
-  API:
-    - apollo-client-api
-github_repo: apollostack/client-docs
+github_repo: apollostack/react-docs
 content_root: source
 
 logo:
-  desktop: logo/icon-apollo-white-200x200.png
-  mobile: logo/icon-apollo-white-200x200.png
+  nav_mobile: logo/logo-apollo-space.svg
+  title: Apollo Developers
+  subtitle: Developers
 favicon: logo/favicon.png
 
 typescript_api_box:
   data_file: docs.json
 
 nav_links:
-  'Apollo Project':
-    url: http://www.apollostack.com/
-    partial: illustration-guide
+  'Apollo':
+    url: http://dev.apollodata.com/
     target: _new
-  'Apollo Blog':
-    url: https://medium.com/apollo-stack
-    partial: illustration-compass
-    target: _new
-  'GraphQL Guide':
-    url: http://docs.apollostack.com/graphql
-    partial: illustration-compass
-  'Apollo Client':
-    url: http://docs.apollostack.com/client
-    partial: illustration-compass
+  'React':
+    url: http://dev.apollodata.com/react
     active: true
-  'Apollo Server':
-    url: http://docs.apollostack.com/server
-    partial: illustration-compass
-  'GitHub':
-    url: https://github.com/apollostack
-    partial: illustration-github
+  'Core JS':
+    url: http://dev.apollodata.com/core
+  'Tools':
+    url: http://dev.apollodata.com/tools
+  'Community':
+    url: http://dev.apollodata.com/community
+  'Blog':
+    url: https://medium.com/apollo-stack
     target: _new
 
 social_links:
@@ -77,8 +69,8 @@ apis:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://docs.apollostack.com/client
-root: /client/
+url: http://dev.apollodata.com/react
+root: /react/
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 

@@ -1,27 +1,16 @@
 ---
-title: The Apollo Data Stack
+title: Apollo JavaScript Client
 order: 0
-description: Introduction to the Apollo Data Stack.
+description: Documentation for the Apollo JavaScript Client core
 ---
 
-Apollo is a data stack for modern apps, built with [GraphQL](https://medium.com/apollo-stack/the-basics-of-graphql-in-5-links-9e1dc4cac055#.576me0i04). It's a decoupled set of packages, including a GraphQL client, a set of tools for a GraphQL-JS server, and various client-side integrations.
+This is the documentation for the `apollo-client` library, a JavaScript GraphQL client.
 
-We're building Apollo to be:
+If you want to learn how to use this library and are using React, we suggest reading the [React Apollo Guide](http://dev.apollodata.com/react). Otherwise, this documentation should help you understand how the client's core API works.
 
-1. **Incrementally adoptable**, so that you can drop it into any JavaScript app
-3. **Simple to get started with**, you can just read one guide and get going
-4. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app
+The Apollo team builds and maintains a collection of utilities designed to make it easier to use [GraphQL](http://graphql.org) across a range of front-end and server technologies.
 
-Apollo is currently in the technical preview stage. This means there are still many features to build and bugs to iron out (check the GitHub issues for the [various repositories](https://github.com/apollostack)), but we think what we have now shows the general direction of the project, and is usable by adventurous developers who want to participate actively in the project. Give it a shot, and let us know how it goes!
-
-To read more about Apollo in general, visit:
-
-- [Our website](http://www.apollostack.com/)
-- [Our Medium blog](https://medium.com/apollo-stack)
-
-## New to GraphQL?
-
-Just getting started with GraphQL? Check out the [official documentation](http://graphql.org/), as well as [our blog post](https://medium.com/apollo-stack/the-basics-of-graphql-in-5-links-9e1dc4cac055) that can help you to get started quickly.
+If you are looking to use Apollo with a native mobile client, there is a [iOS Client](https://github.com/apollostack/apollo-ios) in development and plans for an Android client too. On the other hand, the React integration works with [React Native](https://facebook.github.io/react-native/) on both platforms without changes.
 
 ## Example apps
 

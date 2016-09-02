@@ -720,7 +720,7 @@ describe('writing to the store', () => {
     }
 
     testData.forEach((data) => {
-      data.mutation.definitions.forEach((definition) => {
+      data.mutation.definitions.forEach((definition: OperationDefinition) => {
         if (isOperationDefinition(definition)) {
           definition.selectionSet.selections.forEach((selection) => {
             if (isField(selection)) {
@@ -783,7 +783,7 @@ describe('writing to the store', () => {
       return value.kind === 'OperationDefinition';
     }
 
-    mutation.definitions.map((def) => {
+    mutation.definitions.map((def: OperationDefinition) => {
       if (isOperationDefinition(def)) {
         assert.deepEqual(writeSelectionSetToStore({
           dataId: '5',
@@ -1030,7 +1030,7 @@ describe('writing to the store', () => {
     }
 
     testData.forEach(({mutation, variables, expected}) => {
-      mutation.definitions.map((def) => {
+      mutation.definitions.map((def: OperationDefinition) => {
         assert.throws(() => {
           if (isOperationDefinition(def)) {
             writeSelectionSetToStore({

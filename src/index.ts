@@ -163,7 +163,12 @@ export function clearFragmentDefinitions() {
   fragmentDefinitionsMap = {};
 }
 
-
+/**
+ * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
+ * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
+ * receive results from the server and cache the results in a Redux store. It also delivers updates
+ * to GraphQL queries through {@link Observable} instances.
+ */
 export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
@@ -178,6 +183,45 @@ export default class ApolloClient {
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public batchInterval: number;
 
+  /**
+   * Constructs an instance of {@link ApolloClient}.
+   *
+   * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
+   * to a GraphQL spec-compliant server.
+   *
+   * @param reduxRootKey The root key within the Redux store in which data fetched from the server
+   * will be stored.
+   *
+   * @param initialState The initial state assigned to the store.
+   *
+   * @param dataIdFromObject A function that returns a object identifier given a particular result
+   * object.
+   *
+   * @param queryTransformer A function that takes a {@link SelectionSet} and modifies it in place
+   * in some way. The query transformer is then applied to the every GraphQL document before it is
+   * sent to the server.
+   *
+   * For example, a query transformer can add the __typename field to every level of a GraphQL
+   * document. In fact, the @{addTypename} query transformer does exactly this.
+   *
+   * @param shouldBatch Determines whether multiple queries should be batched together in a single
+   * roundtrip.
+   * <p />
+   *
+   * Note that if this is set to true, the [[NetworkInterface]] should implement
+   * [[BatchedNetworkInterface]]. Every time a query is fetched, it is placed into the queue of
+   * the batcher. At the end of each batcher time interval, the query batcher batches together
+   * (if shouldBatch is true) each of the queries in the queue and sends them to the server.
+   * This happens transparently: each query will still receive exactly the result it asked for,
+   * regardless of whether or not it is batched.
+   *
+   * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
+   *
+   * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
+   * server side render.
+   *
+   * @param batchInterval The time interval on which the query batcher operates.
+   */
   constructor({
     networkInterface,
     reduxRootKey,
@@ -227,6 +271,24 @@ export default class ApolloClient {
     this.setStore = this.setStore.bind(this);
   }
 
+  /**
+   * This watches the results of the query according to the options specified and
+   * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and
+   * receive updated results through a GraphQL observer.
+   * <p /><p />
+   * Note that this method is not an implementation of GraphQL subscriptions. Rather,
+   * it uses Apollo's store in order to reactively deliver updates to your query results.
+   * <p /><p />
+   * For example, suppose you call watchQuery on a GraphQL query that fetches an person's
+   * first name and last name and this person has a particular object identifer, provided by
+   * dataIdFromObject. Later, a different query fetches that same person's
+   * first and last name and his/her first name has now changed. Then, any observers associated
+   * with the results of the first query will be updated with a new result object.
+   * <p /><p />
+   * See [here](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3#.3mb0cbcmc) for
+   * a description of store reactivity.
+   *
+   */
   public watchQuery(options: WatchQueryOptions): ObservableQuery {
     this.initStore();
 
@@ -244,6 +306,15 @@ export default class ApolloClient {
     return this.queryManager.watchQuery(options);
   };
 
+  /**
+   * This resolves a single query according to the options specified and returns a
+   * {@link Promise} which is either resolved with the resulting data or rejected
+   * with an error.
+   *
+   * @param options An object of type {@link WatchQueryOptions} that allows us to describe
+   * how this query should be treated e.g. whether it is a polling query, whether it should hit the
+   * server at all or just resolve from the cache, etc.
+   */
   public query(options: WatchQueryOptions): Promise<ApolloQueryResult> {
     this.initStore();
 
@@ -261,6 +332,37 @@ export default class ApolloClient {
     return this.queryManager.query(options);
   };
 
+  /**
+   * This resolves a single mutation according to the options specified and returns a
+   * {@link Promise} which is either resolved with the resulting data or rejected with an
+   * error.
+   *
+   * It takes options as an object with the following keys and values:
+   *
+   * @param mutation A GraphQL document, often created with `gql` from the `graphql-tag` package,
+   * that contains a single mutation inside of it.
+   *
+   * @param variables An object that maps from the name of a variable as used in the mutation
+   * GraphQL document to that variable's value.
+   *
+   * @param fragments A list of fragments as returned by {@link createFragment}. These fragments
+   * can be referenced from within the GraphQL mutation document.
+   *
+   * @param optimisticResponse An object that represents the result of this mutation that will be
+   * optimistically stored before the server has actually returned a result. This is most often
+   * used for optimistic UI, where we want to be able to see the result of a mutation immediately,
+   * and update the UI later if any errors appear.
+   *
+   * @param updateQueries A {@link MutationQueryReducersMap}, which is map from query names to
+   * mutation query reducers. Briefly, this map defines how to incorporate the results of the
+   * mutation into the results of queries that are currently being watched by your application.
+   *
+   * @param refetchQueries A list of query names which will be refetched once this mutation has
+   * returned. This is often used if you have a set of queries which may be affected by a mutation
+   * and will have to update. Rather than writing a mutation query reducer (i.e. `updateQueries`)
+   * for this, you can simply refetch the queries that will be affected and achieve a consistent
+   * store once these queries return.
+   */
   public mutate(options: {
     mutation: Document,
     variables?: Object,
@@ -279,6 +381,9 @@ export default class ApolloClient {
     return this.queryManager.startGraphQLSubscription(options);
   }
 
+  /**
+   * Returns a reducer function configured according to the `reducerConfig` instance variable.
+   */
   public reducer(): Function {
     return createApolloReducer(this.reducerConfig);
   }
@@ -295,6 +400,9 @@ export default class ApolloClient {
     };
   };
 
+  /**
+   * This initializes the Redux store that we use as a reactive cache.
+   */
   public initStore() {
     if (this.store) {
       // Don't do anything if we already have a store

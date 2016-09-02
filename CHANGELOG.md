@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- ...
+- Make `returnPartialData` work better with fragments. [PR #580](https://github.com/apollostack/apollo-client/pull/580)
 
 ### v0.4.14
 

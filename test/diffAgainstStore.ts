@@ -517,7 +517,9 @@ describe('diffing queries against the store', () => {
       query: firstQuery,
     });
 
-    const queryWithMissingField = gql`
+    // Variants on a simple query with a missing field.
+
+    const simpleQuery = gql`
       {
         people_one(id: "1") {
           name
@@ -526,24 +528,76 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    const { result } = diffSelectionSetAgainstStore({
+    const inlineFragmentQuery = gql`
+      {
+        people_one(id: "1") {
+          ... on Person {
+            name
+            age
+          }
+        }
+      }
+    `;
+
+    const namedFragmentQuery = gql`
+      query {
+        people_one(id: "1") {
+          ...personInfo
+        }
+      }
+      fragment personInfo on Person {
+        name
+        age
+      }`;
+
+    const simpleDiff = diffSelectionSetAgainstStore({
       store,
       rootId: 'ROOT_QUERY',
-      selectionSet: getQueryDefinition(queryWithMissingField).selectionSet,
+      selectionSet: getQueryDefinition(simpleQuery).selectionSet,
       variables: null,
       throwOnMissingField: false,
     });
 
-    assert.deepEqual(result, {
+    assert.deepEqual(simpleDiff.result, {
       people_one: {
         name: 'Luke Skywalker',
       },
     });
+
+    const inlineDiff = diffSelectionSetAgainstStore({
+      store,
+      rootId: 'ROOT_QUERY',
+      selectionSet: getQueryDefinition(inlineFragmentQuery).selectionSet,
+      variables: null,
+      throwOnMissingField: false,
+    });
+
+    assert.deepEqual(inlineDiff.result, {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    });
+
+    const namedDiff = diffSelectionSetAgainstStore({
+      store,
+      rootId: 'ROOT_QUERY',
+      selectionSet: getQueryDefinition(namedFragmentQuery).selectionSet,
+      variables: null,
+      throwOnMissingField: false,
+      fragmentMap: createFragmentMap(getFragmentDefinitions(namedFragmentQuery)),
+    });
+
+    assert.deepEqual(namedDiff.result, {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    });
+
     assert.throws(function() {
       diffSelectionSetAgainstStore({
         store,
         rootId: 'ROOT_QUERY',
-        selectionSet: getQueryDefinition(queryWithMissingField).selectionSet,
+        selectionSet: getQueryDefinition(simpleQuery).selectionSet,
         variables: null,
         throwOnMissingField: true,
       });

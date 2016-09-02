@@ -62,4 +62,4 @@ By adding a function that returns the options for this particular component and 
 
 Generally, you shouldn't have polling intervals that are very small, say, less than 10 seconds. If you have data that changes this frequently and need those updates on your client that quickly, you should use GraphQL subscriptions.
 
-## Subscriptions
+<!-- ## Subscriptions -->

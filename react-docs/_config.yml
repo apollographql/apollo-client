@@ -37,15 +37,14 @@ logo:
   nav_mobile: logo/logo-apollo-space.svg
   title: Apollo Developers
   subtitle: Developers
+  url: http://dev.apollodata.com/
+  target: _new
 favicon: logo/favicon.png
 
 typescript_api_box:
   data_file: docs.json
 
 nav_links:
-  'Apollo':
-    url: http://dev.apollodata.com/
-    target: _new
   'React':
     url: http://dev.apollodata.com/react
     active: true
@@ -53,8 +52,8 @@ nav_links:
     url: http://dev.apollodata.com/core
   'Tools':
     url: http://dev.apollodata.com/tools
-  'Community':
-    url: http://dev.apollodata.com/community
+  # 'Community':
+  #   url: http://dev.apollodata.com/community
   'Blog':
     url: https://medium.com/apollo-stack
     target: _new

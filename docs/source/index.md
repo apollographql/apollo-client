@@ -31,6 +31,7 @@ We have put together some basic example apps using various parts of Apollo; chec
 - [Githunt - A full-stack Apollo Client and Server example app that uses React, Webpack, Babel, and Redux](https://github.com/apollostack/GitHunt)
 - [Githunt written in Angular 2](https://github.com/apollostack/GitHunt-angular2)
 - [A GraphQL server example that uses SQL, MongoDB + REST](https://github.com/apollostack/apollo-server-tutorial)
+- [A GraphQL server starter-kit](https://github.com/Quadric/perfect-graphql-starter)
 - [A simple GraphQL blog that uses Feathersjs for managing database services](https://github.com/swarthout/feathers-apollo)
 - [A fork of Facebook's F8 React Native app that uses Apollo](https://github.com/nnance/f8app-apollo)
 - [A production-ready starter-kit using React and Webpack](https://github.com/saikat/react-apollo-starter-kit)

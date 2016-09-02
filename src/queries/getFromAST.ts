@@ -105,6 +105,9 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   return fragmentDef as FragmentDefinition;
 }
 
+/**
+ * This is an interface that describes a map from fragment names to fragment definitions.
+ */
 export interface FragmentMap {
   [fragmentName: string]: FragmentDefinition;
 }

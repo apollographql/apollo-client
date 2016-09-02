@@ -38,6 +38,10 @@ import {
   replaceQueryResults,
 } from './replaceQueryResults';
 
+/**
+ * This is a normalized representation of the Apollo query result cache. Briefly, it consists of
+ * a flatten representation of query result trees.
+ */
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
 }

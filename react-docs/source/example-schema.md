@@ -13,7 +13,7 @@ The front-end, which we'll focus on here, displays a lot of the techniques that 
 <h2 id="githunt-schema">The GitHunt Schema</h2>
 
 
-You may be interested in the schema that GitHunt uses, and that the queries in this guide are written against. You can see the full schema in the [GraphQL Schema Language](https://wehavefaces.net/graphql-shorthand-notation-cheatsheet-17cd715861b6) here:
+You may be interested in the schema that GitHunt uses, and that the queries in this guide are written against. You can see the full schema written in the [GraphQL Schema Language](https://wehavefaces.net/graphql-shorthand-notation-cheatsheet-17cd715861b6) here:
 
 ```text
 # This uses the exact field names returned by the GitHub API for simplicity
@@ -94,10 +94,5 @@ type Mutation {
 
   # Comment on a repository
   submitComment(repoFullName: String!, commentContent: String!): Comment
-}
-
-schema {
-  query: Query
-  mutation: Mutation
 }
 ```

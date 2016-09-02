@@ -1,11 +1,44 @@
 ---
-title: Updating your UI
+title: Controlling the Cache
 order: 13
 ---
 
-In most cases, your UI will be updated automatically as entries in Apollo Client's cache are updated. The function specified in the `dataIdFromObject` option can be used to assign a globally unique id to every object in the cache. These ids allow Apollo Client to reactively tell your queries about update your queries with results when new information becomes available. But, in some cases, just using `dataIdFromObject` is not enough for your application UI to get these updates. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that you can't assign an object identifier to, Apollo Client cannot update existing queries for you. In those cases you have to use `fetchMore` in order to make sure that the queries on your page are updated with the right information and your UI updates correctly.
+Apollo performs two important core tasks: executing queries and mutations, and caching the results.
 
-## `fetchMore`
+Thanks to Apollo's cache, it's possible for the results of a query or mutation to affect to your UI in all the relevant places . In many cases it's possible for that to happen automatically, whereas in others you need to help the client out a little in doing so.
+
+<h2 id="dataIdFromObject">Using `dataIdFromObject`</h2>
+
+Apollo's cache is [constructed](http://dev.apollodata.com/core/how-it-works.html#normalize) one object at time, based on an id generated from each object returned by your queries.
+
+By default, Apollo cannot determine the ids to use for object except through the position that they take in queries. However, if you specify a function to generate an id from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), you can create an unique id for each "real" object.
+
+```js
+import ApolloClient from 'apollo-client';
+
+// If your database has unique ids across all types of objects, you can use
+// a very simple function!
+// Remember: You'll need to ensure that you select ids in every query
+const client = new ApolloClient({
+  dataIdFromObject: o => o.id
+});
+
+// If the ids are only unique per type (this is typical if an id is just an
+// id out of a database table), you can use the `__typename` field to scope it.
+// This is a GraphQL field that's automatically available, but you do need
+// to query for it also.
+const client = new ApolloClient({
+  dataIdFromObject: o => `${o.__typename}-${o.id},`
+});
+```
+
+These ids allow Apollo Client to reactively tell your queries about updates when new information becomes available.
+
+In some cases, just using `dataIdFromObject` is not enough for your application UI to get these updates, as such id-based updates can only affect documents that are already matching a given query. 
+
+For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that you can't assign an object identifier to, Apollo Client cannot update existing queries for you. In those cases you have to use `fetchMore` in order to make sure that the queries on your page are updated with the right information and your UI updates correctly.
+
+<h2 id="fetchMore">Using `fetchMore`</h2>
 
 `fetchMore` can be used to manually update the result of one query based on the data returned by another query. Most often, it is used to handle pagination. In our GitHunt example, we have a paginated feed that displays a list of GitHub respositories. When we hit the "Load More" button, we don't Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list of repositories that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.
 
@@ -66,7 +99,7 @@ Here, the `fetchMore` query is the same as the query associated with the compone
 
 Although `fetchMore` is often used for pagination, there are many other cases in which it is applicable. For example, suppose you have a list of items (say, a collaborative todo list) and you have a query that fetches items that have been added to the list later. Then, you don't have to refetch the whole todo list: you can just incorporate the newly added items with `fetchMore` and specifying the `updateQuery` function correctly.
 
-## `updateQueries`
+<h2 id="updateQueries">Using `updateQueries`</h2>
 
 Just as `fetchMore` allows you to update your UI according to the result of a query, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI should just update automatically based on the result of a mutation as long as modified fields of objects and the object identifiers of modified objects are returned with the mutation (see the cache and `dataIdFromObject` documentation for more information).
 

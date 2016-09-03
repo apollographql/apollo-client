@@ -62,7 +62,7 @@ export interface JsonValue {
   json: any;
 }
 
-export type StoreValue = number | string | string[] | IdValue | JsonValue | undefined;
+export type StoreValue = number | string | string[] | IdValue | JsonValue | void;
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');

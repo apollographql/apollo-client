@@ -414,7 +414,7 @@ const MyComponentWithUpvote = withUpvoteAndRef(MyComponent);
 ```js
 import React, { Component } from 'react';
 import { withApollo } from 'react-apollo';
-import { ApolloClient } from 'apollo-client';
+import ApolloClient from 'apollo-client';
 
 const MyComponent = (props) => {
   // this.props.client is the apollo client

@@ -114,7 +114,7 @@ In this guide, we'll use separate components for instructional purposes.
 ```js
 import React, { Component } from 'react';
 import { withApollo } from 'react-apollo';
-import { ApolloClient } from 'apollo-client';
+import ApolloClient from 'apollo-client';
 
 class MyComponent extends Component { ... }
 MyComponent.propTypes = {

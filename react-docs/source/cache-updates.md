@@ -1,30 +1,30 @@
 ---
-title: Controlling the Cache
+title: Controlling the Store
 order: 13
 ---
 
 Apollo performs two important core tasks: executing queries and mutations, and caching the results.
 
-Thanks to Apollo's cache, it's possible for the results of a query or mutation to affect to your UI in all the relevant places . In many cases it's possible for that to happen automatically, whereas in others you need to help the client out a little in doing so.
+Thanks to Apollo's store, it's possible for the results of a query or mutation to alter to your UI in all the relevant places. In many cases it's possible for that to happen automatically, whereas in others you need to help the client out a little in doing so.
 
 <h2 id="dataIdFromObject">Using `dataIdFromObject`</h2>
 
-Apollo's cache is [constructed](http://dev.apollodata.com/core/how-it-works.html#normalize) one object at time, based on an id generated from each object returned by your queries.
+Apollo's store is [constructed](http://dev.apollodata.com/core/how-it-works.html#normalize) one object at time, based on an ID generated from each object returned by your queries.
 
-By default, Apollo cannot determine the ids to use for object except through the position that they take in queries. However, if you specify a function to generate an id from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), you can create an unique id for each "real" object.
+By default, Apollo cannot determine the IDs to use for object except through the position that they take in queries. However, if you specify a function to generate an ID from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), you can create an unique ID for each "real" object.
 
 ```js
 import ApolloClient from 'apollo-client';
 
-// If your database has unique ids across all types of objects, you can use
+// If your database has unique IDs across all types of objects, you can use
 // a very simple function!
-// Remember: You'll need to ensure that you select ids in every query
+// Remember: You'll need to ensure that you select IDs in every query
 const client = new ApolloClient({
   dataIdFromObject: o => o.id
 });
 
-// If the ids are only unique per type (this is typical if an id is just an
-// id out of a database table), you can use the `__typename` field to scope it.
+// If the IDs are only unique per type (this is typical if an ID is just an
+// ID out of a database table), you can use the `__typename` field to scope it.
 // This is a GraphQL field that's automatically available, but you do need
 // to query for it also.
 const client = new ApolloClient({
@@ -32,9 +32,9 @@ const client = new ApolloClient({
 });
 ```
 
-These ids allow Apollo Client to reactively tell your queries about updates when new information becomes available.
+These IDs allow Apollo Client to reactively tell your queries about updates when new information becomes available.
 
-In some cases, just using `dataIdFromObject` is not enough for your application UI to get these updates, as such id-based updates can only affect documents that are already matching a given query. 
+In some cases, just using `dataIdFromObject` is not enough for your application UI to get these updates, as such ID-based updates can only affect documents that are already matching a given query.
 
 For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that you can't assign an object identifier to, Apollo Client cannot update existing queries for you. In those cases you have to use `fetchMore` in order to make sure that the queries on your page are updated with the right information and your UI updates correctly.
 
@@ -101,7 +101,7 @@ Although `fetchMore` is often used for pagination, there are many other cases in
 
 <h2 id="updateQueries">Using `updateQueries`</h2>
 
-Just as `fetchMore` allows you to update your UI according to the result of a query, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI should just update automatically based on the result of a mutation as long as modified fields of objects and the object identifiers of modified objects are returned with the mutation (see the cache and `dataIdFromObject` documentation for more information).
+Just as `fetchMore` allows you to update your UI according to the result of a query, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI should just update automatically based on the result of a mutation as long as modified fields of objects and the object identifiers of modified objects are returned with the mutation (see the [`dataIdFromObject`](#dataIdFromObject) documentation above for more information).
 
 However, if you are removing or adding items to a list with a mutation or can't assign object identifiers to some of your objects, you'll have to use `updateQueries` to make sure that your UI reflects the change correctly.
 

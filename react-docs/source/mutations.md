@@ -190,7 +190,3 @@ When people talk about GraphQL, they often focus on the data fetching side of th
 In GraphQL, mutations can return any type, and that type can be queried just like a regular GraphQL query. So the question is - what type should a particular mutation return?
 
 In GraphQL itself, there isn't any specification about how this is supposed to work. In most cases, the data available from a mutation result should be the server developer's best guess of the data a client would need to understand what happened on the server. For example, a mutation that creates a new comment on a blog post might return the comment itself. A mutation that reorders an array might need to return the new array.
-
-In many cases, it's beneficial to have the mutation result return the _parent_ of the new object, so that the client developer can decide what data they need to update. For example, if a todo list has a computed field for the number of tasks, inserting a new task might update that as well, meaning it might be good to have the mutation return a `TodoList` type rather than a `Task` type.
-
-Sometimes, you might need to define a new type just for the result of a specific mutation. For example, in the todo list case, it might make sense for the result of the mutation to have two fields, and include _both_ the inserted task and the associated todo list. That way, the client can more easily refetch related data.

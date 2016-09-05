@@ -12,7 +12,7 @@ In this article, we'll cover the technical details of using Apollo to implement 
 
 <h2 id="fetch-more">Using `fetchMore`</h2>
 
-Apollo lets you do pagination with a function called [`fetchMore`](link), which provided on the `data` prop by the `graphql` HOC. You need to specify what query and variables to use for the update, and how to merge the new query result with the existing data on the client. How exactly you do that will determine what kind of pagination you are implementing.
+Apollo lets you do pagination with a function called [`fetchMore`](cache-updates.html#fetchMore), which provided on the `data` prop by the `graphql` HOC. You need to specify what query and variables to use for the update, and how to merge the new query result with the existing data on the client. How exactly you do that will determine what kind of pagination you are implementing.
 
 <h2 id="numbered-pages">Offset-based</h2>
 

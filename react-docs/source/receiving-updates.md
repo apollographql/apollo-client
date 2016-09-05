@@ -13,8 +13,20 @@ Refetches are the simplest way to force a portion of your cache to reflect the i
 For example, continuing with the GitHunt schema, we may have the following component implementation:
 
 ```javascript
-const FEED_QUERY = gql`
-  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+import React, { Component } from 'react';
+import gql from 'grapqhl-tag';
+import { graphql } from 'react-apollo';
+
+class Feed extends Component {
+  // ...
+  onRefreshClicked() {
+    this.props.data.refetch();
+  }
+  // ...
+}
+
+const FeedEntries = gql`
+  query FeedEntries($type: FeedType!, $offset: Int, $limit: Int) {
     feed($type: NEW, offset: $offset, limit: $limit) {
       createdAt
       commentCount
@@ -26,14 +38,7 @@ const FEED_QUERY = gql`
     }
   }`;
 
-@graphql(FEED_QUERY);
-class FeedComponent extends Component {
-  // ...
-  onRefreshClicked() {
-    this.props.data.refetch();
-  }
-  // ...
-}
+const FeedWithData = graphql(FeedEntries)(Feed);
 ```
 
 In particular, suppose we have a "refresh" button somewhere on the page and when that button is clicked, the `onRefreshClicked` method is called on our component. We have the method `this.props.data.refetch`, which allows us to refetch the query associated with the `FeedCompoment`. This means that instead of resolving information about the `feed` field from the cache (even if we have it!), the query will hit the server and will update the cache with new results from the server.
@@ -48,14 +53,12 @@ If you have a query whose result can change pretty frequently, it probably makes
 Continuing with our refetch example, we can add a polling interval with an additional option:
 
 ```javascript
-@graphql(FEED_QUERY, {
+const FeedWithData = graphql(FeedEntries, {
   options: (props) => {
     return { pollInterval: 20000 };
   },
-});
-class FeedComponent extends Component {
-  // ...
-}
+})(Feed);
+
 ```
 
 By adding a function that returns the options for this particular component and setting a `pollInterval` key within the options, we can set the polling interval in milliseconds. Apollo will then take care of refetching this query every twenty seconds and your UI will be updated with the newest information from the server every twenty seconds.

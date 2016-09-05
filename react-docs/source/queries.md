@@ -3,11 +3,11 @@ title: Queries
 order: 10
 ---
 
-To fetch data from the server in a GraphQL system, we use GraphQL queries (you can read about the structure of GraphQL queries in detail at [graphql.org](XXX)).
+To fetch data from the server in a GraphQL system, we use GraphQL queries (you can read about the structure of GraphQL queries in detail at [graphql.org](http://graphql.org/docs/queries/)).
 
 <h2 id="basics">Basic Queries</h2>
 
-When we are using a basic query we can use the `graphql` container in a very simple way. We simply need to parse our query into a GraphQL document using the [graphql-tag](../apollo-client/index.html#gql) library.
+When we are using a basic query we can use the `graphql` container in a very simple way. We simply need to parse our query into a GraphQL document using the `graphql-tag` library.
 
 For instance, in GitHunt, we want to display the current user (if logged in) in the `Profile` component:
 
@@ -48,7 +48,7 @@ Using `graphql` with queries makes it easy to bind data to components. As seen a
 - `loading: Boolean`
   Loading will be true if a query is in flight (including when calling refetch).
 
-- [`error: ApolloError`](apollo-client-api.html#ApolloError)
+- [`error: ApolloError`](/core/apollo-client-api.html#ApolloError)
   The error key will be `null` if no errors were created during the query.
 
 - `...fields`
@@ -64,7 +64,7 @@ Using `graphql` with queries makes it easy to bind data to components. As seen a
 
   could return a result object that includes `{ user: { name: "James" }, likes: { count: 10 } }`.
 
-- [`...QuerySubscription`](apollo-client-api.html#QuerySubscription)
+- [`...QuerySubscription`](/core/apollo-client-api.html#QuerySubscription)
 
   The subscription created on this query will be merged into the passed props so you can dynamically refetch, change polling settings, or even unsubscribe to this query. The methods include `stopPolling`, `startPolling`, `refetch`, and `fetchMore`.
 
@@ -72,7 +72,7 @@ Note that if you create [custom `props`](#graphql-props) for your child componen
 
 <h2 id="graphql-options">Providing `options`</h2>
 
-If you want to configure the query, you can provide an `options` key on the second argument to `graphql`, and your options will be passed to [`ApolloClient.watchQuery`](apollo-client-api.html#watchQuery). If your query takes variables, this is the place to pass them in:
+If you want to configure the query, you can provide an `options` key on the second argument to `graphql`, and your options will be passed to [`ApolloClient.watchQuery`](/core/apollo-client-api.html#watchQuery). If your query takes variables, this is the place to pass them in:
 
 ```js
 // Suppose our profile query took an avatar size
@@ -107,7 +107,7 @@ By default, `graphql` will attempt to pick up any missing variables from the que
 
 <h3 id="other-graphql-options">Other `watchQuery` `options`</h3>
 
-You may want to configure the options used by Apollo's [watchQuery](apollo-client-api.html#watchQuery) using `options`:
+You may want to configure the options used by Apollo's [watchQuery](/core/apollo-client-api.html#watchQuery) using `options`:
 
 ```js
 const ProfileWithData = graphql(CurrentUserForLayout, {

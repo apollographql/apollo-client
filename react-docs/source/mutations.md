@@ -3,7 +3,7 @@ title: Mutations
 order: 11
 ---
 
-In addition to fetching data using queries, Apollo also handles [GraphQL mutations](link-to-guide). Mutations are identical to queries in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the operation is used to change the dataset behind the schema.
+In addition to fetching data using queries, Apollo also handles GraphQL mutations. Mutations are identical to queries in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the operation is used to change the dataset behind the schema.
 
 ```js
 mutation {
@@ -32,7 +32,7 @@ The result of the above mutation might be be:
 }
 ```
 
-When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](link-to-cache-section), which in turn updates UI automatically, so we don't explicitly handle the results ourselves. In order for the client to correctly do this, we need to ensure we select the correct fields (as in all the fields that we care about that may have changed).
+When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](cache-updates.html#dataIdFromObject), which in turn updates UI automatically, so we don't explicitly handle the results ourselves. In order for the client to correctly do this, we need to ensure we select the correct fields (as in all the fields that we care about that may have changed).
 
 <h2 id="basics">Basic Mutations</h2>
 
@@ -62,7 +62,7 @@ const NewEntryWithData = graphql(submitRepository)(NewEntry);
 
 <h3 id="calling-mutations">Calling mutations</h3>
 
-Most mutations will require arguments in the form of query variables, and you may wish to provide other options to [ApolloClient#mutate](apollo-client-api.html#mutate). You can directly pass options to `mutate` when you call it in the wrapped component:
+Most mutations will require arguments in the form of query variables, and you may wish to provide other options to [ApolloClient#mutate](/core/apollo-client-api.html#mutate). You can directly pass options to `mutate` when you call it in the wrapped component:
 
 ```js
 import React, { Component, PropTypes } from 'react';

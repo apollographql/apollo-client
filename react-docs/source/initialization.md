@@ -18,7 +18,7 @@ To get started using Apollo, we need to create an `ApolloClient` and an `ApolloP
 
 <h3 id="creating-client">Creating a client</h3>
 
-To get started, create an [`ApolloClient`](apollo-client-api.html#constructor) instance and point it at your GraphQL server:
+To get started, create an [`ApolloClient`](/core/apollo-client-api.html#constructor) instance and point it at your GraphQL server:
 
 ```js
 import ApolloClient from 'apollo-client';
@@ -27,7 +27,7 @@ import ApolloClient from 'apollo-client';
 const client = new ApolloClient();
 ```
 
-The client takes a variety of [options](apollo-client-api.html#constructor), but in particular, if you want to change the URL of the GraphQL server, you can pass in a custom [`NetworkInterface`](apollo-client-api.html#NetworkInterface):
+The client takes a variety of [options](/core/apollo-client-api.html#constructor), but in particular, if you want to change the URL of the GraphQL server, you can pass in a custom [`NetworkInterface`](/core/apollo-client-api.html#NetworkInterface):
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
@@ -143,6 +143,5 @@ const MyComponentWithUpvote = graphql(Upvote, { withRef: 'true' })(MyComponent);
 // MyComponentWithUpvote.getWrappedInstance() returns MyComponent instance
 ```
 
-## Troubleshooting
-
-XXX: Maybe we should add something here later when we have content
+<!--  Add content here once it exists -->
+<!-- ## Troubleshooting -->

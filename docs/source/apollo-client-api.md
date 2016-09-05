@@ -17,6 +17,14 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ApolloClient.initStore %}
 {% tsapibox ApolloClient.setStore %}
 
+<h2 id="ObservableQuery">ObservableQuery</h2>
+
+{% tsapibox ObservableQuery.refetch %}
+{% tsapibox ObservableQuery.fetchMore %}
+{% tsapibox ObservableQuery.updateQuery %}
+{% tsapibox ObservableQuery.startPolling %}
+{% tsapibox ObservableQuery.stopPolling %}
+
 <h2 id="utilities">Utilities</h2>
 
 {% tsapibox createNetworkInterface %}
@@ -27,10 +35,12 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 <h2 id="types">Types</h2>
 
 {% tsapibox ApolloError %}
-{% tsapibox QuerySubscription %}
+{% tsapibox ApolloQueryResult %}
 {% tsapibox ApolloStore %}
 {% tsapibox NetworkInterface %}
 {% tsapibox NetworkInterfaceOptions %}
+{% tsapibox HTTPNetworkInterface %}
+{% tsapibox BatchedNetworkInterface %}
 {% tsapibox NormalizedCache %}
 {% tsapibox ApolloReducerConfig %}
 {% tsapibox MutationBehaviorReducerArgs %}

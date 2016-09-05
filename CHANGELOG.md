@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 - Make `returnPartialData` work better with fragments. [PR #580](https://github.com/apollostack/apollo-client/pull/580)
+- Include more type definitions and methods in root export for use in react-apollo [PR #619](https://github.com/apollostack/apollo-client/pull/619)
 
 ### v0.4.14
 

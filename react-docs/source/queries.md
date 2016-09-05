@@ -1,5 +1,5 @@
 ---
-title: Querying for data
+title: Queries
 order: 10
 ---
 
@@ -193,7 +193,9 @@ const CurrentUserForLayout = gql`
 `;
 
 const ProfileWithData = graphql(CurrentUserForLayout, {
-  props({ data: { loading, currentUser, refetch } }) => ({
+  // ownProps are the props that are passed into the `ProfileWithData`
+  // when it is used by a parent component
+  props({ ownProps, data: { loading, currentUser, refetch } }) => ({
     userLoading: loading,
     user: currentUser,
     refetchUser: refetch,

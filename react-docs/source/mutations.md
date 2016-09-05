@@ -1,5 +1,5 @@
 ---
-title: Modifying data on the server
+title: Mutations
 order: 11
 ---
 

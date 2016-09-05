@@ -42,7 +42,7 @@ Using `graphql` with mutations makes it easy to bind actions to components. Unli
 ```js
 import React, { Component, PropTypes } from 'react';
 import { graphql } from 'react-apollo';
-import { gql } from 'graphql-tag';
+import gql from 'graphql-tag';
 
 class NewEntry extends Component { ... }
 NewEntry.propTypes = {
@@ -67,7 +67,7 @@ Most mutations will require arguments in the form of query variables, and you ma
 ```js
 import React, { Component, PropTypes } from 'react';
 import { graphql } from 'react-apollo';
-import { gql } from 'graphql-tag';
+import gql from 'graphql-tag';
 
 class NewEntry extends Component {
   onClick() {
@@ -102,7 +102,7 @@ However, typically you'd want to keep the concern of understanding the mutation'
 ```js
 import React, { Component, PropTypes } from 'react';
 import { graphql } from 'react-apollo';
-import { gql } from 'graphql-tag';
+import gql from 'graphql-tag';
 
 class NewEntry extends Component {
   render() {
@@ -137,7 +137,7 @@ Apollo Client gives you a way to specify the `optimisticResponse` option, that w
 ```js
 import React, { Component, PropTypes } from 'react';
 import { graphql } from 'react-apollo';
-import { gql } from 'graphql-tag';
+import gql from 'graphql-tag';
 
 class CommentPage extends Component { ... }
 CommentPage.propTypes = {

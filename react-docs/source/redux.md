@@ -74,7 +74,7 @@ const withCloneList = graphql(CLONE_LIST, {
     cloneList() {
       return mutate()
         .then(result => {
-          ownProps.viewList(result.id);
+          ownProps.onSelectList(result.id);
         });
     },
   }),

@@ -3,8 +3,8 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Apollo Docs
-subtitle: Technical preview docs
+title: Apollo JavaScript Core
+subtitle: Core API Documentation for the Apollo JS GraphQL Client
 description:
 author:
 language:
@@ -14,46 +14,47 @@ versions:
 sidebar_categories:
   null:
     - index
-  Apollo Client Core:
-    - apollo-client/index
-    - apollo-client/queries
-    - apollo-client/mutations
-    - apollo-client/fragments
-    - apollo-client/pagination
-    - apollo-client/network
-    - apollo-client/devtools
-    - apollo-client/how-it-works
-  Apollo Client Integrations:
-    - apollo-client/react
-    - apollo-client/angular2
-    - apollo-client/meteor
-    - apollo-client/redux
-  Apollo Server:
-    - apollo-server/index
-    - apollo-server/setup
-    - apollo-server/requests
-    - apollo-server/graphiql
-    - apollo-server/migration
-  GraphQL Tools:
-    - graphql-tools/index
-#    - graphql-tools/guide
-#    - graphql-tools/tools
-    - graphql-tools/generate-schema
-    - graphql-tools/resolvers
-    - graphql-tools/scalars
-    - graphql-tools/mocking
-    - graphql-tools/connectors
-    - graphql-tools/errors
+    - apollo-client-api
+  'Technical Documentation':
+    - network
+    - fragments
+    - devtools
+    - how-it-works
+  Integrations:
+    - angular2
+    - meteor
+# not sure if we should rename this?
 github_repo: apollostack/docs
 content_root: source
+
 logo:
-  desktop: /logo/large.png
-  mobile: /logo/square.png
+  nav_mobile: logo/logo-apollo-space.svg
+  title: Apollo Developers
+  subtitle: Developers
+  url: http://dev.apollodata.com/
+  target: _new
+favicon: logo/favicon.png
+
+typescript_api_box:
+  data_file: docs.json
+
 nav_links:
-  apollostack.com: http://www.apollostack.com/
-  Blog: https://medium.com/apollo-stack
-  GitHub: https://github.com/apollostack
-favicon: /logo/square.png
+  'React':
+    url: http://dev.apollodata.com/react
+  'Core JS':
+    url: http://dev.apollodata.com/core
+    active: true
+  'Tools':
+    url: http://dev.apollodata.com/tools
+  # 'Community':
+  #   url: http://dev.apollodata.com/community
+  'Blog':
+    url: https://medium.com/apollo-stack
+    target: _new
+
+social_links:
+  github: 'https://github.com/apollostack'
+  twitter: '@apollostack'
 
 # API keys
 apis:
@@ -61,8 +62,8 @@ apis:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://docs.apollostack.com/
-root: /
+url: http://dev.apollodata.com/core
+root: /core/
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 

@@ -13,14 +13,19 @@
     "hexo-generator-tag": "^0.1.1",
     "hexo-renderer-ejs": "^0.1.0",
     "hexo-renderer-marked": "^0.2.4",
-    "hexo-renderer-stylus": "^0.3.0",
-    "hexo-server": "^0.1.2"
+    "hexo-renderer-less": "^0.2.0",
+    "hexo-server": "^0.1.2",
+    "hexo-typescript-api-box": "^0.7.0",
+    "typedoc": "github:tmeasday/typedoc#ts-2.0-built"
   },
   "devDependencies": {
-    "hexo-s3-deploy": "^1.0.1"
+    "hexo-s3-deploy": "^1.2.1"
   },
   "scripts": {
+    "build": "cd code; typedoc --json ../docs.json",
+    "prestart": "npm run build",
     "start": "hexo serve",
+    "predeploy": "npm run build",
     "deploy": "hexo-s3-deploy"
   }
 }

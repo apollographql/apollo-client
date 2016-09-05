@@ -4,6 +4,176 @@ order: 110
 description: How to point your Apollo client to a different GraphQL server, or use a totally different protocol.
 ---
 
+<h2 id="network-interfaces">Network interfaces</h2>
+
+Apollo Client has a pluggable network interface layer, which can let you configure how queries are sent over HTTP, or replace the whole network part with something completely custom, like a websocket transport, mocked server data, or anything else you can imagine.
+
+<h3 id="createNetworkInterface" title="createNetworkInterface">Creating a network interface</h3>
+
+To create a network interface, use [`createNetworkInterface`](apollo-client-api.html#createNetworkInterface).
+
+Here's how you would instantiate a new client with a custom endpoint URL:
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+
+const networkInterface = createNetworkInterface('https://example.com/graphql');
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+<h3 id="networkInterfaceMiddleware" title="Middleware">Middleware</h3>
+
+It is possible to use middleware with the network interface created via `createNetworkInterface`.  In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.  Each object must contain an `applyMiddleware` method with the following parameters:
+
+- `req: object` The HTTP request being processed by the middleware.
+- `next: function` This function pushes the HTTP request onward through the middleware.
+
+This example shows how you'd create a middleware.  It can be done either by providing the required object directly to `.use()` or by creating an object and passing it to `.use()`. In both cases all middleware objects have to be wrapped inside an array.
+
+In both examples, we'll show how you would add an authentication token to the HTTP header of the requests being sent by the client.
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+
+const networkInterface = createNetworkInterface('/graphql');
+
+networkInterface.use([{
+  applyMiddleware(req, next) {
+    if (!req.options.headers) {
+      req.options.headers = {};  // Create the header object if needed.
+    }
+    req.options.headers.authorization = localStorage.getItem('token') ? localStorage.getItem('token') : null;
+    next();
+  }
+}]);
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+The above example shows the use of a single middleware passed directly to .use(). It checks to see if we have a token (JWT, for example) and passes that token into the HTTP header of the request, so we can authenticate interactions with GraphQL performed through our network interface.
+
+The following example shows the use of multiple middlewares passed as an array:
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+
+const networkInterface = createNetworkInterface('/graphql');
+const token = 'first-token-value';
+const token2 = 'second-token-value';
+
+const exampleWare1 = {
+  applyMiddleware(req, next) {
+    if (!req.options.headers) {
+      req.options.headers = {};  // Create the headers object if needed.
+    }
+    req.options.headers.authorization = token;
+    next();
+  }
+}
+
+const exampleWare2 = {
+  applyMiddleware(req, next) {
+    if (!req.options.headers) {
+      req.options.headers = {};  // Create the headers object if needed.
+    }
+    req.options.headers.authorization = token2;
+    next();
+  }
+}
+
+networkInterface.use([exampleWare1, exampleWare2]);
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+Given the above code, the header's `Authorization` value will be that of `token2`.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware, passed to `.use()` as an array.
+
+<h3 id="networkInterfaceAfterware" title="Afterware">Afterware</h3>
+A afterware is very similar to a middleware, except that a afterware runs after a request has been made,
+that is when a response is going to get processed.
+
+It is possible to use afterware with the network interface created via `createNetworkInterface`.
+In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.
+Each object must contain an `applyAfterware` method with the following parameters:
+
+- `{ response }: object` A object contain the HTTP response of a GraphQL fetch.
+- `next: function` This function pushes the HTTP response onward through the afterware.
+
+This example shows how you'd create a afterware.
+It can be done either by providing the required object directly to `.useAfter()`
+or by creating an object and passing it to `.useAfter()`.
+In both cases all afterware objects have to be wrapped inside an array.
+
+Below are some examples of using afterwares.
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import {logout} from './logout';
+
+const networkInterface = createNetworkInterface('/graphql');
+
+networkInterface.useAfter([{
+  applyAfterware({ response }, next) {
+    if (response.status === 401) {
+      logout();
+    }
+    next();
+  }
+}]);
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+The above example shows the use of a single afterware passed directly to `.useAfter()`.
+It checks to see if the response status code is equal to 401 and if it is then we will
+logout the user from the application.
+
+The following example shows the use of multiple afterwares passed as an array:
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import {redirectTo} from './redirect';
+
+const networkInterface = createNetworkInterface('/graphql');
+
+const exampleWare1 = {
+  applyAfterware({ response }, next) {
+    if (response.status === 500) {
+      console.error('Server returned an error');
+    }
+    next();
+  }
+}
+
+const exampleWare2 = {
+  applyAfterware({ response }, next) {
+    if (response.status === 200) {
+      redirectTo('/');
+    }
+    next();
+  }
+}
+
+networkInterface.useAfter([exampleWare1, exampleWare2]);
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
+This example shows how you can use more than one afterware to make multiple/separate
+modifications to the response being processed in the form of a chain.
+
+
 <h2 id="custom-network-interface">Custom network interface</h2>
 
 You can define a custom network interface and pass it to the Apollo Client to send your queries in a different way. You might want to do this for a variety of reasons:

@@ -26,7 +26,6 @@ sidebar_categories:
     - auth
     - pagination
     - optimistic-ui
-    - lists
     - prefetching
     - redux
     - server-side-rendering

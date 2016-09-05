@@ -46,7 +46,7 @@ const CommentPageWithData = graphql(submitComment, {
 
 We select `id` and `__typename` because that's what we configured `dataIdFromObject` to use to determine a globally unique object ID.
 
-<h2 id="optimistic-advanced">Advanced optimistic updates</h2>
+<h2 id="optimistic-advanced">Adding to a list</h2>
 
 In the example above, we showed how to seamlessly edit an existing object in the store with an optimistic mutation result. However, many mutations don't just update an existing object in the store, but they insert a new one.
 

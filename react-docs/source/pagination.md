@@ -124,7 +124,7 @@ const moreComments = gql`
 `;
 
 const CommentsWithData = graphql(Comment, {
-  // This function re-runs everytime data `changes`, including after `updateQuery`
+  // This function re-runs everytime `data` changes, including after `updateQuery`
   props({ data: { loading, cursor, comments, fetchMore } }) {
     return {
       loading,

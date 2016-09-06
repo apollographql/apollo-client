@@ -123,35 +123,26 @@ const moreComments = gql`
   }
 `;
 
-const FeedWithData = graphql(FEED_QUERY, {
-  props({ data: { loading, feed, currentUser, cursor, fetchMore } }) {
-    // This technique only allows a single instance of `FeedWithData` in your app
-    // A better approach would be to store the cursor on the component
-    //   (however this is a little difficult right now:
-    //    https://github.com/apollostack/react-apollo/issues/188)
-    FeedWithData.cursor = cursor;
+const CommentsWithData = graphql(Comment, {
+  // This function re-runs everytime data `changes`, including after `updateQuery`
+  props({ data: { loading, cursor, comments, fetchMore } }) {
     return {
       loading,
-      feed,
-      currentUser,
+      comments,
       loadMoreEntries: () => {
         return fetchMore({
           query: moreComments,
           variables: {
-            // cursor is the initial cursor returned by the original query
-            // this.cursor is the cursor that we update via `updateQuery` below
-            cursor: FeedWithData.cursor,
+            cursor: cursor,
           },
           updateQuery: (previousResult, { fetchMoreResult, queryVariables }) => {
             const previousEntry = previousResult.entry;
             const newComments = fetchMoreResult.data.comments.nextComments;
 
-            // update internal reference to cursor
-            FeedWithData.cursor = fetchMoreResult.data.cursor;
-
             return {
-              title: previousEntry.title,
-              author: previousEntry.author,
+              // By return `cursor` here, we "rebind" the `loadMore` function
+              // to the new cursor.
+              cursor: fetchMoreResult.data.cursor,
               // put promoted comments in front
               comments: [...newComments, ...previousEntry.comments],
             };

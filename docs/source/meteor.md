@@ -46,7 +46,7 @@ createApolloServer({
 });
 ```
 
-The [GraphiQL](https://github.com/graphql/graphiql) url is [http://localhost:3000/graphql](http://localhost:3000/graphql)
+The [GraphiQL](https://github.com/graphql/graphiql) url is [http://localhost:3000/graphiql](http://localhost:3000/graphiql)
 
 Inside your resolvers, if the user is logged in, their id will be  `context.userId`:
 

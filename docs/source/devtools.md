@@ -12,7 +12,7 @@ If you don't pass in an existing Redux Store into the `ApolloClient` constructor
 
 To get started with Redux DevTools, click the DevTools icon in your chrome browser. You will now see the Redux logger.
 
-![DevTools](../assets/devtools/devtools.png)
+![DevTools](./assets/devtools/devtools.png)
 
 ### Features
 
@@ -51,7 +51,7 @@ When a query is sent to your GraphQL server, Apollo dispatches an action to the 
 Taking a closer look at the metadata that comes with a `APOLLO_QUERY_INIT` action, we see that `APOLLO_QUERY_INIT` sends over `queryId`, `queryString`, and `query`. The action takes these pieces of metadata and adds it to the Redux store. These properties can now be found saved in Redux.
 The beauty of these state changes is the management for data "readyness". When the Store dispatches `APOLLO_QUERY_INIT`, the particular query we are trying to resolve will have this structure:
 
-![QUERY_INIT_DATA](../assets/devtools/query-init-data.png)
+![QUERY_INIT_DATA](./assets/devtools/query-init-data.png)
 
 * The keys `loading` to manage our data "readyness",
 * `networkError` and `graphQLErrors` to have complete visibility of errors to the end user.
@@ -106,7 +106,7 @@ Here we can see the `selection set` of our mutation and the variables used in th
 
 When a mutation has been resolved, the Store dispatches `APOLLO_MUTATION_RESULT`.
 
-![MUTATION_RESULT](../assets/devtools/mutation-result.png)
+![MUTATION_RESULT](./assets/devtools/mutation-result.png)
 
 * The keys `loading` to manage our mutation "readyness"
 * `error` to have complete visibility of errors to the end user.

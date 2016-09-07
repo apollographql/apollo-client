@@ -33,3 +33,4 @@ We have put together some basic example apps using various parts of Apollo; chec
 - [A Meteor Integration example that uses SQL, MongoDB + Rest](https://github.com/abhiaiyer91/sample-graphql-meteor-server)
 - [A full-stack app with a Material UI React frontend on top of Discourse](https://github.com/apollostack/apollo-demo)
 - [Simple example using FlowRouter as a Routes manager](https://github.com/AYCRAL/meteor-apollo-flow)
+- [Example uisng React Router and Stardust (Semantic UI)](https://github.com/AYCRAL/meteor-router-stardust)

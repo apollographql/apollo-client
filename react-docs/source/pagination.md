@@ -135,16 +135,18 @@ const CommentsWithData = graphql(Comment, {
           variables: {
             cursor: cursor,
           },
-          updateQuery: (previousResult, { fetchMoreResult, queryVariables }) => {
+          updateQuery: (previousResult, { fetchMoreResult }) => {
             const previousEntry = previousResult.entry;
-            const newComments = fetchMoreResult.data.comments.nextComments;
+            const newComments = fetchMoreResult.data.moreComments.comments;
 
             return {
               // By return `cursor` here, we "rebind" the `loadMore` function
               // to the new cursor.
               cursor: fetchMoreResult.data.cursor,
-              // put promoted comments in front
-              comments: [...newComments, ...previousEntry.comments],
+              entry: {
+                // put promoted comments in front
+                comments: [...newComments, ...previousEntry.entry.comments],
+              },
             };
           },
         });

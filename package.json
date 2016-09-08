@@ -72,6 +72,7 @@
     "@types/node": "^6.0.38",
     "@types/promises-a-plus": "0.0.26",
     "@types/redux": "^3.5.29",
+    "@types/sinon": "^1.16.29",
     "async": "^2.0.0",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",

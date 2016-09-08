@@ -72,7 +72,7 @@ export const resolvers = {
 
 `networkInterfaceConfig` may contain any of the following fields:
 - `path`: path of the GraphQL server. Default: `'/graphql'`.
-- `options`: `FetchOptions` passed to [`createNetworkInterface`](http://docs.apollostack.com/apollo-client/index.html#createNetworkInterface). Default: `{}`.
+- `options`: `FetchOptions` passed to [`createNetworkInterface`](http://dev.apollodata.com/core/apollo-client-api.html#createNetworkInterface). Default: `{}`.
 - `useMeteorAccounts`: Whether to send the current user's login token to the GraphQL server with each request. Default: `true`.
 
 Returns an [`options` object](http://0.0.0.0:4000/apollo-client/index.html#ApolloClient) for `ApolloClient`:

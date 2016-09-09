@@ -2935,14 +2935,15 @@ describe('QueryManager', () => {
       });
     });
 
-    it('should be passed to the observer as true if we are returning partial data', () => {
+    it('should be passed to the observer as true if we are returning partial data', (done) => {
+      const fortuneCookie = 'You must stick to your goal but rethink your approach';
       const primeQuery = gql`
         query {
           fortuneCookie
         }`;
-      const primeData = {
-        fortuneCookie: 'You must stick to your goal but rethink your approach',
-      };
+      const primeData = { fortuneCookie };
+
+      const author = { name: 'John' };
       const query = gql`
         query {
           fortuneCookie
@@ -2950,17 +2951,16 @@ describe('QueryManager', () => {
             name
           }
         }`;
+      const fullData = { fortuneCookie, author };
+
       const diffQuery = gql`
         query {
           author {
             name
           }
         }`;
-      const diffData = {
-        author: {
-          name: 'John',
-        },
-      };
+      const diffData = { author };
+
       const queryManager = mockQueryManager(
         {
           request: { query: diffQuery },
@@ -2972,11 +2972,20 @@ describe('QueryManager', () => {
           result: { data: primeData },
         }
       );
+
+      let seenInitial = false;
       queryManager.query({ query: primeQuery }).then((primeResult) => {
         queryManager.watchQuery({ query, returnPartialData: true }).subscribe({
           next(result) {
-            assert(result.loading);
-            assert.deepEqual(result.data, { data: diffData } );
+            if (!seenInitial) {
+              assert(result.loading);
+              assert.deepEqual(result.data, primeData);
+              seenInitial = true;
+            } else {
+              assert(!result.loading);
+              assert.deepEqual(result.data, fullData);
+              done();
+            }
           },
         });
       });

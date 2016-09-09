@@ -221,7 +221,15 @@ export function diffSelectionSetAgainstStore({
           }
 
           if (isObject(fieldResult)) {
-            assign(result, fieldResult);
+            for (const key in fieldResult) {
+              if (
+                (fieldResult.hasOwnProperty(key) && result.hasOwnProperty(key)) && (isObject(fieldResult[key]) && isObject(result[key]))) {
+                assign(result[key], fieldResult[key]);
+              } else {
+                assign(result, fieldResult);
+              }
+            }
+
           }
           if (!fragmentErrors[typename]) {
             fragmentErrors[typename] = null;

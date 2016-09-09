@@ -10,7 +10,7 @@ To install `apollo`, run both of these commands:
 
 ```text
 meteor add apollo
-meteor npm install --save apollo-client apollo-server express graphql
+meteor npm install --save apollo-client apollo-server express graphql graphql-tools body-parser
 ```
 
 ## Usage
@@ -34,19 +34,22 @@ Define your schema and resolvers, and then set up the Apollo server with [`creat
 
 ```js
 import { createApolloServer } from 'meteor/apollo';
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 
-import schema from '/imports/api/schema';
+import typeDefs from '/imports/api/schema';
 import resolvers from '/imports/api/resolvers';
 
-createApolloServer({
-  graphiql: true,
-  pretty: true,
-  schema,
+const schema = makeExecutableSchema({
+  typeDefs,
   resolvers,
+});
+
+createApolloServer({
+  schema,
 });
 ```
 
-The [GraphiQL](https://github.com/graphql/graphiql) url is [http://localhost:3000/graphiql](http://localhost:3000/graphiql)
+The [GraphiQL](https://github.com/graphql/graphiql) url by default is [http://localhost:3000/graphiql](http://localhost:3000/graphiql)
 
 Inside your resolvers, if the user is logged in, their id will be  `context.userId`:
 
@@ -93,5 +96,10 @@ Returns an [`options` object](http://0.0.0.0:4000/apollo-client/index.html#Apoll
 - `config` may contain any of the following fields:
   - `path`: [Path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. Default: `'/graphql'`.
   - `maxAccountsCacheSizeInMB`: User account ids are cached in memory to reduce the response latency on multiple requests from the same user. Default: `1`.
+  - `graphiql`: Whether to enable GraphiQL. Default: `true` in development and `false` in production.
+  - `graphiqlPath`: Path for GraphiQL. Default: `/graphiql` (note the i).
+  - `graphiqlOptions`: [GraphiQL options](http://docs.apollostack.com/apollo-server/graphiql.html#graphiqlOptions) (optional).
 
-It will use the same port as your Meteor server. Don't put a route or static asset at the same path as the Apollo server (default is `/graphql`).
+
+
+It will use the same port as your Meteor server. Don't put a route or static asset at the same path as the Apollo route or the GraphiQL route if in use (defaults are `/graphql` and `/graphiql` respectively).

@@ -8,12 +8,13 @@ Expect active development and potentially significant breaking changes in the `0
 - Make sure stopping a poll interval doesn't stop updates from the store. [PR #625](https://github.com/apollostack/apollo-client/pull/625)
 - Include more type definitions and methods in root export for use in react-apollo [PR #619](https://github.com/apollostack/apollo-client/pull/619)
 - Added `resultTransformer` and `resultComparator` to `ApolloClient`/`QueryManager`, which afford the ability to transform result objects immediately before they are returned to the application. [PR #446](https://github.com/apollostack/apollo-client/pull/446)
+- Fixed issue with nested fragments overriding each other. [PR #629](https://github.com/apollostack/apollo-client/pull/629)
+- Add "reduxRootSelector" parameter to the ApolloClient constructor and deprecate "reduxRootKey". [PR #631](https://github.com/apollostack/apollo-client/pull/631)
 
 ### v0.4.15
 
 - Options set in middleware can override the fetch query in the network layer. [Issue #627](https://github.com/apollostack/apollo-client/issues/627) and [PR #628](https://github.com/apollostack/apollo-client/pull/628).
 - Make `returnPartialData` work better with fragments. [PR #580](https://github.com/apollostack/apollo-client/pull/580)
-- Add "reduxRootSelector" parameter to the ApolloClient constructor and deprecate "reduxRootKey". [PR #631](https://github.com/apollostack/apollo-client/pull/631)
 
 ### v0.4.14
 

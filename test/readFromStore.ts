@@ -157,6 +157,63 @@ describe('reading from the store', () => {
     });
   });
 
+  it('runs a nested fragment with multiple fragments', () => {
+    const result: any = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedObj: {
+        id: 'abcde',
+        stringField: 'This is a string too!',
+        numberField: 6,
+        nullField: null,
+      } as StoreObject,
+    };
+
+    const store = {
+      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+        nestedObj: {
+          type: 'id',
+          id: 'abcde',
+          generated: false,
+        },
+      }) as StoreObject,
+      abcde: result.nestedObj,
+    } as NormalizedCache;
+
+    const queryResult = readFragmentFromStore({
+      store,
+      fragment: gql`
+        fragment FragmentName on Item {
+          stringField,
+          numberField,
+          ...on Item {
+            nestedObj {
+              stringField
+            }
+          }
+          ...on Item {
+            nestedObj {
+              numberField
+            }
+          }
+        }
+      `,
+      rootId: 'abcd',
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: 'This is a string!',
+      numberField: 5,
+      nestedObj: {
+        stringField: 'This is a string too!',
+        numberField: 6,
+      },
+    });
+  });
+
   it('runs a nested fragment with an array without IDs', () => {
     const result: any = {
       id: 'abcd',

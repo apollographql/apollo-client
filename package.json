@@ -59,7 +59,7 @@
     "lodash.merge": "^4.4.0",
     "lodash.pick": "^4.2.0",
     "redux": "^3.3.1",
-    "symbol-observable": "^0.2.4",
+    "symbol-observable": "^1.0.2",
     "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {
@@ -85,7 +85,7 @@
     "pretty-bytes": "^4.0.0",
     "remap-istanbul": "^0.5.1",
     "request-promise": "^4.0.1",
-    "rxjs": "^5.0.0-beta.7",
+    "rxjs": "^5.0.0-beta.11",
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "tslint": "3.15.1",

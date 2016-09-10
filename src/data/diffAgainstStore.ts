@@ -221,16 +221,7 @@ export function diffSelectionSetAgainstStore({
           }
 
           if (isObject(fieldResult)) {
-            Object.keys(fieldResult).forEach(key => {
-              if (shouldDeepMerge(key, result, fieldResult)) {
-                assign(
-                  (result as { [key: string]: Object })[key],
-                  (fieldResult as { [key: string]: Object })[key]
-                );
-              } else {
-                assign(result, fieldResult);
-              }
-            });
+            mergeFieldResult(result, fieldResult);
           }
           if (!fragmentErrors[typename]) {
             fragmentErrors[typename] = null;
@@ -269,16 +260,7 @@ export function diffSelectionSetAgainstStore({
             pushMissingField(selection);
           }
           if (isObject(fieldResult)) {
-            Object.keys(fieldResult).forEach(key => {
-              if (shouldDeepMerge(key, result, fieldResult)) {
-                assign(
-                  (result as { [key: string]: Object })[key],
-                  (fieldResult as { [key: string]: Object })[key]
-                );
-              } else {
-                assign(result, fieldResult);
-              }
-            });
+            mergeFieldResult(result, fieldResult);
           }
 
           if (!fragmentErrors[typename]) {
@@ -338,6 +320,22 @@ function shouldDeepMerge(
   fieldResult: { [key: string]: any }
 ): boolean {
   return isObject(fieldResult[key]) && isObject(result[key]);
+}
+
+function mergeFieldResult(
+  result: { [key: string]: any },
+  fieldResult: { [key: string]: any }
+) {
+  Object.keys(fieldResult).forEach(key => {
+    if (shouldDeepMerge(key, result, fieldResult)) {
+      assign(
+        (result as { [key: string]: Object })[key],
+        (fieldResult as { [key: string]: Object })[key]
+      );
+    } else {
+      assign(result, fieldResult);
+    }
+  });
 }
 
 function diffFieldAgainstStore({

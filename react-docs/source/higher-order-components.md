@@ -55,7 +55,23 @@ class MyComponent extends Component {
 
 In this guide, we won't use the decorator syntax to make the code more familiar, but you can always use it if you prefer.
 
-For details about the `graphql` higher-order-component, read about how to use it with [queries](/react/queries) and [mutations](/react/mutations).
+<h3 id="graphql-api">graphql API</h3>
+
+The `graphql` function takes two arguments:
+
+- `query`: Required, a GraphQL document parsed with the `gql` tag
+- `config`: An optional object with configuration, as described below
+
+The config object can include one or more of the following keys:
+
+- `name`: Rename the `data` prop the higher-order-component passes down to something else
+- `options`: Pass options about the query
+- `props`: Modify the props before they are passed into the child component
+- `withRef`: Add a method to access the child component to the container, [read more below](#with-ref)
+
+The `graphql` function returns another function, which takes any React component and returns a new React component class wrapped with the specified query. This is similar to how `connect` works in Redux.
+
+For details about how to use the `graphql` higher-order-component in a variety of situations, read about how to use it with [queries](/react/queries) and [mutations](/react/mutations).
 
 <h2 id="withApollo">withApollo</h2>
 

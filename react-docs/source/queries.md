@@ -145,7 +145,7 @@ If you want to decouple your UI components from Apollo and make them more reusab
 
 <h3 id="graphql-name">Using `name`</h3>
 
-If you want to change the name of the default `data` prop, but keep the exact same shape, you can use `name` field. This is especially useful for nested `graphql` containers, where the `data` prop would clash between them.
+If you want to change the name of the default `data` prop, but keep the exact same shape, you can use `name` option to the `graphql` container. This is especially useful for nested `graphql` containers, where the `data` prop would clash between them.
 
 ```js
 import React, { Component, PropTypes } from 'react';
@@ -175,10 +175,9 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 })(Profile);
 ```
 
-
 <h3 id="graphql-props">Using `props`</h3>
 
-If you want a greater level of control, use `props` to map the query results to the props to be passed to the child component:
+If you want complete control over the props of the child component, use the `props` option to map the query `data` object into any number of props that will be passed into the child:
 
 ```js
 

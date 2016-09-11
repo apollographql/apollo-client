@@ -3,13 +3,15 @@ title: Queries
 order: 10
 ---
 
-To fetch data from the server in a GraphQL system, we use GraphQL queries (you can read about the structure of GraphQL queries in detail at [graphql.org](http://graphql.org/docs/queries/)).
+On this page, you can learn how to use `react-apollo` to attach GraphQL query results to your React UI. You can read about GraphQL queries themselves in detail at [graphql.org](http://graphql.org/docs/queries/).
+
+Note that when using `react-apollo`, you don't have to learn anything special about the query syntax, since everything is just standard GraphQL. Anything you can type into the GraphiQL query explorer, you can also put into your `react-apollo` code.
 
 <h2 id="basics">Basic Queries</h2>
 
-When we are using a basic query we can use the `graphql` container in a very simple way. We simply need to parse our query into a GraphQL document using the `graphql-tag` library.
+When we are running a basic query we can use the `graphql` container in a very simple way. We simply parse our query into a GraphQL document using the `graphql-tag` library, and then pass it into the `graphql` container as the first argument.
 
-For instance, in GitHunt, we want to display the current user (if logged in) in the `Profile` component:
+For instance, in GitHunt, we want to display the currently logged-in user in the `Profile` component:
 
 ```js
 import React, { Component, PropTypes } from 'react';
@@ -37,42 +39,51 @@ const CurrentUserForLayout = gql`
 const ProfileWithData = graphql(CurrentUserForLayout)(Profile);
 ```
 
-When we use `graphql` in this simple way with a GraphQL query document, the results are made available on a generic `data` prop on the child component (`Profile` in this case). In this case we can see that result object contains `loading`, a Boolean indicating if the the query is "in-flight", and (once the query has completed) `currentUser`, the field we've picked out in `CurrentUserForLayout`.
+When we use `graphql` in this simple way with a GraphQL query document, the results are passed to the child component in a prop called `data`. In addition to the `currentUser` field selected in the query, the `data` prop also includes a field called `loading`, a Boolean value indicating if the the query is currently being loaded from the server.
 
-We can expect the `data.currentUser` sub-prop to change as the logged-in-ness of the client and what it knows about the current user changes over time. That information is stored in Apollo Client's cache, and you can read more about techniques to bring the cache up to date with the server in the [article on the subject](cache-updates.html).
+The `data.currentUser` sub-prop will change as what the client knows about the current user changes over time. That information is stored in Apollo Client's global cache, so if some other query fetches new information about the current user, this component will update to remain consistent. You can read more about techniques to bring the cache up to date with the server in the [article on the subject](cache-updates.html).
 
 <h2 id="default-result-props">The structure of the `data` prop</h2>
 
-Using `graphql` with queries makes it easy to bind data to components. As seen above, `graphql` will add the result of the query as `data` to the props passed to the wrapped component (it will also pass through all of the props of the parent container). The shape of the `data` prop will be the following:
+As seen above, `graphql` will pass the result of the query to the wrapped component in a prop called `data`. It will also pass through all of the props of the parent container.
 
-- `loading: Boolean`
-  Loading will be true if a query is in flight (including when calling refetch).
+For queries, the shape of the `data` prop is the following:
 
-- [`error: ApolloError`](/core/apollo-client-api.html#ApolloError)
-  The error key will be `null` if no errors were created during the query.
+- `...fields`: One key for each root field in the query.
+- `loading`: This field is `true` if there is currently a query fetch in flight, including after calling `refetch`. `false` otherwise.
+- `error`: An ApolloError object that represents the different possible errors that might happen when running a query.
+- `...QuerySubscription`: All of the methods from the Apollo [QuerySubscription object](/core/apollo-client-api.html#QuerySubscription), including `stopPolling`, `startPolling`, `refetch`, `fetchMore`, and others.
 
-- `...fields`
+Here's a complete example. For a query like this:
 
-  One key for each field selected on the root query, so:
+```graphql
+query getUserAndLikes(id: $ID!) {
+  user(userId: $id) { name }
+  likes(userId: $id) { count }
+}
+```
 
-  ```graphql
-  query getUserAndLikes(id: $ID!) {
-    user(userId: $id) { name }
-    likes(userId: $id) { count }
-  }
-  ```
+You would get a prop like:
 
-  could return a result object that includes `{ user: { name: "James" }, likes: { count: 10 } }`.
+```js
+data: {
+  user: { name: "James" },
+  likes: { count: 10 } },
+  loading: false,
+  error: null,
+  refetch() { ... },
+  fetchMore() { ... },
+  startPolling() { ... },
+  stopPolling() { ... },
+  // ... more methods from the QuerySubscription object
+}
+```
 
-- [`...QuerySubscription`](/core/apollo-client-api.html#QuerySubscription)
+If you use the `props` option to the wrapper to specify [custom `props`](#graphql-props) for your child component, this object will be passed to the `props` option on the parameter named `data`.
 
-  The subscription created on this query will be merged into the passed props so you can dynamically refetch, change polling settings, or even unsubscribe to this query. The methods include `stopPolling`, `startPolling`, `refetch`, and `fetchMore`.
+<h2 id="graphql-options">Query options</h2>
 
-Note that if you create [custom `props`](#graphql-props) for your child component, this object will be passed to the `props` function on the parameter named `data`.
-
-<h2 id="graphql-options">Providing `options`</h2>
-
-If you want to configure the query, you can provide an `options` key on the second argument to `graphql`, and your options will be passed to [`ApolloClient.watchQuery`](/core/apollo-client-api.html#watchQuery). If your query takes variables, this is the place to pass them in:
+If you want to configure the query, you can provide an `options` key on the second argument to `graphql`, and your options will be passed along to [`ApolloClient.watchQuery`](/core/apollo-client-api.html#watchQuery). If your query takes variables, this is the place to pass them in:
 
 ```js
 // Suppose our profile query took an avatar size

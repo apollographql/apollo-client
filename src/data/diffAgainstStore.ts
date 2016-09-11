@@ -2,7 +2,7 @@ import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isObject = require('lodash.isobject');
 import has = require('lodash.has');
-import assign = require('lodash.assign');
+import deepAssign = require('deep-assign');
 
 import {
   storeKeyNameFromField,
@@ -221,7 +221,7 @@ export function diffSelectionSetAgainstStore({
           }
 
           if (isObject(fieldResult)) {
-            mergeFieldResult(result, fieldResult);
+            deepAssign(result, fieldResult);
           }
           if (!fragmentErrors[typename]) {
             fragmentErrors[typename] = null;
@@ -260,7 +260,7 @@ export function diffSelectionSetAgainstStore({
             pushMissingField(selection);
           }
           if (isObject(fieldResult)) {
-            mergeFieldResult(result, fieldResult);
+            deepAssign(result, fieldResult);
           }
 
           if (!fragmentErrors[typename]) {
@@ -312,30 +312,6 @@ export function diffSelectionSetAgainstStore({
     isMissing,
     missingSelectionSets,
   };
-}
-
-function shouldDeepMerge(
-  key: string,
-  result: { [key: string]: any },
-  fieldResult: { [key: string]: any }
-): boolean {
-  return isObject(fieldResult[key]) && isObject(result[key]);
-}
-
-function mergeFieldResult(
-  result: { [key: string]: any },
-  fieldResult: { [key: string]: any }
-) {
-  Object.keys(fieldResult).forEach(key => {
-    if (shouldDeepMerge(key, result, fieldResult)) {
-      assign(
-        (result as { [key: string]: Object })[key],
-        (fieldResult as { [key: string]: Object })[key]
-      );
-    } else {
-      assign(result, fieldResult);
-    }
-  });
 }
 
 function diffFieldAgainstStore({

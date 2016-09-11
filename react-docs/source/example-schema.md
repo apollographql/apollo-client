@@ -1,21 +1,19 @@
 ---
-title: GitHunt App and Schema
-order: 3
+title: GitHunt Example and Schema
+order: 4
 ---
 
 In the documentation we'll show examples of using Apollo in React via the GitHunt example application.
 
-GitHunt is a Product Hunt-style application that shows a list of GitHub repositories, sorted by votes with attached comments. [The API](https://github.com/apollostack/GitHunt-API) demonstrates combining two data sources--a third-party API (the GitHub API), and a local database--in a single GraphQL endpoint.
+GitHunt is a Product Hunt-style application that shows a list of GitHub repositories, sorted by votes with attached comments. [The API server code](https://github.com/apollostack/GitHunt-API) demonstrates combining two data sources--a third-party API and a local database--in a single GraphQL endpoint.
 
-The front-end, which we'll focus on here, displays a lot of the techniques that you can use to build an great React UI for *any* GraphQL server. You can check out the full source code on [GitHub](https://github.com/apollostack/GitHunt-React), or just follow the snippets here.
-
+The [React UI](https://github.com/apollostack/GitHunt-React), which we'll focus on in this guide, shows a lot of the techniques that you can use to build an great React UI for *any* GraphQL server. You can check out the full source code on GitHub or just read the snippets in the guide.
 
 <h2 id="githunt-schema">The GitHunt Schema</h2>
 
+Most of the examples in this guide are written for the GitHunt schema. You can see the full schema written in the [GraphQL Schema Language](https://wehavefaces.net/graphql-shorthand-notation-cheatsheet-17cd715861b6) below:
 
-You may be interested in the schema that GitHunt uses, and that the queries in this guide are written against. You can see the full schema written in the [GraphQL Schema Language](https://wehavefaces.net/graphql-shorthand-notation-cheatsheet-17cd715861b6) here:
-
-```text
+```graphql
 # This uses the exact field names returned by the GitHub API for simplicity
 type Repository {
   name: String!

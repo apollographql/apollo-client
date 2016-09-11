@@ -16,6 +16,7 @@ sidebar_categories:
     - index
     - example
     - initialization
+    - higher-order-components
     - example-schema
   Usage:
     - queries

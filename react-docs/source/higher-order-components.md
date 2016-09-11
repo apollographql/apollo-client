@@ -64,7 +64,7 @@ The `graphql` function takes two arguments:
 
 The config object can include one or more of the following keys:
 
-- `name`: Rename the `data` prop the higher-order-component passes down to something else
+- `name`: Rename the prop the higher-order-component passes down to something else
 - `options`: Pass options about the query or mutation, documented in the [queries](/react/queries) and [mutations](/react/mutations) guides
 - `props`: Modify the props before they are passed into the child component
 - `withRef`: Add a method to access the child component to the container, [read more below](#with-ref)

@@ -143,14 +143,13 @@ As we've seen, by default, `graphql` will provide a `data` prop to the wrapped c
 
 <h3 id="graphql-name">Using `name`</h3>
 
-If you want to change the name of this default property, you can use `name` field. In particular this is useful for nested `graphql` containers:
+If you want to change the name of the default `data` prop, but keep the exact same shape, you can use `name` field. This is especially useful for nested `graphql` containers, where the `data` prop would clash between them.
 
 ```js
 import React, { Component, PropTypes } from 'react';
 import { graphql } from 'react-apollo';
 import gql from 'graphql-tag';
 
-// If we want the data at `CurrentUserForLayout`
 class Profile extends Component { ... }
 Profile.propTypes = {
   CurrentUserForLayout: PropTypes.shape({
@@ -168,6 +167,7 @@ const CurrentUserForLayout = gql`
   }
 `;
 
+// We want the prop to be called 'CurrentUserForLayout' instead of data
 const ProfileWithData = graphql(CurrentUserForLayout, {
   name: 'CurrentUserForLayout'
 })(Profile);

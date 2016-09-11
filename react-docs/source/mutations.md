@@ -3,7 +3,7 @@ title: Mutations
 order: 11
 ---
 
-In addition to fetching data using queries, Apollo also handles GraphQL mutations. Mutations are identical to queries in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the operation is used to change the dataset behind the schema.
+In addition to fetching data using queries, Apollo also handles GraphQL mutations. Mutations are identical to queries in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the root fields on this query are going to be performing writes to the backend.
 
 ```js
 mutation {
@@ -14,12 +14,12 @@ mutation {
 }
 ```
 
-GraphQL mutations consist of two parts:
+GraphQL mutations represent two things in one query string:
 
-1. The mutation name with arguments (`submitRepository`), which represents the actual operation to be done on the server
-2. The fields you want back from the result of the mutation to update the client (`id` and `repoName`)
+1. The mutation field name with arguments, `submitRepository`, which represents the actual operation to be done on the server
+2. The fields you want back from the result of the mutation to update the client: `{ id, repoName }`
 
-The result of the above mutation might be be:
+The above mutation will submit a new GitHub repository to GitHunt, saving an entry to the database. The result might be:
 
 ```
 {
@@ -32,12 +32,11 @@ The result of the above mutation might be be:
 }
 ```
 
-When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](cache-updates.html#dataIdFromObject), which in turn updates UI automatically, so we don't explicitly handle the results ourselves. In order for the client to correctly do this, we need to ensure we select the correct fields (as in all the fields that we care about that may have changed).
+When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](cache-updates.html#dataIdFromObject), which in turn updates the UI automatically, so we often don't need to explicitly handle the results. In order for the client to correctly do this, we need to ensure we select the necessary fields in the result. One good strategy can be to simply ask for any fields that might have been affected by the mutation.
 
 <h2 id="basics">Basic Mutations</h2>
 
-
-Using `graphql` with mutations makes it easy to bind actions to components. Unlike queries, mutations provide only a simple prop (the `mutate` function) to the wrapped component.
+Using `graphql` with mutations makes it easy to bind actions to components. Unlike queries, which provide a complicated object with lots of metadata and methods, mutations provide only a simple function to the wrapped component, in the `mutate` prop.
 
 ```js
 import React, { Component, PropTypes } from 'react';
@@ -62,7 +61,9 @@ const NewEntryWithData = graphql(submitRepository)(NewEntry);
 
 <h3 id="calling-mutations">Calling mutations</h3>
 
-Most mutations will require arguments in the form of query variables, and you may wish to provide other options to [ApolloClient#mutate](/core/apollo-client-api.html#mutate). You can directly pass options to `mutate` when you call it in the wrapped component:
+Most mutations will require arguments in the form of query variables, and you may wish to also provide other options to [ApolloClient#mutate](/core/apollo-client-api.html#mutate).
+
+You can directly pass options to the default `mutate` prop when you call it in the wrapped component:
 
 ```js
 import React, { Component, PropTypes } from 'react';
@@ -97,7 +98,7 @@ const submitRepository = gql`
 const NewEntryWithData = graphql(submitRepository)(NewEntry);
 ```
 
-However, typically you'd want to keep the concern of understanding the mutation's structure out of your presentational component. The best way to do this is to use the [`props`](queries.html#graphql-props) argument to bind your mutate function:
+However, typically you'd want to keep the concern of formatting the mutation options out of your presentational component. The best way to do this is to use the [`props`](queries.html#graphql-props) argument to wrap the mutation in a function that accepts exactly the arguments it needs:
 
 ```js
 import React, { Component, PropTypes } from 'react';
@@ -116,23 +117,19 @@ NewEntry.propTypes = {
 const submitRepository = /* as above */;
 
 const NewEntryWithData = graphql(submitRepository, {
-  props({ mutate }) {
-    return {
-      submit(repoFullName) {
-        return mutate({ variables: { repoFullName } });
-      },
-    };
-  },
+  props: ({ mutate }) => ({
+    submit: (repoFullName) => mutate({ variables: { repoFullName } }),
+  });
 })(NewEntry);
 ```
 
-> Note that in general you shouldn't attempt to use the results from the mutation callback directly, instead you can rely on Apollo's id-based cache updating to take care of it for you, or if necessary passing a [`updateQueries`](cache-updates.html#updateQueries) callback to update the result of relevant queries with your mutation results.
+Note that, in general, you don't need to use the results from the mutation callback directly. Instead you should usually rely on Apollo's id-based cache updating to take care of it for you. If that doesn't cover your needs, you can pass an [`updateQueries`](cache-updates.html#updateQueries) callback to update any relevant queries with your mutation results. That way, you can keep your UI components as stateless and declarative as possible.
 
 <h2 id="optimistic-ui">Optimistic UI</h2>
 
-Sometimes your client code can easily predict the result of the mutation, if it succeeds, even before the server responds with the result. For instance, in GitHunt, when a user comments on a repository, we want to show the new comment in context immediately, without waiting on the latency of a round trip to the server, giving the user the experience of a snappy UI. This is what we call [Optimistic UI](http://info.meteor.com/blog/optimistic-ui-with-meteor-latency-compensation). This is possible if the client can predict an *Optimistic Response* for the mutation.
+Sometimes your client code can easily predict the result of a successful mutation even before the server responds with the result. For instance, in GitHunt, when a user comments on a repository, we want to show the new comment in the UI immediately, without waiting on the latency of a round trip to the server, giving the user a faster UI experience. This is what we call [Optimistic UI](http://info.meteor.com/blog/optimistic-ui-with-meteor-latency-compensation). This is possible with Apollo if the client can predict an *Optimistic Response* for the mutation.
 
-Apollo Client gives you a way to specify the `optimisticResponse` option, that will be used to update active queries immediately, in the same way that the server's mutation response will. Once the actual mutation response returns, the optimistic part will be thrown away and replaced with the real result.
+All you need to do is specify the `optimisticResponse` option. This "fake result" will be used to update active queries immediately, in the same way that the server's mutation response will. The optimistic patches are stored in a separate place in the cache, so once the actual mutation returns, the relevant optimistic update is automatically thrown away and replaced with the real result.
 
 ```js
 import React, { Component, PropTypes } from 'react';
@@ -160,20 +157,18 @@ const submitComment = gql`
 
 const CommentPageWithData = graphql(submitComment, {
   props: ({ ownProps, mutate }) => ({
-    submit({ repoFullName, commentContent }) {
-      return mutate({
-        variables: { repoFullName, commentContent },
-        optimisticResponse: {
-          __typename: 'Mutation',
-          submitComment: {
-            __typename: 'Comment',
-            // Note that we can access the props of the container at `ownProps`
-            postedBy: ownProps.currentUser,
-            createdAt: +new Date,
-            content: commentContent,
-          },
+    submit: ({ repoFullName, commentContent }) => mutate({
+      variables: { repoFullName, commentContent },
+      optimisticResponse: {
+        __typename: 'Mutation',
+        submitComment: {
+          __typename: 'Comment',
+          // Note that we can access the props of the container at `ownProps`
+          postedBy: ownProps.currentUser,
+          createdAt: +new Date,
+          content: commentContent,
         },
-      };
+      },
     });
   }),
 })(CommentPage);
@@ -189,4 +184,4 @@ When people talk about GraphQL, they often focus on the data fetching side of th
 
 In GraphQL, mutations can return any type, and that type can be queried just like a regular GraphQL query. So the question is - what type should a particular mutation return?
 
-In GraphQL itself, there isn't any specification about how this is supposed to work. In most cases, the data available from a mutation result should be the server developer's best guess of the data a client would need to understand what happened on the server. For example, a mutation that creates a new comment on a blog post might return the comment itself. A mutation that reorders an array might need to return the new array.
+In most cases, the data available from a mutation result should be the server developer's best guess of the data a client would need to understand what happened on the server. For example, a mutation that creates a new comment on a blog post might return the comment itself. A mutation that reorders an array might need to return the whole array.

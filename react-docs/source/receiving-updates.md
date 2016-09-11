@@ -3,7 +3,7 @@ title: Getting updates from the server
 order: 12
 ---
 
-Apollo Client caches the results of queries and then uses this cache in order to resolve parts of queries. However, what happens if the information in our cache goes out of date, i.e. the cache becomes stale? How do we make sure that we can update the cache if information changes on the server? How will our UI update to reflect this new information? These are questsions that this section should answer.
+Apollo Client caches the results of queries and then uses this cache in order to resolve parts of queries. However, what happens if the information in our cache goes stale? How do we make sure to update the cache if information changes on the server? How will our UI update to reflect this new information? This section will attempt to answer those questions.
 
 A momentarily stale cache is an unavoidable problem. There's no feasible way to have a client-side cache and make sure that the cache will *always* reflect exactly the information that is available on the server. For pretty much any application, this isn't too much of an issue: your UI may be slightly out-of-date temporarily, but, it'll sync soon enough. There are a few strategies to make sure that Apollo Client is eventually consistent with the information available to your server. These are: refetches, polling queries and GraphQL subscriptions.
 

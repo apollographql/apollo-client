@@ -139,7 +139,7 @@ All of these function-based forms of `options` will be recalculated whenever the
 
 <h2 id="graphql-props">Controlling child props</h2>
 
-As we've seen, by default, `graphql` will provide a `data` prop to the wrapped component with various information about the state of the query. We'll also see that [mutations](mutations.html) provide a callback on the `mutate` prop. However, if you want to decouple your presentational component from Apollo, and make it more reusable, you may want more control over the props passed into it.
+As we've seen, by default, `graphql` will provide a `data` prop to the wrapped component with various information about the state of the query. We'll also see that [mutations](mutations.html) provide a callback on the `mutate` prop. However, if you want to decouple your presentational component from Apollo and make it more reusable, you may want wrap these default props into your own custom objects and functions.
 
 <h3 id="graphql-name">Using `name`</h3>
 

@@ -26,23 +26,21 @@ The Apollo client does more than simply run your queries against your GraphQL se
 
 The best way to use `apollo-client` in your React app is with `react-apollo`, a React-specific API that's designed to take full advantage of Apollo's features. The integration provides a natural "higher-order-component" API for queries and mutations, and will keep your rendered component tree up to date with the data in the cache seamlessly.
 
-<h2 id="what-it-works-with">What it works with</h2>
+<h2 id="compatibility">Compatibility</h2>
 
-React Apollo provides a idiomatic React API, and is designed to work in a straightforward way with many tools used in a typical React app. In particular:
+Apollo is designed to work with many of the tools used in a typical React app. In particular:
 
- - It works with React Native out of the box;
- - It is router-independent so that you can use the library of your choice, such as React Router;
- - Uses Redux internally and you can [take advantage](redux.html) of this, but also can be used with any other client-side data library that integrates with React.
+- **React Native**: It's supported out of the box!
+- **Redux**: Apollo client uses Redux internally, and you can [integrate it into your existing store](redux.html) to use your favorite Redux tools such as the dev tools or persistence libraries. You can also use it alongside any other data management library, such as MobX, without issues.
+- **Router-independent**: You can use the library of your choice, such as React Router.
+- **Any GraphQL server**: It doesn't matter if you use JavaScript, Ruby, Scala, or anything else to build your GraphQL server. Apollo works completely with standard GraphQL, and doesn't have any requirements for your server or schema design.
 
-If you want to use Apollo with a different front-end environment (for instance a different JavaScript framework, or a native mobile app), it is possible too! Please check out the links at the top of this document, or head to our [developer site](http://apollostack.com) to get started.
-
-<h2 id="comparison">How does Apollo compare to other GraphQL clients?</h2>
+<h2 id="comparison">Comparison with other GraphQL clients</h2>
 
 If you are deciding whether to use `react-apollo` or some other GraphQL client, it's worth considering the [goals](#apollo-client) of the project, and how they compare. In particular:
 
- - [Relay](https://facebook.github.io/relay/) is a performant, opinionated, React-specific GraphQL client built by Facebook for their mobile applications. It focuses on enabling the co-location of queries and components, and is opinionated about the design of your GraphQL schema, especially in the case of pagination. In contrast, Apollo is designed to be a general-purpose tool that can be used with any schema or any frontend architecture, but as a result is less optimized for the specific use cases Relay targets.
-
- - [Lokka](https://github.com/kadirahq/lokka) is a simple GraphQL Javascript client with a basic query cache.
+ - [Relay](https://facebook.github.io/relay/) is a performant, opinionated, React-specific GraphQL client built by Facebook for their mobile applications. It focuses on enabling the co-location of queries and components, and is opinionated about the design of your GraphQL schema, especially in the case of pagination. Apollo has an analogous set of features to Relay, but is designed to be a general-purpose tool that can be used with any schema or any frontend architecture. Relay's coupling to a specific kind of schema and architecture enables some benefits but with the loss of some flexibility.
+ - [Lokka](https://github.com/kadirahq/lokka) is a simple GraphQL Javascript client with a basic query cache. Apollo is more complex, but includes a much more sophisticated cache and set of features around updating and refetching data.
 
 <h2 id="learn-more">Learn More</h2>
 

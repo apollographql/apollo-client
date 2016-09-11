@@ -141,7 +141,8 @@ describe('client', () => {
     } catch (error) {
       assert.equal(
         error.message,
-        'Existing store does not use apolloReducer for apollo'
+        'Existing store does not use apolloReducer. Please make sure the store ' +
+        'is properly configured and "reduxRootSelector" is correctly specified.'
       );
     }
 
@@ -166,24 +167,96 @@ describe('client', () => {
   });
 
   it('can allow passing in a top level key', () => {
-    const reduxRootKey = 'test';
+    const reduxRootKey = 'testApollo';
     const client = new ApolloClient({
       reduxRootKey,
     });
 
-    client.initStore();
-
-    assert.deepEqual(
-      client.store.getState(),
-      {
-        [reduxRootKey]: {
-          queries: {},
-          mutations: {},
-          data: {},
-          optimistic: [],
-        },
-      }
+    // shouldn't throw
+    createStore(
+        combineReducers({
+          testApollo: client.reducer(),
+        }),
+        // here "client.setStore(store)" will be called internally,
+        // this method throws if "reduxRootSelector" or "reduxRootKey"
+        // are not configured properly
+        applyMiddleware(client.middleware())
     );
+  });
+
+  it('should allow passing in a selector function for apollo state', () => {
+    const reduxRootSelector = (state: any) => state.testApollo;
+    const client = new ApolloClient({
+      reduxRootSelector,
+    });
+
+    // shouldn't throw
+    createStore(
+        combineReducers({
+          testApollo: client.reducer(),
+        }),
+        // here "client.setStore(store)" will be called internally,
+        // this method throws if "reduxRootSelector" or "reduxRootKey"
+        // are not configured properly
+        applyMiddleware(client.middleware())
+    );
+  });
+
+  it('should throw an error if both "reduxRootKey" and "reduxRootSelector" are passed', () => {
+    const reduxRootSelector = (state: any) => state.testApollo;
+    try {
+      new ApolloClient({
+        reduxRootKey: 'apollo',
+        reduxRootSelector,
+      });
+
+      assert.fail();
+    } catch (error) {
+      assert.equal(
+          error.message,
+          'Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.'
+      );
+    }
+
+  });
+
+  it('should throw an error if "reduxRootKey" is provided and the client tries to create the store', () => {
+    const client = new ApolloClient({
+      reduxRootKey: 'test',
+    });
+    try {
+      client.initStore();
+
+      assert.fail();
+    } catch (error) {
+      assert.equal(
+          error.message,
+          'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
+          'They should only be used when the store is created outside of the client. ' +
+          'This may lead to unexpected results when querying the store internally. ' +
+          `Please remove that option from ApolloClient constructor.`
+      );
+    }
+  });
+
+  it('should throw an error if "reduxRootSelector" is provided and the client tries to create the store', () => {
+    const reduxRootSelector = (state: any) => state.testApollo;
+    const client = new ApolloClient({
+      reduxRootSelector,
+    });
+    try {
+      client.initStore();
+
+      assert.fail();
+    } catch (error) {
+      assert.equal(
+          error.message,
+          'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
+          'They should only be used when the store is created outside of the client. ' +
+          'This may lead to unexpected results when querying the store internally. ' +
+          `Please remove that option from ApolloClient constructor.`
+      );
+    }
   });
 
   it('should allow for a single query to take place', () => {
@@ -260,45 +333,6 @@ describe('client', () => {
       }),
       applyMiddleware(client.middleware())
     );
-
-    return client.query({ query })
-      .then((result) => {
-        assert.deepEqual(result.data, data);
-      });
-  });
-
-  it('can allow a custom top level key', () => {
-
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
-    };
-
-    const networkInterface = mockNetworkInterface({
-      request: { query },
-      result: { data },
-    });
-
-    const reduxRootKey = 'test';
-    const client = new ApolloClient({
-      networkInterface,
-      reduxRootKey,
-    });
 
     return client.query({ query })
       .then((result) => {
@@ -772,7 +806,7 @@ describe('client', () => {
       client.queryManager = new QueryManager({
         networkInterface,
         store: client.store,
-        reduxRootKey: 'apollo',
+        reduxRootSelector: (state) => state.apollo,
       });
 
       client.query({ query }).then(() => {

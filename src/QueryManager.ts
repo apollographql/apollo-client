@@ -81,6 +81,7 @@ import {
 
 import {
   ApolloQueryResult,
+  ApolloStateSelector,
 } from './index';
 
 import {
@@ -113,7 +114,7 @@ export class QueryManager {
   public store: ApolloStore;
 
   private networkInterface: NetworkInterface;
-  private reduxRootKey: string;
+  private reduxRootSelector: ApolloStateSelector;
   private queryTransformer: QueryTransformer;
   private queryListeners: { [queryId: string]: QueryListener };
 
@@ -150,14 +151,14 @@ export class QueryManager {
   constructor({
     networkInterface,
     store,
-    reduxRootKey,
+    reduxRootSelector,
     queryTransformer,
     shouldBatch = false,
     batchInterval = 10,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
-    reduxRootKey: string,
+    reduxRootSelector: ApolloStateSelector,
     queryTransformer?: QueryTransformer,
     shouldBatch?: Boolean,
     batchInterval?: number,
@@ -166,7 +167,7 @@ export class QueryManager {
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
-    this.reduxRootKey = reduxRootKey;
+    this.reduxRootSelector = reduxRootSelector;
     this.queryTransformer = queryTransformer;
     this.pollingTimers = {};
     this.batchInterval = batchInterval;
@@ -429,7 +430,7 @@ export class QueryManager {
   };
 
   public getApolloState(): Store {
-    return this.store.getState()[this.reduxRootKey];
+    return this.reduxRootSelector(this.store.getState());
   }
 
   public getDataWithOptimisticResults(): NormalizedCache {
@@ -748,7 +749,7 @@ export class QueryManager {
   } {
     const { missingSelectionSets, result } = diffSelectionSetAgainstStore({
       selectionSet: queryDef.selectionSet,
-      store: this.store.getState()[this.reduxRootKey].data,
+      store: this.reduxRootSelector(this.store.getState()).data,
       throwOnMissingField: false,
       rootId,
       variables,

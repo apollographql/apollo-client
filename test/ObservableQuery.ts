@@ -17,4 +17,53 @@ const wrap = (done: Function, cb: (...args: any[]) => any) => (...args: any[]) =
 };
 
 describe('ObservableQuery', () => {
+  const query = gql`
+    query($id: ID!){
+      people_one(id: $id) {
+        name
+      }
+    }
+  `;
+  const variables = { id: 1 };
+  const differentVariables = { id: 2 };
+  const dataOne = {
+    people_one: {
+      name: 'Luke Skywalker',
+    },
+  };
+  const dataTwo = {
+    people_one: {
+      name: 'Leia Skywalker',
+    },
+  };
+  describe('currentResult', () => {
+    it('returns the current query status immediately', (done) => {
+      const observable: ObservableQuery = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+        delay: 100,
+      });
+
+      // XXX: should I need to subscribe for this to work?
+      observable.subscribe({ next() {} }); // tslint:disable-line
+
+      assert.deepEqual(observable.currentResult(), {
+        loading: true,
+        data: {},
+      });
+      setTimeout(() => {
+        assert.deepEqual(observable.currentResult(), {
+          loading: true,
+          data: {},
+        });
+      }, 5);
+      setTimeout(() => {
+        assert.deepEqual(observable.currentResult(), {
+          data: dataOne,
+          loading: false,
+        });
+        done();
+      }, 105);
+    });
+  });
 });

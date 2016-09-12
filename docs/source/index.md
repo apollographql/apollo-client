@@ -24,6 +24,7 @@ We have put together some basic example apps using various parts of Apollo; chec
 - [A simple GraphQL blog that uses Feathersjs for managing database services](https://github.com/swarthout/feathers-apollo)
 - [A fork of Facebook's F8 React Native app that uses Apollo](https://github.com/nnance/f8app-apollo)
 - [A production-ready starter-kit using React and Webpack](https://github.com/saikat/react-apollo-starter-kit)
+- [Apollo Client And Server Starter Kit for isomorphic web app that uses React, Webpack, Babel and SQL](https://github.com/sysgears/apollo-fullstack-starter-kit)
 
 ### Meteor Examples
 - [A bare-bones Meteor starter kit](https://github.com/apollostack/meteor-starter-kit)

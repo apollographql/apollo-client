@@ -47,25 +47,25 @@ const client = new ApolloClient({
 });
 ```
 
-<h2 id="server-rendering">Server-side rendering and hydration</h2>
+<h2 id="server-rendering">Server-side rendering</h2>
 
 You can render your entire React-based Apollo application on a Node server using rendering functions built into `react-apollo`. These functions take care of the job of fetching all queries that are required to rendering your component tree. Typically you would use these functions from within a HTTP server such as [Express](https://expressjs.com).
 
 No changes are required to client queries to support this, so your Apollo-based React UI should support SSR out of the box.
 
-<h3 id="server-initialization">Server Initialization</h3>
+<h3 id="server-initialization">Server initialization</h3>
 
 In order to render your application on the server, you need to handle a HTTP request (using a server like Express, and a server-capable Router like React-Router), and then render your application to a string to pass back on the response.
 
 We'll see how to take your component tree and turn it into a string in the next section, but you'll need to be a little careful in how you construct your Apollo Client instance on the server to ensure everything works there as well:
 
-1. When [creating an Apollo Client instance](initialization.html) on the server, you'll need to set up you network interface to connect to the API server correctly (this will look different to how you do it on the client).
+1. When [creating an Apollo Client instance](initialization.html) on the server, you'll need to set up you network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
 
-2. As you just want to fetch query results once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid force-fetching.
+2. Since you only want to fetch each query result once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid repeated force-fetching.
 
-3. You need to ensure that you create a new client for each request, rather than re-using the same client for multiple requests as otherwise you'll have problems with [authentication](auth.html) and you may see stale results.
+3. You need to ensure that you create a new client or store instance for each request, rather than re-using the same client for multiple requests. Otherwise the UI will be getting stale data and you'll have problems with [authentication](auth.html).
 
-Once you put that all together, you'll end up with initialization code that looks as follows:
+Once you put that all together, you'll end up with initialization code that looks like this:
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
@@ -73,10 +73,11 @@ import { ApolloProvider } from 'react-apollo';
 import Express from 'express';
 import { match, RouterContext } from 'react-router';
 
-// A Routes file is a good shared entry-point betwen client and server
+// A Routes file is a good shared entry-point between client and server
 import routes from './routes';
 
-// Note you don't have to use any particular http server
+// Note you don't have to use any particular http server, but
+// we're using Express in this example
 const app = new Express();
 app.use((req, res) => {
 
@@ -116,9 +117,9 @@ Next we'll see what that rendering code actually does.
 
 <h3 id="getDataFromTree">Using `getDataFromTree`</h3>
 
-The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all (it does this recursively if you have nested queries). It returns a promise which returns the React Context provided by `ApolloProvider` (you can use this to get the current store state with `context.store.getState()`).
+The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all. It does this recursively down the whole tree if you have nested queries. It returns a promise which resolves to the React Context provided by `ApolloProvider`, and you can use this to get the current store state with `context.store.getState()`.
 
-At the point that the promise returns, your Apollo Client will be completely initialized, which should mean your app will now render instantly (all queries are prefetched) and you can return the stringified results to the request:
+At the point that the promise resolves, your Apollo Client store will be completely initialized, which should mean your app will now render instantly (since all queries are prefetched) and you can return the stringified results in the response:
 
 ```js
 import { getDataFromTree } from "react-apollo/server"

@@ -115,7 +115,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     this.refetch = (variables?: any) => {
       this.variables = assign(this.variables, variables);
-      
+
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query refetch.');
       }

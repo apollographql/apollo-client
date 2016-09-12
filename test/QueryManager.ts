@@ -51,7 +51,6 @@ import * as Rx from 'rxjs';
 import assign = require('lodash.assign');
 
 import mockNetworkInterface, {
-  MockedResponse,
   ParsedRequest,
 } from './mocks/mockNetworkInterface';
 

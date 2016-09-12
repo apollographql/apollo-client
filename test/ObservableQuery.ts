@@ -14,7 +14,7 @@ const wrap = (done: Function, cb: (...args: any[]) => any) => (...args: any[]) =
   } catch (e) {
     done(e);
   }
-}
+};
 
 describe('ObservableQuery', () => {
   describe('setVariables', () => {
@@ -39,7 +39,7 @@ describe('ObservableQuery', () => {
     };
 
     it('reruns query if the variables change', (done) => {
-      const observable : ObservableQuery = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
       }, {
@@ -65,7 +65,7 @@ describe('ObservableQuery', () => {
 
 
     it('does not rerun query if variables do not change', (done) => {
-      const observable : ObservableQuery = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
       }, {
@@ -87,7 +87,7 @@ describe('ObservableQuery', () => {
             setTimeout(() => !errored && done(), 10);
           } else if (handleCount === 2) {
             errored = true;
-            throw new Error("Observable callback should not fire twice");
+            throw new Error('Observable callback should not fire twice');
           }
         }),
       });

@@ -5,20 +5,21 @@ order: 13
 
 Apollo performs two important core tasks: executing queries and mutations, and caching the results.
 
-Thanks to Apollo's store, it's possible for the results of a query or mutation to alter to your UI in all the relevant places. In many cases it's possible for that to happen automatically, whereas in others you need to help the client out a little in doing so.
+Thanks to Apollo's store, it's possible for the results of a query or mutation to update to your UI in all the right places. In many cases it's possible for that to happen automatically, whereas in others you need to help the client out a little in doing so.
 
-<h2 id="dataIdFromObject">Using `dataIdFromObject`</h2>
+<h2 id="dataIdFromObject">Normalization with `dataIdFromObject`</h2>
 
-Apollo's store is [constructed](http://dev.apollodata.com/core/how-it-works.html#normalize) one object at time, based on an ID generated from each object returned by your queries.
+While Apollo can do basic caching based on the shape of GraphQL queries and their results, Apollo won't be able to associate objects fetched by different queries without additional information about the identities of the objects returned from the server. This is referred to as [cache normalization](http://dev.apollodata.com/core/how-it-works.html#normalize). You can read about our caching model in detail in our blog post, ["GraphQL Concepts Visualized"](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3).
 
-By default, Apollo cannot determine the IDs to use for object except through the position that they take in queries. However, if you specify a function to generate an ID from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), you can create an unique ID for each "real" object.
+By default, Apollo does not use and object IDs at all, doing caching based only on the path to the object from the root query. However, if you specify a function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), you can decide how Apollo will identify and de-duplicate the objects returned from the server.
 
 ```js
 import ApolloClient from 'apollo-client';
 
 // If your database has unique IDs across all types of objects, you can use
 // a very simple function!
-// Remember: You'll need to ensure that you select IDs in every query
+// Remember: You'll need to ensure that you select IDs in every query where
+// you need to results to be normalized.
 const client = new ApolloClient({
   dataIdFromObject: o => o.id
 });
@@ -28,15 +29,15 @@ const client = new ApolloClient({
 // This is a GraphQL field that's automatically available, but you do need
 // to query for it also.
 const client = new ApolloClient({
-  dataIdFromObject: o => `${o.__typename}-${o.id},`
+  dataIdFromObject: o => `${o.__typename}:${o.id},`
 });
 ```
 
-These IDs allow Apollo Client to reactively tell your queries about updates when new information becomes available.
+These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.
 
-In some cases, just using `dataIdFromObject` is not enough for your application UI to get these updates, as such ID-based updates can only affect documents that are already matching a given query.
+In some cases, just using `dataIdFromObject` is not enough for your application UI to update correctly. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that to which you can't assign an object identifier, Apollo Client cannot update existing queries for you.
 
-For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that you can't assign an object identifier to, Apollo Client cannot update existing queries for you. In those cases you have to use `fetchMore` in order to make sure that the queries on your page are updated with the right information and your UI updates correctly.
+In those cases you have to use other features like `fetchMore` or the other methods listed on this page in order to make sure that your queries are updated with the right information and your UI updates correctly.
 
 <h2 id="fetchMore">Using `fetchMore`</h2>
 

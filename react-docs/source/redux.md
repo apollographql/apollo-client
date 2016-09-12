@@ -4,7 +4,7 @@ order: 25
 ---
 
 
-By default, the Apollo Client creates its own internal Redux store to manage queries and their results. If you are already using Redux for the rest of your app, you can have the client integrate with your existing store instead.
+By default, Apollo Client creates its own internal Redux store to manage queries and their results. If you are already using Redux for the rest of your app, you can have the client integrate with your existing store instead.
 
 This will let you better track the different events that happen in your app, and how your client and server side data changes interleave. It will also make using tools like the [Redux Dev Tools](https://github.com/zalmoxisus/redux-devtools-extension) more natural.
 
@@ -54,8 +54,7 @@ const store = createStore(
 );
 ```
 
-<h2 id="using-connect">Using Connect</h2>
-
+<h2 id="using-connect">Using connect</h2>
 
 You can continue to use `react-redux`'s `connect` higher order component to wire state into and out of your components. You can connect before or after (or both!) attaching GraphQL data to your component with `graphql`:
 
@@ -90,3 +89,5 @@ const ListWithDataAndState = connect(
   }),
 )(ListWithData);
 ```
+
+This means you can easily pass variables into your queries that come from Redux state, or dispatch actions that rely on server-side data.

@@ -5,7 +5,7 @@ order: 24
 
 Prefetching is one of the easiest ways to make your application's UI feel a lot faster with Apollo Client. Prefetching simply means loading data into the cache before it needs to be rendered on the screen. Essentially, we want to load all data required for a view as soon as we can guess that a user will navigate to it.
 
-In Apollo Client, prefetching is very simple and can be done by running a component's query before rendering. In GitHunt, we use the `withApollo` higher-order component to directly call a `query` as soon as the user hovers over a link to the comments page. With the data prefetched, the comments page renders immediately, and the user often experiences no delay at all:
+In Apollo Client, prefetching is very simple and can be done by running a component's query before it is rendered. As a simple example, in GitHunt, we use the `withApollo` higher-order component to directly call a `query` as soon as the user hovers over a link to the comments page. With the data prefetched, the comments page renders immediately, and the user often experiences no delay at all:
 
 ```js
 const FeedEntry = ({ entry, currentUser, onVote, client }) => {

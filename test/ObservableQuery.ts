@@ -284,4 +284,35 @@ describe('ObservableQuery', () => {
       });
     });
   });
+
+  describe('currentResult', () => {
+    it('returns the current query status immediately', (done) => {
+      const observable: ObservableQuery = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+        delay: 100,
+      });
+
+      // XXX: should I need to subscribe for this to work?
+      observable.subscribe({ next() {} }); // tslint:disable-line
+
+      assert.deepEqual(observable.currentResult(), {
+        loading: true,
+        data: {},
+      });
+      setTimeout(() => {
+        assert.deepEqual(observable.currentResult(), {
+          loading: true,
+          data: {},
+        });
+      }, 5);
+      setTimeout(() => {
+        assert.deepEqual(observable.currentResult(), {
+          data: dataOne,
+          loading: false,
+        });
+        done();
+      }, 105);
+    });
+  });
 });

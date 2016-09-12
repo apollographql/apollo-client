@@ -30,3 +30,4 @@ import './errors';
 import './mockNetworkInterface';
 import './graphqlSubscriptions';
 import './batchedNetworkInterface';
+import './ObservableQuery';

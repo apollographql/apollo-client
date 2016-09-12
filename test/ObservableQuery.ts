@@ -290,29 +290,64 @@ describe('ObservableQuery', () => {
       const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
-        delay: 100,
+        delay: 20,
       });
 
-      // XXX: should I need to subscribe for this to work?
-      observable.subscribe({ next() {} }); // tslint:disable-line
+      observable.subscribe({
+        next: wrap(done, result => {
+          assert.deepEqual(observable.currentResult(), {
+            data: dataOne,
+            loading: false,
+          });
+          done();
+        }),
+      });
 
       assert.deepEqual(observable.currentResult(), {
         loading: true,
         data: {},
       });
-      setTimeout(() => {
+      setTimeout(wrap(done, () => {
         assert.deepEqual(observable.currentResult(), {
           loading: true,
           data: {},
         });
-      }, 5);
-      setTimeout(() => {
-        assert.deepEqual(observable.currentResult(), {
-          data: dataOne,
-          loading: false,
-        });
-        done();
-      }, 105);
+      }), 0);
+    });
+
+    it('returns loading while refetching', (done) => {
+      const observable: ObservableQuery = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+      let handleCount = 0;
+      observable.subscribe({
+        next: wrap(done, result => {
+          handleCount++;
+
+          if (handleCount === 1) {
+            assert.deepEqual(observable.currentResult(), {
+              data: dataOne,
+              loading: false,
+            });
+            observable.refetch();
+            assert.deepEqual(observable.currentResult(), {
+              loading: true,
+              data: {},
+            });
+          } else if (handleCount === 2) {
+            assert.deepEqual(observable.currentResult(), {
+              data: dataTwo,
+              loading: false,
+            });
+            done();
+          }
+        }),
+      });
     });
   });
 });

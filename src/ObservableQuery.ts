@@ -256,15 +256,13 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public currentResult(): ApolloQueryResult {
-    try {
-      const { previousResult } = this.queryManager.getQueryWithPreviousResult(this.queryId);
-      return { data: previousResult, loading: false };
-    } catch (e) {
-      if (e && e.extraInfo.isFieldError) {
-        return { data: {}, loading: true };
-      }
-      throw e;
+    const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
+
+    if (queryStoreValue.loading) {
+      return { data: {}, loading: true };
     }
 
+    const { previousResult } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+    return { data: previousResult, loading: false };
   }
 }

@@ -25,7 +25,6 @@ describe('ObservableQuery', () => {
     }
   `;
   const variables = { id: 1 };
-  const differentVariables = { id: 2 };
   const dataOne = {
     people_one: {
       name: 'Luke Skywalker',

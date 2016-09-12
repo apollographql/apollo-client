@@ -3,16 +3,17 @@ title: Pagination
 order: 21
 ---
 
-Sometimes, you will have one or more views in your application where you need to display a list that contains too much data to be either fetched or displayed at once. Pagination is the most common solution to this problem, and Apollo Client has built-in functionality that makes it quite easy to do.
+Often, you will have some views in your application where you need to display a list that contains too much data to be either fetched or displayed at once. Pagination is the most common solution to this problem, and Apollo Client has built-in functionality that makes it quite easy to do.
 
 There are basically two ways of fetching paginated data: numbered pages, and cursors. There are also two ways for displaying paginated data: discrete pages, and infinite scrolling. For a more in-depth explanation of the difference and when you might want to use one vs. the other, we recommend that you read our blog post on the subject: [Understanding Pagination](https://medium.com/apollo-stack/understanding-pagination-rest-graphql-and-relay-b10f835549e7).
 
 In this article, we'll cover the technical details of using Apollo to implement both approaches.
 
-
 <h2 id="fetch-more">Using `fetchMore`</h2>
 
-Apollo lets you do pagination with a function called [`fetchMore`](cache-updates.html#fetchMore), which is provided on the `data` prop by the `graphql` HOC (higher-order component). You need to specify what query and variables to use for the update, and how to merge the new query result with the existing data on the client. How exactly you do that will determine what kind of pagination you are implementing.
+In Apollo, the easiest way to do pagination is with a function called [`fetchMore`](cache-updates.html#fetchMore), which is provided on the `data` prop by the `graphql` higher order component. This basically allows you to do a new GraphQL query and merge the result into the original result.
+
+You can specify what query and variables to use for the new query, and how to merge the new query result with the existing data on the client. How exactly you do that will determine what kind of pagination you are implementing.
 
 <h2 id="numbered-pages">Offset-based</h2>
 
@@ -67,6 +68,7 @@ const FeedWithData = graphql(FEED_QUERY, {
           updateQuery: (previousResult, { fetchMoreResult }) => {
             if (!fetchMoreResult.data) { return prev; }
             return Object.assign({}, prev, {
+              // Append the new feed results to the old one
               feed: [...previousResult.feed, ...fetchMoreResult.data.feed],
             });
           },
@@ -76,13 +78,14 @@ const FeedWithData = graphql(FEED_QUERY, {
   },
 })(Feed);
 ```
-[source code](https://github.com/apollostack/GitHunt-React/blob/c0b18795a18b3da42dc90cf7c63b29b14965206d/ui/Feed.js#L165)
 
-As you can see, `fetchMore` is accessible through the `data` argument to the `props` function (or passed directly to a child component). As it makes sense to keep all data-specific logic together for your app, we use `props` to define a simpler "load more" function (`loadMoreEntries` in this case), to be used naively by the child component (`Feed` in this case).
+[See this code in context in GitHunt.](https://github.com/apollostack/GitHunt-React/blob/c0b18795a18b3da42dc90cf7c63b29b14965206d/ui/Feed.js#L165)
 
-In the example above, `loadMoreEntries` is a function which calls `fetchMore` with the length of the current feed as a variable. Whenever you don't pass a query argument to `fetchMore`, fetch more will use the original `query` again with new variables. Once the new data is returned from the server, the `updateQuery` function is used to merge it with the existing data, which will cause a re-render of your UI component.
+As you can see, `fetchMore` is accessible through the `data` argument to the `props` function. So that our presentational component can remain unaware of Apollo, we use `props` to define a simple "load more" function, named `loadMoreEntries`, that can be called by the child component, `Feed`. This way we don't need to change the `Feed` component at all if we need to change our pagination logic.
 
-In the example above, the `loadMoreEntries` function is called from the UI component:
+In the example above, `loadMoreEntries` is a function which calls `fetchMore` with the length of the current feed as a variable. By default, `fetchMore` more will use the original `query`, so we just pass in new variables. Once the new data is returned from the server, the `updateQuery` function is used to merge it with the existing data, which will cause a re-render of your UI component with an expanded list.
+
+Here is how the `loadMoreEntries` function from above is called from the UI component:
 
 ```js
 const Feed = () => {
@@ -102,17 +105,19 @@ const Feed = () => {
 }
 ```
 
-One downside of pagination with numbered pages or offsets is that an item can be skipped or returned twice when items are inserted into or removed from the list at the same time. That can be avoided with cursor-based pagination.
+The above approach works great for limit/offset pagination. One downside of pagination with numbered pages or offsets is that an item can be skipped or returned twice when items are inserted into or removed from the list at the same time. That can be avoided with cursor-based pagination.
 
 <h2 id="cursor-pages">Cursor-based</h2>
 
-In cursor-based pagination, a cursor is used to keep track of where in the data set the next items should be fetched from. Sometimes the cursor can be quite simple and just refer to the ID of the last object fetched, but in some cases — for example lists sorted according to some criteria — the cursor needs to encode the sorting criteria in addition to the ID of the last object fetched. Cursor-based pagination isn't all that different from offset-based pagination, but instead of using an absolute offset, it points to the last object fetched and contains information about the sort order used. Because it doesn't use an absolute offset, it is more suitable for frequently changing datasets than offset-based pagination.
+In cursor-based pagination, a "cursor" is used to keep track of where in the data set the next items should be fetched from. Sometimes the cursor can be quite simple and just refer to the ID of the last object fetched, but in some cases — for example lists sorted according to some criteria — the cursor needs to encode the sorting criteria in addition to the ID of the last object fetched.
 
-In the example below, we use a `fetchMore` query to continuously load new comments, which then appear at the top. The cursor to be used in the `fetchMore` query is provided in the initial server response, and has to be updated whenever more data is fetched.
+Implementing cursor-based pagination on the client isn't all that different from offset-based pagination, but instead of using an absolute offset, we keep a reference to the last object fetched and information about the sort order used.
+
+In the example below, we use a `fetchMore` query to continuously load new comments, which will be prepended to the list. The cursor to be used in the `fetchMore` query is provided in the initial server response, and is updated whenever more data is fetched.
 
 ```js
-const moreComments = gql`
-  query moreComments($cursor: String) {
+const MoreCommentsQuery = gql`
+  query MoreComments($cursor: String) {
     moreComments(cursor: $cursor) {
       cursor
       comments {
@@ -124,14 +129,15 @@ const moreComments = gql`
 `;
 
 const CommentsWithData = graphql(Comment, {
-  // This function re-runs everytime `data` changes, including after `updateQuery`
+  // This function re-runs every time `data` changes, including after `updateQuery`,
+  // meaning our loadMoreEntries function will always have the right cursor
   props({ data: { loading, cursor, comments, fetchMore } }) {
     return {
       loading,
       comments,
       loadMoreEntries: () => {
         return fetchMore({
-          query: moreComments,
+          query: MoreCommentsQuery,
           variables: {
             cursor: cursor,
           },
@@ -140,11 +146,12 @@ const CommentsWithData = graphql(Comment, {
             const newComments = fetchMoreResult.data.moreComments.comments;
 
             return {
-              // By return `cursor` here, we "rebind" the `loadMore` function
+              // By returning `cursor` here, we update the `loadMore` function
               // to the new cursor.
               cursor: fetchMoreResult.data.cursor,
+
               entry: {
-                // put promoted comments in front
+                // Put the new comments in the front of the list
                 comments: [...newComments, ...previousEntry.entry.comments],
               },
             };
@@ -155,3 +162,9 @@ const CommentsWithData = graphql(Comment, {
   },
 })(Feed);
 ```
+
+<h2 id="relay-cursors">Relay-style cursor pagination</h2>
+
+Relay, another popular GraphQL client, is opinionated about the input and output of paginated queries, so people sometimes build their server's pagination model around Relay's needs. If you have a server that is designed to work with the [Relay Cursor Connections](https://facebook.github.io/relay/graphql/connections.htm) spec, you can also call that server from Apollo Client with no problems.
+
+> This section coming soon. Refer to the cursor directions from above for now, and if you have time please contribute a Relay example here!

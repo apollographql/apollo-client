@@ -20,6 +20,7 @@ import {
 import { tryFunctionOrLogError } from './util/errorHandling';
 
 import assign = require('lodash.assign');
+import isEqual = require('lodash.isequal');
 
 export interface FetchMoreOptions {
   updateQuery: (previousQueryResult: Object, options: {
@@ -34,12 +35,28 @@ export interface UpdateQueryOptions {
 
 export class ObservableQuery extends Observable<ApolloQueryResult> {
   public refetch: (variables?: any) => Promise<ApolloQueryResult>;
+  /**
+   * Update the variables of this observable query, and fetch the new results
+   * if they've changed. If you want to force new results, use `refetch`.
+   *
+   * Note: if the variables have not changed, the promise will return the old
+   * results immediately, and the `next` callback will *not* fire.
+   *
+   * @param variables: The new set of variables. If there are missing variables,
+   * the previous values of those variables will be used.
+   */
+  public setVariables: (variables: any) => Promise<ApolloQueryResult>;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
   public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
   public startPolling: (p: number) => void;
   public options: WatchQueryOptions;
   public queryId: string;
+  /**
+   *
+   * The current value of the variables for this query. Can change.
+   */
+  public variables: { [key: string]: any };
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
 
@@ -91,14 +108,13 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     };
     super(subscriberFunction);
     this.options = options;
+    this.variables = this.options.variables || {};
     this.scheduler = scheduler;
     this.queryManager = queryManager;
     this.queryId = queryId;
 
     this.refetch = (variables?: any) => {
-      // Extend variables if available
-      variables = variables || this.options.variables ?
-        assign({}, this.options.variables, variables) : undefined;
+      this.variables = assign(this.variables, variables);
 
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query refetch.');
@@ -106,9 +122,28 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       // Use the same options as before, but with new variables and forceFetch true
       return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
         forceFetch: true,
-        variables,
+        variables: this.variables,
       }) as WatchQueryOptions)
       .then(result => this.queryManager.transformResult(result));
+    };
+
+    // There's a subtle difference between setVariables and refetch:
+    //   - setVariables will take results from the store unless the query
+    //   is marked forceFetch (and definitely if the variables haven't changed)
+    //   - refetch will always go to the server
+    this.setVariables = (variables: any) => {
+      const newVariables = assign({}, this.variables, variables);
+
+      if (isEqual(newVariables, this.variables)) {
+        return this.result();
+      } else {
+        this.variables = newVariables;
+        // Use the same options as before, but with new variables and forceFetch true
+        return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
+          variables: this.variables,
+        }) as WatchQueryOptions)
+        .then(result => this.queryManager.transformResult(result));
+      }
     };
 
     this.fetchMore = (fetchMoreOptions: WatchQueryOptions & FetchMoreOptions) => {
@@ -122,8 +157,8 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
             combinedOptions = fetchMoreOptions;
           } else {
             // fetch the same query with a possibly new variables
-            const variables = this.options.variables || fetchMoreOptions.variables ?
-              assign({}, this.options.variables, fetchMoreOptions.variables) : undefined;
+            const variables = this.variables || fetchMoreOptions.variables ?
+              assign({}, this.variables, fetchMoreOptions.variables) : undefined;
 
             combinedOptions = assign({}, this.options, fetchMoreOptions, {
               variables,

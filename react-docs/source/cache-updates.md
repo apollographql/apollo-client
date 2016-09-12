@@ -41,16 +41,17 @@ In those cases you have to use other features like `fetchMore` or the other meth
 
 <h2 id="fetchMore">Using `fetchMore`</h2>
 
-`fetchMore` can be used to manually update the result of one query based on the data returned by another query. Most often, it is used to handle pagination. In our GitHunt example, we have a paginated feed that displays a list of GitHub respositories. When we hit the "Load More" button, we don't Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list of repositories that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.
+`fetchMore` can be used to manually update the result of one query based on the data returned by another query. Most often, it is used to handle pagination. In our GitHunt example, we have a paginated feed that displays a list of GitHub respositories. When we hit the "Load More" button, we don't want Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.
 
-This is possible with `fetchMore`. The `fetchMore` method allows us to fetch another query and incorporate that query's result into the result that our component query previously received. We can see it in action within the [GitHunt](https://github.com/apollostack/GitHunt-React) code:
+This is possible with `fetchMore`. The `fetchMore` method allows us to fetch another query and incorporate that query's result into the result of one existing query. We can see it in action within the [GitHunt](https://github.com/apollostack/GitHunt-React) code:
 
 ```javascript
-const FEED_QUERY = gql`
+const FeedQuery = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
-    // ...
+    # ...
   }`;
-const FeedWithData = graphql(FEED_QUERY, {
+
+const FeedWithData = graphql(FeedQuery, {
   props({ data: { loading, feed, currentUser, fetchMore } }) {
     return {
       loading,
@@ -98,11 +99,11 @@ When we call `fetchMore`, Apollo Client will fire the `fetchMore` query and it n
 
 Here, the `fetchMore` query is the same as the query associated with the component. Our `updateQuery` takes the new feed items returned and just appends them onto the feed items that we'd asked for previously. With this, the UI will update and the feed will contain the next page of items!
 
-Although `fetchMore` is often used for pagination, there are many other cases in which it is applicable. For example, suppose you have a list of items (say, a collaborative todo list) and you have a query that fetches items that have been added to the list later. Then, you don't have to refetch the whole todo list: you can just incorporate the newly added items with `fetchMore` and specifying the `updateQuery` function correctly.
+Although `fetchMore` is often used for pagination, there are many other cases in which it is applicable. For example, suppose you have a list of items (say, a collaborative todo list) and you have a way to fetch items that have been updated after a certain time. Then, you don't have to refetch the whole todo list to get updates: you can just incorporate the newly added items with `fetchMore`, as long as your `updateQuery` function correctly merges the new results.
 
 <h2 id="updateQueries">Using `updateQueries`</h2>
 
-Just as `fetchMore` allows you to update your UI according to the result of a query, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI should just update automatically based on the result of a mutation as long as modified fields of objects and the object identifiers of modified objects are returned with the mutation (see the [`dataIdFromObject`](#dataIdFromObject) documentation above for more information).
+Just as `fetchMore` allows you to update your UI according to the result of a query, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI will update automatically based on mutation results, as long as the object IDs in the result match up with the IDs you already have in your store. See the [`dataIdFromObject`](#dataIdFromObject) documentation above for more information about how to take advantage of this feature.
 
 However, if you are removing or adding items to a list with a mutation or can't assign object identifiers to some of your objects, you'll have to use `updateQueries` to make sure that your UI reflects the change correctly.
 

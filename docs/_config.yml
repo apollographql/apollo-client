@@ -21,7 +21,6 @@ sidebar_categories:
     - devtools
     - how-it-works
   Integrations:
-    - angular2
     - meteor
 # not sure if we should rename this?
 github_repo: apollostack/docs
@@ -39,6 +38,8 @@ typescript_api_box:
   data_file: docs.json
 
 nav_links:
+  'Angular 2':
+    url: http://dev.apollodata.com/angular2
   'React':
     url: http://dev.apollodata.com/react
   'Core JS':

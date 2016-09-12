@@ -107,7 +107,9 @@ Just as `fetchMore` allows you to update your UI according to the result of a qu
 
 However, if you are removing or adding items to a list with a mutation or can't assign object identifiers to some of your objects, you'll have to use `updateQueries` to make sure that your UI reflects the change correctly.
 
-We'll take the comments page within GitHunt as our example. When we submit a new comment, the "submit" button fires a mutation which adds a new comment to the "list" of the comments held on the server. As the original query that fetched the comments for the list couldn't know about this comment, Apollo can't automatically add it to the list for us. So we'll use `updateQueries` to
+We'll take the comments page within GitHunt as our example. When we submit a new comment, the "submit" button fires a mutation which adds a new comment to the "list" of the comments held on the server (in reality, the server doesn't know there's a list--it just knows that something is added to the `comments` table in SQL). The original query that fetched the comments for the list doesn't know about this new comment yet, so Apollo can't automatically add it to the list for us. So we'll use `updateQueries` to make sure that query result is updated, which will update Apollo's normalized store.
+
+If you're familiar with Redux, think of the `updateQueries` option as a reducer, except instead of updating the store directly we're updating the query result shape, which means we don't have to worry about how the store internals work.
 
 We expose this mutation through a function prop that the `CommentsPage` component can call. This is what the code looks like:
 
@@ -158,20 +160,18 @@ const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
 })(CommentsPage);
 ```
 
-If we were to look carefully at the server schema, we'd see that the mutation actually returns information about the single new comment that was added; it doesn't refetch the whole list of comments. This makes a lot of sense: if we have a thousand comments on a page, we don't want to refetch each of them if we add a single new comment.
+If we were to look carefully at the server schema, we'd see that the mutation actually returns information about the single new comment that was added; it doesn't refetch the whole list of comments. This makes a lot of sense: if we have a thousand comments on a page, we don't want to refetch all of them if we add a single new comment.
 
 The comments page itself is rendered with the following query:
 
 ```javascript
 const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
-    # Eventually move this into a no fetch query right on the entry
-    # since we literally just need this info to determine whether to
-    # show upvote/downvote buttons
     currentUser {
       login
       html_url
     }
+
     entry(repoFullName: $repoName) {
       id
       postedBy {

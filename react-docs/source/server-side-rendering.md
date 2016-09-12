@@ -13,7 +13,7 @@ You can use one or both of these techniques to provide a better user experience.
 
 <h2 id="store-rehydration">Store rehydration</h2>
 
-For applications that can perform some queries on the server prior to rendering the UI on the client, Apollo allows for setting the initial state of data. This is sometimes called rehydration (the data is "dehydrated" when it is serialized and included in the initial HTML payload).
+For applications that can perform some queries on the server prior to rendering the UI on the client, Apollo allows for setting the initial state of data. This is sometimes called rehydration, since the data is "dehydrated" when it is serialized and included in the initial HTML payload.
 
 For example, a typical approach is to include a script tag that looks something like:
 
@@ -32,13 +32,13 @@ const client = new ApolloClient({
 });
 ```
 
-> We'll see below how you can generate both the HTML and the Apollo store's state using Node and `react-apollo`'s server rendering functions. However if you are rendering HTML via some other means, you will have to generate the state manually.
+We'll see below how you can generate both the HTML and the Apollo store's state using Node and `react-apollo`'s server rendering functions. However if you are rendering HTML via some other means, you will have to generate the state manually.
 
-> Note: if you are using [Redux](redux.html) externally to Apollo, and already have store rehydration, you should pass the store state into the [`Store` constructor](http://redux.js.org/docs/basics/Store.html).
+If you are using [Redux](redux.html) externally to Apollo, and already have store rehydration, you should pass the store state into the [`Store` constructor](http://redux.js.org/docs/basics/Store.html).
 
 Then, when the client runs the first set of queries, the data will be returned instantly because it is already in the store!
 
-> Note that if you are using [`forceFetch`](cache-updates.html#forceFetch) on queries, you should pass the `ssrForceFetchDelay` option to skip force fetching during initialization:
+If you are using [`forceFetch`](cache-updates.html#forceFetch) on some of the initial queries, you can pass the `ssrForceFetchDelay` option to skip force fetching during initialization, so that even those queries run using the cache:
 
 ```js
 const client = new ApolloClient({
@@ -49,15 +49,9 @@ const client = new ApolloClient({
 
 <h2 id="server-rendering">Server-side rendering and hydration</h2>
 
-You can render your entire React-based Apollo application on a Node server using some built in rendering functions. These functions take care of the job of fetching all queries that are required to rendering your component tree. Typically you would use these functions from within a HTTP server such as [Express](https://expressjs.com).
+You can render your entire React-based Apollo application on a Node server using rendering functions built into `react-apollo`. These functions take care of the job of fetching all queries that are required to rendering your component tree. Typically you would use these functions from within a HTTP server such as [Express](https://expressjs.com).
 
-No changes are required to client queries to support this, however, queries can be ignored during server rendering by passing `ssr: false` in the query options. Typically, this will mean the component will get rendered in it's loading state on the server. For example:
-
-```js
-const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
-  options: { ssr: false }, // won't be called during SSR
-});
-```
+No changes are required to client queries to support this, so your Apollo-based React UI should support SSR out of the box.
 
 <h3 id="server-initialization">Server Initialization</h3>
 
@@ -118,7 +112,6 @@ app.listen(basePort, () => console.log( // eslint-disable-line no-console
 ```
 You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollostack/GitHunt-React/blob/master/ui/server.js) for a complete working example.
 
-
 Next we'll see what that rendering code actually does.
 
 <h3 id="getDataFromTree">Using `getDataFromTree`</h3>
@@ -158,6 +151,16 @@ function Html({ content, state }) {
     </html>
   );
 }
+```
+
+<h3 id="skip-for-ssr">Skipping queries for SSR</h3>
+
+If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in it's loading state on the server. For example:
+
+```js
+const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
+  options: { ssr: false }, // won't be called during SSR
+});
 ```
 
 <!--  Leave this bit out until it's fixed -->

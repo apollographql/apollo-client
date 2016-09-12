@@ -119,7 +119,7 @@ const submitRepository = /* as above */;
 const NewEntryWithData = graphql(submitRepository, {
   props: ({ mutate }) => ({
     submit: (repoFullName) => mutate({ variables: { repoFullName } }),
-  });
+  }),
 })(NewEntry);
 ```
 

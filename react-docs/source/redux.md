@@ -8,7 +8,7 @@ By default, Apollo Client creates its own internal Redux store to manage queries
 
 This will let you better track the different events that happen in your app, and how your client and server side data changes interleave. It will also make using tools like the [Redux Dev Tools](https://github.com/zalmoxisus/redux-devtools-extension) more natural.
 
-<h2 id="creating-a-store">Creating a Store</h2>
+<h2 id="creating-a-store">Creating a store</h2>
 
 If you want to use your own store, you'll need to pass in reducer and middleware from your Apollo Client instance; you can then pass the store into your `ApolloProvider` directly:
 

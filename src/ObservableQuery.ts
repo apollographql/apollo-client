@@ -138,7 +138,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         return this.result();
       } else {
         this.variables = newVariables;
-        // Use the same options as before, but with new variables and forceFetch true
+        // Use the same options as before, but with new variables
         return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
           variables: this.variables,
         }) as WatchQueryOptions)

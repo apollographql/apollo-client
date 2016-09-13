@@ -207,4 +207,25 @@ describe('AST utility functions', () => {
     const operationName = getOperationName(query);
     assert.equal(operationName, 'nameOfMutation');
   });
+
+  it('should throw if type definitions found in document', () => {
+    const queryWithFragments = gql`
+      fragment authorDetails on Author {
+        firstName
+        lastName
+      }
+
+      query($search: AuthorSearchInputType) {
+        author(search: $search) {
+          ...authorDetails
+        }
+      }
+
+      input AuthorSearchInputType {
+        firstName: String
+      }`;
+    assert.throws(() => {
+      getQueryDefinition(queryWithFragments);
+    }, 'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"');
+  });
 });

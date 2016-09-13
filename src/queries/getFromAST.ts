@@ -34,6 +34,10 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   }
 
   const definitionTypes = doc.definitions.map((definition) => {
+    if (definition.kind !== 'OperationDefinition' && definition.kind !== 'FragmentDefinition') {
+      throw new Error(`Schema type definitions not allowed in queries. Found: "${definition.kind}"`);
+    }
+
     return definition.kind;
   });
   const typeCounts = countBy(definitionTypes, identity);

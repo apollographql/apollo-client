@@ -63,6 +63,31 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('reruns observer callback if the variables change but data does not', (done) => {
+      const observable: ObservableQuery = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables: differentVariables },
+        result: { data: dataOne },
+      });
+
+      let handleCount = 0;
+      observable.subscribe({
+        next: wrap(done, result => {
+          console.trace();
+          handleCount++;
+
+          if (handleCount === 1) {
+            assert.deepEqual(result.data, dataOne);
+            observable.setVariables(differentVariables);
+          } else if (handleCount === 2) {
+            assert.deepEqual(result.data, dataOne);
+            done();
+          }
+        }),
+      });
+    });
 
     it('does not rerun query if variables do not change', (done) => {
       const observable: ObservableQuery = mockWatchQuery({

@@ -448,7 +448,7 @@ export default class ApolloClient {
   public updateQueriesFromSubscription(
     options: SubscriptionOptions,
     updateQueries: QueryUpdateReducersMap,
-  ): Observable<any> {
+  ): void {
     this.updateQueriesFromObservable(this.subscribe(options), updateQueries);
   }
 

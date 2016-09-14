@@ -31,6 +31,7 @@ import {
 import {
   QueryManager,
   SubscriptionOptions,
+  QueryUpdateReducersMap,
 } from './QueryManager';
 
 import {
@@ -410,16 +411,31 @@ export default class ApolloClient {
    * @param updateQueries Reducers updating the store with the arbitrary data
    */
   public updateQueriesWithData(
-    updateData: Object,
-    updateQueries: {
-      [queryName: string]: (previousQueryResult: any, options: {
-        updateData: any,
-        queryName: string,
-        queryVariables: Object,
-      }) => any,
-    }
+    updateData: any,
+    updateQueries: QueryUpdateReducersMap,
   ): void {
     this.queryManager.updateQueriesWithData(updateData, updateQueries);
+  }
+
+  /**
+   * Updates some store queries using some arbitrary data observable and an updateQueries reducers
+   * map.
+   *
+   * This system is not made to be used by a final user but by a subscription system for injecting
+   * subscription results.
+   *
+   * @param updateDataObservable The data observable to inject in the updateQueries reducers
+   * @param updateQueries Reducers updating the store with the arbitrary data
+   */
+  public updateQueriesFromObservable(
+    updateDataObservable: Observable<any>,
+    updateQueries: QueryUpdateReducersMap,
+  ): void {
+    updateDataObservable.subscribe({
+      next: (updateData) => {
+        this.updateQueriesWithData(updateData, updateQueries);
+      },
+    });
   }
 
   /**

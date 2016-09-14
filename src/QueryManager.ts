@@ -107,6 +107,14 @@ export interface SubscriptionOptions {
   fragments?: FragmentDefinition[];
 };
 
+export interface QueryUpdateReducersMap {
+  [queryName: string]: (previousQueryResult: any, options: {
+    updateData: any,
+    queryName: string,
+    queryVariables: Object,
+  }) => any;
+};
+
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   public scheduler: QueryScheduler;
@@ -306,13 +314,7 @@ export class QueryManager {
   // Updates some store queries using some arbitrary data and an updateQueries reducers map
   public updateQueriesWithData(
     updateData: Object,
-    updateQueries: {
-      [queryName: string]: (previousQueryResult: any, options: {
-        updateData: any,
-        queryName: string,
-        queryVariables: Object,
-      }) => any,
-    }
+    updateQueries: QueryUpdateReducersMap
   ): void {
     Object.keys(updateQueries).forEach((queryName) => {
       const reducer = updateQueries[queryName];

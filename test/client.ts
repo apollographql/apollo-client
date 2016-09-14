@@ -47,6 +47,10 @@ import {
 } from '../src/QueryManager';
 
 import {
+  Observable,
+} from '../src/util/Observable';
+
+import {
   createNetworkInterface,
   HTTPNetworkInterface,
   Request,
@@ -1695,11 +1699,7 @@ describe('client', () => {
         result: 3,
       };
       const updateQueries = {
-        addQuery: (prev: any, {updateData}: {
-          updateData: any,
-          queryName: string,
-          queryVariables: Object,
-        }) => ({
+        addQuery: (prev: any, {updateData}: any) => ({
           result: prev.result + updateData.result,
         }),
       };
@@ -1720,6 +1720,61 @@ describe('client', () => {
             assert.deepEqual(result.data, data);
             client.updateQueriesWithData(arbitraryData, updateQueries);
           } else if (yieldedValues === 2) {
+            assert.deepEqual(result.data, finalData);
+            done();
+          }
+        },
+      });
+    });
+
+    it('should allow arbitrary updates on one query via an observable', (done) => {
+      const query = gql`
+        query addQuery{
+          result
+        }`;
+      const data = {
+        result: 1,
+      };
+      const arbitraryData1 = {
+        result: 1,
+      };
+      const arbitraryData2 = {
+        result: 2,
+      };
+      const finalData = {
+        result: 4,
+      };
+      const updateQueries = {
+        addQuery: (prev: any, {updateData}: any) => ({
+          result: prev.result + updateData.result,
+        }),
+      };
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+      });
+
+      let yieldedValues = 0;
+
+      client.watchQuery({ query }).subscribe({
+        next(result) {
+          yieldedValues += 1;
+          if (yieldedValues === 1) {
+            assert.deepEqual(result.data, data);
+            const dataObservable = new Observable<any>(observer => {
+              process.nextTick(() => {
+                observer.next(arbitraryData1);
+                process.nextTick(() => {
+                  observer.next(arbitraryData2);
+                });
+              });
+              return () => undefined;
+            });
+            client.updateQueriesFromObservable(dataObservable, updateQueries);
+          } else if (yieldedValues === 3) {
             assert.deepEqual(result.data, finalData);
             done();
           }

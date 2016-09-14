@@ -439,6 +439,20 @@ export default class ApolloClient {
   }
 
   /**
+   * Update the store when a subscription fires new data merging the data using an updateQueries
+   * reducer map.
+   *
+   * @param options Subscription options
+   * @param updateQueries Reducers updating the store with the subscription data
+   */
+  public updateQueriesFromSubscription(
+    options: SubscriptionOptions,
+    updateQueries: QueryUpdateReducersMap,
+  ): Observable<any> {
+    this.updateQueriesFromObservable(this.subscribe(options), updateQueries);
+  }
+
+  /**
    * This initializes the Redux store that we use as a reactive cache.
    */
   public initStore() {

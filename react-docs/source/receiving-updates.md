@@ -60,9 +60,7 @@ Continuing with our refetch example, we can add a polling interval simply by add
 
 ```javascript
 const FeedWithData = graphql(FeedEntries, {
-  options: {
-    return { pollInterval: 20000 };
-  },
+  options: { pollInterval: 20000 },
 })(Feed);
 ```
 

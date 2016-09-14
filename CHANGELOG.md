@@ -2,7 +2,11 @@
 
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
-### vNEXT
+### vNext
+
+- Add a way to massively update queriy states when a subscription or an observable yields some new data. Discussed in [Issue #644](https://github.com/apollostack/apollo-client/issues/644), addressed in [PR #649](https://github.com/apollostack/apollo-client/pull/649)
+
+### v0.4.15
 
 - Options set in middleware can override the fetch query in the network layer. [Issue #627](https://github.com/apollostack/apollo-client/issues/627) and [PR #628](https://github.com/apollostack/apollo-client/pull/628).
 - Make `returnPartialData` work better with fragments. [PR #580](https://github.com/apollostack/apollo-client/pull/580)

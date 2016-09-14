@@ -206,13 +206,15 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public currentResult(): ApolloQueryResult {
+    // check the store to find out if we are currently querying for data
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
+    const loading = !queryStoreValue || queryStoreValue.loading;
 
-    if (!queryStoreValue || queryStoreValue.loading) {
-      return { data: {}, loading: true };
+    if (!loading || this.options.returnPartialData) {
+      const { previousResult } = this.queryManager.getQueryWithPreviousResult(this);
+      return { data: previousResult, loading };
     }
 
-    const { previousResult } = this.queryManager.getQueryWithPreviousResult(this.queryId);
-    return { data: previousResult, loading: false };
+    return { data: {}, loading };
   }
 }

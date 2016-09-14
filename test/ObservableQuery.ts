@@ -3,6 +3,7 @@ const { assert } = chai;
 
 import gql from 'graphql-tag';
 
+import mockQueryManager from './mocks/mockQueryManager';
 import mockWatchQuery from './mocks/mockWatchQuery';
 import { ObservableQuery } from '../src/ObservableQuery';
 
@@ -63,6 +64,31 @@ describe('ObservableQuery', () => {
           data: {},
         });
       }), 0);
+    });
+
+    it('returns results from the store immediately', () => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { data: dataOne },
+      });
+
+      return queryManager.query({ query, variables })
+        .then(result => {
+          assert.deepEqual(result, {
+            data: dataOne,
+            loading: false,
+          });
+
+          const observable = queryManager.watchQuery({
+            query,
+            variables,
+            returnPartialData: true,
+          });
+          assert.deepEqual(observable.currentResult(), {
+            data: dataOne,
+            loading: true,
+          });
+        });
     });
 
     it('returns loading while refetching', (done) => {

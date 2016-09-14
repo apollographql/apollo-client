@@ -625,12 +625,17 @@ export class QueryManager {
     this.stopQueryInStore(queryId);
   }
 
-  public getQueryWithPreviousResult(queryId: string, isOptimistic = false) {
-    if (!this.observableQueries[queryId]) {
-      throw new Error(`ObservableQuery with this id doesn't exist: ${queryId}`);
-    }
+  public getQueryWithPreviousResult(queryIdOrObservable: string | ObservableQuery, isOptimistic = false) {
+    let observableQuery : ObservableQuery;
+    if (typeof queryIdOrObservable === 'string') {
+      if (!this.observableQueries[queryIdOrObservable]) {
+        throw new Error(`ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`);
+      }
 
-    const observableQuery = this.observableQueries[queryId].observableQuery;
+      observableQuery = this.observableQueries[queryIdOrObservable].observableQuery;
+    } else {
+      observableQuery = queryIdOrObservable;
+    }
 
     const queryOptions = observableQuery.options;
 

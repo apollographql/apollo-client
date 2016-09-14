@@ -401,6 +401,28 @@ export default class ApolloClient {
   };
 
   /**
+   * Updates some store queries using some arbitrary data and an updateQueries reducers map
+   *
+   * This system is not made to be used by a final user but by a subscription system for injecting
+   * subscription results.
+   *
+   * @param updateData The data to inject in the updateQueries reducers
+   * @param updateQueries Reducers updating the store with the arbitrary data
+   */
+  public updateQueriesWithData(
+    updateData: Object,
+    updateQueries: {
+      [queryName: string]: (previousQueryResult: any, options: {
+        updateData: any,
+        queryName: string,
+        queryVariables: Object,
+      }) => any,
+    }
+  ): void {
+    this.queryManager.updateQueriesWithData(updateData, updateQueries);
+  }
+
+  /**
    * This initializes the Redux store that we use as a reactive cache.
    */
   public initStore() {

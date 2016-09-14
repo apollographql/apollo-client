@@ -1678,4 +1678,53 @@ describe('client', () => {
       done();
     });
   });
+
+  describe('Arbitrary store updates', () => {
+    it('should allow arbitrary updates on one query', (done) => {
+      const query = gql`
+        query addQuery{
+          result
+        }`;
+      const data = {
+        result: 1,
+      };
+      const arbitraryData = {
+        result: 2,
+      };
+      const finalData = {
+        result: 3,
+      };
+      const updateQueries = {
+        addQuery: (prev: any, {updateData}: {
+          updateData: any,
+          queryName: string,
+          queryVariables: Object,
+        }) => ({
+          result: prev.result + updateData.result,
+        }),
+      };
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+      });
+
+      let yieldedValues = 0;
+
+      client.watchQuery({ query }).subscribe({
+        next(result) {
+          yieldedValues += 1;
+          if (yieldedValues === 1) {
+            assert.deepEqual(result.data, data);
+            client.updateQueriesWithData(arbitraryData, updateQueries);
+          } else if (yieldedValues === 2) {
+            assert.deepEqual(result.data, finalData);
+            done();
+          }
+        },
+      });
+    });
+  });
 });

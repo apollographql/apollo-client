@@ -303,6 +303,46 @@ export class QueryManager {
     });
   }
 
+  // Updates some store queries using some arbitrary data and an updateQueries reducers map
+  public updateQueriesWithData(
+    updateData: Object,
+    updateQueries: {
+      [queryName: string]: (previousQueryResult: any, options: {
+        updateData: any,
+        queryName: string,
+        queryVariables: Object,
+      }) => any,
+    }
+  ): void {
+    Object.keys(updateQueries).forEach((queryName) => {
+      const reducer = updateQueries[queryName];
+      const queryIds = this.queryIdsByName[queryName];
+      if (!queryIds) {
+        // XXX should throw an error?
+        return;
+      }
+      queryIds.forEach((queryId) => {
+        const {
+          previousResult,
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
+        } = this.getQueryWithPreviousResult(queryId);
+        this.store.dispatch({
+          type: 'APOLLO_UPDATE_QUERY_RESULT',
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
+          newResult: reducer(previousResult, {
+            updateData,
+            queryName,
+            queryVariables,
+          }),
+        });
+      });
+    });
+  }
+
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
   public queryListenerForObserver(

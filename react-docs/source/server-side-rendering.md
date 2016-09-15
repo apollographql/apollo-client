@@ -164,23 +164,20 @@ const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
 });
 ```
 
-<!--  Leave this bit out until it's fixed -->
-<!-- <h3 id="renderToStringWithData">Using `renderToStringWithData`</h3>
+<h3 id="renderToStringWithData">Using `renderToStringWithData`</h3>
 
-The `renderToStringWithData` function takes your react tree and returns the stringified tree with all data requirements. It also injects a script tag that includes `window. __APOLLO_STATE__ ` which equals the full redux store for hydration. This method returns a promise that eventually returns the markup
+The `renderToStringWithData` function simplifies the above and simply returns the content string and state that you need to render. So it reduces the number of steps slightly:
 
 ```js
 // server application code (integrated usage)
 import { renderToStringWithData } from "react-apollo/server"
 
 // during request
-renderToStringWithData(app).then(markup => {
-  // send markup to client
+renderToStringWithData(app).then((content, state) => {
+  const html = <Html content={content} state={state} />;
+
+  res.status(200);
+  res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);
+  res.end();
 });
 ```
-
-> See the notes above about `getDataFromTree`.
-
-> Extra Client notes:
-  - In this case, pass `initialState: JSON.parse(decodeURI(__APOLLO_STATE__))`
-  - As of this writing, this technique will lead to a React warning "Target node has markup rendered by React, but there are unrelated nodes as well"---we're working on a better solution to this, but in the meantime if you want to avoid the error, use `getDataFromTree` directly.  <h2 id="store-rehydration">Store hydration</h2> -->

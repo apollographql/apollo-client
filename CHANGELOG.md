@@ -2,7 +2,11 @@
 
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
-### vNEXT
+### vNext
+
+- Avoid store reading errors on mutations after a failed/canceled query. [Issue #647](https://github.com/apollostack/apollo-client/issues/647) and [PR #651](https://github.com/apollostack/apollo-client/pull/651)
+
+### v0.4.15
 
 ### v0.4.19
 - Fix: set default reduxRootKey for backwards-compatibility when using ApolloClient as middleware  [PR #688](https://github.com/apollostack/apollo-client/pull/688)

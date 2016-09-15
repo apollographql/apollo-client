@@ -45,7 +45,7 @@ nav_links:
   'Core JS':
     url: http://dev.apollodata.com/core
     active: true
-  'Tools':
+  'Server':
     url: http://dev.apollodata.com/tools
   # 'Community':
   #   url: http://dev.apollodata.com/community

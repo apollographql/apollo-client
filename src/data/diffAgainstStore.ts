@@ -2,7 +2,7 @@ import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isObject = require('lodash.isobject');
 import has = require('lodash.has');
-import deepAssign = require('deep-assign');
+const deepAssign = require('deep-assign');
 
 import {
   storeKeyNameFromField,

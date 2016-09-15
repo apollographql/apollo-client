@@ -651,17 +651,24 @@ export class QueryManager {
       fragments = getFragmentDefinitions(transformedDoc);
     }
 
-    const previousResult = readSelectionSetFromStore({
-      // In case of an optimistic change, apply reducer on top of the
-      // results including previous optimistic updates. Otherwise, apply it
-      // on top of the real data only.
-      store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
-      rootId: 'ROOT_QUERY',
-      selectionSet: queryDefinition.selectionSet,
-      variables: queryOptions.variables,
-      returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
-      fragmentMap: createFragmentMap(fragments || []),
-    });
+    let previousResult: any = null;
+    try {
+      previousResult = readSelectionSetFromStore({
+        // In case of an optimistic change, apply reducer on top of the
+        // results including previous optimistic updates. Otherwise, apply it
+        // on top of the real data only.
+        store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+        rootId: 'ROOT_QUERY',
+        selectionSet: queryDefinition.selectionSet,
+        variables: queryOptions.variables,
+        returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
+        fragmentMap: createFragmentMap(fragments || []),
+      });
+    } catch (e) {
+      if (!/can't find field/i.test(e.message)) {
+        throw e;
+      }
+    }
 
     return {
       previousResult,
@@ -706,12 +713,15 @@ export class QueryManager {
           queryFragments,
         } = this.getQueryWithPreviousResult(queryId, isOptimistic);
 
-        const newResult = tryFunctionOrLogError(() => reducer(
-          previousResult, {
-            mutationResult,
-            queryName,
-            queryVariables,
-          }));
+        let newResult: any = null;
+        if (previousResult) {
+          newResult = tryFunctionOrLogError(() => reducer(
+            previousResult, {
+              mutationResult,
+              queryName,
+              queryVariables,
+            }));
+        }
 
         if (newResult) {
           resultBehaviors.push({

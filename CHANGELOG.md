@@ -6,6 +6,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Options set in middleware can override the fetch query in the network layer. [Issue #627](https://github.com/apollostack/apollo-client/issues/627) and [PR #628](https://github.com/apollostack/apollo-client/pull/628).
 - Make `returnPartialData` work better with fragments. [PR #580](https://github.com/apollostack/apollo-client/pull/580)
+- Fixed issue with nested fragments overriding each other. [PR #629](https://github.com/apollostack/apollo-client/pull/629)
 
 ### v0.4.14
 

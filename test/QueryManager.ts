@@ -1921,17 +1921,75 @@ describe('QueryManager', () => {
       next(result) {
         handleCount++;
 
-        if (handleCount === 2) {
+        if (handleCount === 1) {
           handle.stopPolling();
         }
       },
     });
 
     setTimeout(() => {
-      assert.equal(handleCount, 2);
+      assert.equal(handleCount, 1);
       done();
     }, 160);
+  });
 
+  it('stopped polling queries still get updates', (done) => {
+    const query = gql`
+      query fetchLeia($id: String) {
+        people_one(id: $id) {
+          name
+        }
+      }
+    `;
+
+    const variables = {
+      id: '2',
+    };
+
+    const data1 = {
+      people_one: {
+        name: 'Leia Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Leia Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query, variables },
+        result: { data: data1 },
+      },
+      {
+        request: { query, variables },
+        result: { data: data2 },
+      }
+    );
+    let handleCount = 0;
+    const handle = queryManager.watchQuery({
+      query,
+      variables,
+      pollInterval: 50,
+    });
+
+    handle.subscribe({
+      next(result) {
+        handleCount++;
+
+        if (handleCount === 1) {
+          handle.stopPolling();
+
+          queryManager.query({ query, variables, forceFetch: true })
+            .then(() => {
+              assert.equal(handleCount, 2);
+              done();
+            });
+        }
+      },
+    });
   });
 
   it('warns if you forget the template literal tag', () => {

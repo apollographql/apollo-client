@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
+    "lib": ["es6", "dom"],
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
@@ -9,12 +10,12 @@
     "outDir": "lib",
     "allowSyntheticDefaultImports": true,
     "removeComments": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
   "files": [
-    "typings/main/index.d.ts",
+    "typings.d.ts",
     "src/index.ts",
     "test/tests.ts"
    ]

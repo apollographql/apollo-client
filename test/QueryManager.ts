@@ -1352,7 +1352,7 @@ describe('QueryManager', () => {
     const store = createStore(
       combineReducers({
         test: testReducer,
-        apollo: client.reducer(),
+        apollo: client.reducer() as any, // XXX see why this type fails
       }),
       applyMiddleware(client.middleware())
     );

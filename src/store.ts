@@ -1,6 +1,6 @@
 import {
   createStore,
-  compose,
+  compose as reduxCompose,
   applyMiddleware,
   combineReducers,
 } from 'redux';
@@ -123,10 +123,13 @@ export function createApolloStore({
     enhancers.push(applyMiddleware(crashReporter));
   }
 
+  // XXX to avoid type fail
+  const compose: (...args: any[]) => () => any = reduxCompose;
+
   return createStore(
-    combineReducers({ [reduxRootKey]: createApolloReducer(config) }),
+    combineReducers({ [reduxRootKey]: createApolloReducer(config) as any }), // XXX see why this type fails
     initialState,
-    compose(...enhancers) as () => any // XXX see why this type fails
+    compose(...enhancers),
   );
 }
 

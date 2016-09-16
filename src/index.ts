@@ -39,6 +39,7 @@ import {
 
 import {
   Observable,
+  Subscription,
 } from './util/Observable';
 
 import {
@@ -76,7 +77,12 @@ import {
 
 import {
   getFragmentDefinitions,
+  createFragmentMap,
 } from './queries/getFromAST';
+
+import {
+  ApolloError,
+} from './errors';
 
 import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
@@ -95,6 +101,16 @@ export {
   writeQueryToStore,
   writeFragmentToStore,
   print as printAST,
+  createFragmentMap,
+  ApolloError,
+
+  // internal type definitions for export
+  WatchQueryOptions,
+  ObservableQuery,
+  MutationBehavior,
+  MutationQueryReducersMap,
+  Subscription,
+  ApolloStore,
 };
 
 export type ApolloQueryResult = {

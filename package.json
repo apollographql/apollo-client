@@ -55,7 +55,7 @@
     "lodash.isobject": "^3.0.2",
     "lodash.isstring": "^4.0.1",
     "lodash.isundefined": "^3.0.1",
-    "lodash.mapvalues": "^4.4.0",
+    "lodash.mapvalues": "^4.5.0",
     "lodash.merge": "^4.4.0",
     "lodash.pick": "^4.2.0",
     "redux": "^3.3.1",

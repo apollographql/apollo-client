@@ -5,12 +5,12 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 - Make sure stopping a poll interval doesn't stop updates from the store. [PR #625](https://github.com/apollostack/apollo-client/pull/625)
+- Include more type definitions and methods in root export for use in react-apollo [PR #619](https://github.com/apollostack/apollo-client/pull/619)
 
 ### v0.4.15
 
 - Options set in middleware can override the fetch query in the network layer. [Issue #627](https://github.com/apollostack/apollo-client/issues/627) and [PR #628](https://github.com/apollostack/apollo-client/pull/628).
 - Make `returnPartialData` work better with fragments. [PR #580](https://github.com/apollostack/apollo-client/pull/580)
-- Include more type definitions and methods in root export for use in react-apollo [PR #619](https://github.com/apollostack/apollo-client/pull/619)
 
 ### v0.4.14
 

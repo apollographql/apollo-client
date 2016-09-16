@@ -115,10 +115,10 @@ describe('client', () => {
   it('can allow passing in a store', () => {
     const client = new ApolloClient();
 
-    const store: ReduxStore = createStore(
+    const store: ReduxStore<any> = createStore(
       combineReducers({
         todos: todosReducer,
-        apollo: client.reducer(),
+        apollo: client.reducer()as any,
       }),
       applyMiddleware(client.middleware())
     );
@@ -256,7 +256,7 @@ describe('client', () => {
     createStore(
       combineReducers({
         todos: todosReducer,
-        apollo: client.reducer(),
+        apollo: client.reducer() as any, // XXX see why this type fails
       }),
       applyMiddleware(client.middleware())
     );
@@ -423,7 +423,7 @@ describe('client', () => {
     createStore(
       combineReducers({
         todos: todosReducer,
-        [reduxRootKey]: client.reducer(),
+        [reduxRootKey]: client.reducer()as any,
       }),
       applyMiddleware(client.middleware())
     );
@@ -889,7 +889,7 @@ describe('client', () => {
 
       const store = createStore(
         combineReducers({
-          apollo: client.reducer(),
+          apollo: client.reducer()as any,
         }),
         applyMiddleware(client.middleware())
       );

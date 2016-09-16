@@ -37,6 +37,7 @@ import {
 } from 'graphql';
 
 import ApolloClient, {
+  ApolloStateSelector,
   ApolloQueryResult,
 } from '../src/index';
 
@@ -78,26 +79,29 @@ describe('QueryManager', () => {
     return undefined;
   };
 
+  const defaultReduxRootSelector = (state: any) => state.apollo;
+
   // Helper method that serves as the constructor method for
   // QueryManager but has defaults that make sense for these
   // tests.
   const createQueryManager = ({
     networkInterface,
     store,
-    reduxRootKey,
+    reduxRootSelector,
     queryTransformer,
     shouldBatch,
   }: {
     networkInterface?: NetworkInterface,
     store?: ApolloStore,
-    reduxRootKey?: string,
+    reduxRootSelector?: ApolloStateSelector,
     queryTransformer?: QueryTransformer,
     shouldBatch?: boolean,
   }) => {
+
     return new QueryManager({
       networkInterface: networkInterface || mockNetworkInterface(),
       store: store || createApolloStore(),
-      reduxRootKey: reduxRootKey || 'apollo',
+      reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
       queryTransformer,
       shouldBatch,
     });
@@ -109,7 +113,7 @@ describe('QueryManager', () => {
     return new QueryManager({
       networkInterface: mockNetworkInterface(...mockedResponses),
       store: createApolloStore(),
-      reduxRootKey: 'apollo',
+      reduxRootSelector: defaultReduxRootSelector,
     });
   };
 
@@ -1096,6 +1100,7 @@ describe('QueryManager', () => {
     };
 
     const reduxRootKey = 'test';
+    const reduxRootSelector = (state: any) => state[reduxRootKey];
     const store = createApolloStore({
       reduxRootKey,
       config: { dataIdFromObject: getIdField },
@@ -1108,7 +1113,7 @@ describe('QueryManager', () => {
         }
       ),
       store,
-      reduxRootKey,
+      reduxRootSelector,
     });
 
     return queryManager.mutate({
@@ -1117,7 +1122,7 @@ describe('QueryManager', () => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(store.getState()[reduxRootKey].data['5'], { id: '5', isPrivate: true });
+      assert.deepEqual(reduxRootSelector(store.getState()).data['5'], { id: '5', isPrivate: true });
     });
   });
 
@@ -3180,7 +3185,7 @@ function testDiffing(
     store: createApolloStore({
       config: { dataIdFromObject: getIdField },
     }),
-    reduxRootKey: 'apollo',
+    reduxRootSelector: (state) => state.apollo,
   });
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {

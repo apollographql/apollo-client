@@ -31,6 +31,7 @@ import {
 import {
   QueryManager,
   SubscriptionOptions,
+  QueryUpdateReducersMap,
 } from './QueryManager';
 
 import {
@@ -399,6 +400,57 @@ export default class ApolloClient {
       };
     };
   };
+
+  /**
+   * Updates some store queries using some arbitrary data and an updateQueries reducers map
+   *
+   * This system is not made to be used by a final user but by a subscription system for injecting
+   * subscription results.
+   *
+   * @param updateData The data to inject in the updateQueries reducers
+   * @param updateQueries Reducers updating the store with the arbitrary data
+   */
+  public updateQueriesWithData(
+    updateData: any,
+    updateQueries: QueryUpdateReducersMap,
+  ): void {
+    this.queryManager.updateQueriesWithData(updateData, updateQueries);
+  }
+
+  /**
+   * Updates some store queries using some arbitrary data observable and an updateQueries reducers
+   * map.
+   *
+   * This system is not made to be used by a final user but by a subscription system for injecting
+   * subscription results.
+   *
+   * @param updateDataObservable The data observable to inject in the updateQueries reducers
+   * @param updateQueries Reducers updating the store with the arbitrary data
+   */
+  public updateQueriesFromObservable(
+    updateDataObservable: Observable<any>,
+    updateQueries: QueryUpdateReducersMap,
+  ): void {
+    updateDataObservable.subscribe({
+      next: (updateData) => {
+        this.updateQueriesWithData(updateData, updateQueries);
+      },
+    });
+  }
+
+  /**
+   * Update the store when a subscription fires new data merging the data using an updateQueries
+   * reducer map.
+   *
+   * @param options Subscription options
+   * @param updateQueries Reducers updating the store with the subscription data
+   */
+  public updateQueriesFromSubscription(
+    options: SubscriptionOptions,
+    updateQueries: QueryUpdateReducersMap,
+  ): void {
+    this.updateQueriesFromObservable(this.subscribe(options), updateQueries);
+  }
 
   /**
    * This initializes the Redux store that we use as a reactive cache.

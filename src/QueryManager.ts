@@ -107,6 +107,14 @@ export interface SubscriptionOptions {
   fragments?: FragmentDefinition[];
 };
 
+export interface QueryUpdateReducersMap {
+  [queryName: string]: (previousQueryResult: any, options: {
+    updateData: any,
+    queryName: string,
+    queryVariables: Object,
+  }) => any;
+};
+
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   public scheduler: QueryScheduler;
@@ -300,6 +308,40 @@ export class QueryManager {
             networkError: err,
           }));
         });
+    });
+  }
+
+  // Updates some store queries using some arbitrary data and an updateQueries reducers map
+  public updateQueriesWithData(
+    updateData: Object,
+    updateQueries: QueryUpdateReducersMap
+  ): void {
+    Object.keys(updateQueries).forEach((queryName) => {
+      const reducer = updateQueries[queryName];
+      const queryIds = this.queryIdsByName[queryName];
+      if (!queryIds) {
+        // XXX should throw an error?
+        return;
+      }
+      queryIds.forEach((queryId) => {
+        const {
+          previousResult,
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
+        } = this.getQueryWithPreviousResult(queryId);
+        this.store.dispatch({
+          type: 'APOLLO_UPDATE_QUERY_RESULT',
+          queryVariables,
+          querySelectionSet,
+          queryFragments,
+          newResult: reducer(previousResult, {
+            updateData,
+            queryName,
+            queryVariables,
+          }),
+        });
+      });
     });
   }
 

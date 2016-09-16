@@ -898,7 +898,7 @@ describe('client', () => {
       return client.query({ query })
         .then((result) => {
           assert.deepEqual(result.data, data);
-          assert.deepEqual(store.getState()['apollo'].data['1'],
+          assert.deepEqual((store.getState() as any)['apollo'].data['1'],
             {
               id: '1',
               name: 'Luke Skywalker',
@@ -1149,7 +1149,7 @@ describe('client', () => {
 
       // hacky solution that allows us to test whether the warning is printed
       const oldWarn = console.warn;
-      console.warn = (str, vals) => {
+      console.warn = (str: string) => {
         assert.include(str, 'Warning: fragment with name');
       };
 
@@ -1184,7 +1184,7 @@ describe('client', () => {
       createFragment(fragmentDoc);
 
       const oldWarn = console.warn;
-      console.warn = (str) => {
+      console.warn = (str: string) => {
         assert.include(str, 'Warning: fragment with name');
         console.warn = oldWarn;
         done();
@@ -1219,7 +1219,7 @@ describe('client', () => {
       createFragment(fragmentDoc);
 
       const oldWarn = console.warn;
-      console.warn = (str) => {
+      console.warn = (str: string) => {
         assert.include(str, 'Warning: fragment with name');
         console.warn = oldWarn;
         done();
@@ -1475,7 +1475,7 @@ describe('client', () => {
 
     it('should not print a warning if we call disableFragmentWarnings', (done) => {
       const oldWarn = console.warn;
-      console.warn = (str) => {
+      console.warn = (str: string) => {
         done(new Error('Returned a warning despite calling disableFragmentWarnings'));
       };
       disableFragmentWarnings();

@@ -15,7 +15,7 @@ npm install apollo-client
 
 To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3. Move on to the next article to see how to import and initialize the client.
 
-[Read the docs.](http://docs.apollostack.com/apollo-client/index.html)
+[Read the docs.](http://dev.apollodata.com/core/)
 
 ---
 

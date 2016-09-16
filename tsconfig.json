@@ -10,7 +10,7 @@
     "outDir": "lib",
     "allowSyntheticDefaultImports": true,
     "removeComments": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },

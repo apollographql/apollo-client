@@ -65,7 +65,7 @@ function todos(state = initialState, action: any): any {
 
 const rootReducer = combineReducers({
   todos
-});
+}) as any; // XXX see why this type fails
 
 export {
   rootReducer

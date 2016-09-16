@@ -170,7 +170,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     };
 
     this.stopPolling = () => {
-      this.queryManager.stopQuery(this.queryId);
       if (isPollingQuery) {
         this.scheduler.stopPollingQuery(this.queryId);
       }

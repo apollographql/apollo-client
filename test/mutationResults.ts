@@ -648,7 +648,7 @@ describe('mutation results', () => {
     it('error handling in reducer functions', () => {
       const oldError = console.error;
       const errors: any[] = [];
-      console.error = (msg) => {
+      console.error = (msg: string) => {
         errors.push(msg);
       };
 

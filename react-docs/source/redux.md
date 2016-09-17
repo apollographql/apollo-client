@@ -6,6 +6,8 @@ order: 25
 
 By default, Apollo Client creates its own internal Redux store to manage queries and their results. If you are already using Redux for the rest of your app, you can have the client integrate with your existing store instead.
 
+> Note: While this will enable Apollo Client to keep its data in the same store, you should still use the [graphql container](/react/higher-order-components.html) to attach the data to your UI. If you want to use your Redux and Apollo state in a component, you need to use _both_ `graphql` from react-apollo and `connect` from Redux.
+
 This will let you better track the different events that happen in your app, and how your client and server side data changes interleave. It will also make using tools like the [Redux Dev Tools](https://github.com/zalmoxisus/redux-devtools-extension) more natural.
 
 <h2 id="creating-a-store">Creating a store</h2>

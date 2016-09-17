@@ -26,6 +26,7 @@ import {
   ApolloStore,
   createApolloReducer,
   ApolloReducerConfig,
+  Store,
 } from './store';
 
 import {
@@ -87,6 +88,7 @@ import {
 import isUndefined = require('lodash.isundefined');
 import assign = require('lodash.assign');
 import flatten = require('lodash.flatten');
+import isString = require('lodash.isstring');
 
 // We expose the print method from GraphQL so that people that implement
 // custom network interfaces can turn query ASTs into query strings as needed.
@@ -120,6 +122,16 @@ export type ApolloQueryResult = {
   // This type is different from the GraphQLResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.
 }
+
+/**
+ * This type defines a "selector" function that receives state from the Redux store
+ * and returns the part of it that is managed by ApolloClient
+ * @param state State of a Redux store
+ * @returns {Store} Part of state managed by ApolloClient
+ */
+export type ApolloStateSelector = (state: any) => Store;
+
+const DEFAULT_REDUX_ROOT_KEY = 'apollo';
 
 // A map going from the name of a fragment to that fragment's definition.
 // The point is to keep track of fragments that exist and print a warning if we encounter two
@@ -179,6 +191,10 @@ export function clearFragmentDefinitions() {
   fragmentDefinitionsMap = {};
 }
 
+function defaultReduxRootSelector(state: any) {
+  return state[DEFAULT_REDUX_ROOT_KEY];
+}
+
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -188,7 +204,7 @@ export function clearFragmentDefinitions() {
 export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
-  public reduxRootKey: string;
+  public reduxRootSelector: ApolloStateSelector | null;
   public initialState: any;
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
@@ -205,8 +221,13 @@ export default class ApolloClient {
    * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
    * to a GraphQL spec-compliant server.
    *
-   * @param reduxRootKey The root key within the Redux store in which data fetched from the server
-   * will be stored.
+   * @deprecated please use "reduxRootSelector" instead
+   * @param reduxRootKey The root key within the Redux store in which data fetched from the server.
+   * will be stored. This option should only be used if the store is created outside of the client.
+   *
+   * @param reduxRootSelector Either a "selector" function that receives state from the Redux store
+   * and returns the part of it that is managed by ApolloClient or a key that points to that state.
+   * This option should only be used if the store is created outside of the client.
    *
    * @param initialState The initial state assigned to the store.
    *
@@ -241,6 +262,7 @@ export default class ApolloClient {
   constructor({
     networkInterface,
     reduxRootKey,
+    reduxRootSelector,
     initialState,
     dataIdFromObject,
     queryTransformer,
@@ -252,6 +274,7 @@ export default class ApolloClient {
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
+    reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
     queryTransformer?: QueryTransformer,
@@ -261,7 +284,28 @@ export default class ApolloClient {
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
     batchInterval?: number,
   } = {}) {
-    this.reduxRootKey = reduxRootKey ? reduxRootKey : 'apollo';
+    if (reduxRootKey && reduxRootSelector) {
+      throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
+    }
+
+    if (reduxRootKey) {
+      console.warn(
+          '"reduxRootKey" option is deprecated and might be removed in the upcoming versions, ' +
+          'please use the "reduxRootSelector" instead.'
+      );
+    }
+
+    if (!reduxRootSelector && reduxRootKey) {
+      this.reduxRootSelector = (state: any) => state[reduxRootKey];
+    } else if (isString(reduxRootSelector)) {
+      this.reduxRootSelector = (state: any) => state[reduxRootSelector as string];
+    } else if (typeof reduxRootSelector === 'function') {
+      this.reduxRootSelector = reduxRootSelector;
+    } else {
+      // we need to know that reduxRootSelector wasn't provided by the user
+      this.reduxRootSelector = null;
+    }
+
     this.initialState = initialState ? initialState : {};
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface('/graphql');
@@ -355,25 +399,25 @@ export default class ApolloClient {
    *
    * It takes options as an object with the following keys and values:
    *
-   * @param mutation A GraphQL document, often created with `gql` from the `graphql-tag` package,
+   * @param options.mutation A GraphQL document, often created with `gql` from the `graphql-tag` package,
    * that contains a single mutation inside of it.
    *
-   * @param variables An object that maps from the name of a variable as used in the mutation
+   * @param options.variables An object that maps from the name of a variable as used in the mutation
    * GraphQL document to that variable's value.
    *
-   * @param fragments A list of fragments as returned by {@link createFragment}. These fragments
+   * @param options.fragments A list of fragments as returned by {@link createFragment}. These fragments
    * can be referenced from within the GraphQL mutation document.
    *
-   * @param optimisticResponse An object that represents the result of this mutation that will be
+   * @param options.optimisticResponse An object that represents the result of this mutation that will be
    * optimistically stored before the server has actually returned a result. This is most often
    * used for optimistic UI, where we want to be able to see the result of a mutation immediately,
    * and update the UI later if any errors appear.
    *
-   * @param updateQueries A {@link MutationQueryReducersMap}, which is map from query names to
+   * @param options.updateQueries A {@link MutationQueryReducersMap}, which is map from query names to
    * mutation query reducers. Briefly, this map defines how to incorporate the results of the
    * mutation into the results of queries that are currently being watched by your application.
    *
-   * @param refetchQueries A list of query names which will be refetched once this mutation has
+   * @param options.refetchQueries A list of query names which will be refetched once this mutation has
    * returned. This is often used if you have a set of queries which may be affected by a mutation
    * and will have to update. Rather than writing a mutation query reducer (i.e. `updateQueries`)
    * for this, you can simply refetch the queries that will be affected and achieve a consistent
@@ -425,9 +469,18 @@ export default class ApolloClient {
       return;
     }
 
+    if (this.reduxRootSelector) {
+      throw new Error(
+          'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
+          'They should only be used when the store is created outside of the client. ' +
+          'This may lead to unexpected results when querying the store internally. ' +
+          `Please remove that option from ApolloClient constructor.`
+      );
+    }
+
     // If we don't have a store already, initialize a default one
     this.setStore(createApolloStore({
-      reduxRootKey: this.reduxRootKey,
+      reduxRootKey: DEFAULT_REDUX_ROOT_KEY,
       initialState: this.initialState,
       config: this.reducerConfig,
     }));
@@ -438,16 +491,21 @@ export default class ApolloClient {
   };
 
   private setStore(store: ApolloStore) {
+    const reduxRootSelector = (this.reduxRootSelector) ? this.reduxRootSelector : defaultReduxRootSelector;
+
     // ensure existing store has apolloReducer
-    if (isUndefined(store.getState()[this.reduxRootKey])) {
-      throw new Error(`Existing store does not use apolloReducer for ${this.reduxRootKey}`);
+    if (isUndefined(reduxRootSelector(store.getState()))) {
+      throw new Error(
+          'Existing store does not use apolloReducer. Please make sure the store ' +
+          'is properly configured and "reduxRootSelector" is correctly specified.'
+      );
     }
 
     this.store = store;
 
     this.queryManager = new QueryManager({
       networkInterface: this.networkInterface,
-      reduxRootKey: this.reduxRootKey,
+      reduxRootSelector: reduxRootSelector,
       store,
       queryTransformer: this.queryTransformer,
       shouldBatch: this.shouldBatch,

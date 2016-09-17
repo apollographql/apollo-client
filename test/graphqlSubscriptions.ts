@@ -172,7 +172,7 @@ describe('GraphQL Subscriptions', () => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     const queryManager = new QueryManager({
       networkInterface: network,
-      reduxRootKey: 'apollo',
+      reduxRootSelector: (state: any) => state.apollo,
       store: createApolloStore(),
     });
 
@@ -210,7 +210,7 @@ describe('GraphQL Subscriptions', () => {
     let numResults = 0;
     const queryManager = new QueryManager({
       networkInterface: network,
-      reduxRootKey: 'apollo',
+      reduxRootSelector: (state: any) => state.apollo,
       store: createApolloStore(),
     });
 

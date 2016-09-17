@@ -176,7 +176,7 @@ describe('client', () => {
     createStore(
         combineReducers({
           testApollo: client.reducer(),
-        }),
+        } as any),
         // here "client.setStore(store)" will be called internally,
         // this method throws if "reduxRootSelector" or "reduxRootKey"
         // are not configured properly
@@ -194,7 +194,7 @@ describe('client', () => {
     createStore(
         combineReducers({
           testApollo: client.reducer(),
-        }),
+        } as any),
         // here "client.setStore(store)" will be called internally,
         // this method throws if "reduxRootSelector" or "reduxRootKey"
         // are not configured properly

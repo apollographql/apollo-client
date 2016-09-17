@@ -14,5 +14,6 @@
     "dist": true,
     "coverage": true,
     "npm": true
-  }
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

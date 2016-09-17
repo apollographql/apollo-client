@@ -38,6 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "es6-promise": "^3.3.1",
+    "fetch-ponyfill": "^3.0.0",
     "graphql-tag": "^0.1.13",
     "lodash.assign": "^4.0.8",
     "lodash.clonedeep": "^4.3.2",
@@ -59,14 +60,12 @@
     "lodash.merge": "^4.4.0",
     "lodash.pick": "^4.2.0",
     "redux": "^3.3.1",
-    "symbol-observable": "^1.0.2",
-    "whatwg-fetch": "^1.0.0"
+    "symbol-observable": "^1.0.2"
   },
   "devDependencies": {
     "@types/async": "^2.0.31",
     "@types/chai": "^3.4.32",
     "@types/chai-as-promised": "0.0.28",
-    "@types/isomorphic-fetch": "0.0.30",
     "@types/lodash": "^4.14.34",
     "@types/mocha": "^2.2.31",
     "@types/node": "^6.0.38",
@@ -85,7 +84,6 @@
     "grunt": "1.0.1",
     "grunt-tslint": "3.2.1",
     "gzip-size": "^3.0.0",
-    "isomorphic-fetch": "^2.2.1",
     "istanbul": "^0.4.5",
     "lodash": "^4.6.1",
     "lodash.mapvalues": "^4.3.0",

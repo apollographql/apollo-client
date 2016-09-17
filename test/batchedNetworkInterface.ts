@@ -19,9 +19,11 @@ import { AfterwareInterface } from '../src/afterware';
 
 import { GraphQLResult } from 'graphql';
 
-import 'whatwg-fetch';
+import createFetch from 'fetch-ponyfill';
 
 import gql from 'graphql-tag';
+
+const fetch = createFetch().fetch;
 
 describe('HTTPBatchedNetworkInterface', () => {
   // Helper method that tests a roundtrip given a particular set of requests to the

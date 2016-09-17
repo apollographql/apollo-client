@@ -1,7 +1,6 @@
 /* tslint:disable */
-// ensure support for fetch and promise
+// ensure support for promise
 import 'es6-promise';
-import 'isomorphic-fetch';
 
 process.env.NODE_ENV = 'test';
 

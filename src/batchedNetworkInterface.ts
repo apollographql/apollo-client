@@ -10,9 +10,11 @@ import {
   GraphQLResult,
 } from 'graphql';
 
-import 'whatwg-fetch';
+import createFetch from 'fetch-ponyfill';
 
 import assign = require('lodash.assign');
+
+const fetch = createFetch().fetch;
 
 // An implementation of the network interface that operates over HTTP and batches
 // together requests over the HTTP transport. Note that this implementation will only work correctly

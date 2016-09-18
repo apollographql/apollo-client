@@ -5,7 +5,7 @@ order: 13
 
 Apollo performs two important core tasks: executing queries and mutations, and caching the results.
 
-Thanks to Apollo's store, it's possible for the results of a query or mutation to update to your UI in all the right places. In many cases it's possible for that to happen automatically, whereas in others you need to help the client out a little in doing so.
+Thanks to Apollo's store, it's possible for the results of a query or mutation to update your UI in all the right places. In many cases it's possible for that to happen automatically, whereas in others you need to help the client out a little in doing so.
 
 <h2 id="dataIdFromObject">Normalization with `dataIdFromObject`</h2>
 

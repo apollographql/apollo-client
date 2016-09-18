@@ -11,7 +11,7 @@ Thanks to Apollo's store, it's possible for the results of a query or mutation t
 
 While Apollo can do basic caching based on the shape of GraphQL queries and their results, Apollo won't be able to associate objects fetched by different queries without additional information about the identities of the objects returned from the server. This is referred to as [cache normalization](http://dev.apollodata.com/core/how-it-works.html#normalize). You can read about our caching model in detail in our blog post, ["GraphQL Concepts Visualized"](https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3).
 
-By default, Apollo does not use and object IDs at all, doing caching based only on the path to the object from the root query. However, if you specify a function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), you can decide how Apollo will identify and de-duplicate the objects returned from the server.
+By default, Apollo does not use object IDs at all, doing caching based only on the path to the object from the root query. However, if you specify a function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), you can decide how Apollo will identify and de-duplicate the objects returned from the server.
 
 ```js
 import ApolloClient from 'apollo-client';

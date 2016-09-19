@@ -56,7 +56,7 @@ nav_links:
     url: http://dev.apollodata.com/android
   'Vanilla JS':
     url: http://dev.apollodata.com/core
-  'Server':
+  'Servers':
     url: http://dev.apollodata.com/tools
     separator: true
   'Blog':

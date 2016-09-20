@@ -9,7 +9,6 @@ Expect active development and potentially significant breaking changes in the `0
 - Include more type definitions and methods in root export for use in react-apollo [PR #619](https://github.com/apollostack/apollo-client/pull/619)
 - Added `resultTransformer` and `resultComparator` to `ApolloClient`/`QueryManager`, which afford the ability to transform result objects immediately before they are returned to the application. [PR #446](https://github.com/apollostack/apollo-client/pull/446)
 - Fixed issue with nested fragments overriding each other. [PR #629](https://github.com/apollostack/apollo-client/pull/629)
-- Add "reduxRootSelector" parameter to the ApolloClient constructor and deprecate "reduxRootKey". [PR #631](https://github.com/apollostack/apollo-client/pull/631)
 
 ### v0.4.15
 

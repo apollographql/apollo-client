@@ -463,10 +463,6 @@ export class QueryManager {
 
   public addQueryListener(queryId: string, listener: QueryListener) {
     this.queryListeners[queryId] = listener;
-  };
-
-  public removeQueryListener(queryId: string) {
-    delete this.queryListeners[queryId];
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.

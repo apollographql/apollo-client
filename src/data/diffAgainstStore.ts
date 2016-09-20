@@ -2,7 +2,7 @@ import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isObject = require('lodash.isobject');
 import has = require('lodash.has');
-import deepAssign = require('deep-assign');
+import merge = require('lodash.merge');
 
 import {
   storeKeyNameFromField,
@@ -221,7 +221,7 @@ export function diffSelectionSetAgainstStore({
           }
 
           if (isObject(fieldResult)) {
-            deepAssign(result, fieldResult);
+            merge(result, fieldResult);
           }
           if (!fragmentErrors[typename]) {
             fragmentErrors[typename] = null;
@@ -260,7 +260,7 @@ export function diffSelectionSetAgainstStore({
             pushMissingField(selection);
           }
           if (isObject(fieldResult)) {
-            deepAssign(result, fieldResult);
+            merge(result, fieldResult);
           }
 
           if (!fragmentErrors[typename]) {

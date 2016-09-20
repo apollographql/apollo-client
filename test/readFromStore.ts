@@ -172,7 +172,9 @@ describe('reading from the store', () => {
       deepNestedObj: {
         stringField: 'This is a deep string',
         numberField: 7,
+        nullField: null,
       } as StoreObject,
+      nullObject: null,
     };
 
     const store = {
@@ -180,6 +182,7 @@ describe('reading from the store', () => {
         nestedObj: {
           type: 'id',
           id: 'abcde',
+          nullField: null,
           generated: false,
         },
       }) as StoreObject,
@@ -188,6 +191,7 @@ describe('reading from the store', () => {
           type: 'id',
           id: 'abcdef',
           generated: false,
+          nullField: null,
         },
       }) as StoreObject,
       abcdef: result.deepNestedObj as StoreObject,
@@ -199,21 +203,29 @@ describe('reading from the store', () => {
         fragment FragmentName on Item {
           stringField,
           numberField,
+          nullField,
           ...on Item {
             nestedObj {
               stringField
+              nullField
               deepNestedObj {
                 stringField
+                nullField
               }
             }
           }
           ...on Item {
             nestedObj {
               numberField
+              nullField
               deepNestedObj {
                 numberField
+                nullField
               }
             }
+          }
+          ... on Item {
+            nullObject
           }
         }
       `,
@@ -224,14 +236,18 @@ describe('reading from the store', () => {
     assert.deepEqual(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
+      nullField: null,
       nestedObj: {
         stringField: 'This is a string too!',
         numberField: 6,
+        nullField: null,
         deepNestedObj: {
           stringField: 'This is a deep string',
           numberField: 7,
+          nullField: null,
         },
       },
+      nullObject: null,
     });
   });
 

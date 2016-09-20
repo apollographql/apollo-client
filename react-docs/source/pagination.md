@@ -1,6 +1,5 @@
 ---
 title: Pagination
-order: 21
 ---
 
 Often, you will have some views in your application where you need to display a list that contains too much data to be either fetched or displayed at once. Pagination is the most common solution to this problem, and Apollo Client has built-in functionality that makes it quite easy to do.

@@ -1,6 +1,5 @@
 ---
 title: Queries
-order: 10
 ---
 
 On this page, you can learn how to use `react-apollo` to attach GraphQL query results to your React UI. You can read about GraphQL queries themselves in detail at [graphql.org](http://graphql.org/docs/queries/).

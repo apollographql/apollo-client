@@ -1,6 +1,5 @@
 ---
 title: Connecting data
-order: 3
 ---
 
 Now that we have created an `ApolloClient` instance and attached it to our UI tree with `ApolloProvider`, we can start using the main function of `react-apollo`: adding GraphQL functionality to our UI components.

@@ -1,6 +1,5 @@
 ---
 title: Simple Apollo Example
-order: 1
 ---
 
 This a very simple example of a Apollo Application that uses React. You can see GraphQL in action, combined with the concepts explained in this guide.

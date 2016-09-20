@@ -1,6 +1,5 @@
 ---
 title: Optimistic UI
-order: 22
 ---
 
 As explained in the [mutations](mutations.html#optimistic-ui) section, optimistic UI is a pattern that you can use to simulate the results of a mutation and update the UI even before receiving a response from the server. Once the response is received from the server, optimistic result is thrown away and replaced with the actual result.

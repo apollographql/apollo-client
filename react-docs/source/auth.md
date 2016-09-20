@@ -1,6 +1,5 @@
 ---
 title: Authentication
-order: 20
 ---
 
 Unless all of the data you are loading is completely public, your app has some sort of users, accounts and permissions systems. If different users have different permissions in your application, then you need a way to tell the server which user is associated with each request.

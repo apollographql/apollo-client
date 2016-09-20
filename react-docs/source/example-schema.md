@@ -1,6 +1,5 @@
 ---
 title: GitHunt Example and Schema
-order: 4
 ---
 
 In the documentation we'll show examples of using Apollo in React via the GitHunt example application.

@@ -1,6 +1,5 @@
 ---
 title: Setup and options
-order: 2
 ---
 <h2 id="installation">Installation</h2>
 

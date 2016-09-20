@@ -645,6 +645,114 @@ describe('mutation results', () => {
       });
     });
 
+    it.only('does not fail with fragments and null values', () => {
+      const queryWithNull = gql`
+        fragment Text1 on Todo {
+          nestedText {
+            text1
+          }
+        }
+
+        fragment Text2 on Todo {
+          nestedText {
+            text2
+          }
+        }
+
+        fragment ComplexTodo on Todo {
+          __typename
+          id
+          ...Text1
+          ...Text2
+          completed
+        }
+
+        fragment ComplexTodoList on TodoList {
+          __typename
+          id
+          todos {
+            ...ComplexTodo
+          }
+        }
+
+        query todoListWithNull {
+          __typename
+          todoList(id: 6) {
+            ...ComplexTodoList
+          }
+        }
+      `;
+
+      const resultWithNull: any = {
+        data: {
+          __typename: 'Query',
+          todoList: {
+            __typename: 'TodoList',
+            id: null,
+            todos: [
+              {
+                __typename: 'Todo',
+                id: '3',
+                nestedText: null,
+                completed: null,
+              },
+              {
+                __typename: 'Todo',
+                id: '6',
+                nestedText:  {
+                  text1: 'Second',
+                  //text2: 'Task',
+                },
+                completed: false,
+              },
+              {
+                __typename: 'Todo',
+                id: '12',
+                nestedText:  {
+                  text1: 'Do Other Stuff',
+                  text2: null,
+                },
+                completed: false,
+              },
+            ],
+          },
+        },
+      };
+
+      return setup({
+        request: { query: queryWithNull },
+        result: resultWithNull,
+      }, {
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              assert.equal(mResult.data.createTodo.id, '99');
+
+              const state = clonedeep(prev) as any;
+              state.todoList.todos.unshift(mResult.data.createTodo);
+              return state;
+            },
+          },
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+
     it('error handling in reducer functions', () => {
       const oldError = console.error;
       const errors: any[] = [];

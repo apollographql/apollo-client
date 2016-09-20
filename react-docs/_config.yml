@@ -28,6 +28,7 @@ sidebar_categories:
     - pagination
     - optimistic-ui
     - prefetching
+    - react-native
     - redux
     - server-side-rendering
 github_repo: apollostack/react-docs

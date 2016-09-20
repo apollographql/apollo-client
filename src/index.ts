@@ -308,6 +308,8 @@ export default class ApolloClient {
     if (!reduxRootSelector && reduxRootKey) {
       this.reduxRootSelector = (state: any) => state[reduxRootKey];
     } else if (isString(reduxRootSelector)) {
+      // for backwards compatibility, we set reduxRootKey if reduxRootSelector is a string
+      this.reduxRootKey = reduxRootSelector;
       this.reduxRootSelector = (state: any) => state[reduxRootSelector as string];
     } else if (typeof reduxRootSelector === 'function') {
       this.reduxRootSelector = reduxRootSelector;
@@ -496,6 +498,8 @@ export default class ApolloClient {
       initialState: this.initialState,
       config: this.reducerConfig,
     }));
+    // for backcompatibility, ensure that reduxRootKey is set to selector return value
+    this.reduxRootKey = DEFAULT_REDUX_ROOT_KEY;
   };
 
   public resetStore() {

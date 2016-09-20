@@ -4,6 +4,11 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### v0.4.18
+
+- Fix bug with null fragments introduced in 0.4.16 [PR #683](https://github.com/apollostack/apollo-client/pull/683)
+- Set reduxRootKey for backwards-compatibility, even when using reduxRootSelector [PR #685](https://github.com/apollostack/apollo-client/pull/683)
+
 ### v0.4.17
 
 - This version is identical to 0.4.15. It was published over 0.4.16 because that had some unintentional breaking changes. Once the breaks are identified and fixed, there will be a 0.4.18 with the new features.

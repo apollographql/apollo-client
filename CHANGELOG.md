@@ -4,6 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- **Breaking changes** Remove `queryTransform` option and replace it with `addTypename`, which
+is true by default and adds `__typename` to selection sets. [PR #671](https://github.com/apollostack/apollo-client/pull/671)
+
 ### v0.4.18
 
 - Fix bug with null fragments introduced in 0.4.16 [PR #683](https://github.com/apollostack/apollo-client/pull/683)

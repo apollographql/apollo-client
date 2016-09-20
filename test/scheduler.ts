@@ -9,6 +9,7 @@ import {
 } from '../src/store';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
+import { applyTransformers, addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
 describe('QueryScheduler', () => {
   const defaultReduxRootSelector = (state: any) => state.apollo;
@@ -132,12 +133,14 @@ describe('QueryScheduler', () => {
     const myQuery = gql`
       query {
         someAuthorAlias: author {
+          __typename
           firstName
           lastName
         }
       }`;
     const data = {
       'someAuthorAlias': {
+        '__typename': 'Author',
         'firstName': 'John',
         'lastName': 'Smith',
       },
@@ -382,12 +385,14 @@ describe('QueryScheduler', () => {
     const query2 = gql`
     query {
       author {
+        __typename
         firstName
         lastName
       }
     }`;
     const data2 = {
       author: {
+        __typename: 'Author',
         firstName: 'Dhaivat',
         lastName: 'Pandya',
       },
@@ -452,6 +457,7 @@ describe('QueryScheduler', () => {
     }`;
     const data = {
       author: {
+        __typename: 'Author',
         firstName: 'John',
         lastName: 'Smith',
       },
@@ -459,7 +465,7 @@ describe('QueryScheduler', () => {
     const queryManager = new QueryManager({
       networkInterface: mockNetworkInterface(
         {
-          request: { query },
+          request: { query: applyTransformers(query, [addTypenameToSelectionSet]) },
           result: { data },
         }
       ),

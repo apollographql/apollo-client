@@ -2,7 +2,7 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename, createFragment } from '../src';
+import ApolloClient, { createFragment } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 import { addFragmentsToDocument } from '../src/queries/getFromAST';
@@ -14,6 +14,7 @@ import gql from 'graphql-tag';
 
 import {
   applyTransformers,
+  addTypenameToSelectionSet,
 } from '../src/queries/queryTransform';
 
 describe('optimistic mutation results', () => {
@@ -131,7 +132,6 @@ describe('optimistic mutation results', () => {
 
     client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypename,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
@@ -913,13 +913,13 @@ describe('optimistic mutation - githunt comments', () => {
   function setup(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: {
-        query: applyTransformers(query, [addTypename]),
+        query: applyTransformers(query, [addTypenameToSelectionSet]),
         variables,
       },
       result,
     }, {
       request: {
-        query: addFragmentsToDocument(applyTransformers(queryWithFragment, [addTypename]), fragment),
+        query: addFragmentsToDocument(applyTransformers(queryWithFragment, [addTypenameToSelectionSet]), fragment),
         variables,
       },
       result,
@@ -927,13 +927,13 @@ describe('optimistic mutation - githunt comments', () => {
 
     client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypename,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
         }
         return null;
       },
+      addTypename: true,
     });
 
     const obsHandle = client.watchQuery({
@@ -996,7 +996,7 @@ describe('optimistic mutation - githunt comments', () => {
 
     return setup({
       request: {
-        query: applyTransformers(mutation, [addTypename]),
+        query: applyTransformers(mutation, [addTypenameToSelectionSet]),
         variables: mutationVariables,
       },
       result: mutationResult,
@@ -1022,7 +1022,10 @@ describe('optimistic mutation - githunt comments', () => {
 
     return setup({
       request: {
-        query: addFragmentsToDocument(applyTransformers(mutationWithFragment, [addTypename]), fragmentWithTypenames),
+        query: addFragmentsToDocument(
+          applyTransformers(mutationWithFragment, [addTypenameToSelectionSet]),
+          fragmentWithTypenames
+        ),
         variables: mutationVariables,
       },
       result: mutationResult,

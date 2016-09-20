@@ -29,8 +29,8 @@ import {
 } from './queries/getFromAST';
 
 import {
-  QueryTransformer,
   applyTransformers,
+  addTypenameToSelectionSet,
 } from './queries/queryTransform';
 
 import {
@@ -131,7 +131,6 @@ export class QueryManager {
 
   private networkInterface: NetworkInterface;
   private reduxRootSelector: ApolloStateSelector;
-  private queryTransformer: QueryTransformer;
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private queryListeners: { [queryId: string]: QueryListener };
@@ -143,6 +142,8 @@ export class QueryManager {
 
   private batcher: QueryBatcher;
   private batchInterval: number;
+
+  private addTypename: boolean;
 
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
@@ -170,33 +171,33 @@ export class QueryManager {
     networkInterface,
     store,
     reduxRootSelector,
-    queryTransformer,
     resultTransformer,
     resultComparator,
     shouldBatch = false,
     batchInterval = 10,
+    addTypename = true,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
-    queryTransformer?: QueryTransformer,
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
     shouldBatch?: Boolean,
     batchInterval?: number,
+    addTypename?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
-    this.queryTransformer = queryTransformer;
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
     this.pollingTimers = {};
     this.batchInterval = batchInterval;
     this.queryListeners = {};
     this.queryResults = {};
+    this.addTypename = addTypename;
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -256,8 +257,9 @@ export class QueryManager {
     // construct the fragment map.
     mutation = addFragmentsToDocument(mutation, fragments);
 
-    if (this.queryTransformer) {
-      mutation = applyTransformers(mutation, [this.queryTransformer]);
+    // apply addTypename transformer by default
+    if (this.addTypename) {
+      mutation = applyTransformers(mutation, [addTypenameToSelectionSet]);
     }
 
     let mutationDef = getMutationDefinition(mutation);
@@ -567,8 +569,8 @@ export class QueryManager {
 
     let queryDoc = addFragmentsToDocument(query, fragments);
     // Apply the query transformer if one has been provided.
-    if (this.queryTransformer) {
-      queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
+    if (this.addTypename) {
+      queryDoc = applyTransformers(queryDoc, [addTypenameToSelectionSet]);
     }
     const request: Request = {
       query: queryDoc,
@@ -636,7 +638,7 @@ export class QueryManager {
     let fragments = queryOptions.fragments;
     let queryDefinition = getQueryDefinition(queryOptions.query);
 
-    if (this.queryTransformer) {
+    if (this.addTypename) {
       const doc = {
         kind: 'Document',
         definitions: [
@@ -645,7 +647,7 @@ export class QueryManager {
         ],
       };
 
-      const transformedDoc = applyTransformers(doc, [this.queryTransformer]);
+      const transformedDoc = applyTransformers(doc, [addTypenameToSelectionSet]);
 
       queryDefinition = getQueryDefinition(transformedDoc);
       fragments = getFragmentDefinitions(transformedDoc);
@@ -731,7 +733,7 @@ export class QueryManager {
   // Takes a set of WatchQueryOptions and transforms the query document
   // accordingly. Specifically, it does the following:
   // 1. Adds the fragments to the document
-  // 2. Applies the queryTransformer (if there is one defined)
+  // 2. Applies the addTypenameToSelectionSet transformer if addTypename is set to true
   // 3. Creates a fragment map out of all of the fragment definitions within the query
   //    document.
   // 4. Returns the final query document and the fragment map associated with the
@@ -747,8 +749,8 @@ export class QueryManager {
     let queryDoc = addFragmentsToDocument(query, fragments);
 
     // Apply the query transformer if one has been provided
-    if (this.queryTransformer) {
-      queryDoc = applyTransformers(queryDoc, [ this.queryTransformer ]);
+    if (this.addTypename) {
+      queryDoc = applyTransformers(queryDoc, [ addTypenameToSelectionSet ]);
     }
 
     return {
@@ -915,7 +917,7 @@ export class QueryManager {
     } as SelectionSetWithRoot;
 
     // If we don't use diffing, then these will be the same as the original query, other than
-    // the queryTransformer that could have been applied.
+    // the addTypenameToSelectionSet that could have been applied.
     let minimizedQueryString = queryString;
     let minimizedQuery = querySS;
     let minimizedQueryDoc = queryDoc;

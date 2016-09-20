@@ -3147,7 +3147,10 @@ describe('QueryManager', () => {
 
   describe('result transformation', () => {
 
-    let client: ApolloClient, response, transformCount;
+    let client: ApolloClient;
+    let response: any;
+    let transformCount: number;
+
     beforeEach(() => {
       transformCount = 0;
 
@@ -3245,7 +3248,9 @@ describe('QueryManager', () => {
 
     class Model {}
 
-    let client: ApolloClient, response;
+    let client: ApolloClient;
+    let response: any;
+
     beforeEach(() => {
       const networkInterface: NetworkInterface = {
         query(request: Request): Promise<GraphQLResult> {

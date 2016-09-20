@@ -204,6 +204,7 @@ function defaultReduxRootSelector(state: any) {
 export default class ApolloClient {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
+  public reduxRootKey: string;
   public reduxRootSelector: ApolloStateSelector | null;
   public initialState: any;
   public queryManager: QueryManager;
@@ -293,6 +294,7 @@ export default class ApolloClient {
           '"reduxRootKey" option is deprecated and might be removed in the upcoming versions, ' +
           'please use the "reduxRootSelector" instead.'
       );
+      this.reduxRootKey = reduxRootKey;
     }
 
     if (!reduxRootSelector && reduxRootKey) {

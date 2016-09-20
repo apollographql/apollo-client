@@ -122,3 +122,8 @@ declare module 'graphql-tag/parser' {
 declare module 'graphql-tag/printer' {
   function print(ast: any): string;
 }
+
+declare module 'deep-assign' {
+  function deepAssign(...objects: any[]): any;
+  export = deepAssign;
+}

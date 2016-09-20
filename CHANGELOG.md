@@ -4,7 +4,13 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- ...
+### v0.4.17
+
+- Exactly the same as 0.4.15.
+
+### v0.4.16
+
+- Some unintentional breaking changes were published here.
 
 ### v0.4.15
 

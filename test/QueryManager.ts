@@ -545,6 +545,69 @@ describe('QueryManager', () => {
     });
   });
 
+  it.only('allows you to subscribe twice to the one query', (done) => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }`,
+      variables: {
+        id: '1',
+      },
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    // pre populate data to avoid contention
+    queryManager.query(request)
+      .then(() => {
+        let subOneCount = 0;
+        const handle = queryManager.watchQuery(request);
+        handle.subscribe({
+          next(result) {
+            subOneCount++;
+
+            if (subOneCount === 1) {
+              assert.deepEqual(result.data, data1);
+            } else if (subOneCount === 2) {
+              assert.deepEqual(result.data, data2);
+            }
+          },
+        });
+
+        let subTwoCount = 0;
+        handle.subscribe({
+          next(result) {
+            subTwoCount++;
+            if (subTwoCount === 1) {
+              assert.deepEqual(result.data, data1);
+              handle.refetch();
+            } else if (subTwoCount === 2) {
+              assert.deepEqual(result.data, data2);
+              done();
+            }
+          }
+        });
+      });
+  });
+
   it('allows you to refetch queries', (done) => {
 
     const request = {

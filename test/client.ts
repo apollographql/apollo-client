@@ -166,6 +166,14 @@ describe('client', () => {
     );
   });
 
+  it('sets reduxRootKey by default (backcompat)', () => {
+    const client = new ApolloClient();
+
+    client.initStore();
+
+    assert.equal(client.reduxRootKey, 'apollo');
+  });
+
   it('can allow passing in a top level key', () => {
     const reduxRootKey = 'testApollo';
     const client = new ApolloClient({
@@ -203,6 +211,27 @@ describe('client', () => {
         // are not configured properly
         applyMiddleware(client.middleware())
     );
+  });
+
+  it('should allow passing reduxRootSelector as a string', () => {
+    const reduxRootSelector = 'testApollo';
+    const client = new ApolloClient({
+      reduxRootSelector,
+    });
+
+    // shouldn't throw
+    createStore(
+        combineReducers({
+          testApollo: client.reducer(),
+        } as any),
+        // here "client.setStore(store)" will be called internally,
+        // this method throws if "reduxRootSelector" or "reduxRootKey"
+        // are not configured properly
+        applyMiddleware(client.middleware())
+    );
+
+    // Check if the key is added to the client instance, like before
+    assert.equal(client.reduxRootKey, 'testApollo');
   });
 
   it('should throw an error if both "reduxRootKey" and "reduxRootSelector" are passed', () => {

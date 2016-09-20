@@ -214,6 +214,7 @@ export default class ApolloClient {
   public batchInterval: number;
   public addTypename: boolean;
 
+
   /**
    * Constructs an instance of {@link ApolloClient}.
    *
@@ -283,6 +284,11 @@ export default class ApolloClient {
     batchInterval?: number,
     addTypename?: boolean,
   } = {}) {
+    if (arguments && arguments[0] && arguments[0]['queryTransformer']) {
+      console.warn('The "queryTransformer" option was removed. Use the "addTypename" option ' +
+      ' to add __typename to queries');
+    }
+
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
     }

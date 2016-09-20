@@ -74,6 +74,16 @@ chai.use(chaiAsPromised);
 disableFragmentWarnings();
 
 describe('client', () => {
+  it('prints a warning if the queryTransformer option is passed', () => {
+    const realConsoleWarn = console.warn;
+    const warnings: string[] = [];
+    console.warn = (msg: string) => warnings.push(msg);
+    const client = new ApolloClient({ queryTransformer: 'blah'} as any);
+    console.warn = realConsoleWarn;
+    assert.isDefined(client);
+    assert(warnings.length === 1);
+  });
+
   it('does not require any arguments and creates store lazily', () => {
     const client = new ApolloClient();
 

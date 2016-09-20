@@ -157,7 +157,7 @@ describe('reading from the store', () => {
     });
   });
 
-  it.only('runs a nested fragment with multiple fragments', () => {
+  it('runs a nested fragment with multiple fragments', () => {
     const result: any = {
       id: 'abcd',
       stringField: 'This is a string!',

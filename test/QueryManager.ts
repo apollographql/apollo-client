@@ -3144,6 +3144,166 @@ describe('QueryManager', () => {
       });
     });
   });
+
+  describe('result transformation', () => {
+
+    let client: ApolloClient;
+    let response: any;
+    let transformCount: number;
+
+    beforeEach(() => {
+      transformCount = 0;
+
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          return Promise.resolve(response);
+        },
+      };
+
+      client = new ApolloClient({
+        networkInterface,
+        resultTransformer(result) {
+          transformCount++;
+          return {
+            data: assign({}, result.data, {transformCount}),
+            loading: false,
+          };
+        },
+      });
+    });
+
+    it('transforms query() results', () => {
+      response = {data: {foo: 123}};
+      return client.query({query: gql`{ foo }`})
+        .then((result) => {
+          assert.deepEqual(result.data, {foo: 123, transformCount: 1});
+        });
+    });
+
+    it('transforms watchQuery() results', (done) => {
+      response = {data: {foo: 123}};
+      const handle = client.watchQuery({query: gql`{ foo }`});
+
+      let callCount = 0;
+      handle.subscribe({
+        error: done,
+        next(result) {
+          try {
+            callCount++;
+            if (callCount === 1) {
+              assert.deepEqual(result.data, {foo: 123, transformCount: 1});
+              response = {data: {foo: 456}};
+              handle.refetch();
+            } else {
+              assert.deepEqual(result.data, {foo: 456, transformCount: 2});
+              done();
+            }
+          } catch (error) {
+            done(error);
+          }
+        },
+      });
+    });
+
+    it('does not transform identical watchQuery() results', (done) => {
+      response = {data: {foo: 123}};
+      const handle = client.watchQuery({query: gql`{ foo }`});
+
+      let callCount = 0;
+      handle.subscribe({
+        error: done,
+        next(result) {
+          callCount++;
+          try {
+            assert.equal(callCount, 1, 'observer should only fire once');
+            assert.deepEqual(result.data, {foo: 123, transformCount: 1});
+          } catch (error) {
+            done(error);
+            return;
+          }
+
+          response = {data: {foo: 123}}; // Ensure we have new response objects.
+          handle.refetch().then(() => {
+            // Skip done() on subsequent calls, because that means we've already failed.  This gives
+            // us better test failure output.
+            if (callCount === 1) {
+              done();
+            }
+          }).catch(done);
+        },
+      });
+    });
+
+    it('transforms mutate() results', () => {
+      response = {data: {foo: 123}};
+      return client.mutate({mutation: gql`mutation makeChanges { foo }`})
+        .then((result) => {
+          assert.deepEqual(result.data, {foo: 123, transformCount: 1});
+        });
+    });
+
+  });
+
+  describe('result transformation with custom equality', () => {
+
+    class Model {}
+
+    let client: ApolloClient;
+    let response: any;
+
+    beforeEach(() => {
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          return Promise.resolve(response);
+        },
+      };
+
+      client = new ApolloClient({
+        networkInterface,
+        resultTransformer(result) {
+          result.data.__proto__ = Model.prototype;
+          return result;
+        },
+        resultComparator(result1, result2) {
+          // A real example would, say, deep compare the two while ignoring prototypes.
+          const foo1 = result1 && result1.data && result1.data.foo;
+          const foo2 = result2 && result2.data && result2.data.foo;
+          return foo1 === foo2;
+        },
+      });
+    });
+
+    it('does not transform identical watchQuery() results, according to the comparator', (done) => {
+      response = {data: {foo: 123}};
+      const handle = client.watchQuery({query: gql`{ foo }`});
+
+      let callCount = 0;
+      handle.subscribe({
+        error: done,
+        next(result) {
+          callCount++;
+          try {
+            assert.equal(callCount, 1, 'observer should only fire once');
+            assert.instanceOf(result.data, Model);
+          } catch (error) {
+            done(error);
+            return;
+          }
+
+          response = {data: {foo: 123}}; // Ensure we have new response objects.
+          handle.refetch().then(() => {
+            // Skip done() on subsequent calls, because that means we've already failed.  This gives
+            // us better test failure output.
+            if (callCount === 1) {
+              done();
+            }
+          }).catch(done);
+        },
+      });
+    });
+
+  });
+
 });
 
 function testDiffing(

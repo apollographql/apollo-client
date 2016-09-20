@@ -7,6 +7,7 @@ Expect active development and potentially significant breaking changes in the `0
 - **Backwards compatible deprecation** Add a `reduxRootSelector` option and deprecate `reduxRootKey`. This will allow people to put Apollo anywhere they like, even inside a store otherwise managed by ImmutableJS. Note: if you pass a `reduxRootKey` in this version, it will automatically create a `reduxRootSelector` for you, and attach it to the `ApolloClient` instance as before, but this behavior will be removed in `0.5`. [PR #631](https://github.com/apollostack/apollo-client/pull/631)
 - Make sure stopping a poll interval doesn't stop updates from the store. [PR #625](https://github.com/apollostack/apollo-client/pull/625)
 - Include more type definitions and methods in root export for use in react-apollo [PR #619](https://github.com/apollostack/apollo-client/pull/619)
+- Added `resultTransformer` and `resultComparator` to `ApolloClient`/`QueryManager`, which afford the ability to transform result objects immediately before they are returned to the application. [PR #446](https://github.com/apollostack/apollo-client/pull/446)
 
 ### v0.4.15
 
@@ -36,7 +37,6 @@ Expect active development and potentially significant breaking changes in the `0
 - Add code to support GraphQL subscriptions. [PR #540](https://github.com/apollostack/apollo-client/pull/540).
 - Fixed a couple of issues within query merging that caused issues with null values or arrays in responses. [PR #523](https://github.com/apollostack/apollo-client/pull/523).
 - Added an `updateQuery` method on observable queries. Allows application code to arbitrary change the result of a query normalized to store, without issuing any network requests. [PR #506](https://github.com/apollostack/apollo-client/pull/506) and [Issue #495](https://github.com/apollostack/apollo-client/issues/495).
-
 - Fixed issue where result of fetchMore from server wasn't being passed through [PR #508](https://github.com/apollostack/apollo-client/pull/508)
 
 ### v0.4.11

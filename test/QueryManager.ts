@@ -16,11 +16,6 @@ import {
   getIdField,
 } from '../src/data/extensions';
 
-import {
-  addTypenameToSelectionSet,
-  QueryTransformer,
-} from '../src/queries/queryTransform';
-
 import gql from 'graphql-tag';
 
 import {
@@ -88,22 +83,22 @@ describe('QueryManager', () => {
     networkInterface,
     store,
     reduxRootSelector,
-    queryTransformer,
     shouldBatch,
+    addTypename = false,
   }: {
     networkInterface?: NetworkInterface,
     store?: ApolloStore,
     reduxRootSelector?: ApolloStateSelector,
-    queryTransformer?: QueryTransformer,
     shouldBatch?: boolean,
+    addTypename?: boolean,
   }) => {
 
     return new QueryManager({
       networkInterface: networkInterface || mockNetworkInterface(),
       store: store || createApolloStore(),
       reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
-      queryTransformer,
       shouldBatch,
+      addTypename,
     });
   };
 
@@ -114,6 +109,7 @@ describe('QueryManager', () => {
       networkInterface: mockNetworkInterface(...mockedResponses),
       store: createApolloStore(),
       reduxRootSelector: defaultReduxRootSelector,
+      addTypename: false,
     });
   };
 
@@ -195,7 +191,10 @@ describe('QueryManager', () => {
       request: { query: mutation, variables },
       result: { data },
     });
-    const queryManager = createQueryManager({ networkInterface, store });
+    const queryManager = createQueryManager({
+      networkInterface,
+      store,
+    });
     return new Promise<{ result: GraphQLResult, queryManager: QueryManager }>((resolve, reject) => {
       queryManager.mutate({ mutation, variables }).then((result) => {
         resolve({ result, queryManager });
@@ -2021,7 +2020,7 @@ describe('QueryManager', () => {
     }, /wrap the query string in a "gql" tag/);
   });
 
-  it('should transform queries correctly when given a QueryTransformer', (done) => {
+  it('TODO should add __typename by default', (done) => {
     const query = gql`
       query {
         author {
@@ -2051,8 +2050,6 @@ describe('QueryManager', () => {
       },
     };
 
-    //make sure that the query is transformed within the query
-    //manager
     createQueryManager({
       networkInterface: mockNetworkInterface(
         {
@@ -2064,14 +2061,60 @@ describe('QueryManager', () => {
           result: {data: transformedQueryResult},
         }
       ),
-      queryTransformer: addTypenameToSelectionSet,
+      addTypename: true,
     }).query({query: query}).then((result) => {
       assert.deepEqual(result.data, transformedQueryResult);
       done();
     });
   });
 
-  it('should transform mutations correctly', (done) => {
+  it('should not add __typename if you tell it not to', (done) => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const transformedQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const unmodifiedQueryResult = {
+      'author': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+      },
+    };
+    const transformedQueryResult = {
+      'author': {
+        'firstName': 'John',
+        'lastName': 'Smith',
+      },
+    };
+
+    createQueryManager({
+      networkInterface: mockNetworkInterface(
+        {
+          request: {query},
+          result: {data: unmodifiedQueryResult},
+        },
+        {
+          request: {query: transformedQuery},
+          result: {data: transformedQueryResult},
+        }
+      ),
+      addTypename: false,
+    }).query({query: query}).then((result) => {
+      assert.deepEqual(result.data, transformedQueryResult);
+      done();
+    });
+  });
+
+  it('TODO should add __typename to mutations correctly', (done) => {
     const mutation = gql`
       mutation {
         createAuthor(firstName: "John", lastName: "Smith") {
@@ -2111,7 +2154,7 @@ describe('QueryManager', () => {
           request: {query: transformedMutation},
           result: {data: transformedMutationResult},
         }),
-      queryTransformer: addTypenameToSelectionSet,
+        addTypename: true,
     }).mutate({mutation: mutation}).then((result) => {
       assert.deepEqual(result.data, transformedMutationResult);
       done();
@@ -3346,6 +3389,7 @@ function testDiffing(
       config: { dataIdFromObject: getIdField },
     }),
     reduxRootSelector: (state) => state.apollo,
+    addTypename: false,
   });
 
   const steps = queryArray.map(({ query, fullResponse, variables }) => {

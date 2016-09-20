@@ -148,6 +148,7 @@ describe('GraphQL Subscriptions', () => {
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       networkInterface: network,
+      addTypename: false,
     });
 
     const sub = client.subscribe(options).subscribe({
@@ -174,6 +175,7 @@ describe('GraphQL Subscriptions', () => {
       networkInterface: network,
       reduxRootSelector: (state: any) => state.apollo,
       store: createApolloStore(),
+      addTypename: false,
     });
 
     const obs = queryManager.startGraphQLSubscription(options);
@@ -212,6 +214,7 @@ describe('GraphQL Subscriptions', () => {
       networkInterface: network,
       reduxRootSelector: (state: any) => state.apollo,
       store: createApolloStore(),
+      addTypename: false,
     });
 
     const sub = queryManager.startGraphQLSubscription(options).subscribe({

@@ -4,9 +4,11 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- ...
+### v0.4.17
 
-### v0.4.16
+- This version is identical to 0.4.15. It was published over 0.4.16 because that had some unintentional breaking changes. Once the breaks are identified and fixed, there will be a 0.4.18 with the new features.
+
+### v0.4.16 (deprecated, had breaking changes)
 
 - **Backwards compatible deprecation** Add a `reduxRootSelector` option and deprecate `reduxRootKey`. This will allow people to put Apollo anywhere they like, even inside a store otherwise managed by ImmutableJS. Note: if you pass a `reduxRootKey` in this version, it will automatically create a `reduxRootSelector` for you, and attach it to the `ApolloClient` instance as before, but this behavior will be removed in `0.5`. [PR #631](https://github.com/apollostack/apollo-client/pull/631)
 - Make sure stopping a poll interval doesn't stop updates from the store. [PR #625](https://github.com/apollostack/apollo-client/pull/625)

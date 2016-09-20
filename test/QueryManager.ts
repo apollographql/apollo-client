@@ -759,9 +759,15 @@ describe('QueryManager', () => {
           assert.deepEqual(result.data, data2);
           handle.refetch(variables1);
         } else if (handleCount === 3) {
+          assert.isTrue(result.loading);
+          assert.deepEqual(result.data, data2);
+        } else if (handleCount === 4) {
           assert.deepEqual(result.data, data3);
           handle.refetch(variables2);
-        } else if (handleCount === 4) {
+        } else if (handleCount === 5) {
+          assert.isTrue(result.loading);
+          assert.deepEqual(result.data, data3);
+        } else if (handleCount === 6) {
           assert.deepEqual(result.data, data4);
           done();
         }

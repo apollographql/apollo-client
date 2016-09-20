@@ -4,6 +4,7 @@ const { assert } = chai;
 import gql from 'graphql-tag';
 
 import mockWatchQuery from './mocks/mockWatchQuery';
+import mockQueryManager from './mocks/mockQueryManager';
 import { ObservableQuery } from '../src/ObservableQuery';
 
 // I'm not sure why mocha doesn't provide something like this, you can't
@@ -56,6 +57,10 @@ describe('ObservableQuery', () => {
             assert.deepEqual(result.data, dataOne);
             observable.setVariables(differentVariables);
           } else if (handleCount === 2) {
+            assert.isTrue(result.loading);
+            assert.deepEqual(result.data, dataOne);
+          } else if (handleCount === 3) {
+            assert.isFalse(result.loading);
             assert.deepEqual(result.data, dataTwo);
             done();
           }
@@ -75,18 +80,54 @@ describe('ObservableQuery', () => {
       let handleCount = 0;
       observable.subscribe({
         next: wrap(done, result => {
-          console.trace();
           handleCount++;
 
           if (handleCount === 1) {
             assert.deepEqual(result.data, dataOne);
             observable.setVariables(differentVariables);
           } else if (handleCount === 2) {
+            assert.isTrue(result.loading);
+            assert.deepEqual(result.data, dataOne);
+          } else if (handleCount === 3) {
             assert.deepEqual(result.data, dataOne);
             done();
           }
         }),
       });
+    });
+
+    it('does not rerun observer callback if the variables change but new data is in store', (done) => {
+      const manager = mockQueryManager({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables: differentVariables },
+        result: { data: dataOne },
+      });
+
+      manager.query({ query, variables: differentVariables })
+        .then(() => {
+          const observable: ObservableQuery = manager.watchQuery({ query, variables });
+
+          let handleCount = 0;
+          let errored = false;
+          observable.subscribe({
+            next: wrap(done, result => {
+              handleCount++;
+
+              if (handleCount === 1) {
+                assert.deepEqual(result.data, dataOne);
+                observable.setVariables(differentVariables);
+
+                // Nothing should happen, so we'll wait a moment to check that
+                setTimeout(() => !errored && done(), 10);
+              } else if (handleCount === 2) {
+                errored = true;
+                throw new Error('Observable callback should not fire twice');
+              }
+            }),
+          });
+        });
     });
 
     it('does not rerun query if variables do not change', (done) => {

@@ -182,6 +182,9 @@ describe('client', () => {
         // are not configured properly
         applyMiddleware(client.middleware())
     );
+
+    // Check if the key is added to the client instance, like before
+    assert.equal(client.reduxRootKey, 'testApollo');
   });
 
   it('should allow passing in a selector function for apollo state', () => {

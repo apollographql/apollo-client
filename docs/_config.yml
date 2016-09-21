@@ -11,6 +11,8 @@ language:
 timezone:
 versions:
   - '1'
+
+# This setting also defines the page order used to generate the Previous/Next links at the bottom of each page
 sidebar_categories:
   null:
     - index
@@ -22,6 +24,7 @@ sidebar_categories:
     - how-it-works
   Integrations:
     - meteor
+
 # not sure if we should rename this?
 github_repo: apollostack/docs
 content_root: source

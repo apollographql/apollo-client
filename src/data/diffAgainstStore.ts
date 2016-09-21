@@ -38,7 +38,7 @@ import {
 } from '../errors';
 
 export interface DiffResult {
-  result: any;
+  result?: any;
   isMissing?: boolean;
 }
 
@@ -287,7 +287,6 @@ Perhaps you want to use the \`returnPartialData\` option?`,
     }
 
     return {
-      result: null,
       isMissing: true,
     };
   }

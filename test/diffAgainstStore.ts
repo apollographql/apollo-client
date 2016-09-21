@@ -39,7 +39,7 @@ describe('diffing queries against the store', () => {
       query,
     });
 
-    assert.isFalse(diffQueryAgainstStore({
+    assert.notOk(diffQueryAgainstStore({
       store,
       query,
     }).isMissing);
@@ -85,7 +85,7 @@ describe('diffing queries against the store', () => {
       query: secondQuery,
     });
 
-    assert.isFalse(isMissing);
+    assert.notOk(isMissing);
     assert.deepEqual(store['1'], result.people_one);
   });
 

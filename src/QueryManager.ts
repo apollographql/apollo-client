@@ -40,7 +40,6 @@ import {
 import {
   GraphQLResult,
   Document,
-  OperationDefinition,
   FragmentDefinition,
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711

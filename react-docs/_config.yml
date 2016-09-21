@@ -52,12 +52,12 @@ nav_links:
   'Angular 2':
     url: http://dev.apollodata.com/angular2
   'iOS':
-    url: http://dev.apollodata.com/iOS
+    url: http://dev.apollodata.com/ios
   'Android':
     url: http://dev.apollodata.com/android
   'Vanilla JS':
     url: http://dev.apollodata.com/core
-  'Servers':
+  'Server':
     url: http://dev.apollodata.com/tools
     separator: true
   'Blog':

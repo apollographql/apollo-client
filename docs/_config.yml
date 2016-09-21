@@ -26,32 +26,8 @@ sidebar_categories:
 github_repo: apollostack/docs
 content_root: source
 
-logo:
-  nav_mobile: logo/logo-apollo-space.svg
-  title: Apollo Developers
-  subtitle: Developers
-  url: http://dev.apollodata.com/
-  target: _new
-favicon: logo/favicon.png
-
 typescript_api_box:
   data_file: docs.json
-
-nav_links:
-  'Angular 2':
-    url: http://dev.apollodata.com/angular2
-  'React':
-    url: http://dev.apollodata.com/react
-  'Core JS':
-    url: http://dev.apollodata.com/core
-    active: true
-  'Server':
-    url: http://dev.apollodata.com/tools
-  # 'Community':
-  #   url: http://dev.apollodata.com/community
-  'Blog':
-    url: https://medium.com/apollo-stack
-    target: _new
 
 social_links:
   github: 'https://github.com/apollostack'

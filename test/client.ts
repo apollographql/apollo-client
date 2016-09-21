@@ -174,6 +174,22 @@ describe('client', () => {
     assert.equal(client.reduxRootKey, 'apollo');
   });
 
+  it('sets reduxRootKey if you use ApolloClient as middleware', () => {
+    const client = new ApolloClient();
+
+    createStore(
+        combineReducers({
+          apollo: client.reducer(),
+        } as any),
+        // here "client.setStore(store)" will be called internally,
+        // this method throws if "reduxRootSelector" or "reduxRootKey"
+        // are not configured properly
+        applyMiddleware(client.middleware())
+    );
+
+    assert.equal(client.reduxRootKey, 'apollo');
+  });
+
   it('can allow passing in a top level key', () => {
     const reduxRootKey = 'testApollo';
     const client = new ApolloClient({

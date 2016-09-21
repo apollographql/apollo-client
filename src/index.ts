@@ -507,7 +507,15 @@ export default class ApolloClient {
   };
 
   private setStore(store: ApolloStore) {
-    const reduxRootSelector = (this.reduxRootSelector) ? this.reduxRootSelector : defaultReduxRootSelector;
+    let reduxRootSelector: ApolloStateSelector;
+    if (this.reduxRootSelector) {
+      reduxRootSelector = this.reduxRootSelector;
+    } else {
+      reduxRootSelector = defaultReduxRootSelector;
+
+      // for backwards compatibility with react-apollo, we set reduxRootKey here.
+      this.reduxRootKey = DEFAULT_REDUX_ROOT_KEY;
+    }
 
     // ensure existing store has apolloReducer
     if (isUndefined(reduxRootSelector(store.getState()))) {

@@ -4,6 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### v0.4.19
+- Fix: set default reduxRootKey for backwards-compatibility when using ApolloClient as middleware  [PR #688](https://github.com/apollostack/apollo-client/pull/688)
+
 ### v0.4.18
 
 - Fix bug with null fragments introduced in 0.4.16 [PR #683](https://github.com/apollostack/apollo-client/pull/683)

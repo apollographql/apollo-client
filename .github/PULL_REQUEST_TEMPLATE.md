@@ -13,3 +13,4 @@ TODO:
 - [ ] Make sure all tests and linter rules pass
 - [ ] Update CHANGELOG.md with your change
 - [ ] Add your name and email to the AUTHORS file (optional)
+- [ ] If this was a change that affects the external API, update the docs and post a link to the PR in the discussion

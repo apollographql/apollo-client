@@ -603,7 +603,7 @@ describe('QueryManager', () => {
               assert.deepEqual(result.data, data2);
               done();
             }
-          }
+          },
         });
       });
   });

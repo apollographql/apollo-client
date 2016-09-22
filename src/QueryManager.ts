@@ -136,9 +136,6 @@ export class QueryManager {
   private resultComparator: ResultComparator;
   private queryListeners: { [queryId: string]: QueryListener };
 
-  // A map going from queryId to the last result/state that the queryListener was told about.
-  private queryResults: { [queryId: string]: ApolloQueryResult };
-
   private idCounter = 0;
 
   private batcher: QueryBatcher;
@@ -196,7 +193,6 @@ export class QueryManager {
     this.pollingTimers = {};
     this.batchInterval = batchInterval;
     this.queryListeners = {};
-    this.queryResults = {};
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -335,6 +331,7 @@ export class QueryManager {
     options: WatchQueryOptions,
     observer: Observer<ApolloQueryResult>
   ): QueryListener {
+    let lastResult: ApolloQueryResult;
     return (queryStoreValue: QueryStoreValue) => {
       // The query store value can be undefined in the event of a store
       // reset.
@@ -373,8 +370,8 @@ export class QueryManager {
             };
 
             if (observer.next) {
-              if (this.isDifferentResult(queryId, resultFromStore )) {
-                this.queryResults[queryId] = resultFromStore;
+              if (this.isDifferentResult(lastResult, resultFromStore)) {
+                lastResult = resultFromStore;
                 observer.next(this.transformResult(resultFromStore));
               }
             }
@@ -1004,11 +1001,10 @@ export class QueryManager {
     });
   }
 
-  // Given a query id and a new result, this checks if the old result is
-  // the same as the last result for that particular query id.
-  private isDifferentResult(queryId: string, result: ApolloQueryResult): boolean {
+  // check to see if two results are the same, given our resultComparator
+  private isDifferentResult(lastResult: ApolloQueryResult, newResult: ApolloQueryResult): boolean {
     const comparator = this.resultComparator || isEqual;
-    return !comparator(this.queryResults[queryId], result);
+    return !comparator(lastResult, newResult);
   }
 
   private broadcastQueries() {

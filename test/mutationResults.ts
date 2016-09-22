@@ -702,4 +702,93 @@ describe('mutation results', () => {
       });
     });
   });
+
+  it('does not fail if one of the previous queries did not complete correctly', (done) => {
+    const variableQuery = gql`
+      query Echo($message: String) {
+        echo(message: $message)
+      }
+    `;
+
+    const variables1 = {
+      message: 'a',
+    };
+
+    const result1 = {
+      data: {
+        echo: 'a',
+      },
+    };
+
+    const variables2 = {
+      message: 'b',
+    };
+
+    const result2 = {
+      data: {
+        echo: 'b',
+      },
+    };
+
+    const resetMutation = gql`
+      mutation Reset {
+        reset {
+          echo
+        }
+      }
+    `;
+
+    const resetMutationResult = {
+      data: {
+        reset: {
+          echo: '0',
+        },
+      },
+    };
+
+    networkInterface = mockNetworkInterface({
+      request: { query: variableQuery, variables: variables1 },
+      result: result1,
+    }, {
+      request: { query: variableQuery, variables: variables2 },
+      result: result2,
+    }, {
+      request: { query: resetMutation },
+      result: resetMutationResult,
+    });
+
+    client = new ApolloClient({networkInterface});
+
+    const watchedQuery = client.watchQuery({query: variableQuery, variables: variables1});
+
+    const firstSubs = watchedQuery.subscribe({
+      next: () => null,
+    });
+
+    // Cancel the query right away!
+    firstSubs.unsubscribe();
+
+    let yieldCount = 0;
+    watchedQuery.subscribe({
+      next: ({data}: any) => {
+        yieldCount += 1;
+        if (yieldCount === 1) {
+          assert.equal(data.echo, 'b');
+          client.mutate({
+            mutation: resetMutation,
+            updateQueries: {
+              Echo: (prev, options) => {
+                return {echo: '0'};
+              },
+            },
+          });
+        } else if (yieldCount === 2) {
+          assert.equal(data.echo, '0');
+          done();
+        }
+      },
+    });
+
+    watchedQuery.refetch(variables2);
+  });
 });

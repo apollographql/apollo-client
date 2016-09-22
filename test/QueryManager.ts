@@ -3206,6 +3206,76 @@ describe('QueryManager', () => {
         },
       });
     });
+
+    it('should warn but continue when an unknown query name is asked to refetch', (done) => {
+      const oldWarn = console.warn;
+      let warned: any;
+      console.warn = (...args: any[]) => {
+        warned = args;
+      };
+
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }`;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        }
+      );
+      let resultsReceived = 0;
+      queryManager.watchQuery({ query }).subscribe({
+        next(result) {
+          if (resultsReceived === 0) {
+            assert.deepEqual(result.data, data);
+            queryManager.mutate({ mutation, refetchQueries: ['fakeQuery', 'getAuthors'] });
+          } else if (resultsReceived === 1) {
+            assert.deepEqual(result.data, secondReqData);
+            assert.include(warned[0], 'Warning: unknown query with name fakeQuery');
+            console.warn = oldWarn;
+            done();
+          }
+          resultsReceived++;
+        },
+      });
+    });
   });
 
   describe('result transformation', () => {

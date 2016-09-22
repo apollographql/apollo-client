@@ -30,7 +30,7 @@ const subscribeAndCount = (
       cb(handleCount, result);
     }),
   });
-}
+};
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests
@@ -112,7 +112,7 @@ describe('ObservableQuery', () => {
             timer.tick(100);
             done();
           } else if (handleCount === 2) {
-            done(new Error("Should not get more than one result"));
+            done(new Error('Should not get more than one result'));
           }
         });
 

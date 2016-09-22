@@ -39,7 +39,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   /**
    * Reset this query to take a new set of options.
    */
-  public setOptions: (ModifiableWatchQueryOptions: any) => Promise<ApolloQueryResult>;
+  public setOptions: (options: ModifiableWatchQueryOptions) => Promise<ApolloQueryResult>;
   /**
    * Update the variables of this observable query, and fetch the new results
    * if they've changed. If you want to force new results, use `refetch`.
@@ -132,16 +132,16 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       .then(result => this.queryManager.transformResult(result));
     };
 
-    this.setOptions = (options: ModifiableWatchQueryOptions) => {
-      this.options = assign({}, this.options, options) as WatchQueryOptions;
-      if (options.pollInterval) {
-        this.startPolling(options.pollInterval);
-      } else {
+    this.setOptions = (opts: ModifiableWatchQueryOptions) => {
+      this.options = assign({}, this.options, opts) as WatchQueryOptions;
+      if (opts.pollInterval) {
+        this.startPolling(opts.pollInterval);
+      } else if (opts.pollInterval === 0) {
         this.stopPolling();
       }
 
-      return this.setVariables(options.variables);
-    }
+      return this.setVariables(opts.variables);
+    };
 
     // There's a subtle difference between setVariables and refetch:
     //   - setVariables will take results from the store unless the query

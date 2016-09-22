@@ -94,19 +94,19 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       }
 
       if (isPollingQuery) {
-        if (options.noFetch) {
+        if (this.options.noFetch) {
           throw new Error('noFetch option should not use query polling.');
         }
 
         this.scheduler.startPollingQuery(
-          options,
+          this.options,
           queryId
         );
       }
       queryManager.startQuery(
         queryId,
-        options,
-        queryManager.queryListenerForObserver(queryId, options, observer)
+        this.options,
+        queryManager.queryListenerForObserver(queryId, this.options, observer)
       );
 
       return retQuerySubscription;
@@ -234,7 +234,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       if (isPollingQuery) {
         this.scheduler.stopPollingQuery(this.queryId);
       }
-      options.pollInterval = pollInterval;
+      this.options.pollInterval = pollInterval;
       this.scheduler.startPollingQuery(this.options, this.queryId, false);
     };
   }

@@ -545,7 +545,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it.only('allows you to subscribe twice to the one query', (done) => {
+  it('allows you to subscribe twice to the one query', (done) => {
     const request = {
       query: gql`
         query fetchLuke($id: String) {

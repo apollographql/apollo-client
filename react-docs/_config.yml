@@ -14,7 +14,6 @@ versions:
 sidebar_categories:
   null:
     - index
-    - example
     - initialization
     - higher-order-components
     - example-schema

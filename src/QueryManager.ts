@@ -134,7 +134,7 @@ export class QueryManager {
   private queryTransformer: QueryTransformer;
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
-  private queryListeners: { [queryId: string]: QueryListener };
+  private queryListeners: { [queryId: string]: QueryListener[] };
 
   private idCounter = 0;
 
@@ -459,7 +459,8 @@ export class QueryManager {
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
-    this.queryListeners[queryId] = listener;
+    this.queryListeners[queryId] = this.queryListeners[queryId] || [];
+    this.queryListeners[queryId].push(listener);
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.
@@ -542,7 +543,7 @@ export class QueryManager {
   }
 
   public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
-    this.queryListeners[queryId] = listener;
+    this.addQueryListener(queryId, listener);
 
     // If the pollInterval is present, the scheduler has already taken care of firing the first
     // fetch so we don't have to worry about it here.
@@ -1009,13 +1010,15 @@ export class QueryManager {
 
   private broadcastQueries() {
     const queries = this.getApolloState().queries;
-    forOwn(this.queryListeners, (listener: QueryListener, queryId: string) => {
-      // it's possible for the listener to be undefined if the query is being stopped
-      // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
-      if (listener) {
-        const queryStoreValue = queries[queryId];
-        listener(queryStoreValue);
-      }
+    forOwn(this.queryListeners, (listeners: QueryListener[], queryId: string) => {
+      listeners.forEach((listener: QueryListener) => {
+        // it's possible for the listener to be undefined if the query is being stopped
+        // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
+        if (listener) {
+          const queryStoreValue = queries[queryId];
+          listener(queryStoreValue);
+        }
+      });
     });
   }
 

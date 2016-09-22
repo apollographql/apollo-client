@@ -601,7 +601,13 @@ describe('QueryManager', () => {
               handle.refetch();
             } else if (subTwoCount === 2) {
               assert.deepEqual(result.data, data2);
-              done();
+              setTimeout(() => {
+                try {
+                  assert.equal(subOneCount, 2);
+                  assert.equal(subTwoCount, 2);
+                  done();
+                } catch (e) { done(e); }
+              }, 0);
             }
           },
         });

@@ -83,7 +83,7 @@ import ApolloClient from 'apollo-client';
 
 class MyComponent extends Component { ... }
 MyComponent.propTypes = {
-  client: React.PropTypes.instanceOf(ApolloClient).isRequired;
+  client: React.PropTypes.instanceOf(ApolloClient).isRequired,
 }
 
 const MyComponentWithApollo = withApollo(MyComponent);

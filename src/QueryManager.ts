@@ -998,7 +998,7 @@ export class QueryManager {
   private refetchQueryByName(queryName: string) {
     const refetchedQueries = this.queryIdsByName[queryName];
     // Warn if the query named does not exist (misnamed, or merely not yet fetched)
-    if (!refetchedQueries) {
+    if (refetchedQueries === undefined) {
       console.warn(`Warning: unknown query with name ${queryName} asked to refetch`);
     } else {
       refetchedQueries.forEach((queryId) => {

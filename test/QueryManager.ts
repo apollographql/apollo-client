@@ -3276,6 +3276,83 @@ describe('QueryManager', () => {
         },
       });
     });
+
+    it('should ignore without warning a query name that is asked to refetch with no active subscriptions', (done) => {
+      const oldWarn = console.warn;
+      let timesWarned = 0;
+      console.warn = (...args: any[]) => {
+        timesWarned++;
+      };
+
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }`;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        }
+      );
+
+      let resultsReceived = 0;
+      const temporarySubscription = queryManager.watchQuery({ query }).subscribe({
+        next(result) {
+          if (resultsReceived === 0) {
+            assert.deepEqual(result.data, data);
+            // unsubscribe before the mutation
+            temporarySubscription.unsubscribe();
+            queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
+          } else if (resultsReceived === 1) {
+            // should not be subscribed
+            done(new Error('Returned data when it should have been unsubscribed.'));
+          }
+          resultsReceived++;
+        },
+      });
+      // no warning should have been fired
+      setTimeout(() => {
+        assert.equal(timesWarned, 0);
+        console.warn = oldWarn;
+        done();
+      }, 10);
+    });
   });
 
   describe('result transformation', () => {

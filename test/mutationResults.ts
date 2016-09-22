@@ -116,7 +116,7 @@ describe('mutation results', () => {
     return state;
   }
 
-  function setup(...mockedResponses: any[]) {
+  function setupObsHandle(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: { query },
       result,
@@ -137,10 +137,13 @@ describe('mutation results', () => {
       },
     });
 
-    const obsHandle = client.watchQuery({
+    return client.watchQuery({
       query,
     });
+  }
 
+  function setup(...mockedResponses: any[]) {
+    const obsHandle = setupObsHandle(...mockedResponses);
     return obsHandle.result();
   };
 
@@ -642,6 +645,32 @@ describe('mutation results', () => {
 
         // Since we used `prepend` it should be at the front
         assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('does not fail if the query did not complete correctly', () => {
+      const obsHandle = setupObsHandle({
+        request: { query: mutation },
+        result: mutationResult,
+      });
+      const subs = obsHandle.subscribe({
+        next: () => null,
+      });
+      // Cancel the query right away!
+      subs.unsubscribe();
+      return client.mutate({
+        mutation,
+        updateQueries: {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+            assert.equal(mResult.data.createTodo.id, '99');
+            assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+            const state = clonedeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        },
       });
     });
 

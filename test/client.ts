@@ -429,6 +429,7 @@ describe('client', () => {
             minimizedQuery: null,
             variables: undefined,
             loading: false,
+            stopped: false,
             networkError: null,
             graphQLErrors: null,
             forceFetch: false,

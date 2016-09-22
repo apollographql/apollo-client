@@ -1,11 +1,13 @@
 import * as chai from 'chai';
 const { assert } = chai;
+import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
 
 import mockWatchQuery from './mocks/mockWatchQuery';
 import mockQueryManager from './mocks/mockQueryManager';
 import { ObservableQuery } from '../src/ObservableQuery';
+import { ApolloQueryResult } from '../src';
 
 // I'm not sure why mocha doesn't provide something like this, you can't
 // always use promises
@@ -17,28 +19,93 @@ const wrap = (done: Function, cb: (...args: any[]) => any) => (...args: any[]) =
   }
 };
 
-describe('ObservableQuery', () => {
-  describe('setVariables', () => {
-    const query = gql`
-      query($id: ID!){
-        people_one(id: $id) {
-          name
-        }
-      }
-    `;
-    const variables = { id: 1 };
-    const differentVariables = { id: 2 };
-    const dataOne = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
-    const dataTwo = {
-      people_one: {
-        name: 'Leia Skywalker',
-      },
-    };
+const subscribeAndCount = (
+    done: Function,
+    observable: ObservableQuery,
+    cb: (handleCount: Number, result: ApolloQueryResult) => any) => {
+  let handleCount = 0;
+  return observable.subscribe({
+    next: wrap(done, result => {
+      handleCount++;
+      cb(handleCount, result);
+    }),
+  });
+}
 
+describe('ObservableQuery', () => {
+  // Standard data for all these tests
+  const query = gql`
+    query($id: ID!){
+      people_one(id: $id) {
+        name
+      }
+    }
+  `;
+  const variables = { id: 1 };
+  const differentVariables = { id: 2 };
+  const dataOne = {
+    people_one: {
+      name: 'Luke Skywalker',
+    },
+  };
+  const dataTwo = {
+    people_one: {
+      name: 'Leia Skywalker',
+    },
+  };
+
+
+  describe('setOptions', () => {
+    describe('to change pollInterval', () => {
+      let timer: any;
+      beforeEach(() => timer = sinon.useFakeTimers());
+      afterEach(() => timer.restore());
+
+      it('starts polling if goes from 0 -> something', (done) => {
+        const manager = mockQueryManager({
+          request: { query, variables },
+          result: { data: dataOne },
+        }, {
+          request: { query, variables },
+          result: { data: dataTwo },
+        });
+
+        const observable = manager.watchQuery({ query, variables });
+        subscribeAndCount(done, observable, (handleCount, result) => {
+          console.log({handleCount, result})
+          if (handleCount === 1) {
+            assert.deepEqual(result.data, dataOne);
+            observable.setOptions({ pollInterval: 10 });
+            console.log('tick', 10)
+            timer.tick(10);
+            console.log('tick', 1)
+            timer.tick(1);
+            console.log('ticked')
+          } else if (handleCount === 2) {
+            assert.deepEqual(result.data, dataTwo);
+            done();
+          }
+        });
+
+        // trigger the first subscription callback
+        timer.tick(0);
+      });
+
+      it('stops polling if goes from something -> 0', (done) => {
+        done();
+      });
+
+      it('can change from x>0 to y>0', (done) => {
+        done();
+      });
+    });
+
+    it('does a network request if forceFetch becomes true', (done) => {
+      done();
+    });
+  });
+
+  describe('setVariables', () => {
     it('reruns query if the variables change', (done) => {
       const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
@@ -48,23 +115,18 @@ describe('ObservableQuery', () => {
         result: { data: dataTwo },
       });
 
-      let handleCount = 0;
-      observable.subscribe({
-        next: wrap(done, result => {
-          handleCount++;
-
-          if (handleCount === 1) {
-            assert.deepEqual(result.data, dataOne);
-            observable.setVariables(differentVariables);
-          } else if (handleCount === 2) {
-            assert.isTrue(result.loading);
-            assert.deepEqual(result.data, dataOne);
-          } else if (handleCount === 3) {
-            assert.isFalse(result.loading);
-            assert.deepEqual(result.data, dataTwo);
-            done();
-          }
-        }),
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, dataOne);
+          observable.setVariables(differentVariables);
+        } else if (handleCount === 2) {
+          assert.isTrue(result.loading);
+          assert.deepEqual(result.data, dataOne);
+        } else if (handleCount === 3) {
+          assert.isFalse(result.loading);
+          assert.deepEqual(result.data, dataTwo);
+          done();
+        }
       });
     });
 
@@ -77,22 +139,17 @@ describe('ObservableQuery', () => {
         result: { data: dataOne },
       });
 
-      let handleCount = 0;
-      observable.subscribe({
-        next: wrap(done, result => {
-          handleCount++;
-
-          if (handleCount === 1) {
-            assert.deepEqual(result.data, dataOne);
-            observable.setVariables(differentVariables);
-          } else if (handleCount === 2) {
-            assert.isTrue(result.loading);
-            assert.deepEqual(result.data, dataOne);
-          } else if (handleCount === 3) {
-            assert.deepEqual(result.data, dataOne);
-            done();
-          }
-        }),
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, dataOne);
+          observable.setVariables(differentVariables);
+        } else if (handleCount === 2) {
+          assert.isTrue(result.loading);
+          assert.deepEqual(result.data, dataOne);
+        } else if (handleCount === 3) {
+          assert.deepEqual(result.data, dataOne);
+          done();
+        }
       });
     });
 
@@ -109,23 +166,18 @@ describe('ObservableQuery', () => {
         .then(() => {
           const observable: ObservableQuery = manager.watchQuery({ query, variables });
 
-          let handleCount = 0;
           let errored = false;
-          observable.subscribe({
-            next: wrap(done, result => {
-              handleCount++;
+          subscribeAndCount(done, observable, (handleCount, result) => {
+            if (handleCount === 1) {
+              assert.deepEqual(result.data, dataOne);
+              observable.setVariables(differentVariables);
 
-              if (handleCount === 1) {
-                assert.deepEqual(result.data, dataOne);
-                observable.setVariables(differentVariables);
-
-                // Nothing should happen, so we'll wait a moment to check that
-                setTimeout(() => !errored && done(), 10);
-              } else if (handleCount === 2) {
-                errored = true;
-                throw new Error('Observable callback should not fire twice');
-              }
-            }),
+              // Nothing should happen, so we'll wait a moment to check that
+              setTimeout(() => !errored && done(), 10);
+            } else if (handleCount === 2) {
+              errored = true;
+              throw new Error('Observable callback should not fire twice');
+            }
           });
         });
     });
@@ -139,23 +191,18 @@ describe('ObservableQuery', () => {
         result: { data: dataTwo },
       });
 
-      let handleCount = 0;
       let errored = false;
-      observable.subscribe({
-        next: wrap(done, result => {
-          handleCount++;
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, dataOne);
+          observable.setVariables(variables);
 
-          if (handleCount === 1) {
-            assert.deepEqual(result.data, dataOne);
-            observable.setVariables(variables);
-
-            // Nothing should happen, so we'll wait a moment to check that
-            setTimeout(() => !errored && done(), 10);
-          } else if (handleCount === 2) {
-            errored = true;
-            throw new Error('Observable callback should not fire twice');
-          }
-        }),
+          // Nothing should happen, so we'll wait a moment to check that
+          setTimeout(() => !errored && done(), 10);
+        } else if (handleCount === 2) {
+          errored = true;
+          throw new Error('Observable callback should not fire twice');
+        }
       });
     });
   });

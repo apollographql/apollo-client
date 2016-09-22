@@ -4,14 +4,9 @@ import {
 } from 'graphql';
 
 /**
- * The argument to a query
+ * We can change these options to an ObservableQuery
  */
-export interface WatchQueryOptions {
-  /**
-   * A GraphQL document that consists of a single query to be sent down to the
-   * server.
-   */
-  query: Document;
+export interface ModifiableWatchQueryOptions {
   /**
    * A map going from variable name to variable value, where the variables are used
    * within the GraphQL query.
@@ -42,6 +37,18 @@ export interface WatchQueryOptions {
    * refetched from the server.
    */
   pollInterval?: number;
+}
+
+/**
+ * The argument to a query
+ */
+export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
+  /**
+   * A GraphQL document that consists of a single query to be sent down to the
+   * server.
+   */
+  query: Document;
+
   /**
    * A list of fragments that are returned by {@link createFragment} which can be
    * referenced from the query document.

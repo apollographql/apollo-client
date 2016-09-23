@@ -674,6 +674,51 @@ describe('mutation results', () => {
       });
     });
 
+    it('does not make next queries fail if a mutation fails', (done) => {
+      const obsHandle = setupObsHandle({
+        request: { query: mutation },
+        result: {errors: [new Error('mock error')]},
+      }, {
+        request: { query },
+        result,
+      });
+
+      obsHandle.subscribe({
+        next() {
+          client.mutate({
+            mutation,
+            updateQueries: {
+              todoList: (prev, options) => {
+                const mResult = options.mutationResult as any;
+                const state = clonedeep(prev) as any;
+                state.todoList.todos.unshift(mResult.data.createTodo);
+                return state;
+              },
+            },
+          })
+          .then(
+            () => done(new Error('Mutation should have failed')),
+            () => client.mutate({
+              mutation,
+              updateQueries: {
+                todoList: (prev, options) => {
+                  const mResult = options.mutationResult as any;
+                  const state = clonedeep(prev) as any;
+                  state.todoList.todos.unshift(mResult.data.createTodo);
+                  return state;
+                },
+              },
+            }),
+          )
+          .then(
+            () => done(new Error('Mutation should have failed')),
+            () => obsHandle.refetch(),
+          )
+          .then(() => done(), done);
+        },
+      });
+    });
+
     it('error handling in reducer functions', () => {
       const oldError = console.error;
       const errors: any[] = [];

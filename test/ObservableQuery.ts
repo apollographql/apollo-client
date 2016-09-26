@@ -19,9 +19,17 @@ const wrap = (done: Function, cb: (...args: any[]) => any) => (...args: any[]) =
 
 describe('ObservableQuery', () => {
   const query = gql`
-    query($id: ID!){
+    query($id: ID!) {
       people_one(id: $id) {
         name
+      }
+    }
+  `;
+  const superQuery = gql`
+    query($id: ID!) {
+      people_one(id: $id) {
+        name
+        age
       }
     }
   `;
@@ -29,6 +37,12 @@ describe('ObservableQuery', () => {
   const dataOne = {
     people_one: {
       name: 'Luke Skywalker',
+    },
+  };
+  const superDataOne = {
+    people_one: {
+      name: 'Luke Skywalker',
+      age: 21,
     },
   };
   const dataTwo = {
@@ -41,7 +55,7 @@ describe('ObservableQuery', () => {
       const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
-        delay: 20,
+        delay: 100,
       });
 
       observable.subscribe({
@@ -73,7 +87,7 @@ describe('ObservableQuery', () => {
       });
 
       return queryManager.query({ query, variables })
-        .then(result => {
+        .then((result: any) => {
           assert.deepEqual(result, {
             data: dataOne,
             loading: false,
@@ -82,17 +96,61 @@ describe('ObservableQuery', () => {
           const observable = queryManager.watchQuery({
             query,
             variables,
+          });
+          assert.deepEqual(observable.currentResult(), {
+            data: dataOne,
+            loading: false,
+          });
+        });
+    });
+
+    it('returns partial data from the store immediately', (done) => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query: superQuery, variables },
+        result: { data: superDataOne },
+      });
+
+      queryManager.query({ query, variables })
+        .then((result: any) => {
+          const observable = queryManager.watchQuery({
+            query: superQuery,
+            variables,
             returnPartialData: true,
           });
           assert.deepEqual(observable.currentResult(), {
             data: dataOne,
             loading: true,
           });
+
+          // we can use this to trigger the query
+          let handleCount = 0;
+          observable.subscribe({
+            next: wrap(done, (subResult) => {
+              handleCount += 1;
+              assert.deepEqual(subResult, observable.currentResult());
+
+              if (handleCount === 1) {
+                assert.deepEqual(subResult, {
+                  data: dataOne,
+                  loading: true,
+                });
+              } else if (handleCount === 2) {
+                assert.deepEqual(subResult, {
+                  data: superDataOne,
+                  loading: false,
+                });
+                done();
+              }
+            }),
+          });
         });
     });
 
-    it('returns loading while refetching', (done) => {
-      const observable: ObservableQuery = mockWatchQuery({
+    it('returns loading even if full data is available when force fetching', (done) => {
+      const queryManager = mockQueryManager({
         request: { query, variables },
         result: { data: dataOne },
       }, {
@@ -100,30 +158,35 @@ describe('ObservableQuery', () => {
         result: { data: dataTwo },
       });
 
-      let handleCount = 0;
-      observable.subscribe({
-        next: wrap(done, result => {
-          handleCount++;
+      queryManager.query({ query, variables })
+        .then((result: any) => {
+          const observable = queryManager.watchQuery({
+            query,
+            variables,
+            forceFetch: true,
+          });
+          assert.deepEqual(observable.currentResult(), {
+            data: dataOne,
+            loading: true,
+          });
 
-          if (handleCount === 1) {
-            assert.deepEqual(observable.currentResult(), {
-              data: dataOne,
-              loading: false,
-            });
-            observable.refetch();
-            assert.deepEqual(observable.currentResult(), {
-              loading: true,
-              data: {},
-            });
-          } else if (handleCount === 2) {
-            assert.deepEqual(observable.currentResult(), {
-              data: dataTwo,
-              loading: false,
-            });
-            done();
-          }
-        }),
-      });
+          // we can use this to trigger the query
+          let handleCount = 0;
+          observable.subscribe({
+            next: wrap(done, (subResult) => {
+              handleCount += 1;
+              assert.deepEqual(subResult, observable.currentResult());
+
+              if (handleCount === 1) {
+                assert.deepEqual(subResult, {
+                  data: dataTwo,
+                  loading: false,
+                });
+                done();
+              }
+            }),
+          });
+        });
     });
   });
 });

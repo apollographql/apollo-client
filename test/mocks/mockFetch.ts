@@ -1,4 +1,6 @@
-import 'whatwg-fetch';
+import createFetch from 'fetch-ponyfill';
+
+const fetch = createFetch().fetch;
 
 // This is an implementation of a mocked window.fetch implementation similar in
 // structure to the MockedNetworkInterface.

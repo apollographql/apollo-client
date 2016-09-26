@@ -1,7 +1,8 @@
 import isString = require('lodash.isstring');
 import assign = require('lodash.assign');
 import mapValues = require('lodash.mapvalues');
-import 'whatwg-fetch';
+
+import createFetch from 'fetch-ponyfill';
 
 import {
   GraphQLResult,
@@ -17,6 +18,8 @@ import {
   mergeRequests,
   unpackMergedResult,
 } from './batching/queryMerging';
+
+const fetch = createFetch().fetch;
 
 /**
  * This is an interface that describes an GraphQL document to be sent

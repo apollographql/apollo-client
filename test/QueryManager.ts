@@ -2,6 +2,10 @@ import {
   QueryManager,
 } from '../src/QueryManager';
 
+import mockQueryManager from './mocks/mockQueryManager';
+
+import mockWatchQuery from './mocks/mockWatchQuery';
+
 import { ObservableQuery } from '../src/ObservableQuery';
 
 import { WatchQueryOptions } from '../src/watchQueryOptions';
@@ -48,7 +52,6 @@ import * as Rx from 'rxjs';
 import assign = require('lodash.assign');
 
 import mockNetworkInterface, {
-  MockedResponse,
   ParsedRequest,
 } from './mocks/mockNetworkInterface';
 
@@ -105,21 +108,6 @@ describe('QueryManager', () => {
       queryTransformer,
       shouldBatch,
     });
-  };
-
-  // Helper method for the tests that construct a query manager out of a
-  // a list of mocked responses for a mocked network interface.
-  const mockQueryManager = (...mockedResponses: MockedResponse[]) => {
-    return new QueryManager({
-      networkInterface: mockNetworkInterface(...mockedResponses),
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
-    });
-  };
-
-  const mockWatchQuery = (mockedResponse: MockedResponse) => {
-    const queryManager = mockQueryManager(mockedResponse);
-    return queryManager.watchQuery({ query: mockedResponse.request.query });
   };
 
   // Helper method that sets up a mockQueryManager and then passes on the

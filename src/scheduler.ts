@@ -127,6 +127,7 @@ export class QueryScheduler {
 
     if (this.intervalQueries[interval].length === 0) {
       clearInterval(this.pollingTimers[interval]);
+      delete this.intervalQueries[interval];
     }
   }
 

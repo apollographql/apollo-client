@@ -625,8 +625,46 @@ export class QueryManager {
     this.stopQueryInStore(queryId);
   }
 
+  public getCurrentQueryResult(observableQuery: ObservableQuery, isOptimistic = false) {
+    const {
+      queryVariables,
+      querySelectionSet,
+      queryFragments } = this.getQueryParts(observableQuery);
+
+    const queryOptions = observableQuery.options;
+    const readOptions = {
+      // In case of an optimistic change, apply reducer on top of the
+      // results including previous optimistic updates. Otherwise, apply it
+      // on top of the real data only.
+      store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+      rootId: 'ROOT_QUERY',
+      selectionSet: querySelectionSet,
+      variables: queryVariables,
+      fragmentMap: createFragmentMap(queryFragments || []),
+      returnPartialData: false,
+    };
+    try {
+      // first try reading the full result from the store
+      const data = readSelectionSetFromStore(readOptions);
+      return { data, partial: false };
+    } catch (e) {
+      // next, try reading partial results, if we want them
+      if (queryOptions.returnPartialData || queryOptions.noFetch) {
+        try {
+          readOptions.returnPartialData = true;
+          const data = readSelectionSetFromStore(readOptions);
+          return { data, partial: true };
+        } catch (e) {
+          // fall through
+        }
+      }
+
+      return { data: {}, partial: true };
+    }
+  }
+
   public getQueryWithPreviousResult(queryIdOrObservable: string | ObservableQuery, isOptimistic = false) {
-    let observableQuery : ObservableQuery;
+    let observableQuery: ObservableQuery;
     if (typeof queryIdOrObservable === 'string') {
       if (!this.observableQueries[queryIdOrObservable]) {
         throw new Error(`ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`);
@@ -637,6 +675,32 @@ export class QueryManager {
       observableQuery = queryIdOrObservable;
     }
 
+    const {
+      queryVariables,
+      querySelectionSet,
+      queryFragments } = this.getQueryParts(observableQuery);
+
+    const { data } = this.getCurrentQueryResult(observableQuery, isOptimistic);
+
+    return {
+      previousResult: data,
+      queryVariables,
+      querySelectionSet,
+      queryFragments,
+    };
+  }
+
+  // Give the result transformer a chance to observe or modify result data before it is passed on.
+  public transformResult(result: ApolloQueryResult): ApolloQueryResult {
+    if (!this.resultTransformer) {
+      return result;
+    } else {
+      return this.resultTransformer(result);
+    }
+  }
+
+  // XXX: I think we just store this on the observable query at creation time
+  private getQueryParts(observableQuery: ObservableQuery) {
     const queryOptions = observableQuery.options;
 
     let fragments = queryOptions.fragments;
@@ -657,43 +721,11 @@ export class QueryManager {
       fragments = getFragmentDefinitions(transformedDoc);
     }
 
-    const queryState = this.getApolloState().queries[queryId];
-
-    // If the previous query, for some reason, did not complete correctly, we run the
-    // readSelectionSet in returnPartialData in order to avoid field reading errors
-    const forcePartialData =
-      queryState.loading ||
-      queryState.stopped ||
-      !!queryState.networkError ||
-      !!queryState.graphQLErrors;
-
-    const previousResult = readSelectionSetFromStore({
-      // In case of an optimistic change, apply reducer on top of the
-      // results including previous optimistic updates. Otherwise, apply it
-      // on top of the real data only.
-      store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
-      rootId: 'ROOT_QUERY',
-      selectionSet: queryDefinition.selectionSet,
-      variables: queryOptions.variables,
-      returnPartialData: forcePartialData || queryOptions.returnPartialData || queryOptions.noFetch,
-      fragmentMap: createFragmentMap(fragments || []),
-    });
-
     return {
-      previousResult,
       queryVariables: queryOptions.variables,
       querySelectionSet: queryDefinition.selectionSet,
       queryFragments: fragments,
     };
-  }
-
-  // Give the result transformer a chance to observe or modify result data before it is passed on.
-  public transformResult(result: ApolloQueryResult): ApolloQueryResult {
-    if (!this.resultTransformer) {
-      return result;
-    } else {
-      return this.resultTransformer(result);
-    }
   }
 
   private collectResultBehaviorsFromUpdateQueries(

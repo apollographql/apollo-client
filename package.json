@@ -100,7 +100,7 @@
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "tslint": "3.15.1",
-    "typescript": "2.0.0",
+    "typescript": "2.0.3",
     "uglify-js": "^2.6.2"
   }
 }

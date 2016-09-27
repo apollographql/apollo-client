@@ -3145,6 +3145,22 @@ describe('QueryManager', () => {
   });
 
   describe('refetchQueries', () => {
+    const oldWarn = console.warn;
+    let warned: any;
+    let timesWarned = 0;
+
+    beforeEach((done) => {
+      // clear warnings
+      warned = null;
+      timesWarned = 0;
+      // mock warn method
+      console.warn = (...args: any[]) => {
+        warned = args;
+        timesWarned++;
+      };
+      done();
+    });
+
     it('should refetch the right query when a result is successfully returned', (done) => {
       const mutation = gql`
         mutation changeAuthorName {
@@ -3208,12 +3224,6 @@ describe('QueryManager', () => {
     });
 
     it('should warn but continue when an unknown query name is asked to refetch', (done) => {
-      const oldWarn = console.warn;
-      let warned: any;
-      console.warn = (...args: any[]) => {
-        warned = args;
-      };
-
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -3269,7 +3279,7 @@ describe('QueryManager', () => {
           } else if (resultsReceived === 1) {
             assert.deepEqual(result.data, secondReqData);
             assert.include(warned[0], 'Warning: unknown query with name fakeQuery');
-            console.warn = oldWarn;
+            assert.equal(timesWarned, 1);
             done();
           }
           resultsReceived++;
@@ -3278,12 +3288,6 @@ describe('QueryManager', () => {
     });
 
     it('should ignore without warning a query name that is asked to refetch with no active subscriptions', (done) => {
-      const oldWarn = console.warn;
-      let timesWarned = 0;
-      console.warn = (...args: any[]) => {
-        timesWarned++;
-      };
-
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -3349,9 +3353,14 @@ describe('QueryManager', () => {
       // no warning should have been fired
       setTimeout(() => {
         assert.equal(timesWarned, 0);
-        console.warn = oldWarn;
         done();
       }, 10);
+    });
+
+    afterEach((done) => {
+      // restore standard method
+      console.warn = oldWarn;
+      done();
     });
   });
 

@@ -68,15 +68,29 @@ const crashReporter = (store: any) => (next: any) => (action: any) => {
   }
 };
 
+/**
+ * This utility wraps the operation done by the reducer with the intent of catching thrown errors
+ * and avoid crashing the redux state.
+ */
+function safeReducer(reducer: Function, state: any, ...args: any[]): any {
+  try {
+    return reducer(state, ...args);
+  } catch (err) {
+    console.error('Caught an exception in Apollo Reducer!', err);
+    console.error(err.stack);
+    return state;
+  }
+}
+
 export function createApolloReducer(config: ApolloReducerConfig): Function {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
     const newState = {
-      queries: queries(state.queries, action),
-      mutations: mutations(state.mutations, action),
+      queries: safeReducer(queries, state.queries, action),
+      mutations: safeReducer(mutations, state.mutations, action),
 
       // Note that we are passing the queries into this, because it reads them to associate
       // the query ID in the result with the actual query
-      data: data(state.data, action, state.queries, state.mutations, config),
+      data: safeReducer(data, state.data, action, state.queries, state.mutations, config),
       optimistic: [] as any,
     };
 
@@ -84,7 +98,7 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
     // APOLLO_MUTATION_INIT action to simulate
     // the APOLLO_MUTATION_RESULT action. That's
     // why we pass in newState
-    newState.optimistic = optimistic(
+    newState.optimistic = safeReducer(optimistic,
       state.optimistic,
       action,
       newState,

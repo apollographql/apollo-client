@@ -1,5 +1,6 @@
 import * as chai from 'chai';
 const { assert } = chai;
+import gql from 'graphql-tag';
 
 import {
   createApolloStore,
@@ -120,6 +121,67 @@ describe('createApolloStore', () => {
 
     const store = createApolloStore({
       initialState,
+    });
+
+    store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+      observableQueryIds: ['test.0'],
+    });
+
+    assert.deepEqual(store.getState().apollo, emptyState);
+  });
+
+  it('can\'t crash the reducer', () => {
+    const initialState = {
+      apollo: {
+        queries: {
+          'test.0': true,
+          'test.1': false,
+        },
+        mutations: {},
+        data: {
+          'test.0': true,
+          'test.1': true,
+        },
+        optimistic: ([] as any[]),
+      },
+    };
+
+    const emptyState = {
+      queries: {
+        'test.0': true,
+      },
+      mutations: {},
+      data: {},
+      optimistic: ([] as any[]),
+    };
+
+    const store = createApolloStore({
+      initialState,
+    });
+
+    const queryString = `{ shouldBeHere }`;
+    const query = gql`${queryString}`;
+
+    // Try to crash the store with a bad query result
+    store.dispatch({
+      type: 'APOLLO_QUERY_INIT',
+      queryString,
+      query,
+      minimizedQueryString: queryString,
+      minimizedQuery: query,
+      variables: {},
+      forceFetch: true,
+      returnPartialData: false,
+      queryId: '1',
+      requestId: 1,
+      fragmentMap: {},
+    });
+    store.dispatch({
+      type: 'APOLLO_QUERY_RESULT',
+      result: { data: { somethingElse: true }},
+      queryId: '1',
+      requestId: 1,
     });
 
     store.dispatch({

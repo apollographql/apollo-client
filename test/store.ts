@@ -21,6 +21,7 @@ describe('createApolloStore', () => {
         mutations: {},
         data: {},
         optimistic: [],
+        reducerError: (null as Error),
       }
     );
   });
@@ -37,6 +38,7 @@ describe('createApolloStore', () => {
         mutations: {},
         data: {},
         optimistic: [],
+        reducerError: (null as Error),
       }
     );
   });
@@ -52,6 +54,7 @@ describe('createApolloStore', () => {
           'test.0': true,
         },
         optimistic: ([] as any[]),
+        reducerError: (null as Error),
       },
     };
 
@@ -72,6 +75,7 @@ describe('createApolloStore', () => {
         data: {
           'test.0': true,
         },
+        reducerError: (null as Error),
       },
     };
 
@@ -107,6 +111,7 @@ describe('createApolloStore', () => {
           'test.1': true,
         },
         optimistic: ([] as any[]),
+        reducerError: (null as Error),
       },
     };
 
@@ -144,16 +149,8 @@ describe('createApolloStore', () => {
           'test.1': true,
         },
         optimistic: ([] as any[]),
+        reducerError: (null as Error),
       },
-    };
-
-    const emptyState = {
-      queries: {
-        'test.0': true,
-      },
-      mutations: {},
-      data: {},
-      optimistic: ([] as any[]),
     };
 
     const store = createApolloStore({
@@ -184,11 +181,24 @@ describe('createApolloStore', () => {
       requestId: 1,
     });
 
+    assert.equal(
+      store.getState().apollo.reducerError.message,
+      'Cannot read property \'selections\' of undefined'
+    );
+
     store.dispatch({
       type: 'APOLLO_STORE_RESET',
       observableQueryIds: ['test.0'],
     });
 
-    assert.deepEqual(store.getState().apollo, emptyState);
+    assert.deepEqual(store.getState().apollo, {
+      queries: {
+        'test.0': true,
+      },
+      mutations: {},
+      data: {},
+      optimistic: ([] as any[]),
+      reducerError: (null as Error),
+    });
   });
 });

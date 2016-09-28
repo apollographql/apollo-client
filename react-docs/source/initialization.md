@@ -27,7 +27,7 @@ import ApolloClient from 'apollo-client';
 const client = new ApolloClient();
 ```
 
-The client takes a variety of [options](/core/apollo-client-api.html#constructor), but in particular, if you want to change the URL of the GraphQL server, you can pass create a custom [`NetworkInterface`](/core/apollo-client-api.html#NetworkInterface):
+The client takes a variety of [options](/core/apollo-client-api.html#constructor), but in particular, if you want to change the URL of the GraphQL server, you can create a custom [`NetworkInterface`](/core/apollo-client-api.html#NetworkInterface):
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';

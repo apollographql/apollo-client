@@ -3145,6 +3145,22 @@ describe('QueryManager', () => {
   });
 
   describe('refetchQueries', () => {
+    const oldWarn = console.warn;
+    let warned: any;
+    let timesWarned = 0;
+
+    beforeEach((done) => {
+      // clear warnings
+      warned = null;
+      timesWarned = 0;
+      // mock warn method
+      console.warn = (...args: any[]) => {
+        warned = args;
+        timesWarned++;
+      };
+      done();
+    });
+
     it('should refetch the right query when a result is successfully returned', (done) => {
       const mutation = gql`
         mutation changeAuthorName {
@@ -3205,6 +3221,146 @@ describe('QueryManager', () => {
           resultsReceived++;
         },
       });
+    });
+
+    it('should warn but continue when an unknown query name is asked to refetch', (done) => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }`;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        }
+      );
+      let resultsReceived = 0;
+      queryManager.watchQuery({ query }).subscribe({
+        next(result) {
+          if (resultsReceived === 0) {
+            assert.deepEqual(result.data, data);
+            queryManager.mutate({ mutation, refetchQueries: ['fakeQuery', 'getAuthors'] });
+          } else if (resultsReceived === 1) {
+            assert.deepEqual(result.data, secondReqData);
+            assert.include(warned[0], 'Warning: unknown query with name fakeQuery');
+            assert.equal(timesWarned, 1);
+            done();
+          }
+          resultsReceived++;
+        },
+      });
+    });
+
+    it('should ignore without warning a query name that is asked to refetch with no active subscriptions', (done) => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }`;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        }
+      );
+
+      let resultsReceived = 0;
+      const temporarySubscription = queryManager.watchQuery({ query }).subscribe({
+        next(result) {
+          if (resultsReceived === 0) {
+            assert.deepEqual(result.data, data);
+            // unsubscribe before the mutation
+            temporarySubscription.unsubscribe();
+            queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
+          } else if (resultsReceived === 1) {
+            // should not be subscribed
+            done(new Error('Returned data when it should have been unsubscribed.'));
+          }
+          resultsReceived++;
+        },
+      });
+      // no warning should have been fired
+      setTimeout(() => {
+        assert.equal(timesWarned, 0);
+        done();
+      }, 10);
+    });
+
+    afterEach((done) => {
+      // restore standard method
+      console.warn = oldWarn;
+      done();
     });
   });
 

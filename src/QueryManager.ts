@@ -996,9 +996,15 @@ export class QueryManager {
   // Refetches a query given that query's name. Refetches
   // all ObservableQuery instances associated with the query name.
   private refetchQueryByName(queryName: string) {
-    this.queryIdsByName[queryName].forEach((queryId) => {
-      this.observableQueries[queryId].observableQuery.refetch();
-    });
+    const refetchedQueries = this.queryIdsByName[queryName];
+    // Warn if the query named does not exist (misnamed, or merely not yet fetched)
+    if (refetchedQueries === undefined) {
+      console.warn(`Warning: unknown query with name ${queryName} asked to refetch`);
+    } else {
+      refetchedQueries.forEach((queryId) => {
+        this.observableQueries[queryId].observableQuery.refetch();
+      });
+    }
   }
 
   // check to see if two results are the same, given our resultComparator

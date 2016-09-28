@@ -84,6 +84,7 @@ describe('createApolloStore', () => {
       mutations: { },
       data: { },
       optimistic: ([] as any[]),
+      reducerError: (null as Error),
     };
 
     const store = createApolloStore({
@@ -122,6 +123,7 @@ describe('createApolloStore', () => {
       mutations: {},
       data: {},
       optimistic: ([] as any[]),
+      reducerError: (null as Error),
     };
 
     const store = createApolloStore({

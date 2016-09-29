@@ -254,4 +254,21 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       });
     });
   }
+
+  public currentResult(): ApolloQueryResult {
+    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
+    const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
+    const queryLoading = !queryStoreValue || queryStoreValue.loading;
+
+    // We need to be careful about the loading state we show to the user, to try
+    // and be vaguely in line with what the user would have seen from .subscribe()
+    // but to still provide useful information synchronously when the query
+    // will not end up hitting the server.
+    // See more: https://github.com/apollostack/apollo-client/issues/707
+    // Basically: is there a query in flight right now (modolo the next tick)?
+    const loading = (this.options.forceFetch && queryLoading)
+      || (partial && !this.options.noFetch);
+
+    return { data, loading };
+  }
 }

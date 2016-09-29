@@ -44,6 +44,7 @@ export interface Store {
   queries: QueryStore;
   mutations: MutationStore;
   optimistic: OptimisticStore;
+  reducerError: Error;
 }
 
 /**
@@ -70,26 +71,36 @@ const crashReporter = (store: any) => (next: any) => (action: any) => {
 
 export function createApolloReducer(config: ApolloReducerConfig): Function {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
-    const newState = {
-      queries: queries(state.queries, action),
-      mutations: mutations(state.mutations, action),
+    let newState = state;
+    try {
+      newState = {
+        queries: queries(state.queries, action),
+        mutations: mutations(state.mutations, action),
 
-      // Note that we are passing the queries into this, because it reads them to associate
-      // the query ID in the result with the actual query
-      data: data(state.data, action, state.queries, state.mutations, config),
-      optimistic: [] as any,
-    };
+        // Note that we are passing the queries into this, because it reads them to associate
+        // the query ID in the result with the actual query
+        data: data(state.data, action, state.queries, state.mutations, config),
+        optimistic: [] as any,
+        reducerError: null,
+      };
 
-    // Note, we need to have the results of the
-    // APOLLO_MUTATION_INIT action to simulate
-    // the APOLLO_MUTATION_RESULT action. That's
-    // why we pass in newState
-    newState.optimistic = optimistic(
-      state.optimistic,
-      action,
-      newState,
-      config
-    );
+      // Note, we need to have the results of the
+      // APOLLO_MUTATION_INIT action to simulate
+      // the APOLLO_MUTATION_RESULT action. That's
+      // why we pass in newState
+      newState.optimistic = optimistic(
+        state.optimistic,
+        action,
+        newState,
+        config
+      );
+    } catch (reducerError) {
+      newState = Object.assign({}, state, {
+        reducerError,
+      });
+    }
+
+
 
     return newState;
   };

@@ -161,6 +161,7 @@ describe('client', () => {
           mutations: {},
           data: {},
           optimistic: [],
+          reducerError: null,
         },
       }
     );
@@ -456,6 +457,7 @@ describe('client', () => {
           },
         },
         optimistic: [],
+        reducerError: null,
       },
     };
 

@@ -885,6 +885,11 @@ export class QueryManager {
           } catch (e) {}
           /* tslint:enable */
 
+          const {reducerError} = this.getApolloState();
+          if (reducerError) {
+            throw reducerError;
+          }
+
           // return a chainable promise
           this.removeFetchQueryPromise(requestId);
           resolve({ data: resultFromStore, loading: false });

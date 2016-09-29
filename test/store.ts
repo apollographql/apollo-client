@@ -1,5 +1,6 @@
 import * as chai from 'chai';
 const { assert } = chai;
+import gql from 'graphql-tag';
 
 import {
   createApolloStore,
@@ -20,6 +21,7 @@ describe('createApolloStore', () => {
         mutations: {},
         data: {},
         optimistic: [],
+        reducerError: (null as Error),
       }
     );
   });
@@ -36,6 +38,7 @@ describe('createApolloStore', () => {
         mutations: {},
         data: {},
         optimistic: [],
+        reducerError: (null as Error),
       }
     );
   });
@@ -51,6 +54,7 @@ describe('createApolloStore', () => {
           'test.0': true,
         },
         optimistic: ([] as any[]),
+        reducerError: (null as Error),
       },
     };
 
@@ -71,6 +75,7 @@ describe('createApolloStore', () => {
         data: {
           'test.0': true,
         },
+        reducerError: (null as Error),
       },
     };
 
@@ -79,6 +84,7 @@ describe('createApolloStore', () => {
       mutations: { },
       data: { },
       optimistic: ([] as any[]),
+      reducerError: (null as Error),
     };
 
     const store = createApolloStore({
@@ -106,6 +112,7 @@ describe('createApolloStore', () => {
           'test.1': true,
         },
         optimistic: ([] as any[]),
+        reducerError: (null as Error),
       },
     };
 
@@ -116,6 +123,7 @@ describe('createApolloStore', () => {
       mutations: {},
       data: {},
       optimistic: ([] as any[]),
+      reducerError: (null as Error),
     };
 
     const store = createApolloStore({
@@ -128,5 +136,71 @@ describe('createApolloStore', () => {
     });
 
     assert.deepEqual(store.getState().apollo, emptyState);
+  });
+
+  it('can\'t crash the reducer', () => {
+    const initialState = {
+      apollo: {
+        queries: {
+          'test.0': true,
+          'test.1': false,
+        },
+        mutations: {},
+        data: {
+          'test.0': true,
+          'test.1': true,
+        },
+        optimistic: ([] as any[]),
+        reducerError: (null as Error),
+      },
+    };
+
+    const store = createApolloStore({
+      initialState,
+    });
+
+    const queryString = `{ shouldBeHere }`;
+    const query = gql`${queryString}`;
+
+    // Try to crash the store with a bad query result
+    store.dispatch({
+      type: 'APOLLO_QUERY_INIT',
+      queryString,
+      query,
+      minimizedQueryString: queryString,
+      minimizedQuery: query,
+      variables: {},
+      forceFetch: true,
+      returnPartialData: false,
+      queryId: '1',
+      requestId: 1,
+      fragmentMap: {},
+    });
+    store.dispatch({
+      type: 'APOLLO_QUERY_RESULT',
+      result: { data: { somethingElse: true }},
+      queryId: '1',
+      requestId: 1,
+    });
+
+    assert.equal(
+      store.getState().apollo.reducerError.message,
+      'Cannot read property \'selections\' of undefined'
+    );
+
+    store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+      observableQueryIds: ['test.0'],
+    });
+
+    assert.deepEqual(store.getState().apollo, {
+      queries: {
+        'test.0': true,
+      },
+      mutations: {},
+      data: {},
+      optimistic: ([] as any[]),
+      reducerError: (null as Error),
+    });
   });
 });

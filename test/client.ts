@@ -436,6 +436,7 @@ describe('client', () => {
             fragmentMap: {},
             returnPartialData: false,
             lastRequestId: 1,
+            previousVariables: null,
           },
         },
         mutations: {},

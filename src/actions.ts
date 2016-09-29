@@ -48,6 +48,7 @@ export interface QueryInitAction {
   queryId: string;
   requestId: number;
   fragmentMap: FragmentMap;
+  storePreviousVariables: boolean;
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {

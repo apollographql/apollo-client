@@ -2,6 +2,10 @@ import {
   QueryManager,
 } from '../src/QueryManager';
 
+import mockQueryManager from './mocks/mockQueryManager';
+
+import mockWatchQuery from './mocks/mockWatchQuery';
+
 import { ObservableQuery } from '../src/ObservableQuery';
 
 import { WatchQueryOptions } from '../src/watchQueryOptions';
@@ -48,7 +52,6 @@ import * as Rx from 'rxjs';
 import assign = require('lodash.assign');
 
 import mockNetworkInterface, {
-  MockedResponse,
   ParsedRequest,
 } from './mocks/mockNetworkInterface';
 
@@ -105,21 +108,6 @@ describe('QueryManager', () => {
       queryTransformer,
       shouldBatch,
     });
-  };
-
-  // Helper method for the tests that construct a query manager out of a
-  // a list of mocked responses for a mocked network interface.
-  const mockQueryManager = (...mockedResponses: MockedResponse[]) => {
-    return new QueryManager({
-      networkInterface: mockNetworkInterface(...mockedResponses),
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
-    });
-  };
-
-  const mockWatchQuery = (mockedResponse: MockedResponse) => {
-    const queryManager = mockQueryManager(mockedResponse);
-    return queryManager.watchQuery({ query: mockedResponse.request.query });
   };
 
   // Helper method that sets up a mockQueryManager and then passes on the
@@ -601,7 +589,13 @@ describe('QueryManager', () => {
               handle.refetch();
             } else if (subTwoCount === 2) {
               assert.deepEqual(result.data, data2);
-              done();
+              setTimeout(() => {
+                try {
+                  assert.equal(subOneCount, 2);
+                  assert.equal(subTwoCount, 2);
+                  done();
+                } catch (e) { done(e); }
+              }, 0);
             }
           },
         });
@@ -719,8 +713,18 @@ describe('QueryManager', () => {
       },
     };
 
-    const variables = {
+    const data4 = {
+      people_one: {
+        name: 'Luke Skywalker has a whole new bag',
+      },
+    };
+
+    const variables1 = {
       test: 'I am your father',
+    };
+
+    const variables2 = {
+      test: "No. No! That's not true! That's impossible!",
     };
 
     const queryManager = mockQueryManager(
@@ -733,8 +737,12 @@ describe('QueryManager', () => {
         result: { data: data2 },
       },
       {
-        request: { query: query, variables },
+        request: { query: query, variables: variables1 },
         result: { data: data3 },
+      },
+      {
+        request: { query: query, variables: variables2 },
+        result: { data: data4 },
       }
     );
     let handleCount = 0;
@@ -749,9 +757,18 @@ describe('QueryManager', () => {
           handle.refetch();
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, data2);
-          handle.refetch(variables);
+          handle.refetch(variables1);
         } else if (handleCount === 3) {
+          assert.isTrue(result.loading);
+          assert.deepEqual(result.data, data2);
+        } else if (handleCount === 4) {
           assert.deepEqual(result.data, data3);
+          handle.refetch(variables2);
+        } else if (handleCount === 5) {
+          assert.isTrue(result.loading);
+          assert.deepEqual(result.data, data3);
+        } else if (handleCount === 6) {
+          assert.deepEqual(result.data, data4);
           done();
         }
       },

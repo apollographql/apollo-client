@@ -37,6 +37,7 @@ export interface QueryStoreValue {
   variables: Object;
   previousVariables: Object;
   loading: boolean;
+  stopped: boolean;
   networkError: Error;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
@@ -77,6 +78,7 @@ export function queries(
       variables: action.variables,
       previousVariables,
       loading: true,
+      stopped: false,
       networkError: null,
       graphQLErrors: null,
       forceFetch: action.forceFetch,
@@ -142,7 +144,10 @@ export function queries(
   } else if (isQueryStopAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
 
-    delete newState[action.queryId];
+    newState[action.queryId] = assign({}, previousState[action.queryId], {
+      loading: false,
+      stopped: true,
+    }) as QueryStoreValue;
 
     return newState;
   } else if (isStoreResetAction(action)) {

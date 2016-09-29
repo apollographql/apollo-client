@@ -116,7 +116,7 @@ describe('mutation results', () => {
     return state;
   }
 
-  function setup(...mockedResponses: any[]) {
+  function setupObsHandle(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: { query },
       result,
@@ -137,10 +137,13 @@ describe('mutation results', () => {
       },
     });
 
-    const obsHandle = client.watchQuery({
+    return client.watchQuery({
       query,
     });
+  }
 
+  function setup(...mockedResponses: any[]) {
+    const obsHandle = setupObsHandle(...mockedResponses);
     return obsHandle.result();
   };
 
@@ -645,6 +648,77 @@ describe('mutation results', () => {
       });
     });
 
+    it('does not fail if the query did not complete correctly', () => {
+      const obsHandle = setupObsHandle({
+        request: { query: mutation },
+        result: mutationResult,
+      });
+      const subs = obsHandle.subscribe({
+        next: () => null,
+      });
+      // Cancel the query right away!
+      subs.unsubscribe();
+      return client.mutate({
+        mutation,
+        updateQueries: {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+            assert.equal(mResult.data.createTodo.id, '99');
+            assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+            const state = clonedeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        },
+      });
+    });
+
+    it('does not make next queries fail if a mutation fails', (done) => {
+      const obsHandle = setupObsHandle({
+        request: { query: mutation },
+        result: {errors: [new Error('mock error')]},
+      }, {
+        request: { query },
+        result,
+      });
+
+      obsHandle.subscribe({
+        next() {
+          client.mutate({
+            mutation,
+            updateQueries: {
+              todoList: (prev, options) => {
+                const mResult = options.mutationResult as any;
+                const state = clonedeep(prev) as any;
+                state.todoList.todos.unshift(mResult.data.createTodo);
+                return state;
+              },
+            },
+          })
+          .then(
+            () => done(new Error('Mutation should have failed')),
+            () => client.mutate({
+              mutation,
+              updateQueries: {
+                todoList: (prev, options) => {
+                  const mResult = options.mutationResult as any;
+                  const state = clonedeep(prev) as any;
+                  state.todoList.todos.unshift(mResult.data.createTodo);
+                  return state;
+                },
+              },
+            }),
+          )
+          .then(
+            () => done(new Error('Mutation should have failed')),
+            () => obsHandle.refetch(),
+          )
+          .then(() => done(), done);
+        },
+      });
+    });
+
     it('error handling in reducer functions', () => {
       const oldError = console.error;
       const errors: any[] = [];
@@ -672,5 +746,94 @@ describe('mutation results', () => {
         console.error = oldError;
       });
     });
+  });
+
+  it('does not fail if one of the previous queries did not complete correctly', (done) => {
+    const variableQuery = gql`
+      query Echo($message: String) {
+        echo(message: $message)
+      }
+    `;
+
+    const variables1 = {
+      message: 'a',
+    };
+
+    const result1 = {
+      data: {
+        echo: 'a',
+      },
+    };
+
+    const variables2 = {
+      message: 'b',
+    };
+
+    const result2 = {
+      data: {
+        echo: 'b',
+      },
+    };
+
+    const resetMutation = gql`
+      mutation Reset {
+        reset {
+          echo
+        }
+      }
+    `;
+
+    const resetMutationResult = {
+      data: {
+        reset: {
+          echo: '0',
+        },
+      },
+    };
+
+    networkInterface = mockNetworkInterface({
+      request: { query: variableQuery, variables: variables1 },
+      result: result1,
+    }, {
+      request: { query: variableQuery, variables: variables2 },
+      result: result2,
+    }, {
+      request: { query: resetMutation },
+      result: resetMutationResult,
+    });
+
+    client = new ApolloClient({networkInterface});
+
+    const watchedQuery = client.watchQuery({query: variableQuery, variables: variables1});
+
+    const firstSubs = watchedQuery.subscribe({
+      next: () => null,
+    });
+
+    // Cancel the query right away!
+    firstSubs.unsubscribe();
+
+    let yieldCount = 0;
+    watchedQuery.subscribe({
+      next: ({data}: any) => {
+        yieldCount += 1;
+        if (yieldCount === 1) {
+          assert.equal(data.echo, 'b');
+          client.mutate({
+            mutation: resetMutation,
+            updateQueries: {
+              Echo: (prev, options) => {
+                return {echo: '0'};
+              },
+            },
+          });
+        } else if (yieldCount === 2) {
+          assert.equal(data.echo, '0');
+          done();
+        }
+      },
+    });
+
+    watchedQuery.refetch(variables2);
   });
 });

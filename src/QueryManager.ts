@@ -652,6 +652,16 @@ export class QueryManager {
       fragments = getFragmentDefinitions(transformedDoc);
     }
 
+    const queryState = this.getApolloState().queries[queryId];
+
+    // If the previous query, for some reason, did not complete correctly, we run the
+    // readSelectionSet in returnPartialData in order to avoid field reading errors
+    const forcePartialData =
+      queryState.loading ||
+      queryState.stopped ||
+      !!queryState.networkError ||
+      !!queryState.graphQLErrors;
+
     const previousResult = readSelectionSetFromStore({
       // In case of an optimistic change, apply reducer on top of the
       // results including previous optimistic updates. Otherwise, apply it
@@ -660,7 +670,7 @@ export class QueryManager {
       rootId: 'ROOT_QUERY',
       selectionSet: queryDefinition.selectionSet,
       variables: queryOptions.variables,
-      returnPartialData: queryOptions.returnPartialData || queryOptions.noFetch,
+      returnPartialData: forcePartialData || queryOptions.returnPartialData || queryOptions.noFetch,
       fragmentMap: createFragmentMap(fragments || []),
     });
 

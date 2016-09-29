@@ -1,6 +1,7 @@
 import {
   Document,
   SelectionSet,
+  Definition,
   OperationDefinition,
   FragmentDefinition,
   Field,
@@ -71,7 +72,7 @@ function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: Que
 export function applyTransformers(doc: Document, queryTransformers: QueryTransformer[]): Document {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
-  docClone.definitions.forEach((definition) => {
+  docClone.definitions.forEach((definition: Definition) => {
     if (definition.kind === 'OperationDefinition') { // query or mutation
       traverseSelectionSet((definition as OperationDefinition).selectionSet, queryTransformers, true);
     } else {

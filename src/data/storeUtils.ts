@@ -63,10 +63,12 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
       valueToObjectRepresentation(nestedArgArrayObj, name, listValue, variables);
       return (nestedArgArrayObj as any)[name.value];
     });
-  } else {
-    throw new Error(`The inline argument "${name.value}" of kind "${value.kind}" is not supported.
-                    Use variables instead of inline arguments to overcome this limitation.`);
   }
+  // // The following is impossible according to tsc.
+  // else {
+  //  throw new Error(`The inline argument "${name.value}" of kind "${value.kind}" is not supported.
+  //                  Use variables instead of inline arguments to overcome this limitation.`);
+  // }
 }
 
 export function storeKeyNameFromField(field: Field, variables?: Object): string {

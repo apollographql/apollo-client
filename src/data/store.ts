@@ -52,13 +52,13 @@ export interface StoreObject {
 }
 
 export interface IdValue {
-  type: "id";
+  type: 'id';
   id: string;
   generated: boolean;
 }
 
 export interface JsonValue {
-  type: "json";
+  type: 'json';
   json: any;
 }
 

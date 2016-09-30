@@ -79,7 +79,6 @@ export {
 
   // fragment stuff
   createFragment,
-  fragmentDefinitionsMap,
   clearFragmentDefinitions,
   disableFragmentWarnings,
   enableFragmentWarnings,

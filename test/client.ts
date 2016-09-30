@@ -10,7 +10,6 @@ import ApolloClient, {
   enableFragmentWarnings,
 } from '../src';
 
- // XXX The import/export in index somehow clobbers the singleton. We should fix that.
 import { fragmentDefinitionsMap } from '../src/fragments';
 
 import {

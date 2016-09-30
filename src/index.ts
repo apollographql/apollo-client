@@ -55,7 +55,6 @@ import {
 import ApolloClient from './ApolloClient';
 import {
   createFragment,
-  fragmentDefinitionsMap,
   clearFragmentDefinitions,
   disableFragmentWarnings,
   enableFragmentWarnings,

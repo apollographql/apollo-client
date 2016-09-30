@@ -309,7 +309,7 @@ export default class ApolloClient {
       this.reduxRootSelector = (state: any) => state[reduxRootKey];
     } else if (isString(reduxRootSelector)) {
       // for backwards compatibility, we set reduxRootKey if reduxRootSelector is a string
-      this.reduxRootKey = reduxRootSelector;
+      this.reduxRootKey = reduxRootSelector as string;
       this.reduxRootSelector = (state: any) => state[reduxRootSelector as string];
     } else if (typeof reduxRootSelector === 'function') {
       this.reduxRootSelector = reduxRootSelector;

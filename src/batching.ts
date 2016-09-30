@@ -110,7 +110,7 @@ export class QueryBatcher {
     } else {
       const clonedRequests = cloneDeep(this.queuedRequests);
       this.queuedRequests = [];
-      clonedRequests.forEach((fetchRequest, index) => {
+      clonedRequests.forEach((fetchRequest: any, index: number) => {
         this.networkInterface.query(requests[index]).then((result) => {
           resolvers[index](result);
         }).catch((reason) => {

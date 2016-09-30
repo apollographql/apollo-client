@@ -379,7 +379,7 @@ Perhaps you want to use the \`returnPartialData\` option?`,
   if (isArray(storeValue)) {
     let isMissing: any;
 
-    const result = storeValue.map((id) => {
+    const result = (storeValue as string[]).map((id) => {
       // null value in array
       if (isNull(id)) {
         return null;

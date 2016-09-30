@@ -103,7 +103,7 @@ export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetw
 }
 
 export function printRequest(request: Request): PrintedRequest {
-  return mapValues(request, (val, key) => {
+  return mapValues(request, (val: any, key: any) => {
     return key === 'query' ? print(val) : val;
   }) as any as PrintedRequest;
 }

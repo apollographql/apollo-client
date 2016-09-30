@@ -1,5 +1,6 @@
 import {
   NormalizedCache,
+  StoreObject,
 } from './store';
 
 import {
@@ -172,7 +173,7 @@ function mutationResultDeleteReducer(state: NormalizedCache, {
   delete state[dataId];
 
   // Now we need to go through the whole store and remove all references
-  const newState = mapValues(state, (storeObj) => {
+  const newState = mapValues(state, (storeObj: StoreObject) => {
     return removeRefsFromStoreObj(storeObj, dataId);
   });
 
@@ -182,7 +183,7 @@ function mutationResultDeleteReducer(state: NormalizedCache, {
 function removeRefsFromStoreObj(storeObj: any, dataId: any) {
   let affected = false;
 
-  const cleanedObj = mapValues(storeObj, (value, key) => {
+  const cleanedObj = mapValues(storeObj, (value: any) => {
     if (value === dataId) {
       affected = true;
       return null;

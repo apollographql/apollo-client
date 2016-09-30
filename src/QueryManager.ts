@@ -74,9 +74,8 @@ import {
 } from './scheduler';
 
 import {
-  ApolloQueryResult,
   ApolloStateSelector,
-} from './index';
+} from './ApolloClient';
 
 import {
   Observer,
@@ -101,6 +100,14 @@ export interface SubscriptionOptions {
   variables?: { [key: string]: any };
   fragments?: FragmentDefinition[];
 };
+
+export type ApolloQueryResult = {
+  data: any;
+  loading: boolean;
+
+  // This type is different from the GraphQLResult type because it doesn't include errors.
+  // Those are thrown via the standard promise/observer catch mechanism.
+}
 
 // A result transformer is given the data that is to be returned from the store from a query or
 // mutation, and can modify or observe it before the value is provided to your application.

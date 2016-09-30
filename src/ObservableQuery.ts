@@ -12,11 +12,8 @@ import {
 
 import {
   QueryManager,
-} from './QueryManager';
-
-import {
   ApolloQueryResult,
-} from './index';
+} from './QueryManager';
 
 import { tryFunctionOrLogError } from './util/errorHandling';
 

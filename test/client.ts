@@ -4,12 +4,14 @@ import * as sinon from 'sinon';
 
 import ApolloClient, {
   createFragment,
-  fragmentDefinitionsMap,
   clearFragmentDefinitions,
   disableFragmentWarnings,
   printAST,
   enableFragmentWarnings,
 } from '../src';
+
+ // XXX The import/export in index somehow clobbers the singleton. We should fix that.
+import { fragmentDefinitionsMap } from '../src/fragments';
 
 import {
   GraphQLError,
@@ -1212,6 +1214,7 @@ describe('client', () => {
           firstName
           lastName
         }`;
+      assert.equal(Object.keys(fragmentDefinitionsMap).length, 0);
       createFragment(fragmentDoc);
       assert.equal(Object.keys(fragmentDefinitionsMap).length, 1);
       assert(fragmentDefinitionsMap.hasOwnProperty('authorDetails'));

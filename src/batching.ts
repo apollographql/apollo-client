@@ -34,7 +34,7 @@ export class QueryBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   public queuedRequests: QueryFetchRequest[] = [];
 
-  private shouldBatch: Boolean;
+  private shouldBatch: boolean;
   private pollInterval: Number;
   private pollTimer: NodeJS.Timer | any; //oddity in Typescript
 
@@ -46,7 +46,7 @@ export class QueryBatcher {
     shouldBatch,
     networkInterface,
   }: {
-    shouldBatch: Boolean,
+    shouldBatch: boolean,
     networkInterface: NetworkInterface,
   }) {
     this.shouldBatch = shouldBatch;

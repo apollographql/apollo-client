@@ -40,8 +40,6 @@ export interface QueryInitAction {
   type: 'APOLLO_QUERY_INIT';
   queryString: string;
   query: SelectionSetWithRoot;
-  minimizedQueryString: string;
-  minimizedQuery: SelectionSetWithRoot;
   variables: Object;
   forceFetch: boolean;
   returnPartialData: boolean;

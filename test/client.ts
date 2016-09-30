@@ -425,8 +425,6 @@ describe('client', () => {
               typeName: 'Query',
               selectionSet: (query.definitions[0] as OperationDefinition).selectionSet,
             },
-            minimizedQueryString: null,
-            minimizedQuery: null,
             variables: undefined,
             loading: false,
             stopped: false,

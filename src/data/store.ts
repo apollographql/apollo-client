@@ -104,8 +104,8 @@ export function data(
 
       const newState = writeSelectionSetToStore({
         result: action.result.data,
-        dataId: queryStoreValue.minimizedQuery.id,
-        selectionSet: queryStoreValue.minimizedQuery.selectionSet,
+        dataId: queryStoreValue.query.id,
+        selectionSet: queryStoreValue.query.selectionSet,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,

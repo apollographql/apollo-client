@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 
 
-export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): Boolean {
+export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): boolean {
   if (!variables) {
     variables = {};
   }
@@ -16,7 +16,7 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
     return true;
   }
 
-  let res: Boolean = true;
+  let res: boolean = true;
   selection.directives.forEach((directive) => {
     // TODO should move this validation to GraphQL validation once that's implemented.
     if (directive.name.value !== 'skip' && directive.name.value !== 'include') {
@@ -38,7 +38,7 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
     }
 
     const ifValue = directive.arguments[0].value;
-    let evaledValue: Boolean = false;
+    let evaledValue: boolean = false;
     if (!ifValue || ifValue.kind !== 'BooleanValue') {
       // means it has to be a variable value if this is a valid @skip or @include directive
       if (ifValue.kind !== 'Variable') {

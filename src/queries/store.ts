@@ -32,8 +32,6 @@ export interface QueryStore {
 export interface QueryStoreValue {
   queryString: string;
   query: SelectionSetWithRoot;
-  minimizedQueryString: string;
-  minimizedQuery: SelectionSetWithRoot;
   variables: Object;
   previousVariables: Object;
   loading: boolean;
@@ -73,8 +71,6 @@ export function queries(
     newState[action.queryId] = {
       queryString: action.queryString,
       query: action.query,
-      minimizedQueryString: action.minimizedQueryString,
-      minimizedQuery: action.minimizedQuery,
       variables: action.variables,
       previousVariables,
       loading: true,
@@ -135,7 +131,7 @@ export function queries(
     const newState = assign({}, previousState) as QueryStore;
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {
-      loading: action.complete,
+      loading: !action.complete,
       networkError: null,
       previousVariables: null,
     }) as QueryStoreValue;

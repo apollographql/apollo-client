@@ -2,6 +2,10 @@
 
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
+### vNEXT
+
+- **Feature removal**: Remove query diffing functionality to make client more predictable and simplify implementation. Queries will still read from the store, and if the store does not have all of the necessary data the entire query will fetch from the server. Read justification and discussion in [Issue #615](https://github.com/apollostack/apollo-client/issues/615) [PR #693](https://github.com/apollostack/apollo-client/pull/693)
+
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)
 - Fix: avoid field error on mutations after a query cancellation or a query failure by enforcing returnPartialData during previous data retrieval before applying a mutation update. [PR #696](https://github.com/apollostack/apollo-client/pull/696) and [Issue #647](https://github.com/apollostack/apollo-client/issues/647).

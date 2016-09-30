@@ -18,18 +18,9 @@ import {
 } from './store';
 
 import {
-  SelectionSetWithRoot,
-} from '../queries/store';
-
-import {
   SelectionSet,
   Field,
-  Directive,
   Document,
-  Selection,
-  FragmentDefinition,
-  OperationDefinition,
-  Variable,
 } from 'graphql';
 
 import {
@@ -46,12 +37,9 @@ import {
   ApolloError,
 } from '../errors';
 
-import flatten = require('lodash.flatten');
-
 export interface DiffResult {
-  result: any;
-  isMissing?: 'true';
-  missingSelectionSets?: SelectionSetWithRoot[];
+  result?: any;
+  isMissing?: boolean;
 }
 
 export function diffQueryAgainstStore({
@@ -123,7 +111,7 @@ export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error
  * @param  {SelectionSet} selectionSet A GraphQL selection set
  * @param  {Store} store The Apollo Client store object
  * @param  {String} rootId The ID of the root object that the selection set applies to
- * @param  {Boolean} [throwOnMissingField] Throw an error rather than returning any selection sets
+ * @param  {boolean} [throwOnMissingField] Throw an error rather than returning any selection sets
  * when a field isn't found in the store.
  * @return {result: Object, missingSelectionSets: [SelectionSet]}
  */
@@ -151,7 +139,7 @@ export function diffSelectionSetAgainstStore({
   }
 
   const result = {};
-  const missingFields: Selection[] = [];
+  let hasMissingFields = false;
 
   // A map going from a typename to missing field errors thrown on that
   // typename. This data structure is needed to support union types. For example, if we have
@@ -164,16 +152,7 @@ export function diffSelectionSetAgainstStore({
 
   selectionSet.selections.forEach((selection) => {
     // Don't push more than one missing field per field in the query
-    let missingFieldPushed = false;
     let fieldResult: any;
-    let fieldIsMissing: string;
-
-    function pushMissingField(missingField: Selection) {
-      if (!missingFieldPushed) {
-        missingFields.push(missingField);
-        missingFieldPushed = true;
-      }
-    }
 
     const included = shouldInclude(selection, variables);
 
@@ -187,16 +166,10 @@ export function diffSelectionSetAgainstStore({
         fragmentMap,
         included,
       });
-      fieldIsMissing = diffResult.isMissing;
+      hasMissingFields = hasMissingFields || diffResult.isMissing;
       fieldResult = diffResult.result;
 
       const resultFieldKey = resultKeyNameFromField(selection);
-      if (fieldIsMissing) {
-        // even if the field is not included, we want to keep it in the
-        // query that is sent to the server. So, we push it into the set of
-        // fields that is missing.
-        pushMissingField(selection);
-      }
       if (included && fieldResult !== undefined) {
         (result as any)[resultFieldKey] = fieldResult;
       }
@@ -213,16 +186,14 @@ export function diffSelectionSetAgainstStore({
             store,
             fragmentMap,
           });
-          fieldIsMissing = diffResult.isMissing;
-          fieldResult = diffResult.result;
 
-          if (fieldIsMissing) {
-            pushMissingField(selection);
-          }
+          hasMissingFields = hasMissingFields || diffResult.isMissing;
+          fieldResult = diffResult.result;
 
           if (isObject(fieldResult)) {
             merge(result, fieldResult);
           }
+
           if (!fragmentErrors[typename]) {
             fragmentErrors[typename] = null;
           }
@@ -253,12 +224,9 @@ export function diffSelectionSetAgainstStore({
             store,
             fragmentMap,
           });
-          fieldIsMissing = diffResult.isMissing;
+          hasMissingFields = hasMissingFields || diffResult.isMissing;
           fieldResult = diffResult.result;
 
-          if (fieldIsMissing) {
-            pushMissingField(selection);
-          }
           if (isObject(fieldResult)) {
             merge(result, fieldResult);
           }
@@ -281,36 +249,9 @@ export function diffSelectionSetAgainstStore({
     handleFragmentErrors(fragmentErrors);
   }
 
-  // Set this to true if we don't have enough information at this level to generate a refetch
-  // query, so we need to merge the selection set with the parent, rather than appending
-  let isMissing: any;
-  let missingSelectionSets: any;
-
-  // If we weren't able to resolve some selections from the store, construct them into
-  // a query we can fetch from the server
-  if (missingFields.length) {
-    if (rootId === 'ROOT_QUERY') {
-      const typeName = 'Query';
-
-      missingSelectionSets = [
-        {
-          id: rootId,
-          typeName,
-          selectionSet: {
-            kind: 'SelectionSet',
-            selections: missingFields,
-          },
-        },
-      ];
-    } else {
-      isMissing = 'true';
-    }
-  }
-
   return {
     result,
-    isMissing,
-    missingSelectionSets,
+    isMissing: hasMissingFields,
   };
 }
 
@@ -329,8 +270,8 @@ function diffFieldAgainstStore({
   rootId: string,
   store: NormalizedCache,
   fragmentMap?: FragmentMap,
-  included?: Boolean,
-}): FieldDiffResult {
+  included?: boolean,
+}): DiffResult {
   const storeObj = store[rootId] || {};
   const storeFieldKey = storeKeyNameFromField(field, variables);
 
@@ -346,7 +287,7 @@ Perhaps you want to use the \`returnPartialData\` option?`,
     }
 
     return {
-      isMissing: 'true',
+      isMissing: true,
     };
   }
 
@@ -423,96 +364,4 @@ Perhaps you want to use the \`returnPartialData\` option?`,
   }
 
   throw new Error('Unexpected value in the store where the query had a subselection.');
-}
-
-interface FieldDiffResult {
-  result?: any;
-  isMissing?: 'true';
-}
-
-function collectUsedVariablesFromSelectionSet(selectionSet: SelectionSet): any[] {
-  return uniq(flatten(selectionSet.selections.map((selection) => {
-    if (isField(selection)) {
-      return collectUsedVariablesFromField(selection);
-    } else if (isInlineFragment(selection)) {
-      return collectUsedVariablesFromSelectionSet(selection.selectionSet);
-    } else {
-      // Some named fragment. Don't handle it here, rely on the caller
-      // to process fragments separately.
-      return [];
-    }
-  })));
-}
-
-function collectUsedVariablesFromDirectives(directives: Directive[]) {
-  return flatten(directives.map(directive => {
-    if (directive.arguments) {
-      return flatten(directive.arguments.map(arg => {
-        if (arg.kind === 'Argument' && arg.value.kind === 'Variable') {
-          return [(arg.value as Variable).name.value];
-        }
-
-        return [];
-      }));
-    }
-
-    return [];
-  }));
-}
-
-function collectUsedVariablesFromField(field: Field) {
-  let variables: any[] = [];
-
-  if (field.arguments) {
-    variables = flatten(field.arguments.map((arg) => {
-      if (arg.value.kind === 'Variable') {
-        return [(arg.value as Variable).name.value];
-      }
-
-      return [];
-    }));
-  }
-
-  if (field.selectionSet) {
-    variables = [
-        ...variables,
-        ...collectUsedVariablesFromSelectionSet(field.selectionSet),
-    ];
-  }
-
-  if (field.directives) {
-    variables = [
-      ...variables,
-      ...collectUsedVariablesFromDirectives(field.directives),
-    ];
-  }
-
-  return uniq(variables);
-}
-
-export function removeUnusedVariablesFromQuery (
-  query: Document
-): void {
-  const queryDef = getQueryDefinition(query);
-  const usedVariables = flatten(
-    query.definitions.map((def) => collectUsedVariablesFromSelectionSet(
-      (def as FragmentDefinition | OperationDefinition).selectionSet)));
-
-  if (!queryDef.variableDefinitions) {
-    return;
-  }
-
-  const diffedVariableDefinitions =
-    queryDef.variableDefinitions.filter((variableDefinition) => {
-      return usedVariables.indexOf(
-        variableDefinition.variable.name.value) !== -1;
-    });
-
-  queryDef.variableDefinitions = diffedVariableDefinitions;
-}
-
-function uniq(array: any[]): any[] {
-  return array.filter(
-    (item, index, arr) =>
-      arr.indexOf(item) === index);
 }

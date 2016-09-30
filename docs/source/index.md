@@ -17,8 +17,8 @@ If you are looking to use Apollo with a native mobile client, there is a [iOS Cl
 We have put together some basic example apps using various parts of Apollo; check them out to see how everything fits together. We're always looking for improvements and feedback on these apps, and they'll get better as Apollo becomes more production-ready!
 
 ### General JS Examples
-- [Githunt - A full-stack Apollo Client and Server example app that uses React, Webpack, Babel, and Redux](https://github.com/apollostack/GitHunt)
-- [Githunt written in Angular 2](https://github.com/apollostack/GitHunt-angular2)
+- [GitHunt - A full-stack Apollo Client and Server example app that uses React, Webpack, Babel, and Redux](https://github.com/apollostack/GitHunt)
+- [GitHunt written in Angular 2](https://github.com/apollostack/GitHunt-angular2)
 - [A GraphQL server example that uses SQL, MongoDB + REST](https://github.com/apollostack/apollo-server-tutorial)
 - [A GraphQL server starter-kit](https://github.com/Quadric/perfect-graphql-starter)
 - [A simple GraphQL blog that uses Feathersjs for managing database services](https://github.com/swarthout/feathers-apollo)

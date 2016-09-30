@@ -958,7 +958,7 @@ export class QueryManager {
         result: { data: storeResult },
         variables,
         query: querySS,
-        complete: !needToFetch,
+        complete: !shouldFetch,
         queryId,
       });
     }

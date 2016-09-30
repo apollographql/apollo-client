@@ -131,7 +131,7 @@ export function queries(
     const newState = assign({}, previousState) as QueryStore;
 
     newState[action.queryId] = assign({}, previousState[action.queryId], {
-      loading: action.complete,
+      loading: !action.complete,
       networkError: null,
       previousVariables: null,
     }) as QueryStoreValue;

@@ -2800,18 +2800,10 @@ describe('QueryManager', () => {
         }`;
       const fullData = { fortuneCookie, author };
 
-      const diffQuery = gql`
-        query {
-          author {
-            name
-          }
-        }`;
-      const diffData = { author };
-
       const queryManager = mockQueryManager(
         {
-          request: { query: diffQuery },
-          result: { data: diffData },
+          request: { query },
+          result: { data: fullData },
           delay: 5,
         },
         {

@@ -50,7 +50,7 @@ import {
 
 import {
   ApolloError,
-} from './errors';
+} from './errors/ApolloError';
 
 import ApolloClient from './ApolloClient';
 import {

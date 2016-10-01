@@ -64,7 +64,7 @@ import {
 
 import {
   ApolloError,
-} from '../src/errors';
+} from '../src/errors/ApolloError';
 
 import {
   Observer,

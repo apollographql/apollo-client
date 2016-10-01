@@ -63,7 +63,7 @@ import { getFragmentDefinitions } from '../src/queries/getFromAST';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { ApolloError } from '../src/errors';
+import { ApolloError } from '../src/errors/ApolloError';
 
 import {
   createMockFetch,

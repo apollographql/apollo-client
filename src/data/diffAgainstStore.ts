@@ -35,7 +35,7 @@ import {
 
 import {
   ApolloError,
-} from '../errors';
+} from '../errors/ApolloError';
 
 export interface DiffResult {
   result?: any;

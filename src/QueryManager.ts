@@ -87,7 +87,7 @@ import { tryFunctionOrLogError } from './util/errorHandling';
 
 import {
   ApolloError,
-} from './errors';
+} from './errors/ApolloError';
 
 import { WatchQueryOptions } from './watchQueryOptions';
 

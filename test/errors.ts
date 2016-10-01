@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ApolloError } from '../src/errors';
+import { ApolloError } from '../src/errors/ApolloError';
 
 describe('ApolloError', () => {
   it('should construct itself correctly', () => {

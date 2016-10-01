@@ -34,11 +34,11 @@ import {
   SubscriptionOptions,
   ResultComparator,
   ResultTransformer,
-} from './QueryManager';
+} from './core/QueryManager';
 
 import {
   ObservableQuery,
-} from './ObservableQuery';
+} from './core/ObservableQuery';
 
 import {
   Observable,
@@ -46,7 +46,7 @@ import {
 
 import {
   WatchQueryOptions,
-} from './watchQueryOptions';
+} from './core/watchQueryOptions';
 
 import {
   IdGetter,

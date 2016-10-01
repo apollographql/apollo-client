@@ -15,7 +15,7 @@ import {
 
 import {
   ObservableQuery,
-} from './ObservableQuery';
+} from './core/ObservableQuery';
 
 import {
   Subscription,
@@ -23,7 +23,7 @@ import {
 
 import {
   WatchQueryOptions,
-} from './watchQueryOptions';
+} from './core/watchQueryOptions';
 
 import {
   readQueryFromStore,

@@ -1,14 +1,14 @@
 import {
   QueryManager,
-} from '../src/QueryManager';
+} from '../src/core/QueryManager';
 
 import mockQueryManager from './mocks/mockQueryManager';
 
 import mockWatchQuery from './mocks/mockWatchQuery';
 
-import { ObservableQuery } from '../src/ObservableQuery';
+import { ObservableQuery } from '../src/core/ObservableQuery';
 
-import { WatchQueryOptions } from '../src/watchQueryOptions';
+import { WatchQueryOptions } from '../src/core/watchQueryOptions';
 
 import {
   createApolloStore,
@@ -41,7 +41,7 @@ import ApolloClient, {
 
 import {
   ApolloQueryResult,
-} from '../src/QueryManager';
+} from '../src/core/QueryManager';
 
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 

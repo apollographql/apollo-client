@@ -2,7 +2,7 @@ import { MockedResponse } from './mockNetworkInterface';
 
 import mockQueryManager from './mockQueryManager';
 
-import { ObservableQuery } from '../../src/ObservableQuery'; // tslint:disable-line
+import { ObservableQuery } from '../../src/core/ObservableQuery'; // tslint:disable-line
 
 export default (...mockedResponses: MockedResponse[]) => {
   const queryManager = mockQueryManager(...mockedResponses);

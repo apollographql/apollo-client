@@ -2,7 +2,7 @@ import { assert } from 'chai';
 
 import merge = require('lodash.merge');
 
-import { HTTPBatchedNetworkInterface } from '../src/batchedNetworkInterface';
+import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInterface';
 
 import {
   createMockFetch,
@@ -12,10 +12,10 @@ import {
 import {
   Request,
   printRequest,
-} from '../src/networkInterface';
+} from '../src/transport/networkInterface';
 
-import { MiddlewareInterface } from '../src/middleware';
-import { AfterwareInterface } from '../src/afterware';
+import { MiddlewareInterface } from '../src/transport/middleware';
+import { AfterwareInterface } from '../src/transport/afterware';
 
 import { GraphQLResult } from 'graphql';
 

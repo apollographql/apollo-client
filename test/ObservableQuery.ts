@@ -6,8 +6,8 @@ import gql from 'graphql-tag';
 
 import mockQueryManager from './mocks/mockQueryManager';
 import mockWatchQuery from './mocks/mockWatchQuery';
-import { ObservableQuery } from '../src/ObservableQuery';
-import { ApolloQueryResult } from '../src';
+import { ObservableQuery } from '../src/core/ObservableQuery';
+import { ApolloQueryResult } from '../src/core/QueryManager';
 
 // I'm not sure why mocha doesn't provide something like this, you can't
 // always use promises

@@ -4,12 +4,13 @@ import * as sinon from 'sinon';
 
 import ApolloClient, {
   createFragment,
-  fragmentDefinitionsMap,
   clearFragmentDefinitions,
   disableFragmentWarnings,
   printAST,
   enableFragmentWarnings,
 } from '../src';
+
+import { fragmentDefinitionsMap } from '../src/fragments';
 
 import {
   GraphQLError,
@@ -44,7 +45,7 @@ import {
 
 import {
   QueryManager,
-} from '../src/QueryManager';
+} from '../src/core/QueryManager';
 
 import {
   createNetworkInterface,
@@ -52,7 +53,7 @@ import {
   Request,
   NetworkInterface,
   addQueryMerging,
-} from '../src/networkInterface';
+} from '../src/transport/networkInterface';
 
 import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 
@@ -62,7 +63,7 @@ import { getFragmentDefinitions } from '../src/queries/getFromAST';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { ApolloError } from '../src/errors';
+import { ApolloError } from '../src/errors/ApolloError';
 
 import {
   createMockFetch,
@@ -1212,6 +1213,7 @@ describe('client', () => {
           firstName
           lastName
         }`;
+      assert.equal(Object.keys(fragmentDefinitionsMap).length, 0);
       createFragment(fragmentDoc);
       assert.equal(Object.keys(fragmentDefinitionsMap).length, 1);
       assert(fragmentDefinitionsMap.hasOwnProperty('authorDetails'));

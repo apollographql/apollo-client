@@ -46,7 +46,7 @@ import {
 
 import {
   ApolloError,
-} from '../errors';
+} from '../errors/ApolloError';
 
 // import {
 //   printAST,

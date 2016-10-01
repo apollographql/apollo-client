@@ -2,7 +2,7 @@ import {
   NetworkInterface,
   SubscriptionNetworkInterface,
   Request,
-} from './networkInterface';
+} from '../transport/networkInterface';
 
 import forOwn = require('lodash.forown');
 import isEqual = require('lodash.isequal');
@@ -11,12 +11,12 @@ import {
   ApolloStore,
   Store,
   getDataWithOptimisticResults,
-} from './store';
+} from '../store';
 
 import {
   SelectionSetWithRoot,
   QueryStoreValue,
-} from './queries/store';
+} from '../queries/store';
 
 import {
   getMutationDefinition,
@@ -26,16 +26,16 @@ import {
   getOperationName,
   addFragmentsToDocument,
   FragmentMap,
-} from './queries/getFromAST';
+} from '../queries/getFromAST';
 
 import {
   QueryTransformer,
   applyTransformers,
-} from './queries/queryTransform';
+} from '../queries/queryTransform';
 
 import {
   NormalizedCache,
-} from './data/store';
+} from '../data/store';
 
 import {
   GraphQLResult,
@@ -53,42 +53,41 @@ import { print } from 'graphql-tag/printer';
 
 import {
   readSelectionSetFromStore,
-} from './data/readFromStore';
+} from '../data/readFromStore';
 
 import {
   diffSelectionSetAgainstStore,
-} from './data/diffAgainstStore';
+} from '../data/diffAgainstStore';
 
 import {
   MutationBehavior,
   MutationQueryReducersMap,
-} from './data/mutationResults';
+} from '../data/mutationResults';
 
 import {
   QueryFetchRequest,
   QueryBatcher,
-} from './batching';
+} from '../transport/batching';
 
 import {
   QueryScheduler,
-} from './scheduler';
+} from '../scheduler/scheduler';
 
 import {
-  ApolloQueryResult,
   ApolloStateSelector,
-} from './index';
+} from '../ApolloClient';
 
 import {
   Observer,
   Subscription,
   Observable,
-} from './util/Observable';
+} from '../util/Observable';
 
-import { tryFunctionOrLogError } from './util/errorHandling';
+import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import {
   ApolloError,
-} from './errors';
+} from '../errors/ApolloError';
 
 import { WatchQueryOptions } from './watchQueryOptions';
 
@@ -101,6 +100,14 @@ export interface SubscriptionOptions {
   variables?: { [key: string]: any };
   fragments?: FragmentDefinition[];
 };
+
+export type ApolloQueryResult = {
+  data: any;
+  loading: boolean;
+
+  // This type is different from the GraphQLResult type because it doesn't include errors.
+  // Those are thrown via the standard promise/observer catch mechanism.
+}
 
 // A result transformer is given the data that is to be returned from the store from a query or
 // mutation, and can modify or observe it before the value is provided to your application.

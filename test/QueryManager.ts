@@ -1,14 +1,14 @@
 import {
   QueryManager,
-} from '../src/QueryManager';
+} from '../src/core/QueryManager';
 
 import mockQueryManager from './mocks/mockQueryManager';
 
 import mockWatchQuery from './mocks/mockWatchQuery';
 
-import { ObservableQuery } from '../src/ObservableQuery';
+import { ObservableQuery } from '../src/core/ObservableQuery';
 
-import { WatchQueryOptions } from '../src/watchQueryOptions';
+import { WatchQueryOptions } from '../src/core/watchQueryOptions';
 
 import {
   createApolloStore,
@@ -37,8 +37,11 @@ import {
 
 import ApolloClient, {
   ApolloStateSelector,
+} from '../src/ApolloClient';
+
+import {
   ApolloQueryResult,
-} from '../src/index';
+} from '../src/core/QueryManager';
 
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 
@@ -53,7 +56,7 @@ import mockNetworkInterface, {
 import {
   BatchedNetworkInterface,
   NetworkInterface,
-} from '../src/networkInterface';
+} from '../src/transport/networkInterface';
 
 import {
   getFragmentDefinition,
@@ -61,7 +64,7 @@ import {
 
 import {
   ApolloError,
-} from '../src/errors';
+} from '../src/errors/ApolloError';
 
 import {
   Observer,

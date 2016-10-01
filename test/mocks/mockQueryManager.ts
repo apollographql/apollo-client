@@ -1,6 +1,6 @@
 import {
   QueryManager,
-} from '../../src/QueryManager';
+} from '../../src/core/QueryManager';
 
 import mockNetworkInterface, {
   MockedResponse,

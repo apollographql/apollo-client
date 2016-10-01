@@ -4,21 +4,18 @@ import {
   FetchMoreQueryOptions,
 } from './watchQueryOptions';
 
-import { Observable, Observer } from './util/Observable';
+import { Observable, Observer } from '../util/Observable';
 
 import {
   QueryScheduler,
-} from './scheduler';
+} from '../scheduler/scheduler';
 
 import {
   QueryManager,
+  ApolloQueryResult,
 } from './QueryManager';
 
-import {
-  ApolloQueryResult,
-} from './index';
-
-import { tryFunctionOrLogError } from './util/errorHandling';
+import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');

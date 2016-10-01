@@ -12,7 +12,7 @@ import gql from 'graphql-tag';
 
 import {
   QueryManager,
-} from '../src/QueryManager';
+} from '../src/core/QueryManager';
 
 import {
   createApolloStore,

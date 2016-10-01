@@ -1,4 +1,4 @@
-import { QueryScheduler } from '../src/scheduler';
+import { QueryScheduler } from '../src/scheduler/scheduler';
 import { assert } from 'chai';
 import {
   QueryManager,

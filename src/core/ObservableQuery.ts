@@ -8,7 +8,7 @@ import { Observable, Observer } from '../util/Observable';
 
 import {
   QueryScheduler,
-} from '../scheduler';
+} from '../scheduler/scheduler';
 
 import {
   QueryManager,

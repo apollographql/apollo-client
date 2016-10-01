@@ -11,11 +11,11 @@
 import {
   QueryManager,
   QueryListener,
-} from './core/QueryManager';
+} from '../core/QueryManager';
 
-import { ObservableQuery } from './core/ObservableQuery';
+import { ObservableQuery } from '../core/ObservableQuery';
 
-import { WatchQueryOptions } from './core/watchQueryOptions';
+import { WatchQueryOptions } from '../core/watchQueryOptions';
 
 import assign = require('lodash.assign');
 

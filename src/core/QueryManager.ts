@@ -71,7 +71,7 @@ import {
 
 import {
   QueryScheduler,
-} from '../scheduler';
+} from '../scheduler/scheduler';
 
 import {
   ApolloStateSelector,

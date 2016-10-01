@@ -1,7 +1,7 @@
 import {
   NetworkInterface,
   createNetworkInterface,
-} from './networkInterface';
+} from './transport/networkInterface';
 
 import {
   Document,

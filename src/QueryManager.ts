@@ -2,7 +2,7 @@ import {
   NetworkInterface,
   SubscriptionNetworkInterface,
   Request,
-} from './networkInterface';
+} from './transport/networkInterface';
 
 import forOwn = require('lodash.forown');
 import isEqual = require('lodash.isequal');
@@ -67,7 +67,7 @@ import {
 import {
   QueryFetchRequest,
   QueryBatcher,
-} from './batching';
+} from './transport/batching';
 
 import {
   QueryScheduler,

@@ -16,7 +16,7 @@ import { AfterwareInterface } from './afterware';
 import {
   mergeRequests,
   unpackMergedResult,
-} from './batching/queryMerging';
+} from './queryMerging';
 
 /**
  * This is an interface that describes an GraphQL document to be sent

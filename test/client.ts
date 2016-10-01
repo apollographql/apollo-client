@@ -53,7 +53,7 @@ import {
   Request,
   NetworkInterface,
   addQueryMerging,
-} from '../src/networkInterface';
+} from '../src/transport/networkInterface';
 
 import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
 

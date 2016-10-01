@@ -49,7 +49,7 @@ import {
 
 import {
   Request,
-} from '../networkInterface';
+} from './networkInterface';
 
 import {
   resultKeyNameFromField,

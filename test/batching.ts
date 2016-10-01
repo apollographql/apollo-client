@@ -1,6 +1,6 @@
 import { QueryBatcher,
          QueryFetchRequest,
-       } from '../src/batching';
+       } from '../src/transport/batching';
 import { assert } from 'chai';
 import mockNetworkInterface, {
   mockBatchedNetworkInterface,

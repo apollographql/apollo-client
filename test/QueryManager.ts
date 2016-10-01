@@ -56,7 +56,7 @@ import mockNetworkInterface, {
 import {
   BatchedNetworkInterface,
   NetworkInterface,
-} from '../src/networkInterface';
+} from '../src/transport/networkInterface';
 
 import {
   getFragmentDefinition,

@@ -1,7 +1,7 @@
 import {
   createNetworkInterface,
   addQueryMerging,
-} from './networkInterface';
+} from './transport/networkInterface';
 
 import {
   print,

@@ -13,15 +13,15 @@ import {
   addQueryMerging,
   NetworkInterface,
   Request,
-} from '../src/networkInterface';
+} from '../src/transport/networkInterface';
 
 import {
   MiddlewareRequest,
-} from '../src/middleware';
+} from '../src/transport/middleware';
 
 import {
   AfterwareResponse,
-} from '../src/afterware';
+} from '../src/transport/afterware';
 
 import gql from 'graphql-tag';
 

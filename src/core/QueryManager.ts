@@ -65,17 +65,16 @@ import {
 } from '../data/mutationResults';
 
 import {
-  QueryFetchRequest,
-  QueryBatcher,
-} from '../transport/batching';
-
-import {
   QueryScheduler,
 } from '../scheduler/scheduler';
 
 import {
   ApolloStateSelector,
 } from '../ApolloClient';
+
+import {
+  QueryFetchRequest
+} from '../transport/batching';
 
 import {
   Observer,
@@ -139,9 +138,6 @@ export class QueryManager {
 
   private idCounter = 0;
 
-  private batcher: QueryBatcher;
-  private batchInterval: number;
-
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
   // destabalizing action occurs (e.g. reset of the Apollo store).
@@ -171,8 +167,6 @@ export class QueryManager {
     queryTransformer,
     resultTransformer,
     resultComparator,
-    shouldBatch = false,
-    batchInterval = 10,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -180,8 +174,6 @@ export class QueryManager {
     queryTransformer?: QueryTransformer,
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
-    shouldBatch?: boolean,
-    batchInterval?: number,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -192,19 +184,12 @@ export class QueryManager {
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
     this.pollingTimers = {};
-    this.batchInterval = batchInterval;
     this.queryListeners = {};
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
     });
 
-    this.batcher = new QueryBatcher({
-      shouldBatch,
-      networkInterface: this.networkInterface,
-    });
-
-    this.batcher.start(this.batchInterval);
     this.fetchQueryPromises = {};
     this.observableQueries = {};
     this.queryIdsByName = {};
@@ -844,7 +829,7 @@ export class QueryManager {
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      return this.batcher.enqueueRequest(fetchRequest)
+      return this.networkInterface.query(fetchRequest)
         .then((result: GraphQLResult) => {
           // XXX handle multiple ApolloQueryResults
           this.store.dispatch({

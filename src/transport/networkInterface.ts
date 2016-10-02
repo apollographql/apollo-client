@@ -52,16 +52,16 @@ export interface NetworkInterface {
   query(request: Request): Promise<GraphQLResult>;
 }
 
+export interface BatchedNetworkInterface extends NetworkInterface {
+  batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
+}
+
 export interface SubscriptionNetworkInterface extends NetworkInterface {
   subscribe(request: Request, handler: (error: any, result: any) => void): number;
   unsubscribe(id: Number): void;
 }
 
-export interface BatchedNetworkInterface extends NetworkInterface {
-  batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
-}
-
-export interface HTTPNetworkInterface extends BatchedNetworkInterface {
+export interface HTTPNetworkInterface extends NetworkInterface {
   _uri: string;
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[];
@@ -80,34 +80,14 @@ export interface ResponseAndOptions {
   options: RequestInit;
 }
 
-// Takes a standard network interface (i.e. not necessarily a BatchedNetworkInterface) and turns
-// it into a network interface that supports batching by composing/merging queries in to one
-// query.
-export function addQueryMerging(networkInterface: NetworkInterface): BatchedNetworkInterface {
-  return assign(networkInterface, {
-    batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
-      // If we a have a single request, there is no point doing any merging
-      // at all.
-      if (requests.length === 1) {
-        return this.query(requests[0]).then((result: any) => {
-          return Promise.resolve([result]);
-        });
-      }
-
-      const composedRequest = mergeRequests(requests);
-      return this.query(composedRequest).then((composedResult: any) => {
-        return unpackMergedResult(composedResult, requests);
-      });
-    },
-  }) as BatchedNetworkInterface;
-}
-
 export function printRequest(request: Request): PrintedRequest {
   return mapValues(request, (val: any, key: any) => {
     return key === 'query' ? print(val) : val;
   }) as any as PrintedRequest;
 }
 
+// TODO: refactor
+// add the batching to this.
 export class HTTPFetchNetworkInterface implements NetworkInterface {
   public _uri: string;
   public _opts: RequestInit;
@@ -241,46 +221,16 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
   }
 }
 
-// This import has to be placed here due to a bug in TypeScript:
-// https://github.com/Microsoft/TypeScript/issues/21
-import {
-  HTTPBatchedNetworkInterface,
-} from './batchedNetworkInterface';
-
-
 export interface NetworkInterfaceOptions {
   uri: string;
   opts?: RequestInit;
   transportBatching?: boolean;
 }
 
-// This function is written to preserve backwards compatibility.
-// Specifically, there are two ways of calling `createNetworkInterface`:
-// 1. createNetworkInterface(uri: string, opts: RequestInit)
-// 2. createnetworkInterface({ uri: string, opts: RequestInit, transportBatching: boolean})
-// where the latter is preferred over the former.
-//
-// XXX remove this backward compatibility feature by 1.0
-export function createNetworkInterface(
-  interfaceOpts: (NetworkInterfaceOptions | string),
-  backOpts: RequestInit = {}
-): HTTPNetworkInterface {
-  if (isString(interfaceOpts) || !interfaceOpts) {
-    const uri = interfaceOpts as string;
-    return addQueryMerging(new HTTPFetchNetworkInterface(uri, backOpts)) as HTTPNetworkInterface;
-  } else {
+export function createNetworkInterface(interfaceOpts: NetworkInterfaceOptions): HTTPNetworkInterface {
     const {
-      transportBatching = false,
       opts = {},
       uri,
     } = interfaceOpts as NetworkInterfaceOptions;
-    if (transportBatching) {
-      // We can use transport batching rather than query merging.
-      return new HTTPBatchedNetworkInterface(uri, opts) as HTTPNetworkInterface;
-    } else {
-      // createNetworkInterface has batching ability by default through query merging,
-      // which is not used unless the `shouldBatch` option is passed to apollo-client.
-      return addQueryMerging(new HTTPFetchNetworkInterface(uri, opts)) as HTTPNetworkInterface;
-    }
-  }
+    return new HTTPFetchNetworkInterface(uri, opts);
 }

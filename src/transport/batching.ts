@@ -5,7 +5,6 @@ import {
 import {
   NetworkInterface,
   Request,
-  BatchedNetworkInterface,
 } from './networkInterface';
 
 import {
@@ -27,7 +26,7 @@ export interface QueryFetchRequest {
   reject?: (error: Error) => void;
 };
 
-// QueryBatcher takes a operates on a queue  of QueryFetchRequests. It polls and checks this queue
+// QueryBatcher operates on a queue  of QueryFetchRequests. It polls and checks this queue
 // for new fetch requests. If there are multiple requests in the queue at a time, it will batch
 // them together into one query. Batching can be toggled with the shouldBatch option.
 export class QueryBatcher {
@@ -38,20 +37,16 @@ export class QueryBatcher {
   private pollInterval: Number;
   private pollTimer: NodeJS.Timer | any; //oddity in Typescript
 
-  //This instance is used to call batchQuery() and send the queries in the
-  //queue to the server.
-  private networkInterface: NetworkInterface;
+  //This function is called to the queries in the queue to the server.
+  private batchFetchFunction: (request: Request[]) => Promise<GraphQLResult[]>;
 
   constructor({
-    shouldBatch,
-    networkInterface,
+    batchFetchFunction,
   }: {
-    shouldBatch: boolean,
-    networkInterface: NetworkInterface,
+    batchFetchFunction: (request: Request[]) => Promise<GraphQLResult[]>,
   }) {
-    this.shouldBatch = shouldBatch;
     this.queuedRequests = [];
-    this.networkInterface = networkInterface;
+    this.batchFetchFunction = batchFetchFunction;
   }
 
   public enqueueRequest(request: QueryFetchRequest): Promise<GraphQLResult> {
@@ -92,43 +87,26 @@ export class QueryBatcher {
       rejecters.push(fetchRequest.reject);
     });
 
-    if (this.shouldBatch) {
-      this.queuedRequests = [];
-      const batchedPromise =
-        (this.networkInterface as BatchedNetworkInterface).batchQuery(requests);
+    this.queuedRequests = [];
+    const batchedPromise = this.batchFetchFunction(requests);
 
-      batchedPromise.then((results) => {
-        results.forEach((result, index) => {
-          resolvers[index](result);
-        });
-      }).catch((error) => {
-        rejecters.forEach((rejecter, index) => {
-          rejecters[index](error);
-        });
+    batchedPromise.then((results) => {
+      results.forEach((result, index) => {
+        resolvers[index](result);
       });
-      return promises;
-    } else {
-      const clonedRequests = cloneDeep(this.queuedRequests);
-      this.queuedRequests = [];
-      clonedRequests.forEach((fetchRequest: any, index: number) => {
-        this.networkInterface.query(requests[index]).then((result) => {
-          resolvers[index](result);
-        }).catch((reason) => {
-          rejecters[index](reason);
-        });
+    }).catch((error) => {
+      rejecters.forEach((rejecter, index) => {
+        rejecters[index](error);
       });
-
-      return promises;
-    }
+    });
+    return promises;
   }
 
   public start(pollInterval: Number) {
-    if (this.shouldBatch) {
-      this.pollInterval = pollInterval;
-      this.pollTimer = setInterval(() => {
-        this.consumeQueue();
-      }, this.pollInterval);
-    }
+    this.pollInterval = pollInterval;
+    this.pollTimer = setInterval(() => {
+      this.consumeQueue();
+    }, this.pollInterval);
   }
 
   public stop() {

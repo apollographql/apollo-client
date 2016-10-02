@@ -1,4 +1,13 @@
 import {
+  GraphQLResult,
+} from 'graphql';
+
+import 'whatwg-fetch';
+
+import assign = require('lodash.assign');
+import isNumber = require('lodash.isnumber');
+
+import {
   HTTPFetchNetworkInterface,
   RequestAndOptions,
   Request,
@@ -6,28 +15,36 @@ import {
 } from './networkInterface';
 
 import {
-  GraphQLResult,
-} from 'graphql';
-
-import 'whatwg-fetch';
-
-import assign = require('lodash.assign');
+  QueryBatcher,
+} from './batching';
 
 // An implementation of the network interface that operates over HTTP and batches
 // together requests over the HTTP transport. Note that this implementation will only work correctly
 // for GraphQL server implementations that support batching. If such a server is not available, you
 // should see `addQueryMerging` instead.
 export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
-  constructor(uri: string, opts: RequestInit) {
-    super(uri, opts);
 
-    // TODO: parse some more options related to batching.
+  private pollInterval: number;
+  private batcher: QueryBatcher;
+
+  constructor(uri: string, pollInterval: number, fetchOpts: RequestInit) {
+    super(uri, fetchOpts);
+
+    if (!isNumber(pollInterval)) {
+      throw new Error(`pollInterval must be a number, got ${pollInterval}`);
+    }
+
+    this.pollInterval = pollInterval;
+    this.batcher = new QueryBatcher({
+      batchFetchFunction: this.batchQuery.bind(this),
+    });
+    this.batcher.start(this.pollInterval);
+    // XXX possible leak: when do we stop polling the queue?
   };
 
   public query(request: Request): Promise<GraphQLResult> {
-    // TODO REFACTOR
-    // put the batcher in here.
-    return null;
+    // we just pass it through to the batcher.
+    return this.batcher.enqueueRequest(request);
   }
 
   // made public for testing only

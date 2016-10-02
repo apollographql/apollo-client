@@ -2,6 +2,7 @@ import { QueryBatcher,
          QueryFetchRequest,
        } from '../src/transport/batching';
 import { assert } from 'chai';
+import { Request } from '../src/transport/networkInterface';
 import {
   mockBatchedNetworkInterface,
 } from './mocks/mockNetworkInterface';
@@ -44,8 +45,7 @@ describe('QueryBatcher', () => {
       }`;
 
     const request: QueryFetchRequest = {
-      options: { query },
-      queryId: 'not-a-real-id',
+      request: { query },
     };
 
     assert.equal(batcher.queuedRequests.length, 0);
@@ -82,9 +82,8 @@ describe('QueryBatcher', () => {
     const batcher = new QueryBatcher({
       batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
     });
-    const request: QueryFetchRequest = {
-      options: { query },
-      queryId: 'not-a-real-id',
+    const request: Request = {
+      query,
     };
 
     it('should be able to consume from a queue containing a single query', (done) => {
@@ -103,9 +102,8 @@ describe('QueryBatcher', () => {
     });
 
     it('should be able to consume from a queue containing multiple queries', (done) => {
-      const request2 = {
-        options: { query },
-        queryId: 'another-fake-id',
+      const request2: Request = {
+        query,
       };
       const NI = mockBatchedNetworkInterface(
           {
@@ -165,9 +163,8 @@ describe('QueryBatcher', () => {
           lastName
         }
       }`;
-    const request = {
-      options: { query },
-      queryId: 'not-a-real-id',
+    const request: Request = {
+      query,
     };
 
     batcher.enqueueRequest(request);
@@ -180,7 +177,7 @@ describe('QueryBatcher', () => {
     assert.equal(batcher.queuedRequests.length, 2);
   });
 
-  it('should reject the promise if there is a network error with batch:true', (done) => {
+  it('should reject the promise if there is a network error', (done) => {
     const query = gql`
       query {
         author {
@@ -188,9 +185,8 @@ describe('QueryBatcher', () => {
           lastName
         }
       }`;
-    const request = {
-      options: { query },
-      queryId: 'very-real-id',
+    const request: Request = {
+      query: query,
     };
     const error = new Error('Network error');
     const myNetworkInterface = mockBatchedNetworkInterface(

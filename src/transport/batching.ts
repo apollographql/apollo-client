@@ -1,8 +1,4 @@
 import {
-  WatchQueryOptions,
-} from '../core/watchQueryOptions';
-
-import {
   Request,
 } from './networkInterface';
 
@@ -11,9 +7,7 @@ import {
 } from 'graphql';
 
 export interface QueryFetchRequest {
-  options: WatchQueryOptions;
-  queryId: string;
-  operationName?: string;
+  request: Request;
 
   // promise is created when the query fetch request is
   // added to the queue and is resolved once the result is back
@@ -45,14 +39,17 @@ export class QueryBatcher {
     this.batchFetchFunction = batchFetchFunction;
   }
 
-  public enqueueRequest(request: QueryFetchRequest): Promise<GraphQLResult> {
-    this.queuedRequests.push(request);
-    request.promise = new Promise((resolve, reject) => {
-      request.resolve = resolve;
-      request.reject = reject;
+  public enqueueRequest(request: Request): Promise<GraphQLResult> {
+    const fetchRequest: QueryFetchRequest = {
+      request,
+    };
+    this.queuedRequests.push(fetchRequest);
+    fetchRequest.promise = new Promise((resolve, reject) => {
+      fetchRequest.resolve = resolve;
+      fetchRequest.reject = reject;
     });
 
-    return request.promise;
+    return fetchRequest.promise;
   }
 
   // Consumes the queue. Called on a polling interval.
@@ -64,9 +61,9 @@ export class QueryBatcher {
 
     const requests: Request[] = this.queuedRequests.map((queuedRequest) => {
       return {
-        query: queuedRequest.options.query,
-        variables: queuedRequest.options.variables,
-        operationName: queuedRequest.operationName,
+        query: queuedRequest.request.query,
+        variables: queuedRequest.request.variables,
+        operationName: queuedRequest.request.operationName,
       };
     });
 
@@ -94,7 +91,12 @@ export class QueryBatcher {
     return promises;
   }
 
+  // TODO instead of start and stop, just set a timeout when a request comes in,
+  // and batch up everything in that interval. If no requests come in, don't batch.
   public start(pollInterval: Number) {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+    }
     this.pollInterval = pollInterval;
     this.pollTimer = setInterval(() => {
       this.consumeQueue();

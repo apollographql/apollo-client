@@ -13,11 +13,6 @@ import { print } from 'graphql-tag/printer';
 import { MiddlewareInterface } from './middleware';
 import { AfterwareInterface } from './afterware';
 
-import {
-  mergeRequests,
-  unpackMergedResult,
-} from './queryMerging';
-
 /**
  * This is an interface that describes an GraphQL document to be sent
  * to the server.
@@ -56,6 +51,7 @@ export interface BatchedNetworkInterface extends NetworkInterface {
   batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
 }
 
+// XXX why does this have to extend network interface? does it even have a 'query' function?
 export interface SubscriptionNetworkInterface extends NetworkInterface {
   subscribe(request: Request, handler: (error: any, result: any) => void): number;
   unsubscribe(id: Number): void;

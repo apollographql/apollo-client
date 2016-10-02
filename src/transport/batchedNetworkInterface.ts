@@ -24,36 +24,11 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
     // TODO: parse some more options related to batching.
   };
 
-  public query(request: Request): Promise<GraphQLResult>{
+  public query(request: Request): Promise<GraphQLResult> {
     // TODO REFACTOR
     // put the batcher in here.
     return null;
   }
-
-  private batchedFetchFromRemoteEndpoint(
-    requestsAndOptions: RequestAndOptions[]
-  ): Promise<IResponse> {
-    const options: RequestInit = {};
-
-    // Combine all of the options given by the middleware into one object.
-    requestsAndOptions.forEach((requestAndOptions) => {
-      assign(options, requestAndOptions.options);
-    });
-
-    // Serialize the requests to strings of JSON
-    const printedRequests = requestsAndOptions.map(({ request }) => {
-      return printRequest(request);
-    });
-
-    return fetch(this._uri, assign({}, this._opts, options, {
-      body: JSON.stringify(printedRequests),
-      headers: assign({}, options.headers, {
-        Accept: '*/*',
-        'Content-Type': 'application/json',
-      }),
-      method: 'POST',
-    }));
-  };
 
   // made public for testing only
   public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
@@ -100,4 +75,29 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       });
     });
   }
+
+  private batchedFetchFromRemoteEndpoint(
+    requestsAndOptions: RequestAndOptions[]
+  ): Promise<IResponse> {
+    const options: RequestInit = {};
+
+    // Combine all of the options given by the middleware into one object.
+    requestsAndOptions.forEach((requestAndOptions) => {
+      assign(options, requestAndOptions.options);
+    });
+
+    // Serialize the requests to strings of JSON
+    const printedRequests = requestsAndOptions.map(({ request }) => {
+      return printRequest(request);
+    });
+
+    return fetch(this._uri, assign({}, this._opts, options, {
+      body: JSON.stringify(printedRequests),
+      headers: assign({}, options.headers, {
+        Accept: '*/*',
+        'Content-Type': 'application/json',
+      }),
+      method: 'POST',
+    }));
+  };
 }

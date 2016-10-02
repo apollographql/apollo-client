@@ -184,6 +184,7 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
 
 export class MockBatchedNetworkInterface
 extends MockNetworkInterface implements BatchedNetworkInterface {
+
   public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
     const resultPromises: Promise<GraphQLResult>[] = [];
     requests.forEach((request) => {

@@ -73,10 +73,6 @@ import {
 } from '../ApolloClient';
 
 import {
-  QueryFetchRequest
-} from '../transport/batching';
-
-import {
   Observer,
   Subscription,
   Observable,

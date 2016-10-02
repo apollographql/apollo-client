@@ -2,7 +2,7 @@ import { QueryBatcher,
          QueryFetchRequest,
        } from '../src/transport/batching';
 import { assert } from 'chai';
-import mockNetworkInterface, {
+import {
   mockBatchedNetworkInterface,
 } from './mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
@@ -14,7 +14,7 @@ describe('QueryBatcher', () => {
   it('should construct', () => {
     assert.doesNotThrow(() => {
       const querySched = new QueryBatcher({
-        batchFetchFunction: networkInterface.batchQuery,
+        batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
       });
       querySched.consumeQueue();
     });
@@ -22,7 +22,7 @@ describe('QueryBatcher', () => {
 
   it('should not do anything when faced with an empty queue', () => {
     const batcher = new QueryBatcher({
-      batchFetchFunction: networkInterface.batchQuery,
+      batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
 
     assert.equal(batcher.queuedRequests.length, 0);
@@ -32,7 +32,7 @@ describe('QueryBatcher', () => {
 
   it('should be able to add to the queue', () => {
     const batcher = new QueryBatcher({
-      batchFetchFunction: networkInterface.batchQuery,
+      batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
 
     const query = gql`
@@ -80,7 +80,7 @@ describe('QueryBatcher', () => {
       }
     );
     const batcher = new QueryBatcher({
-      batchFetchFunction: myNetworkInterface.batchQuery,
+      batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
     });
     const request: QueryFetchRequest = {
       options: { query },
@@ -89,7 +89,7 @@ describe('QueryBatcher', () => {
 
     it('should be able to consume from a queue containing a single query', (done) => {
       const myBatcher = new QueryBatcher({
-        batchFetchFunction: myNetworkInterface.batchQuery,
+        batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
       });
 
       myBatcher.enqueueRequest(request);
@@ -119,7 +119,7 @@ describe('QueryBatcher', () => {
         );
 
       const myBatcher = new QueryBatcher({
-        batchFetchFunction: NI.batchQuery,
+        batchFetchFunction: NI.batchQuery.bind(NI),
       });
       myBatcher.enqueueRequest(request);
       myBatcher.enqueueRequest(request2);
@@ -143,7 +143,7 @@ describe('QueryBatcher', () => {
           }
         );
       const myBatcher = new QueryBatcher({
-        batchFetchFunction: NI.batchQuery,
+        batchFetchFunction: NI.batchQuery.bind(NI),
       });
       const promise = myBatcher.enqueueRequest(request);
       myBatcher.consumeQueue();
@@ -156,7 +156,7 @@ describe('QueryBatcher', () => {
 
   it('should be able to stop polling', () => {
     const batcher = new QueryBatcher({
-      batchFetchFunction: networkInterface.batchQuery,
+      batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
     const query = gql`
       query {
@@ -200,7 +200,7 @@ describe('QueryBatcher', () => {
       }
     );
     const batcher = new QueryBatcher({
-      batchFetchFunction: myNetworkInterface.batchQuery,
+      batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
     });
     const promise = batcher.enqueueRequest(request);
     batcher.consumeQueue();

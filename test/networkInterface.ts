@@ -10,8 +10,8 @@ const { assert, expect } = chai;
 
 import {
   createNetworkInterface,
-  NetworkInterface,
-  Request,
+//  NetworkInterface,
+//  Request,
 } from '../src/transport/networkInterface';
 
 import {
@@ -24,9 +24,9 @@ import {
 
 import gql from 'graphql-tag';
 
-import { print } from 'graphql-tag/printer';
+// import { print } from 'graphql-tag/printer';
 
-import { GraphQLResult } from 'graphql';
+// import { GraphQLResult } from 'graphql';
 
 describe('network interface', () => {
   before(() => {

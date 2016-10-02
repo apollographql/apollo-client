@@ -3,15 +3,12 @@ import {
 } from '../core/watchQueryOptions';
 
 import {
-  NetworkInterface,
   Request,
 } from './networkInterface';
 
 import {
   GraphQLResult,
 } from 'graphql';
-
-import cloneDeep = require('lodash.clonedeep');
 
 export interface QueryFetchRequest {
   options: WatchQueryOptions;
@@ -33,7 +30,6 @@ export class QueryBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   public queuedRequests: QueryFetchRequest[] = [];
 
-  private shouldBatch: boolean;
   private pollInterval: Number;
   private pollTimer: NodeJS.Timer | any; //oddity in Typescript
 
@@ -55,10 +51,6 @@ export class QueryBatcher {
       request.resolve = resolve;
       request.reject = reject;
     });
-
-    if (!this.shouldBatch) {
-      this.consumeQueue();
-    }
 
     return request.promise;
   }

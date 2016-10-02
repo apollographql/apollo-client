@@ -64,11 +64,6 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors/ApolloError';
 
-import {
-  createMockFetch,
-  createMockedIResponse,
-} from './mocks/mockFetch';
-
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 

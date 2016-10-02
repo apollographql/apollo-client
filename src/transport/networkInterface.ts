@@ -231,6 +231,6 @@ export function createNetworkInterface(interfaceOpts: NetworkInterfaceOptions): 
     const {
       opts = {},
       uri,
-    } = interfaceOpts as NetworkInterfaceOptions;
+    } = interfaceOpts || {} as NetworkInterfaceOptions;
     return new HTTPFetchNetworkInterface(uri, opts);
 }

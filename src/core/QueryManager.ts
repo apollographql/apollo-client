@@ -820,16 +820,10 @@ export class QueryManager {
       operationName: getOperationName(query),
     };
 
-    const fetchRequest: QueryFetchRequest = {
-      options: { query, variables },
-      queryId,
-      operationName: request.operationName,
-    };
-
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      return this.networkInterface.query(fetchRequest)
+      return this.networkInterface.query(request)
         .then((result: GraphQLResult) => {
           // XXX handle multiple ApolloQueryResults
           this.store.dispatch({

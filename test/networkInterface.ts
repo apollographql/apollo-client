@@ -2,6 +2,8 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { assign } from 'lodash';
+import isequal = require('lodash.isequal');
+import * as fetchMock from 'fetch-mock';
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -24,43 +26,112 @@ import {
 
 import gql from 'graphql-tag';
 
-// import { print } from 'graphql-tag/printer';
+import { print } from 'graphql-tag/printer';
 
 // import { GraphQLResult } from 'graphql';
 
 describe('network interface', () => {
+  const swapiUrl = 'http://graphql-swapi.test/';
+  const missingUrl = 'http://does-not-exist.test/';
+
+  const simpleQueryWithNoVars = gql`
+    query people {
+      allPeople(first: 1) {
+        people {
+          name
+        }
+      }
+    }
+  `;
+
+  const simpleQueryWithVar = gql`
+    query people($personNum: Int!) {
+      allPeople(first: $personNum) {
+        people {
+          name
+        }
+      }
+    }
+  `;
+
+  const simpleResult = {
+    data: {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    },
+  };
+
+  const complexQueryWithTwoVars = gql`
+    query people($personNum: Int!, $filmNum: Int!) {
+      allPeople(first: $personNum) {
+        people {
+          name
+          filmConnection(first: $filmNum) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const complexResult = {
+    data: {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+            filmConnection: {
+              edges: [
+                {
+                  node: {
+                    id: 'ZmlsbXM6MQ==',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  // We mock the network interface to return the results that the SWAPI would.
   before(() => {
-    this.realFetch = (<any>global)['fetch'];
+    // We won't be too careful about counting calls or closely checking
+    // parameters, but just do the basic stuff to ensure the request looks right
+    fetchMock.post(swapiUrl, (url, opts) => {
+      const { query, variables } = JSON.parse((opts as RequestInit).body.toString());
 
-    (<any>global)['fetch'] = ((url: string, opts: any) => {
-      this.lastFetchOpts = opts;
-      if (url === 'http://does-not-exist.test/') {
-        return Promise.reject('Network error');
+      if (query === print(simpleQueryWithNoVars)) {
+        return simpleResult;
       }
 
-      if (url === 'http://graphql-swapi.test/') {
-        url = 'http://graphql-swapi.parseapp.com/';
+      if (query === print(simpleQueryWithVar)
+          && isequal(variables, { personNum: 1 })) {
+        return simpleResult;
       }
 
-      // XXX swapi graphql NPM package is broken now
-      // else if (url === 'http://graphql-swapi.test/') {
-      //   return new Promise((resolve, reject) => {
-      //     const request = JSON.parse(opts.body);
-      //     graphql(swapiSchema, request.query, undefined, request.variables).then(result => {
-      //       const response = new (<any>global)['Response'](JSON.stringify(result));
-      //       resolve(response);
-      //     }).catch(error => {
-      //       reject(error);
-      //     });
-      //   });
-      // }
+      if (query === print(complexQueryWithTwoVars)
+          && isequal(variables, { personNum: 1, filmNum: 1 })) {
+        return complexResult;
+      }
 
-      return this.realFetch(url, opts);
+      throw new Error('Invalid Query');
     });
+    fetchMock.post(missingUrl, Promise.reject('Network error'));
   });
 
   after(() => {
-    (<any>global)['fetch'] = this.realFetch;
+    fetchMock.restore();
   });
 
   describe('creating a network interface', () => {
@@ -142,36 +213,18 @@ describe('network interface', () => {
         { key: 'personNum', val: 1 },
       ]);
 
-      const swapi = createNetworkInterface({ uri: 'http://graphql-swapi.test/' });
+      const swapi = createNetworkInterface({ uri: swapiUrl });
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
-        query: gql`
-          query people($personNum: Int!) {
-            allPeople(first: $personNum) {
-              people {
-                name
-              }
-            }
-          }
-        `,
+        query: simpleQueryWithVar,
         variables: {},
         debugName: 'People query',
       };
 
       return assert.eventually.deepEqual(
         swapi.query(simpleRequest),
-        {
-          data: {
-            allPeople: {
-              people: [
-                {
-                  name: 'Luke Skywalker',
-                },
-              ],
-            },
-          },
-        }
+        simpleResult,
       );
     });
 
@@ -180,25 +233,17 @@ describe('network interface', () => {
         { key: 'planet', val: 'mars' },
       ]);
 
-      const swapi = createNetworkInterface({ uri: 'http://graphql-swapi.test/' });
+      const swapi = createNetworkInterface({ uri: swapiUrl });
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
-        query: gql`
-          query people {
-            allPeople(first: 1) {
-              people {
-                name
-              }
-            }
-          }
-        `,
+        query: simpleQueryWithNoVars,
         variables: {},
         debugName: 'People query',
       };
 
       return swapi.query(simpleRequest).then((data) => {
-        assert.equal(this.lastFetchOpts.planet, 'mars');
+        assert.equal((fetchMock.lastCall()[1] as any).planet, 'mars');
         assert.notOk((<any>swapi._opts)['planet']);
       });
     });
@@ -210,27 +255,18 @@ describe('network interface', () => {
 
       const swapi = createNetworkInterface({ uri: 'http://graphql-swapi.test/' });
       swapi.use([testWare1]);
-      // this is a stub for the end user client api
       const simpleRequest = {
-        query: gql`
-          query people($personNum: Int!) {
-            allPeople(first: $personNum) {
-              people {
-                name
-              }
-            }
-          }
-        `,
-        variables: {},
+        query: simpleQueryWithVar,
+        variables: { personNum: 1 },
         debugName: 'People query',
       };
 
       return swapi.query(simpleRequest).then((data) => {
         return assert.deepEqual(
-          JSON.parse(this.lastFetchOpts.body),
+          JSON.parse((fetchMock.lastCall()[1] as any).body),
           {
             query: 'query people($personNum: Int!) {\n  allPeople(first: $personNum) {\n    people {\n      name\n    }\n  }\n}\n',
-            variables: {},
+            variables: { personNum: 1 },
             debugName: 'People query',
             newParam: '0123456789',
           }
@@ -250,48 +286,14 @@ describe('network interface', () => {
       swapi.use([testWare1, testWare2]);
       // this is a stub for the end user client api
       const simpleRequest = {
-        query: gql`
-          query people($personNum: Int!, $filmNum: Int!) {
-            allPeople(first: $personNum) {
-              people {
-                name
-                filmConnection(first: $filmNum) {
-                  edges {
-                    node {
-                      id
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `,
+        query: complexQueryWithTwoVars,
         variables: {},
         debugName: 'People query',
       };
 
       return assert.eventually.deepEqual(
         swapi.query(simpleRequest),
-        {
-          data: {
-            allPeople: {
-              people: [
-                {
-                  name: 'Luke Skywalker',
-                  filmConnection: {
-                    edges: [
-                      {
-                        node: {
-                          id: 'ZmlsbXM6MQ==',
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        }
+        complexResult,
       );
     });
   });
@@ -336,53 +338,27 @@ describe('network interface', () => {
 
   describe('making a request', () => {
     it('should fetch remote data', () => {
-      const swapi = createNetworkInterface({ uri: 'http://graphql-swapi.test/' });
+      const swapi = createNetworkInterface({ uri: swapiUrl });
 
       // this is a stub for the end user client api
       const simpleRequest = {
-        query: gql`
-          query people {
-            allPeople(first: 1) {
-              people {
-                name
-              }
-            }
-          }
-        `,
+        query: simpleQueryWithNoVars,
         variables: {},
         debugName: 'People query',
       };
 
       return assert.eventually.deepEqual(
         swapi.query(simpleRequest),
-        {
-          data: {
-            allPeople: {
-              people: [
-                {
-                  name: 'Luke Skywalker',
-                },
-              ],
-            },
-          },
-        }
+        simpleResult,
       );
     });
 
     it('should throw on a network error', () => {
-      const nowhere = createNetworkInterface({ uri: 'http://does-not-exist.test/' });
+      const nowhere = createNetworkInterface({ uri: missingUrl });
 
       // this is a stub for the end user client api
       const doomedToFail = {
-        query: gql`
-          query people {
-            allPeople(first: 1) {
-              people {
-                name
-              }
-            }
-          }
-        `,
+        query: simpleQueryWithNoVars,
         variables: {},
         debugName: 'People Query',
       };

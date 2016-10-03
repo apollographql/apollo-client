@@ -104,6 +104,10 @@ export class QueryScheduler {
 
   // Fires the all of the queries on a particular interval. Called on a setInterval.
   public fetchQueriesOnInterval(interval: number) {
+    // XXX this "filter" here is nasty, because it does two things at the same time.
+    // 1. remove queries that have stopped polling
+    // 2. call fetchQueries for queries that are polling and not in flight.
+    // TODO: refactor this to make it cleaner
     this.intervalQueries[interval] = this.intervalQueries[interval].filter((queryId) => {
       // If queryOptions can't be found from registeredQueries, it means that this queryId
       // is no longer registered and should be removed from the list of queries firing on this

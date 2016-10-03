@@ -1,6 +1,5 @@
 import {
   createNetworkInterface,
-  addQueryMerging,
 } from './transport/networkInterface';
 
 import {
@@ -64,7 +63,6 @@ import {
 // custom network interfaces can turn query ASTs into query strings as needed.
 export {
   createNetworkInterface,
-  addQueryMerging,
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,

@@ -12,9 +12,8 @@ const { assert, expect } = chai;
 
 import {
   createNetworkInterface,
-  addQueryMerging,
-  NetworkInterface,
-  Request,
+//  NetworkInterface,
+//  Request,
 } from '../src/transport/networkInterface';
 
 import {
@@ -29,7 +28,7 @@ import gql from 'graphql-tag';
 
 import { print } from 'graphql-tag/printer';
 
-import { GraphQLResult } from 'graphql';
+// import { GraphQLResult } from 'graphql';
 
 describe('network interface', () => {
   const swapiUrl = 'http://graphql-swapi.test/';
@@ -143,7 +142,7 @@ describe('network interface', () => {
     });
 
     it('should create an instance with a given uri', () => {
-      const networkInterface = createNetworkInterface('/graphql');
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       assert.equal(networkInterface._uri, '/graphql');
     });
 
@@ -153,7 +152,7 @@ describe('network interface', () => {
         credentials: 'include',
       };
 
-      const networkInterface = createNetworkInterface('/graphql', customOpts);
+      const networkInterface = createNetworkInterface({ uri: '/graphql', opts: customOpts });
 
       assert.deepEqual(networkInterface._opts, assign({}, customOpts));
     });
@@ -165,7 +164,7 @@ describe('network interface', () => {
       };
       const originalOpts = assign({}, customOpts);
 
-      const networkInterface = createNetworkInterface('/graphql', customOpts);
+      const networkInterface = createNetworkInterface({ uri: '/graphql', opts: customOpts });
 
       delete customOpts.headers;
 
@@ -176,7 +175,7 @@ describe('network interface', () => {
   describe('middleware', () => {
     it('should throw an error if you pass something bad', () => {
       const malWare: any = {};
-      const networkInterface = createNetworkInterface('/graphql');
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
 
       try {
         networkInterface.use([malWare]);
@@ -193,7 +192,7 @@ describe('network interface', () => {
     it('should take a middleware and assign it', () => {
       const testWare = TestWare();
 
-      const networkInterface = createNetworkInterface('/graphql');
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.use([testWare]);
 
       assert.equal(networkInterface._middlewares[0], testWare);
@@ -203,7 +202,7 @@ describe('network interface', () => {
       const testWare1 = TestWare();
       const testWare2 = TestWare();
 
-      const networkInterface = createNetworkInterface('/graphql');
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.use([testWare1, testWare2]);
 
       assert.deepEqual(networkInterface._middlewares, [testWare1, testWare2]);
@@ -214,7 +213,7 @@ describe('network interface', () => {
         { key: 'personNum', val: 1 },
       ]);
 
-      const swapi = createNetworkInterface(swapiUrl);
+      const swapi = createNetworkInterface({ uri: swapiUrl });
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -234,7 +233,7 @@ describe('network interface', () => {
         { key: 'planet', val: 'mars' },
       ]);
 
-      const swapi = createNetworkInterface(swapiUrl);
+      const swapi = createNetworkInterface({ uri: swapiUrl });
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -254,7 +253,7 @@ describe('network interface', () => {
         { key: 'newParam', val: '0123456789' },
       ]);
 
-      const swapi = createNetworkInterface('http://graphql-swapi.test/');
+      const swapi = createNetworkInterface({ uri: 'http://graphql-swapi.test/' });
       swapi.use([testWare1]);
       const simpleRequest = {
         query: simpleQueryWithVar,
@@ -283,7 +282,7 @@ describe('network interface', () => {
         { key: 'filmNum', val: 1 },
       ]);
 
-      const swapi = createNetworkInterface('http://graphql-swapi.test/');
+      const swapi = createNetworkInterface({ uri: 'http://graphql-swapi.test/' });
       swapi.use([testWare1, testWare2]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -303,7 +302,7 @@ describe('network interface', () => {
     it('should throw an error if you pass something bad', () => {
       const malWare = TestAfterWare();
       delete malWare.applyAfterware;
-      const networkInterface = createNetworkInterface('/graphql');
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
 
       try {
         networkInterface.useAfter([malWare]);
@@ -320,7 +319,7 @@ describe('network interface', () => {
     it('should take a afterware and assign it', () => {
       const testWare = TestAfterWare();
 
-      const networkInterface = createNetworkInterface('/graphql');
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.useAfter([testWare]);
 
       assert.equal(networkInterface._afterwares[0], testWare);
@@ -330,7 +329,7 @@ describe('network interface', () => {
       const testWare1 = TestAfterWare();
       const testWare2 = TestAfterWare();
 
-      const networkInterface = createNetworkInterface('/graphql');
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.useAfter([testWare1, testWare2]);
 
       assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
@@ -339,7 +338,7 @@ describe('network interface', () => {
 
   describe('making a request', () => {
     it('should fetch remote data', () => {
-      const swapi = createNetworkInterface(swapiUrl);
+      const swapi = createNetworkInterface({ uri: swapiUrl });
 
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -355,7 +354,7 @@ describe('network interface', () => {
     });
 
     it('should throw on a network error', () => {
-      const nowhere = createNetworkInterface(missingUrl);
+      const nowhere = createNetworkInterface({ uri: missingUrl });
 
       // this is a stub for the end user client api
       const doomedToFail = {
@@ -365,127 +364,6 @@ describe('network interface', () => {
       };
 
       return assert.isRejected(nowhere.query(doomedToFail));
-    });
-  });
-
-  describe('query merging', () => {
-    it('should merge together queries when we call batchQuery()', (done) => {
-      const query1 = gql`
-        query authorStuff {
-          author {
-            name
-          }
-        }`;
-      const query2 = gql`
-        query cookieStuff {
-          fortuneCookie
-        }`;
-      const composedQuery = gql`
-        query ___composed {
-          ___authorStuff___requestIndex_0___fieldIndex_0: author {
-            name
-          }
-          ___cookieStuff___requestIndex_1___fieldIndex_0: fortuneCookie
-        }`;
-      const request1 = { query: query1 };
-      const request2 = { query: query2 };
-
-      const myNetworkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
-          assert.equal(print(request.query), print(composedQuery));
-          done();
-          return new Promise((resolve, reject) => {
-            // never resolve
-          });
-        },
-      };
-      const mergingNetworkInterface = addQueryMerging(myNetworkInterface);
-      mergingNetworkInterface.batchQuery([request1, request2]);
-    });
-
-    it('should unpack merged query results when we call batchQuery()', (done) => {
-      const query1 = gql`
-        query authorStuff {
-          author {
-            name
-          }
-        }`;
-      const query2 = gql`
-        query cookieStuff {
-          fortuneCookie
-        }`;
-      const composedQuery = gql`
-        query ___composed {
-          ___authorStuff___requestIndex_0___fieldIndex_0: author {
-            name
-          }
-          ___cookieStuff___requestIndex_1___fieldIndex_0: fortuneCookie
-        }`;
-      const fortune = 'No snowflake in an avalanche feels responsible.';
-      const result1 = {
-        data: {
-          author: {
-            name: 'John Smith',
-          },
-        },
-      };
-      const result2 = {
-        data: {
-          fortuneCookie: fortune,
-        },
-      };
-      const composedResult = {
-        data: {
-          ___authorStuff___requestIndex_0___fieldIndex_0: {
-            name: 'John Smith',
-          },
-          ___cookieStuff___requestIndex_1___fieldIndex_0: fortune,
-        },
-      };
-      const request1 = { query: query1 };
-      const request2 = { query: query2 };
-
-      const myNetworkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
-          assert.equal(print(request.query), print(composedQuery));
-          return Promise.resolve(composedResult);
-        },
-      };
-      const mergingNetworkInterface = addQueryMerging(myNetworkInterface);
-      mergingNetworkInterface.batchQuery([request1, request2]).then((results) => {
-        assert.equal(results.length, 2);
-        assert.deepEqual(results[0], result1);
-        assert.deepEqual(results[1], result2);
-        done();
-      });
-    });
-
-    it('should not merge queries when batchQuery is passed a single query', () => {
-      const query = gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }`;
-      const data = {
-        author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      };
-      const request = { query: query };
-      const myNetworkInterface: NetworkInterface = {
-        query(requestReceived: Request): Promise<GraphQLResult> {
-          assert.equal(print(requestReceived.query), print(query));
-          return Promise.resolve({ data });
-        },
-      };
-      const mergingNetworkInterface = addQueryMerging(myNetworkInterface);
-      mergingNetworkInterface.batchQuery([request]).then((results) => {
-        assert.equal(results.length, 1);
-        assert.deepEqual(results[0], { data });
-      });
     });
   });
 });

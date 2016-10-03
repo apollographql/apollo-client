@@ -658,6 +658,53 @@ describe('Query merging', () => {
       assert.deepEqual(unpackedResults, expUnpackedResults);
     });
 
+    it('should unpack queries with a single fragment spread in two root queries', () => {
+      const query = gql`
+        query authorStuff {
+          author {
+            ...authorInfo
+          }
+          secondAuthor {
+            ...authorInfo
+          }
+        }
+        fragment authorInfo on RootQuery {
+          firstName
+          lastName
+        }`;
+      const requests = [ { query }];
+      const result = {
+        data: {
+          ___authorStuff___requestIndex_0___fieldIndex_0: {
+            ___authorStuff___requestIndex_0___fieldIndex_2: 'John',
+            ___authorStuff___requestIndex_0___fieldIndex_3: 'Smith',
+          },
+          ___authorStuff___requestIndex_0___fieldIndex_1: {
+            ___authorStuff___requestIndex_0___fieldIndex_2: 'Joe',
+            ___authorStuff___requestIndex_0___fieldIndex_3: 'Smith',
+          },
+        },
+      };
+
+      const expUnpackedResults = [
+        {
+          data: {
+            author: {
+              'firstName': 'John',
+              'lastName': 'Smith',
+            },
+            secondAuthor: {
+              'firstName': 'Joe',
+              'lastName': 'Smith'
+            },
+          },
+        },
+      ];
+
+      const unpackedResults = unpackMergedResult(result, requests);
+      assert.deepEqual(unpackedResults, expUnpackedResults);
+    });
+
     it('should be able to unpack queries with inlined fragments', () => {
       const query1 = gql`
         query authorStuff {

@@ -70,7 +70,9 @@ import {
   Observer,
 } from '../src/util/Observable';
 
-describe('QueryManager', () => {
+import wrap from './util/wrap';
+
+describe.only('QueryManager', () => {
 
   // Standard "get id from object" method.
   const dataIdFromObject = (object: any) => {
@@ -111,6 +113,7 @@ describe('QueryManager', () => {
   // Helper method that sets up a mockQueryManager and then passes on the
   // results to an observer.
   const assertWithObserver = ({
+    done,
     query,
     variables = {},
     queryOptions = {},
@@ -119,6 +122,7 @@ describe('QueryManager', () => {
     delay,
     observer,
   }: {
+    done: MochaDone,
     query: Document,
     variables?: Object,
     queryOptions?: Object,
@@ -134,30 +138,34 @@ describe('QueryManager', () => {
       delay,
     });
     const finalOptions = assign({ query, variables }, queryOptions) as WatchQueryOptions;
-    return queryManager.watchQuery(finalOptions).subscribe(observer);
+    return queryManager.watchQuery(finalOptions).subscribe({
+      next: wrap(done, observer.next),
+      error: observer.error,
+    });
   };
 
   // Helper method that asserts whether a particular query correctly returns
   // a given piece of data.
   const assertRoundtrip = ({
+    done,
     query,
     data,
     variables = {},
-    done,
   }: {
+    done: MochaDone,
     query: Document,
     data: Object,
-    variables?: Object,
-    done: any
+    variables?: Object
   }) => {
     assertWithObserver({
+      done,
       query,
       result: { data },
       variables,
       observer: {
         next(result) {
-            assert.deepEqual(result.data, data, 'Roundtrip assertion failed.');
-            done();
+          assert.deepEqual(result.data, data, 'Roundtrip assertion failed.');
+          done();
         },
       },
     });
@@ -195,13 +203,14 @@ describe('QueryManager', () => {
     mutation: Document,
     data: Object,
     variables?: Object,
-    done: any
   }) => {
-    mockMutation(opts).then(({ result }) => {
-      assert.deepEqual(result.data, opts.data);
-      opts.done();
-    }).catch((error) => {
-      opts.done(error);
+    return mockMutation(opts).then(({ result }) => {
+      try {
+        assert.deepEqual(result.data, opts.data);
+        return Promise.resolve(true);
+      } catch (e) {
+        return Promise.reject(e);
+      }
     });
   };
 
@@ -311,6 +320,7 @@ describe('QueryManager', () => {
 
   it('handles GraphQL errors', (done) => {
     assertWithObserver({
+      done,
       query: gql`
           query people {
             allPeople(first: 1) {
@@ -343,6 +353,7 @@ describe('QueryManager', () => {
 
   it('handles GraphQL errors with data returned', (done) => {
     assertWithObserver({
+      done,
       query: gql`
       query people {
         allPeople(first: 1) {
@@ -382,6 +393,7 @@ describe('QueryManager', () => {
 
   it('empty error array (handle non-spec-compliant server) #156', (done) => {
     assertWithObserver({
+      done,
       query: gql`
       query people {
         allPeople(first: 1) {
@@ -412,6 +424,7 @@ describe('QueryManager', () => {
 
   it('handles network errors', (done) => {
     assertWithObserver({
+      done,
       query: gql`
       query people {
         allPeople(first: 1) {
@@ -443,6 +456,7 @@ describe('QueryManager', () => {
     };
 
     assertWithObserver({
+      done,
       query: gql`
       query people {
         allPeople(first: 1) {
@@ -468,6 +482,7 @@ describe('QueryManager', () => {
 
   it('handles an unsubscribe action that happens before data returns', (done) => {
     const subscription = assertWithObserver({
+      done,
       query: gql`
       query people {
         allPeople(first: 1) {
@@ -912,6 +927,7 @@ describe('QueryManager', () => {
   it('should error if we pass noFetch on a polling query', (done) => {
     assert.throw(() => {
       assertWithObserver({
+        done,
         observer: {
           next(result) {
             done(new Error('Returned a result when it should not have.'));
@@ -979,26 +995,24 @@ describe('QueryManager', () => {
     });
   });
 
-  it('runs a mutation', (done) => {
-    assertMutationRoundtrip({
+  it('runs a mutation', () => {
+    return assertMutationRoundtrip({
       mutation: gql`
         mutation makeListPrivate {
           makeListPrivate(id: "5")
         }`,
       data: { makeListPrivate: true },
-      done,
     });
   });
 
-  it('runs a mutation with variables', (done) => {
-    assertMutationRoundtrip({
+  it('runs a mutation with variables', () => {
+    return assertMutationRoundtrip({
       mutation: gql`
         mutation makeListPrivate($listId: ID!) {
           makeListPrivate(id: $listId)
         }`,
       variables: { listId: '1' },
       data: { makeListPrivate: true },
-      done,
     });
   });
 
@@ -2835,6 +2849,7 @@ describe('QueryManager', () => {
 
     it('should be passed to the observer as false if we are returning all the data', (done) => {
       assertWithObserver({
+        done,
         query: gql`
           query {
             author {

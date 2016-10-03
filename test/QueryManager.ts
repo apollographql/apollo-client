@@ -71,8 +71,9 @@ import {
 } from '../src/util/Observable';
 
 import wrap from './util/wrap';
+import subscribeAndCount from './util/subscribeAndCount';
 
-describe.only('QueryManager', () => {
+describe('QueryManager', () => {
 
   // Standard "get id from object" method.
   const dataIdFromObject = (object: any) => {
@@ -535,14 +536,15 @@ describe.only('QueryManager', () => {
 
     const observable = Rx.Observable.from(handle);
 
+
     observable
       .map(result => (assign({ fromRx: true }, result)))
       .subscribe({
-      next(newResult) {
+      next: wrap(done, (newResult) => {
         const expectedResult = assign({ fromRx: true, loading: false }, expResult);
         assert.deepEqual(newResult, expectedResult);
         done();
-      },
+      }),
     });
   });
 
@@ -579,44 +581,36 @@ describe.only('QueryManager', () => {
     // pre populate data to avoid contention
     queryManager.query(request)
       .then(() => {
-        let subOneCount = 0;
         const handle = queryManager.watchQuery(request);
-        handle.subscribe({
-          next(result) {
-            subOneCount++;
-
-            if (subOneCount === 1) {
-              assert.deepEqual(result.data, data1);
-            } else if (subOneCount === 2) {
-              assert.deepEqual(result.data, data2);
-            }
-          },
+        let subOneCount: Number;
+        subscribeAndCount(done, handle, (count, result) => {
+          subOneCount = count;
+          if (subOneCount === 1) {
+            assert.deepEqual(result.data, data1);
+          } else if (subOneCount === 2) {
+            assert.deepEqual(result.data, data2);
+          }
         });
 
-        let subTwoCount = 0;
-        handle.subscribe({
-          next(result) {
-            subTwoCount++;
-            if (subTwoCount === 1) {
-              assert.deepEqual(result.data, data1);
-              handle.refetch();
-            } else if (subTwoCount === 2) {
-              assert.deepEqual(result.data, data2);
-              setTimeout(() => {
-                try {
-                  assert.equal(subOneCount, 2);
-                  assert.equal(subTwoCount, 2);
-                  done();
-                } catch (e) { done(e); }
-              }, 0);
-            }
-          },
+        subscribeAndCount(done, handle, (subTwoCount, result) => {
+          if (subTwoCount === 1) {
+            assert.deepEqual(result.data, data1);
+            handle.refetch();
+          } else if (subTwoCount === 2) {
+            assert.deepEqual(result.data, data2);
+            setTimeout(() => {
+              try {
+                assert.equal(subOneCount, 2);
+                assert.equal(subTwoCount, 2);
+                done();
+              } catch (e) { done(e); }
+            }, 0);
+          }
         });
       });
   });
 
   it('allows you to refetch queries', (done) => {
-
     const request = {
       query: gql`
         query fetchLuke($id: String) {
@@ -645,21 +639,16 @@ describe.only('QueryManager', () => {
       firstResult: { data: data1 },
       secondResult: { data: data2 },
     });
-    let handleCount = 0;
+
     const handle = queryManager.watchQuery(request);
-
-    handle.subscribe({
-      next(result) {
-        handleCount++;
-
-        if (handleCount === 1) {
-          assert.deepEqual(result.data, data1);
-          handle.refetch();
-        } else if (handleCount === 2) {
-          assert.deepEqual(result.data, data2);
-          done();
-        }
-      },
+    subscribeAndCount(done, handle, (handleCount, result) => {
+      if (handleCount === 1) {
+        assert.deepEqual(result.data, data1);
+        handle.refetch();
+      } else if (handleCount === 2) {
+        assert.deepEqual(result.data, data2);
+        done();
+      }
     });
   });
 
@@ -758,33 +747,28 @@ describe.only('QueryManager', () => {
         result: { data: data4 },
       }
     );
-    let handleCount = 0;
+
     const handle = queryManager.watchQuery({ query });
-
-    handle.subscribe({
-      next(result) {
-        handleCount++;
-
-        if (handleCount === 1) {
-          assert.deepEqual(result.data, data1);
-          handle.refetch();
-        } else if (handleCount === 2) {
-          assert.deepEqual(result.data, data2);
-          handle.refetch(variables1);
-        } else if (handleCount === 3) {
-          assert.isTrue(result.loading);
-          assert.deepEqual(result.data, data2);
-        } else if (handleCount === 4) {
-          assert.deepEqual(result.data, data3);
-          handle.refetch(variables2);
-        } else if (handleCount === 5) {
-          assert.isTrue(result.loading);
-          assert.deepEqual(result.data, data3);
-        } else if (handleCount === 6) {
-          assert.deepEqual(result.data, data4);
-          done();
-        }
-      },
+    subscribeAndCount(done, handle, (handleCount, result) => {
+      if (handleCount === 1) {
+        assert.deepEqual(result.data, data1);
+        handle.refetch();
+      } else if (handleCount === 2) {
+        assert.deepEqual(result.data, data2);
+        handle.refetch(variables1);
+      } else if (handleCount === 3) {
+        assert.isTrue(result.loading);
+        assert.deepEqual(result.data, data2);
+      } else if (handleCount === 4) {
+        assert.deepEqual(result.data, data3);
+        handle.refetch(variables2);
+      } else if (handleCount === 5) {
+        assert.isTrue(result.loading);
+        assert.deepEqual(result.data, data3);
+      } else if (handleCount === 6) {
+        assert.deepEqual(result.data, data4);
+        done();
+      }
     });
   });
 
@@ -835,24 +819,19 @@ describe.only('QueryManager', () => {
       pollInterval: 200,
     });
 
-    let resultCount = 0;
+    subscribeAndCount(done, handle, (handleCount, result) => {
+      // Perform refetch on first result from watchQuery
+      if (handleCount === 1) {
+        handle.refetch();
+      };
 
-    handle.subscribe({
-      next(result) {
-        resultCount++;
-        // Perform refetch on first result from watchQuery
-        if (resultCount === 1) {
-          handle.refetch();
-        };
-
-        // Wait for a result count of 3
-        if (resultCount === 3) {
-          // Stop polling
-          handle.stopPolling();
-          assert(result);
-          done();
-        }
-      },
+      // Wait for a result count of 3
+      if (handleCount === 3) {
+        // Stop polling
+        handle.stopPolling();
+        assert(result);
+        done();
+      }
     });
   });
 
@@ -1162,7 +1141,6 @@ describe.only('QueryManager', () => {
       }),
       applyMiddleware(client.middleware())
     );
-    let handleCount = 0;
     const handle = createQueryManager({
       networkInterface: mockNetworkInterface(
         {
@@ -1177,24 +1155,18 @@ describe.only('QueryManager', () => {
       store: store,
     }).watchQuery({ query, variables });
 
-    handle.subscribe({
-      next(result) {
-        handleCount++;
-        if (handleCount === 1) {
-          assert.deepEqual(result.data, data1);
-          return handle.refetch();
-        } else if (handleCount === 2) {
-          assert.deepEqual(result.data, data2);
-          store.dispatch({
-            type: 'TOGGLE',
-          });
-        }
-        assert.equal(handleCount, 2);
+    subscribeAndCount(done, handle, (handleCount, result) => {
+      if (handleCount === 1) {
+        assert.deepEqual(result.data, data1);
+        handle.refetch();
+      } else if (handleCount === 2) {
+        assert.deepEqual(result.data, data2);
+        store.dispatch({
+          type: 'TOGGLE',
+        });
         done();
-        return undefined;
-      },
+      }
     });
-
   });
 
   it(`doesn't return data while query is loading`, (done) => {
@@ -1309,30 +1281,27 @@ describe.only('QueryManager', () => {
         delay: 10,
       }
     );
-    let handle1Count = 0;
-    queryManager.watchQuery({ query: query1 }).subscribe({
-      next(result) {
-        handle1Count++;
 
-        if (handle1Count === 1) {
-          assert.deepEqual(result.data, data1);
+    const handle = queryManager.watchQuery({ query: query1 });
+    subscribeAndCount(done, handle, (handleCount, result) => {
+      if (handleCount === 1) {
+        assert.deepEqual(result.data, data1);
 
-          queryManager.query({
-            query: query2,
-          });
-        } else if (handle1Count === 2 &&
-            result.data['people_one'].name === 'Luke Skywalker has a new name') {
-          // 3 because the query init action for the second query causes a callback
-          assert.deepEqual(result.data, {
-            people_one: {
-              name: 'Luke Skywalker has a new name',
-              age: 50,
-            },
-          });
+        queryManager.query({
+          query: query2,
+        });
+      } else if (handleCount === 2 &&
+          result.data['people_one'].name === 'Luke Skywalker has a new name') {
+        // 3 because the query init action for the second query causes a callback
+        assert.deepEqual(result.data, {
+          people_one: {
+            name: 'Luke Skywalker has a new name',
+            age: 50,
+          },
+        });
 
-          done();
-        }
-      },
+        done();
+      }
     });
   });
 
@@ -1370,23 +1339,20 @@ describe.only('QueryManager', () => {
         result: { data: data2 },
       }
     );
-    let handleCount = 0;
-    const subscription = queryManager.watchQuery({
+    const handle = queryManager.watchQuery({
       query,
       variables,
       pollInterval: 50,
-    }).subscribe({
-      next(result) {
-        handleCount++;
+    });
 
-        if (handleCount === 1) {
-          assert.deepEqual(result.data, data1);
-        } else if (handleCount === 2) {
-          assert.deepEqual(result.data, data2);
-          subscription.unsubscribe();
-          done();
-        }
-      },
+    const subscription = subscribeAndCount(done, handle, (handleCount, result) => {
+      if (handleCount === 1) {
+        assert.deepEqual(result.data, data1);
+      } else if (handleCount === 2) {
+        assert.deepEqual(result.data, data2);
+        subscription.unsubscribe();
+        done();
+      }
     });
   });
 
@@ -1662,20 +1628,15 @@ describe.only('QueryManager', () => {
       }
     );
 
-    let handleCount = 0;
     const handle = queryManager.watchQuery({ query, variables });
-    const subscription = handle.subscribe({
-      next(result) {
-        handleCount++;
-
-        if (handleCount === 1) {
-          assert.deepEqual(result.data, data1);
-        } else if (handleCount === 2) {
-          assert.deepEqual(result.data, data2);
-          subscription.unsubscribe();
-          done();
-        }
-      },
+    const subscription = subscribeAndCount(done, handle, (handleCount, result) => {
+      if (handleCount === 1) {
+        assert.deepEqual(result.data, data1);
+      } else if (handleCount === 2) {
+        assert.deepEqual(result.data, data2);
+        subscription.unsubscribe();
+        done();
+      }
     });
 
     handle.startPolling(50);
@@ -1716,25 +1677,22 @@ describe.only('QueryManager', () => {
         result: { data: data2 },
       }
     );
-    let handleCount = 0;
     const handle = queryManager.watchQuery({
       query,
       variables,
       pollInterval: 50,
     });
 
-    handle.subscribe({
-      next(result) {
-        handleCount++;
-
-        if (handleCount === 1) {
-          handle.stopPolling();
-        }
-      },
+    let count = 0;
+    subscribeAndCount(done, handle, (handleCount, result) => {
+      count = handleCount;
+      if (handleCount === 1) {
+        handle.stopPolling();
+      }
     });
 
     setTimeout(() => {
-      assert.equal(handleCount, 1);
+      assert.equal(count, 1);
       done();
     }, 160);
   });
@@ -2829,20 +2787,18 @@ describe.only('QueryManager', () => {
         }
       );
 
-      let seenInitial = false;
       queryManager.query({ query: primeQuery }).then((primeResult) => {
-        queryManager.watchQuery({ query, returnPartialData: true }).subscribe({
-          next(result) {
-            if (!seenInitial) {
-              assert(result.loading);
-              assert.deepEqual(result.data, primeData);
-              seenInitial = true;
-            } else {
-              assert(!result.loading);
-              assert.deepEqual(result.data, fullData);
-              done();
-            }
-          },
+        const handle = queryManager.watchQuery({ query, returnPartialData: true });
+
+        subscribeAndCount(done, handle, (handleCount, result) => {
+          if (handleCount === 1) {
+            assert(result.loading);
+            assert.deepEqual(result.data, primeData);
+          } else {
+            assert(!result.loading);
+            assert.deepEqual(result.data, fullData);
+            done();
+          }
         });
       });
     });
@@ -2939,18 +2895,15 @@ describe.only('QueryManager', () => {
           result: { data: mutationData },
         }
       );
-      let resultsReceived = 0;
-      queryManager.watchQuery({ query }).subscribe({
-        next(result) {
-          if (resultsReceived === 0) {
-            assert.deepEqual(result.data, data);
-            queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
-          } else if (resultsReceived === 1) {
-            assert.deepEqual(result.data, secondReqData);
-            done();
-          }
-          resultsReceived++;
-        },
+      const handle = queryManager.watchQuery({ query });
+      subscribeAndCount(done, handle, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
+        } else {
+          assert.deepEqual(result.data, secondReqData);
+          done();
+        }
       });
     });
 
@@ -3001,20 +2954,17 @@ describe.only('QueryManager', () => {
           result: { data: mutationData },
         }
       );
-      let resultsReceived = 0;
-      queryManager.watchQuery({ query }).subscribe({
-        next(result) {
-          if (resultsReceived === 0) {
-            assert.deepEqual(result.data, data);
-            queryManager.mutate({ mutation, refetchQueries: ['fakeQuery', 'getAuthors'] });
-          } else if (resultsReceived === 1) {
-            assert.deepEqual(result.data, secondReqData);
-            assert.include(warned[0], 'Warning: unknown query with name fakeQuery');
-            assert.equal(timesWarned, 1);
-            done();
-          }
-          resultsReceived++;
-        },
+      const handle = queryManager.watchQuery({ query });
+      subscribeAndCount(done, handle, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          queryManager.mutate({ mutation, refetchQueries: ['fakeQuery', 'getAuthors'] });
+        } else {
+          assert.deepEqual(result.data, secondReqData);
+          assert.include(warned[0], 'Warning: unknown query with name fakeQuery');
+          assert.equal(timesWarned, 1);
+          done();
+        }
       });
     });
 
@@ -3134,24 +3084,15 @@ describe.only('QueryManager', () => {
       response = {data: {foo: 123}};
       const handle = client.watchQuery({query: gql`{ foo }`});
 
-      let callCount = 0;
-      handle.subscribe({
-        error: done,
-        next(result) {
-          try {
-            callCount++;
-            if (callCount === 1) {
-              assert.deepEqual(result.data, {foo: 123, transformCount: 1});
-              response = {data: {foo: 456}};
-              handle.refetch();
-            } else {
-              assert.deepEqual(result.data, {foo: 456, transformCount: 2});
-              done();
-            }
-          } catch (error) {
-            done(error);
-          }
-        },
+      subscribeAndCount(done, handle, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, {foo: 123, transformCount: 1});
+          response = {data: {foo: 456}};
+          handle.refetch();
+        } else {
+          assert.deepEqual(result.data, {foo: 456, transformCount: 2});
+          done();
+        }
       });
     });
 

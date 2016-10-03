@@ -12,7 +12,8 @@
     "removeComments": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "types": [ "mocha", "node" ]
   },
   "files": [
     "typings.d.ts",

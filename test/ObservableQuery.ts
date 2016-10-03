@@ -7,30 +7,9 @@ import gql from 'graphql-tag';
 import mockQueryManager from './mocks/mockQueryManager';
 import mockWatchQuery from './mocks/mockWatchQuery';
 import { ObservableQuery } from '../src/core/ObservableQuery';
-import { ApolloQueryResult } from '../src/core/QueryManager';
 
-// I'm not sure why mocha doesn't provide something like this, you can't
-// always use promises
-const wrap = (done: Function, cb: (...args: any[]) => any) => (...args: any[]) => {
-  try {
-    return cb(...args);
-  } catch (e) {
-    done(e);
-  }
-};
-
-const subscribeAndCount = (
-    done: Function,
-    observable: ObservableQuery,
-    cb: (handleCount: Number, result: ApolloQueryResult) => any) => {
-  let handleCount = 0;
-  return observable.subscribe({
-    next: wrap(done, result => {
-      handleCount++;
-      cb(handleCount, result);
-    }),
-  });
-};
+import wrap from './util/wrap';
+import subscribeAndCount from './util/subscribeAndCount';
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests
@@ -307,14 +286,12 @@ describe('ObservableQuery', () => {
         delay: 100,
       });
 
-      observable.subscribe({
-        next: wrap(done, result => {
-          assert.deepEqual(observable.currentResult(), {
-            data: dataOne,
-            loading: false,
-          });
-          done();
-        }),
+      subscribeAndCount(done, observable, () => {
+        assert.deepEqual(observable.currentResult(), {
+          data: dataOne,
+          loading: false,
+        });
+        done();
       });
 
       assert.deepEqual(observable.currentResult(), {

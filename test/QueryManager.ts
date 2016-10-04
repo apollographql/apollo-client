@@ -54,7 +54,6 @@ import mockNetworkInterface, {
 } from './mocks/mockNetworkInterface';
 
 import {
-  BatchedNetworkInterface,
   NetworkInterface,
 } from '../src/transport/networkInterface';
 
@@ -93,13 +92,11 @@ describe('QueryManager', () => {
     store,
     reduxRootSelector,
     queryTransformer,
-    shouldBatch,
   }: {
     networkInterface?: NetworkInterface,
     store?: ApolloStore,
     reduxRootSelector?: ApolloStateSelector,
     queryTransformer?: QueryTransformer,
-    shouldBatch?: boolean,
   }) => {
 
     return new QueryManager({
@@ -107,7 +104,6 @@ describe('QueryManager', () => {
       store: store || createApolloStore(),
       reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
       queryTransformer,
-      shouldBatch,
     });
   };
 
@@ -1877,6 +1873,7 @@ describe('QueryManager', () => {
     });
   });
 
+/*
   describe('batched queries', () => {
     it('should batch together two queries fired in the same batcher tick', (done) => {
       const query1 = gql`
@@ -1950,6 +1947,7 @@ describe('QueryManager', () => {
 
     });
   });
+  */
 
   describe('store resets', () => {
     it('should change the store state to an empty state', () => {

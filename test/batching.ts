@@ -2,20 +2,20 @@ import { QueryBatcher,
          QueryFetchRequest,
        } from '../src/transport/batching';
 import { assert } from 'chai';
-import mockNetworkInterface, {
+import { Request } from '../src/transport/networkInterface';
+import {
   mockBatchedNetworkInterface,
 } from './mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
 import { GraphQLResult } from 'graphql';
 
-const networkInterface = mockNetworkInterface();
+const networkInterface = mockBatchedNetworkInterface();
 
 describe('QueryBatcher', () => {
   it('should construct', () => {
     assert.doesNotThrow(() => {
       const querySched = new QueryBatcher({
-        shouldBatch: true,
-        networkInterface,
+        batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
       });
       querySched.consumeQueue();
     });
@@ -23,8 +23,7 @@ describe('QueryBatcher', () => {
 
   it('should not do anything when faced with an empty queue', () => {
     const batcher = new QueryBatcher({
-      shouldBatch: true,
-      networkInterface,
+      batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
 
     assert.equal(batcher.queuedRequests.length, 0);
@@ -34,8 +33,7 @@ describe('QueryBatcher', () => {
 
   it('should be able to add to the queue', () => {
     const batcher = new QueryBatcher({
-      shouldBatch: true,
-      networkInterface,
+      batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
 
     const query = gql`
@@ -47,8 +45,7 @@ describe('QueryBatcher', () => {
       }`;
 
     const request: QueryFetchRequest = {
-      options: { query },
-      queryId: 'not-a-real-id',
+      request: { query },
     };
 
     assert.equal(batcher.queuedRequests.length, 0);
@@ -83,18 +80,15 @@ describe('QueryBatcher', () => {
       }
     );
     const batcher = new QueryBatcher({
-      shouldBatch: true,
-      networkInterface: myNetworkInterface,
+      batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
     });
-    const request: QueryFetchRequest = {
-      options: { query },
-      queryId: 'not-a-real-id',
+    const request: Request = {
+      query,
     };
 
     it('should be able to consume from a queue containing a single query', (done) => {
       const myBatcher = new QueryBatcher({
-        shouldBatch: true,
-        networkInterface: myNetworkInterface,
+        batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
       });
 
       myBatcher.enqueueRequest(request);
@@ -108,13 +102,10 @@ describe('QueryBatcher', () => {
     });
 
     it('should be able to consume from a queue containing multiple queries', (done) => {
-      const request2 = {
-        options: { query },
-        queryId: 'another-fake-id',
+      const request2: Request = {
+        query,
       };
-      const myBatcher = new QueryBatcher({
-        shouldBatch: true,
-        networkInterface: mockBatchedNetworkInterface(
+      const NI = mockBatchedNetworkInterface(
           {
             request: { query },
             result: {data },
@@ -123,7 +114,10 @@ describe('QueryBatcher', () => {
             request: { query },
             result: { data },
           }
-        ),
+        );
+
+      const myBatcher = new QueryBatcher({
+        batchFetchFunction: NI.batchQuery.bind(NI),
       });
       myBatcher.enqueueRequest(request);
       myBatcher.enqueueRequest(request2);
@@ -140,14 +134,14 @@ describe('QueryBatcher', () => {
     });
 
     it('should return a promise when we enqueue a request and resolve it with a result', (done) => {
-      const myBatcher = new QueryBatcher({
-        shouldBatch: true,
-        networkInterface: mockBatchedNetworkInterface(
+      const NI = mockBatchedNetworkInterface(
           {
             request: { query },
             result: { data },
           }
-        ),
+        );
+      const myBatcher = new QueryBatcher({
+        batchFetchFunction: NI.batchQuery.bind(NI),
       });
       const promise = myBatcher.enqueueRequest(request);
       myBatcher.consumeQueue();
@@ -160,8 +154,7 @@ describe('QueryBatcher', () => {
 
   it('should be able to stop polling', () => {
     const batcher = new QueryBatcher({
-      shouldBatch: true,
-      networkInterface,
+      batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
     const query = gql`
       query {
@@ -170,9 +163,8 @@ describe('QueryBatcher', () => {
           lastName
         }
       }`;
-    const request = {
-      options: { query },
-      queryId: 'not-a-real-id',
+    const request: Request = {
+      query,
     };
 
     batcher.enqueueRequest(request);
@@ -185,7 +177,7 @@ describe('QueryBatcher', () => {
     assert.equal(batcher.queuedRequests.length, 2);
   });
 
-  it('should resolve the promise returned when we enqueue with shouldBatch: false', (done) => {
+  it('should reject the promise if there is a network error', (done) => {
     const query = gql`
       query {
         author {
@@ -193,82 +185,8 @@ describe('QueryBatcher', () => {
           lastName
         }
       }`;
-    const myRequest = {
-      options: { query },
-      queryId: 'not-a-real-id',
-    };
-
-    const data = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-    const myNetworkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        result: { data },
-      }
-    );
-    const batcher = new QueryBatcher({
-      shouldBatch: false,
-      networkInterface: myNetworkInterface,
-    });
-    const promise = batcher.enqueueRequest(myRequest);
-    batcher.consumeQueue();
-    promise.then((result) => {
-      assert.deepEqual(result, { data });
-      done();
-    });
-  });
-
-  it('should immediately consume the queue when we enqueue with shouldBatch: false', (done) => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-    const myRequest = {
-      options: { query },
-      queryId: 'not-a-real-id',
-    };
-
-    const data = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-    const myNetworkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        result: { data },
-      }
-    );
-    const batcher = new QueryBatcher({
-      shouldBatch: false,
-      networkInterface: myNetworkInterface,
-    });
-    const promise = batcher.enqueueRequest(myRequest);
-    promise.then((result) => {
-      assert.deepEqual(result, { data });
-      done();
-    });
-  });
-
-  it('should reject the promise if there is a network error with batch:true', (done) => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-    const request = {
-      options: { query },
-      queryId: 'very-real-id',
+    const request: Request = {
+      query: query,
     };
     const error = new Error('Network error');
     const myNetworkInterface = mockBatchedNetworkInterface(
@@ -278,70 +196,12 @@ describe('QueryBatcher', () => {
       }
     );
     const batcher = new QueryBatcher({
-      shouldBatch: true,
-      networkInterface: myNetworkInterface,
+      batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
     });
     const promise = batcher.enqueueRequest(request);
     batcher.consumeQueue();
     promise.catch((resError: Error) => {
       assert.equal(resError.message, 'Network error');
-      done();
-    });
-  });
-
-  it('should reject the promise if there is a network error with batch:false', (done) => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-    const request = {
-      options: { query },
-      queryId: 'super-real-id',
-    };
-    const error = new Error('Network error');
-    const myNetworkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        error,
-      }
-    );
-    const batcher = new QueryBatcher({
-      shouldBatch: false,
-      networkInterface: myNetworkInterface,
-    });
-    const promise = batcher.enqueueRequest(request);
-    batcher.consumeQueue();
-    promise.catch((resError: Error) => {
-      assert.equal(resError.message, 'Network error');
-      done();
-    });
-  });
-
-  it('should not start polling if shouldBatch is false', (done) => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-     }`;
-    const fetchRequest = {
-      options: { query },
-      queryId: 'super-real-id',
-    };
-    const batcher = new QueryBatcher({
-      shouldBatch: false,
-      networkInterface: mockNetworkInterface({
-        request: { query },
-      }),
-    });
-    batcher.start(1);
-    batcher.queuedRequests.push(fetchRequest);
-    setTimeout(() => {
-      assert.equal(batcher.queuedRequests.length, 1);
       done();
     });
   });

@@ -884,7 +884,7 @@ describe('QueryManager', () => {
     );
 
     // First, prime the store so that query diffing removes the query
-    queryManager.query({
+    return queryManager.query({
       query: primeQuery,
     }).then(() => {
       const handle = queryManager.watchQuery({
@@ -955,7 +955,7 @@ describe('QueryManager', () => {
     );
 
     // First, prime the cache
-    queryManager.query({
+    return queryManager.query({
       query: primeQuery,
     }).then(() => {
       const handle = queryManager.watchQuery({
@@ -991,14 +991,14 @@ describe('QueryManager', () => {
     });
   });
 
-  it('runs a mutation with object parameters and puts the result in the store', (done) => {
+  it('runs a mutation with object parameters and puts the result in the store', () => {
     const data = {
       makeListPrivate: {
         id: '5',
         isPrivate: true,
       },
     };
-    mockMutation({
+    return mockMutation({
       mutation: gql`
         mutation makeListPrivate {
           makeListPrivate(input: {id: "5"}) {
@@ -1018,8 +1018,6 @@ describe('QueryManager', () => {
         queryManager.store.getState()['apollo'].data['5'],
         { id: '5', isPrivate: true }
       );
-
-      done();
     });
   });
 

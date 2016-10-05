@@ -1,16 +1,5 @@
-import isArray = require('lodash.isarray');
-import isNull = require('lodash.isnull');
-import isObject = require('lodash.isobject');
-import has = require('lodash.has');
-import merge = require('lodash.merge');
-import { print } from 'graphql-tag/printer';
-
 import {
-  storeKeyNameFromField,
-  resultKeyNameFromField,
   storeKeyNameFromFieldNameAndArgs,
-  isField,
-  isInlineFragment,
 } from './storeUtils';
 
 import {
@@ -21,7 +10,6 @@ import {
 
 import {
   SelectionSet,
-  Field,
   Document,
   OperationDefinition,
   FragmentDefinition,
@@ -32,10 +20,6 @@ import {
   getFragmentDefinition,
   FragmentMap,
 } from '../queries/getFromAST';
-
-import {
-  shouldInclude,
-} from '../queries/directives';
 
 import {
   ApolloError,
@@ -131,7 +115,7 @@ const readStoreResolver: Resolver = (
   const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
   const fieldValue = obj[storeKeyName];
 
-  if (! fieldValue) {
+  if (typeof fieldValue === 'undefined') {
     if (context.throwOnMissingField) {
       throw new ApolloError({
         errorMessage: `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
@@ -192,8 +176,6 @@ export function diffSelectionSetAgainstStore({
     throwOnMissingField,
   };
 
-  console.log(print(doc));
-
   const result = graphql(readStoreResolver, doc, 'ROOT_QUERY', context, variables, mapper);
 
   return { result };
@@ -215,7 +197,9 @@ function makeDocument(
     selectionSet,
   };
 
-  const frags: FragmentDefinition[] = Object.keys(fragmentMap).map((name) => fragmentMap[name]);
+  const frags: FragmentDefinition[] = fragmentMap ?
+    Object.keys(fragmentMap).map((name) => fragmentMap[name]) :
+    [];
 
   const doc: Document = {
     kind: 'Document',

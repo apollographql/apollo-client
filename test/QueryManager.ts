@@ -71,6 +71,7 @@ import {
 
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
+import observableToPromise from './util/observableToPromise';
 
 describe('QueryManager', () => {
 
@@ -1299,7 +1300,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('allows you to poll queries', (done) => {
+  it('allows you to poll queries', () => {
     const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
@@ -1333,21 +1334,16 @@ describe('QueryManager', () => {
         result: { data: data2 },
       }
     );
-    const handle = queryManager.watchQuery({
+    const observable = queryManager.watchQuery({
       query,
       variables,
       pollInterval: 50,
     });
 
-    const subscription = subscribeAndCount(done, handle, (handleCount, result) => {
-      if (handleCount === 1) {
-        assert.deepEqual(result.data, data1);
-      } else if (handleCount === 2) {
-        assert.deepEqual(result.data, data2);
-        subscription.unsubscribe();
-        done();
-      }
-    });
+    return observableToPromise({ observable },
+      (result) => assert.deepEqual(result.data, data1),
+      (result) => assert.deepEqual(result.data, data2),
+    );
   });
 
   it('should let you handle multiple polled queries and unsubscribe from one of them', (done) => {
@@ -2364,7 +2360,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('should be able to unsubscribe from a polling query subscription', (done) => {
+  it('should be able to unsubscribe from a polling query subscription', () => {
     const query = gql`
       query {
         author {
@@ -2378,22 +2374,19 @@ describe('QueryManager', () => {
         lastName: 'Smith',
       },
     };
-    let timesFired = 0;
-    const subscription = mockQueryManager({
+
+    const observable = mockQueryManager({
       request: { query },
       result: { data },
-    }).watchQuery({ query, pollInterval: 20 })
-      .subscribe({
-        next(result) {
-          timesFired += 1;
-          subscription.unsubscribe();
-        },
-      });
+    }).watchQuery({ query, pollInterval: 20 });
 
-    setTimeout(() => {
-      assert.equal(timesFired, 1);
-      done();
-    }, 60);
+    return observableToPromise({ observable, wait: 60 },
+      // After this callback runs, the sub will stop, and the sub should not
+      // run again for the wait timeout
+      (result: any) => {
+        assert.deepEqual(result.data, data);
+      }
+    );
   });
 
   it('should not empty the store when a polling query fails due to a network error', (done) => {

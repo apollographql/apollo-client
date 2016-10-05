@@ -25,7 +25,7 @@ import {
   ApolloError,
 } from '../errors/ApolloError';
 
-import graphql, {
+import graphqlAnywhere, {
   Resolver,
   ResultMapper,
 } from 'graphql-anywhere';
@@ -179,7 +179,7 @@ export function diffSelectionSetAgainstStore({
     hasMissingField: false,
   };
 
-  const result = graphql(readStoreResolver, doc, 'ROOT_QUERY', context, variables, mapper);
+  const result = graphqlAnywhere(readStoreResolver, doc, 'ROOT_QUERY', context, variables, mapper);
 
   return {
     result,

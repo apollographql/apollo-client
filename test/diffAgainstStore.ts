@@ -3,13 +3,8 @@ import { assert } from 'chai';
 import {
   diffQueryAgainstStore,
 } from '../src/data/diffAgainstStore';
-import { writeQueryToStore } from '../src/data/writeToStore';
-import {
-  getQueryDefinition,
-  getFragmentDefinitions,
-  createFragmentMap,
-} from '../src/queries/getFromAST';
 
+import { writeQueryToStore } from '../src/data/writeToStore';
 
 import {
   getIdField,

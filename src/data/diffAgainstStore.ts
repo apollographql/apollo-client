@@ -9,10 +9,7 @@ import {
 } from './store';
 
 import {
-  SelectionSet,
   Document,
-  OperationDefinition,
-  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -47,7 +44,7 @@ export function diffQueryAgainstStore({
   return diffSelectionSetAgainstStore({
     store,
     query,
-    throwOnMissingField: false,
+    throwOnMissingField,
     variables,
   });
 }

@@ -45,7 +45,7 @@ export function readQueryFromStore({
   store,
   query,
   variables,
-  returnPartialData,
+  returnPartialData = false,
   fragmentMap,
 }: {
   store: NormalizedCache,

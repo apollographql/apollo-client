@@ -47,7 +47,6 @@ import {
   /* tslint:disable */
   SelectionSet,
   /* tslint:enable */
-  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';

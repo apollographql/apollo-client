@@ -100,6 +100,7 @@ export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error
 type ReadStoreContext = {
   store: NormalizedCache;
   throwOnMissingField: boolean;
+  hasMissingField: boolean;
 }
 
 const readStoreResolver: Resolver = (
@@ -108,7 +109,7 @@ const readStoreResolver: Resolver = (
   args: any,
   context: ReadStoreContext
 ) => {
-  const obj = context.store[objId];
+  const obj = context.store[objId] || {};
   const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
   const fieldValue = obj[storeKeyName];
 
@@ -122,6 +123,8 @@ Perhaps you want to use the \`returnPartialData\` option?`,
         },
       });
     }
+
+    context.hasMissingField = true;
 
     return fieldValue;
   }
@@ -171,11 +174,17 @@ export function diffSelectionSetAgainstStore({
   const context: ReadStoreContext = {
     store,
     throwOnMissingField,
+
+    // Filled in during execution
+    hasMissingField: false,
   };
 
   const result = graphql(readStoreResolver, doc, 'ROOT_QUERY', context, variables, mapper);
 
-  return { result };
+  return {
+    result,
+    isMissing: context.hasMissingField,
+  };
 }
 
 // Shim to use graphql-anywhere, to be removed

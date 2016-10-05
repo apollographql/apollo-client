@@ -285,5 +285,5 @@ function storeRoundtrip(query: Document, result: any, variables = {}) {
     fragmentMap,
   });
 
-  assert.deepEqual(result, reconstructedResult);
+  assert.deepEqual(reconstructedResult, result);
 }

@@ -3,10 +3,12 @@ import isNull = require('lodash.isnull');
 import isObject = require('lodash.isobject');
 import has = require('lodash.has');
 import merge = require('lodash.merge');
+import { print } from 'graphql-tag/printer';
 
 import {
   storeKeyNameFromField,
   resultKeyNameFromField,
+  storeKeyNameFromFieldNameAndArgs,
   isField,
   isInlineFragment,
 } from './storeUtils';
@@ -21,6 +23,7 @@ import {
   SelectionSet,
   Field,
   Document,
+  OperationDefinition,
 } from 'graphql';
 
 import {
@@ -36,6 +39,11 @@ import {
 import {
   ApolloError,
 } from '../errors/ApolloError';
+
+import graphql, {
+  Resolver,
+  ResultMapper,
+} from 'graphql-anywhere';
 
 export interface DiffResult {
   result?: any;
@@ -104,6 +112,52 @@ export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error
   }
 }
 
+type ReadStoreContext = {
+  store: NormalizedCache;
+  throwOnMissingField: boolean;
+}
+
+// Sentinel object for missing value
+const MISSING_VALUE = {};
+
+const readStoreResolver: Resolver = (
+  fieldName: string,
+  objId: string,
+  args: any,
+  context: ReadStoreContext
+) => {
+  const obj = context.store[objId];
+  const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
+  const fieldValue = obj[storeKeyName];
+
+  if (! fieldValue) {
+    if (context.throwOnMissingField) {
+      throw new ApolloError({
+        errorMessage: `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
+Perhaps you want to use the \`returnPartialData\` option?`,
+        extraInfo: {
+          isFieldError: true,
+        },
+      });
+    }
+
+    return MISSING_VALUE;
+  }
+
+  if (isJsonValue(fieldValue)) {
+    // if this is an object scalar, it must be a json blob and we have to unescape it
+    return fieldValue.json;
+  }
+
+  if (isIdValue(fieldValue)) {
+    return fieldValue.id;
+  }
+
+  return fieldValue;
+};
+
+const mapper: ResultMapper = (childValues, rootValue) => childValues;
+
 /**
  * Given a store, a root ID, and a selection set, return as much of the result as possible and
  * identify which selection sets and root IDs need to be fetched to get the rest of the requested
@@ -130,238 +184,40 @@ export function diffSelectionSetAgainstStore({
   variables: Object,
   fragmentMap?: FragmentMap,
 }): DiffResult {
-  if (selectionSet.kind !== 'SelectionSet') {
-    throw new Error('Must be a selection set.');
-  }
+  const doc = makeDocument(selectionSet, rootId, fragmentMap);
 
-  if (!fragmentMap) {
-    fragmentMap = {};
-  }
-
-  const result = {};
-  let hasMissingFields = false;
-
-  // A map going from a typename to missing field errors thrown on that
-  // typename. This data structure is needed to support union types. For example, if we have
-  // a union type (Apple | Orange) and we only receive fields for fragments on
-  // "Apple", that should not result in an error. But, if at least one of the fragments
-  // for each of "Apple" and "Orange" is missing a field, that should return an error.
-  // (i.e. with this approach, we manage to handle missing fields correctly even for
-  // union types without any knowledge of the GraphQL schema).
-  let fragmentErrors: { [typename: string]: Error } = {};
-
-  selectionSet.selections.forEach((selection) => {
-    // Don't push more than one missing field per field in the query
-    let fieldResult: any;
-
-    const included = shouldInclude(selection, variables);
-
-    if (isField(selection)) {
-      const diffResult = diffFieldAgainstStore({
-        field: selection,
-        throwOnMissingField,
-        variables,
-        rootId,
-        store,
-        fragmentMap,
-        included,
-      });
-      hasMissingFields = hasMissingFields || diffResult.isMissing;
-      fieldResult = diffResult.result;
-
-      const resultFieldKey = resultKeyNameFromField(selection);
-      if (included && fieldResult !== undefined) {
-        (result as any)[resultFieldKey] = fieldResult;
-      }
-    } else if (isInlineFragment(selection)) {
-      const typename = selection.typeCondition.name.value;
-
-      if (included) {
-        try {
-          const diffResult = diffSelectionSetAgainstStore({
-            selectionSet: selection.selectionSet,
-            throwOnMissingField,
-            variables,
-            rootId,
-            store,
-            fragmentMap,
-          });
-
-          hasMissingFields = hasMissingFields || diffResult.isMissing;
-          fieldResult = diffResult.result;
-
-          if (isObject(fieldResult)) {
-            merge(result, fieldResult);
-          }
-
-          if (!fragmentErrors[typename]) {
-            fragmentErrors[typename] = null;
-          }
-        } catch (e) {
-          if (e.extraInfo && e.extraInfo.isFieldError) {
-            fragmentErrors[typename] = e;
-          } else {
-            throw e;
-          }
-        }
-      }
-    } else {
-      const fragment = fragmentMap[selection.name.value];
-
-      if (!fragment) {
-        throw new Error(`No fragment named ${selection.name.value}`);
-      }
-
-      const typename = fragment.typeCondition.name.value;
-
-      if (included) {
-        try {
-          const diffResult = diffSelectionSetAgainstStore({
-            selectionSet: fragment.selectionSet,
-            throwOnMissingField,
-            variables,
-            rootId,
-            store,
-            fragmentMap,
-          });
-          hasMissingFields = hasMissingFields || diffResult.isMissing;
-          fieldResult = diffResult.result;
-
-          if (isObject(fieldResult)) {
-            merge(result, fieldResult);
-          }
-
-          if (!fragmentErrors[typename]) {
-            fragmentErrors[typename] = null;
-          }
-        } catch (e) {
-          if (e.extraInfo && e.extraInfo.isFieldError) {
-            fragmentErrors[typename] = e;
-          } else {
-            throw e;
-          }
-        }
-      }
-    }
-  });
-
-  if (throwOnMissingField) {
-    handleFragmentErrors(fragmentErrors);
-  }
-
-  return {
-    result,
-    isMissing: hasMissingFields,
+  const context: ReadStoreContext = {
+    store,
+    throwOnMissingField,
   };
+
+  console.log(print(doc));
+
+  const result = graphql(readStoreResolver, doc, 'ROOT_QUERY', context, variables, mapper);
+
+  return { result };
 }
 
-function diffFieldAgainstStore({
-  field,
-  throwOnMissingField,
-  variables,
-  rootId,
-  store,
-  fragmentMap,
-  included = true,
-}: {
-  field: Field,
-  throwOnMissingField: boolean,
-  variables: Object,
+// Shim to use graphql-anywhere, to be removed
+function makeDocument(
+  selectionSet: SelectionSet,
   rootId: string,
-  store: NormalizedCache,
-  fragmentMap?: FragmentMap,
-  included?: boolean,
-}): DiffResult {
-  const storeObj = store[rootId] || {};
-  const storeFieldKey = storeKeyNameFromField(field, variables);
-
-  if (! has(storeObj, storeFieldKey)) {
-    if (throwOnMissingField && included) {
-      throw new ApolloError({
-        errorMessage: `Can't find field ${storeFieldKey} on object (${rootId}) ${JSON.stringify(storeObj, null, 2)}.
-Perhaps you want to use the \`returnPartialData\` option?`,
-        extraInfo: {
-          isFieldError: true,
-        },
-      });
-    }
-
-    return {
-      isMissing: true,
-    };
+  fragmentMap: FragmentMap
+): Document {
+  if (rootId !== 'ROOT_QUERY') {
+    throw new Error('only supports query');
   }
 
-  const storeValue = storeObj[storeFieldKey];
+  const op: OperationDefinition = {
+    kind: 'OperationDefinition',
+    operation: 'query',
+    selectionSet,
+  };
 
-  // Handle all scalar types here
-  if (! field.selectionSet) {
-    if (isJsonValue(storeValue)) {
-      // if this is an object scalar, it must be a json blob and we have to unescape it
-      return {
-        result: storeValue.json,
-      };
-    } else {
-      // if this is a non-object scalar, we can return it immediately
-      return {
-        result: storeValue,
-      };
-    }
-  }
+  const doc: Document = {
+    kind: 'Document',
+    definitions: [op],
+  };
 
-  // From here down, the field has a selection set, which means it's trying to
-  // query a GraphQLObjectType
-  if (isNull(storeValue)) {
-    // Basically any field in a GraphQL response can be null
-    return {
-      result: null,
-    };
-  }
-
-  if (isArray(storeValue)) {
-    let isMissing: any;
-
-    const result = (storeValue as string[]).map((id) => {
-      // null value in array
-      if (isNull(id)) {
-        return null;
-      }
-
-      const itemDiffResult = diffSelectionSetAgainstStore({
-        store,
-        throwOnMissingField,
-        rootId: id,
-        selectionSet: field.selectionSet,
-        variables,
-        fragmentMap,
-      });
-
-      if (itemDiffResult.isMissing) {
-        // XXX merge all of the missing selections from the children to get a more minimal result
-        isMissing = 'true';
-      }
-
-      return itemDiffResult.result;
-    });
-
-    return {
-      result,
-      isMissing,
-    };
-  }
-
-  // If the store value is an object and it has a selection set, it must be
-  // an escaped id.
-  if (isIdValue(storeValue)) {
-    const unescapedId = storeValue.id;
-    return diffSelectionSetAgainstStore({
-      store,
-      throwOnMissingField,
-      rootId: unescapedId,
-      selectionSet: field.selectionSet,
-      variables,
-      fragmentMap,
-    });
-  }
-
-  throw new Error('Unexpected value in the store where the query had a subselection.');
+  return doc;
 }

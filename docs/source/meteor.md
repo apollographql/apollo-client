@@ -6,7 +6,7 @@ description: Specifics about using Apollo in your Meteor application.
 
 The Apollo client and server tools are published on NPM, which makes them available to all JavaScript applications, including those written with [Meteor](https://www.meteor.com/) 1.3 and above. When using Meteor with Apollo, you can use those npm packages directly, or you can use the [`apollo` Atmosphere package](https://github.com/apollostack/meteor-integration/), which simplifies things for you.
 
-To install `apollo`, run both of these commands:
+To install `apollo`, run these commands:
 
 ```text
 meteor add apollo
@@ -78,7 +78,7 @@ export const resolvers = {
 - `options`: `FetchOptions` passed to [`createNetworkInterface`](http://dev.apollodata.com/core/apollo-client-api.html#createNetworkInterface). Default: `{}`.
 - `useMeteorAccounts`: Whether to send the current user's login token to the GraphQL server with each request. Default: `true`.
 
-Returns an [`options` object](http://0.0.0.0:4000/apollo-client/index.html#ApolloClient) for `ApolloClient`:
+Returns an [`options` object](http://dev.apollodata.com/core/apollo-client-api.html#apollo-client) for `ApolloClient`:
 
 ```
 {
@@ -92,13 +92,13 @@ Returns an [`options` object](http://0.0.0.0:4000/apollo-client/index.html#Apoll
 
 `createApolloServer(options, config)`
 
-- [`options`](http://docs.apollostack.com/apollo-server/tools.html#apolloServer)
+- [`options`](http://dev.apollodata.com/tools/apollo-server/setup.html#apolloOptions)
 - `config` may contain any of the following fields:
   - `path`: [Path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. Default: `'/graphql'`.
   - `maxAccountsCacheSizeInMB`: User account ids are cached in memory to reduce the response latency on multiple requests from the same user. Default: `1`.
   - `graphiql`: Whether to enable GraphiQL. Default: `true` in development and `false` in production.
   - `graphiqlPath`: Path for GraphiQL. Default: `/graphiql` (note the i).
-  - `graphiqlOptions`: [GraphiQL options](http://docs.apollostack.com/apollo-server/graphiql.html#graphiqlOptions) (optional).
+  - `graphiqlOptions`: [GraphiQL options](http://dev.apollodata.com/tools/apollo-server/graphiql.html#graphiqlOptions) (optional).
 
 
 

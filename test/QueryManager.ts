@@ -575,6 +575,7 @@ describe('QueryManager', () => {
       secondResult: { data: data2 },
     });
 
+
     // pre populate data to avoid contention
     queryManager.query(request)
       .then(() => {
@@ -607,7 +608,7 @@ describe('QueryManager', () => {
       });
   });
 
-  it('allows you to refetch queries', (done) => {
+  it('allows you to refetch queries', () => {
     const request = {
       query: gql`
         query fetchLuke($id: String) {
@@ -637,19 +638,17 @@ describe('QueryManager', () => {
       secondResult: { data: data2 },
     });
 
-    const handle = queryManager.watchQuery(request);
-    subscribeAndCount(done, handle, (handleCount, result) => {
-      if (handleCount === 1) {
+    const observable = queryManager.watchQuery(request);
+    return observableToPromise({ observable },
+      (result) => {
         assert.deepEqual(result.data, data1);
-        handle.refetch();
-      } else if (handleCount === 2) {
-        assert.deepEqual(result.data, data2);
-        done();
-      }
-    });
+        observable.refetch();
+      },
+      (result) => assert.deepEqual(result.data, data2)
+    );
   });
 
-  it('allows you to refetch queries with promises', (done) => {
+  it('allows you to refetch queries with promises', () => {
     const request = {
       query: gql`
       {
@@ -679,13 +678,12 @@ describe('QueryManager', () => {
     const handle = queryManager.watchQuery(request);
     handle.subscribe({});
 
-    handle.refetch().then((result) => {
-      assert.deepEqual(result.data, data2);
-      done();
-    });
+    return handle.refetch().then(
+      (result) => assert.deepEqual(result.data, data2)
+    );
   });
 
-  it('allows you to refetch queries with new variables', (done) => {
+  it('allows you to refetch queries with new variables', () => {
     const query = gql`
       {
         people_one(id: 1) {
@@ -745,31 +743,35 @@ describe('QueryManager', () => {
       }
     );
 
-    const handle = queryManager.watchQuery({ query });
-    subscribeAndCount(done, handle, (handleCount, result) => {
-      if (handleCount === 1) {
+    const observable = queryManager.watchQuery({ query });
+    return observableToPromise({ observable },
+      (result) => {
         assert.deepEqual(result.data, data1);
-        handle.refetch();
-      } else if (handleCount === 2) {
+        observable.refetch();
+      },
+      (result) => {
         assert.deepEqual(result.data, data2);
-        handle.refetch(variables1);
-      } else if (handleCount === 3) {
+        observable.refetch(variables1);
+      },
+      (result) => {
         assert.isTrue(result.loading);
         assert.deepEqual(result.data, data2);
-      } else if (handleCount === 4) {
+      },
+      (result) => {
         assert.deepEqual(result.data, data3);
-        handle.refetch(variables2);
-      } else if (handleCount === 5) {
+        observable.refetch(variables2);
+      },
+      (result) => {
         assert.isTrue(result.loading);
         assert.deepEqual(result.data, data3);
-      } else if (handleCount === 6) {
+      },
+      (result) => {
         assert.deepEqual(result.data, data4);
-        done();
       }
-    });
+    );
   });
 
-  it('continues to poll after refetch', (done) => {
+  it('continues to poll after refetch', () => {
     const query = gql`
       {
         people_one(id: 1) {
@@ -811,25 +813,23 @@ describe('QueryManager', () => {
       }
     );
 
-    const handle = queryManager.watchQuery({
+    const observable = queryManager.watchQuery({
       query,
       pollInterval: 200,
     });
 
-    subscribeAndCount(done, handle, (handleCount, result) => {
-      // Perform refetch on first result from watchQuery
-      if (handleCount === 1) {
-        handle.refetch();
-      };
-
-      // Wait for a result count of 3
-      if (handleCount === 3) {
-        // Stop polling
-        handle.stopPolling();
+    return observableToPromise({ observable },
+      (result) => {
+        assert.deepEqual(result.data, data1);
+        observable.refetch();
+      },
+      (result) => assert.deepEqual(result.data, data2),
+      (result) => {
+        assert.deepEqual(result.data, data3);
+        observable.stopPolling();
         assert(result);
-        done();
       }
-    });
+    );
   });
 
   it('supports returnPartialData #193', () => {
@@ -1097,7 +1097,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('does not broadcast queries when non-apollo actions are dispatched', (done) => {
+  it('does not broadcast queries when non-apollo actions are dispatched', () => {
     const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
@@ -1136,7 +1136,7 @@ describe('QueryManager', () => {
       }),
       applyMiddleware(client.middleware())
     );
-    const handle = createQueryManager({
+    const observable = createQueryManager({
       networkInterface: mockNetworkInterface(
         {
           request: { query, variables },
@@ -1150,21 +1150,21 @@ describe('QueryManager', () => {
       store: store,
     }).watchQuery({ query, variables });
 
-    subscribeAndCount(done, handle, (handleCount, result) => {
-      if (handleCount === 1) {
+    return observableToPromise({ observable },
+      (result) => {
         assert.deepEqual(result.data, data1);
-        handle.refetch();
-      } else if (handleCount === 2) {
+        observable.refetch();
+      },
+      (result) => {
         assert.deepEqual(result.data, data2);
         store.dispatch({
           type: 'TOGGLE',
         });
-        done();
       }
-    });
+    );
   });
 
-  it(`doesn't return data while query is loading`, (done) => {
+  it(`doesn't return data while query is loading`, () => {
     const query1 = gql`
       {
         people_one(id: 1) {
@@ -1205,34 +1205,20 @@ describe('QueryManager', () => {
       }
     );
 
-    let handle1Count = 0;
-    let handle2Count = 0;
+    const observable1 = queryManager.watchQuery({ query: query1 });
+    const observable2 = queryManager.watchQuery({ query: query2 });
 
-    queryManager.watchQuery({ query: query1 }).subscribe({
-      next(result) {
-        handle1Count++;
-        checkDone();
-      },
-    });
-    queryManager.watchQuery({ query: query2 }).subscribe({
-      next(result) {
-        handle2Count++;
-        checkDone();
-      },
-    });
-
-    function checkDone() {
-      if (handle1Count === 1 && handle2Count === 1) {
-        done();
-      }
-
-      if (handle1Count > 1) {
-        assert.fail();
-      }
-    }
+    return Promise.all([
+      observableToPromise({ observable: observable1 },
+        (result) => assert.deepEqual(result.data, data1)
+      ),
+      observableToPromise({ observable: observable2 },
+        (result) => assert.deepEqual(result.data, data2)
+      ),
+    ]);
   });
 
-  it(`updates result of previous query if the result of a new query overlaps`, (done) => {
+  it(`updates result of previous query if the result of a new query overlaps`, () => {
     const query1 = gql`
       {
         people_one(id: 1) {
@@ -1277,27 +1263,20 @@ describe('QueryManager', () => {
       }
     );
 
-    const handle = queryManager.watchQuery({ query: query1 });
-    subscribeAndCount(done, handle, (handleCount, result) => {
-      if (handleCount === 1) {
+    const observable = queryManager.watchQuery({ query: query1 });
+    return observableToPromise({ observable },
+      (result) => {
         assert.deepEqual(result.data, data1);
-
-        queryManager.query({
-          query: query2,
-        });
-      } else if (handleCount === 2 &&
-          result.data['people_one'].name === 'Luke Skywalker has a new name') {
-        // 3 because the query init action for the second query causes a callback
-        assert.deepEqual(result.data, {
-          people_one: {
-            name: 'Luke Skywalker has a new name',
-            age: 50,
-          },
-        });
-
-        done();
-      }
-    });
+        queryManager.query({ query: query2 });
+      },
+      // 3 because the query init action for the second query causes a callback
+      (result) => assert.deepEqual(result.data, {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+          age: 50,
+        },
+      })
+    );
   });
 
   it('allows you to poll queries', () => {
@@ -1456,7 +1435,7 @@ describe('QueryManager', () => {
     }, 400);
   });
 
-  it('allows you to unsubscribe from polled queries', (done) => {
+  it('allows you to unsubscribe from polled queries', () => {
     const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
@@ -1491,31 +1470,19 @@ describe('QueryManager', () => {
         result: { data: data2 },
       }
     );
-    let handleCount = 0;
-    const subscription = queryManager.watchQuery({
+    const observable = queryManager.watchQuery({
       query,
       variables,
       pollInterval: 50,
-    }).subscribe({
-      next(result) {
-        handleCount++;
-
-        if (handleCount === 1) {
-          assert.deepEqual(result.data, data1);
-        } else if (handleCount === 2) {
-          assert.deepEqual(result.data, data2);
-          subscription.unsubscribe();
-        }
-      },
     });
 
-    setTimeout(() => {
-      assert.equal(handleCount, 2);
-      done();
-    }, 160);
+    return observableToPromise({ observable, wait: 60 },
+      (result) => assert.deepEqual(result.data, data1),
+      (result) => assert.deepEqual(result.data, data2)
+    );
   });
 
-  it('allows you to unsubscribe from polled query errors', (done) => {
+  it('allows you to unsubscribe from polled query errors', () => {
     const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
@@ -1555,34 +1522,24 @@ describe('QueryManager', () => {
       }
     );
 
-    let handleCount = 0;
-    const subscription = queryManager.watchQuery({
+    const observable = queryManager.watchQuery({
       query,
       variables,
       pollInterval: 50,
-    }).subscribe({
-      next(result) {
-        handleCount++;
-
-        if (handleCount === 1) {
-          assert.deepEqual(result.data, data1);
-        } else if (handleCount === 2) {
-          done(new Error('Should not deliver second result'));
-        }
-      },
-      error: (error) => {
-        assert.include(error.message, 'Network error');
-        subscription.unsubscribe();
-      },
     });
 
-    setTimeout(() => {
-      assert.equal(handleCount, 1);
-      done();
-    }, 160);
+    return observableToPromise({
+        observable,
+        wait: 60,
+        errorCallbacks: [
+          (error) => assert.include(error.message, 'Network error'),
+        ],
+      },
+      (result) => assert.deepEqual(result.data, data1)
+    );
   });
 
-  it('exposes a way to start a polling query', (done) => {
+  it('exposes a way to start a polling query', () => {
     const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
@@ -1618,21 +1575,65 @@ describe('QueryManager', () => {
       }
     );
 
-    const handle = queryManager.watchQuery({ query, variables });
-    const subscription = subscribeAndCount(done, handle, (handleCount, result) => {
-      if (handleCount === 1) {
+    const observable = queryManager.watchQuery({ query, variables });
+    observable.startPolling(50);
+
+    return observableToPromise({ observable },
+      (result) => assert.deepEqual(result.data, data1),
+      (result) => assert.deepEqual(result.data, data2)
+    );
+  });
+
+  it('exposes a way to stop a polling query', () => {
+    const query = gql`
+      query fetchLeia($id: String) {
+        people_one(id: $id) {
+          name
+        }
+      }
+    `;
+
+    const variables = {
+      id: '2',
+    };
+
+    const data1 = {
+      people_one: {
+        name: 'Leia Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Leia Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query, variables },
+        result: { data: data1 },
+      },
+      {
+        request: { query, variables },
+        result: { data: data2 },
+      }
+    );
+    const observable = queryManager.watchQuery({
+      query,
+      variables,
+      pollInterval: 50,
+    });
+
+    return observableToPromise({ observable, wait: 60},
+      (result) => {
         assert.deepEqual(result.data, data1);
-      } else if (handleCount === 2) {
-        assert.deepEqual(result.data, data2);
-        subscription.unsubscribe();
-        done();
+        observable.stopPolling();
       }
-    });
-
-    handle.startPolling(50);
+    );
   });
 
-  it('exposes a way to stop a polling query', (done) => {
+  it('stopped polling queries still get updates', () => {
     const query = gql`
       query fetchLeia($id: String) {
         people_one(id: $id) {
@@ -1667,83 +1668,28 @@ describe('QueryManager', () => {
         result: { data: data2 },
       }
     );
-    const handle = queryManager.watchQuery({
+    const observable = queryManager.watchQuery({
       query,
       variables,
       pollInterval: 50,
     });
 
-    let count = 0;
-    subscribeAndCount(done, handle, (handleCount, result) => {
-      count = handleCount;
-      if (handleCount === 1) {
-        handle.stopPolling();
-      }
-    });
-
-    setTimeout(() => {
-      assert.equal(count, 1);
-      done();
-    }, 160);
-  });
-
-  it('stopped polling queries still get updates', (done) => {
-    const query = gql`
-      query fetchLeia($id: String) {
-        people_one(id: $id) {
-          name
-        }
-      }
-    `;
-
-    const variables = {
-      id: '2',
-    };
-
-    const data1 = {
-      people_one: {
-        name: 'Leia Skywalker',
-      },
-    };
-
-    const data2 = {
-      people_one: {
-        name: 'Leia Skywalker has a new name',
-      },
-    };
-
-    const queryManager = mockQueryManager(
-      {
-        request: { query, variables },
-        result: { data: data1 },
-      },
-      {
-        request: { query, variables },
-        result: { data: data2 },
-      }
-    );
-    let handleCount = 0;
-    const handle = queryManager.watchQuery({
-      query,
-      variables,
-      pollInterval: 50,
-    });
-
-    handle.subscribe({
-      next(result) {
-        handleCount++;
-
-        if (handleCount === 1) {
-          handle.stopPolling();
-
+    let timeout: Function;
+    return Promise.race([
+      observableToPromise({ observable },
+        (result) => {
+          assert.deepEqual(result.data, data1);
           queryManager.query({ query, variables, forceFetch: true })
-            .then(() => {
-              assert.equal(handleCount, 2);
-              done();
-            });
-        }
-      },
-    });
+            .then(() => timeout());
+        },
+        (result) => assert.deepEqual(result.data, data2)
+      ),
+      // Ensure that the observable has recieved 2 results *before*
+      // the rejection triggered above
+      new Promise((resolve, reject) => {
+        timeout = () => reject(new Error('Should have two results by now'));
+      }),
+    ]);
   });
 
   it('warns if you forget the template literal tag', () => {
@@ -1959,7 +1905,7 @@ describe('QueryManager', () => {
       assert.deepEqual(currentState, expectedState);
     });
 
-    it('should only refetch once when we store reset', (done) => {
+    it('should only refetch once when we store reset', () => {
       let queryManager: QueryManager = null;
       const query = gql`
         query {
@@ -1976,7 +1922,6 @@ describe('QueryManager', () => {
       };
 
       let timesFired = 0;
-      let numResults = 0;
       const networkInterface: NetworkInterface = {
         query(request: Request): Promise<GraphQLResult> {
           if (timesFired === 0) {
@@ -1989,21 +1934,14 @@ describe('QueryManager', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      queryManager.watchQuery({ query }).subscribe({
-        next(result) {
-          numResults += 1;
-        },
+      const observable = queryManager.watchQuery({ query });
 
-        error(err) {
-          done(new Error('Errored on observable on store reset.'));
-        },
-      });
-
-      setTimeout(() => {
+      // wait just to make sure the observable doesn't fire again
+      return observableToPromise({ observable, wait: 0 },
+        (result) => assert.deepEqual(result.data, data)
+      ).then(() => {
         assert.equal(timesFired, 2);
-        assert.equal(numResults, 1);
-        done();
-      }, 100);
+      });
     });
 
 
@@ -2180,6 +2118,7 @@ describe('QueryManager', () => {
         done();
       });
     });
+
     it('should accept a list of fragments and let us reference them from mutate', (done) => {
       const fragment1 = getFragmentDefinition(gql`
         fragment authorDetails on Author {
@@ -2298,7 +2237,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('should reject a query promise given a GraphQL error', (done) => {
+  it('should reject a query promise given a GraphQL error', () => {
     const query = gql`
       query {
         author {
@@ -2307,18 +2246,20 @@ describe('QueryManager', () => {
         }
       }`;
     const graphQLErrors = [new Error('GraphQL error')];
-    mockQueryManager({
+    return mockQueryManager({
       request: { query },
       result: { errors: graphQLErrors },
-    }).query({ query }).then((result) => {
-      done(new Error('Returned result on an errored fetchQuery'));
-    }).catch((error) => {
-      const apolloError = error as ApolloError;
-      assert(apolloError.message);
-      assert.equal(apolloError.graphQLErrors, graphQLErrors);
-      assert(!apolloError.networkError);
-      done();
-    });
+    }).query({ query }).then(
+      (result) => {
+        throw new Error('Returned result on an errored fetchQuery');
+      },
+      // don't use .catch() for this or it will catch the above error
+      (error) => {
+        const apolloError = error as ApolloError;
+        assert(apolloError.message);
+        assert.equal(apolloError.graphQLErrors, graphQLErrors);
+        assert(!apolloError.networkError);
+      });
   });
 
   it('should not empty the store when a non-polling query fails due to a network error', (done) => {
@@ -2389,7 +2330,7 @@ describe('QueryManager', () => {
     );
   });
 
-  it('should not empty the store when a polling query fails due to a network error', (done) => {
+  it('should not empty the store when a polling query fails due to a network error', () => {
     const query = gql`
       query {
         author {
@@ -2413,27 +2354,27 @@ describe('QueryManager', () => {
         error: new Error('Network error occurred.'),
       }
     );
-    const subscription = queryManager.watchQuery({ query, pollInterval: 20 })
-      .subscribe({
-        next(result) {
-          assert.deepEqual(result, { data });
-          assert.deepEqual(
-            queryManager.store.getState().apollo.data['$ROOT_QUERY.author'],
-            data.author
-          );
-        },
+    const observable = queryManager.watchQuery({ query, pollInterval: 20 });
 
-        error(error) {
-          assert.deepEqual(
-            queryManager.store.getState().apollo.data['$ROOT_QUERY.author'],
-            data.author
-          );
-          subscription.unsubscribe();
-        },
-      });
-    setTimeout(() => {
-      done();
-    }, 100);
+    return observableToPromise({
+        observable,
+        errorCallbacks: [
+          () => {
+            assert.deepEqual(
+              queryManager.store.getState().apollo.data['$ROOT_QUERY.author'],
+              data.author
+            );
+          },
+        ],
+      },
+      (result) => {
+        assert.deepEqual(result.data, data);
+        assert.deepEqual(
+          queryManager.store.getState().apollo.data['$ROOT_QUERY.author'],
+          data.author
+        );
+      }
+    );
   });
 
   it('should not fire next on an observer if there is no change in the result', (done) => {

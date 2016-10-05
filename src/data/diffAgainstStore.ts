@@ -24,6 +24,7 @@ import {
   Field,
   Document,
   OperationDefinition,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -214,9 +215,11 @@ function makeDocument(
     selectionSet,
   };
 
+  const frags: FragmentDefinition[] = Object.keys(fragmentMap).map((name) => fragmentMap[name]);
+
   const doc: Document = {
     kind: 'Document',
-    definitions: [op],
+    definitions: [op, ...frags],
   };
 
   return doc;

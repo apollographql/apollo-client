@@ -109,9 +109,9 @@ const readStoreResolver: Resolver = (
   args: any,
   context: ReadStoreContext
 ) => {
-  const obj = context.store[objId] || {};
+  const obj = context.store[objId];
   const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
-  const fieldValue = obj[storeKeyName];
+  const fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
     if (context.throwOnMissingField) {

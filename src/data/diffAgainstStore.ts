@@ -102,9 +102,6 @@ type ReadStoreContext = {
   throwOnMissingField: boolean;
 }
 
-// Sentinel object for missing value
-const MISSING_VALUE = {};
-
 const readStoreResolver: Resolver = (
   fieldName: string,
   objId: string,
@@ -126,7 +123,7 @@ Perhaps you want to use the \`returnPartialData\` option?`,
       });
     }
 
-    return MISSING_VALUE;
+    return fieldValue;
   }
 
   if (isJsonValue(fieldValue)) {

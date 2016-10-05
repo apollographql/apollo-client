@@ -55,28 +55,6 @@ export function diffQueryAgainstStore({
   });
 }
 
-export function diffFragmentAgainstStore({
-  store,
-  fragment,
-  rootId,
-  variables,
-}: {
-  store: NormalizedCache,
-  fragment: Document,
-  rootId: string,
-  variables?: Object,
-}): DiffResult {
-  const fragmentDef = getFragmentDefinition(fragment);
-
-  return diffSelectionSetAgainstStore({
-    store,
-    rootId,
-    selectionSet: fragmentDef.selectionSet,
-    throwOnMissingField: false,
-    variables,
-  });
-}
-
 // Takes a map of errors for fragments of each type. If all of the types have
 // thrown an error, this function will throw the error associated with one
 // of the types.

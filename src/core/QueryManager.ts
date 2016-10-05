@@ -47,6 +47,7 @@ import {
   /* tslint:disable */
   SelectionSet,
   /* tslint:enable */
+  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -56,7 +57,7 @@ import {
 } from '../data/readFromStore';
 
 import {
-  diffSelectionSetAgainstStore,
+  diffQueryAgainstStore,
 } from '../data/diffAgainstStore';
 
 import {
@@ -898,13 +899,11 @@ export class QueryManager {
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     if (!forceFetch) {
-      const { isMissing, result } = diffSelectionSetAgainstStore({
-        selectionSet: queryDef.selectionSet,
+      const { isMissing, result } = diffQueryAgainstStore({
+        query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
         throwOnMissingField: false,
-        rootId: querySS.id,
         variables,
-        fragmentMap,
       });
 
       // If we're in here, only fetch if we have missing fields

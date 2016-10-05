@@ -2,7 +2,6 @@ import { assert } from 'chai';
 
 import {
   diffQueryAgainstStore,
-  diffSelectionSetAgainstStore,
 } from '../src/data/diffAgainstStore';
 import { writeQueryToStore } from '../src/data/writeToStore';
 import {
@@ -110,10 +109,9 @@ describe('diffing queries against the store', () => {
         ...notARealFragment
       }`;
     assert.throws(() => {
-      diffSelectionSetAgainstStore({
+      diffQueryAgainstStore({
         store,
-        rootId: 'ROOT_QUERY',
-        selectionSet: getQueryDefinition(unionQuery).selectionSet,
+        query: unionQuery,
         variables: null,
         throwOnMissingField: true,
       });
@@ -152,10 +150,9 @@ describe('diffing queries against the store', () => {
         }
       }`;
     assert.doesNotThrow(() => {
-      diffSelectionSetAgainstStore({
+      diffQueryAgainstStore({
         store,
-        rootId: 'ROOT_QUERY',
-        selectionSet: getQueryDefinition(unionQuery).selectionSet,
+        query: unionQuery,
         variables: null,
         throwOnMissingField: true,
       });
@@ -194,13 +191,11 @@ describe('diffing queries against the store', () => {
         powers
       }`;
     assert.doesNotThrow(() => {
-      diffSelectionSetAgainstStore({
+      diffQueryAgainstStore({
         store,
-        rootId: 'ROOT_QUERY',
-        selectionSet: getQueryDefinition(unionQuery).selectionSet,
+        query: unionQuery,
         variables: null,
         throwOnMissingField: true,
-        fragmentMap: createFragmentMap(getFragmentDefinitions(unionQuery)),
       });
     });
   });
@@ -238,13 +233,11 @@ describe('diffing queries against the store', () => {
         jedi
       }`;
     assert.throw(() => {
-      diffSelectionSetAgainstStore({
+      diffQueryAgainstStore({
         store,
-        rootId: 'ROOT_QUERY',
-        selectionSet: getQueryDefinition(unionQuery).selectionSet,
+        query: unionQuery,
         variables: null,
         throwOnMissingField: true,
-        fragmentMap: createFragmentMap(getFragmentDefinitions(unionQuery)),
       });
     });
   });
@@ -283,10 +276,9 @@ describe('diffing queries against the store', () => {
       }`;
 
     assert.throw(() => {
-      diffSelectionSetAgainstStore({
+      diffQueryAgainstStore({
         store,
-        rootId: 'ROOT_QUERY',
-        selectionSet: getQueryDefinition(unionQuery).selectionSet,
+        query: unionQuery,
         variables: null,
         throwOnMissingField: true,
       });
@@ -350,12 +342,10 @@ describe('diffing queries against the store', () => {
         age
       }`;
 
-    const simpleDiff = diffSelectionSetAgainstStore({
+    const simpleDiff = diffQueryAgainstStore({
       store,
-      rootId: 'ROOT_QUERY',
-      selectionSet: getQueryDefinition(simpleQuery).selectionSet,
+      query: simpleQuery,
       variables: null,
-      throwOnMissingField: false,
     });
 
     assert.deepEqual(simpleDiff.result, {
@@ -364,12 +354,10 @@ describe('diffing queries against the store', () => {
       },
     });
 
-    const inlineDiff = diffSelectionSetAgainstStore({
+    const inlineDiff = diffQueryAgainstStore({
       store,
-      rootId: 'ROOT_QUERY',
-      selectionSet: getQueryDefinition(inlineFragmentQuery).selectionSet,
+      query: inlineFragmentQuery,
       variables: null,
-      throwOnMissingField: false,
     });
 
     assert.deepEqual(inlineDiff.result, {
@@ -378,13 +366,10 @@ describe('diffing queries against the store', () => {
       },
     });
 
-    const namedDiff = diffSelectionSetAgainstStore({
+    const namedDiff = diffQueryAgainstStore({
       store,
-      rootId: 'ROOT_QUERY',
-      selectionSet: getQueryDefinition(namedFragmentQuery).selectionSet,
+      query: namedFragmentQuery,
       variables: null,
-      throwOnMissingField: false,
-      fragmentMap: createFragmentMap(getFragmentDefinitions(namedFragmentQuery)),
     });
 
     assert.deepEqual(namedDiff.result, {
@@ -394,10 +379,9 @@ describe('diffing queries against the store', () => {
     });
 
     assert.throws(function() {
-      diffSelectionSetAgainstStore({
+      diffQueryAgainstStore({
         store,
-        rootId: 'ROOT_QUERY',
-        selectionSet: getQueryDefinition(simpleQuery).selectionSet,
+        query: simpleQuery,
         variables: null,
         throwOnMissingField: true,
       });

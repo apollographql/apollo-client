@@ -1,10 +1,12 @@
 import {
-  diffSelectionSetAgainstStore,
+  diffQueryAgainstStore,
 } from './diffAgainstStore';
 
 import {
   SelectionSet,
   Document,
+  OperationDefinition,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -103,16 +105,45 @@ export function readSelectionSetFromStore({
   returnPartialData?: boolean,
   fragmentMap?: FragmentMap,
 }): Object {
+  const query = makeDocument(selectionSet, rootId, fragmentMap);
+
   const {
     result,
-  } = diffSelectionSetAgainstStore({
-    selectionSet,
-    rootId,
+  } = diffQueryAgainstStore({
+    query,
     store,
     throwOnMissingField: !returnPartialData,
     variables,
-    fragmentMap,
   });
 
   return result;
+}
+
+
+// Shim to use graphql-anywhere, to be removed
+function makeDocument(
+  selectionSet: SelectionSet,
+  rootId: string,
+  fragmentMap: FragmentMap
+): Document {
+  if (rootId !== 'ROOT_QUERY') {
+    throw new Error('only supports query');
+  }
+
+  const op: OperationDefinition = {
+    kind: 'OperationDefinition',
+    operation: 'query',
+    selectionSet,
+  };
+
+  const frags: FragmentDefinition[] = fragmentMap ?
+    Object.keys(fragmentMap).map((name) => fragmentMap[name]) :
+    [];
+
+  const doc: Document = {
+    kind: 'Document',
+    definitions: [op, ...frags],
+  };
+
+  return doc;
 }

@@ -16,8 +16,6 @@ import {
 } from 'graphql';
 
 import {
-  getQueryDefinition,
-  getFragmentDefinition,
   FragmentMap,
 } from '../queries/getFromAST';
 
@@ -39,17 +37,16 @@ export function diffQueryAgainstStore({
   store,
   query,
   variables,
+  throwOnMissingField = false,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
+  throwOnMissingField?: boolean,
 }): DiffResult {
-  const queryDef = getQueryDefinition(query);
-
   return diffSelectionSetAgainstStore({
     store,
-    rootId: 'ROOT_QUERY',
-    selectionSet: queryDef.selectionSet,
+    query,
     throwOnMissingField: false,
     variables,
   });
@@ -132,23 +129,19 @@ const mapper: ResultMapper = (childValues, rootValue) => childValues;
  * when a field isn't found in the store.
  * @return {result: Object, missingSelectionSets: [SelectionSet]}
  */
-export function diffSelectionSetAgainstStore({
-  selectionSet,
+function diffSelectionSetAgainstStore({
+  query,
   store,
-  rootId,
   throwOnMissingField = false,
   variables,
   fragmentMap,
 }: {
-  selectionSet: SelectionSet,
+  query: Document,
   store: NormalizedCache,
-  rootId: string,
   throwOnMissingField: boolean,
   variables: Object,
   fragmentMap?: FragmentMap,
 }): DiffResult {
-  const doc = makeDocument(selectionSet, rootId, fragmentMap);
-
   const context: ReadStoreContext = {
     store,
     throwOnMissingField,
@@ -157,38 +150,11 @@ export function diffSelectionSetAgainstStore({
     hasMissingField: false,
   };
 
-  const result = graphqlAnywhere(readStoreResolver, doc, 'ROOT_QUERY', context, variables, mapper);
+  const result = graphqlAnywhere(
+    readStoreResolver, query, 'ROOT_QUERY', context, variables, mapper);
 
   return {
     result,
     isMissing: context.hasMissingField,
   };
-}
-
-// Shim to use graphql-anywhere, to be removed
-function makeDocument(
-  selectionSet: SelectionSet,
-  rootId: string,
-  fragmentMap: FragmentMap
-): Document {
-  if (rootId !== 'ROOT_QUERY') {
-    throw new Error('only supports query');
-  }
-
-  const op: OperationDefinition = {
-    kind: 'OperationDefinition',
-    operation: 'query',
-    selectionSet,
-  };
-
-  const frags: FragmentDefinition[] = fragmentMap ?
-    Object.keys(fragmentMap).map((name) => fragmentMap[name]) :
-    [];
-
-  const doc: Document = {
-    kind: 'Document',
-    definitions: [op, ...frags],
-  };
-
-  return doc;
 }

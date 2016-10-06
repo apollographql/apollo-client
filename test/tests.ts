@@ -19,7 +19,6 @@ import './store';
 import './queryTransform';
 import './getFromAST';
 import './directives';
-import './queryMerging';
 import './batching';
 import './scheduler';
 import './mutationResults';

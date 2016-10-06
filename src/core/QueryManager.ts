@@ -47,27 +47,23 @@ import {
   /* tslint:disable */
   SelectionSet,
   /* tslint:enable */
+  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
 
 import {
-  readSelectionSetFromStore,
+  readQueryFromStore,
 } from '../data/readFromStore';
 
 import {
-  diffSelectionSetAgainstStore,
+  diffQueryAgainstStore,
 } from '../data/diffAgainstStore';
 
 import {
   MutationBehavior,
   MutationQueryReducersMap,
 } from '../data/mutationResults';
-
-import {
-  QueryFetchRequest,
-  QueryBatcher,
-} from '../transport/batching';
 
 import {
   QueryScheduler,
@@ -139,9 +135,6 @@ export class QueryManager {
 
   private idCounter = 0;
 
-  private batcher: QueryBatcher;
-  private batchInterval: number;
-
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
   // destabalizing action occurs (e.g. reset of the Apollo store).
@@ -171,8 +164,6 @@ export class QueryManager {
     queryTransformer,
     resultTransformer,
     resultComparator,
-    shouldBatch = false,
-    batchInterval = 10,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -180,8 +171,6 @@ export class QueryManager {
     queryTransformer?: QueryTransformer,
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
-    shouldBatch?: boolean,
-    batchInterval?: number,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -192,19 +181,12 @@ export class QueryManager {
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
     this.pollingTimers = {};
-    this.batchInterval = batchInterval;
     this.queryListeners = {};
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
     });
 
-    this.batcher = new QueryBatcher({
-      shouldBatch,
-      networkInterface: this.networkInterface,
-    });
-
-    this.batcher.start(this.batchInterval);
     this.fetchQueryPromises = {};
     this.observableQueries = {};
     this.queryIdsByName = {};
@@ -362,13 +344,12 @@ export class QueryManager {
         } else {
           try {
             const resultFromStore = {
-              data: readSelectionSetFromStore({
+              data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
-                rootId: queryStoreValue.query.id,
-                selectionSet: queryStoreValue.query.selectionSet,
+                query: makeDocument(
+                  queryStoreValue.query.selectionSet, 'ROOT_QUERY', queryStoreValue.fragmentMap),
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
-                fragmentMap: queryStoreValue.fragmentMap,
               }),
               loading: queryStoreValue.loading,
             };
@@ -638,22 +619,20 @@ export class QueryManager {
       // results including previous optimistic updates. Otherwise, apply it
       // on top of the real data only.
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
-      rootId: 'ROOT_QUERY',
-      selectionSet: querySelectionSet,
+      query: makeDocument(querySelectionSet, 'ROOT_QUERY', createFragmentMap(queryFragments || [])),
       variables: queryVariables,
-      fragmentMap: createFragmentMap(queryFragments || []),
       returnPartialData: false,
     };
     try {
       // first try reading the full result from the store
-      const data = readSelectionSetFromStore(readOptions);
+      const data = readQueryFromStore(readOptions);
       return { data, partial: false };
     } catch (e) {
       // next, try reading partial results, if we want them
       if (queryOptions.returnPartialData || queryOptions.noFetch) {
         try {
           readOptions.returnPartialData = true;
-          const data = readSelectionSetFromStore(readOptions);
+          const data = readQueryFromStore(readOptions);
           return { data, partial: true };
         } catch (e) {
           // fall through
@@ -835,16 +814,10 @@ export class QueryManager {
       operationName: getOperationName(query),
     };
 
-    const fetchRequest: QueryFetchRequest = {
-      options: { query, variables },
-      queryId,
-      operationName: request.operationName,
-    };
-
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      return this.batcher.enqueueRequest(fetchRequest)
+      return this.networkInterface.query(request)
         .then((result: GraphQLResult) => {
           // XXX handle multiple ApolloQueryResults
           this.store.dispatch({
@@ -863,13 +836,11 @@ export class QueryManager {
             // ensure result is combined with data already in store
             // this will throw an error if there are missing fields in
             // the results if returnPartialData is false.
-            resultFromStore = readSelectionSetFromStore({
+            resultFromStore = readQueryFromStore({
               store: this.getApolloState().data,
-              rootId: querySS.id,
-              selectionSet: querySS.selectionSet,
               variables,
               returnPartialData: returnPartialData || noFetch,
-              fragmentMap,
+              query,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */
@@ -923,13 +894,11 @@ export class QueryManager {
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     if (!forceFetch) {
-      const { isMissing, result } = diffSelectionSetAgainstStore({
-        selectionSet: queryDef.selectionSet,
+      const { isMissing, result } = diffQueryAgainstStore({
+        query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
         throwOnMissingField: false,
-        rootId: querySS.id,
         variables,
-        fragmentMap,
       });
 
       // If we're in here, only fetch if we have missing fields
@@ -1025,4 +994,32 @@ export class QueryManager {
     this.idCounter++;
     return requestId;
   }
+}
+
+// Shim to use graphql-anywhere, to be removed
+function makeDocument(
+  selectionSet: SelectionSet,
+  rootId: string,
+  fragmentMap: FragmentMap
+): Document {
+  if (rootId !== 'ROOT_QUERY') {
+    throw new Error('only supports query');
+  }
+
+  const op: OperationDefinition = {
+    kind: 'OperationDefinition',
+    operation: 'query',
+    selectionSet,
+  };
+
+  const frags: FragmentDefinition[] = fragmentMap ?
+    Object.keys(fragmentMap).map((name) => fragmentMap[name]) :
+    [];
+
+  const doc: Document = {
+    kind: 'Document',
+    definitions: [op, ...frags],
+  };
+
+  return doc;
 }

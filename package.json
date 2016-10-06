@@ -38,6 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "es6-promise": "^4.0.3",
+    "graphql-anywhere": "^0.1.11",
     "graphql-tag": "^0.1.13",
     "lodash.assign": "^4.0.8",
     "lodash.clonedeep": "^4.3.2",
@@ -79,6 +80,7 @@
     "colors": "^1.1.2",
     "es6-promise": "^4.0.4",
     "typed-graphql": "1.0.2",
+    "fetch-mock": "^5.5.0",
     "grunt": "1.0.1",
     "grunt-tslint": "3.2.1",
     "gzip-size": "^3.0.0",
@@ -89,6 +91,7 @@
     "mocha": "^3.0.0",
     "pretty-bytes": "^4.0.0",
     "remap-istanbul": "^0.5.1",
+    "request": "^2.75.0",
     "rxjs": "^5.0.0-beta.11",
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",

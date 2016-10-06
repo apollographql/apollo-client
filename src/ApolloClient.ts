@@ -99,11 +99,9 @@ export default class ApolloClient {
   public queryTransformer: QueryTransformer;
   public resultTransformer: ResultTransformer;
   public resultComparator: ResultComparator;
-  public shouldBatch: boolean;
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
-  public batchInterval: number;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -131,23 +129,12 @@ export default class ApolloClient {
    * For example, a query transformer can add the __typename field to every level of a GraphQL
    * document. In fact, the @{addTypename} query transformer does exactly this.
    *
-   * @param shouldBatch Determines whether multiple queries should be batched together in a single
-   * roundtrip.
-   * <p />
-   *
-   * Note that if this is set to true, the [[NetworkInterface]] should implement
-   * [[BatchedNetworkInterface]]. Every time a query is fetched, it is placed into the queue of
-   * the batcher. At the end of each batcher time interval, the query batcher batches together
-   * (if shouldBatch is true) each of the queries in the queue and sends them to the server.
-   * This happens transparently: each query will still receive exactly the result it asked for,
-   * regardless of whether or not it is batched.
    *
    * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
    *
    * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
    * server side render.
    *
-   * @param batchInterval The time interval on which the query batcher operates.
    */
   constructor({
     networkInterface,
@@ -158,11 +145,9 @@ export default class ApolloClient {
     queryTransformer,
     resultTransformer,
     resultComparator,
-    shouldBatch = false,
     ssrMode = false,
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
-    batchInterval,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -172,11 +157,9 @@ export default class ApolloClient {
     queryTransformer?: QueryTransformer,
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
-    shouldBatch?: boolean,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
-    batchInterval?: number,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -205,15 +188,13 @@ export default class ApolloClient {
 
     this.initialState = initialState ? initialState : {};
     this.networkInterface = networkInterface ? networkInterface :
-      createNetworkInterface('/graphql');
+      createNetworkInterface({ uri: '/graphql' });
     this.queryTransformer = queryTransformer;
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
-    this.shouldBatch = shouldBatch;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
-    this.batchInterval = batchInterval;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -419,8 +400,6 @@ export default class ApolloClient {
       queryTransformer: this.queryTransformer,
       resultTransformer: this.resultTransformer,
       resultComparator: this.resultComparator,
-      shouldBatch: this.shouldBatch,
-      batchInterval: this.batchInterval,
     });
   };
 }

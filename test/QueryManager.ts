@@ -71,7 +71,9 @@ import {
 
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
-import observableToPromise from './util/observableToPromise';
+import observableToPromise, {
+  observableToPromiseAndSubscription,
+} from './util/observableToPromise';
 
 describe('QueryManager', () => {
 
@@ -1476,10 +1478,20 @@ describe('QueryManager', () => {
       pollInterval: 50,
     });
 
-    return observableToPromise({ observable, wait: 60 },
+    const { promise, subscription } = observableToPromiseAndSubscription({
+        observable,
+        wait: 60,
+      },
       (result) => assert.deepEqual(result.data, data1),
-      (result) => assert.deepEqual(result.data, data2)
+      (result) => {
+        assert.deepEqual(result.data, data2);
+
+        // we unsubscribe here manually, rather than waiting for the timeout.
+        subscription.unsubscribe();
+      }
     );
+
+    return promise;
   });
 
   it('allows you to unsubscribe from polled query errors', () => {
@@ -1680,14 +1692,14 @@ describe('QueryManager', () => {
         (result) => {
           assert.deepEqual(result.data, data1);
           queryManager.query({ query, variables, forceFetch: true })
-            .then(() => timeout());
+            .then(() => timeout(new Error('Should have two results by now')));
         },
         (result) => assert.deepEqual(result.data, data2)
       ),
       // Ensure that the observable has recieved 2 results *before*
       // the rejection triggered above
       new Promise((resolve, reject) => {
-        timeout = () => reject(new Error('Should have two results by now'));
+        timeout = (error: Error) => reject(error);
       }),
     ]);
   });
@@ -2321,13 +2333,16 @@ describe('QueryManager', () => {
       result: { data },
     }).watchQuery({ query, pollInterval: 20 });
 
-    return observableToPromise({ observable, wait: 60 },
-      // After this callback runs, the sub will stop, and the sub should not
-      // run again for the wait timeout
+    const { promise, subscription } = observableToPromiseAndSubscription({
+        observable,
+        wait: 60,
+      },
       (result: any) => {
         assert.deepEqual(result.data, data);
+        subscription.unsubscribe();
       }
     );
+    return promise;
   });
 
   it('should not empty the store when a polling query fails due to a network error', () => {
@@ -2377,7 +2392,7 @@ describe('QueryManager', () => {
     );
   });
 
-  it('should not fire next on an observer if there is no change in the result', (done) => {
+  it('should not fire next on an observer if there is no change in the result', () => {
     const query = gql`
       query {
         author {
@@ -2403,21 +2418,21 @@ describe('QueryManager', () => {
         result: { data },
       }
     );
-    let timesFired = 0;
-    queryManager.watchQuery({ query }).subscribe({
-      next(result) {
-        timesFired += 1;
+
+    const observable = queryManager.watchQuery({ query });
+    return Promise.all([
+      // we wait for a little bit to ensure the result of the second query
+      // don't trigger another subscription event
+      observableToPromise({ observable, wait: 100 },
+        (result) => assert.deepEqual(result.data, data)
+      ),
+      queryManager.query({ query }).then((result) => {
         assert.deepEqual(result.data, data);
-      },
-    });
-    queryManager.query({ query }).then((result) => {
-      assert.deepEqual(result.data, data);
-      assert.equal(timesFired, 1);
-      done();
-    });
+      }),
+    ]);
   });
 
-  it('should error when we orphan a real-id node in the store with a real-id node', (done) => {
+  it('should error when we orphan a real-id node in the store with a real-id node', () => {
     const query1 = gql`
       query {
         author {
@@ -2457,7 +2472,6 @@ describe('QueryManager', () => {
         name: {
           firstName: 'John',
         },
-        age: 18,
         id: '197',
         __typename: 'Author',
       },
@@ -2478,41 +2492,28 @@ describe('QueryManager', () => {
       store,
     });
 
-    let resultsReceived1 = 0;
-    let resultsReceived2 = 0;
-    let errorsReceived1 = 0;
+    const observable1 = queryManager.watchQuery({ query: query1 });
+    const observable2 = queryManager.watchQuery({ query: query2 });
 
-    queryManager.watchQuery({ query: query1 }).subscribe({
-      next(result) {
-        resultsReceived1 += 1;
-      },
-
-      error(error) {
-        assert(error);
-        errorsReceived1 += 1;
-      },
-    });
-
-    queryManager.watchQuery({ query: query2 }).subscribe({
-      next(result) {
-        resultsReceived2 += 1;
-      },
-
-      error(error) {
-        done(new Error('Erorred on the second handler.'));
-      },
-    });
-
-    setTimeout(() => {
-      assert.equal(resultsReceived1, 1);
-      assert.equal(resultsReceived2, 1);
-      assert.equal(errorsReceived1, 1);
-      done();
-    }, 60);
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise({
+          observable: observable1,
+          errorCallbacks: [
+            (error) => assert.deepEqual((error as any).extraInfo, { isFieldError: true }),
+          ],
+          wait: 60,
+        },
+        (result) => assert.deepEqual(result.data, data1)
+      ),
+      observableToPromise({ observable: observable2, wait: 60 },
+        (result) => assert.deepEqual(result.data, data2)
+      ),
+    ]);
   });
 
 
-  it('should error if we replace a real id node in the store with a generated id node', (done) => {
+  it('should error if we replace a real id node in the store with a generated id node', () => {
     const queryWithId = gql`
       query {
         author {
@@ -2557,40 +2558,29 @@ describe('QueryManager', () => {
       store,
     });
 
-    let withIdResults = 0;
-    let withIdErrors = 0;
-    let withoutIdResults = 0;
-    let withoutIdErrors = 0;
+    const observableWithId = queryManager.watchQuery({ query: queryWithId });
+    const observableWithoutId = queryManager.watchQuery({ query: queryWithoutId });
 
-    queryManager.watchQuery({ query: queryWithId }).subscribe({
-      next(result) {
-        withIdResults += 1;
-      },
-      error(error) {
-        withIdErrors += 1;
-      },
-    });
-
-    queryManager.watchQuery({ query: queryWithoutId }).subscribe({
-      next(result) {
-        withoutIdResults += 1;
-      },
-      error(error) {
-        assert.include(error.message, 'Store error: ');
-        withoutIdErrors += 1;
-      },
-    });
-
-    setTimeout(() => {
-      assert.equal(withIdResults, 1);
-      assert.equal(withIdErrors, 0);
-      assert.equal(withoutIdResults, 0);
-      assert.equal(withoutIdErrors, 1);
-      done();
-    }, 60);
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise({ observable: observableWithId, wait: 60 },
+        (result) => assert.deepEqual(result.data, dataWithId)
+      ),
+      observableToPromise({
+          observable: observableWithoutId,
+          errorCallbacks: [
+            (error) => assert.include(error.message, 'Store error'),
+            // The error gets triggered a second time when we unsubscribe the
+            // the first promise, as there is no duplicate prevention for errors
+            (error) => assert.include(error.message, 'Store error'),
+          ],
+          wait: 60,
+        }
+      ),
+    ]);
   });
 
-  it('should not error when merging a generated id store node  with a real id node', (done) => {
+  it('should not error when merging a generated id store node  with a real id node', () => {
     const queryWithoutId = gql`
       query {
         author {
@@ -2631,6 +2621,16 @@ describe('QueryManager', () => {
         __typename: 'Author',
       },
     };
+    const mergedDataWithoutId = {
+      author: {
+        name: {
+          firstName: 'Jane',
+          lastName: 'Smith',
+        },
+        age: '124',
+        __typename: 'Author',
+      },
+    };
     const store = createApolloStore({ config: { dataIdFromObject } });
     const queryManager = createQueryManager({
       networkInterface:  mockNetworkInterface(
@@ -2645,31 +2645,24 @@ describe('QueryManager', () => {
       ),
       store,
     });
-    let withoutIdResultsReceived = 0;
-    let withIdResultsReceived = 0;
-    queryManager.watchQuery({ query: queryWithoutId }).subscribe({
-      next(result) {
-        withoutIdResultsReceived += 1;
-        assert.deepEqual(result, { data: dataWithoutId } );
-      },
-    });
 
-    queryManager.watchQuery({ query: queryWithId }).subscribe({
-      next(result) {
-        withIdResultsReceived += 1;
-        assert.deepEqual(result, { data: dataWithId });
-      },
-    });
+    const observableWithId = queryManager.watchQuery({ query: queryWithId });
+    const observableWithoutId = queryManager.watchQuery({ query: queryWithoutId });
 
-    setTimeout(() => {
-      assert.equal(withoutIdResultsReceived, 2);
-      assert.equal(withIdResultsReceived, 1);
-      done();
-    }, 120);
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise({ observable: observableWithoutId, wait: 120 },
+        (result) => assert.deepEqual(result.data, dataWithoutId),
+        (result) => assert.deepEqual(result.data, mergedDataWithoutId)
+      ),
+      observableToPromise({ observable: observableWithId, wait: 120 },
+        (result) => assert.deepEqual(result.data, dataWithId)
+      ),
+    ]);
   });
 
   describe('loading state', () => {
-    it('should be passed as false if we are not watching a query', (done) => {
+    it('should be passed as false if we are not watching a query', () => {
       const query = gql`
         query {
           fortuneCookie
@@ -2677,17 +2670,16 @@ describe('QueryManager', () => {
       const data = {
         fortuneCookie: 'Buy it',
       };
-      mockQueryManager({
+      return  mockQueryManager({
         request: { query },
         result: { data },
       }).query({ query }).then((result) => {
         assert(!result.loading);
         assert.deepEqual(result.data, data);
-        done();
       });
     });
 
-    it('should be passed to the observer as true if we are returning partial data', (done) => {
+    it('should be passed to the observer as true if we are returning partial data', () => {
       const fortuneCookie = 'You must stick to your goal but rethink your approach';
       const primeQuery = gql`
         query {
@@ -2717,19 +2709,19 @@ describe('QueryManager', () => {
         }
       );
 
-      queryManager.query({ query: primeQuery }).then((primeResult) => {
-        const handle = queryManager.watchQuery({ query, returnPartialData: true });
+      return queryManager.query({ query: primeQuery }).then((primeResult) => {
+        const observable = queryManager.watchQuery({ query, returnPartialData: true });
 
-        subscribeAndCount(done, handle, (handleCount, result) => {
-          if (handleCount === 1) {
+        return observableToPromise({ observable },
+          (result) => {
             assert(result.loading);
             assert.deepEqual(result.data, primeData);
-          } else {
+          },
+          (result) => {
             assert(!result.loading);
             assert.deepEqual(result.data, fullData);
-            done();
           }
-        });
+        );
       });
     });
 
@@ -2778,7 +2770,7 @@ describe('QueryManager', () => {
       done();
     });
 
-    it('should refetch the right query when a result is successfully returned', (done) => {
+    it('should refetch the right query when a result is successfully returned', () => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -2825,19 +2817,17 @@ describe('QueryManager', () => {
           result: { data: mutationData },
         }
       );
-      const handle = queryManager.watchQuery({ query });
-      subscribeAndCount(done, handle, (handleCount, result) => {
-        if (handleCount === 1) {
+      const observable = queryManager.watchQuery({ query });
+      return observableToPromise({ observable },
+        (result) => {
           assert.deepEqual(result.data, data);
           queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
-        } else {
-          assert.deepEqual(result.data, secondReqData);
-          done();
-        }
-      });
+        },
+        (result) => assert.deepEqual(result.data, secondReqData)
+      );
     });
 
-    it('should warn but continue when an unknown query name is asked to refetch', (done) => {
+    it('should warn but continue when an unknown query name is asked to refetch', () => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -2884,21 +2874,21 @@ describe('QueryManager', () => {
           result: { data: mutationData },
         }
       );
-      const handle = queryManager.watchQuery({ query });
-      subscribeAndCount(done, handle, (handleCount, result) => {
-        if (handleCount === 1) {
+      const observable = queryManager.watchQuery({ query });
+      return observableToPromise({ observable },
+        (result) => {
           assert.deepEqual(result.data, data);
           queryManager.mutate({ mutation, refetchQueries: ['fakeQuery', 'getAuthors'] });
-        } else {
+        },
+        (result) => {
           assert.deepEqual(result.data, secondReqData);
           assert.include(warned[0], 'Warning: unknown query with name fakeQuery');
           assert.equal(timesWarned, 1);
-          done();
         }
-      });
+      );
     });
 
-    it('should ignore without warning a query name that is asked to refetch with no active subscriptions', (done) => {
+    it('should ignore without warning a query name that is asked to refetch with no active subscriptions', () => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -2946,26 +2936,16 @@ describe('QueryManager', () => {
         }
       );
 
-      let resultsReceived = 0;
-      const temporarySubscription = queryManager.watchQuery({ query }).subscribe({
-        next(result) {
-          if (resultsReceived === 0) {
-            assert.deepEqual(result.data, data);
-            // unsubscribe before the mutation
-            temporarySubscription.unsubscribe();
-            queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
-          } else if (resultsReceived === 1) {
-            // should not be subscribed
-            done(new Error('Returned data when it should have been unsubscribed.'));
-          }
-          resultsReceived++;
-        },
-      });
-      // no warning should have been fired
-      setTimeout(() => {
-        assert.equal(timesWarned, 0);
-        done();
-      }, 10);
+      const observable = queryManager.watchQuery({ query });
+      return observableToPromise({ observable },
+        (result) => {
+          assert.deepEqual(result.data, data);
+        }
+      ).then(() => {
+        // The subscription has been stopped already
+        return queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
+      })
+      .then(() => assert.equal(timesWarned, 0));
     });
 
     afterEach((done) => {
@@ -3010,49 +2990,37 @@ describe('QueryManager', () => {
         });
     });
 
-    it('transforms watchQuery() results', (done) => {
+    it('transforms watchQuery() results', () => {
       response = {data: {foo: 123}};
-      const handle = client.watchQuery({query: gql`{ foo }`});
+      const observable = client.watchQuery({query: gql`{ foo }`});
 
-      subscribeAndCount(done, handle, (handleCount, result) => {
-        if (handleCount === 1) {
+      return observableToPromise({ observable },
+        (result) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
           response = {data: {foo: 456}};
-          handle.refetch();
-        } else {
-          assert.deepEqual(result.data, {foo: 456, transformCount: 2});
-          done();
-        }
-      });
+          observable.refetch();
+        },
+        (result) => assert.deepEqual(result.data, {foo: 456, transformCount: 2})
+      );
     });
 
-    it('does not transform identical watchQuery() results', (done) => {
+    it('does not transform identical watchQuery() results', () => {
       response = {data: {foo: 123}};
-      const handle = client.watchQuery({query: gql`{ foo }`});
+      const observable = client.watchQuery({query: gql`{ foo }`});
 
-      let callCount = 0;
-      handle.subscribe({
-        error: done,
-        next(result) {
-          callCount++;
-          try {
-            assert.equal(callCount, 1, 'observer should only fire once');
-            assert.deepEqual(result.data, {foo: 123, transformCount: 1});
-          } catch (error) {
-            done(error);
-            return;
+      let succeed: Function;
+      return Promise.race([
+        // This will never resolve but *will* fail if we see the wrong number
+        // of callbacks
+        observableToPromise({ observable, shouldResolve: false },
+          (result) => {
+            assert.deepEqual(result.data, { foo: 123, transformCount: 1 });
+            // If a callback triggers before the then, we'll get a test failure
+            observable.refetch().then(() => succeed());
           }
-
-          response = {data: {foo: 123}}; // Ensure we have new response objects.
-          handle.refetch().then(() => {
-            // Skip done() on subsequent calls, because that means we've already failed.  This gives
-            // us better test failure output.
-            if (callCount === 1) {
-              done();
-            }
-          }).catch(done);
-        },
-      });
+        ),
+        new Promise((resolve) => succeed = resolve),
+      ]);
     });
 
     it('transforms mutate() results', () => {
@@ -3094,33 +3062,25 @@ describe('QueryManager', () => {
       });
     });
 
-    it('does not transform identical watchQuery() results, according to the comparator', (done) => {
+    it('does not transform identical watchQuery() results, according to the comparator', () => {
       response = {data: {foo: 123}};
-      const handle = client.watchQuery({query: gql`{ foo }`});
+      const observable = client.watchQuery({query: gql`{ foo }`});
 
-      let callCount = 0;
-      handle.subscribe({
-        error: done,
-        next(result) {
-          callCount++;
-          try {
-            assert.equal(callCount, 1, 'observer should only fire once');
+
+      let succeed: Function;
+      return Promise.race([
+        // This will never resolve but *will* fail if we see the wrong number
+        // of callbacks
+        observableToPromise({ observable, shouldResolve: false },
+          (result) => {
             assert.instanceOf(result.data, Model);
-          } catch (error) {
-            done(error);
-            return;
+            response = {data: {foo: 123}}; // Ensure we have new response objects.
+            // If a callback triggers before the then, we'll get a test failure
+            observable.refetch().then(() => succeed());
           }
-
-          response = {data: {foo: 123}}; // Ensure we have new response objects.
-          handle.refetch().then(() => {
-            // Skip done() on subsequent calls, because that means we've already failed.  This gives
-            // us better test failure output.
-            if (callCount === 1) {
-              done();
-            }
-          }).catch(done);
-        },
-      });
+        ),
+        new Promise((resolve) => succeed = resolve),
+      ]);
     });
 
   });

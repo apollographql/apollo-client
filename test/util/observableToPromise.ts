@@ -1,38 +1,63 @@
 import { ObservableQuery } from '../../src/core/ObservableQuery';
 import { ApolloQueryResult } from '../../src/core/QueryManager';
+import { Subscription } from '../../src/util/Observable';
+
+/**
+ *
+ * @param observable the observable query to subscribe to
+ * @param shouldResolve should we resolve after seeing all our callbacks [default: true]
+ *   (use this if you are racing the promise against another)
+ * @param wait how long to wait after seeing desired callbacks before resolving
+ *   [default: -1 => don't wait]
+ * @param errorCallbacks an expected set of errors
+ */
+export type Options = {
+  observable: ObservableQuery,
+  shouldResolve?: boolean,
+  wait?: number,
+  errorCallbacks?: ((error: Error) => any)[],
+};
+
+export type ResultCallback = ((result: ApolloQueryResult) => any);
 
 // Take an observable and N callbacks, and observe the observable,
 // ensuring it is called exactly N times, resolving once it has done so.
 // Optionally takes a timeout, which it will wait X ms after the Nth callback
 // to ensure it is not called again.
-export default function({
-      observable,
-      wait = -1,
-      errorCallbacks = [],
-    }: {
-      observable: ObservableQuery,
-      wait?: number,
-      errorCallbacks?: ((error: Error) => any)[],
-    },
-    ...cbs: ((result: ApolloQueryResult) => any)[]): Promise<any[]> {
-  return new Promise((resolve, reject) => {
+export function observableToPromiseAndSubscription({
+    observable,
+    shouldResolve = true,
+    wait = -1,
+    errorCallbacks = [],
+  }: Options,
+  ...cbs: ResultCallback[]
+): { promise: Promise<any[]>, subscription: Subscription } {
+
+  let subscription: Subscription;
+  const promise = new Promise((resolve, reject) => {
     let errorIndex = 0;
     let cbIndex = 0;
     const results: any[] = [];
 
-    let subscription: any;
+    const tryToResolve = () => {
+      if (!shouldResolve) {
+        return;
+      }
 
-    function tryToResolve() {
-      if (cbIndex === cbs.length && errorIndex === errorCallbacks.length) {
+      const done = () => {
         subscription.unsubscribe();
+        // XXX: we could pass a few other things out here?
+        resolve(results);
+      };
 
+      if (cbIndex === cbs.length && errorIndex === errorCallbacks.length) {
         if (wait === -1) {
-          resolve(results);
+          done();
         } else {
-          setTimeout(() => resolve(results), wait);
+          setTimeout(done, wait);
         }
       }
-    }
+    };
 
     subscription = observable.subscribe({
       next(result) {
@@ -64,4 +89,16 @@ export default function({
       },
     });
   });
+
+  return {
+    promise,
+    subscription,
+  };
 };
+
+export default function(
+  options: Options,
+  ...cbs: ResultCallback[]
+): Promise<any[]> {
+  return observableToPromiseAndSubscription(options, ...cbs).promise;
+}

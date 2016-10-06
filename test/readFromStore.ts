@@ -2,7 +2,6 @@ import { assert } from 'chai';
 import * as _ from 'lodash';
 
 import {
-  readFragmentFromStore,
   readQueryFromStore,
 } from '../src/data/readFromStore';
 
@@ -26,14 +25,13 @@ describe('reading from the store', () => {
     }, /exactly one/);
 
     assert.throws(() => {
-      readFragmentFromStore({
+      readQueryFromStore({
         store: {},
-        fragment: gql`
-          { name }
+        query: gql`
+          fragment x on y { name }
         `,
-        rootId: 'asdf',
       });
-    }, /be a fragment/);
+    }, /contain a query/);
   });
 
   it('runs a basic query', () => {
@@ -451,18 +449,17 @@ describe('reading from the store', () => {
       nullField: null,
     } as StoreObject;
 
-    const store = { abcd: result } as NormalizedCache;
+    const store = { 'ROOT_QUERY': result } as NormalizedCache;
 
     assert.doesNotThrow(() => {
-      readFragmentFromStore({
+      readQueryFromStore({
         store,
-        fragment: gql`
-          fragment FragmentName on Item {
+        query: gql`
+          {
             stringField,
             missingField
           }
         `,
-        rootId: 'abcd',
         returnPartialData: true,
       });
     }, /field missingField on object/);

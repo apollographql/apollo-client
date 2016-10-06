@@ -66,30 +66,6 @@ export function readQueryFromStore({
   });
 }
 
-export function readFragmentFromStore({
-  store,
-  fragment,
-  rootId,
-  variables,
-  returnPartialData,
-}: {
-  store: NormalizedCache,
-  fragment: Document,
-  rootId: string,
-  variables?: Object,
-  returnPartialData?: boolean,
-}): Object {
-  const fragmentDef = getFragmentDefinition(fragment);
-
-  return readSelectionSetFromStore({
-    store,
-    rootId,
-    selectionSet: fragmentDef.selectionSet,
-    variables,
-    returnPartialData,
-  });
-}
-
 export function readSelectionSetFromStore({
   store,
   rootId,

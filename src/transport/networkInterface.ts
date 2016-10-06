@@ -72,7 +72,7 @@ export interface RequestAndOptions {
 }
 
 export interface ResponseAndOptions {
-  response: IResponse;
+  response: GraphQLResult;
   options: RequestInit;
 }
 
@@ -177,14 +177,12 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       request,
       options,
     }).then(this.fetchFromRemoteEndpoint.bind(this))
-      .then(response => {
-        this.applyAfterwares({
-          response: response as IResponse,
+      .then(response => (response as IResponse).json())
+      .then(response => this.applyAfterwares({
+          response,
           options,
-        });
-        return response;
-      })
-      .then(result => (result as IResponse).json())
+      }))
+      .then(({ response }) => response)
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(

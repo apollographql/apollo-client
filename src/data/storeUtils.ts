@@ -88,9 +88,13 @@ export function storeKeyNameFromField(field: Field, variables?: Object): string 
 }
 
 export function storeKeyNameFromFieldNameAndArgs(fieldName: string, args?: Object): string {
-  const stringifiedArgs: string = JSON.stringify(args);
+  if (args) {
+    const stringifiedArgs: string = JSON.stringify(args);
 
-  return `${fieldName}(${stringifiedArgs})`;
+    return `${fieldName}(${stringifiedArgs})`;
+  }
+
+  return fieldName;
 }
 
 export function resultKeyNameFromField(field: Field): string {

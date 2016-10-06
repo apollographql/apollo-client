@@ -26,7 +26,6 @@ import {
 
 import {
   readQueryFromStore,
-  readFragmentFromStore,
 } from './data/readFromStore';
 
 import {
@@ -66,7 +65,6 @@ export {
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,
-  readFragmentFromStore,
   addTypenameToSelectionSet as addTypename,
   writeQueryToStore,
   writeFragmentToStore,

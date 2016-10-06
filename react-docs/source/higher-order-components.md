@@ -70,7 +70,7 @@ The config object can include one or more of the following keys:
 
 The `graphql` function returns another function, which takes any React component and returns a new React component class wrapped with the specified query. This is similar to how `connect` works in Redux.
 
-For details about how to use the `graphql` higher-order-component in a variety of situations, read about how to use it with [queries](/react/queries) and [mutations](/react/mutations).
+For details about how to use the `graphql` higher-order-component in a variety of situations, read about how to use it with [queries](/react/queries.html) and [mutations](/react/mutations.html).
 
 <h2 id="withApollo">withApollo</h2>
 

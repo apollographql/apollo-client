@@ -38,6 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "es6-promise": "^4.0.3",
+    "graphql-anywhere": "^0.1.11",
     "graphql-tag": "^0.1.13",
     "lodash.assign": "^4.0.8",
     "lodash.clonedeep": "^4.3.2",
@@ -77,7 +78,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "colors": "^1.1.2",
-    "es6-promise": "^3.1.2",
+    "es6-promise": "^4.0.4",
     "typed-graphql": "1.0.2",
     "fetch-mock": "^5.5.0",
     "grunt": "1.0.1",

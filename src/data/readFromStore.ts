@@ -3,17 +3,8 @@ import {
 } from './diffAgainstStore';
 
 import {
-  SelectionSet,
   Document,
-  OperationDefinition,
-  FragmentDefinition,
 } from 'graphql';
-
-import {
-  getQueryDefinition,
-  getFragmentDefinition,
-  FragmentMap,
-} from '../queries/getFromAST';
 
 import {
   NormalizedCache,
@@ -46,43 +37,12 @@ export function readQueryFromStore({
   query,
   variables,
   returnPartialData = false,
-  fragmentMap,
 }: {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
   returnPartialData?: boolean,
-  fragmentMap?: FragmentMap,
 }): Object {
-  const queryDef = getQueryDefinition(query);
-
-  return readSelectionSetFromStore({
-    store,
-    rootId: 'ROOT_QUERY',
-    selectionSet: queryDef.selectionSet,
-    variables,
-    returnPartialData,
-    fragmentMap,
-  });
-}
-
-export function readSelectionSetFromStore({
-  store,
-  rootId,
-  selectionSet,
-  variables,
-  returnPartialData = false,
-  fragmentMap,
-}: {
-  store: NormalizedCache,
-  rootId: string,
-  selectionSet: SelectionSet,
-  variables: Object,
-  returnPartialData?: boolean,
-  fragmentMap?: FragmentMap,
-}): Object {
-  const query = makeDocument(selectionSet, rootId, fragmentMap);
-
   const {
     result,
   } = diffQueryAgainstStore({
@@ -93,33 +53,4 @@ export function readSelectionSetFromStore({
   });
 
   return result;
-}
-
-
-// Shim to use graphql-anywhere, to be removed
-function makeDocument(
-  selectionSet: SelectionSet,
-  rootId: string,
-  fragmentMap: FragmentMap
-): Document {
-  if (rootId !== 'ROOT_QUERY') {
-    throw new Error('only supports query');
-  }
-
-  const op: OperationDefinition = {
-    kind: 'OperationDefinition',
-    operation: 'query',
-    selectionSet,
-  };
-
-  const frags: FragmentDefinition[] = fragmentMap ?
-    Object.keys(fragmentMap).map((name) => fragmentMap[name]) :
-    [];
-
-  const doc: Document = {
-    kind: 'Document',
-    definitions: [op, ...frags],
-  };
-
-  return doc;
 }

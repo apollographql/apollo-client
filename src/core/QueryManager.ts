@@ -47,12 +47,13 @@ import {
   /* tslint:disable */
   SelectionSet,
   /* tslint:enable */
+  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
 
 import {
-  readSelectionSetFromStore,
+  readQueryFromStore,
 } from '../data/readFromStore';
 
 import {
@@ -343,13 +344,12 @@ export class QueryManager {
         } else {
           try {
             const resultFromStore = {
-              data: readSelectionSetFromStore({
+              data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
-                rootId: queryStoreValue.query.id,
-                selectionSet: queryStoreValue.query.selectionSet,
+                query: makeDocument(
+                  queryStoreValue.query.selectionSet, 'ROOT_QUERY', queryStoreValue.fragmentMap),
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
-                fragmentMap: queryStoreValue.fragmentMap,
               }),
               loading: queryStoreValue.loading,
             };
@@ -619,22 +619,20 @@ export class QueryManager {
       // results including previous optimistic updates. Otherwise, apply it
       // on top of the real data only.
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
-      rootId: 'ROOT_QUERY',
-      selectionSet: querySelectionSet,
+      query: makeDocument(querySelectionSet, 'ROOT_QUERY', createFragmentMap(queryFragments || [])),
       variables: queryVariables,
-      fragmentMap: createFragmentMap(queryFragments || []),
       returnPartialData: false,
     };
     try {
       // first try reading the full result from the store
-      const data = readSelectionSetFromStore(readOptions);
+      const data = readQueryFromStore(readOptions);
       return { data, partial: false };
     } catch (e) {
       // next, try reading partial results, if we want them
       if (queryOptions.returnPartialData || queryOptions.noFetch) {
         try {
           readOptions.returnPartialData = true;
-          const data = readSelectionSetFromStore(readOptions);
+          const data = readQueryFromStore(readOptions);
           return { data, partial: true };
         } catch (e) {
           // fall through
@@ -838,13 +836,11 @@ export class QueryManager {
             // ensure result is combined with data already in store
             // this will throw an error if there are missing fields in
             // the results if returnPartialData is false.
-            resultFromStore = readSelectionSetFromStore({
+            resultFromStore = readQueryFromStore({
               store: this.getApolloState().data,
-              rootId: querySS.id,
-              selectionSet: querySS.selectionSet,
               variables,
               returnPartialData: returnPartialData || noFetch,
-              fragmentMap,
+              query,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */
@@ -998,4 +994,32 @@ export class QueryManager {
     this.idCounter++;
     return requestId;
   }
+}
+
+// Shim to use graphql-anywhere, to be removed
+function makeDocument(
+  selectionSet: SelectionSet,
+  rootId: string,
+  fragmentMap: FragmentMap
+): Document {
+  if (rootId !== 'ROOT_QUERY') {
+    throw new Error('only supports query');
+  }
+
+  const op: OperationDefinition = {
+    kind: 'OperationDefinition',
+    operation: 'query',
+    selectionSet,
+  };
+
+  const frags: FragmentDefinition[] = fragmentMap ?
+    Object.keys(fragmentMap).map((name) => fragmentMap[name]) :
+    [];
+
+  const doc: Document = {
+    kind: 'Document',
+    definitions: [op, ...frags],
+  };
+
+  return doc;
 }

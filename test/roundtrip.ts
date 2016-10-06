@@ -282,7 +282,6 @@ function storeRoundtrip(query: Document, result: any, variables = {}) {
     store,
     query,
     variables,
-    fragmentMap,
   });
 
   assert.deepEqual(reconstructedResult, result);

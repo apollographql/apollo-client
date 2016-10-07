@@ -126,15 +126,28 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 })(Profile);
 ```
 
+All of these function-based forms of `options` will be recalculated whenever the props change.
+
+<h2 id="graphql-skip">Skipping an operation</h2>
+
 Sometimes you may want to skip a query based on the available information, to do this you can pass `skip: true` as part of the options. This is useful if you want to ignore a query if a user isn't authenticated:
 
 ```js
 const ProfileWithData = graphql(CurrentUserForLayout, {
-  options: (ownProps) => ({ skip: !ownProps.authenticated })
+  skip: (ownProps) => !ownProps.authenticated,
 })(Profile);
 ```
 
-All of these function-based forms of `options` will be recalculated whenever the props change.
+This can also be represented as an object instead of a method that takes props:
+
+```js
+const ProfileWithData = graphql(CurrentUserForLayout, {
+  skip: true,
+})(Profile);
+```
+
+> This does not pass `data` or run the `options` or `props` methods if passed. It effectively bypasses the HOC.
+
 
 <h2 id="graphql-props">Controlling child props</h2>
 

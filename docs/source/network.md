@@ -103,7 +103,7 @@ It is possible to use afterware with the network interface created via `createNe
 In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.
 Each object must contain an `applyAfterware` method with the following parameters:
 
-- `{ response }: object` A object contain the response. (GraphQLResult).
+- `{ response }: object` A object contain the HTTP response of a GraphQL fetch.
 - `next: function` This function pushes the HTTP response onward through the afterware.
 
 This example shows how you'd create a afterware.
@@ -121,10 +121,8 @@ const networkInterface = createNetworkInterface('/graphql');
 
 networkInterface.useAfter([{
   applyAfterware({ response }, next) {
-    if (response.errors) {
-      errors.forEach(error => {
-        console.error('Error from server', error);
-      }
+    if (response.status === 401) {
+      logout();
     }
     next();
   }
@@ -136,7 +134,8 @@ const client = new ApolloClient({
 ```
 
 The above example shows the use of a single afterware passed directly to `.useAfter()`.
-It checks to see if the response has errors in it. and if it does, it will print them to the browser console.
+It checks to see if the response status code is equal to 401 and if it is then we will
+logout the user from the application.
 
 The following example shows the use of multiple afterwares passed as an array:
 
@@ -148,10 +147,8 @@ const networkInterface = createNetworkInterface('/graphql');
 
 const exampleWare1 = {
   applyAfterware({ response }, next) {
-    if (response.errors) {
-      errors.forEach(error => {
-        console.error('Error from server', error);
-      }
+    if (response.status === 500) {
+      console.error('Server returned an error');
     }
     next();
   }
@@ -159,8 +156,7 @@ const exampleWare1 = {
 
 const exampleWare2 = {
   applyAfterware({ response }, next) {
-    if (response.me === null) {
-      // user is not logged in.
+    if (response.status === 200) {
       redirectTo('/');
     }
     next();

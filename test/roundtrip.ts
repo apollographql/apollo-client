@@ -141,6 +141,31 @@ describe('roundtrip', () => {
       });
     });
 
+    it('should resolve fields it can on interface with non matching inline fragments', () => {
+      storeRoundtrip(gql`
+        query {
+          dark_forces {
+            __typename
+            name
+            ... on Droid {
+              model
+            }
+          }
+        }`, {
+        dark_forces: [
+          {
+            __typename: 'Droid',
+            name: '8t88',
+            model: '88',
+          },
+          {
+            __typename: 'Darth',
+            name: 'Anakin Skywalker',
+          },
+        ],
+      });
+    });
+
     it('should throw an error on two of the same inline fragment types', () => {
       assert.throws(() => {
         storeRoundtrip(gql`

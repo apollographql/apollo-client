@@ -172,8 +172,8 @@ The `renderToStringWithData` function simplifies the above and simply returns th
 import { renderToStringWithData } from "react-apollo/server"
 
 // during request
-renderToStringWithData(app).then((content, state) => {
-  const html = <Html content={content} state={state} />;
+renderToStringWithData(app).then(({ markup, initialState }) => {
+  const html = <Html content={markup} state={initialState} />;
 
   res.status(200);
   res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);

@@ -1,7 +1,5 @@
-import { GraphQLResult } from 'graphql';
-
 export interface AfterwareResponse {
-  response: GraphQLResult;
+  response: IResponse;
   options: RequestInit;
 }
 

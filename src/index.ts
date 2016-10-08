@@ -30,7 +30,6 @@ import {
 
 import {
   writeQueryToStore,
-  writeFragmentToStore,
 } from './data/writeToStore';
 
 import {
@@ -67,7 +66,6 @@ export {
   readQueryFromStore,
   addTypenameToSelectionSet as addTypename,
   writeQueryToStore,
-  writeFragmentToStore,
   print as printAST,
   createFragmentMap,
   ApolloError,

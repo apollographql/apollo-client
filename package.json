@@ -82,7 +82,7 @@
     "typed-graphql": "1.0.2",
     "fetch-mock": "^5.5.0",
     "grunt": "1.0.1",
-    "grunt-tslint": "3.2.1",
+    "grunt-tslint": "3.3.0",
     "gzip-size": "^3.0.0",
     "isomorphic-fetch": "^2.2.1",
     "istanbul": "^0.4.5",

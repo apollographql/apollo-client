@@ -47,6 +47,16 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
    * A GraphQL document that consists of a single query to be sent down to the
    * server.
    */
+  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a lot of tests.
+  query: Document;
+}
+
+// This interface is deprecated because we no longer pass around fragments separately in the core.
+export interface DeprecatedWatchQueryOptions extends ModifiableWatchQueryOptions {
+  /**
+   * A GraphQL document that consists of a single query to be sent down to the
+   * server.
+   */
   query: Document;
 
   /**

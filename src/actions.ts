@@ -1,4 +1,5 @@
 import {
+  Document,
   GraphQLResult,
   SelectionSet,
   FragmentDefinition,
@@ -111,9 +112,8 @@ export function isMutationErrorAction(action: ApolloAction): action is MutationE
 
 export interface UpdateQueryResultAction {
   type: 'APOLLO_UPDATE_QUERY_RESULT';
-  queryVariables: any;
-  querySelectionSet: SelectionSet;
-  queryFragments: FragmentDefinition[];
+  variables: any;
+  document: Document;
   newResult: Object;
 }
 

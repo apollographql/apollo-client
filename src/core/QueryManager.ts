@@ -346,8 +346,7 @@ export class QueryManager {
             const resultFromStore = {
               data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
-                query: makeDocument(
-                  queryStoreValue.query.selectionSet, 'ROOT_QUERY', queryStoreValue.fragmentMap),
+                query: queryStoreValue.query,
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
               }),
@@ -609,9 +608,8 @@ export class QueryManager {
 
   public getCurrentQueryResult(observableQuery: ObservableQuery, isOptimistic = false) {
     const {
-      queryVariables,
-      querySelectionSet,
-      queryFragments } = this.getQueryParts(observableQuery);
+      variables,
+      document } = this.getQueryParts(observableQuery);
 
     const queryOptions = observableQuery.options;
     const readOptions = {
@@ -619,8 +617,8 @@ export class QueryManager {
       // results including previous optimistic updates. Otherwise, apply it
       // on top of the real data only.
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
-      query: makeDocument(querySelectionSet, 'ROOT_QUERY', createFragmentMap(queryFragments || [])),
-      variables: queryVariables,
+      query: document,
+      variables,
       returnPartialData: false,
     };
     try {
@@ -656,17 +654,15 @@ export class QueryManager {
     }
 
     const {
-      queryVariables,
-      querySelectionSet,
-      queryFragments } = this.getQueryParts(observableQuery);
+      variables,
+      document } = this.getQueryParts(observableQuery);
 
     const { data } = this.getCurrentQueryResult(observableQuery, isOptimistic);
 
     return {
       previousResult: data,
-      queryVariables,
-      querySelectionSet,
-      queryFragments,
+      variables,
+      document
     };
   }
 
@@ -680,32 +676,21 @@ export class QueryManager {
   }
 
   // XXX: I think we just store this on the observable query at creation time
+  // TODO LATER: rename this function. Its main role is to apply the transform, nothing else!
   private getQueryParts(observableQuery: ObservableQuery) {
     const queryOptions = observableQuery.options;
 
-    let fragments = queryOptions.fragments;
-    let queryDefinition = getQueryDefinition(queryOptions.query);
+    let transformedDoc = observableQuery.options.query;
 
     if (this.queryTransformer) {
-      const doc = {
-        kind: 'Document',
-        definitions: [
-          queryDefinition,
-            ...(fragments || []),
-        ],
-      };
-
-      const transformedDoc = applyTransformers(doc, [this.queryTransformer]);
-
-      queryDefinition = getQueryDefinition(transformedDoc);
-      fragments = getFragmentDefinitions(transformedDoc);
+      // TODO XXX: do we need to make a copy of the document before transforming it?
+      transformedDoc = applyTransformers(transformedDoc, [this.queryTransformer]);
     }
 
     return {
-      queryVariables: queryOptions.variables,
-      querySelectionSet: queryDefinition.selectionSet,
-      queryFragments: fragments,
-    };
+      variables: queryOptions.variables,
+      document: transformedDoc,
+    }
   }
 
   private collectResultBehaviorsFromUpdateQueries(
@@ -729,25 +714,23 @@ export class QueryManager {
       queryIds.forEach((queryId) => {
         const {
           previousResult,
-          queryVariables,
-          querySelectionSet,
-          queryFragments,
+          variables,
+          document,
         } = this.getQueryWithPreviousResult(queryId, isOptimistic);
 
         const newResult = tryFunctionOrLogError(() => reducer(
           previousResult, {
             mutationResult,
             queryName,
-            queryVariables,
+            variables,
           }));
 
         if (newResult) {
           resultBehaviors.push({
             type: 'QUERY_RESULT',
             newResult,
-            queryVariables,
-            querySelectionSet,
-            queryFragments,
+            variables,
+            document,
           });
         }
       });
@@ -766,13 +749,9 @@ export class QueryManager {
   //    query.
   private transformQueryDocument(options: WatchQueryOptions): {
     queryDoc: Document,
-    fragmentMap: FragmentMap,
+    // fragmentMap: FragmentMap,
   } {
-    const {
-      query,
-      fragments = [],
-    } = options;
-    let queryDoc = addFragmentsToDocument(query, fragments);
+    let queryDoc = options.query;
 
     // Apply the query transformer if one has been provided
     if (this.queryTransformer) {
@@ -781,7 +760,7 @@ export class QueryManager {
 
     return {
       queryDoc,
-      fragmentMap: createFragmentMap(getFragmentDefinitions(queryDoc)),
+      // fragmentMap: createFragmentMap(getFragmentDefinitions(queryDoc)),
     };
   }
 
@@ -877,7 +856,6 @@ export class QueryManager {
 
     const {
       queryDoc,
-      fragmentMap,
     } = this.transformQueryDocument(options);
 
     const queryDef = getQueryDefinition(queryDoc);
@@ -997,6 +975,8 @@ export class QueryManager {
 }
 
 // Shim to use graphql-anywhere, to be removed
+// TODO REFACTOR: delete this.
+/*
 function makeDocument(
   selectionSet: SelectionSet,
   rootId: string,
@@ -1023,3 +1003,4 @@ function makeDocument(
 
   return doc;
 }
+*/

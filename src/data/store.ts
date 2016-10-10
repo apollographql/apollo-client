@@ -104,12 +104,11 @@ export function data(
 
       const newState = writeSelectionSetToStore({
         result: action.result.data,
-        dataId: queryStoreValue.query.id,
-        selectionSet: queryStoreValue.query.selectionSet,
+        dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
+        document: queryStoreValue.document, // TODO: What's in a selection set that's not in a doc?
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
       });
 
       return newState;

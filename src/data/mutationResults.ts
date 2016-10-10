@@ -277,7 +277,7 @@ export function mutationResultQueryResultReducer(state: NormalizedCache, {
 export type MutationQueryReducer = (previousResult: Object, options: {
   mutationResult: Object,
   queryName: Object,
-  queryVariables: Object,
+  variables: Object,
 }) => Object;
 
 export type MutationQueryReducersMap = {

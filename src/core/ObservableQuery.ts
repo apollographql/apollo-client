@@ -28,7 +28,7 @@ export interface FetchMoreOptions {
 }
 
 export interface UpdateQueryOptions {
-  queryVariables: Object;
+  variables: Object;
 }
 
 export class ObservableQuery extends Observable<ApolloQueryResult> {
@@ -184,7 +184,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         })
         .then((fetchMoreResult) => {
           const reducer = fetchMoreOptions.updateQuery;
-          const mapFn = (previousResult: any, { queryVariables }: {queryVariables: any }) => {
+          const mapFn = (previousResult: any, { variables }: {variables: any }) => {
+
+            // TODO REFACTOR: reached max recursion depth (figuratively). Continue renaming to variables further down when we have time.
+            const queryVariables = variables;
             return reducer(
               previousResult, {
                 fetchMoreResult,
@@ -199,20 +202,19 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.updateQuery = (mapFn) => {
       const {
         previousResult,
-        queryVariables,
-        querySelectionSet,
-        queryFragments = [],
+        variables,
+        document,
       } = this.queryManager.getQueryWithPreviousResult(this.queryId);
+
       const newResult = tryFunctionOrLogError(
-        () => mapFn(previousResult, { queryVariables }));
+        () => mapFn(previousResult, { variables }));
 
       if (newResult) {
         this.queryManager.store.dispatch({
           type: 'APOLLO_UPDATE_QUERY_RESULT',
           newResult,
-          queryVariables,
-          querySelectionSet,
-          queryFragments,
+          variables,
+          document,
         });
       }
     };

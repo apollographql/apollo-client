@@ -18,6 +18,7 @@ import {
 } from '../data/storeUtils';
 
 import {
+  Document,
   SelectionSet,
   GraphQLError,
 } from 'graphql';
@@ -31,7 +32,7 @@ export interface QueryStore {
 
 export interface QueryStoreValue {
   queryString: string;
-  query: SelectionSetWithRoot;
+  query: Document;
   variables: Object;
   previousVariables: Object;
   loading: boolean;

@@ -6,7 +6,6 @@ import assign = require('lodash.assign');
 
 import {
   getQueryDefinition,
-  getFragmentDefinition,
   FragmentMap,
 } from '../queries/getFromAST';
 
@@ -20,7 +19,6 @@ import {
 import {
   OperationDefinition,
   SelectionSet,
-  FragmentDefinition,
   Field,
   Document,
 } from 'graphql';
@@ -47,55 +45,6 @@ import {
 import {
   ApolloError,
 } from '../errors/ApolloError';
-
-// import {
-//   printAST,
-// } from './debug';
-
-/**
- * Convert a nested GraphQL result into a normalized store, where each object from the schema
- * appears exactly once.
- * @param  {Object} result Arbitrary nested JSON, returned from the GraphQL server
- * @param  {String} fragment The GraphQL fragment used to fetch the data in result
- * @param  {SelectionSet} selectionSet The parsed selection set for the subtree of the query this
- *                                       result represents
- * @param  {Object} store The store to merge into
- * @return {Object} The resulting store
- */
-export function writeFragmentToStore({
-  result,
-  fragment,
-  store = {} as NormalizedCache,
-  variables,
-  dataIdFromObject = null,
-}: {
-  result: Object,
-  fragment: Document,
-  store?: NormalizedCache,
-  variables?: Object,
-  dataIdFromObject?: IdGetter,
-}): NormalizedCache {
-  // Argument validation
-  if (!fragment) {
-    throw new Error('Must pass fragment.');
-  }
-
-  const parsedFragment: FragmentDefinition = getFragmentDefinition(fragment);
-  const selectionSet: SelectionSet = parsedFragment.selectionSet;
-
-  if (!(result as any)['id']) {
-    throw new Error('Result must have id when writing fragment to store.');
-  }
-
-  return writeSelectionSetToStore({
-    dataId: (result as any)['id'],
-    result,
-    selectionSet,
-    store,
-    variables,
-    dataIdFromObject,
-  });
-}
 
 /**
  * Writes the result of a query to the store.

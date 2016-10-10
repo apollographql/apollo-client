@@ -860,11 +860,6 @@ export class QueryManager {
 
     const queryDef = getQueryDefinition(queryDoc);
     const queryString = print(queryDoc);
-    const querySS = {
-      id: 'ROOT_QUERY',
-      typeName: 'Query',
-      selectionSet: queryDef.selectionSet,
-    } as SelectionSetWithRoot;
 
     let storeResult: any;
     let needToFetch: boolean = forceFetch;
@@ -892,13 +887,12 @@ export class QueryManager {
     this.store.dispatch({
       type: 'APOLLO_QUERY_INIT',
       queryString,
-      query: querySS,
+      document: queryDoc,
       variables,
       forceFetch,
       returnPartialData: returnPartialData || noFetch,
       queryId,
       requestId,
-      fragmentMap,
       // we store the old variables in order to trigger "loading new variables"
       // state if we know we will go to the server
       storePreviousVariables: shouldFetch,
@@ -911,7 +905,7 @@ export class QueryManager {
         type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: { data: storeResult },
         variables,
-        query: querySS,
+        document: queryDoc,
         complete: !shouldFetch,
         queryId,
       });
@@ -922,9 +916,7 @@ export class QueryManager {
         requestId,
         queryId,
         query: queryDoc,
-        querySS,
         options,
-        fragmentMap,
       });
     }
 

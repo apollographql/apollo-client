@@ -4,6 +4,7 @@ import {
 } from './store';
 
 import {
+  Document,
   GraphQLResult,
   SelectionSet,
   FragmentDefinition,
@@ -62,9 +63,8 @@ export type MutationArrayDeleteBehavior = {
 
 export type MutationQueryResultBehavior = {
   type: 'QUERY_RESULT';
-  queryVariables: any;
-  querySelectionSet: SelectionSet;
-  queryFragments: FragmentDefinition[];
+  variables: any;
+  document: Document;
   newResult: Object;
 };
 

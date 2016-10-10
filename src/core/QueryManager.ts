@@ -770,17 +770,13 @@ export class QueryManager {
   private fetchRequest({
     requestId,
     queryId,
-    query,
-    querySS,
+    document,
     options,
-    fragmentMap,
   }: {
     requestId: number,
     queryId: string,
-    query: Document,
-    querySS: SelectionSetWithRoot,
+    document: Document,
     options: WatchQueryOptions,
-    fragmentMap: FragmentMap,
   }): Promise<GraphQLResult> {
     const {
       variables,
@@ -788,9 +784,9 @@ export class QueryManager {
       returnPartialData,
     } = options;
     const request: Request = {
-      query,
+      query: document,
       variables,
-      operationName: getOperationName(query),
+      operationName: getOperationName(document),
     };
 
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
@@ -819,7 +815,7 @@ export class QueryManager {
               store: this.getApolloState().data,
               variables,
               returnPartialData: returnPartialData || noFetch,
-              query,
+              query: document,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */
@@ -915,7 +911,7 @@ export class QueryManager {
       return this.fetchRequest({
         requestId,
         queryId,
-        query: queryDoc,
+        document: queryDoc,
         options,
       });
     }

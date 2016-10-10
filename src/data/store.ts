@@ -7,7 +7,8 @@ import {
 } from '../actions';
 
 import {
-  writeSelectionSetToStore,
+  writeSelectionSetToStore, // TODO REFACTOR: remove this import.
+  writeResultToStore,
 } from './writeToStore';
 
 import assign = require('lodash.assign');
@@ -102,10 +103,10 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      const newState = writeSelectionSetToStore({
+      const newState = writeResultToStore({
         result: action.result.data,
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
-        document: queryStoreValue.document, // TODO: What's in a selection set that's not in a doc?
+        document: queryStoreValue.query, // TODO: What's in a selection set that's not in a doc?
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,

@@ -40,13 +40,12 @@ export function isQueryErrorAction(action: ApolloAction): action is QueryErrorAc
 export interface QueryInitAction {
   type: 'APOLLO_QUERY_INIT';
   queryString: string;
-  query: SelectionSetWithRoot;
+  document: Document;
   variables: Object;
   forceFetch: boolean;
   returnPartialData: boolean;
   queryId: string;
   requestId: number;
-  fragmentMap: FragmentMap;
   storePreviousVariables: boolean;
 }
 

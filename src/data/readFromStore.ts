@@ -21,7 +21,6 @@ import {
 
 import graphqlAnywhere, {
   Resolver,
-  ResultMapper,
 } from 'graphql-anywhere';
 
 export type StoreReadOptions = {
@@ -91,7 +90,7 @@ export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error
 
 type ReadStoreContext = {
   store: NormalizedCache;
-  throwOnMissingField: boolean;
+  returnPartialData: boolean;
   hasMissingField: boolean;
 }
 
@@ -106,7 +105,7 @@ const readStoreResolver: Resolver = (
   const fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
-    if (context.throwOnMissingField) {
+    if (! context.returnPartialData) {
       throw new ApolloError({
         errorMessage: `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
 Perhaps you want to use the \`returnPartialData\` option?`,
@@ -133,8 +132,6 @@ Perhaps you want to use the \`returnPartialData\` option?`,
   return fieldValue;
 };
 
-const mapper: ResultMapper = (childValues, rootValue) => childValues;
-
 /**
  * Given a store and a query, return as much of the result as possible and
  * identify if any data was missing from the store.
@@ -156,14 +153,13 @@ export function diffQueryAgainstStore({
 }): DiffResult {
   const context: ReadStoreContext = {
     store,
-    throwOnMissingField: !options.returnPartialData,
+    returnPartialData: options.returnPartialData,
 
     // Filled in during execution
     hasMissingField: false,
   };
 
-  const result = graphqlAnywhere(
-    readStoreResolver, query, 'ROOT_QUERY', context, variables, mapper);
+  const result = graphqlAnywhere(readStoreResolver, query, 'ROOT_QUERY', context, variables);
 
   return {
     result,

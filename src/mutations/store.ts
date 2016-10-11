@@ -7,7 +7,6 @@ import {
 } from '../actions';
 
 import {
-  Document,
   SelectionSet,
 } from 'graphql';
 
@@ -19,7 +18,6 @@ export interface MutationStore {
 
 export interface MutationStoreValue {
   mutationString: string;
-  mutation: Document;
   variables: Object;
   loading: boolean;
   error: Error;
@@ -40,7 +38,6 @@ export function mutations(
 
     newState[action.mutationId] = {
       mutationString: action.mutationString,
-      mutation: action.mutation,
       variables: action.variables,
       loading: true,
       error: null,

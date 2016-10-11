@@ -1,3 +1,5 @@
+import gql from 'graphql-tag';
+
 import {
   ApolloAction,
   isQueryResultAction,
@@ -124,7 +126,7 @@ export function data(
       let newState = writeResultToStore({
         result: constAction.result.data,
         dataId: 'ROOT_MUTATION',
-        document: queryStoreValue.mutation,
+        document: gql`${queryStoreValue.mutationString}`,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
@@ -136,7 +138,7 @@ export function data(
             behavior,
             result: constAction.result,
             variables: queryStoreValue.variables,
-            document: queryStoreValue.mutation,
+            document: gql`${queryStoreValue.mutationString}`,
             config,
           };
 

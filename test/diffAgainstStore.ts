@@ -108,9 +108,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        options: {
-          returnPartialData: false,
-        },
+        returnPartialData: false,
       });
     }, /No fragment/);
   });
@@ -151,9 +149,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        options: {
-          returnPartialData: false,
-        },
+        returnPartialData: false,
       });
     });
   });
@@ -194,9 +190,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        options: {
-          returnPartialData: false,
-        },
+        returnPartialData: false,
       });
     });
   });
@@ -238,9 +232,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        options: {
-          returnPartialData: false,
-        },
+        returnPartialData: false,
       });
     });
   });
@@ -283,9 +275,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        options: {
-          returnPartialData: false,
-        },
+        returnPartialData: false,
       });
     });
   });
@@ -388,9 +378,7 @@ describe('diffing queries against the store', () => {
         store,
         query: simpleQuery,
         variables: null,
-        options: {
-          returnPartialData: false,
-        },
+        returnPartialData: false,
       });
     });
   });

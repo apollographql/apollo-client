@@ -23,10 +23,6 @@ import graphqlAnywhere, {
   Resolver,
 } from 'graphql-anywhere';
 
-export type StoreReadOptions = {
-  returnPartialData: boolean;
-}
-
 export type DiffResult = {
   result?: any;
   isMissing?: boolean;
@@ -36,7 +32,7 @@ export type ReadQueryOptions = {
   store: NormalizedCache,
   query: Document,
   variables?: Object,
-  options?: StoreReadOptions,
+  returnPartialData?: boolean,
 }
 
 /**
@@ -58,12 +54,12 @@ export function readQueryFromStore({
   store,
   query,
   variables,
-  options = {} as StoreReadOptions,
+  returnPartialData = false,
 }: ReadQueryOptions): Object {
   const { result } = diffQueryAgainstStore({
     query,
     store,
-    options,
+    returnPartialData,
     variables,
   });
 
@@ -146,11 +142,11 @@ export function diffQueryAgainstStore({
   store,
   query,
   variables,
-  options = { returnPartialData: true } as StoreReadOptions,
+  returnPartialData = true,
 }: ReadQueryOptions): DiffResult {
   const context: ReadStoreContext = {
     store,
-    returnPartialData: options.returnPartialData,
+    returnPartialData,
 
     // Filled in during execution
     hasMissingField: false,

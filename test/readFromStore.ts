@@ -460,9 +460,7 @@ describe('reading from the store', () => {
             missingField
           }
         `,
-        options: {
-          returnPartialData: true,
-        },
+        returnPartialData: true,
       });
     }, /field missingField on object/);
   });

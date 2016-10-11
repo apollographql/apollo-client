@@ -54,6 +54,7 @@ import { print } from 'graphql-tag/printer';
 
 import {
   readQueryFromStore,
+  ReadQueryOptions,
 } from '../data/readFromStore';
 
 import {
@@ -349,9 +350,7 @@ export class QueryManager {
                 query: makeDocument(
                   queryStoreValue.query.selectionSet, 'ROOT_QUERY', queryStoreValue.fragmentMap),
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
-                options: {
-                  returnPartialData: options.returnPartialData || options.noFetch,
-                },
+                returnPartialData: options.returnPartialData || options.noFetch,
               }),
               loading: queryStoreValue.loading,
             };
@@ -616,17 +615,16 @@ export class QueryManager {
       queryFragments } = this.getQueryParts(observableQuery);
 
     const queryOptions = observableQuery.options;
-    const readOptions = {
+    const readOptions: ReadQueryOptions = {
       // In case of an optimistic change, apply reducer on top of the
       // results including previous optimistic updates. Otherwise, apply it
       // on top of the real data only.
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
       query: makeDocument(querySelectionSet, 'ROOT_QUERY', createFragmentMap(queryFragments || [])),
       variables: queryVariables,
-      options: {
-        returnPartialData: false,
-      },
+      returnPartialData: false,
     };
+
     try {
       // first try reading the full result from the store
       const data = readQueryFromStore(readOptions);
@@ -635,7 +633,7 @@ export class QueryManager {
       // next, try reading partial results, if we want them
       if (queryOptions.returnPartialData || queryOptions.noFetch) {
         try {
-          readOptions.options.returnPartialData = true;
+          readOptions.returnPartialData = true;
           const data = readQueryFromStore(readOptions);
           return { data, partial: true };
         } catch (e) {
@@ -843,9 +841,7 @@ export class QueryManager {
             resultFromStore = readQueryFromStore({
               store: this.getApolloState().data,
               variables,
-              options: {
-                returnPartialData: returnPartialData || noFetch,
-              },
+              returnPartialData: returnPartialData || noFetch,
               query,
             });
             // ensure multiple errors don't get thrown
@@ -903,9 +899,7 @@ export class QueryManager {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
-        options: {
-          returnPartialData: true,
-        },
+        returnPartialData: true,
         variables,
       });
 

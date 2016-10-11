@@ -32,7 +32,7 @@ import {
 
 import {
   handleFragmentErrors,
-} from './diffAgainstStore';
+} from './readFromStore';
 
 import {
   IdGetter,

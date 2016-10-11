@@ -58,7 +58,7 @@ import {
 
 import {
   diffQueryAgainstStore,
-} from '../data/diffAgainstStore';
+} from '../data/readFromStore';
 
 import {
   MutationBehavior,
@@ -349,7 +349,9 @@ export class QueryManager {
                 query: makeDocument(
                   queryStoreValue.query.selectionSet, 'ROOT_QUERY', queryStoreValue.fragmentMap),
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
-                returnPartialData: options.returnPartialData || options.noFetch,
+                options: {
+                  returnPartialData: options.returnPartialData || options.noFetch,
+                },
               }),
               loading: queryStoreValue.loading,
             };
@@ -621,7 +623,9 @@ export class QueryManager {
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
       query: makeDocument(querySelectionSet, 'ROOT_QUERY', createFragmentMap(queryFragments || [])),
       variables: queryVariables,
-      returnPartialData: false,
+      options: {
+        returnPartialData: false,
+      },
     };
     try {
       // first try reading the full result from the store
@@ -631,7 +635,7 @@ export class QueryManager {
       // next, try reading partial results, if we want them
       if (queryOptions.returnPartialData || queryOptions.noFetch) {
         try {
-          readOptions.returnPartialData = true;
+          readOptions.options.returnPartialData = true;
           const data = readQueryFromStore(readOptions);
           return { data, partial: true };
         } catch (e) {
@@ -839,7 +843,9 @@ export class QueryManager {
             resultFromStore = readQueryFromStore({
               store: this.getApolloState().data,
               variables,
-              returnPartialData: returnPartialData || noFetch,
+              options: {
+                returnPartialData: returnPartialData || noFetch,
+              },
               query,
             });
             // ensure multiple errors don't get thrown
@@ -897,7 +903,9 @@ export class QueryManager {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
-        throwOnMissingField: false,
+        options: {
+          returnPartialData: true,
+        },
         variables,
       });
 

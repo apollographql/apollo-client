@@ -18,10 +18,8 @@ import {
 } from '../queries/store';
 
 import {
-  getMutationDefinition,
+  checkDocument,
   getQueryDefinition,
-  getFragmentDefinitions,
-  createFragmentMap,
   getOperationName,
   addFragmentsToDocument,
 } from '../queries/getFromAST';
@@ -231,9 +229,8 @@ export class QueryManager {
       mutation = applyTransformers(mutation, [this.queryTransformer]);
     }
 
-    let mutationDef = getMutationDefinition(mutation);
+    checkDocument(mutation);
     const mutationString = print(mutation);
-    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
     const request = {
       query: mutation,
       variables,
@@ -251,14 +248,9 @@ export class QueryManager {
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
-      mutation: {
-        id: 'ROOT_MUTATION',
-        typeName: 'Mutation',
-        selectionSet: mutationDef.selectionSet,
-      },
+      mutation,
       variables,
       mutationId,
-      fragmentMap: queryFragmentMap,
       optimisticResponse,
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
     });

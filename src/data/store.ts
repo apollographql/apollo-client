@@ -7,7 +7,6 @@ import {
 } from '../actions';
 
 import {
-  writeSelectionSetToStore, // TODO REFACTOR: remove this import.
   writeResultToStore,
 } from './writeToStore';
 
@@ -122,14 +121,13 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      let newState = writeSelectionSetToStore({
+      let newState = writeResultToStore({
         result: constAction.result.data,
-        dataId: queryStoreValue.mutation.id,
-        selectionSet: queryStoreValue.mutation.selectionSet,
+        dataId: 'ROOT_MUTATION',
+        document: queryStoreValue.mutation,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
       });
 
       if (constAction.resultBehaviors) {
@@ -138,8 +136,7 @@ export function data(
             behavior,
             result: constAction.result,
             variables: queryStoreValue.variables,
-            fragmentMap: queryStoreValue.fragmentMap,
-            selectionSet: queryStoreValue.mutation.selectionSet,
+            document: queryStoreValue.mutation,
             config,
           };
 

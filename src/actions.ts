@@ -4,14 +4,8 @@ import {
 } from 'graphql';
 
 import {
-  SelectionSetWithRoot,
-} from './queries/store';
-
-import {
   MutationBehavior,
 } from './data/mutationResults';
-
-import { FragmentMap } from './queries/getFromAST';
 
 export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
@@ -74,10 +68,9 @@ export function isQueryStopAction(action: ApolloAction): action is QueryStopActi
 export interface MutationInitAction {
   type: 'APOLLO_MUTATION_INIT';
   mutationString: string;
-  mutation: SelectionSetWithRoot;
+  mutation: Document;
   variables: Object;
   mutationId: string;
-  fragmentMap: FragmentMap;
   optimisticResponse: Object;
   resultBehaviors?: MutationBehavior[];
 }

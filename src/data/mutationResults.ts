@@ -6,7 +6,6 @@ import {
 import {
   Document,
   GraphQLResult,
-  SelectionSet,
 } from 'graphql';
 
 import mapValues = require('lodash.mapvalues');
@@ -21,7 +20,9 @@ import {
 } from './writeToStore';
 
 import {
-  FragmentMap,
+  getOperationDefinition,
+  getFragmentDefinitions,
+  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -77,8 +78,7 @@ export type MutationBehaviorReducerArgs = {
   behavior: MutationBehavior;
   result: GraphQLResult;
   variables: any;
-  fragmentMap: FragmentMap;
-  selectionSet: SelectionSet;
+  document: Document;
   config: ApolloReducerConfig;
 }
 
@@ -93,8 +93,7 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
   behavior,
   result,
   variables,
-  fragmentMap,
-  selectionSet,
+  document,
   config,
 }: MutationBehaviorReducerArgs): NormalizedCache {
   const {
@@ -102,6 +101,10 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
     storePath,
     where,
   } = behavior as MutationArrayInsertBehavior;
+
+  // TODO REFACTOR: refactor deeper here, continue replacing selectionSet and fragmentMap with doc.
+  const selectionSet = getOperationDefinition(document).selectionSet;
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
 
   // Step 1: get selection set and result for resultPath
   const scopedSelectionSet = scopeSelectionSetToResultPath({

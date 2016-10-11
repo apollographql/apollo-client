@@ -1,4 +1,3 @@
-import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isUndefined = require('lodash.isundefined');
 import isObject = require('lodash.isobject');
@@ -35,7 +34,7 @@ import {
 
 import {
   handleFragmentErrors,
-} from './diffAgainstStore';
+} from './readFromStore';
 
 import {
   IdGetter,
@@ -318,7 +317,7 @@ function writeFieldToStore({
       type: 'json',
       json: value,
     };
-  } else if (isArray(value)) {
+  } else if (Array.isArray(value)) {
     // this is an array with sub-objects
     const thisIdList: Array<string> = [];
 

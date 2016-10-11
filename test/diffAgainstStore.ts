@@ -2,7 +2,7 @@ import { assert } from 'chai';
 
 import {
   diffQueryAgainstStore,
-} from '../src/data/diffAgainstStore';
+} from '../src/data/readFromStore';
 
 import { writeQueryToStore } from '../src/data/writeToStore';
 
@@ -108,7 +108,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        throwOnMissingField: true,
+        returnPartialData: false,
       });
     }, /No fragment/);
   });
@@ -149,7 +149,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        throwOnMissingField: true,
+        returnPartialData: false,
       });
     });
   });
@@ -190,7 +190,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        throwOnMissingField: true,
+        returnPartialData: false,
       });
     });
   });
@@ -232,7 +232,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        throwOnMissingField: true,
+        returnPartialData: false,
       });
     });
   });
@@ -275,7 +275,7 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        throwOnMissingField: true,
+        returnPartialData: false,
       });
     });
   });
@@ -378,7 +378,7 @@ describe('diffing queries against the store', () => {
         store,
         query: simpleQuery,
         variables: null,
-        throwOnMissingField: true,
+        returnPartialData: false,
       });
     });
   });

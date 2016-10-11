@@ -2,8 +2,14 @@ import {
   Document,
 } from 'graphql';
 
+import graphqlAnywhere, {
+  Resolver,
+} from 'graphql-anywhere';
+
 import {
   NormalizedCache,
+  isJsonValue,
+  isIdValue,
 } from './store';
 
 import {
@@ -11,17 +17,8 @@ import {
 } from './storeUtils';
 
 import {
-  isJsonValue,
-  isIdValue,
-} from './store';
-
-import {
   ApolloError,
 } from '../errors/ApolloError';
-
-import graphqlAnywhere, {
-  Resolver,
-} from 'graphql-anywhere';
 
 export type DiffResult = {
   result?: any;
@@ -45,7 +42,7 @@ export type ReadQueryOptions = {
  * @param variables A map from the name of a variable to its value. These variables can be
  * referenced by the query document.
  *
- * @param options.returnPartialData If set to true, the query will be resolved even if all of the data
+ * @param returnPartialData If set to true, the query will be resolved even if all of the data
  * needed to resolve the query is not found in the store. The data keys that are not found will not
  * be present in the returned object. If set to false, an error will be thrown if there are fields
  * that cannot be resolved from the store.
@@ -135,7 +132,7 @@ Perhaps you want to use the \`returnPartialData\` option?`,
  * identify if any data was missing from the store.
  * @param  {Document} query A parsed GraphQL query document
  * @param  {Store} store The Apollo Client store object
- * @param  {StoreReadOptions} [options] Options to use during execution
+ * @param  {boolean} [returnPartialData] Whether to throw an error if any fields are missing
  * @return {result: Object, isMissing: [boolean]}
  */
 export function diffQueryAgainstStore({

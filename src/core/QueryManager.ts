@@ -944,34 +944,3 @@ export class QueryManager {
     return requestId;
   }
 }
-
-// Shim to use graphql-anywhere, to be removed
-// TODO REFACTOR: delete this.
-/*
-function makeDocument(
-  selectionSet: SelectionSet,
-  rootId: string,
-  fragmentMap: FragmentMap
-): Document {
-  if (rootId !== 'ROOT_QUERY') {
-    throw new Error('only supports query');
-  }
-
-  const op: OperationDefinition = {
-    kind: 'OperationDefinition',
-    operation: 'query',
-    selectionSet,
-  };
-
-  const frags: FragmentDefinition[] = fragmentMap ?
-    Object.keys(fragmentMap).map((name) => fragmentMap[name]) :
-    [];
-
-  const doc: Document = {
-    kind: 'Document',
-    definitions: [op, ...frags],
-  };
-
-  return doc;
-}
-*/

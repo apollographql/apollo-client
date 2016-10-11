@@ -31,7 +31,6 @@ import {
 import {
   QueryManager,
   ApolloQueryResult,
-  SubscriptionOptions,
   ResultComparator,
   ResultTransformer,
 } from './core/QueryManager';
@@ -46,6 +45,7 @@ import {
 
 import {
   DeprecatedWatchQueryOptions,
+  DeprecatedSubscriptionOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -348,9 +348,19 @@ export default class ApolloClient {
     return this.queryManager.mutate(realOptions);
   };
 
-  public subscribe(options: SubscriptionOptions): Observable<any> {
+  public subscribe(options: DeprecatedSubscriptionOptions): Observable<any> {
     this.initStore();
-    return this.queryManager.startGraphQLSubscription(options);
+
+    // We add the fragments to the document to pass only the document around internally.
+    const fullDocument = addFragmentsToDocument(options.query, options.fragments);
+
+    const realOptions = Object.assign({}, options, {
+      document: fullDocument,
+    });
+    delete realOptions.fragments;
+    delete realOptions.query;
+
+    return this.queryManager.startGraphQLSubscription(realOptions);
   }
 
   /**

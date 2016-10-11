@@ -21,7 +21,6 @@ import {
   checkDocument,
   getQueryDefinition,
   getOperationName,
-  addFragmentsToDocument,
 } from '../queries/getFromAST';
 
 import {
@@ -36,7 +35,6 @@ import {
 import {
   GraphQLResult,
   Document,
-  FragmentDefinition,
   // TODO REFACTOR: do we still need this??
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
@@ -89,9 +87,8 @@ import { ObservableQuery } from './ObservableQuery';
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export interface SubscriptionOptions {
-  query: Document;
+  document: Document;
   variables?: { [key: string]: any };
-  fragments?: FragmentDefinition[];
 };
 
 export type ApolloQueryResult = {
@@ -361,9 +358,6 @@ export class QueryManager {
   // supposed to be refetched in the event of a store reset. Once we unify error handling for
   // network errors and non-network errors, the shouldSubscribe option will go away.
 
-  // The fragments option within WatchQueryOptions specifies a list of fragments that can be
-  // referenced by the query.
-  // These fragments are used to compose queries out of a bunch of fragments for UI components.
   public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
@@ -527,12 +521,10 @@ export class QueryManager {
     options: SubscriptionOptions
   ): Observable<any> {
     const {
-      query,
+      document,
       variables,
-      fragments = [],
     } = options;
-
-    let queryDoc = addFragmentsToDocument(query, fragments);
+    let queryDoc = document;
     // Apply the query transformer if one has been provided.
     if (this.queryTransformer) {
       queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
@@ -726,16 +718,9 @@ export class QueryManager {
   }
 
   // Takes a set of WatchQueryOptions and transforms the query document
-  // accordingly. Specifically, it does the following:
-  // 1. Adds the fragments to the document
-  // 2. Applies the queryTransformer (if there is one defined)
-  // 3. Creates a fragment map out of all of the fragment definitions within the query
-  //    document.
-  // 4. Returns the final query document and the fragment map associated with the
-  //    query.
+  // accordingly. Specifically, it applies the queryTransformer (if there is one defined)
   private transformQueryDocument(options: WatchQueryOptions): {
     queryDoc: Document,
-    // fragmentMap: FragmentMap,
   } {
     let queryDoc = options.query;
 
@@ -746,12 +731,11 @@ export class QueryManager {
 
     return {
       queryDoc,
-      // fragmentMap: createFragmentMap(getFragmentDefinitions(queryDoc)),
     };
   }
 
   // Takes a request id, query id, a query document and information associated with the query
-  // (e.g. variables, fragment map, etc.) and send it to the network interface. Returns
+  // and send it to the network interface. Returns
   // a promise for the result associated with that request.
   private fetchRequest({
     requestId,

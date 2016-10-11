@@ -71,12 +71,8 @@ export interface FetchMoreQueryOptions {
   variables?: { [key: string]: any };
 }
 
-export interface GraphQLSubscriptionOptions {
-  subscription: Document;
+export interface DeprecatedSubscriptionOptions {
+  query: Document;
   variables?: { [key: string]: any };
   fragments?: FragmentDefinition[];
-  updateQuery: (previousQueryResult: Object, options: {
-    subscriptionResult: Object,
-    queryVariables: Object,
-  }) => Object;
 };

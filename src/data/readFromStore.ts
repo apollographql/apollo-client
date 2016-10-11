@@ -16,10 +16,6 @@ import {
 } from './store';
 
 import {
-  FragmentMap,
-} from '../queries/getFromAST';
-
-import {
   ApolloError,
 } from '../errors/ApolloError';
 
@@ -28,9 +24,14 @@ import graphqlAnywhere, {
   ResultMapper,
 } from 'graphql-anywhere';
 
-// import {
-//   printAST,
-// } from './debug';
+export type StoreReadOptions = {
+  returnPartialData: boolean;
+}
+
+export interface DiffResult {
+  result?: any;
+  isMissing?: boolean;
+}
 
 /**
  * Resolves the result of a query solely from the store (i.e. never hits the server).
@@ -42,13 +43,10 @@ import graphqlAnywhere, {
  * @param variables A map from the name of a variable to its value. These variables can be
  * referenced by the query document.
  *
- * @param returnPartialData If set to true, the query will be resolved even if all of the data
+ * @param options.returnPartialData If set to true, the query will be resolved even if all of the data
  * needed to resolve the query is not found in the store. The data keys that are not found will not
  * be present in the returned object. If set to false, an error will be thrown if there are fields
  * that cannot be resolved from the store.
- *
- * @param fragmentMap A map from the name of a fragment to its fragment definition. These fragments
- * can be referenced within the query document.
  */
 export function readQueryFromStore({
   store,
@@ -61,9 +59,7 @@ export function readQueryFromStore({
   variables?: Object,
   options?: StoreReadOptions,
 }): Object {
-  const {
-    result,
-  } = diffQueryAgainstStore({
+  const { result } = diffQueryAgainstStore({
     query,
     store,
     options,
@@ -71,34 +67,6 @@ export function readQueryFromStore({
   });
 
   return result;
-}
-
-export type StoreReadOptions = {
-  returnPartialData: boolean;
-}
-
-export interface DiffResult {
-  result?: any;
-  isMissing?: boolean;
-}
-
-export function diffQueryAgainstStore({
-  store,
-  query,
-  variables,
-  options = { returnPartialData: true } as StoreReadOptions,
-}: {
-  store: NormalizedCache,
-  query: Document,
-  variables?: Object,
-  options?: StoreReadOptions,
-}): DiffResult {
-  return diffSelectionSetAgainstStore({
-    store,
-    query,
-    options,
-    variables,
-  });
 }
 
 // Takes a map of errors for fragments of each type. If all of the types have
@@ -168,26 +136,23 @@ Perhaps you want to use the \`returnPartialData\` option?`,
 const mapper: ResultMapper = (childValues, rootValue) => childValues;
 
 /**
- * Given a store, a root ID, and a selection set, return as much of the result as possible and
- * identify which selection sets and root IDs need to be fetched to get the rest of the requested
- * data.
- * @param  {SelectionSet} selectionSet A GraphQL selection set
+ * Given a store and a query, return as much of the result as possible and
+ * identify if any data was missing from the store.
+ * @param  {Document} query A parsed GraphQL query document
  * @param  {Store} store The Apollo Client store object
- * @param  {String} rootId The ID of the root object that the selection set applies to
- * @param  {boolean} [throwOnMissingField] Throw an error rather than returning any selection sets
- * when a field isn't found in the store.
- * @return {result: Object, missingSelectionSets: [SelectionSet]}
+ * @param  {StoreReadOptions} [options] Options to use during execution
+ * @return {result: Object, isMissing: [boolean]}
  */
-function diffSelectionSetAgainstStore({
-  query,
+export function diffQueryAgainstStore({
   store,
-  options,
+  query,
   variables,
+  options = { returnPartialData: true } as StoreReadOptions,
 }: {
-  query: Document,
   store: NormalizedCache,
-  options: StoreReadOptions,
-  variables: Object,
+  query: Document,
+  variables?: Object,
+  options?: StoreReadOptions,
 }): DiffResult {
   const context: ReadStoreContext = {
     store,

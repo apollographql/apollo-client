@@ -54,11 +54,12 @@ import { print } from 'graphql-tag/printer';
 
 import {
   readQueryFromStore,
+  ReadQueryOptions,
 } from '../data/readFromStore';
 
 import {
   diffQueryAgainstStore,
-} from '../data/diffAgainstStore';
+} from '../data/readFromStore';
 
 import {
   MutationBehavior,
@@ -614,7 +615,7 @@ export class QueryManager {
       queryFragments } = this.getQueryParts(observableQuery);
 
     const queryOptions = observableQuery.options;
-    const readOptions = {
+    const readOptions: ReadQueryOptions = {
       // In case of an optimistic change, apply reducer on top of the
       // results including previous optimistic updates. Otherwise, apply it
       // on top of the real data only.
@@ -623,6 +624,7 @@ export class QueryManager {
       variables: queryVariables,
       returnPartialData: false,
     };
+
     try {
       // first try reading the full result from the store
       const data = readQueryFromStore(readOptions);
@@ -897,7 +899,7 @@ export class QueryManager {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
-        throwOnMissingField: false,
+        returnPartialData: true,
         variables,
       });
 

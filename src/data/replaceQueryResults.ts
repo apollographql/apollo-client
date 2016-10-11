@@ -3,17 +3,8 @@ import {
 } from './store';
 
 import {
-  SelectionSet,
-  FragmentDefinition,
-} from 'graphql';
-
-import {
   writeResultToStore,
 } from './writeToStore';
-
-import {
-  createFragmentMap,
-} from '../queries/getFromAST';
 
 import {
   ApolloReducerConfig,

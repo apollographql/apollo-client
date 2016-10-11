@@ -58,10 +58,6 @@ import {
 } from '../src/transport/networkInterface';
 
 import {
-  getFragmentDefinition,
-} from '../src/queries/getFromAST';
-
-import {
   ApolloError,
 } from '../src/errors/ApolloError';
 

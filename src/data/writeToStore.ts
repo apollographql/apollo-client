@@ -123,7 +123,7 @@ export function writeResultToStore({
     variables,
     dataIdFromObject,
     fragmentMap,
-  })
+  });
 }
 
 export function writeSelectionSetToStore({

@@ -14,7 +14,6 @@ import {
 } from '../store';
 
 import {
-  SelectionSetWithRoot,
   QueryStoreValue,
 } from '../queries/store';
 
@@ -25,7 +24,6 @@ import {
   createFragmentMap,
   getOperationName,
   addFragmentsToDocument,
-  FragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -41,13 +39,13 @@ import {
   GraphQLResult,
   Document,
   FragmentDefinition,
+  // TODO REFACTOR: do we still need this??
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
   /* tslint:disable */
   SelectionSet,
   /* tslint:enable */
-  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -662,7 +660,7 @@ export class QueryManager {
     return {
       previousResult: data,
       variables,
-      document
+      document,
     };
   }
 
@@ -690,7 +688,7 @@ export class QueryManager {
     return {
       variables: queryOptions.variables,
       document: transformedDoc,
-    }
+    };
   }
 
   private collectResultBehaviorsFromUpdateQueries(
@@ -854,7 +852,6 @@ export class QueryManager {
       queryDoc,
     } = this.transformQueryDocument(options);
 
-    const queryDef = getQueryDefinition(queryDoc);
     const queryString = print(queryDoc);
 
     let storeResult: any;

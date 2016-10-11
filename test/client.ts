@@ -14,7 +14,6 @@ import { fragmentDefinitionsMap } from '../src/fragments';
 
 import {
   GraphQLError,
-  OperationDefinition,
   GraphQLResult,
 } from 'graphql';
 
@@ -383,7 +382,7 @@ describe('client', () => {
       });
   });
 
-  it('can allow the store to be rehydrated from the server', () => {
+  it('store can be rehydrated from the server', () => {
 
     const query = gql`
       query people {
@@ -415,18 +414,13 @@ describe('client', () => {
         queries: {
           '0': {
             queryString: print(query),
-            query: {
-              id: 'ROOT_QUERY',
-              typeName: 'Query',
-              selectionSet: (query.definitions[0] as OperationDefinition).selectionSet,
-            },
+            query,
             variables: undefined,
             loading: false,
             stopped: false,
             networkError: null,
             graphQLErrors: null,
             forceFetch: false,
-            fragmentMap: {},
             returnPartialData: false,
             lastRequestId: 1,
             previousVariables: null,

@@ -1,8 +1,6 @@
 import {
   Document,
   GraphQLResult,
-  SelectionSet,
-  FragmentDefinition,
 } from 'graphql';
 
 import {

@@ -45,7 +45,6 @@ import {
 } from './util/Observable';
 
 import {
-  WatchQueryOptions,
   DeprecatedWatchQueryOptions,
 } from './core/watchQueryOptions';
 

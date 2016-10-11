@@ -7,7 +7,6 @@ import {
   Document,
   GraphQLResult,
   SelectionSet,
-  FragmentDefinition,
 } from 'graphql';
 
 import mapValues = require('lodash.mapvalues');

@@ -10,10 +10,6 @@ import {
 } from '../actions';
 
 import {
-  FragmentMap,
-} from '../queries/getFromAST';
-
-import {
   graphQLResultHasError,
 } from '../data/storeUtils';
 

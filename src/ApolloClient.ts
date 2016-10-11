@@ -336,7 +336,16 @@ export default class ApolloClient {
     refetchQueries?: string[],
   }): Promise<ApolloQueryResult> {
     this.initStore();
-    return this.queryManager.mutate(options);
+
+    // We add the fragments to the document to pass only the document around internally.
+    const fullDocument = addFragmentsToDocument(options.mutation, options.fragments);
+
+    const realOptions = Object.assign({}, options, {
+      mutation: fullDocument,
+    });
+    delete realOptions.fragments;
+
+    return this.queryManager.mutate(realOptions);
   };
 
   public subscribe(options: SubscriptionOptions): Observable<any> {

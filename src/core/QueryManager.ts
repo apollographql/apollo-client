@@ -214,7 +214,6 @@ export class QueryManager {
     mutation,
     variables,
     resultBehaviors = [],
-    fragments = [],
     optimisticResponse,
     updateQueries,
     refetchQueries = [],
@@ -222,16 +221,11 @@ export class QueryManager {
     mutation: Document,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
-    fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[],
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
-
-    // Add the fragments that were passed in to the mutation document and then
-    // construct the fragment map.
-    mutation = addFragmentsToDocument(mutation, fragments);
 
     if (this.queryTransformer) {
       mutation = applyTransformers(mutation, [this.queryTransformer]);

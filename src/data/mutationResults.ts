@@ -10,7 +10,6 @@ import {
 } from 'graphql';
 
 import mapValues = require('lodash.mapvalues');
-import isArray = require('lodash.isarray');
 import cloneDeep = require('lodash.clonedeep');
 import assign = require('lodash.assign');
 
@@ -189,7 +188,7 @@ function removeRefsFromStoreObj(storeObj: any, dataId: any) {
       return null;
     }
 
-    if (isArray(value)) {
+    if (Array.isArray(value)) {
       const filteredArray = cleanArray(value, dataId);
 
       if (filteredArray !== value) {
@@ -213,7 +212,7 @@ function removeRefsFromStoreObj(storeObj: any, dataId: any) {
 // Remove any occurrences of dataId in an arbitrarily nested array, and make sure that the old array
 // === the new array if nothing was changed
 export function cleanArray(originalArray: any[], dataId: any): any[] {
-  if (originalArray.length && isArray(originalArray[0])) {
+  if (originalArray.length && Array.isArray(originalArray[0])) {
     // Handle arbitrarily nested arrays
     let modified = false;
     const filteredArray = originalArray.map((nestedArray) => {

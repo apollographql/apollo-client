@@ -27,9 +27,16 @@ export type StoreReadOptions = {
   returnPartialData: boolean;
 }
 
-export interface DiffResult {
+export type DiffResult = {
   result?: any;
   isMissing?: boolean;
+}
+
+export type ReadQueryOptions = {
+  store: NormalizedCache,
+  query: Document,
+  variables?: Object,
+  options?: StoreReadOptions,
 }
 
 /**
@@ -52,12 +59,7 @@ export function readQueryFromStore({
   query,
   variables,
   options = {} as StoreReadOptions,
-}: {
-  store: NormalizedCache,
-  query: Document,
-  variables?: Object,
-  options?: StoreReadOptions,
-}): Object {
+}: ReadQueryOptions): Object {
   const { result } = diffQueryAgainstStore({
     query,
     store,
@@ -145,12 +147,7 @@ export function diffQueryAgainstStore({
   query,
   variables,
   options = { returnPartialData: true } as StoreReadOptions,
-}: {
-  store: NormalizedCache,
-  query: Document,
-  variables?: Object,
-  options?: StoreReadOptions,
-}): DiffResult {
+}: ReadQueryOptions): DiffResult {
   const context: ReadStoreContext = {
     store,
     returnPartialData: options.returnPartialData,

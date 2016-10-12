@@ -25,6 +25,7 @@ describe('GraphQL Subscriptions', () => {
 
   let sub1: any;
   let options: any;
+  let realOptions: any;
   let watchQueryOptions: any;
   let sub2: any;
   let commentsQuery: any;
@@ -63,9 +64,19 @@ describe('GraphQL Subscriptions', () => {
       variables: {
           name: 'Changping Chen',
         },
-      handler: (error: any, result: any) => {
-        // do nothing
-      },
+    };
+
+    realOptions = {
+      document: gql`
+        subscription UserInfo($name: String) {
+          user(name: $name) {
+            name
+          }
+        }
+      `,
+      variables: {
+          name: 'Changping Chen',
+        },
     };
 
     watchQueryOptions = {
@@ -176,7 +187,7 @@ describe('GraphQL Subscriptions', () => {
       store: createApolloStore(),
     });
 
-    const obs = queryManager.startGraphQLSubscription(options);
+    const obs = queryManager.startGraphQLSubscription(realOptions);
 
     let counter = 0;
 
@@ -214,7 +225,7 @@ describe('GraphQL Subscriptions', () => {
       store: createApolloStore(),
     });
 
-    const sub = queryManager.startGraphQLSubscription(options).subscribe({
+    const sub = queryManager.startGraphQLSubscription(realOptions).subscribe({
       next(result) {
         assert.deepEqual(result, results[numResults].result);
         numResults++;

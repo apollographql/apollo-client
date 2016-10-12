@@ -4,8 +4,11 @@ import isObject = require('lodash.isobject');
 import assign = require('lodash.assign');
 
 import {
+  getOperationDefinition,
   getQueryDefinition,
   FragmentMap,
+  getFragmentDefinitions,
+  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -84,6 +87,37 @@ export function writeQueryToStore({
     dataId: 'ROOT_QUERY',
     result,
     selectionSet: queryDefinition.selectionSet,
+    store,
+    variables,
+    dataIdFromObject,
+    fragmentMap,
+  });
+}
+
+export function writeResultToStore({
+  result,
+  dataId,
+  document,
+  store = {} as NormalizedCache,
+  variables,
+  dataIdFromObject,
+}: {
+  dataId: string,
+  result: any,
+  document: Document,
+  store?: NormalizedCache,
+  variables: Object,
+  dataIdFromObject: IdGetter,
+}): NormalizedCache {
+
+  // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
+  const selectionSet = getOperationDefinition(document).selectionSet;
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+
+  return writeSelectionSetToStore({
+    result,
+    dataId,
+    selectionSet,
     store,
     variables,
     dataIdFromObject,

@@ -14,18 +14,13 @@ import {
 } from '../store';
 
 import {
-  SelectionSetWithRoot,
   QueryStoreValue,
 } from '../queries/store';
 
 import {
-  getMutationDefinition,
+  checkDocument,
   getQueryDefinition,
-  getFragmentDefinitions,
-  createFragmentMap,
   getOperationName,
-  addFragmentsToDocument,
-  FragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -40,14 +35,13 @@ import {
 import {
   GraphQLResult,
   Document,
-  FragmentDefinition,
+  // TODO REFACTOR: do we still need this??
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
   /* tslint:disable */
   SelectionSet,
   /* tslint:enable */
-  OperationDefinition,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -93,9 +87,8 @@ import { ObservableQuery } from './ObservableQuery';
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export interface SubscriptionOptions {
-  query: Document;
+  document: Document;
   variables?: { [key: string]: any };
-  fragments?: FragmentDefinition[];
 };
 
 export type ApolloQueryResult = {
@@ -133,6 +126,7 @@ export class QueryManager {
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private queryListeners: { [queryId: string]: QueryListener[] };
+  private queryDocuments: { [queryId: string]: Document };
 
   private idCounter = 0;
 
@@ -183,6 +177,7 @@ export class QueryManager {
     this.resultComparator = resultComparator;
     this.pollingTimers = {};
     this.queryListeners = {};
+    this.queryDocuments = {};
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -217,7 +212,6 @@ export class QueryManager {
     mutation,
     variables,
     resultBehaviors = [],
-    fragments = [],
     optimisticResponse,
     updateQueries,
     refetchQueries = [],
@@ -225,24 +219,18 @@ export class QueryManager {
     mutation: Document,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
-    fragments?: FragmentDefinition[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[],
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
-    // Add the fragments that were passed in to the mutation document and then
-    // construct the fragment map.
-    mutation = addFragmentsToDocument(mutation, fragments);
-
     if (this.queryTransformer) {
       mutation = applyTransformers(mutation, [this.queryTransformer]);
     }
 
-    let mutationDef = getMutationDefinition(mutation);
+    checkDocument(mutation);
     const mutationString = print(mutation);
-    const queryFragmentMap = createFragmentMap(getFragmentDefinitions(mutation));
     const request = {
       query: mutation,
       variables,
@@ -257,17 +245,14 @@ export class QueryManager {
     const updateQueriesResultBehaviors = !optimisticResponse ? [] :
       this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true);
 
+    this.queryDocuments[mutationId] = mutation;
+
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
-      mutation: {
-        id: 'ROOT_MUTATION',
-        typeName: 'Mutation',
-        selectionSet: mutationDef.selectionSet,
-      },
+      mutation,
       variables,
       mutationId,
-      fragmentMap: queryFragmentMap,
       optimisticResponse,
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
     });
@@ -285,6 +270,7 @@ export class QueryManager {
             type: 'APOLLO_MUTATION_RESULT',
             result,
             mutationId,
+            document: mutation,
             resultBehaviors: [
                 ...resultBehaviors,
                 ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
@@ -292,6 +278,7 @@ export class QueryManager {
           });
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
+          delete this.queryDocuments[mutationId];
           resolve(this.transformResult(<ApolloQueryResult>result));
         })
         .catch((err) => {
@@ -301,6 +288,7 @@ export class QueryManager {
             mutationId,
           });
 
+          delete this.queryDocuments[mutationId];
           reject(new ApolloError({
             networkError: err,
           }));
@@ -347,8 +335,7 @@ export class QueryManager {
             const resultFromStore = {
               data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
-                query: makeDocument(
-                  queryStoreValue.query.selectionSet, 'ROOT_QUERY', queryStoreValue.fragmentMap),
+                query: this.queryDocuments[queryId],
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
               }),
@@ -378,9 +365,6 @@ export class QueryManager {
   // supposed to be refetched in the event of a store reset. Once we unify error handling for
   // network errors and non-network errors, the shouldSubscribe option will go away.
 
-  // The fragments option within WatchQueryOptions specifies a list of fragments that can be
-  // referenced by the query.
-  // These fragments are used to compose queries out of a bunch of fragments for UI components.
   public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
@@ -544,12 +528,10 @@ export class QueryManager {
     options: SubscriptionOptions
   ): Observable<any> {
     const {
-      query,
+      document,
       variables,
-      fragments = [],
     } = options;
-
-    let queryDoc = addFragmentsToDocument(query, fragments);
+    let queryDoc = document;
     // Apply the query transformer if one has been provided.
     if (this.queryTransformer) {
       queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
@@ -605,14 +587,14 @@ export class QueryManager {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
     delete this.queryListeners[queryId];
+    delete this.queryDocuments[queryId];
     this.stopQueryInStore(queryId);
   }
 
   public getCurrentQueryResult(observableQuery: ObservableQuery, isOptimistic = false) {
     const {
-      queryVariables,
-      querySelectionSet,
-      queryFragments } = this.getQueryParts(observableQuery);
+      variables,
+      document } = this.getQueryParts(observableQuery);
 
     const queryOptions = observableQuery.options;
     const readOptions: ReadQueryOptions = {
@@ -620,8 +602,8 @@ export class QueryManager {
       // results including previous optimistic updates. Otherwise, apply it
       // on top of the real data only.
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
-      query: makeDocument(querySelectionSet, 'ROOT_QUERY', createFragmentMap(queryFragments || [])),
-      variables: queryVariables,
+      query: document,
+      variables,
       returnPartialData: false,
     };
 
@@ -658,17 +640,15 @@ export class QueryManager {
     }
 
     const {
-      queryVariables,
-      querySelectionSet,
-      queryFragments } = this.getQueryParts(observableQuery);
+      variables,
+      document } = this.getQueryParts(observableQuery);
 
     const { data } = this.getCurrentQueryResult(observableQuery, isOptimistic);
 
     return {
       previousResult: data,
-      queryVariables,
-      querySelectionSet,
-      queryFragments,
+      variables,
+      document,
     };
   }
 
@@ -682,31 +662,20 @@ export class QueryManager {
   }
 
   // XXX: I think we just store this on the observable query at creation time
+  // TODO LATER: rename this function. Its main role is to apply the transform, nothing else!
   private getQueryParts(observableQuery: ObservableQuery) {
     const queryOptions = observableQuery.options;
 
-    let fragments = queryOptions.fragments;
-    let queryDefinition = getQueryDefinition(queryOptions.query);
+    let transformedDoc = observableQuery.options.query;
 
     if (this.queryTransformer) {
-      const doc = {
-        kind: 'Document',
-        definitions: [
-          queryDefinition,
-            ...(fragments || []),
-        ],
-      };
-
-      const transformedDoc = applyTransformers(doc, [this.queryTransformer]);
-
-      queryDefinition = getQueryDefinition(transformedDoc);
-      fragments = getFragmentDefinitions(transformedDoc);
+      // TODO XXX: do we need to make a copy of the document before transforming it?
+      transformedDoc = applyTransformers(transformedDoc, [this.queryTransformer]);
     }
 
     return {
-      queryVariables: queryOptions.variables,
-      querySelectionSet: queryDefinition.selectionSet,
-      queryFragments: fragments,
+      variables: queryOptions.variables,
+      document: transformedDoc,
     };
   }
 
@@ -731,25 +700,23 @@ export class QueryManager {
       queryIds.forEach((queryId) => {
         const {
           previousResult,
-          queryVariables,
-          querySelectionSet,
-          queryFragments,
+          variables,
+          document,
         } = this.getQueryWithPreviousResult(queryId, isOptimistic);
 
         const newResult = tryFunctionOrLogError(() => reducer(
           previousResult, {
             mutationResult,
             queryName,
-            queryVariables,
+            variables,
           }));
 
         if (newResult) {
           resultBehaviors.push({
             type: 'QUERY_RESULT',
             newResult,
-            queryVariables,
-            querySelectionSet,
-            queryFragments,
+            variables,
+            document,
           });
         }
       });
@@ -759,22 +726,11 @@ export class QueryManager {
   }
 
   // Takes a set of WatchQueryOptions and transforms the query document
-  // accordingly. Specifically, it does the following:
-  // 1. Adds the fragments to the document
-  // 2. Applies the queryTransformer (if there is one defined)
-  // 3. Creates a fragment map out of all of the fragment definitions within the query
-  //    document.
-  // 4. Returns the final query document and the fragment map associated with the
-  //    query.
+  // accordingly. Specifically, it applies the queryTransformer (if there is one defined)
   private transformQueryDocument(options: WatchQueryOptions): {
     queryDoc: Document,
-    fragmentMap: FragmentMap,
   } {
-    const {
-      query,
-      fragments = [],
-    } = options;
-    let queryDoc = addFragmentsToDocument(query, fragments);
+    let queryDoc = options.query;
 
     // Apply the query transformer if one has been provided
     if (this.queryTransformer) {
@@ -783,27 +739,22 @@ export class QueryManager {
 
     return {
       queryDoc,
-      fragmentMap: createFragmentMap(getFragmentDefinitions(queryDoc)),
     };
   }
 
   // Takes a request id, query id, a query document and information associated with the query
-  // (e.g. variables, fragment map, etc.) and send it to the network interface. Returns
+  // and send it to the network interface. Returns
   // a promise for the result associated with that request.
   private fetchRequest({
     requestId,
     queryId,
-    query,
-    querySS,
+    document,
     options,
-    fragmentMap,
   }: {
     requestId: number,
     queryId: string,
-    query: Document,
-    querySS: SelectionSetWithRoot,
+    document: Document,
     options: WatchQueryOptions,
-    fragmentMap: FragmentMap,
   }): Promise<GraphQLResult> {
     const {
       variables,
@@ -811,9 +762,9 @@ export class QueryManager {
       returnPartialData,
     } = options;
     const request: Request = {
-      query,
+      query: document,
       variables,
-      operationName: getOperationName(query),
+      operationName: getOperationName(document),
     };
 
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
@@ -824,6 +775,7 @@ export class QueryManager {
           // XXX handle multiple ApolloQueryResults
           this.store.dispatch({
             type: 'APOLLO_QUERY_RESULT',
+            document,
             result,
             queryId,
             requestId,
@@ -842,7 +794,7 @@ export class QueryManager {
               store: this.getApolloState().data,
               variables,
               returnPartialData: returnPartialData || noFetch,
-              query,
+              query: document,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */
@@ -879,16 +831,9 @@ export class QueryManager {
 
     const {
       queryDoc,
-      fragmentMap,
     } = this.transformQueryDocument(options);
 
-    const queryDef = getQueryDefinition(queryDoc);
     const queryString = print(queryDoc);
-    const querySS = {
-      id: 'ROOT_QUERY',
-      typeName: 'Query',
-      selectionSet: queryDef.selectionSet,
-    } as SelectionSetWithRoot;
 
     let storeResult: any;
     let needToFetch: boolean = forceFetch;
@@ -913,16 +858,16 @@ export class QueryManager {
     const shouldFetch = needToFetch && !noFetch;
 
     // Initialize query in store with unique requestId
+    this.queryDocuments[queryId] = queryDoc;
     this.store.dispatch({
       type: 'APOLLO_QUERY_INIT',
       queryString,
-      query: querySS,
+      document: queryDoc,
       variables,
       forceFetch,
       returnPartialData: returnPartialData || noFetch,
       queryId,
       requestId,
-      fragmentMap,
       // we store the old variables in order to trigger "loading new variables"
       // state if we know we will go to the server
       storePreviousVariables: shouldFetch,
@@ -935,7 +880,7 @@ export class QueryManager {
         type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: { data: storeResult },
         variables,
-        query: querySS,
+        document: queryDoc,
         complete: !shouldFetch,
         queryId,
       });
@@ -945,10 +890,8 @@ export class QueryManager {
       return this.fetchRequest({
         requestId,
         queryId,
-        query: queryDoc,
-        querySS,
+        document: queryDoc,
         options,
-        fragmentMap,
       });
     }
 
@@ -996,32 +939,4 @@ export class QueryManager {
     this.idCounter++;
     return requestId;
   }
-}
-
-// Shim to use graphql-anywhere, to be removed
-function makeDocument(
-  selectionSet: SelectionSet,
-  rootId: string,
-  fragmentMap: FragmentMap
-): Document {
-  if (rootId !== 'ROOT_QUERY') {
-    throw new Error('only supports query');
-  }
-
-  const op: OperationDefinition = {
-    kind: 'OperationDefinition',
-    operation: 'query',
-    selectionSet,
-  };
-
-  const frags: FragmentDefinition[] = fragmentMap ?
-    Object.keys(fragmentMap).map((name) => fragmentMap[name]) :
-    [];
-
-  const doc: Document = {
-    kind: 'Document',
-    definitions: [op, ...frags],
-  };
-
-  return doc;
 }

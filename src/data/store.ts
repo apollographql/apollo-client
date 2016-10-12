@@ -7,7 +7,7 @@ import {
 } from '../actions';
 
 import {
-  writeSelectionSetToStore,
+  writeResultToStore,
 } from './writeToStore';
 
 import assign = require('lodash.assign');
@@ -102,14 +102,13 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      const newState = writeSelectionSetToStore({
+      const newState = writeResultToStore({
         result: action.result.data,
-        dataId: queryStoreValue.query.id,
-        selectionSet: queryStoreValue.query.selectionSet,
+        dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
+        document: action.document,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
       });
 
       return newState;
@@ -122,14 +121,13 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      let newState = writeSelectionSetToStore({
+      let newState = writeResultToStore({
         result: constAction.result.data,
-        dataId: queryStoreValue.mutation.id,
-        selectionSet: queryStoreValue.mutation.selectionSet,
+        dataId: 'ROOT_MUTATION',
+        document: constAction.document,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
       });
 
       if (constAction.resultBehaviors) {
@@ -138,8 +136,7 @@ export function data(
             behavior,
             result: constAction.result,
             variables: queryStoreValue.variables,
-            fragmentMap: queryStoreValue.fragmentMap,
-            selectionSet: queryStoreValue.mutation.selectionSet,
+            document: constAction.document,
             config,
           };
 

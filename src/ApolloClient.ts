@@ -31,7 +31,6 @@ import {
 import {
   QueryManager,
   ApolloQueryResult,
-  SubscriptionOptions,
   ResultComparator,
   ResultTransformer,
 } from './core/QueryManager';
@@ -45,7 +44,8 @@ import {
 } from './util/Observable';
 
 import {
-  WatchQueryOptions,
+  DeprecatedWatchQueryOptions,
+  DeprecatedSubscriptionOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -67,6 +67,10 @@ import {
 } from './data/storeUtils';
 
 import { createFragment } from './fragments';
+
+import {
+  addFragmentsToDocument,
+} from './queries/getFromAST';
 
 /**
  * This type defines a "selector" function that receives state from the Redux store
@@ -229,13 +233,13 @@ export default class ApolloClient {
    * a description of store reactivity.
    *
    */
-  public watchQuery(options: WatchQueryOptions): ObservableQuery {
+  public watchQuery(options: DeprecatedWatchQueryOptions): ObservableQuery {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
       options = assign({}, options, {
         forceFetch: false,
-      }) as WatchQueryOptions;
+      }) as DeprecatedWatchQueryOptions;
     }
 
     // Register each of the fragments present in the query document. The point
@@ -243,7 +247,15 @@ export default class ApolloClient {
     // document itself.
     createFragment(options.query);
 
-    return this.queryManager.watchQuery(options);
+    // We add the fragments to the document to pass only the document around internally.
+    const fullDocument = addFragmentsToDocument(options.query, options.fragments);
+
+    const realOptions = Object.assign({}, options, {
+      query: fullDocument,
+    });
+    delete realOptions.fragments;
+
+    return this.queryManager.watchQuery(realOptions);
   };
 
   /**
@@ -255,13 +267,16 @@ export default class ApolloClient {
    * how this query should be treated e.g. whether it is a polling query, whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query(options: WatchQueryOptions): Promise<ApolloQueryResult> {
+  public query(options: DeprecatedWatchQueryOptions): Promise<ApolloQueryResult> {
     this.initStore();
+
+    // XXX what if I pass pollInterval? Will it just keep running?
+    // XXX why doesn't this stop the query after it's done?
 
     if (!this.shouldForceFetch && options.forceFetch) {
       options = assign({}, options, {
         forceFetch: false,
-      }) as WatchQueryOptions;
+      }) as DeprecatedWatchQueryOptions;
     }
 
     // Register each of the fragments present in the query document. The point
@@ -269,7 +284,15 @@ export default class ApolloClient {
     // document itself.
     createFragment(options.query);
 
-    return this.queryManager.query(options);
+    // We add the fragments to the document to pass only the document around internally.
+    const fullDocument = addFragmentsToDocument(options.query, options.fragments);
+
+    const realOptions = Object.assign({}, options, {
+      query: fullDocument,
+    });
+    delete realOptions.fragments;
+
+    return this.queryManager.query(realOptions);
   };
 
   /**
@@ -313,12 +336,31 @@ export default class ApolloClient {
     refetchQueries?: string[],
   }): Promise<ApolloQueryResult> {
     this.initStore();
-    return this.queryManager.mutate(options);
+
+    // We add the fragments to the document to pass only the document around internally.
+    const fullDocument = addFragmentsToDocument(options.mutation, options.fragments);
+
+    const realOptions = Object.assign({}, options, {
+      mutation: fullDocument,
+    });
+    delete realOptions.fragments;
+
+    return this.queryManager.mutate(realOptions);
   };
 
-  public subscribe(options: SubscriptionOptions): Observable<any> {
+  public subscribe(options: DeprecatedSubscriptionOptions): Observable<any> {
     this.initStore();
-    return this.queryManager.startGraphQLSubscription(options);
+
+    // We add the fragments to the document to pass only the document around internally.
+    const fullDocument = addFragmentsToDocument(options.query, options.fragments);
+
+    const realOptions = Object.assign({}, options, {
+      document: fullDocument,
+    });
+    delete realOptions.fragments;
+    delete realOptions.query;
+
+    return this.queryManager.startGraphQLSubscription(realOptions);
   }
 
   /**

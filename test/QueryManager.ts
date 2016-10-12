@@ -58,10 +58,6 @@ import {
 } from '../src/transport/networkInterface';
 
 import {
-  getFragmentDefinition,
-} from '../src/queries/getFromAST';
-
-import {
   ApolloError,
 } from '../src/errors/ApolloError';
 
@@ -2077,6 +2073,8 @@ describe('QueryManager', () => {
   });
 
   describe('fragment referencing', () => {
+    // TODO refactor: should we move these tests to client.ts?
+    /*
     it('should accept a list of fragments and let us reference them through fetchQuery', (done) => {
       const fragment1 = getFragmentDefinition(gql`
         fragment authorDetails on Author {
@@ -2190,6 +2188,7 @@ describe('QueryManager', () => {
         done();
       });
     });
+    */
   });
 
   it('should reject a query promise given a network error', (done) => {

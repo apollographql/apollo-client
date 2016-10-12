@@ -3,44 +3,36 @@ import {
 } from './store';
 
 import {
-  SelectionSet,
-  FragmentDefinition,
-} from 'graphql';
-
-import {
-  writeSelectionSetToStore,
+  writeResultToStore,
 } from './writeToStore';
-
-import {
-  createFragmentMap,
-} from '../queries/getFromAST';
 
 import {
   ApolloReducerConfig,
 } from '../store';
 
+import {
+  Document,
+} from 'graphql';
+
 import assign = require('lodash.assign');
 
 export function replaceQueryResults(state: NormalizedCache, {
-  queryVariables,
-  querySelectionSet,
-  queryFragments,
+  variables,
+  document,
   newResult,
 }: {
-  queryVariables: any;
-  querySelectionSet: SelectionSet;
-  queryFragments: FragmentDefinition[];
+  variables: any;
+  document: Document;
   newResult: Object;
 }, config: ApolloReducerConfig) {
   const clonedState = assign({}, state) as NormalizedCache;
 
-  return writeSelectionSetToStore({
+  return writeResultToStore({
     result: newResult,
     dataId: 'ROOT_QUERY',
-    selectionSet: querySelectionSet,
-    variables: queryVariables,
+    variables,
+    document,
     store: clonedState,
     dataIdFromObject: config.dataIdFromObject,
-    fragmentMap: createFragmentMap(queryFragments),
   });
 }

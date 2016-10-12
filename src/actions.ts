@@ -1,23 +1,17 @@
 import {
+  Document,
   GraphQLResult,
-  SelectionSet,
-  FragmentDefinition,
 } from 'graphql';
-
-import {
-  SelectionSetWithRoot,
-} from './queries/store';
 
 import {
   MutationBehavior,
 } from './data/mutationResults';
 
-import { FragmentMap } from './queries/getFromAST';
-
 export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
   result: GraphQLResult;
   queryId: string;
+  document: Document;
   requestId: number;
 }
 
@@ -39,13 +33,12 @@ export function isQueryErrorAction(action: ApolloAction): action is QueryErrorAc
 export interface QueryInitAction {
   type: 'APOLLO_QUERY_INIT';
   queryString: string;
-  query: SelectionSetWithRoot;
+  document: Document;
   variables: Object;
   forceFetch: boolean;
   returnPartialData: boolean;
   queryId: string;
   requestId: number;
-  fragmentMap: FragmentMap;
   storePreviousVariables: boolean;
 }
 
@@ -76,10 +69,9 @@ export function isQueryStopAction(action: ApolloAction): action is QueryStopActi
 export interface MutationInitAction {
   type: 'APOLLO_MUTATION_INIT';
   mutationString: string;
-  mutation: SelectionSetWithRoot;
+  mutation: Document;
   variables: Object;
   mutationId: string;
-  fragmentMap: FragmentMap;
   optimisticResponse: Object;
   resultBehaviors?: MutationBehavior[];
 }
@@ -91,6 +83,7 @@ export function isMutationInitAction(action: ApolloAction): action is MutationIn
 export interface MutationResultAction {
   type: 'APOLLO_MUTATION_RESULT';
   result: GraphQLResult;
+  document: Document;
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
 }
@@ -111,9 +104,8 @@ export function isMutationErrorAction(action: ApolloAction): action is MutationE
 
 export interface UpdateQueryResultAction {
   type: 'APOLLO_UPDATE_QUERY_RESULT';
-  queryVariables: any;
-  querySelectionSet: SelectionSet;
-  queryFragments: FragmentDefinition[];
+  variables: any;
+  document: Document;
   newResult: Object;
 }
 

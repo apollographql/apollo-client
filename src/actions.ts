@@ -11,6 +11,7 @@ export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
   result: GraphQLResult;
   queryId: string;
+  document: Document;
   requestId: number;
 }
 
@@ -82,6 +83,7 @@ export function isMutationInitAction(action: ApolloAction): action is MutationIn
 export interface MutationResultAction {
   type: 'APOLLO_MUTATION_RESULT';
   result: GraphQLResult;
+  document: Document;
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
 }

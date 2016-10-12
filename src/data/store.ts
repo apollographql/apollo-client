@@ -1,5 +1,3 @@
-import gql from 'graphql-tag';
-
 import {
   ApolloAction,
   isQueryResultAction,
@@ -107,7 +105,7 @@ export function data(
       const newState = writeResultToStore({
         result: action.result.data,
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
-        document: gql`${queryStoreValue.queryString}`,
+        document: action.document,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
@@ -126,7 +124,7 @@ export function data(
       let newState = writeResultToStore({
         result: constAction.result.data,
         dataId: 'ROOT_MUTATION',
-        document: gql`${queryStoreValue.mutationString}`,
+        document: constAction.document,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
@@ -138,7 +136,7 @@ export function data(
             behavior,
             result: constAction.result,
             variables: queryStoreValue.variables,
-            document: gql`${queryStoreValue.mutationString}`,
+            document: constAction.document,
             config,
           };
 

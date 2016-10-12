@@ -7,8 +7,6 @@ import {
 import forOwn = require('lodash.forown');
 import isEqual = require('lodash.isequal');
 
-import gql from 'graphql-tag';
-
 import {
   ApolloStore,
   Store,
@@ -128,6 +126,7 @@ export class QueryManager {
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private queryListeners: { [queryId: string]: QueryListener[] };
+  private queryDocuments: { [queryId: string]: Document };
 
   private idCounter = 0;
 
@@ -178,6 +177,7 @@ export class QueryManager {
     this.resultComparator = resultComparator;
     this.pollingTimers = {};
     this.queryListeners = {};
+    this.queryDocuments = {};
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -245,6 +245,8 @@ export class QueryManager {
     const updateQueriesResultBehaviors = !optimisticResponse ? [] :
       this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true);
 
+    this.queryDocuments[mutationId] = mutation;
+
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
@@ -268,6 +270,7 @@ export class QueryManager {
             type: 'APOLLO_MUTATION_RESULT',
             result,
             mutationId,
+            document: mutation,
             resultBehaviors: [
                 ...resultBehaviors,
                 ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
@@ -275,6 +278,7 @@ export class QueryManager {
           });
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
+          delete this.queryDocuments[mutationId];
           resolve(this.transformResult(<ApolloQueryResult>result));
         })
         .catch((err) => {
@@ -284,6 +288,7 @@ export class QueryManager {
             mutationId,
           });
 
+          delete this.queryDocuments[mutationId];
           reject(new ApolloError({
             networkError: err,
           }));
@@ -330,7 +335,7 @@ export class QueryManager {
             const resultFromStore = {
               data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
-                query: gql`${queryStoreValue.queryString}`,
+                query: this.queryDocuments[queryId],
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
               }),
@@ -582,6 +587,7 @@ export class QueryManager {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
     delete this.queryListeners[queryId];
+    delete this.queryDocuments[queryId];
     this.stopQueryInStore(queryId);
   }
 
@@ -769,6 +775,7 @@ export class QueryManager {
           // XXX handle multiple ApolloQueryResults
           this.store.dispatch({
             type: 'APOLLO_QUERY_RESULT',
+            document,
             result,
             queryId,
             requestId,
@@ -851,6 +858,7 @@ export class QueryManager {
     const shouldFetch = needToFetch && !noFetch;
 
     // Initialize query in store with unique requestId
+    this.queryDocuments[queryId] = queryDoc;
     this.store.dispatch({
       type: 'APOLLO_QUERY_INIT',
       queryString,

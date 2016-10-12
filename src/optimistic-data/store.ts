@@ -36,6 +36,7 @@ export function optimistic(
     const fakeMutationResultAction = {
       type: 'APOLLO_MUTATION_RESULT',
       result: { data: action.optimisticResponse },
+      document: action.mutation,
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
     } as ApolloAction;

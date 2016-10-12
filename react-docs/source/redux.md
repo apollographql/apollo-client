@@ -14,7 +14,7 @@ This will let you better track the different events that happen in your app, and
 If you want to use your own store, you'll need to pass in reducer and middleware from your Apollo Client instance; you can then pass the store into your `ApolloProvider` directly:
 
 ```js
-import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import ApolloClient from 'apollo-client';
 import { ApolloProvider } from 'react-apollo';
 
@@ -28,9 +28,12 @@ const store = createStore(
     users: userReducer,
     apollo: client.reducer(),
   }),
-  applyMiddleware(client.middleware()),
-  // If you are using the devToolsExtension, you can add it here also
-  window.devToolsExtension ? window.devToolsExtension() : f => f,
+  {}, // initial state
+  compose(
+      applyMiddleware(client.middleware()),
+      // If you are using the devToolsExtension, you can add it here also
+      window.devToolsExtension ? window.devToolsExtension() : f => f,
+  )
 );
 
 ReactDOM.render(

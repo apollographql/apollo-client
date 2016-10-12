@@ -285,6 +285,16 @@ export type MutationQueryReducersMap = {
   [queryName: string]: MutationQueryReducer;
 };
 
+export type OperationResultReducer = (previousResult: Object, options: {
+  result: Object,
+  operationName: Object,
+  variables: Object,
+}) => Object;
+
+export type OperationResultReducerMap = {
+  [queryId: string]: OperationResultReducer;
+};
+
 // Combines all of the default reducers into a map based on the behavior type they accept
 // The behavior type is used to pick the right reducer when evaluating the result of the mutation
 export const defaultMutationBehaviorReducers: { [type: string]: MutationBehaviorReducer } = {

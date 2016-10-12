@@ -3,6 +3,10 @@ import {
   FragmentDefinition,
 } from 'graphql';
 
+import {
+  OperationResultReducer,
+} from '../data/mutationResults';
+
 /**
  * We can change these options to an ObservableQuery
  */
@@ -37,6 +41,11 @@ export interface ModifiableWatchQueryOptions {
    * refetched from the server.
    */
   pollInterval?: number;
+
+  /**
+   * A redux reducer that lets you update the result of this query in the store based on any action (including mutation and query results)
+   */
+  reducer?: OperationResultReducer;
 }
 
 /**

@@ -7,6 +7,8 @@ import {
 import forOwn = require('lodash.forown');
 import isEqual = require('lodash.isequal');
 
+import gql from 'graphql-tag';
+
 import {
   ApolloStore,
   Store,
@@ -328,7 +330,7 @@ export class QueryManager {
             const resultFromStore = {
               data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
-                query: queryStoreValue.query,
+                query: gql`${queryStoreValue.queryString}`,
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
               }),

@@ -14,7 +14,6 @@ import {
 } from '../data/storeUtils';
 
 import {
-  Document,
   SelectionSet,
   GraphQLError,
 } from 'graphql';
@@ -28,7 +27,6 @@ export interface QueryStore {
 
 export interface QueryStoreValue {
   queryString: string;
-  query: Document; //TODO refactor: maybe we need to store just the printed doc.
   variables: Object;
   previousVariables: Object;
   loading: boolean;
@@ -66,7 +64,6 @@ export function queries(
     // before the initial fetch is done, you'll get an error.
     newState[action.queryId] = {
       queryString: action.queryString,
-      query: action.document,
       variables: action.variables,
       previousVariables,
       loading: true,

@@ -107,7 +107,7 @@ export function data(
       const newState = writeResultToStore({
         result: action.result.data,
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
-        document: queryStoreValue.query, // TODO: What's in a selection set that's not in a doc?
+        document: gql`${queryStoreValue.queryString}`,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,

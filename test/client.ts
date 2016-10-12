@@ -414,7 +414,6 @@ describe('client', () => {
         queries: {
           '0': {
             queryString: print(query),
-            query,
             variables: undefined,
             loading: false,
             stopped: false,

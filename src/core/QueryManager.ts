@@ -125,6 +125,7 @@ export class QueryManager {
   private queryTransformer: QueryTransformer;
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
+  // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   private queryListeners: { [queryId: string]: QueryListener[] };
   private queryDocuments: { [queryId: string]: Document };
 

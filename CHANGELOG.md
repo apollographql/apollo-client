@@ -9,6 +9,7 @@ Expect active development and potentially significant breaking changes in the `0
 - **Breaking change**: Move batching to network interface and split off query merging into separate package [PR #734](https://github.com/apollostack/apollo-client/pull/734)
 - **Feature removal**: No more `(read|diff)(Fragment|SelectionSet)FromStore`.
 - **Feature removal**: No more `write(Fragment|SelectionSet)ToStore`.
+- Fix: refetch only updates original query variable options
 
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)

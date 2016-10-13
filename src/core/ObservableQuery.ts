@@ -121,11 +121,15 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query refetch.');
       }
-      // Use the same options as before, but with new variables and forceFetch true
-      return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
-        forceFetch: true,
+      // Update the existing options with new variables
+      assign(this.options, {
         variables: this.variables,
-      }) as WatchQueryOptions)
+      });
+      // Override forceFetch for this call only
+      const combinedOptions = assign({}, this.options, {
+        forceFetch: true,
+      });
+      return this.queryManager.fetchQuery(this.queryId, combinedOptions)
       .then(result => this.queryManager.transformResult(result));
     };
 

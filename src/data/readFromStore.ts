@@ -51,7 +51,7 @@ export function readQueryFromStore({
   store,
   query,
   variables,
-  returnPartialData = false,
+  returnPartialData = true,
 }: ReadQueryOptions): Object {
   const { result } = diffQueryAgainstStore({
     query,
@@ -61,26 +61,6 @@ export function readQueryFromStore({
   });
 
   return result;
-}
-
-// Takes a map of errors for fragments of each type. If all of the types have
-// thrown an error, this function will throw the error associated with one
-// of the types.
-export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error }) {
-  const typenames = Object.keys(fragmentErrors);
-
-  // This is a no-op.
-  if (typenames.length === 0) {
-    return;
-  }
-
-  const errorTypes = typenames.filter((typename) => {
-    return (fragmentErrors[typename] !== null);
-  });
-
-  if (errorTypes.length === Object.keys(fragmentErrors).length) {
-    throw fragmentErrors[errorTypes[0]];
-  }
 }
 
 type ReadStoreContext = {

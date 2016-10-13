@@ -7,6 +7,10 @@ import {
   MutationBehavior,
 } from './data/mutationResults';
 
+import {
+  ApolloReducer,
+} from './store';
+
 export interface QueryResultAction {
   type: 'APOLLO_QUERY_RESULT';
   result: GraphQLResult;
@@ -74,6 +78,7 @@ export interface MutationInitAction {
   mutationId: string;
   optimisticResponse: Object;
   resultBehaviors?: MutationBehavior[];
+  extraReducers?: ApolloReducer[];
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
@@ -86,6 +91,7 @@ export interface MutationResultAction {
   document: Document;
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
+  extraReducers?: ApolloReducer[];
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

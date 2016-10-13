@@ -130,6 +130,7 @@ export function data(
         dataIdFromObject: config.dataIdFromObject,
       });
 
+      // TODO REFACTOR: remove result behaviors
       if (constAction.resultBehaviors) {
         constAction.resultBehaviors.forEach((behavior) => {
           const args: MutationBehaviorReducerArgs = {
@@ -147,6 +148,14 @@ export function data(
           } else {
             throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
           }
+        });
+      }
+
+      // XXX each reducer gets the state from the previous reducer.
+      // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
+      if (constAction.extraReducers) {
+        constAction.extraReducers.forEach( reducer => {
+          newState = reducer(newState, constAction);
         });
       }
 

@@ -442,6 +442,7 @@ export default class ApolloClient {
       queryTransformer: this.queryTransformer,
       resultTransformer: this.resultTransformer,
       resultComparator: this.resultComparator,
+      reducerConfig: this.reducerConfig,
     });
   };
 }

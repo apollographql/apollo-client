@@ -11,6 +11,7 @@ import {
   ApolloStore,
   Store,
   getDataWithOptimisticResults,
+  ApolloReducerConfig,
 } from '../store';
 
 import {
@@ -31,6 +32,10 @@ import {
 import {
   NormalizedCache,
 } from '../data/store';
+
+import {
+  createStoreReducer,
+} from '../data/resultReducers';
 
 import {
   GraphQLResult,
@@ -125,7 +130,10 @@ export class QueryManager {
   private queryTransformer: QueryTransformer;
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
+  private reducerConfig: ApolloReducerConfig;
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
+  // this should be combined with ObservableQuery, but that needs to be expanded to support
+  // mutations and subscriptions as well.
   private queryListeners: { [queryId: string]: QueryListener[] };
   private queryDocuments: { [queryId: string]: Document };
 
@@ -157,6 +165,7 @@ export class QueryManager {
     networkInterface,
     store,
     reduxRootSelector,
+    reducerConfig = { mutationBehaviorReducers: {} },
     queryTransformer,
     resultTransformer,
     resultComparator,
@@ -164,6 +173,7 @@ export class QueryManager {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
+    reducerConfig?: ApolloReducerConfig,
     queryTransformer?: QueryTransformer,
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
@@ -173,6 +183,7 @@ export class QueryManager {
     this.networkInterface = networkInterface;
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
+    this.reducerConfig = reducerConfig;
     this.queryTransformer = queryTransformer;
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
@@ -248,6 +259,19 @@ export class QueryManager {
 
     this.queryDocuments[mutationId] = mutation;
 
+    const extraReducers = Object.keys(this.observableQueries).map( queryId => {
+      const queryOptions = this.observableQueries[queryId].observableQuery.options;
+      if (queryOptions.reducer) {
+        return createStoreReducer(
+          queryOptions.reducer,
+          queryOptions.query,
+          queryOptions.variables,
+          this.reducerConfig,
+          );
+      }
+      return null;
+    }).filter( reducer => reducer !== null );
+
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
@@ -256,6 +280,7 @@ export class QueryManager {
       mutationId,
       optimisticResponse,
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
+      extraReducers,
     });
 
     return new Promise((resolve, reject) => {
@@ -276,6 +301,7 @@ export class QueryManager {
                 ...resultBehaviors,
                 ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
             ],
+            extraReducers,
           });
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });

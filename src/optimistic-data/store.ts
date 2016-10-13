@@ -51,6 +51,8 @@ export function optimistic(
       config
     );
 
+    // TODO: apply extra reducers and resultBehaviors to optimistic store?
+
     const changedKeys = Object.keys(fakeDataResultState).filter(
       key => optimisticData[key] !== fakeDataResultState[key]);
     const patch = pick(fakeDataResultState, changedKeys);

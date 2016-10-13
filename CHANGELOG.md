@@ -11,6 +11,8 @@ Expect active development and potentially significant breaking changes in the `0
 - **Feature removal**: No more `write(Fragment|SelectionSet)ToStore`.
 - Fix: refetch only updates original query variable options
 
+- Fix: Moved @types packages from devDependencies to dependencies as discussed in [Issue #713](https://github.com/apollostack/apollo-client/issues/713)
+
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)
 - Fix: avoid field error on mutations after a query cancellation or a query failure by enforcing returnPartialData during previous data retrieval before applying a mutation update. [PR #696](https://github.com/apollostack/apollo-client/pull/696) and [Issue #647](https://github.com/apollostack/apollo-client/issues/647).

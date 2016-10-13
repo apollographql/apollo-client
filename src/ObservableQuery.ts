@@ -40,6 +40,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
    * Reset this query to take a new set of options.
    */
   public setOptions: (options: ModifiableWatchQueryOptions) => Promise<ApolloQueryResult>;
+  public _setOptionsNoResult: (options: ModifiableWatchQueryOptions) => void;
   /**
    * Update the variables of this observable query, and fetch the new results
    * if they've changed. If you want to force new results, use `refetch`.
@@ -51,6 +52,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
    * the previous values of those variables will be used.
    */
   public setVariables: (variables: any) => Promise<ApolloQueryResult>;
+  public _setVariablesNoResult: (variables: any) => void;
   public fetchMore: (options: FetchMoreQueryOptions & FetchMoreOptions) => Promise<any>;
   public updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any) => void;
   public stopPolling: () => void;
@@ -142,6 +144,19 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
       return this.setVariables(opts.variables);
     };
+    // XXX work around the bug where this.result() kills the subscription by
+    // allowing us to not call this.result() if we don't need it (eg
+    // react-apollo). See http://localhost:3000/app/mock.meteor.com
+    this._setOptionsNoResult = (opts: ModifiableWatchQueryOptions) => {
+      this.options = assign({}, this.options, opts) as WatchQueryOptions;
+      if (opts.pollInterval) {
+        this.startPolling(opts.pollInterval);
+      } else if (opts.pollInterval === 0) {
+        this.stopPolling();
+      }
+
+      this._setVariablesNoResult(opts.variables);
+    };
 
     // There's a subtle difference between setVariables and refetch:
     //   - setVariables will take results from the store unless the query
@@ -159,6 +174,22 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           variables: this.variables,
         }) as WatchQueryOptions)
         .then(result => this.queryManager.transformResult(result));
+      }
+    };
+    // XXX work around the bug where this.result() kills the subscription by
+    // allowing us to not call this.result() if we don't need it (eg
+    // react-apollo). See http://localhost:3000/app/mock.meteor.com
+    this._setVariablesNoResult = (variables: any) => {
+      const newVariables = assign({}, this.variables, variables);
+
+      if (isEqual(newVariables, this.variables)) {
+        return;
+      } else {
+        this.variables = newVariables;
+        // Use the same options as before, but with new variables
+        this.queryManager.fetchQuery(this.queryId, assign(this.options, {
+          variables: this.variables,
+        }) as WatchQueryOptions);
       }
     };
 

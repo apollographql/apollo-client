@@ -1,16 +1,16 @@
 ---
-title: Apollo JavaScript Client
+title: Introduction
 order: 0
-description: Documentation for the Apollo JavaScript Client core
+description: Documentation for the Apollo Vanilla JavaScript Client Core
 ---
 
-This is the documentation for the `apollo-client` library, a JavaScript GraphQL client.
+This is the documentation for the `apollo-client` library, a vanilla JavaScript GraphQL client.
 
 If you want to learn how to use this library and are using React, we suggest reading the [React Apollo Guide](http://dev.apollodata.com/react). If you are using Angular 2, likewise, we suggest reading the [Angular 2 Apollo Guide](http://dev.apollodata.com/angular2). Otherwise, this documentation should help you understand how the client's core API works.
 
 The Apollo community builds and maintains a collection of utilities designed to make it easier to use [GraphQL](http://graphql.org) across a range of front-end and server technologies.
 
-If you are looking to use Apollo with a native mobile client, there is a [iOS Client](https://github.com/apollostack/apollo-ios) in development and plans for an Android client too. On the other hand, the React integration works with [React Native](https://facebook.github.io/react-native/) on both platforms without changes.
+If you are looking to use Apollo with a native mobile client, there is an [iOS Client](https://github.com/apollostack/apollo-ios) in development and plans for an Android client too. On the other hand, the React integration works with [React Native](https://facebook.github.io/react-native/) on both platforms without changes.
 
 ## Example apps
 

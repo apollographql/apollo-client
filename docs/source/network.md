@@ -1,7 +1,7 @@
 ---
 title: Network layer
 order: 110
-description: How to point your Apollo client to a different GraphQL server, or use a totally different protocol.
+description: How to configure Apollo Client's network layer, or build your own.
 ---
 
 <h2 id="network-interfaces">Network interfaces</h2>
@@ -26,7 +26,7 @@ const client = new ApolloClient({
 
 <h3 id="networkInterfaceMiddleware" title="Middleware">Middleware</h3>
 
-It is possible to use middleware with the network interface created via `createNetworkInterface`.  In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.  Each object must contain an `applyMiddleware` method with the following parameters:
+It is possible to use middleware with the network interface created via `createNetworkInterface`. Middleware is used to inspect and modify every request made over the `netWorkInterface`, for example, adding authentication tokens to every query. In order to add middleware, you must pass an array of objects into the interface created with `createNetworkInterface()`.  Each object must contain an `applyMiddleware` method with the following parameters:
 
 - `req: object` The HTTP request being processed by the middleware.
 - `next: function` This function pushes the HTTP request onward through the middleware.
@@ -96,8 +96,8 @@ const client = new ApolloClient({
 Given the above code, the header's `Authorization` value will be that of `token2`.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware, passed to `.use()` as an array.
 
 <h3 id="networkInterfaceAfterware" title="Afterware">Afterware</h3>
-A afterware is very similar to a middleware, except that a afterware runs after a request has been made,
-that is when a response is going to get processed.
+'Afterware' is very similar to a middleware, except that a afterware runs after a request has been made,
+that is when a response is going to get processed. It's perfect for responding to the situation where a user becomes logged out during their session.
 
 It is possible to use afterware with the network interface created via `createNetworkInterface`.
 In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.
@@ -184,21 +184,21 @@ You can define a custom network interface and pass it to the Apollo Client to se
 
 All you need to do is create a `NetworkInterface` and pass it to the `ApolloClient` constructor.
 
-<h3 id="NetworkInterface">interface NetworkInterface</h3>
+<h3 id="NetworkInterface"><i>interface</i> NetworkInterface</h3>
 
 This is the interface that an object should implement so that it can be used by the Apollo Client to make queries.
 
 - `query(request: GraphQLRequest): Promise<GraphQLResult>` This function on your network interface is pretty self-explanatory - it takes a GraphQL request object, and should return a promise for a GraphQL result. The promise should be rejected in the case of a network error.
 
-<h3 id="GraphQLRequest">interface GraphQLRequest</h3>
+<h3 id="GraphQLRequest"><i>interface</i> GraphQLRequest</h3>
 
 Represents a request passed to the network interface. Has the following properties:
 
 - `query: string` The query to send to the server.
 - `variables: Object` The variables to send with the query.
-- `debugName: string` An optional parameter that will be included in error messages about this query. XXX do we need this?
+- `debugName: string` An optional parameter that will be included in error messages about this query.
 
-<h3 id="GraphQLResult">interface GraphQLResult</h3>
+<h3 id="GraphQLResult"><i>interface</i> GraphQLResult</h3>
 
 This represents a result that comes back from the GraphQL server.
 
@@ -207,7 +207,7 @@ This represents a result that comes back from the GraphQL server.
 
 <h2 id="query-batching">Query batching</h2>
 
-Apollo Client can automatically batch multiple queries into one request when they are done within a 10 millisecond interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. This batching supports all GraphQL endpoints, including those that do not implement transport-level batching, by merging together queries into one top-level query with multiple fields.
+Apollo Client can automatically batch multiple queries into one request when they are made within a 10 millisecond interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. This batching supports all GraphQL endpoints, including those that do not implement transport-level batching, by merging together queries into one top-level query with multiple fields.
 
 To turn on query batching, pass the `shouldBatch: true` option to the `ApolloClient` constructor. In addition, you need to use a network interface that supports batching. The default network interface generated by `createNetworkInterface` supports batching out of the box, but you can convert any network interface to a batching one by calling `addQueryMerging` on it, as described [below](#addQueryMerging).
 
@@ -230,7 +230,7 @@ apolloClient.query({ query: secondQuery });
 // You don't have to do anything special - Apollo will send the two queries as one request.
 ```
 
-If you have developed a custom network interface, you can easily add batching via query merging to it with `addQueryMerging`:
+If you have built a custom network interface, you can easily add batching via query merging to it with `addQueryMerging`:
 
 ```js
 import { myCustomNetworkInterface } from './network';
@@ -319,7 +319,7 @@ Once the results are returned for this query, Apollo will take care of unpacking
 
 This means that your client code and server implementation can remain completely oblivious to the batching that Apollo performs.
 
-<h3 id="BatchedNetworkInterface" title="BatchedNetworkInterface">interface BatchedNetworkInterface</h3>
+<h3 id="BatchedNetworkInterface" title="BatchedNetworkInterface"><i>interface</i> BatchedNetworkInterface</h3>
 
 If you want to implement a network interface that natively supports batching, for example by sending queries to a special endpoint that can handle multiple operations, you can do that by implementing a special method in your network interface, in addition to the normal `query` method:
 

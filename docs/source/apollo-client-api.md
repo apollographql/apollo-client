@@ -1,5 +1,5 @@
 ---
-title: apollo-client API
+title: API Reference (apollo-client)
 order: 11
 description: The API for the apollo-client package
 ---

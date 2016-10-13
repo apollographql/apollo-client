@@ -108,7 +108,6 @@ describe('diffing queries against the store', () => {
         store,
         query: unionQuery,
         variables: null,
-        returnPartialData: false,
       });
     }, /No fragment/);
   });
@@ -195,16 +194,18 @@ describe('diffing queries against the store', () => {
     });
   });
 
-  it('throws an error on a query with fields missing from named fragments of all types', () => {
+  it('throws an error on a query with fields missing from matching named fragments', () => {
     const firstQuery = gql`
       query {
         person {
+          __typename
           firstName
           lastName
         }
       }`;
     const firstResult = {
       person: {
+        __typename: 'Author',
         firstName: 'John',
         lastName: 'Smith',
       },
@@ -216,6 +217,7 @@ describe('diffing queries against the store', () => {
     const unionQuery = gql`
       query {
         person {
+          __typename
           ...authorInfo
           ...jediInfo
         }
@@ -227,49 +229,6 @@ describe('diffing queries against the store', () => {
       fragment jediInfo on Jedi {
         jedi
       }`;
-    assert.throw(() => {
-      diffQueryAgainstStore({
-        store,
-        query: unionQuery,
-        variables: null,
-        returnPartialData: false,
-      });
-    });
-  });
-
-  it('throws an error on a query with fields missing from fragments of all types', () => {
-    const firstQuery = gql`
-      query {
-        person {
-          firstName
-          lastName
-        }
-      }`;
-    const firstResult = {
-      person: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
-    });
-
-    const unionQuery = gql`
-      query {
-        person {
-          ... on Author {
-            firstName
-            address
-          }
-
-          ... on Jedi {
-            powers
-          }
-        }
-      }`;
-
     assert.throw(() => {
       diffQueryAgainstStore({
         store,

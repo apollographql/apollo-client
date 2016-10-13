@@ -4,6 +4,7 @@ import {
 
 import graphqlAnywhere, {
   Resolver,
+  FragmentMatcher,
 } from 'graphql-anywhere';
 
 import {
@@ -51,7 +52,7 @@ export function readQueryFromStore({
   store,
   query,
   variables,
-  returnPartialData = true,
+  returnPartialData = false,
 }: ReadQueryOptions): Object {
   const { result } = diffQueryAgainstStore({
     query,
@@ -68,6 +69,40 @@ type ReadStoreContext = {
   returnPartialData: boolean;
   hasMissingField: boolean;
 }
+
+let haveWarned = false;
+
+const fragmentMatcher: FragmentMatcher = (
+  objId: string,
+  typeCondition: string,
+  context: ReadStoreContext
+): boolean => {
+  const obj = context.store[objId];
+
+  if (! obj) {
+    return false;
+  }
+
+  if (! obj.__typename) {
+    if (! haveWarned) {
+      console.warn(`You're using fragments in your queries, but don't have the addTypename:
+true option set in Apollo Client. Please turn on that option so that we can accurately
+match fragments.`);
+      haveWarned = true;
+    }
+
+    context.returnPartialData = true;
+
+    return true;
+  }
+
+  if (obj.__typename === typeCondition) {
+    return true;
+  }
+
+  // XXX interfaces and unions
+  return false;
+};
 
 const readStoreResolver: Resolver = (
   fieldName: string,
@@ -129,7 +164,9 @@ export function diffQueryAgainstStore({
     hasMissingField: false,
   };
 
-  const result = graphqlAnywhere(readStoreResolver, query, 'ROOT_QUERY', context, variables);
+  const result = graphqlAnywhere(readStoreResolver, query, 'ROOT_QUERY', context, variables, {
+    fragmentMatcher,
+  });
 
   return {
     result,

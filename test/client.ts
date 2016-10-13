@@ -39,10 +39,6 @@ import {
 } from 'redux';
 
 import {
-  createApolloStore,
-} from '../src/store';
-
-import {
   QueryManager,
 } from '../src/core/QueryManager';
 
@@ -813,44 +809,6 @@ describe('client', () => {
     client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
       done();
-    });
-  });
-
-  describe('directives', () => {
-    it('should reject the query promise if skipped data arrives in the result', (done) => {
-      const query = gql`
-        query {
-          fortuneCookie @skip(if: true)
-          otherThing
-        }`;
-      const result = {
-        fortuneCookie: 'you will go far',
-        otherThing: 'false',
-      };
-      const networkInterface = mockNetworkInterface(
-        {
-          request: { query },
-          result: { data: result },
-        }
-      );
-      const client = new ApolloClient({
-        networkInterface,
-      });
-      // we need this so it doesn't print out a bunch of stuff we don't need
-      // when we're trying to test an exception.
-      client.store = createApolloStore({ reportCrashes: false });
-      client.queryManager = new QueryManager({
-        networkInterface,
-        store: client.store,
-        reduxRootSelector: (state) => state.apollo,
-      });
-
-      client.query({ query }).then(() => {
-        // do nothing
-      }).catch((error) => {
-        assert.include(error.message, 'Found extra field');
-        done();
-      });
     });
   });
 

@@ -115,7 +115,7 @@ describe('roundtrip', () => {
   });
 
   describe('fragments', () => {
-    it('should resolve on union types with inline fragments', () => {
+    it('should resolve on union types with inline fragments without typenames', () => {
       storeRoundtrip(gql`
         query {
           all_people {
@@ -139,6 +139,33 @@ describe('roundtrip', () => {
           },
         ],
       });
+    });
+
+    // XXX this test is weird because it assumes the server returned an incorrect result
+    it('should throw an error on two of the same inline fragment types', () => {
+      assert.throws(() => {
+        storeRoundtrip(gql`
+          query {
+            all_people {
+              __typename
+              name
+              ... on Jedi {
+                side
+              }
+              ... on Jedi {
+                rank
+              }
+            }
+          }`, {
+          all_people: [
+            {
+              __typename: 'Jedi',
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+          ],
+          });
+      }, /Can\'t find field rank on object/);
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', () => {
@@ -194,6 +221,34 @@ describe('roundtrip', () => {
           },
         ],
       });
+    });
+
+    it('should throw on error on two of the same spread fragment types', () => {
+      assert.throws(() =>
+        storeRoundtrip(gql`
+          fragment jediSide on Jedi {
+            side
+          }
+          fragment jediRank on Jedi {
+            rank
+          }
+          query {
+            all_people {
+              __typename
+              name
+              ...jediSide
+              ...jediRank
+            }
+          }`, {
+          all_people: [
+            {
+              __typename: 'Jedi',
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+          ],
+        })
+      , /Can\'t find field rank on object/);
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {

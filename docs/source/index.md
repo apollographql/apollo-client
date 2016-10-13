@@ -4,7 +4,7 @@ order: 0
 description: Documentation for the Apollo Vanilla JavaScript Client Core
 ---
 
-This is the documentation for the `apollo-client` library, a vanilla JavaScript GraphQL client. Apollo Client also serves as the core library used by various JavaScript integrations, including React Apollo and Angular2 Apollo.
+This is the documentation for the `apollo-client` library, a vanilla JavaScript GraphQL client that can be used independent of any other framework. Apollo Client also serves as the core library used by various JavaScript integrations, including React Apollo and Angular2 Apollo.
 
 If you want to learn how to use this library and are using React, we suggest reading the [React Apollo Guide](http://dev.apollodata.com/react). If you are using Angular 2, likewise, we suggest reading the [Angular2 Apollo Guide](http://dev.apollodata.com/angular2). Otherwise, this documentation should help you understand how the client's core API works.
 

@@ -13,6 +13,8 @@ import {
 
 import gql from 'graphql-tag';
 
+import { withWarning } from './util/wrap';
+
 describe('roundtrip', () => {
   it('real graphql result', () => {
     storeRoundtrip(gql`
@@ -115,30 +117,32 @@ describe('roundtrip', () => {
   });
 
   describe('fragments', () => {
-    it('should resolve on union types with inline fragments without typenames', () => {
-      storeRoundtrip(gql`
-        query {
-          all_people {
-            name
-            ... on Jedi {
-              side
+    it('should resolve on union types with inline fragments without typenames with warning', () => {
+      withWarning(() => {
+        storeRoundtrip(gql`
+          query {
+            all_people {
+              name
+              ... on Jedi {
+                side
+              }
+              ... on Droid {
+                model
+              }
             }
-            ... on Droid {
-              model
-            }
-          }
-        }`, {
-        all_people: [
-          {
-            name: 'Luke Skywalker',
-            side: 'bright',
-          },
-          {
-            name: 'R2D2',
-            model: 'astromech',
-          },
-        ],
-      });
+          }`, {
+          all_people: [
+            {
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+            {
+              name: 'R2D2',
+              model: 'astromech',
+            },
+          ],
+        });
+      }, /using fragments/);
     });
 
     // XXX this test is weird because it assumes the server returned an incorrect result

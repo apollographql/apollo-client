@@ -59,6 +59,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors/ApolloError';
 
+import { withWarning } from './util/wrap';
+
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
@@ -180,25 +182,27 @@ describe('client', () => {
     assert.equal(client.reduxRootKey, 'apollo');
   });
 
-  it('can allow passing in a top level key', () => {
-    const reduxRootKey = 'testApollo';
-    const client = new ApolloClient({
-      reduxRootKey,
-    });
+  it('can allow passing in a top level key (backcompat)', () => {
+    withWarning(() => {
+      const reduxRootKey = 'testApollo';
+      const client = new ApolloClient({
+        reduxRootKey,
+      });
 
-    // shouldn't throw
-    createStore(
-        combineReducers({
-          testApollo: client.reducer(),
-        } as any),
-        // here "client.setStore(store)" will be called internally,
-        // this method throws if "reduxRootSelector" or "reduxRootKey"
-        // are not configured properly
-        applyMiddleware(client.middleware())
-    );
+      // shouldn't throw
+      createStore(
+          combineReducers({
+            testApollo: client.reducer(),
+          } as any),
+          // here "client.setStore(store)" will be called internally,
+          // this method throws if "reduxRootSelector" or "reduxRootKey"
+          // are not configured properly
+          applyMiddleware(client.middleware())
+      );
 
-    // Check if the key is added to the client instance, like before
-    assert.equal(client.reduxRootKey, 'testApollo');
+      // Check if the key is added to the client instance, like before
+      assert.equal(client.reduxRootKey, 'testApollo');
+    }, /reduxRootKey/);
   });
 
   it('should allow passing in a selector function for apollo state', () => {
@@ -259,9 +263,12 @@ describe('client', () => {
   });
 
   it('should throw an error if "reduxRootKey" is provided and the client tries to create the store', () => {
-    const client = new ApolloClient({
-      reduxRootKey: 'test',
-    });
+    const client = withWarning(() => {
+      return new ApolloClient({
+        reduxRootKey: 'test',
+      });
+    }, /reduxRootKey/);
+
     try {
       client.initStore();
 
@@ -481,10 +488,12 @@ describe('client', () => {
       result: { data },
     });
 
-    const client = new ApolloClient({
-      reduxRootKey,
-      networkInterface,
-    });
+    const client = withWarning(() => {
+      return new ApolloClient({
+        reduxRootKey,
+        networkInterface,
+      });
+    }, /reduxRootKey/);
 
     createStore(
       combineReducers({
@@ -495,7 +504,7 @@ describe('client', () => {
     );
 
     return client.query({ query })
-      .then((result) => {
+      .then((result: any) => {
         assert.deepEqual(result.data, data);
       });
   });

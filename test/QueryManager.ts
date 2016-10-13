@@ -769,6 +769,55 @@ describe('QueryManager', () => {
     );
   });
 
+  it('only modifies varaibles when refetching', () => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query: query },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query },
+        result: { data: data2 },
+      }
+    );
+
+    const observable = queryManager.watchQuery({ query });
+    const originalOptions = assign({}, observable.options);
+    return observableToPromise({ observable },
+      (result) => {
+        assert.deepEqual(result.data, data1);
+        observable.refetch();
+      },
+      (result) => {
+        assert.deepEqual(result.data, data2);
+        const updatedOptions = assign({}, observable.options);
+        delete originalOptions.variables;
+        delete updatedOptions.variables;
+        assert.deepEqual(updatedOptions, originalOptions);
+      }
+    );
+  });
+
   it('continues to poll after refetch', () => {
     const query = gql`
       {

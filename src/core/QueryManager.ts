@@ -805,6 +805,7 @@ export class QueryManager {
           this.store.dispatch({
             type: 'APOLLO_QUERY_RESULT',
             document,
+            operationName: getOperationName(document),
             result,
             queryId,
             requestId,

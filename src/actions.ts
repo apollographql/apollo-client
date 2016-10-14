@@ -16,6 +16,7 @@ export interface QueryResultAction {
   result: GraphQLResult;
   queryId: string;
   document: Document;
+  operationName: string;
   requestId: number;
 }
 

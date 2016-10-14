@@ -665,6 +665,7 @@ describe('mutation results', () => {
     });
   });
 
+
   describe('query result reducers', () => {
     const mutation = gql`
       mutation createTodo {

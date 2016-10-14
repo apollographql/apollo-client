@@ -493,6 +493,69 @@ describe('QueryManager', () => {
     done();
   });
 
+  // When we fix #694 and remove _setVariablesNoResult, we should change
+  // this test to use setVariables directly.
+  it('you can avoid #694 by using _setVariablesNoResult', (done) => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }`,
+      variables: {
+        id: '1',
+      },
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Luke Skywalker has another name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    // pre populate data to avoid contention
+    queryManager.query(request)
+      .then(() => {
+        let subOneCount = 0;
+        const handle = queryManager.watchQuery(request);
+        const subOne = handle.subscribe({
+          next(result) {
+            subOneCount++;
+
+            if (subOneCount === 1) {
+              assert.deepEqual(result.data, data1);
+              // we are intentionally not changing them
+              handle._setVariablesNoResult(request.variables);
+              setTimeout(() => {
+                handle.refetch();
+              }, 0);
+            } else if (subOneCount === 2) {
+              assert.deepEqual(result.data, data2);
+              done();
+            }
+          },
+        });
+      });
+  });
+
   it('supports interoperability with other Observable implementations like RxJS', (done) => {
     const expResult = {
       data: {

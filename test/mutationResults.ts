@@ -663,6 +663,68 @@ describe('mutation results', () => {
         assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
       });
     });
+
+    it('can filter based on operationName', () => {
+      let counter = 0;
+      let observableQuery: any;
+      let observableQuery2: any;
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        observableQuery = client.watchQuery({
+          query,
+          reducer: (previousResult, action) => {
+            if (isMutationResultAction(action) && action.operationName === 'createTodo') {
+              counter++;
+              const newResult = clonedeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null, // TODO: we should actually check the new result
+        });
+
+        // this query subscribes to the same data, but the reducer should never run
+        // because the operationName doesn't match. So the number of
+        observableQuery2 = client.watchQuery({
+          query,
+          reducer: (previousResult, action) => {
+            if (isMutationResultAction(action) && action.operationName === 'wrongName') {
+              counter++; // shouldn't be called, so counter shouldn't increase.
+              const newResult = clonedeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null, // TODO: we should actually check the new result
+        });
+        return client.mutate({
+          mutation,
+        });
+      })
+      .then(() => {
+        // TODO: improve this test. Now it just works because this query is the same as the watchQuery with the reducer.
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        observableQuery.unsubscribe();
+
+        // The reducer should have been called once
+        assert.equal(counter, 1);
+
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
   });
 
 

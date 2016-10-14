@@ -37,6 +37,7 @@ export function optimistic(
       type: 'APOLLO_MUTATION_RESULT',
       result: { data: action.optimisticResponse },
       document: action.mutation,
+      operationName: action.operationName,
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
       extraReducers: action.extraReducers,

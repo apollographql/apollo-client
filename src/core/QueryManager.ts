@@ -277,6 +277,7 @@ export class QueryManager {
       mutationString,
       mutation,
       variables,
+      operationName: getOperationName(mutation),
       mutationId,
       optimisticResponse,
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
@@ -297,6 +298,7 @@ export class QueryManager {
             result,
             mutationId,
             document: mutation,
+            operationName: getOperationName(mutation),
             resultBehaviors: [
                 ...resultBehaviors,
                 ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),

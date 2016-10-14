@@ -75,6 +75,7 @@ export interface MutationInitAction {
   mutationString: string;
   mutation: Document;
   variables: Object;
+  operationName: string;
   mutationId: string;
   optimisticResponse: Object;
   resultBehaviors?: MutationBehavior[];
@@ -85,10 +86,13 @@ export function isMutationInitAction(action: ApolloAction): action is MutationIn
   return action.type === 'APOLLO_MUTATION_INIT';
 }
 
+// TODO REFACOTR: simplify all these actions by providing a generic options field to all actions.
 export interface MutationResultAction {
   type: 'APOLLO_MUTATION_RESULT';
   result: GraphQLResult;
   document: Document;
+  operationName: string;
+  // XXX maybe provide variables as well?
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
   extraReducers?: ApolloReducer[];

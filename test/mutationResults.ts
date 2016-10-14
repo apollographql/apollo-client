@@ -866,11 +866,8 @@ describe('mutation results', () => {
           query: filteredQuery,
           forceFetch: true, // need force-fetch to get the filteredTodos,
           reducer: (previousResult, action) => {
-            console.log(action);
             counter2++;
             if (isMutationResultAction(action) && action.result.data.createTodo.completed) {
-              console.log(action.result.data.createTodo);
-              console.log('PR', previousResult);
               const newResult = clonedeep(previousResult) as any;
               newResult.todoList.filteredTodos.unshift(action.result.data.createTodo);
               return newResult;
@@ -904,7 +901,7 @@ describe('mutation results', () => {
       })
       .then(() => {
         // TODO: improve this test. Now it just works because this query is the same as the watchQuery with the reducer.
-        return client.query({ query:filteredQuery });
+        return client.query({ query: filteredQuery });
       })
       .then((newResult: any) => {
         observableQuery2.unsubscribe();

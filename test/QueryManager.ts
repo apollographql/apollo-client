@@ -519,12 +519,6 @@ describe('QueryManager', () => {
       },
     };
 
-    const data3 = {
-      people_one: {
-        name: 'Luke Skywalker has another name',
-      },
-    };
-
     const queryManager = mockRefetch({
       request,
       firstResult: { data: data1 },
@@ -536,7 +530,7 @@ describe('QueryManager', () => {
       .then(() => {
         let subOneCount = 0;
         const handle = queryManager.watchQuery(request);
-        const subOne = handle.subscribe({
+        handle.subscribe({
           next(result) {
             subOneCount++;
 

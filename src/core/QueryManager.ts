@@ -801,6 +801,20 @@ export class QueryManager {
 
       return this.networkInterface.query(request)
         .then((result: GraphQLResult) => {
+
+          const extraReducers = Object.keys(this.observableQueries).map( obsQueryId => {
+            const queryOptions = this.observableQueries[obsQueryId].observableQuery.options;
+            if (queryOptions.reducer) {
+              return createStoreReducer(
+                queryOptions.reducer,
+                queryOptions.query,
+                queryOptions.variables,
+                this.reducerConfig,
+                );
+            }
+            return null;
+          }).filter( reducer => reducer !== null );
+
           // XXX handle multiple ApolloQueryResults
           this.store.dispatch({
             type: 'APOLLO_QUERY_RESULT',
@@ -809,6 +823,7 @@ export class QueryManager {
             result,
             queryId,
             requestId,
+            extraReducers,
           });
 
           this.removeFetchQueryPromise(requestId);

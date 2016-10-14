@@ -11,13 +11,14 @@ import {
   ApolloReducer,
 } from './store';
 
-export interface QueryResultAction {
+export type QueryResultAction = {
   type: 'APOLLO_QUERY_RESULT';
   result: GraphQLResult;
   queryId: string;
   document: Document;
   operationName: string;
   requestId: number;
+  extraReducers?: ApolloReducer[];
 }
 
 export function isQueryResultAction(action: ApolloAction): action is QueryResultAction {

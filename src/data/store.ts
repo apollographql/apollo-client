@@ -102,7 +102,9 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      const newState = writeResultToStore({
+      // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
+      // write to "the" store?
+      let newState = writeResultToStore({
         result: action.result.data,
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
         document: action.document,
@@ -110,6 +112,14 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
       });
+
+      // XXX each reducer gets the state from the previous reducer.
+      // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
+      if (action.extraReducers) {
+        action.extraReducers.forEach( reducer => {
+          newState = reducer(newState, constAction);
+        });
+      }
 
       return newState;
     }

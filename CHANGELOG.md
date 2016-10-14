@@ -2,6 +2,9 @@
 
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
+### v0.4.21
+ - Added some temporary functions (`_setVariablesNoResult` and `_setOptionsNoResult`) to work around a `react-apollo` problem fundamentally caused by the issue highlighted in [PR #694](https://github.com/apollostack/apollo-client/pull/694). The code as been refactored on `master`, so we expect it to be fixed in 0.5.x, and is not worth resolving now.
+
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)
 - Fix: avoid field error on mutations after a query cancellation or a query failure by enforcing returnPartialData during previous data retrieval before applying a mutation update. [PR #696](https://github.com/apollostack/apollo-client/pull/696) and [Issue #647](https://github.com/apollostack/apollo-client/issues/647).

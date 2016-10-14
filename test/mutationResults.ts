@@ -594,7 +594,7 @@ describe('mutation results', () => {
     });
   });
 
-  describe('query store reducer', () => {
+  describe('result reducer', () => {
     const mutation = gql`
       mutation createTodo {
         # skipping arguments in the test since they don't matter

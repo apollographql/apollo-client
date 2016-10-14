@@ -16,6 +16,10 @@ import {
   applyTransformers,
 } from '../src/queries/queryTransform';
 
+import {
+  isMutationResultAction,
+} from '../src/actions';
+
 describe('optimistic mutation results', () => {
   const query = gql`
     query todoList {
@@ -838,6 +842,133 @@ describe('optimistic mutation results', () => {
         assert.property(dataInStore, 'Todo66');
         assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
         assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
+      });
+    });
+  });
+
+  describe('optimistic updates with result reducer', () => {
+    const mutation = gql`
+      mutation createTodo {
+        # skipping arguments in the test since they don't matter
+        createTodo {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          id: '99',
+          __typename: 'Todo',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
+    const optimisticResponse = {
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '99',
+        text: 'Optimistically generated',
+        completed: true,
+      },
+    };
+
+    /*
+    const mutationResult2 = {
+      data: assign({}, mutationResult.data, {
+        createTodo: assign({}, mutationResult.data.createTodo, {
+          id: '66',
+          text: 'Second mutation.',
+        }),
+      }),
+    };
+
+    const optimisticResponse2 = {
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '66',
+        text: 'Optimistically generated 2',
+        completed: true,
+      },
+    };
+    */
+
+    /*
+    .then(() => {
+        observableQuery = client.watchQuery({
+          query,
+          reducer: (previousResult, action) => {
+            counter++;
+            if (isMutationResultAction(action)) {
+              const newResult = clonedeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null, // TODO: we should actually check the new result
+        });
+        return client.mutate({
+          mutation,
+        });
+      })
+    */
+
+    it('can add an item to an array', () => {
+      let observableQuery: any;
+      let counter = 0;
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        observableQuery = client.watchQuery({
+          query,
+          reducer: (previousResult, action) => {
+            counter++;
+            if (isMutationResultAction(action)) {
+              const newResult = clonedeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null, // TODO: we should actually check the new result
+        });
+      })
+      .then(() => {
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+
+        return promise;
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
       });
     });
   });

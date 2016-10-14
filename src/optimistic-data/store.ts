@@ -1,5 +1,5 @@
 import {
-  ApolloAction,
+  MutationResultAction,
   isMutationInitAction,
   isMutationResultAction,
   isMutationErrorAction,
@@ -33,13 +33,15 @@ export function optimistic(
   config: any
 ): OptimisticStore {
   if (isMutationInitAction(action) && action.optimisticResponse) {
-    const fakeMutationResultAction = {
+    const fakeMutationResultAction: MutationResultAction = {
       type: 'APOLLO_MUTATION_RESULT',
       result: { data: action.optimisticResponse },
       document: action.mutation,
+      operationName: action.operationName,
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
-    } as ApolloAction;
+      extraReducers: action.extraReducers,
+    };
 
     const fakeStore = assign({}, store, { optimistic: previousState }) as Store;
     const optimisticData = getDataWithOptimisticResults(fakeStore);
@@ -50,6 +52,8 @@ export function optimistic(
       store.mutations,
       config
     );
+
+    // TODO: apply extra reducers and resultBehaviors to optimistic store?
 
     const changedKeys = Object.keys(fakeDataResultState).filter(
       key => optimisticData[key] !== fakeDataResultState[key]);

@@ -34,6 +34,10 @@ import {
   ApolloReducerConfig,
 } from '../store';
 
+import {
+  ApolloAction,
+} from '../actions';
+
 // Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 
 export type MutationBehavior =
@@ -283,6 +287,12 @@ export type MutationQueryReducer = (previousResult: Object, options: {
 
 export type MutationQueryReducersMap = {
   [queryName: string]: MutationQueryReducer;
+};
+
+export type OperationResultReducer = (previousResult: Object, action: ApolloAction) => Object;
+
+export type OperationResultReducerMap = {
+  [queryId: string]: OperationResultReducer;
 };
 
 // Combines all of the default reducers into a map based on the behavior type they accept

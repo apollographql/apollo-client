@@ -68,6 +68,8 @@ const crashReporter = (store: any) => (next: any) => (action: any) => {
   }
 };
 
+export type ApolloReducer = (store: NormalizedCache, action: ApolloAction) => NormalizedCache;
+
 export function createApolloReducer(config: ApolloReducerConfig): Function {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
     const newState = {

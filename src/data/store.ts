@@ -102,7 +102,9 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      const newState = writeResultToStore({
+      // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
+      // write to "the" store?
+      let newState = writeResultToStore({
         result: action.result.data,
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
         document: action.document,
@@ -110,6 +112,14 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
       });
+
+      // XXX each reducer gets the state from the previous reducer.
+      // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
+      if (action.extraReducers) {
+        action.extraReducers.forEach( reducer => {
+          newState = reducer(newState, constAction);
+        });
+      }
 
       return newState;
     }
@@ -130,6 +140,7 @@ export function data(
         dataIdFromObject: config.dataIdFromObject,
       });
 
+      // TODO REFACTOR: remove result behaviors
       if (constAction.resultBehaviors) {
         constAction.resultBehaviors.forEach((behavior) => {
           const args: MutationBehaviorReducerArgs = {
@@ -147,6 +158,14 @@ export function data(
           } else {
             throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
           }
+        });
+      }
+
+      // XXX each reducer gets the state from the previous reducer.
+      // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
+      if (constAction.extraReducers) {
+        constAction.extraReducers.forEach( reducer => {
+          newState = reducer(newState, constAction);
         });
       }
 

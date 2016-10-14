@@ -3,7 +3,7 @@ import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient, { addTypename } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
-import { isMutationResultAction } from '../src/actions';
+import { isMutationResultAction, isQueryResultAction } from '../src/actions';
 
 import assign = require('lodash.assign');
 import clonedeep = require('lodash.clonedeep');
@@ -620,6 +620,32 @@ describe('mutation results', () => {
       },
     };
 
+    const query2 = gql`
+      query newTodos {
+        __typename
+        newTodos(since: 1){
+          __typename
+          id
+          text
+          completed
+        }
+      }
+    `;
+
+    const result2: any = {
+      data: {
+        __typename: 'Query',
+        newTodos: [
+          {
+              __typename: 'Todo',
+            id: '3030',
+            text: 'Recently added',
+            completed: false,
+          },
+        ],
+      },
+    };
+
     it('is called on mutation result', () => {
       let counter = 0;
       let observableQuery: any;
@@ -725,6 +751,57 @@ describe('mutation results', () => {
         assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
       });
     });
+
+    it('is called on query result as well', () => {
+      let counter = 0;
+      let observableQuery: any;
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      }, {
+        request: { query: query2 },
+        result: result2,
+      })
+      .then(() => {
+        observableQuery = client.watchQuery({
+          query,
+          reducer: (previousResult, action) => {
+            counter++;
+            if (isQueryResultAction(action)) {
+              const newResult = clonedeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data.newTodos[0]);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null, // TODO: we should actually check the new result
+        });
+      })
+      .then(() => {
+        // TODO: this test is slow, we're making more queries than we really need to
+        return client.query({ query: query2 });
+      })
+      .then((res) => {
+        assert.equal(res.data.newTodos.length, 1);
+        // TODO: improve this test. Now it just works because this query is the same as the watchQuery with the reducer.
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        observableQuery.unsubscribe();
+
+        // The reducer should have been called once
+        assert.equal(counter, 1);
+
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'Recently added');
+      });
+    });
+
+
   });
 
 

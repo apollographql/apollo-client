@@ -10,6 +10,7 @@ Expect active development and potentially significant breaking changes in the `0
 - **Feature removal**: No more `(read|diff)(Fragment|SelectionSet)FromStore`.
 - **Feature removal**: No more `write(Fragment|SelectionSet)ToStore`.
 - Fix: refetch only updates original query variable options
+- Fix: Moved @types packages from devDependencies to dependencies as discussed in [Issue #713](https://github.com/apollostack/apollo-client/issues/713)
 
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)

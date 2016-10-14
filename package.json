@@ -63,16 +63,6 @@
     "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {
-    "@types/async": "^2.0.31",
-    "@types/chai": "^3.4.32",
-    "@types/chai-as-promised": "0.0.28",
-    "@types/isomorphic-fetch": "0.0.30",
-    "@types/lodash": "^4.14.34",
-    "@types/mocha": "^2.2.31",
-    "@types/node": "^6.0.38",
-    "@types/promises-a-plus": "0.0.26",
-    "@types/redux": "^3.5.29",
-    "@types/sinon": "^1.16.29",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
@@ -97,5 +87,17 @@
     "tslint": "3.15.1",
     "typescript": "2.0.3",
     "uglify-js": "^2.6.2"
+  },
+  "optionalDependencies": {
+    "@types/async": "^2.0.31",
+    "@types/chai": "^3.4.32",
+    "@types/chai-as-promised": "0.0.28",
+    "@types/isomorphic-fetch": "0.0.30",
+    "@types/lodash": "^4.14.34",
+    "@types/mocha": "^2.2.31",
+    "@types/node": "^6.0.38",
+    "@types/promises-a-plus": "0.0.26",
+    "@types/redux": "^3.5.29",
+    "@types/sinon": "^1.16.29"
   }
 }

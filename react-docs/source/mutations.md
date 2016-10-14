@@ -58,6 +58,14 @@ const submitRepository = gql`
 const NewEntryWithData = graphql(submitRepository)(NewEntry);
 ```
 
+If you need more than one mutation on a component, you make a graphql container for each:
+
+```js
+const NewEntryWithData =  graphql(submitNewUser, { name : 'newUserMutation' })(graphql(submitRepository, { name: 'newRepositoryMutation' })(Component)
+```
+
+Note the use of the 'name' option on the grapql() call to name the prop that will receive the mutation function for each mutation (by defaut that name is 'mutation').
+
 <h3 id="calling-mutations">Calling mutations</h3>
 
 Most mutations will require arguments in the form of query variables, and you may wish to also provide other options to [ApolloClient#mutate](/core/apollo-client-api.html#mutate).

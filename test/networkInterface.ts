@@ -127,7 +127,9 @@ describe('network interface', () => {
 
       throw new Error('Invalid Query');
     });
-    fetchMock.post(missingUrl, Promise.reject('Network error'));
+    fetchMock.post(missingUrl, () => {
+      throw new Error('Network error');
+    });
   });
 
   after(() => {

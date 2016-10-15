@@ -1018,11 +1018,6 @@ describe('writing to the store', () => {
         variables: { not_the_proper_variable_name: '1' },
         expected: /The inline argument "v" is expected as a variable but was not provided./,
       },
-      {
-        mutation: gql`mutation mut($v: ID) { mut(enum: OK) { id } }`,
-        variables: { v: '1' },
-        expected: /The inline argument "enum" of kind "EnumValue" is not supported.*/,
-      },
     ];
 
     const result: any = { mut: { id: '1' } };

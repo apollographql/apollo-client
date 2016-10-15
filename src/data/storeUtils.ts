@@ -6,6 +6,7 @@ import {
   BooleanValue,
   ObjectValue,
   ListValue,
+  EnumValue,
   Variable,
   InlineFragment,
   Value,
@@ -44,34 +45,35 @@ function isListValue(value: Value): value is ListValue {
   return value.kind === 'ListValue';
 }
 
-function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, variables?: Object) {
+function isEnumValue(value: Value): value is EnumValue {
+  return value.kind === 'EnumValue';
+}
+
+function valueToObjectRepresentation(argObj: any, name: Name, value: Value, variables?: Object) {
   if (isIntValue(value) || isFloatValue(value)) {
-    (argObj as any)[name.value] = Number(value.value);
-
+    argObj[name.value] = Number(value.value);
   } else if (isBooleanValue(value) || isStringValue(value)) {
-    (argObj as any)[name.value] = value.value;
-
+    argObj[name.value] = value.value;
   } else if (isObjectValue(value)) {
     const nestedArgObj = {};
     value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
-    (argObj as any)[name.value] = nestedArgObj;
-
+    argObj[name.value] = nestedArgObj;
   } else if (isVariable(value)) {
     if (! variables || !(value.name.value in variables)) {
       throw new Error(`The inline argument "${value.name.value}" is expected as a variable but was not provided.`);
     }
     const variableValue = (variables as any)[value.name.value];
-    (argObj as any)[name.value] = variableValue;
-
+    argObj[name.value] = variableValue;
   } else if (isListValue(value)) {
-    (argObj as any)[name.value] = value.values.map((listValue) => {
+    argObj[name.value] = value.values.map((listValue) => {
       const nestedArgArrayObj = {};
       valueToObjectRepresentation(nestedArgArrayObj, name, listValue, variables);
       return (nestedArgArrayObj as any)[name.value];
     });
-
+  } else if (isEnumValue(value)) {
+    argObj[name.value] = value.value;
   } else {
-    throw new Error(`The inline argument "${name.value}" of kind "${value.kind}" is not supported.
+    throw new Error(`The inline argument "${name.value}" of kind "${(value as any).kind}" is not supported.
                     Use variables instead of inline arguments to overcome this limitation.`);
   }
 }

@@ -1252,13 +1252,9 @@ describe('client', () => {
         }`;
       createFragment(fragmentDoc);
 
-      const oldWarn = console.warn;
-      console.warn = (str: string) => {
-        assert.include(str, 'Warning: fragment with name');
-        console.warn = oldWarn;
-        done();
-      };
-      client.query({ query: queryDoc });
+      withWarning(() => {
+        client.query({ query: queryDoc });
+      }, /Warning: fragment with name/);
 
       disableFragmentWarnings();
     });
@@ -1288,13 +1284,9 @@ describe('client', () => {
         }`;
       createFragment(fragmentDoc);
 
-      const oldWarn = console.warn;
-      console.warn = (str: string) => {
-        assert.include(str, 'Warning: fragment with name');
-        console.warn = oldWarn;
-        done();
-      };
-      client.watchQuery({ query: queryDoc });
+      withWarning(() => {
+        client.watchQuery({ query: queryDoc });
+      }, /Warning: fragment with name/);
 
       disableFragmentWarnings();
     });

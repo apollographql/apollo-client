@@ -170,10 +170,12 @@ describe('reading from the store', () => {
         nullField: null,
       } as StoreObject,
       nullObject: null,
+      __typename: 'Item',
     };
 
     const store = {
       'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj', 'deepNestedObj')), {
+        __typename: 'Query',
         nestedObj: {
           type: 'id',
           id: 'abcde',
@@ -199,7 +201,7 @@ describe('reading from the store', () => {
           stringField,
           numberField,
           nullField,
-          ...on Item {
+          ... on Query {
             nestedObj {
               stringField
               nullField
@@ -209,7 +211,7 @@ describe('reading from the store', () => {
               }
             }
           }
-          ...on Item {
+          ... on Query {
             nestedObj {
               numberField
               nullField
@@ -219,7 +221,7 @@ describe('reading from the store', () => {
               }
             }
           }
-          ... on Item {
+          ... on Query {
             nullObject
           }
         }

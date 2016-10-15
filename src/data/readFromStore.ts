@@ -4,6 +4,7 @@ import {
 
 import graphqlAnywhere, {
   Resolver,
+  FragmentMatcher,
 } from 'graphql-anywhere';
 
 import {
@@ -63,31 +64,52 @@ export function readQueryFromStore({
   return result;
 }
 
-// Takes a map of errors for fragments of each type. If all of the types have
-// thrown an error, this function will throw the error associated with one
-// of the types.
-export function handleFragmentErrors(fragmentErrors: { [typename: string]: Error }) {
-  const typenames = Object.keys(fragmentErrors);
-
-  // This is a no-op.
-  if (typenames.length === 0) {
-    return;
-  }
-
-  const errorTypes = typenames.filter((typename) => {
-    return (fragmentErrors[typename] !== null);
-  });
-
-  if (errorTypes.length === Object.keys(fragmentErrors).length) {
-    throw fragmentErrors[errorTypes[0]];
-  }
-}
-
 type ReadStoreContext = {
   store: NormalizedCache;
   returnPartialData: boolean;
   hasMissingField: boolean;
 }
+
+let haveWarned = false;
+
+const fragmentMatcher: FragmentMatcher = (
+  objId: string,
+  typeCondition: string,
+  context: ReadStoreContext
+): boolean => {
+  const obj = context.store[objId];
+
+  if (! obj) {
+    return false;
+  }
+
+  if (! obj.__typename) {
+    if (! haveWarned) {
+      console.warn(`You're using fragments in your queries, but don't have the addTypename:
+true option set in Apollo Client. Please turn on that option so that we can accurately
+match fragments.`);
+      if (process.env.NODE_ENV !== 'test') {
+        // When running tests, we want to print the warning every time
+        haveWarned = true;
+      }
+    }
+
+    context.returnPartialData = true;
+    return true;
+  }
+
+  if (obj.__typename === typeCondition) {
+    return true;
+  }
+
+  // XXX here we reach an issue - we don't know if this fragment should match or not. It's either:
+  // 1. A fragment on a non-matching concrete type or interface or union
+  // 2. A fragment on a matching interface or union
+  // If it's 1, we don't want to return anything, if it's 2 we want to match. We can't tell the
+  // difference, so for now, we just do our best to resolve the fragment but turn on partial data
+  context.returnPartialData = true;
+  return true;
+};
 
 const readStoreResolver: Resolver = (
   fieldName: string,
@@ -149,7 +171,9 @@ export function diffQueryAgainstStore({
     hasMissingField: false,
   };
 
-  const result = graphqlAnywhere(readStoreResolver, query, 'ROOT_QUERY', context, variables);
+  const result = graphqlAnywhere(readStoreResolver, query, 'ROOT_QUERY', context, variables, {
+    fragmentMatcher,
+  });
 
   return {
     result,

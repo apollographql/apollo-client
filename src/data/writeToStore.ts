@@ -23,6 +23,8 @@ import {
   SelectionSet,
   Field,
   Document,
+  InlineFragment,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -31,10 +33,6 @@ import {
   IdValue,
   isIdValue,
 } from './store';
-
-import {
-  handleFragmentErrors,
-} from './readFromStore';
 
 import {
   IdGetter,
@@ -132,7 +130,7 @@ export function writeSelectionSetToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject,
-  fragmentMap,
+  fragmentMap = {},
 }: {
   dataId: string,
   result: any,
@@ -142,42 +140,12 @@ export function writeSelectionSetToStore({
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
 }): NormalizedCache {
-
-  if (!fragmentMap) {
-    //we have an empty sym table if there's no sym table given
-    //to us for the fragments.
-    fragmentMap = {};
-  }
-
-  let fragmentErrors: { [typename: string]: Error } = {};
   selectionSet.selections.forEach((selection) => {
     const included = shouldInclude(selection, variables);
 
     if (isField(selection)) {
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
-
-      // In both of these cases, we add some extra information to the error
-      // that allows us to use fragmentErrors correctly. Since the ApolloError type
-      // derives from the Javascript Error type, the end-user doesn't notice the
-      // fact that we're doing this.
-      if (isUndefined(value) && included) {
-        throw new ApolloError({
-          errorMessage: `Can't find field ${resultFieldKey} on result object ${dataId}.`,
-          extraInfo: {
-            isFieldError: true,
-          },
-        });
-      }
-
-      if (!isUndefined(value) && !included) {
-        throw new ApolloError({
-          errorMessage: `Found extra field ${resultFieldKey} on result object ${dataId}.`,
-          extraInfo: {
-            isFieldError: true,
-          },
-        });
-      }
 
       if (!isUndefined(value)) {
         writeFieldToStore({
@@ -191,69 +159,46 @@ export function writeSelectionSetToStore({
         });
       }
     } else if (isInlineFragment(selection)) {
-      const typename = selection.typeCondition.name.value;
-
       if (included) {
-        try {
-          // XXX what to do if this tries to write the same fields? Also, type conditions...
-          writeSelectionSetToStore({
-            result,
-            selectionSet: selection.selectionSet,
-            store,
-            variables,
-            dataId,
-            dataIdFromObject,
-            fragmentMap,
-          });
-
-          if (!fragmentErrors[typename]) {
-            fragmentErrors[typename] = null;
-          }
-        } catch (e) {
-          if (e.extraInfo && e.extraInfo.isFieldError) {
-            fragmentErrors[typename] = e;
-          } else {
-            throw e;
-          }
-        }
+        // XXX what to do if this tries to write the same fields? Also, type conditions...
+        writeSelectionSetToStore({
+          result,
+          selectionSet: selection.selectionSet,
+          store,
+          variables,
+          dataId,
+          dataIdFromObject,
+          fragmentMap,
+        });
       }
     } else {
-      //look up the fragment referred to in the selection
-      const fragment = fragmentMap[selection.name.value];
+      // This is not a field, so it must be a fragment, either inline or named
+      let fragment: InlineFragment | FragmentDefinition;
 
-      if (!fragment) {
-        throw new Error(`No fragment named ${selection.name.value}.`);
+      if (isInlineFragment(selection)) {
+        fragment = selection;
+      } else {
+        // Named fragment
+        fragment = fragmentMap[selection.name.value];
+
+        if (!fragment) {
+          throw new Error(`No fragment named ${selection.name.value}.`);
+        }
       }
 
-      const typename = fragment.typeCondition.name.value;
-
       if (included) {
-        try {
-          writeSelectionSetToStore({
-            result,
-            selectionSet: fragment.selectionSet,
-            store,
-            variables,
-            dataId,
-            dataIdFromObject,
-            fragmentMap,
-          });
-
-          if (!fragmentErrors[typename]) {
-            fragmentErrors[typename] = null;
-          }
-        } catch (e) {
-          if (e.extraInfo && e.extraInfo.isFieldError) {
-            fragmentErrors[typename] = e;
-          } else {
-            throw e;
-          }
-        }
+        writeSelectionSetToStore({
+          result,
+          selectionSet: fragment.selectionSet,
+          store,
+          variables,
+          dataId,
+          dataIdFromObject,
+          fragmentMap,
+        });
       }
     }
   });
-
-  handleFragmentErrors(fragmentErrors);
 
   return store;
 }
@@ -426,8 +371,8 @@ function writeFieldToStore({
   if (shouldMerge) {
     mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);
   }
+
   if (!store[dataId] || storeValue !== store[dataId][storeFieldName]) {
     store[dataId] = newStoreObj;
   }
-
 }

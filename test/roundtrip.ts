@@ -13,6 +13,8 @@ import {
 
 import gql from 'graphql-tag';
 
+import { withWarning } from './util/wrap';
+
 describe('roundtrip', () => {
   it('real graphql result', () => {
     storeRoundtrip(gql`
@@ -115,37 +117,73 @@ describe('roundtrip', () => {
   });
 
   describe('fragments', () => {
-    it('should resolve on union types with inline fragments', () => {
+    it('should work on null fields', () => {
       storeRoundtrip(gql`
         query {
-          all_people {
-            name
-            ... on Jedi {
-              side
-            }
-            ... on Droid {
-              model
+          field {
+            ... on Obj {
+              stuff
             }
           }
-        }`, {
-        all_people: [
-          {
-            name: 'Luke Skywalker',
-            side: 'bright',
-          },
-          {
-            name: 'R2D2',
-            model: 'astromech',
-          },
-        ],
+        }
+      `, {
+        field: null,
       });
     });
 
+    it('should work on basic inline fragments', () => {
+      storeRoundtrip(gql`
+        query {
+          field {
+            __typename
+            ... on Obj {
+              stuff
+            }
+          }
+        }
+      `, {
+        field: {
+          __typename: 'Obj',
+          stuff: 'Result',
+        },
+      });
+    });
+
+    it('should resolve on union types with inline fragments without typenames with warning', () => {
+      withWarning(() => {
+        storeRoundtrip(gql`
+          query {
+            all_people {
+              name
+              ... on Jedi {
+                side
+              }
+              ... on Droid {
+                model
+              }
+            }
+          }`, {
+          all_people: [
+            {
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+            {
+              name: 'R2D2',
+              model: 'astromech',
+            },
+          ],
+        });
+      }, /using fragments/);
+    });
+
+    // XXX this test is weird because it assumes the server returned an incorrect result
     it('should throw an error on two of the same inline fragment types', () => {
       assert.throws(() => {
         storeRoundtrip(gql`
           query {
             all_people {
+              __typename
               name
               ... on Jedi {
                 side
@@ -157,12 +195,38 @@ describe('roundtrip', () => {
           }`, {
           all_people: [
             {
+              __typename: 'Jedi',
               name: 'Luke Skywalker',
               side: 'bright',
             },
           ],
           });
-      }, /Can\'t find field rank on result object/);
+      }, /Can\'t find field rank on object/);
+    });
+
+    it('should resolve fields it can on interface with non matching inline fragments', () => {
+      storeRoundtrip(gql`
+        query {
+          dark_forces {
+            __typename
+            name
+            ... on Droid {
+              model
+            }
+          }
+        }`, {
+        dark_forces: [
+          {
+            __typename: 'Droid',
+            name: '8t88',
+            model: '88',
+          },
+          {
+            __typename: 'Darth',
+            name: 'Anakin Skywalker',
+          },
+        ],
+      });
     });
 
     it('should resolve on union types with spread fragments', () => {
@@ -177,6 +241,7 @@ describe('roundtrip', () => {
 
         query {
           all_people {
+            __typename
             name
             ...jediFragment
             ...droidFragment
@@ -184,10 +249,45 @@ describe('roundtrip', () => {
         }`, {
         all_people: [
           {
+            __typename: 'Jedi',
             name: 'Luke Skywalker',
             side: 'bright',
           },
           {
+            __typename: 'Droid',
+            name: 'R2D2',
+            model: 'astromech',
+          },
+        ],
+      });
+    });
+
+    it('should work with a fragment on the actual interface or union', () => {
+      storeRoundtrip(gql`
+        fragment jediFragment on Character {
+          side
+        }
+
+        fragment droidFragment on Droid {
+          model
+        }
+
+        query {
+          all_people {
+            name
+            __typename
+            ...jediFragment
+            ...droidFragment
+          }
+        }`, {
+        all_people: [
+          {
+            __typename: 'Jedi',
+            name: 'Luke Skywalker',
+            side: 'bright',
+          },
+          {
+            __typename: 'Droid',
             name: 'R2D2',
             model: 'astromech',
           },
@@ -201,13 +301,12 @@ describe('roundtrip', () => {
           fragment jediSide on Jedi {
             side
           }
-
           fragment jediRank on Jedi {
             rank
           }
-
           query {
             all_people {
+              __typename
               name
               ...jediSide
               ...jediRank
@@ -215,12 +314,13 @@ describe('roundtrip', () => {
           }`, {
           all_people: [
             {
+              __typename: 'Jedi',
               name: 'Luke Skywalker',
               side: 'bright',
             },
           ],
         })
-      , /Can\'t find field rank on result object/);
+      , /Can\'t find field rank on object/);
     });
 
     it('should resolve on @include and @skip with inline fragments', () => {
@@ -228,6 +328,7 @@ describe('roundtrip', () => {
         query {
           person {
             name
+            __typename
             ... on Jedi @include(if: true) {
               side
             }
@@ -237,6 +338,7 @@ describe('roundtrip', () => {
           }
         }`, {
         person: {
+          __typename: 'Jedi',
           name: 'Luke Skywalker',
           side: 'bright',
         },
@@ -256,11 +358,13 @@ describe('roundtrip', () => {
         query {
           person {
             name
+            __typename
             ...jediFragment @include(if: true)
             ...droidFragment @skip(if: true)
           }
         }`, {
         person: {
+          __typename: 'Jedi',
           name: 'Luke Skywalker',
           side: 'bright',
         },

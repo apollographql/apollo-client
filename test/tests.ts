@@ -8,6 +8,11 @@ process.env.NODE_ENV = 'test';
 declare function require(name: string): any;
 require('source-map-support').install();
 
+console.warn = (message: string) => {
+  throw new Error(`==> Error in test: Tried to print warning with message:
+${message}`);
+};
+
 import './writeToStore';
 import './readFromStore';
 import './roundtrip';

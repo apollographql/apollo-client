@@ -84,6 +84,8 @@ const fragmentMatcher: FragmentMatcher = (
       console.warn(`You're using fragments in your queries, but don't have the addTypename:
 true option set in Apollo Client. Please turn on that option so that we can accurately
 match fragments.`);
+
+      /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'test') {
         // When running tests, we want to print the warning every time
         haveWarned = true;

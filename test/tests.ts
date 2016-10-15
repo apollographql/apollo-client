@@ -8,9 +8,12 @@ process.env.NODE_ENV = 'test';
 declare function require(name: string): any;
 require('source-map-support').install();
 
-console.warn = (message: string) => {
-  throw new Error(`==> Error in test: Tried to print warning with message:
-${message}`);
+console.warn = console.error = (...messages: string[]) => {
+  console.log(`==> Error in test: Tried to log warning or error with message:
+`, ...messages);
+  if (!process.env.CI) {
+    process.exit(1);
+  }
 };
 
 import './writeToStore';

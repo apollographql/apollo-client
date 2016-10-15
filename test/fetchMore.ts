@@ -34,6 +34,7 @@ describe('updateQuery on a simple query', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     const obsHandle = client.watchQuery({
@@ -128,6 +129,7 @@ describe('fetchMore on an observable query', () => {
 
     client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     const obsHandle = client.watchQuery({

@@ -1227,7 +1227,7 @@ describe('client', () => {
       console.warn = oldWarn;
     });
 
-    it('should issue a warning if we try query with a conflicting fragment name', (done) => {
+    it('should issue a warning if we try query with a conflicting fragment name', () => {
       enableFragmentWarnings();
 
       const client = new ApolloClient({
@@ -1259,7 +1259,7 @@ describe('client', () => {
       disableFragmentWarnings();
     });
 
-    it('should issue a warning if we try to watchQuery with a conflicting fragment name', (done) => {
+    it('should issue a warning if we try to watchQuery with a conflicting fragment name', () => {
       enableFragmentWarnings();
 
       const client = new ApolloClient({

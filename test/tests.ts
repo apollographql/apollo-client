@@ -11,7 +11,9 @@ require('source-map-support').install();
 console.warn = console.error = (...messages: string[]) => {
   console.log(`==> Error in test: Tried to log warning or error with message:
 `, ...messages);
-  process.exit(1);
+  if (process.env.CI) {
+    process.exit(1);
+  }
 };
 
 import './writeToStore';

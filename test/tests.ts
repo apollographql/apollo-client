@@ -16,6 +16,8 @@ console.warn = console.error = (...messages: string[]) => {
   }
 };
 
+process.on('unhandledRejection', () => {});
+
 import './writeToStore';
 import './readFromStore';
 import './roundtrip';

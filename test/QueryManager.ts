@@ -1580,15 +1580,20 @@ describe('QueryManager', () => {
       pollInterval: 50,
     });
 
-    return observableToPromise({
+    const { promise, subscription } = observableToPromiseAndSubscription({
         observable,
         wait: 60,
         errorCallbacks: [
-          (error) => assert.include(error.message, 'Network error'),
+          (error) => {
+            assert.include(error.message, 'Network error');
+            subscription.unsubscribe();
+          },
         ],
       },
       (result) => assert.deepEqual(result.data, data1)
     );
+
+    return promise;
   });
 
   it('exposes a way to start a polling query', () => {
@@ -3156,7 +3161,10 @@ describe('QueryManager', () => {
     const queryManager = mockRefetch({ request, firstResult, secondResult });
 
     const handle = queryManager.watchQuery(request);
-    handle.subscribe({});
+
+    handle.subscribe({
+      error: () => { /* nothing */ },
+    });
 
     handle.refetch().catch((error) => {
       assert.deepEqual(error.graphQLErrors, [
@@ -3167,6 +3175,8 @@ describe('QueryManager', () => {
       ]);
       done();
     });
+
+    // We have an unhandled error warning from the `subscribe` above, which has no `error` cb
   });
 
 });

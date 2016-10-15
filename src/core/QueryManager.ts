@@ -900,7 +900,7 @@ export class QueryManager {
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      return this.networkInterface.query(request)
+      this.networkInterface.query(request)
         .then((result: GraphQLResult) => {
 
           const extraReducers = this.getExtraReducers();
@@ -917,6 +917,14 @@ export class QueryManager {
           });
 
           this.removeFetchQueryPromise(requestId);
+
+          // XXX this duplicates some logic in the store about identifying errors
+          if (result.errors) {
+            throw new ApolloError({
+              graphQLErrors: result.errors,
+            });
+          }
+
           return result;
         }).then(() => {
 
@@ -940,16 +948,27 @@ export class QueryManager {
           this.removeFetchQueryPromise(requestId);
           resolve({ data: resultFromStore, loading: false });
         }).catch((error: Error) => {
-          this.store.dispatch({
-            type: 'APOLLO_QUERY_ERROR',
-            error,
-            queryId,
-            requestId,
-          });
+          // This is for the benefit of `refetch` promises, which currently don't get their errors
+          // through the store like watchQuery observers do
+          if (error instanceof ApolloError) {
+            reject(error);
+          } else {
+            this.store.dispatch({
+              type: 'APOLLO_QUERY_ERROR',
+              error,
+              queryId,
+              requestId,
+            });
 
-          this.removeFetchQueryPromise(requestId);
+            this.removeFetchQueryPromise(requestId);
+
+            reject(new ApolloError({
+              networkError: error,
+            }));
+          }
         });
     });
+
     return retPromise;
   }
 

@@ -15,11 +15,11 @@ import {
 import cloneDeep = require('lodash.clonedeep');
 
 // A QueryTransformer takes a SelectionSet and transforms it in someway (in place).
-export type QueryTransformer = (selectionSet: SelectionSet) => void
+type QueryTransformer = (selectionSet: SelectionSet) => void
 
 // Adds a field with a given name to every node in the AST recursively.
 // Note: this mutates the AST passed in.
-export function addFieldToSelectionSet(fieldName: string, selectionSet: SelectionSet) {
+function addFieldToSelectionSet(fieldName: string, selectionSet: SelectionSet) {
   const fieldAst: Field = {
     kind: 'Field',
     alias: null,
@@ -44,7 +44,7 @@ export function addFieldToSelectionSet(fieldName: string, selectionSet: Selectio
 
 // Adds typename fields to every node in the AST recursively.
 // Note: This muates the AST passed in.
-export function addTypenameToSelectionSet(selectionSet: SelectionSet) {
+function addTypenameToSelectionSet(selectionSet: SelectionSet) {
   return addFieldToSelectionSet('__typename', selectionSet);
 }
 
@@ -69,7 +69,7 @@ function traverseSelectionSet(selectionSet: SelectionSet, queryTransformers: Que
  * @param {QueryTranformer[]} queryTransformers - transformers to be applied to the document
  * @ return {Document} - a new transformed document
  */
-export function applyTransformers(doc: Document, queryTransformers: QueryTransformer[]): Document {
+function applyTransformers(doc: Document, queryTransformers: QueryTransformer[]): Document {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
   docClone.definitions.forEach((definition: Definition) => {
@@ -81,4 +81,8 @@ export function applyTransformers(doc: Document, queryTransformers: QueryTransfo
 
   });
   return docClone;
+}
+
+export function addTypenameToDocument(doc: Document) {
+  return applyTransformers(doc, [addTypenameToSelectionSet]);
 }

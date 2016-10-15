@@ -53,10 +53,6 @@ import {
 } from './data/extensions';
 
 import {
-  QueryTransformer,
-} from './queries/queryTransform';
-
-import {
   MutationBehavior,
   MutationBehaviorReducerMap,
   MutationQueryReducersMap,
@@ -100,7 +96,7 @@ export default class ApolloClient {
   public initialState: any;
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
-  public queryTransformer: QueryTransformer;
+  public addTypename: boolean;
   public resultTransformer: ResultTransformer;
   public resultComparator: ResultComparator;
   public shouldForceFetch: boolean;
@@ -146,24 +142,24 @@ export default class ApolloClient {
     reduxRootSelector,
     initialState,
     dataIdFromObject,
-    queryTransformer,
     resultTransformer,
     resultComparator,
     ssrMode = false,
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
+    addTypename = true,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
-    queryTransformer?: QueryTransformer,
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
+    addTypename?: boolean,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -193,7 +189,7 @@ export default class ApolloClient {
     this.initialState = initialState ? initialState : {};
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
-    this.queryTransformer = queryTransformer;
+    this.addTypename = addTypename;
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
@@ -439,7 +435,7 @@ export default class ApolloClient {
       networkInterface: this.networkInterface,
       reduxRootSelector: reduxRootSelector,
       store,
-      queryTransformer: this.queryTransformer,
+      addTypename: this.addTypename,
       resultTransformer: this.resultTransformer,
       resultComparator: this.resultComparator,
       reducerConfig: this.reducerConfig,

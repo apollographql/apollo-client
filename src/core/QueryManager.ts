@@ -25,8 +25,7 @@ import {
 } from '../queries/getFromAST';
 
 import {
-  QueryTransformer,
-  applyTransformers,
+  addTypenameToDocument,
 } from '../queries/queryTransform';
 
 import {
@@ -125,9 +124,9 @@ export class QueryManager {
   public scheduler: QueryScheduler;
   public store: ApolloStore;
 
+  private addTypename: boolean;
   private networkInterface: NetworkInterface;
   private reduxRootSelector: ApolloStateSelector;
-  private queryTransformer: QueryTransformer;
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private reducerConfig: ApolloReducerConfig;
@@ -166,17 +165,17 @@ export class QueryManager {
     store,
     reduxRootSelector,
     reducerConfig = { mutationBehaviorReducers: {} },
-    queryTransformer,
     resultTransformer,
     resultComparator,
+    addTypename = true,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
     reducerConfig?: ApolloReducerConfig,
-    queryTransformer?: QueryTransformer,
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
+    addTypename?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -184,12 +183,12 @@ export class QueryManager {
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
-    this.queryTransformer = queryTransformer;
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
     this.pollingTimers = {};
     this.queryListeners = {};
     this.queryDocuments = {};
+    this.addTypename = addTypename;
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -237,8 +236,8 @@ export class QueryManager {
   }): Promise<ApolloQueryResult> {
     const mutationId = this.generateQueryId();
 
-    if (this.queryTransformer) {
-      mutation = applyTransformers(mutation, [this.queryTransformer]);
+    if (this.addTypename) {
+      mutation = addTypenameToDocument(mutation);
     }
 
     checkDocument(mutation);
@@ -562,8 +561,8 @@ export class QueryManager {
     } = options;
     let transformedDoc = document;
     // Apply the query transformer if one has been provided.
-    if (this.queryTransformer) {
-      transformedDoc = applyTransformers(transformedDoc, [this.queryTransformer]);
+    if (this.addTypename) {
+      transformedDoc = addTypenameToDocument(transformedDoc);
     }
     const request: Request = {
       query: transformedDoc,
@@ -709,9 +708,9 @@ export class QueryManager {
 
     let transformedDoc = observableQuery.options.query;
 
-    if (this.queryTransformer) {
+    if (this.addTypename) {
       // TODO XXX: do we need to make a copy of the document before transforming it?
-      transformedDoc = applyTransformers(transformedDoc, [this.queryTransformer]);
+      transformedDoc = addTypenameToDocument(transformedDoc);
     }
 
     return {
@@ -774,8 +773,8 @@ export class QueryManager {
     let queryDoc = options.query;
 
     // Apply the query transformer if one has been provided
-    if (this.queryTransformer) {
-      queryDoc = applyTransformers(queryDoc, [ this.queryTransformer ]);
+    if (this.addTypename) {
+      queryDoc = addTypenameToDocument(queryDoc);
     }
 
     return {

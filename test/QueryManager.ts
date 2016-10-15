@@ -19,11 +19,6 @@ import {
   getIdField,
 } from '../src/data/extensions';
 
-import {
-  addTypenameToSelectionSet,
-  QueryTransformer,
-} from '../src/queries/queryTransform';
-
 import gql from 'graphql-tag';
 
 import {
@@ -90,19 +85,19 @@ describe('QueryManager', () => {
     networkInterface,
     store,
     reduxRootSelector,
-    queryTransformer,
+    addTypename = false,
   }: {
     networkInterface?: NetworkInterface,
     store?: ApolloStore,
     reduxRootSelector?: ApolloStateSelector,
-    queryTransformer?: QueryTransformer,
+    addTypename?: boolean,
   }) => {
 
     return new QueryManager({
       networkInterface: networkInterface || mockNetworkInterface(),
       store: store || createApolloStore(),
       reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
-      queryTransformer,
+      addTypename,
     });
   };
 
@@ -1816,7 +1811,7 @@ describe('QueryManager', () => {
           result: {data: transformedQueryResult},
         }
       ),
-      queryTransformer: addTypenameToSelectionSet,
+      addTypename: true,
     }).query({query: query}).then((result) => {
       assert.deepEqual(result.data, transformedQueryResult);
       done();
@@ -1863,7 +1858,7 @@ describe('QueryManager', () => {
           request: {query: transformedMutation},
           result: {data: transformedMutationResult},
         }),
-      queryTransformer: addTypenameToSelectionSet,
+      addTypename: true,
     }).mutate({mutation: mutation}).then((result) => {
       assert.deepEqual(result.data, transformedMutationResult);
       done();

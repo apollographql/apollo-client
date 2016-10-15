@@ -49,8 +49,6 @@ import {
   NetworkInterface,
 } from '../src/transport/networkInterface';
 
-import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
-
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 import { getFragmentDefinitions } from '../src/queries/getFromAST';
@@ -335,6 +333,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     return client.query({ query })
@@ -371,6 +370,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     createStore(
@@ -453,6 +453,7 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
       initialState,
+      addTypename: false,
     });
 
     return client.query({ query })
@@ -494,6 +495,7 @@ describe('client', () => {
       return new ApolloClient({
         reduxRootKey,
         networkInterface,
+        addTypename: false,
       });
     }, /reduxRootKey/);
 
@@ -536,6 +538,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     return client.query({ query })
@@ -574,6 +577,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     const handle = client.watchQuery({ query });
@@ -629,7 +633,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypenameToSelectionSet,
+      addTypename: true,
     });
 
     client.query({ query }).then((actualResult) => {
@@ -679,7 +683,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypenameToSelectionSet,
+      addTypename: true,
     });
     client.query({ forceFetch: true, query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, transformedResult);
@@ -716,6 +720,7 @@ describe('client', () => {
       });
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
     client.mutate({ mutation }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
@@ -750,6 +755,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     return client.query({ forceFetch: true, query }).then((actualResult) => {
@@ -789,6 +795,7 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     return client.query({ query }).then((actualResult) => {
@@ -823,6 +830,7 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
     client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
@@ -846,6 +854,7 @@ describe('client', () => {
     };
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
     client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, data);
@@ -869,6 +878,7 @@ describe('client', () => {
     };
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
     client.mutate({ mutation }).then((actualResult) => {
       assert.deepEqual(actualResult.data, data);
@@ -908,6 +918,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
         dataIdFromObject: (obj: { id: any }) => obj.id,
+        addTypename: false,
       });
 
       return client.query({ query })
@@ -931,6 +942,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
         dataIdFromObject: (obj: { id: any }) => obj.id,
+        addTypename: false,
       });
 
       const store = createStore(
@@ -996,6 +1008,7 @@ describe('client', () => {
     it('forces the query to rerun', () => {
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
 
       // Run a query first to initialize the store
@@ -1011,6 +1024,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
         ssrMode: true,
+        addTypename: false,
       });
 
       const options = { query, forceFetch: true };
@@ -1033,6 +1047,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
         ssrForceFetchDelay: 100,
+        addTypename: false,
       });
 
       // Run a query first to initialize the store
@@ -1211,6 +1226,7 @@ describe('client', () => {
 
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface(),
+        addTypename: false,
       });
       const fragmentDoc = gql`
         fragment authorDetails on Author {
@@ -1246,6 +1262,7 @@ describe('client', () => {
 
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface(),
+        addTypename: false,
       });
       const fragmentDoc = gql`
         fragment authorDetails on Author {
@@ -1308,6 +1325,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
       const fragmentDefs = createFragment(gql`
         fragment authorDetails on Author {
@@ -1352,6 +1370,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
       const fragmentDefs = createFragment(gql`
         fragment authorDetails on Author {
@@ -1396,6 +1415,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
       const fragmentDefs = createFragment(gql`
         fragment authorDetails on Author {
@@ -1442,6 +1462,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
       const fragmentDefs = createFragment(gql`
         fragment authorDetails on Author {
@@ -1541,6 +1562,7 @@ describe('client', () => {
         result: { data },
         error: networkError,
       }),
+      addTypename: false,
     });
 
     client.mutate({ mutation }).then((result) => {
@@ -1575,6 +1597,7 @@ describe('client', () => {
         request: { query: mutation },
         result: { data, errors },
       }),
+      addTypename: false,
     });
     client.mutate({ mutation }).then((result) => {
       done(new Error('Returned a result when it should not have.'));

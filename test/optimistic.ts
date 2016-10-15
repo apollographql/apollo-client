@@ -2,7 +2,7 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename, createFragment } from '../src';
+import ApolloClient, { createFragment } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 import { addFragmentsToDocument } from '../src/queries/getFromAST';
@@ -13,7 +13,7 @@ import clonedeep = require('lodash.clonedeep');
 import gql from 'graphql-tag';
 
 import {
-  applyTransformers,
+  addTypenameToDocument,
 } from '../src/queries/queryTransform';
 
 import {
@@ -135,7 +135,6 @@ describe('optimistic mutation results', () => {
 
     client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypename,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
@@ -1044,13 +1043,13 @@ describe('optimistic mutation - githunt comments', () => {
   function setup(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: {
-        query: applyTransformers(query, [addTypename]),
+        query: addTypenameToDocument(query),
         variables,
       },
       result,
     }, {
       request: {
-        query: addFragmentsToDocument(applyTransformers(queryWithFragment, [addTypename]), fragment),
+        query: addFragmentsToDocument(addTypenameToDocument(queryWithFragment), fragment),
         variables,
       },
       result,
@@ -1058,7 +1057,6 @@ describe('optimistic mutation - githunt comments', () => {
 
     client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypename,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
@@ -1127,7 +1125,7 @@ describe('optimistic mutation - githunt comments', () => {
 
     return setup({
       request: {
-        query: applyTransformers(mutation, [addTypename]),
+        query: addTypenameToDocument(mutation),
         variables: mutationVariables,
       },
       result: mutationResult,
@@ -1153,7 +1151,7 @@ describe('optimistic mutation - githunt comments', () => {
 
     return setup({
       request: {
-        query: addFragmentsToDocument(applyTransformers(mutationWithFragment, [addTypename]), fragmentWithTypenames),
+        query: addFragmentsToDocument(addTypenameToDocument(mutationWithFragment), fragmentWithTypenames),
         variables: mutationVariables,
       },
       result: mutationResult,

@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename } from '../src';
+import ApolloClient from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 import { isMutationResultAction, isQueryResultAction } from '../src/actions';
@@ -125,7 +125,7 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypename,
+      addTypename: true,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
@@ -1023,7 +1023,9 @@ describe('mutation results', () => {
               todoList: (prev, options) => {
                 const mResult = options.mutationResult as any;
                 const state = clonedeep(prev) as any;
-                state.todoList.todos.unshift(mResult.data.createTodo);
+                // It's unfortunate that this function is called at all, but we are removing
+                // the updateQueries API soon so it won't matter.
+                state.todoList.todos.unshift(mResult.data && mResult.data.createTodo);
                 return state;
               },
             },
@@ -1134,7 +1136,10 @@ describe('mutation results', () => {
       result: resetMutationResult,
     });
 
-    client = new ApolloClient({networkInterface});
+    client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
 
     const watchedQuery = client.watchQuery({
       query: variableQuery,

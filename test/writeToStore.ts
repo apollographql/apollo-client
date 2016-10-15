@@ -791,8 +791,8 @@ describe('writing to the store', () => {
           context: {
             store: {},
             variables,
-            dataIdFromObject: () => '5'
-          }
+            dataIdFromObject: () => '5',
+          },
         }), {
           '5': {
             'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
@@ -1042,7 +1042,7 @@ describe('writing to the store', () => {
               context: {
                 store: {},
                 variables,
-                dataIdFromObject: () => '5'
+                dataIdFromObject: () => '5',
               },
             });
           } else {

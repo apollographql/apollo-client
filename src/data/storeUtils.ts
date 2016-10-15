@@ -14,6 +14,8 @@ import {
   Name,
 } from 'graphql';
 
+import isObject = require('lodash.isobject');
+
 function isStringValue(value: Value): value is StringValue {
   return value.kind === 'StringValue';
 }
@@ -34,7 +36,7 @@ function isVariable(value: Value): value is Variable {
   return value.kind === 'Variable';
 }
 
-function isObject(value: Value): value is ObjectValue {
+function isGraphObject(value: Value): value is ObjectValue {
   return value.kind === 'ObjectValue';
 }
 
@@ -49,7 +51,7 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
   } else if (isBooleanValue(value) || isStringValue(value)) {
     (argObj as any)[name.value] = value.value;
 
-  } else if (isObject(value)) {
+  } else if (isGraphObject(value)) {
     const nestedArgObj = {};
     value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
     (argObj as any)[name.value] = nestedArgObj;
@@ -113,4 +115,38 @@ export function isInlineFragment(selection: Selection): selection is InlineFragm
 
 export function graphQLResultHasError(result: GraphQLResult) {
   return result.errors && result.errors.length;
+}
+
+/**
+ * This is a normalized representation of the Apollo query result cache. Briefly, it consists of
+ * a flatten representation of query result trees.
+ */
+export interface NormalizedCache {
+  [dataId: string]: StoreObject;
+}
+
+export interface StoreObject {
+  __typename?: string;
+  [storeFieldKey: string]: StoreValue;
+}
+
+export interface IdValue {
+  type: 'id';
+  id: string;
+  generated: boolean;
+}
+
+export interface JsonValue {
+  type: 'json';
+  json: any;
+}
+
+export type StoreValue = number | string | string[] | IdValue | JsonValue | void;
+
+export function isIdValue(idObject: StoreValue): idObject is IdValue {
+  return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
+}
+
+export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
+  return (isObject(jsonObject) && (jsonObject as (IdValue | JsonValue)).type === 'json');
 }

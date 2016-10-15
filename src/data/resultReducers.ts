@@ -12,7 +12,7 @@ import {
 
 import {
   NormalizedCache,
-} from './store';
+} from './storeUtils';
 
 import {
   ApolloReducer,

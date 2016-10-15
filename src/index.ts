@@ -83,6 +83,7 @@ export {
   MutationQueryReducersMap,
   Subscription,
   ApolloStore,
+  ApolloClient
 };
 
 export default ApolloClient;

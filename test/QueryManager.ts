@@ -2548,13 +2548,18 @@ describe('QueryManager', () => {
       observableToPromise({
           observable: observable1,
           errorCallbacks: [
-            (error) => assert.deepEqual((error as any).extraInfo, { isFieldError: true }),
+            // This isn't the best error message, but at least people will know they are missing
+            // data in the store.
+            (error) => assert.include(error.message, 'find field'),
           ],
           wait: 60,
         },
         (result) => assert.deepEqual(result.data, data1)
       ),
-      observableToPromise({ observable: observable2, wait: 60 },
+      observableToPromise({
+          observable: observable2,
+          wait: 60,
+        },
         (result) => assert.deepEqual(result.data, data2)
       ),
     ]);

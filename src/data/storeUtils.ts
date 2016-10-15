@@ -36,11 +36,11 @@ function isVariable(value: Value): value is Variable {
   return value.kind === 'Variable';
 }
 
-function isGraphObject(value: Value): value is ObjectValue {
+function isObjectValue(value: Value): value is ObjectValue {
   return value.kind === 'ObjectValue';
 }
 
-function isList(value: Value): value is ListValue {
+function isListValue(value: Value): value is ListValue {
   return value.kind === 'ListValue';
 }
 
@@ -51,7 +51,7 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
   } else if (isBooleanValue(value) || isStringValue(value)) {
     (argObj as any)[name.value] = value.value;
 
-  } else if (isGraphObject(value)) {
+  } else if (isObjectValue(value)) {
     const nestedArgObj = {};
     value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
     (argObj as any)[name.value] = nestedArgObj;
@@ -63,7 +63,7 @@ function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, v
     const variableValue = (variables as any)[value.name.value];
     (argObj as any)[name.value] = variableValue;
 
-  } else if (isList(value)) {
+  } else if (isListValue(value)) {
     (argObj as any)[name.value] = value.values.map((listValue) => {
       const nestedArgArrayObj = {};
       valueToObjectRepresentation(nestedArgArrayObj, name, listValue, variables);

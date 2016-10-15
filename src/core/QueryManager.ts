@@ -378,7 +378,9 @@ export class QueryManager {
             }
           } catch (error) {
             if (observer.error) {
-              observer.error(error);
+              observer.error(new ApolloError({
+                networkError: error,
+              }));
             }
           }
         }

@@ -2550,7 +2550,7 @@ describe('QueryManager', () => {
           errorCallbacks: [
             // This isn't the best error message, but at least people will know they are missing
             // data in the store.
-            (error) => assert.include(error.message, 'find field'),
+            (error: ApolloError) => assert.include(error.networkError.message, 'find field'),
           ],
           wait: 60,
         },

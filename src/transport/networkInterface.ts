@@ -224,9 +224,9 @@ export interface NetworkInterfaceOptions {
 }
 
 export function createNetworkInterface(interfaceOpts: NetworkInterfaceOptions): HTTPNetworkInterface {
-    const {
-      opts = {},
-      uri,
-    } = interfaceOpts || {} as NetworkInterfaceOptions;
-    return new HTTPFetchNetworkInterface(uri, opts);
+  const {
+    opts = {},
+    uri,
+  } = interfaceOpts || {} as NetworkInterfaceOptions;
+  return new HTTPFetchNetworkInterface(uri, opts);
 }

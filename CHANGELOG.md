@@ -17,6 +17,7 @@ Expect active development and potentially significant breaking changes in the `0
 - **Refactor**: removed circular dependency in data/store.ts [Issue #731](https://github.com/apollostack/apollo-client/issues/731) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
 - added "ApolloClient" to the named exports to make it compatible with Angular2 AOT compile [Issue #758](https://github.com/apollostack/apollo-client/issues/758) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
 - Fix: moved dev @types to devDependencies otherwise they potentially brake projects that are importing apollo-client [Issue #713](https://github.com/apollostack/apollo-client/issues/713) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
+- Fix rejecting promises on `refetch` and similar methods. Also improve error handling and stop using `ApolloError` internally. [Failing test in PR #524](https://github.com/apollostack/apollo-client/pull/524) [PR #781](https://github.com/apollostack/apollo-client/pull/781)
 
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)

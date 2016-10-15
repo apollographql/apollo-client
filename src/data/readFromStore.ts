@@ -17,10 +17,6 @@ import {
   storeKeyNameFromFieldNameAndArgs,
 } from './storeUtils';
 
-import {
-  ApolloError,
-} from '../errors/ApolloError';
-
 export type DiffResult = {
   result?: any;
   isMissing?: boolean;
@@ -123,13 +119,8 @@ const readStoreResolver: Resolver = (
 
   if (typeof fieldValue === 'undefined') {
     if (! context.returnPartialData) {
-      throw new ApolloError({
-        errorMessage: `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
-Perhaps you want to use the \`returnPartialData\` option?`,
-        extraInfo: {
-          isFieldError: true,
-        },
-      });
+      throw new Error(`Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
+Perhaps you want to use the \`returnPartialData\` option?`);
     }
 
     context.hasMissingField = true;

@@ -117,6 +117,36 @@ describe('roundtrip', () => {
   });
 
   describe('fragments', () => {
+    it('should work on null fields', () => {
+      storeRoundtrip(gql`
+        query {
+          field {
+            ... on Obj {
+              stuff
+            }
+          }
+        }
+      `, {
+        field: null,
+      });
+    });
+
+    it('should work on basic inline fragments', () => {
+      storeRoundtrip(gql`
+        query {
+          field {
+            ... on Obj {
+              stuff
+            }
+          }
+        }
+      `, {
+        field: {
+          stuff: 'Result',
+        },
+      });
+    });
+
     it('should resolve on union types with inline fragments without typenames with warning', () => {
       withWarning(() => {
         storeRoundtrip(gql`

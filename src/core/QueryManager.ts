@@ -560,15 +560,15 @@ export class QueryManager {
       document,
       variables,
     } = options;
-    let queryDoc = document;
+    let transformedDoc = document;
     // Apply the query transformer if one has been provided.
     if (this.queryTransformer) {
-      queryDoc = applyTransformers(queryDoc, [this.queryTransformer]);
+      transformedDoc = applyTransformers(transformedDoc, [this.queryTransformer]);
     }
     const request: Request = {
-      query: queryDoc,
+      query: transformedDoc,
       variables,
-      operationName: getOperationName(queryDoc),
+      operationName: getOperationName(transformedDoc),
     };
 
     let subId: number;
@@ -576,6 +576,8 @@ export class QueryManager {
 
     return new Observable((observer) => {
       observers.push(observer);
+
+      // TODO REFACTOR: the result here is not a normal GraphQL result.
 
       // If this is the first observer, actually initiate the network subscription
       if (observers.length === 1) {
@@ -585,6 +587,16 @@ export class QueryManager {
               obs.error(error);
             });
           } else {
+            this.store.dispatch({
+              type: 'APOLLO_SUBSCRIPTION_RESULT',
+              document: transformedDoc,
+              operationName: getOperationName(transformedDoc),
+              result: { data: result },
+              variables,
+              subscriptionId: subId,
+              extraReducers: this.getExtraReducers(),
+            });
+            // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach((obs) => {
               obs.next(result);
             });
@@ -771,6 +783,21 @@ export class QueryManager {
     };
   }
 
+  private getExtraReducers() {
+    return  Object.keys(this.observableQueries).map( obsQueryId => {
+      const queryOptions = this.observableQueries[obsQueryId].observableQuery.options;
+      if (queryOptions.reducer) {
+        return createStoreReducer(
+          queryOptions.reducer,
+          queryOptions.query,
+          queryOptions.variables,
+          this.reducerConfig,
+          );
+      }
+      return null;
+    }).filter( reducer => reducer !== null );
+  }
+
   // Takes a request id, query id, a query document and information associated with the query
   // and send it to the network interface. Returns
   // a promise for the result associated with that request.
@@ -802,18 +829,7 @@ export class QueryManager {
       return this.networkInterface.query(request)
         .then((result: GraphQLResult) => {
 
-          const extraReducers = Object.keys(this.observableQueries).map( obsQueryId => {
-            const queryOptions = this.observableQueries[obsQueryId].observableQuery.options;
-            if (queryOptions.reducer) {
-              return createStoreReducer(
-                queryOptions.reducer,
-                queryOptions.query,
-                queryOptions.variables,
-                this.reducerConfig,
-                );
-            }
-            return null;
-          }).filter( reducer => reducer !== null );
+          const extraReducers = this.getExtraReducers();
 
           // XXX handle multiple ApolloQueryResults
           this.store.dispatch({

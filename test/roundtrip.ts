@@ -135,6 +135,7 @@ describe('roundtrip', () => {
       storeRoundtrip(gql`
         query {
           field {
+            __typename
             ... on Obj {
               stuff
             }
@@ -142,6 +143,7 @@ describe('roundtrip', () => {
         }
       `, {
         field: {
+          __typename: 'Obj',
           stuff: 'Result',
         },
       });

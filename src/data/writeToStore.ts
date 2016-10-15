@@ -23,6 +23,8 @@ import {
   SelectionSet,
   Field,
   Document,
+  InlineFragment,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -128,7 +130,7 @@ export function writeSelectionSetToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject,
-  fragmentMap,
+  fragmentMap = {},
 }: {
   dataId: string,
   result: any,
@@ -138,13 +140,6 @@ export function writeSelectionSetToStore({
   dataIdFromObject: IdGetter,
   fragmentMap?: FragmentMap,
 }): NormalizedCache {
-
-  if (!fragmentMap) {
-    // we have an empty sym table if there's no sym table given
-    // to us for the fragments.
-    fragmentMap = {};
-  }
-
   selectionSet.selections.forEach((selection) => {
     const included = shouldInclude(selection, variables);
 
@@ -177,11 +172,18 @@ export function writeSelectionSetToStore({
         });
       }
     } else {
-      // Look up the fragment referred to in the selection
-      const fragment = fragmentMap[selection.name.value];
+      // This is not a field, so it must be a fragment, either inline or named
+      let fragment: InlineFragment | FragmentDefinition;
 
-      if (!fragment) {
-        throw new Error(`No fragment named ${selection.name.value}.`);
+      if (isInlineFragment(selection)) {
+        fragment = selection;
+      } else {
+        // Named fragment
+        fragment = fragmentMap[selection.name.value];
+
+        if (!fragment) {
+          throw new Error(`No fragment named ${selection.name.value}.`);
+        }
       }
 
       if (included) {

@@ -15,6 +15,8 @@ import { fragmentDefinitionsMap } from '../src/fragments';
 import {
   GraphQLError,
   GraphQLResult,
+  Document,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -60,6 +62,8 @@ import { ApolloError } from '../src/errors/ApolloError';
 import { withWarning } from './util/wrap';
 
 import observableToPromise from './util/observableToPromise';
+
+import cloneDeep = require('lodash.clonedeep');
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -311,7 +315,6 @@ describe('client', () => {
   });
 
   it('should allow for a single query to take place', () => {
-
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -332,20 +335,33 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query },
-      result: { data },
-    });
+    clientRoundrip(query, data);
+  });
 
-    const client = new ApolloClient({
-      networkInterface,
-      addTypename: false,
-    });
+  it('should allow fragments on root query', () => {
+    const query = gql`
+      query {
+        ...QueryFragment
+        records {
+          id
+        }
+      }
 
-    return client.query({ query })
-      .then((result) => {
-        assert.deepEqual(result.data, data);
-      });
+      fragment QueryFragment on Query {
+        records {
+          name
+        }
+      }
+    `;
+
+    const data = {
+      records: [
+        { id: 1, name: 'One' },
+        { id: 2, name: 'Two' },
+      ],
+    };
+
+    clientRoundrip(query, data);
   });
 
   it('should allow for a single query with existing store', () => {
@@ -1688,3 +1704,24 @@ describe('client', () => {
   });
   */
 });
+
+function clientRoundrip(
+  query: Document,
+  data: GraphQLResult,
+  variables?: any,
+  fragments?: FragmentDefinition[]
+) {
+  const networkInterface = mockNetworkInterface({
+    request: { query: cloneDeep(query) },
+    result: { data },
+  });
+
+  const client = new ApolloClient({
+    networkInterface,
+  });
+
+  return client.query({ query, variables, fragments })
+    .then((result) => {
+      assert.deepEqual(result.data, data);
+    });
+}

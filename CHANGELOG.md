@@ -19,6 +19,9 @@ Expect active development and potentially significant breaking changes in the `0
 - Fix: moved dev @types to devDependencies otherwise they potentially brake projects that are importing apollo-client [Issue #713](https://github.com/apollostack/apollo-client/issues/713) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
 - Fix rejecting promises on `refetch` and similar methods. Also improve error handling and stop using `ApolloError` internally. [Failing test in PR #524](https://github.com/apollostack/apollo-client/pull/524) [PR #781](https://github.com/apollostack/apollo-client/pull/781)
 
+### v0.4.21
+- Added some temporary functions (`_setVariablesNoResult` and `_setOptionsNoResult`) to work around a `react-apollo` problem fundamentally caused by the issue highlighted in [PR #694](https://github.com/apollostack/apollo-client/pull/694). The code as been refactored on `master`, so we expect it to be fixed in 0.5.x, and is not worth resolving now.
+
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)
 - Fix: avoid field error on mutations after a query cancellation or a query failure by enforcing returnPartialData during previous data retrieval before applying a mutation update. [PR #696](https://github.com/apollostack/apollo-client/pull/696) and [Issue #647](https://github.com/apollostack/apollo-client/issues/647).

@@ -6,6 +6,10 @@ import {
   assert,
 } from 'chai';
 
+import clonedeep = require('lodash.clonedeep');
+
+import { isSubscriptionResultAction } from '../src/actions';
+
 import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
@@ -230,6 +234,69 @@ describe('GraphQL Subscriptions', () => {
         assert.deepEqual(result, results[numResults].result);
         numResults++;
         if (numResults === 4) {
+          done();
+        }
+      },
+    }) as any;
+
+    const id = sub._networkSubscriptionId;
+
+    for (let i = 0; i < 4; i++) {
+      network.fireResult(id);
+    }
+  });
+
+  it('should fire redux action and call result reducers', (done) => {
+    const query = gql`
+      query miniQuery {
+        number
+      }
+    `;
+
+    const res = {
+      data: {
+        number: 0,
+      },
+    };
+
+    const req1 = {
+      request: { query },
+      result: res,
+    };
+
+    const network = mockSubscriptionNetworkInterface([sub1], req1);
+    let numResults = 0;
+    let counter = 0;
+    const queryManager = new QueryManager({
+      networkInterface: network,
+      reduxRootSelector: (state: any) => state.apollo,
+      store: createApolloStore(),
+    });
+
+    const observableQuery = queryManager.watchQuery({
+      query,
+      reducer: (previousResult, action) => {
+        counter++;
+        if (isSubscriptionResultAction(action)) {
+          const newResult = clonedeep(previousResult) as any;
+          newResult.number++;
+          return newResult;
+        }
+        return previousResult;
+      },
+    }).subscribe({
+      next: () => null,
+    });
+
+    const sub = queryManager.startGraphQLSubscription(realOptions).subscribe({
+      next(result) {
+        assert.deepEqual(result, results[numResults].result);
+        numResults++;
+        if (numResults === 4) {
+          // once for itself, four times for the subscription results.
+          observableQuery.unsubscribe();
+          assert.equal(counter, 5);
+          assert.equal(queryManager.store.getState()['apollo']['data']['ROOT_QUERY']['number'], 4);
           done();
         }
       },

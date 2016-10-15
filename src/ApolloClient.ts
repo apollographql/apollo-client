@@ -148,6 +148,7 @@ export default class ApolloClient {
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
     addTypename = true,
+    queryTransformer,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -160,6 +161,7 @@ export default class ApolloClient {
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
     addTypename?: boolean,
+    queryTransformer?: any,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -171,6 +173,11 @@ export default class ApolloClient {
           'please use the "reduxRootSelector" instead.'
       );
       this.reduxRootKey = reduxRootKey;
+    }
+
+    if (queryTransformer) {
+      throw new Error('queryTransformer option no longer supported in Apollo Client 0.5. ' +
+        'Instead, there is a new "addTypename" option, which is on by default.');
     }
 
     if (!reduxRootSelector && reduxRootKey) {

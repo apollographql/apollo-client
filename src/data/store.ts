@@ -12,7 +12,6 @@ import {
 } from './writeToStore';
 
 import assign = require('lodash.assign');
-import isObject = require('lodash.isobject');
 
 import {
   QueryStore,

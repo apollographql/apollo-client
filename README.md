@@ -3,9 +3,16 @@
 [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-The Apollo Client can easily be dropped into any JavaScript frontend where you want to use data from a GraphQL server.
+Apollo Client can be used in any JavaScript frontend where you want to use data from a GraphQL server. It's:
 
-It's simple to use, and very small (less than 33kb), while having a lot of useful features around caching, polling, and refetching.
+1. **Incrementally adoptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
+2. **Universally compatible**, so that Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
+2. **Simple to get started with**, you can start loading data right away and learn about advanced features later.
+3. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
+4. **Built for interactive apps**, so your users can make changes and see them reflected in the UI immediately.
+5. **Community driven**, Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
+
+Get started on the [home page](http://dev.apollodata.com/), which has great examples for a variety of frameworks.
 
 ## Installing
 
@@ -13,9 +20,15 @@ It's simple to use, and very small (less than 33kb), while having a lot of usefu
 npm install apollo-client
 ```
 
-To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3. Move on to the next article to see how to import and initialize the client.
+To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3.
 
-[Read the docs.](http://dev.apollodata.com/core/)
+### Learn how to use Apollo Client with your favorite framework
+
+- [React](http://dev.apollodata.com/react/)
+- [Angular 2](http://dev.apollodata.com/angular2/)
+- [Vue](https://github.com/Akryum/vue-apollo)
+- [Meteor](http://dev.apollodata.com/core/meteor.html)
+- [Vanilla JS](http://dev.apollodata.com/core/)
 
 ---
 

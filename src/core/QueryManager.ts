@@ -432,7 +432,82 @@ export class QueryManager {
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<ApolloQueryResult> {
-    return this.fetchQueryOverInterface(queryId, options);
+    const {
+      variables,
+      forceFetch = false,
+      returnPartialData = false,
+      noFetch = false,
+    } = options;
+
+    const {
+      queryDoc,
+    } = this.transformQueryDocument(options);
+
+    const queryString = print(queryDoc);
+
+    let storeResult: any;
+    let needToFetch: boolean = forceFetch;
+
+    // If this is not a force fetch, we want to diff the query against the
+    // store before we fetch it from the network interface.
+    if (!forceFetch) {
+      const { isMissing, result } = diffQueryAgainstStore({
+        query: queryDoc,
+        store: this.reduxRootSelector(this.store.getState()).data,
+        returnPartialData: true,
+        variables,
+      });
+
+      // If we're in here, only fetch if we have missing fields
+      needToFetch = isMissing;
+
+      storeResult = result;
+    }
+
+    const requestId = this.generateRequestId();
+    const shouldFetch = needToFetch && !noFetch;
+
+    // Initialize query in store with unique requestId
+    this.queryDocuments[queryId] = queryDoc;
+    this.store.dispatch({
+      type: 'APOLLO_QUERY_INIT',
+      queryString,
+      document: queryDoc,
+      variables,
+      forceFetch,
+      returnPartialData: returnPartialData || noFetch,
+      queryId,
+      requestId,
+      // we store the old variables in order to trigger "loading new variables"
+      // state if we know we will go to the server
+      storePreviousVariables: shouldFetch,
+    });
+
+    // If there is no part of the query we need to fetch from the server (or,
+    // noFetch is turned on), we just write the store result as the final result.
+    if (!shouldFetch || returnPartialData) {
+      this.store.dispatch({
+        type: 'APOLLO_QUERY_RESULT_CLIENT',
+        result: { data: storeResult },
+        variables,
+        document: queryDoc,
+        complete: !shouldFetch,
+        queryId,
+      });
+    }
+
+    if (shouldFetch) {
+      return this.fetchRequest({
+        requestId,
+        queryId,
+        document: queryDoc,
+        options,
+      });
+    }
+
+    // If we have no query to send to the server, we should return the result
+    // found within the store.
+    return Promise.resolve({ data: storeResult });
   }
 
   public generateQueryId() {
@@ -876,88 +951,6 @@ export class QueryManager {
         });
     });
     return retPromise;
-  }
-
-  private fetchQueryOverInterface(
-    queryId: string,
-    options: WatchQueryOptions
-  ): Promise<ApolloQueryResult> {
-    const {
-      variables,
-      forceFetch = false,
-      returnPartialData = false,
-      noFetch = false,
-    } = options;
-
-    const {
-      queryDoc,
-    } = this.transformQueryDocument(options);
-
-    const queryString = print(queryDoc);
-
-    let storeResult: any;
-    let needToFetch: boolean = forceFetch;
-
-    // If this is not a force fetch, we want to diff the query against the
-    // store before we fetch it from the network interface.
-    if (!forceFetch) {
-      const { isMissing, result } = diffQueryAgainstStore({
-        query: queryDoc,
-        store: this.reduxRootSelector(this.store.getState()).data,
-        returnPartialData: true,
-        variables,
-      });
-
-      // If we're in here, only fetch if we have missing fields
-      needToFetch = isMissing;
-
-      storeResult = result;
-    }
-
-    const requestId = this.generateRequestId();
-    const shouldFetch = needToFetch && !noFetch;
-
-    // Initialize query in store with unique requestId
-    this.queryDocuments[queryId] = queryDoc;
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_INIT',
-      queryString,
-      document: queryDoc,
-      variables,
-      forceFetch,
-      returnPartialData: returnPartialData || noFetch,
-      queryId,
-      requestId,
-      // we store the old variables in order to trigger "loading new variables"
-      // state if we know we will go to the server
-      storePreviousVariables: shouldFetch,
-    });
-
-    // If there is no part of the query we need to fetch from the server (or,
-    // noFetch is turned on), we just write the store result as the final result.
-    if (!shouldFetch || returnPartialData) {
-      this.store.dispatch({
-        type: 'APOLLO_QUERY_RESULT_CLIENT',
-        result: { data: storeResult },
-        variables,
-        document: queryDoc,
-        complete: !shouldFetch,
-        queryId,
-      });
-    }
-
-    if (shouldFetch) {
-      return this.fetchRequest({
-        requestId,
-        queryId,
-        document: queryDoc,
-        options,
-      });
-    }
-
-    // If we have no query to send to the server, we should return the result
-    // found within the store.
-    return Promise.resolve({ data: storeResult });
   }
 
   // Refetches a query given that query's name. Refetches

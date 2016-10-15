@@ -14,6 +14,9 @@ Expect active development and potentially significant breaking changes in the `0
 - **Refactor**: Rewrite how fragments are handled. Remove all validation of fragments when writing to the store, assuming that a spec-compliant server will return a valid set of fragments and results. On reading from the store, use `__typename` if it exists, and strongly encourage using the `addTypename: true` option by warning when the `__typename` field is not in the query and result. [Issue #739](https://github.com/apollostack/apollo-client/issues/739) [PR #767](https://github.com/apollostack/apollo-client/pull/767)
 - GraphQL subscriptions fire an action when new data arrives [PR #775](https://github.com/apollostack/apollo-client/pull/775)
 - **Feature removal and addition**: The `ApolloClient` constructor no longer accepts a `queryTransformer` option. Instead, there is a a new `addTypename` option which is on by default. [Issue #616](https://github.com/apollostack/apollo-client/issues/616) [PR #779](https://github.com/apollostack/apollo-client/pull/779)
+- **Refactor**: removed circular dependency in data/store.ts [Issue #731](https://github.com/apollostack/apollo-client/issues/731) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
+- added "ApolloClient" to the named exports to make it compatible with Angular2 AOT compile [Issue #758](https://github.com/apollostack/apollo-client/issues/758) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
+- Fix: moved dev @types to devDependencies otherwise they potentially brake projects that are importing apollo-client [Issue #713](https://github.com/apollostack/apollo-client/issues/713) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
 
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)

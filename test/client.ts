@@ -168,7 +168,7 @@ describe('client', () => {
 
   it('throws on removed queryTransformer option', () => {
     assert.throws(() => {
-      const client = new ApolloClient({ queryTransformer: 'anything' });
+      new ApolloClient({ queryTransformer: 'anything' });
     }, /addTypename/);
   });
 

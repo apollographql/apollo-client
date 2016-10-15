@@ -61,6 +61,8 @@ import { ApolloError } from '../src/errors/ApolloError';
 
 import { withWarning } from './util/wrap';
 
+import observableToPromise from './util/observableToPromise';
+
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
@@ -721,7 +723,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to handle named fragments on forced fetches', (done) => {
+  it('should be able to handle named fragments on forced fetches', () => {
     const query = gql`
       fragment authorDetails on Author {
         firstName
@@ -729,33 +731,37 @@ describe('client', () => {
       }
       query {
         author {
+          __typename
           ...authorDetails
         }
       }`;
     const result = {
       'author': {
+        __typename: 'Author',
         'firstName': 'John',
         'lastName': 'Smith',
       },
     };
-    const networkInterface = mockNetworkInterface(
-    {
+
+    const networkInterface = mockNetworkInterface({
       request: { query },
       result: { data: result },
     });
+
     const client = new ApolloClient({
       networkInterface,
     });
-    client.query({ forceFetch: true, query }).then((actualResult) => {
+
+    return client.query({ forceFetch: true, query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
-      done();
     });
   });
 
-  it('should be able to handle named fragments with multiple fragments', (done) => {
+  it('should be able to handle named fragments with multiple fragments', () => {
     const query = gql`
       query {
         author {
+          __typename
           ...authorDetails
           ...moreDetails
         }
@@ -769,6 +775,7 @@ describe('client', () => {
       }`;
     const result = {
       'author' : {
+        __typename: 'Author',
         'firstName': 'John',
         'lastName': 'Smith',
         'address': '1337 10th St.',
@@ -783,9 +790,9 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
     });
-    client.query({ query }).then((actualResult) => {
+
+    return client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
-      done();
     });
   });
 
@@ -793,6 +800,7 @@ describe('client', () => {
     const query = gql`
       query {
         author {
+          __typename
           ...authorDetails
         }
       }
@@ -802,6 +810,7 @@ describe('client', () => {
       }`;
     const result = {
       'author' : {
+        __typename: 'Author',
         'firstName': 'John',
         'lastName': 'Smith',
       },
@@ -1267,16 +1276,18 @@ describe('client', () => {
       disableFragmentWarnings();
     });
 
-    it('should allow passing fragments to query', (done) => {
+    it('should allow passing fragments to query', () => {
       const queryDoc = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }`;
       const composedQuery = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }
@@ -1286,6 +1297,7 @@ describe('client', () => {
         }`;
       const data = {
         author: {
+          __typename: 'Author',
           firstName: 'John',
           lastName: 'Smith',
         },
@@ -1303,22 +1315,23 @@ describe('client', () => {
           lastName
         }`);
 
-      client.query({ query: queryDoc, fragments: fragmentDefs }).then((result) => {
+      return client.query({ query: queryDoc, fragments: fragmentDefs }).then((result) => {
         assert.deepEqual(result.data, data);
-        done();
       });
     });
 
-    it('show allow passing fragments to mutate', (done) => {
+    it('show allow passing fragments to mutate', () => {
       const mutationDoc = gql`
         mutation createAuthor {
           createAuthor {
+            __typename
             ...authorDetails
           }
         }`;
       const composedMutation = gql`
         mutation createAuthor {
           createAuthor {
+            __typename
             ...authorDetails
           }
         }
@@ -1328,6 +1341,7 @@ describe('client', () => {
         }`;
       const data = {
         createAuthor: {
+          __typename: 'Author',
           firstName: 'John',
           lastName: 'Smith',
         },
@@ -1345,22 +1359,23 @@ describe('client', () => {
           lastName
         }`);
 
-      client.mutate({ mutation: mutationDoc, fragments: fragmentDefs }).then((result) => {
+      return client.mutate({ mutation: mutationDoc, fragments: fragmentDefs }).then((result) => {
         assert.deepEqual(result, { data });
-        done();
       });
     });
 
-    it('should allow passing fragments to watchQuery', (done) => {
+    it('should allow passing fragments to watchQuery', () => {
       const queryDoc = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }`;
       const composedQuery = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }
@@ -1370,6 +1385,7 @@ describe('client', () => {
         }`;
       const data = {
         author: {
+          __typename: 'Author',
           firstName: 'John',
           lastName: 'Smith',
         },
@@ -1387,25 +1403,25 @@ describe('client', () => {
           lastName
         }`);
 
-      const observer = client.watchQuery({ query: queryDoc, fragments: fragmentDefs });
-      observer.subscribe({
-        next(result) {
-          assert.deepEqual(result.data, data);
-          done();
-        },
+      const observable = client.watchQuery({ query: queryDoc, fragments: fragmentDefs });
+
+      return observableToPromise({ observable }, (result) => {
+        assert.deepEqual(result.data, data);
       });
     });
 
-    it('should allow passing fragments in polling queries', (done) => {
+    it('should allow passing fragments in polling queries', () => {
       const queryDoc = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }`;
       const composedQuery = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }
@@ -1415,6 +1431,7 @@ describe('client', () => {
         }`;
       const data = {
         author: {
+          __typename: 'Author',
           firstName: 'John',
           lastName: 'Smith',
         },
@@ -1432,14 +1449,14 @@ describe('client', () => {
           lastName
         }`);
 
-      const observer = client.watchQuery(
-        { query: queryDoc, pollInterval: 30, fragments: fragmentDefs});
-      const subscription = observer.subscribe({
-        next(result) {
-          assert.deepEqual(result.data, data);
-          subscription.unsubscribe();
-          done();
-        },
+      const observable = client.watchQuery({
+        query: queryDoc,
+        pollInterval: 30,
+        fragments: fragmentDefs,
+      });
+
+      return observableToPromise({ observable }, (result) => {
+        assert.deepEqual(result.data, data);
       });
     });
 

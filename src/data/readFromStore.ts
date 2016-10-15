@@ -95,7 +95,6 @@ match fragments.`);
     }
 
     context.returnPartialData = true;
-
     return true;
   }
 
@@ -103,9 +102,13 @@ match fragments.`);
     return true;
   }
 
-  // XXX interfaces and unions
-  console.log("XXXXX")
-  return false;
+  // XXX here we reach an issue - we don't know if this fragment should match or not. It's either:
+  // 1. A fragment on a non-matching concrete type or interface or union
+  // 2. A fragment on a matching interface or union
+  // If it's 1, we don't want to return anything, if it's 2 we want to match. We can't tell the
+  // difference, so for now, we just do our best to resolve the fragment but turn on partial data
+  context.returnPartialData = true;
+  return true;
 };
 
 const readStoreResolver: Resolver = (

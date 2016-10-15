@@ -116,12 +116,14 @@ describe('diffing queries against the store', () => {
     const firstQuery = gql`
       query {
         person {
+          __typename
           firstName
           lastName
         }
       }`;
     const firstResult = {
       person: {
+        __typename: 'Author',
         firstName: 'John',
         lastName: 'Smith',
       },
@@ -133,6 +135,7 @@ describe('diffing queries against the store', () => {
     const unionQuery = gql`
       query {
         person {
+          __typename
           ... on Author {
             firstName
             lastName
@@ -143,26 +146,28 @@ describe('diffing queries against the store', () => {
           }
         }
       }`;
-    assert.doesNotThrow(() => {
-      diffQueryAgainstStore({
-        store,
-        query: unionQuery,
-        variables: null,
-        returnPartialData: false,
-      });
+    const { isMissing } = diffQueryAgainstStore({
+      store,
+      query: unionQuery,
+      variables: null,
+      returnPartialData: false,
     });
+
+    assert.isTrue(isMissing);
   });
 
   it('does not error on a query with fields missing from all but one named fragment', () => {
     const firstQuery = gql`
       query {
         person {
+          __typename
           firstName
           lastName
         }
       }`;
     const firstResult = {
       person: {
+        __typename: 'Author',
         firstName: 'John',
         lastName: 'Smith',
       },
@@ -174,6 +179,7 @@ describe('diffing queries against the store', () => {
     const unionQuery = gql`
       query {
         person {
+          __typename
           ...authorInfo
           ...jediInfo
         }
@@ -184,14 +190,15 @@ describe('diffing queries against the store', () => {
       fragment jediInfo on Jedi {
         powers
       }`;
-    assert.doesNotThrow(() => {
-      diffQueryAgainstStore({
-        store,
-        query: unionQuery,
-        variables: null,
-        returnPartialData: false,
-      });
+
+    const { isMissing } = diffQueryAgainstStore({
+      store,
+      query: unionQuery,
+      variables: null,
+      returnPartialData: false,
     });
+
+    assert.isTrue(isMissing);
   });
 
   it('throws an error on a query with fields missing from matching named fragments', () => {

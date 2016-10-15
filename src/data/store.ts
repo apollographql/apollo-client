@@ -28,6 +28,7 @@ import {
 
 import {
   graphQLResultHasError,
+  NormalizedCache,
 } from './storeUtils';
 
 import {
@@ -39,39 +40,6 @@ import {
   replaceQueryResults,
 } from './replaceQueryResults';
 
-/**
- * This is a normalized representation of the Apollo query result cache. Briefly, it consists of
- * a flatten representation of query result trees.
- */
-export interface NormalizedCache {
-  [dataId: string]: StoreObject;
-}
-
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldKey: string]: StoreValue;
-}
-
-export interface IdValue {
-  type: 'id';
-  id: string;
-  generated: boolean;
-}
-
-export interface JsonValue {
-  type: 'json';
-  json: any;
-}
-
-export type StoreValue = number | string | string[] | IdValue | JsonValue | void;
-
-export function isIdValue(idObject: StoreValue): idObject is IdValue {
-  return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
-}
-
-export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
-  return (isObject(jsonObject) && (jsonObject as (IdValue | JsonValue)).type === 'json');
-}
 
 export function data(
   previousState: NormalizedCache = {},

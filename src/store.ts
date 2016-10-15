@@ -7,8 +7,11 @@ import {
 
 import {
   data,
-  NormalizedCache,
 } from './data/store';
+
+import {
+  NormalizedCache,
+} from './data/storeUtils';
 
 import {
   queries,

@@ -32,7 +32,7 @@ import {
   StoreObject,
   IdValue,
   isIdValue,
-} from './store';
+} from './storeUtils';
 
 import {
   IdGetter,

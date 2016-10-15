@@ -30,7 +30,7 @@ import {
 
 import {
   NormalizedCache,
-} from '../data/store';
+} from '../data/storeUtils';
 
 import {
   createStoreReducer,

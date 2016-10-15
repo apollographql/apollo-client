@@ -11,7 +11,7 @@ import {
   NormalizedCache,
   isJsonValue,
   isIdValue,
-} from './store';
+} from './storeUtils';
 
 import {
   storeKeyNameFromFieldNameAndArgs,

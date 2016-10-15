@@ -4,7 +4,7 @@ const { assert } = chai;
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient, { createFragment } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
-import { NormalizedCache, StoreObject } from '../src/data/store';
+import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 import { addFragmentsToDocument } from '../src/queries/getFromAST';
 
 import assign = require('lodash.assign');

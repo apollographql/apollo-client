@@ -16,7 +16,7 @@ import {
 
 import {
   NormalizedCache,
-} from '../src/data/store';
+} from '../src/data/storeUtils';
 
 import {
   Selection,

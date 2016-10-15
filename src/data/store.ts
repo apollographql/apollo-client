@@ -4,6 +4,7 @@ import {
   isMutationResultAction,
   isUpdateQueryResultAction,
   isStoreResetAction,
+  isSubscriptionResultAction,
 } from '../actions';
 
 import {
@@ -109,6 +110,35 @@ export function data(
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
         document: action.document,
         variables: queryStoreValue.variables,
+        store: clonedState,
+        dataIdFromObject: config.dataIdFromObject,
+      });
+
+      // XXX each reducer gets the state from the previous reducer.
+      // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
+      if (action.extraReducers) {
+        action.extraReducers.forEach( reducer => {
+          newState = reducer(newState, constAction);
+        });
+      }
+
+      return newState;
+    }
+  } else if (isSubscriptionResultAction(action)) {
+    // the subscription interface should handle not sending us results we no longer subscribe to.
+    // XXX I don't think we ever send in an object with errors, but we might in the future...
+    if (! graphQLResultHasError(action.result)) {
+
+      // XXX use immutablejs instead of cloning
+      const clonedState = assign({}, previousState) as NormalizedCache;
+
+      // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
+      // write to "the" store?
+      let newState = writeResultToStore({
+        result: action.result.data,
+        dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
+        document: action.document,
+        variables: action.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
       });

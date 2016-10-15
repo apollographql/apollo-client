@@ -134,6 +134,20 @@ export function isStoreResetAction(action: ApolloAction): action is StoreResetAc
   return action.type === 'APOLLO_STORE_RESET';
 }
 
+export type SubscriptionResultAction = {
+  type: 'APOLLO_SUBSCRIPTION_RESULT';
+  result: GraphQLResult;
+  subscriptionId: number;
+  variables: Object;
+  document: Document;
+  operationName: string;
+  extraReducers?: ApolloReducer[];
+}
+
+export function isSubscriptionResultAction(action: ApolloAction): action is SubscriptionResultAction {
+  return action.type === 'APOLLO_SUBSCRIPTION_RESULT';
+}
+
 export type ApolloAction =
   QueryResultAction |
   QueryErrorAction |
@@ -144,4 +158,5 @@ export type ApolloAction =
   MutationResultAction |
   MutationErrorAction |
   UpdateQueryResultAction |
-  StoreResetAction;
+  StoreResetAction |
+  SubscriptionResultAction;

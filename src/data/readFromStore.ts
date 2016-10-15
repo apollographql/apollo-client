@@ -88,7 +88,10 @@ const fragmentMatcher: FragmentMatcher = (
       console.warn(`You're using fragments in your queries, but don't have the addTypename:
 true option set in Apollo Client. Please turn on that option so that we can accurately
 match fragments.`);
-      haveWarned = true;
+      if (process.env.NODE_ENV !== 'test') {
+        // When running tests, we want to print the warning every time
+        haveWarned = true;
+      }
     }
 
     context.returnPartialData = true;
@@ -101,6 +104,7 @@ match fragments.`);
   }
 
   // XXX interfaces and unions
+  console.log("XXXXX")
   return false;
 };
 

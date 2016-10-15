@@ -209,6 +209,7 @@ describe('roundtrip', () => {
 
         query {
           all_people {
+            __typename
             name
             ...jediFragment
             ...droidFragment
@@ -216,10 +217,45 @@ describe('roundtrip', () => {
         }`, {
         all_people: [
           {
+            __typename: 'Jedi',
             name: 'Luke Skywalker',
             side: 'bright',
           },
           {
+            __typename: 'Droid',
+            name: 'R2D2',
+            model: 'astromech',
+          },
+        ],
+      });
+    });
+
+    it('should work with a fragment on the actual interface or union', () => {
+      storeRoundtrip(gql`
+        fragment jediFragment on Character {
+          side
+        }
+
+        fragment droidFragment on Droid {
+          model
+        }
+
+        query {
+          all_people {
+            name
+            __typename
+            ...jediFragment
+            ...droidFragment
+          }
+        }`, {
+        all_people: [
+          {
+            __typename: 'Jedi',
+            name: 'Luke Skywalker',
+            side: 'bright',
+          },
+          {
+            __typename: 'Droid',
             name: 'R2D2',
             model: 'astromech',
           },
@@ -260,6 +296,7 @@ describe('roundtrip', () => {
         query {
           person {
             name
+            __typename
             ... on Jedi @include(if: true) {
               side
             }
@@ -269,6 +306,7 @@ describe('roundtrip', () => {
           }
         }`, {
         person: {
+          __typename: 'Jedi',
           name: 'Luke Skywalker',
           side: 'bright',
         },
@@ -288,11 +326,13 @@ describe('roundtrip', () => {
         query {
           person {
             name
+            __typename
             ...jediFragment @include(if: true)
             ...droidFragment @skip(if: true)
           }
         }`, {
         person: {
+          __typename: 'Jedi',
           name: 'Luke Skywalker',
           side: 'bright',
         },

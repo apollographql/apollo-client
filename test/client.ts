@@ -63,6 +63,8 @@ import { withWarning } from './util/wrap';
 
 import observableToPromise from './util/observableToPromise';
 
+import cloneDeep = require('lodash.clonedeep');
+
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
@@ -1710,7 +1712,7 @@ function clientRoundrip(
   fragments?: FragmentDefinition[]
 ) {
   const networkInterface = mockNetworkInterface({
-    request: { query },
+    request: { query: cloneDeep(query) },
     result: { data },
   });
 

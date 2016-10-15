@@ -1,6 +1,6 @@
 import {
   NormalizedCache,
-} from './store';
+} from './storeUtils';
 
 import {
   writeResultToStore,

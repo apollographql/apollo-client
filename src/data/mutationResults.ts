@@ -1,7 +1,7 @@
 import {
   NormalizedCache,
   StoreObject,
-} from './store';
+} from './storeUtils';
 
 import {
   Document,

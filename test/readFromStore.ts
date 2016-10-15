@@ -8,7 +8,7 @@ import {
 import {
   NormalizedCache,
   StoreObject,
-} from '../src/data/store';
+} from '../src/data/storeUtils';
 
 import gql from 'graphql-tag';
 

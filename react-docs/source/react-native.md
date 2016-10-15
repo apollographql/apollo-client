@@ -28,7 +28,7 @@ const App = () => (
 AppRegistry.registerComponent('MyApplication', () => App);
 ```
 
-If you are new to using Apollo with React, you should probably read this guide from [the beginning](index.html).
+If you are new to using Apollo with React, you should probably read the [React guide](index.html).
 
 <h2 id="examples">Examples</h2>
 

@@ -51,6 +51,20 @@ describe('roundtrip', () => {
     });
   });
 
+  it('enum arguments', () => {
+    storeRoundtrip(gql`
+      {
+        hero(episode: JEDI) {
+          name
+        }
+      }
+    `, {
+      hero: {
+        name: 'Luke Skywalker',
+      },
+    });
+  });
+
   it('with an alias', () => {
     storeRoundtrip(gql`
       {

@@ -17,10 +17,6 @@ import {
   storeKeyNameFromFieldNameAndArgs,
 } from './storeUtils';
 
-import {
-  ApolloError,
-} from '../errors/ApolloError';
-
 export type DiffResult = {
   result?: any;
   isMissing?: boolean;
@@ -88,6 +84,8 @@ const fragmentMatcher: FragmentMatcher = (
       console.warn(`You're using fragments in your queries, but don't have the addTypename:
 true option set in Apollo Client. Please turn on that option so that we can accurately
 match fragments.`);
+
+      /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'test') {
         // When running tests, we want to print the warning every time
         haveWarned = true;
@@ -123,13 +121,8 @@ const readStoreResolver: Resolver = (
 
   if (typeof fieldValue === 'undefined') {
     if (! context.returnPartialData) {
-      throw new ApolloError({
-        errorMessage: `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
-Perhaps you want to use the \`returnPartialData\` option?`,
-        extraInfo: {
-          isFieldError: true,
-        },
-      });
+      throw new Error(`Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
+Perhaps you want to use the \`returnPartialData\` option?`);
     }
 
     context.hasMissingField = true;

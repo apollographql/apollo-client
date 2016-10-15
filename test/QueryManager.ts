@@ -1580,15 +1580,20 @@ describe('QueryManager', () => {
       pollInterval: 50,
     });
 
-    return observableToPromise({
+    const { promise, subscription } = observableToPromiseAndSubscription({
         observable,
         wait: 60,
         errorCallbacks: [
-          (error) => assert.include(error.message, 'Network error'),
+          (error) => {
+            assert.include(error.message, 'Network error');
+            subscription.unsubscribe();
+          },
         ],
       },
       (result) => assert.deepEqual(result.data, data1)
     );
+
+    return promise;
   });
 
   it('exposes a way to start a polling query', () => {
@@ -2543,13 +2548,18 @@ describe('QueryManager', () => {
       observableToPromise({
           observable: observable1,
           errorCallbacks: [
-            (error) => assert.deepEqual((error as any).extraInfo, { isFieldError: true }),
+            // This isn't the best error message, but at least people will know they are missing
+            // data in the store.
+            (error: ApolloError) => assert.include(error.networkError.message, 'find field'),
           ],
           wait: 60,
         },
         (result) => assert.deepEqual(result.data, data1)
       ),
-      observableToPromise({ observable: observable2, wait: 60 },
+      observableToPromise({
+          observable: observable2,
+          wait: 60,
+        },
         (result) => assert.deepEqual(result.data, data2)
       ),
     ]);
@@ -3126,6 +3136,52 @@ describe('QueryManager', () => {
       ]);
     });
 
+  });
+
+  it('exposes errors on a refetch as a rejection', (done) => {
+    const request = {
+      query: gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }`,
+    };
+    const firstResult = {
+      data: {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      },
+    };
+    const secondResult = {
+      errors: [
+        {
+          name: 'PeopleError',
+          message: 'This is not the person you are looking for.',
+        },
+      ],
+    };
+
+    const queryManager = mockRefetch({ request, firstResult, secondResult });
+
+    const handle = queryManager.watchQuery(request);
+
+    handle.subscribe({
+      error: () => { /* nothing */ },
+    });
+
+    handle.refetch().catch((error) => {
+      assert.deepEqual(error.graphQLErrors, [
+        {
+          name: 'PeopleError',
+          message: 'This is not the person you are looking for.',
+        },
+      ]);
+      done();
+    });
+
+    // We have an unhandled error warning from the `subscribe` above, which has no `error` cb
   });
 
 });

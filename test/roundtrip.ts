@@ -30,6 +30,27 @@ describe('roundtrip', () => {
     });
   });
 
+  it('multidimensional array (#776)', () => {
+    storeRoundtrip(gql`
+      {
+        rows {
+          value
+        }
+      }
+    `, {
+      rows: [
+        [
+          { value: 1 },
+          { value: 2 },
+        ],
+        [
+          { value: 3 },
+          { value: 4 },
+        ],
+      ],
+    });
+  });
+
   it('with an alias', () => {
     storeRoundtrip(gql`
       {

@@ -259,38 +259,10 @@ function writeFieldToStore({
       json: value,
     };
   } else if (Array.isArray(value)) {
-    // this is an array with sub-objects
-    const thisIdList: Array<string> = [];
+    const generatedId = `${dataId}.${storeFieldName}`;
 
-    value.forEach((item: any, index: any) => {
-      if (isNull(item)) {
-        thisIdList.push(null);
-      } else {
-        let itemDataId = `${dataId}.${storeFieldName}.${index}`;
-
-        if (dataIdFromObject) {
-          const semanticId = dataIdFromObject(item);
-
-          if (semanticId) {
-            itemDataId = semanticId;
-          }
-        }
-
-        thisIdList.push(itemDataId);
-
-        writeSelectionSetToStore({
-          dataId: itemDataId,
-          result: item,
-          store,
-          selectionSet: field.selectionSet,
-          variables,
-          dataIdFromObject,
-          fragmentMap,
-        });
-      }
-    });
-
-    storeValue = thisIdList;
+    storeValue = processArrayValue(value, generatedId, dataIdFromObject, store,
+      field.selectionSet, variables, fragmentMap);
   } else {
     // It's an object
     let valueDataId = `${dataId}.${storeFieldName}`;
@@ -369,4 +341,47 @@ function writeFieldToStore({
   if (!store[dataId] || storeValue !== store[dataId][storeFieldName]) {
     store[dataId] = newStoreObj;
   }
+}
+
+function processArrayValue(
+  value: any[],
+  generatedId: string,
+  dataIdFromObject: IdGetter,
+  store: NormalizedCache,
+  selectionSet: SelectionSet,
+  variables: any,
+  fragmentMap: FragmentMap,
+): any[] {
+  return value.map((item: any, index: any) => {
+    if (isNull(item)) {
+      return null;
+    }
+
+    let itemDataId = `${generatedId}.${index}`;
+
+    if (Array.isArray(item)) {
+      return processArrayValue(item, itemDataId, dataIdFromObject, store, selectionSet,
+        variables, fragmentMap);
+    }
+
+    if (dataIdFromObject) {
+      const semanticId = dataIdFromObject(item);
+
+      if (semanticId) {
+        itemDataId = semanticId;
+      }
+    }
+
+    writeSelectionSetToStore({
+      dataId: itemDataId,
+      result: item,
+      store,
+      selectionSet,
+      variables,
+      dataIdFromObject,
+      fragmentMap,
+    });
+
+    return itemDataId;
+  });
 }

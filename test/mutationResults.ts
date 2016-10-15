@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../src/data/mutationResults';
-import { NormalizedCache, StoreObject } from '../src/data/store';
+import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 import { isMutationResultAction, isQueryResultAction } from '../src/actions';
 
 import assign = require('lodash.assign');

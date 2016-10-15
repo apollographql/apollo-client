@@ -548,9 +548,8 @@ describe('client', () => {
     });
 
     return client.query({ query })
-      .catch((error) => {
-        const apolloError = error as ApolloError;
-        assert.deepEqual(apolloError.graphQLErrors, errors);
+      .catch((error: ApolloError) => {
+        assert.deepEqual(error.graphQLErrors, errors);
       });
   });
 
@@ -1565,10 +1564,9 @@ describe('client', () => {
 
     client.mutate({ mutation }).then((result) => {
       done(new Error('Returned a result when it should not have.'));
-    }).catch((error) => {
-      const apolloError = error as ApolloError;
-      assert(apolloError.networkError);
-      assert.equal(apolloError.networkError.message, networkError.message);
+    }).catch((error: ApolloError) => {
+      assert(error.networkError);
+      assert.equal(error.networkError.message, networkError.message);
       done();
     });
   });
@@ -1599,11 +1597,10 @@ describe('client', () => {
     });
     client.mutate({ mutation }).then((result) => {
       done(new Error('Returned a result when it should not have.'));
-    }).catch((error) => {
-      const apolloError = error as ApolloError;
-      assert(apolloError.graphQLErrors);
-      assert.equal(apolloError.graphQLErrors.length, 1);
-      assert.equal(apolloError.graphQLErrors[0].message, errors[0].message);
+    }).catch((error: ApolloError) => {
+      assert(error.graphQLErrors);
+      assert.equal(error.graphQLErrors.length, 1);
+      assert.equal(error.graphQLErrors[0].message, errors[0].message);
       done();
     });
   });

@@ -3047,7 +3047,7 @@ describe('QueryManager', () => {
 
       client = new ApolloClient({
         networkInterface,
-        resultTransformer(result) {
+        resultTransformer(result: GraphQLResult) {
           transformCount++;
           return {
             data: assign({}, result.data, {transformCount}),
@@ -3060,7 +3060,7 @@ describe('QueryManager', () => {
     it('transforms query() results', () => {
       response = {data: {foo: 123}};
       return client.query({query: gql`{ foo }`})
-        .then((result) => {
+        .then((result: ApolloQueryResult) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
         });
     });
@@ -3101,7 +3101,7 @@ describe('QueryManager', () => {
     it('transforms mutate() results', () => {
       response = {data: {foo: 123}};
       return client.mutate({mutation: gql`mutation makeChanges { foo }`})
-        .then((result) => {
+        .then((result: ApolloQueryResult) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
         });
     });
@@ -3124,11 +3124,11 @@ describe('QueryManager', () => {
 
       client = new ApolloClient({
         networkInterface,
-        resultTransformer(result) {
+        resultTransformer(result: ApolloQueryResult) {
           result.data.__proto__ = Model.prototype;
           return result;
         },
-        resultComparator(result1, result2) {
+        resultComparator(result1: ApolloQueryResult, result2: ApolloQueryResult) {
           // A real example would, say, deep compare the two while ignoring prototypes.
           const foo1 = result1 && result1.data && result1.data.foo;
           const foo2 = result2 && result2.data && result2.data.foo;

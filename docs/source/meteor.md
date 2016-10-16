@@ -92,7 +92,7 @@ Returns an [`options` object](http://dev.apollodata.com/core/apollo-client-api.h
 
 `createApolloServer(options, config)`
 
-- [`options`](http://dev.apollodata.com/tools/apollo-server/setup.html#apolloOptions)
+- `options`: [Apollo Server `options`](http://dev.apollodata.com/tools/apollo-server/setup.html#apolloOptions)
 - `config` may contain any of the following fields:
   - `path`: [Path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. Default: `'/graphql'`.
   - `maxAccountsCacheSizeInMB`: User account ids are cached in memory to reduce the response latency on multiple requests from the same user. Default: `1`.

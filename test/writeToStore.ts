@@ -788,8 +788,11 @@ describe('writing to the store', () => {
           dataId: '5',
           selectionSet: def.selectionSet,
           result: _.cloneDeep(result),
-          variables: variables,
-          dataIdFromObject: () => '5',
+          context: {
+            store: {},
+            variables,
+            dataIdFromObject: () => '5',
+          },
         }), {
           '5': {
             'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
@@ -1031,8 +1034,11 @@ describe('writing to the store', () => {
               dataId: '5',
               selectionSet: def.selectionSet,
               result: _.cloneDeep(result),
-              variables: variables,
-              dataIdFromObject: () => '5',
+              context: {
+                store: {},
+                variables,
+                dataIdFromObject: () => '5',
+              },
             });
           } else {
             throw 'No operation definition found';

@@ -66,7 +66,7 @@ export function writeQueryToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
-  fragmentMap,
+  fragmentMap = {} as FragmentMap,
 }: {
   result: Object,
   query: Document,
@@ -81,11 +81,20 @@ export function writeQueryToStore({
     dataId: 'ROOT_QUERY',
     result,
     selectionSet: queryDefinition.selectionSet,
-    store,
-    variables,
-    dataIdFromObject,
-    fragmentMap,
+    context: {
+      store,
+      variables,
+      dataIdFromObject,
+      fragmentMap,
+    },
   });
+}
+
+export type WriteContext = {
+  store: NormalizedCache;
+  variables?: any;
+  dataIdFromObject?: IdGetter;
+  fragmentMap?: FragmentMap;
 }
 
 export function writeResultToStore({
@@ -94,14 +103,14 @@ export function writeResultToStore({
   document,
   store = {} as NormalizedCache,
   variables,
-  dataIdFromObject,
+  dataIdFromObject = null,
 }: {
   dataId: string,
   result: any,
   document: Document,
   store?: NormalizedCache,
-  variables: Object,
-  dataIdFromObject: IdGetter,
+  variables?: Object,
+  dataIdFromObject?: IdGetter,
 }): NormalizedCache {
 
   // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
@@ -112,10 +121,12 @@ export function writeResultToStore({
     result,
     dataId,
     selectionSet,
-    store,
-    variables,
-    dataIdFromObject,
-    fragmentMap,
+    context: {
+      store,
+      variables,
+      dataIdFromObject,
+      fragmentMap,
+    },
   });
 }
 
@@ -123,19 +134,15 @@ export function writeSelectionSetToStore({
   result,
   dataId,
   selectionSet,
-  store = {} as NormalizedCache,
-  variables,
-  dataIdFromObject,
-  fragmentMap = {},
+  context,
 }: {
   dataId: string,
   result: any,
   selectionSet: SelectionSet,
-  store?: NormalizedCache,
-  variables: Object,
-  dataIdFromObject: IdGetter,
-  fragmentMap?: FragmentMap,
+  context: WriteContext,
 }): NormalizedCache {
+  const { variables, store, dataIdFromObject, fragmentMap } = context;
+
   selectionSet.selections.forEach((selection) => {
     const included = shouldInclude(selection, variables);
 
@@ -147,11 +154,8 @@ export function writeSelectionSetToStore({
         writeFieldToStore({
           dataId,
           value,
-          variables,
-          store,
           field: selection,
-          dataIdFromObject,
-          fragmentMap,
+          context,
         });
       }
     } else if (isInlineFragment(selection)) {
@@ -160,11 +164,8 @@ export function writeSelectionSetToStore({
         writeSelectionSetToStore({
           result,
           selectionSet: selection.selectionSet,
-          store,
-          variables,
           dataId,
-          dataIdFromObject,
-          fragmentMap,
+          context,
         });
       }
     } else {
@@ -186,11 +187,8 @@ export function writeSelectionSetToStore({
         writeSelectionSetToStore({
           result,
           selectionSet: fragment.selectionSet,
-          store,
-          variables,
           dataId,
-          dataIdFromObject,
-          fragmentMap,
+          context,
         });
       }
     }
@@ -226,20 +224,16 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
 function writeFieldToStore({
   field,
   value,
-  variables,
-  store,
   dataId,
-  dataIdFromObject,
-  fragmentMap,
+  context,
 }: {
   field: Field,
   value: any,
-  variables: {},
-  store: NormalizedCache,
   dataId: string,
-  dataIdFromObject: IdGetter,
-  fragmentMap?: FragmentMap,
+  context: WriteContext,
 }) {
+  const { variables, dataIdFromObject, store, fragmentMap } = context;
+
   let storeValue: any;
 
   const storeFieldName: string = storeKeyNameFromField(field, variables);
@@ -261,8 +255,7 @@ function writeFieldToStore({
   } else if (Array.isArray(value)) {
     const generatedId = `${dataId}.${storeFieldName}`;
 
-    storeValue = processArrayValue(value, generatedId, dataIdFromObject, store,
-      field.selectionSet, variables, fragmentMap);
+    storeValue = processArrayValue(value, generatedId, field.selectionSet, context);
   } else {
     // It's an object
     let valueDataId = `${dataId}.${storeFieldName}`;
@@ -294,11 +287,8 @@ function writeFieldToStore({
     writeSelectionSetToStore({
       dataId: valueDataId,
       result: value,
-      store,
       selectionSet: field.selectionSet,
-      variables,
-      dataIdFromObject,
-      fragmentMap,
+      context,
     });
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).
@@ -346,11 +336,8 @@ function writeFieldToStore({
 function processArrayValue(
   value: any[],
   generatedId: string,
-  dataIdFromObject: IdGetter,
-  store: NormalizedCache,
   selectionSet: SelectionSet,
-  variables: any,
-  fragmentMap: FragmentMap,
+  context: WriteContext,
 ): any[] {
   return value.map((item: any, index: any) => {
     if (isNull(item)) {
@@ -360,12 +347,11 @@ function processArrayValue(
     let itemDataId = `${generatedId}.${index}`;
 
     if (Array.isArray(item)) {
-      return processArrayValue(item, itemDataId, dataIdFromObject, store, selectionSet,
-        variables, fragmentMap);
+      return processArrayValue(item, itemDataId, selectionSet, context);
     }
 
-    if (dataIdFromObject) {
-      const semanticId = dataIdFromObject(item);
+    if (context.dataIdFromObject) {
+      const semanticId = context.dataIdFromObject(item);
 
       if (semanticId) {
         itemDataId = semanticId;
@@ -375,11 +361,8 @@ function processArrayValue(
     writeSelectionSetToStore({
       dataId: itemDataId,
       result: item,
-      store,
       selectionSet,
-      variables,
-      dataIdFromObject,
-      fragmentMap,
+      context,
     });
 
     return itemDataId;

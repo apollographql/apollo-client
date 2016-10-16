@@ -129,10 +129,12 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
     result: scopedResult,
     dataId,
     selectionSet: scopedSelectionSet,
-    store: state,
-    variables,
-    dataIdFromObject: config.dataIdFromObject,
-    fragmentMap,
+    context: {
+      store: state,
+      variables,
+      dataIdFromObject: config.dataIdFromObject,
+      fragmentMap,
+    },
   });
 
   // Step 3: insert dataId reference into storePath array

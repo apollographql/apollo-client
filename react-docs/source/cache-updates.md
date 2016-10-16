@@ -28,7 +28,14 @@ const client = new ApolloClient({
 // This is a GraphQL field that's automatically available, but you do need
 // to query for it also.
 const client = new ApolloClient({
-  dataIdFromObject: o => `${o.__typename}:${o.id},`
+  dataIdFromObject: (result) => {
+    if (result.id && result.__typename) {
+      return result.__typename + result.id;
+    }
+    
+    // Make sure to return null if this object doesn't have an ID
+    return null;
+  },
 });
 ```
 

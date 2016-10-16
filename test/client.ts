@@ -53,7 +53,9 @@ import {
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
-import { getFragmentDefinitions } from '../src/queries/getFromAST';
+import {
+  getFragmentDefinitions,
+} from '../src/queries/getFromAST';
 
 import * as chaiAsPromised from 'chai-as-promised';
 

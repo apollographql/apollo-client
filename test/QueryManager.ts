@@ -562,6 +562,12 @@ describe('QueryManager', () => {
       },
     };
 
+    const data3 = {
+      people_one: {
+        name: 'Luke Skywalker has another name',
+      },
+    };
+
     const queryManager = mockRefetch({
       request,
       firstResult: { data: data1 },
@@ -574,7 +580,7 @@ describe('QueryManager', () => {
       .then(() => {
         const handle = queryManager.watchQuery(request);
         let subOneCount: Number;
-        subscribeAndCount(done, handle, (count, result) => {
+        const subOne = subscribeAndCount(done, handle, (count, result) => {
           subOneCount = count;
           if (subOneCount === 1) {
             assert.deepEqual(result.data, data1);
@@ -585,18 +591,26 @@ describe('QueryManager', () => {
 
         subscribeAndCount(done, handle, (subTwoCount, result) => {
           if (subTwoCount === 1) {
-            assert.deepEqual(result.data, data1);
-            handle.refetch();
-          } else if (subTwoCount === 2) {
-            assert.deepEqual(result.data, data2);
-            setTimeout(() => {
-              try {
-                assert.equal(subOneCount, 2);
-                assert.equal(subTwoCount, 2);
-                done();
-              } catch (e) { done(e); }
-            }, 0);
-          }
+              assert.deepEqual(result.data, data1);
+              handle.refetch();
+            } else if (subTwoCount === 2) {
+              assert.deepEqual(result.data, data2);
+              setTimeout(() => {
+                try {
+                  assert.equal(subOneCount, 2);
+
+                  subOne.unsubscribe();
+                  handle.refetch();
+                } catch (e) { done(e); }
+              }, 0);
+            } else if (subTwoCount === 3) {
+              setTimeout(() => {
+                try {
+                  assert.equal(subOneCount, 2);
+                  done();
+                } catch (e) { done(e); }
+              }, 0);
+            }
         });
       });
   });
@@ -3025,7 +3039,7 @@ describe('QueryManager', () => {
 
       client = new ApolloClient({
         networkInterface,
-        resultTransformer(result) {
+        resultTransformer(result: GraphQLResult) {
           transformCount++;
           return {
             data: assign({}, result.data, {transformCount}),
@@ -3038,7 +3052,7 @@ describe('QueryManager', () => {
     it('transforms query() results', () => {
       response = {data: {foo: 123}};
       return client.query({query: gql`{ foo }`})
-        .then((result) => {
+        .then((result: GraphQLResult) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
         });
     });
@@ -3079,7 +3093,7 @@ describe('QueryManager', () => {
     it('transforms mutate() results', () => {
       response = {data: {foo: 123}};
       return client.mutate({mutation: gql`mutation makeChanges { foo }`})
-        .then((result) => {
+        .then((result: GraphQLResult) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
         });
     });
@@ -3102,11 +3116,11 @@ describe('QueryManager', () => {
 
       client = new ApolloClient({
         networkInterface,
-        resultTransformer(result) {
+        resultTransformer(result: ApolloQueryResult) {
           result.data.__proto__ = Model.prototype;
           return result;
         },
-        resultComparator(result1, result2) {
+        resultComparator(result1: GraphQLResult, result2: GraphQLResult) {
           // A real example would, say, deep compare the two while ignoring prototypes.
           const foo1 = result1 && result1.data && result1.data.foo;
           const foo2 = result2 && result2.data && result2.data.foo;

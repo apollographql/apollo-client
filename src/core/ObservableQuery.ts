@@ -11,6 +11,10 @@ import {
 } from '../scheduler/scheduler';
 
 import {
+  ApolloError,
+} from '../errors/ApolloError';
+
+import {
   QueryManager,
   ApolloQueryResult,
 } from './QueryManager';
@@ -44,6 +48,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   private shouldSubscribe: boolean;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
+  private observers: Observer<ApolloQueryResult>[];
 
   constructor({
     scheduler,
@@ -71,6 +76,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.queryManager = queryManager;
     this.queryId = queryId;
     this.shouldSubscribe = shouldSubscribe;
+    this.observers = [];
   }
 
   public result(): Promise<ApolloQueryResult> {
@@ -246,18 +252,28 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult>) {
+    this.observers.push(observer);
+
+    if (this.observers.length === 1) {
+      this.setUpQuery();
+    }
+
     const retQuerySubscription = {
       unsubscribe: () => {
-        if (this.isPollingQuery) {
-          this.scheduler.stopPollingQuery(this.queryId);
+        this.observers = this.observers.filter((obs) => obs !== observer);
+
+        if (this.observers.length === 0) {
+          this.tearDownQuery();
         }
-        this.queryManager.stopQuery(this.queryId);
       },
     };
 
+    return retQuerySubscription;
+  }
+
+  private setUpQuery() {
     if (this.shouldSubscribe) {
       this.queryManager.addObservableQuery(this.queryId, this);
-      this.queryManager.addQuerySubscription(this.queryId, retQuerySubscription);
     }
 
     if (this.isPollingQuery) {
@@ -271,12 +287,28 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       );
     }
 
+    const observer: Observer<ApolloQueryResult> = {
+      next: (result: ApolloQueryResult) => {
+        this.observers.forEach((obs) => obs.next && obs.next(result));
+      },
+      error: (error: ApolloError) => {
+        this.observers.forEach((obs) => obs.error && obs.error(error));
+      },
+    };
+
     this.queryManager.startQuery(
       this.queryId,
       this.options,
       this.queryManager.queryListenerForObserver(this.queryId, this.options, observer)
     );
+  }
 
-    return retQuerySubscription;
+  private tearDownQuery() {
+    if (this.isPollingQuery) {
+      this.scheduler.stopPollingQuery(this.queryId);
+    }
+
+    this.queryManager.stopQuery(this.queryId);
+    this.observers = [];
   }
 }

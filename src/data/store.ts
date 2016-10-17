@@ -4,14 +4,14 @@ import {
   isMutationResultAction,
   isUpdateQueryResultAction,
   isStoreResetAction,
+  isSubscriptionResultAction,
 } from '../actions';
 
 import {
-  writeSelectionSetToStore,
+  writeResultToStore,
 } from './writeToStore';
 
 import assign = require('lodash.assign');
-import isObject = require('lodash.isobject');
 
 import {
   QueryStore,
@@ -27,6 +27,7 @@ import {
 
 import {
   graphQLResultHasError,
+  NormalizedCache,
 } from './storeUtils';
 
 import {
@@ -38,39 +39,6 @@ import {
   replaceQueryResults,
 } from './replaceQueryResults';
 
-/**
- * This is a normalized representation of the Apollo query result cache. Briefly, it consists of
- * a flatten representation of query result trees.
- */
-export interface NormalizedCache {
-  [dataId: string]: StoreObject;
-}
-
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldKey: string]: StoreValue;
-}
-
-export interface IdValue {
-  type: 'id';
-  id: string;
-  generated: boolean;
-}
-
-export interface JsonValue {
-  type: 'json';
-  json: any;
-}
-
-export type StoreValue = number | string | string[] | IdValue | JsonValue | void;
-
-export function isIdValue(idObject: StoreValue): idObject is IdValue {
-  return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
-}
-
-export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
-  return (isObject(jsonObject) && (jsonObject as (IdValue | JsonValue)).type === 'json');
-}
 
 export function data(
   previousState: NormalizedCache = {},
@@ -102,15 +70,53 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      const newState = writeSelectionSetToStore({
+      // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
+      // write to "the" store?
+      let newState = writeResultToStore({
         result: action.result.data,
-        dataId: queryStoreValue.query.id,
-        selectionSet: queryStoreValue.query.selectionSet,
+        dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
+        document: action.document,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
       });
+
+      // XXX each reducer gets the state from the previous reducer.
+      // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
+      if (action.extraReducers) {
+        action.extraReducers.forEach( reducer => {
+          newState = reducer(newState, constAction);
+        });
+      }
+
+      return newState;
+    }
+  } else if (isSubscriptionResultAction(action)) {
+    // the subscription interface should handle not sending us results we no longer subscribe to.
+    // XXX I don't think we ever send in an object with errors, but we might in the future...
+    if (! graphQLResultHasError(action.result)) {
+
+      // XXX use immutablejs instead of cloning
+      const clonedState = assign({}, previousState) as NormalizedCache;
+
+      // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
+      // write to "the" store?
+      let newState = writeResultToStore({
+        result: action.result.data,
+        dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
+        document: action.document,
+        variables: action.variables,
+        store: clonedState,
+        dataIdFromObject: config.dataIdFromObject,
+      });
+
+      // XXX each reducer gets the state from the previous reducer.
+      // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
+      if (action.extraReducers) {
+        action.extraReducers.forEach( reducer => {
+          newState = reducer(newState, constAction);
+        });
+      }
 
       return newState;
     }
@@ -122,24 +128,23 @@ export function data(
       // XXX use immutablejs instead of cloning
       const clonedState = assign({}, previousState) as NormalizedCache;
 
-      let newState = writeSelectionSetToStore({
+      let newState = writeResultToStore({
         result: constAction.result.data,
-        dataId: queryStoreValue.mutation.id,
-        selectionSet: queryStoreValue.mutation.selectionSet,
+        dataId: 'ROOT_MUTATION',
+        document: constAction.document,
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
-        fragmentMap: queryStoreValue.fragmentMap,
       });
 
+      // TODO REFACTOR: remove result behaviors
       if (constAction.resultBehaviors) {
         constAction.resultBehaviors.forEach((behavior) => {
           const args: MutationBehaviorReducerArgs = {
             behavior,
             result: constAction.result,
             variables: queryStoreValue.variables,
-            fragmentMap: queryStoreValue.fragmentMap,
-            selectionSet: queryStoreValue.mutation.selectionSet,
+            document: constAction.document,
             config,
           };
 
@@ -150,6 +155,14 @@ export function data(
           } else {
             throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
           }
+        });
+      }
+
+      // XXX each reducer gets the state from the previous reducer.
+      // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
+      if (constAction.extraReducers) {
+        constAction.extraReducers.forEach( reducer => {
+          newState = reducer(newState, constAction);
         });
       }
 

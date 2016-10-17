@@ -16,7 +16,7 @@ import {
 
 import {
   NormalizedCache,
-} from '../src/data/store';
+} from '../src/data/storeUtils';
 
 import {
   Selection,
@@ -788,8 +788,11 @@ describe('writing to the store', () => {
           dataId: '5',
           selectionSet: def.selectionSet,
           result: _.cloneDeep(result),
-          variables: variables,
-          dataIdFromObject: () => '5',
+          context: {
+            store: {},
+            variables,
+            dataIdFromObject: () => '5',
+          },
         }), {
           '5': {
             'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
@@ -1015,11 +1018,6 @@ describe('writing to the store', () => {
         variables: { not_the_proper_variable_name: '1' },
         expected: /The inline argument "v" is expected as a variable but was not provided./,
       },
-      {
-        mutation: gql`mutation mut($v: ID) { mut(enum: OK) { id } }`,
-        variables: { v: '1' },
-        expected: /The inline argument "enum" of kind "EnumValue" is not supported.*/,
-      },
     ];
 
     const result: any = { mut: { id: '1' } };
@@ -1036,8 +1034,11 @@ describe('writing to the store', () => {
               dataId: '5',
               selectionSet: def.selectionSet,
               result: _.cloneDeep(result),
-              variables: variables,
-              dataIdFromObject: () => '5',
+              context: {
+                store: {},
+                variables,
+                dataIdFromObject: () => '5',
+              },
             });
           } else {
             throw 'No operation definition found';

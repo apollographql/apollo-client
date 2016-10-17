@@ -33,10 +33,6 @@ import {
 } from './data/writeToStore';
 
 import {
-  addTypenameToSelectionSet,
-} from './queries/queryTransform';
-
-import {
   MutationBehavior,
   MutationQueryReducersMap,
 } from './data/mutationResults';
@@ -64,7 +60,6 @@ export {
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,
-  addTypenameToSelectionSet as addTypename,
   writeQueryToStore,
   print as printAST,
   createFragmentMap,
@@ -83,6 +78,7 @@ export {
   MutationQueryReducersMap,
   Subscription,
   ApolloStore,
+  ApolloClient
 };
 
 export default ApolloClient;

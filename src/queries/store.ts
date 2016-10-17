@@ -10,10 +10,6 @@ import {
 } from '../actions';
 
 import {
-  FragmentMap,
-} from '../queries/getFromAST';
-
-import {
   graphQLResultHasError,
 } from '../data/storeUtils';
 
@@ -31,7 +27,6 @@ export interface QueryStore {
 
 export interface QueryStoreValue {
   queryString: string;
-  query: SelectionSetWithRoot;
   variables: Object;
   previousVariables: Object;
   loading: boolean;
@@ -41,7 +36,6 @@ export interface QueryStoreValue {
   forceFetch: boolean;
   returnPartialData: boolean;
   lastRequestId: number;
-  fragmentMap: FragmentMap;
 }
 
 export interface SelectionSetWithRoot {
@@ -70,7 +64,6 @@ export function queries(
     // before the initial fetch is done, you'll get an error.
     newState[action.queryId] = {
       queryString: action.queryString,
-      query: action.query,
       variables: action.variables,
       previousVariables,
       loading: true,
@@ -80,7 +73,6 @@ export function queries(
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,
-      fragmentMap: action.fragmentMap,
     };
 
     return newState;

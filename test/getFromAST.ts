@@ -6,12 +6,18 @@ import {
   createFragmentMap,
   FragmentMap,
   getOperationName,
+  addFragmentsToDocument,
 } from '../src/queries/getFromAST';
 
 import {
   FragmentDefinition,
   OperationDefinition,
 } from 'graphql';
+
+import {
+  createFragment,
+} from '../src';
+
 import { print } from 'graphql-tag/printer';
 import gql from 'graphql-tag';
 import { assert } from 'chai';
@@ -227,5 +233,55 @@ describe('AST utility functions', () => {
     assert.throws(() => {
       getQueryDefinition(queryWithTypeDefination);
     }, 'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"');
+  });
+
+  it('should attach fragments properly', () => {
+    const subjectInfo = createFragment(gql`
+      fragment subjectInfo on Subject {
+        id
+        name
+      }`
+    );
+
+    const businessAreaInfo = createFragment(gql`
+      fragment businessAreaInfo on BusinessArea {
+        id
+        name
+        subjects {
+          ...subjectInfo
+        }
+      }`,
+      [subjectInfo],
+    );
+
+    const query = gql`
+      query {
+        businessAreas {
+          ...businessAreaInfo
+        }
+      }
+    `;
+
+    const fullDoc = addFragmentsToDocument(query, businessAreaInfo);
+
+    assert.equal(print(fullDoc), `{
+  businessAreas {
+    ...businessAreaInfo
+  }
+}
+
+fragment subjectInfo on Subject {
+  id
+  name
+}
+
+fragment businessAreaInfo on BusinessArea {
+  id
+  name
+  subjects {
+    ...subjectInfo
+  }
+}
+`);
   });
 });

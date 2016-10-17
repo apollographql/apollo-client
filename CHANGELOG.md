@@ -4,12 +4,27 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- Add reason() to ApolloError to get the first error message from the request [PR #794](https://github.com/apollostack/apollo-client/pull/794)
+- **new Feature**: Add reason() to ApolloError to get the first error message from the request [PR #794](https://github.com/apollostack/apollo-client/pull/794)
+- **new Feature**: Implement query reducers, which run on every query result/ mutation. [PR #766](https://github.com/apollostack/apollo-client/pull/766)
 - **Refactor**: Reimplement internal store reading in terms of the [graphql-anywhere](https://github.com/apollostack/graphql-anywhere) package, which cleanly separates the GraphQL execution logic from Apollo's specific cache format. This will allow us to make the store reading much more extensible, including enabling developers to write their own custom client-side resolvers to implement client-side computed fields, read from Redux with GraphQL, and redirect cache reads.
 - **Feature removal**: Remove query diffing functionality to make client more predictable and simplify implementation. Queries will still read from the store, and if the store does not have all of the necessary data the entire query will fetch from the server. Read justification and discussion in [Issue #615](https://github.com/apollostack/apollo-client/issues/615) [PR #693](https://github.com/apollostack/apollo-client/pull/693)
 - **Breaking change**: Move batching to network interface and split off query merging into separate package [PR #734](https://github.com/apollostack/apollo-client/pull/734)
 - **Feature removal**: No more `(read|diff)(Fragment|SelectionSet)FromStore`.
 - **Feature removal**: No more `write(Fragment|SelectionSet)ToStore`.
+- Fix: refetch only updates original query variable options
+- Fix: Moved @types packages from devDependencies to dependencies as discussed in [Issue #713](https://github.com/apollostack/apollo-client/issues/713)
+- **Refactor**: Rewrite how fragments are handled. Remove all validation of fragments when writing to the store, assuming that a spec-compliant server will return a valid set of fragments and results. On reading from the store, use `__typename` if it exists, and strongly encourage using the `addTypename: true` option by warning when the `__typename` field is not in the query and result. [Issue #739](https://github.com/apollostack/apollo-client/issues/739) [PR #767](https://github.com/apollostack/apollo-client/pull/767)
+- GraphQL subscriptions fire an action when new data arrives [PR #775](https://github.com/apollostack/apollo-client/pull/775)
+- **Feature removal and addition**: The `ApolloClient` constructor no longer accepts a `queryTransformer` option. Instead, there is a a new `addTypename` option which is on by default. [Issue #616](https://github.com/apollostack/apollo-client/issues/616) [PR #779](https://github.com/apollostack/apollo-client/pull/779)
+- **Refactor**: removed circular dependency in data/store.ts [Issue #731](https://github.com/apollostack/apollo-client/issues/731) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
+- added "ApolloClient" to the named exports to make it compatible with Angular2 AOT compile [Issue #758](https://github.com/apollostack/apollo-client/issues/758) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
+- Fix: moved dev @types to devDependencies otherwise they potentially brake projects that are importing apollo-client [Issue #713](https://github.com/apollostack/apollo-client/issues/713) [PR #778](https://github.com/apollostack/apollo-client/pull/778)
+- Fix rejecting promises on `refetch` and similar methods. Also improve error handling and stop using `ApolloError` internally. [Failing test in PR #524](https://github.com/apollostack/apollo-client/pull/524) [PR #781](https://github.com/apollostack/apollo-client/pull/781)
+- Fix multidimentional array handling. [Issue #776](https://github.com/apollostack/apollo-client/issues/776) [PR #785](https://github.com/apollostack/apollo-client/pull/785)
+- Add support for Enum inline arguments [Issue #183](https://github.com/apollostack/apollo-client/issues/183) [PR #788](https://github.com/apollostack/apollo-client/pull/788)
+
+### v0.4.21
+- Added some temporary functions (`_setVariablesNoResult` and `_setOptionsNoResult`) to work around a `react-apollo` problem fundamentally caused by the issue highlighted in [PR #694](https://github.com/apollostack/apollo-client/pull/694). The code as been refactored on `master`, so we expect it to be fixed in 0.5.x, and is not worth resolving now.
 
 ### v0.4.20
 - Fix: Warn but do not fail when refetchQueries includes an unknown query name [PR #700](https://github.com/apollostack/apollo-client/pull/700)

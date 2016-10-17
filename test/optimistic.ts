@@ -2,9 +2,9 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { addTypename, createFragment } from '../src';
+import ApolloClient, { createFragment } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
-import { NormalizedCache, StoreObject } from '../src/data/store';
+import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 import { addFragmentsToDocument } from '../src/queries/getFromAST';
 
 import assign = require('lodash.assign');
@@ -13,8 +13,12 @@ import clonedeep = require('lodash.clonedeep');
 import gql from 'graphql-tag';
 
 import {
-  applyTransformers,
+  addTypenameToDocument,
 } from '../src/queries/queryTransform';
+
+import {
+  isMutationResultAction,
+} from '../src/actions';
 
 describe('optimistic mutation results', () => {
   const query = gql`
@@ -131,7 +135,6 @@ describe('optimistic mutation results', () => {
 
     client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypename,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
@@ -841,6 +844,133 @@ describe('optimistic mutation results', () => {
       });
     });
   });
+
+  describe('optimistic updates with result reducer', () => {
+    const mutation = gql`
+      mutation createTodo {
+        # skipping arguments in the test since they don't matter
+        createTodo {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          id: '99',
+          __typename: 'Todo',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
+    const optimisticResponse = {
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '99',
+        text: 'Optimistically generated',
+        completed: true,
+      },
+    };
+
+    /*
+    const mutationResult2 = {
+      data: assign({}, mutationResult.data, {
+        createTodo: assign({}, mutationResult.data.createTodo, {
+          id: '66',
+          text: 'Second mutation.',
+        }),
+      }),
+    };
+
+    const optimisticResponse2 = {
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '66',
+        text: 'Optimistically generated 2',
+        completed: true,
+      },
+    };
+    */
+
+    /*
+    .then(() => {
+        observableQuery = client.watchQuery({
+          query,
+          reducer: (previousResult, action) => {
+            counter++;
+            if (isMutationResultAction(action)) {
+              const newResult = clonedeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null, // TODO: we should actually check the new result
+        });
+        return client.mutate({
+          mutation,
+        });
+      })
+    */
+
+    it('can add an item to an array', () => {
+      let observableQuery: any;
+      let counter = 0;
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        observableQuery = client.watchQuery({
+          query,
+          reducer: (previousResult, action) => {
+            counter++;
+            if (isMutationResultAction(action)) {
+              const newResult = clonedeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null, // TODO: we should actually check the new result
+        });
+      })
+      .then(() => {
+        const promise = client.mutate({
+          mutation,
+          optimisticResponse,
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
+
+        return promise;
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+  });
 });
 
 describe('optimistic mutation - githunt comments', () => {
@@ -913,13 +1043,13 @@ describe('optimistic mutation - githunt comments', () => {
   function setup(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
       request: {
-        query: applyTransformers(query, [addTypename]),
+        query: addTypenameToDocument(query),
         variables,
       },
       result,
     }, {
       request: {
-        query: addFragmentsToDocument(applyTransformers(queryWithFragment, [addTypename]), fragment),
+        query: addFragmentsToDocument(addTypenameToDocument(queryWithFragment), fragment),
         variables,
       },
       result,
@@ -927,7 +1057,6 @@ describe('optimistic mutation - githunt comments', () => {
 
     client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypename,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
@@ -996,7 +1125,7 @@ describe('optimistic mutation - githunt comments', () => {
 
     return setup({
       request: {
-        query: applyTransformers(mutation, [addTypename]),
+        query: addTypenameToDocument(mutation),
         variables: mutationVariables,
       },
       result: mutationResult,
@@ -1022,7 +1151,7 @@ describe('optimistic mutation - githunt comments', () => {
 
     return setup({
       request: {
-        query: addFragmentsToDocument(applyTransformers(mutationWithFragment, [addTypename]), fragmentWithTypenames),
+        query: addFragmentsToDocument(addTypenameToDocument(mutationWithFragment), fragmentWithTypenames),
         variables: mutationVariables,
       },
       result: mutationResult,

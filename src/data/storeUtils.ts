@@ -6,6 +6,7 @@ import {
   BooleanValue,
   ObjectValue,
   ListValue,
+  EnumValue,
   Variable,
   InlineFragment,
   Value,
@@ -13,6 +14,8 @@ import {
   GraphQLResult,
   Name,
 } from 'graphql';
+
+import isObject = require('lodash.isobject');
 
 function isStringValue(value: Value): value is StringValue {
   return value.kind === 'StringValue';
@@ -34,42 +37,43 @@ function isVariable(value: Value): value is Variable {
   return value.kind === 'Variable';
 }
 
-function isObject(value: Value): value is ObjectValue {
+function isObjectValue(value: Value): value is ObjectValue {
   return value.kind === 'ObjectValue';
 }
 
-function isList(value: Value): value is ListValue {
+function isListValue(value: Value): value is ListValue {
   return value.kind === 'ListValue';
 }
 
-function valueToObjectRepresentation(argObj: Object, name: Name, value: Value, variables?: Object) {
+function isEnumValue(value: Value): value is EnumValue {
+  return value.kind === 'EnumValue';
+}
+
+function valueToObjectRepresentation(argObj: any, name: Name, value: Value, variables?: Object) {
   if (isIntValue(value) || isFloatValue(value)) {
-    (argObj as any)[name.value] = Number(value.value);
-
+    argObj[name.value] = Number(value.value);
   } else if (isBooleanValue(value) || isStringValue(value)) {
-    (argObj as any)[name.value] = value.value;
-
-  } else if (isObject(value)) {
+    argObj[name.value] = value.value;
+  } else if (isObjectValue(value)) {
     const nestedArgObj = {};
     value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
-    (argObj as any)[name.value] = nestedArgObj;
-
+    argObj[name.value] = nestedArgObj;
   } else if (isVariable(value)) {
     if (! variables || !(value.name.value in variables)) {
       throw new Error(`The inline argument "${value.name.value}" is expected as a variable but was not provided.`);
     }
     const variableValue = (variables as any)[value.name.value];
-    (argObj as any)[name.value] = variableValue;
-
-  } else if (isList(value)) {
-    (argObj as any)[name.value] = value.values.map((listValue) => {
+    argObj[name.value] = variableValue;
+  } else if (isListValue(value)) {
+    argObj[name.value] = value.values.map((listValue) => {
       const nestedArgArrayObj = {};
       valueToObjectRepresentation(nestedArgArrayObj, name, listValue, variables);
       return (nestedArgArrayObj as any)[name.value];
     });
-
+  } else if (isEnumValue(value)) {
+    argObj[name.value] = value.value;
   } else {
-    throw new Error(`The inline argument "${name.value}" of kind "${value.kind}" is not supported.
+    throw new Error(`The inline argument "${name.value}" of kind "${(value as any).kind}" is not supported.
                     Use variables instead of inline arguments to overcome this limitation.`);
   }
 }
@@ -113,4 +117,38 @@ export function isInlineFragment(selection: Selection): selection is InlineFragm
 
 export function graphQLResultHasError(result: GraphQLResult) {
   return result.errors && result.errors.length;
+}
+
+/**
+ * This is a normalized representation of the Apollo query result cache. Briefly, it consists of
+ * a flatten representation of query result trees.
+ */
+export interface NormalizedCache {
+  [dataId: string]: StoreObject;
+}
+
+export interface StoreObject {
+  __typename?: string;
+  [storeFieldKey: string]: StoreValue;
+}
+
+export interface IdValue {
+  type: 'id';
+  id: string;
+  generated: boolean;
+}
+
+export interface JsonValue {
+  type: 'json';
+  json: any;
+}
+
+export type StoreValue = number | string | string[] | IdValue | JsonValue | void;
+
+export function isIdValue(idObject: StoreValue): idObject is IdValue {
+  return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
+}
+
+export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
+  return (isObject(jsonObject) && (jsonObject as (IdValue | JsonValue)).type === 'json');
 }

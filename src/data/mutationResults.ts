@@ -1,16 +1,14 @@
 import {
   NormalizedCache,
   StoreObject,
-} from './store';
+} from './storeUtils';
 
 import {
+  Document,
   GraphQLResult,
-  SelectionSet,
-  FragmentDefinition,
 } from 'graphql';
 
 import mapValues = require('lodash.mapvalues');
-import isArray = require('lodash.isarray');
 import cloneDeep = require('lodash.clonedeep');
 import assign = require('lodash.assign');
 
@@ -21,7 +19,9 @@ import {
 } from './writeToStore';
 
 import {
-  FragmentMap,
+  getOperationDefinition,
+  getFragmentDefinitions,
+  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -33,6 +33,10 @@ import {
 import {
   ApolloReducerConfig,
 } from '../store';
+
+import {
+  ApolloAction,
+} from '../actions';
 
 // Mutation behavior types, these can be used in the `resultBehaviors` argument to client.mutate
 
@@ -62,9 +66,8 @@ export type MutationArrayDeleteBehavior = {
 
 export type MutationQueryResultBehavior = {
   type: 'QUERY_RESULT';
-  queryVariables: any;
-  querySelectionSet: SelectionSet;
-  queryFragments: FragmentDefinition[];
+  variables: any;
+  document: Document;
   newResult: Object;
 };
 
@@ -78,8 +81,7 @@ export type MutationBehaviorReducerArgs = {
   behavior: MutationBehavior;
   result: GraphQLResult;
   variables: any;
-  fragmentMap: FragmentMap;
-  selectionSet: SelectionSet;
+  document: Document;
   config: ApolloReducerConfig;
 }
 
@@ -94,8 +96,7 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
   behavior,
   result,
   variables,
-  fragmentMap,
-  selectionSet,
+  document,
   config,
 }: MutationBehaviorReducerArgs): NormalizedCache {
   const {
@@ -103,6 +104,10 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
     storePath,
     where,
   } = behavior as MutationArrayInsertBehavior;
+
+  // TODO REFACTOR: refactor deeper here, continue replacing selectionSet and fragmentMap with doc.
+  const selectionSet = getOperationDefinition(document).selectionSet;
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
 
   // Step 1: get selection set and result for resultPath
   const scopedSelectionSet = scopeSelectionSetToResultPath({
@@ -124,10 +129,12 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
     result: scopedResult,
     dataId,
     selectionSet: scopedSelectionSet,
-    store: state,
-    variables,
-    dataIdFromObject: config.dataIdFromObject,
-    fragmentMap,
+    context: {
+      store: state,
+      variables,
+      dataIdFromObject: config.dataIdFromObject,
+      fragmentMap,
+    },
   });
 
   // Step 3: insert dataId reference into storePath array
@@ -189,7 +196,7 @@ function removeRefsFromStoreObj(storeObj: any, dataId: any) {
       return null;
     }
 
-    if (isArray(value)) {
+    if (Array.isArray(value)) {
       const filteredArray = cleanArray(value, dataId);
 
       if (filteredArray !== value) {
@@ -213,7 +220,7 @@ function removeRefsFromStoreObj(storeObj: any, dataId: any) {
 // Remove any occurrences of dataId in an arbitrarily nested array, and make sure that the old array
 // === the new array if nothing was changed
 export function cleanArray(originalArray: any[], dataId: any): any[] {
-  if (originalArray.length && isArray(originalArray[0])) {
+  if (originalArray.length && Array.isArray(originalArray[0])) {
     // Handle arbitrarily nested arrays
     let modified = false;
     const filteredArray = originalArray.map((nestedArray) => {
@@ -277,11 +284,17 @@ export function mutationResultQueryResultReducer(state: NormalizedCache, {
 export type MutationQueryReducer = (previousResult: Object, options: {
   mutationResult: Object,
   queryName: Object,
-  queryVariables: Object,
+  variables: Object,
 }) => Object;
 
 export type MutationQueryReducersMap = {
   [queryName: string]: MutationQueryReducer;
+};
+
+export type OperationResultReducer = (previousResult: Object, action: ApolloAction) => Object;
+
+export type OperationResultReducerMap = {
+  [queryId: string]: OperationResultReducer;
 };
 
 // Combines all of the default reducers into a map based on the behavior type they accept

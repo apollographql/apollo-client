@@ -1,12 +1,14 @@
-import isArray = require('lodash.isarray');
 import isNull = require('lodash.isnull');
 import isUndefined = require('lodash.isundefined');
 import isObject = require('lodash.isobject');
 import assign = require('lodash.assign');
 
 import {
+  getOperationDefinition,
   getQueryDefinition,
   FragmentMap,
+  getFragmentDefinitions,
+  createFragmentMap,
 } from '../queries/getFromAST';
 
 import {
@@ -21,6 +23,8 @@ import {
   SelectionSet,
   Field,
   Document,
+  InlineFragment,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -28,11 +32,7 @@ import {
   StoreObject,
   IdValue,
   isIdValue,
-} from './store';
-
-import {
-  handleFragmentErrors,
-} from './readFromStore';
+} from './storeUtils';
 
 import {
   IdGetter,
@@ -41,10 +41,6 @@ import {
 import {
   shouldInclude,
 } from '../queries/directives';
-
-import {
-  ApolloError,
-} from '../errors/ApolloError';
 
 /**
  * Writes the result of a query to the store.
@@ -70,7 +66,7 @@ export function writeQueryToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject = null,
-  fragmentMap,
+  fragmentMap = {} as FragmentMap,
 }: {
   result: Object,
   query: Document,
@@ -85,10 +81,52 @@ export function writeQueryToStore({
     dataId: 'ROOT_QUERY',
     result,
     selectionSet: queryDefinition.selectionSet,
-    store,
-    variables,
-    dataIdFromObject,
-    fragmentMap,
+    context: {
+      store,
+      variables,
+      dataIdFromObject,
+      fragmentMap,
+    },
+  });
+}
+
+export type WriteContext = {
+  store: NormalizedCache;
+  variables?: any;
+  dataIdFromObject?: IdGetter;
+  fragmentMap?: FragmentMap;
+}
+
+export function writeResultToStore({
+  result,
+  dataId,
+  document,
+  store = {} as NormalizedCache,
+  variables,
+  dataIdFromObject = null,
+}: {
+  dataId: string,
+  result: any,
+  document: Document,
+  store?: NormalizedCache,
+  variables?: Object,
+  dataIdFromObject?: IdGetter,
+}): NormalizedCache {
+
+  // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
+  const selectionSet = getOperationDefinition(document).selectionSet;
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+
+  return writeSelectionSetToStore({
+    result,
+    dataId,
+    selectionSet,
+    context: {
+      store,
+      variables,
+      dataIdFromObject,
+      fragmentMap,
+    },
   });
 }
 
@@ -96,27 +134,15 @@ export function writeSelectionSetToStore({
   result,
   dataId,
   selectionSet,
-  store = {} as NormalizedCache,
-  variables,
-  dataIdFromObject,
-  fragmentMap,
+  context,
 }: {
   dataId: string,
   result: any,
   selectionSet: SelectionSet,
-  store?: NormalizedCache,
-  variables: Object,
-  dataIdFromObject: IdGetter,
-  fragmentMap?: FragmentMap,
+  context: WriteContext,
 }): NormalizedCache {
+  const { variables, store, dataIdFromObject, fragmentMap } = context;
 
-  if (!fragmentMap) {
-    //we have an empty sym table if there's no sym table given
-    //to us for the fragments.
-    fragmentMap = {};
-  }
-
-  let fragmentErrors: { [typename: string]: Error } = {};
   selectionSet.selections.forEach((selection) => {
     const included = shouldInclude(selection, variables);
 
@@ -124,103 +150,49 @@ export function writeSelectionSetToStore({
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
 
-      // In both of these cases, we add some extra information to the error
-      // that allows us to use fragmentErrors correctly. Since the ApolloError type
-      // derives from the Javascript Error type, the end-user doesn't notice the
-      // fact that we're doing this.
-      if (isUndefined(value) && included) {
-        throw new ApolloError({
-          errorMessage: `Can't find field ${resultFieldKey} on result object ${dataId}.`,
-          extraInfo: {
-            isFieldError: true,
-          },
-        });
-      }
-
-      if (!isUndefined(value) && !included) {
-        throw new ApolloError({
-          errorMessage: `Found extra field ${resultFieldKey} on result object ${dataId}.`,
-          extraInfo: {
-            isFieldError: true,
-          },
-        });
-      }
-
       if (!isUndefined(value)) {
         writeFieldToStore({
           dataId,
           value,
-          variables,
-          store,
           field: selection,
-          dataIdFromObject,
-          fragmentMap,
+          context,
         });
       }
     } else if (isInlineFragment(selection)) {
-      const typename = selection.typeCondition.name.value;
-
       if (included) {
-        try {
-          // XXX what to do if this tries to write the same fields? Also, type conditions...
-          writeSelectionSetToStore({
-            result,
-            selectionSet: selection.selectionSet,
-            store,
-            variables,
-            dataId,
-            dataIdFromObject,
-            fragmentMap,
-          });
-
-          if (!fragmentErrors[typename]) {
-            fragmentErrors[typename] = null;
-          }
-        } catch (e) {
-          if (e.extraInfo && e.extraInfo.isFieldError) {
-            fragmentErrors[typename] = e;
-          } else {
-            throw e;
-          }
-        }
+        // XXX what to do if this tries to write the same fields? Also, type conditions...
+        writeSelectionSetToStore({
+          result,
+          selectionSet: selection.selectionSet,
+          dataId,
+          context,
+        });
       }
     } else {
-      //look up the fragment referred to in the selection
-      const fragment = fragmentMap[selection.name.value];
+      // This is not a field, so it must be a fragment, either inline or named
+      let fragment: InlineFragment | FragmentDefinition;
 
-      if (!fragment) {
-        throw new Error(`No fragment named ${selection.name.value}.`);
+      if (isInlineFragment(selection)) {
+        fragment = selection;
+      } else {
+        // Named fragment
+        fragment = fragmentMap[selection.name.value];
+
+        if (!fragment) {
+          throw new Error(`No fragment named ${selection.name.value}.`);
+        }
       }
 
-      const typename = fragment.typeCondition.name.value;
-
       if (included) {
-        try {
-          writeSelectionSetToStore({
-            result,
-            selectionSet: fragment.selectionSet,
-            store,
-            variables,
-            dataId,
-            dataIdFromObject,
-            fragmentMap,
-          });
-
-          if (!fragmentErrors[typename]) {
-            fragmentErrors[typename] = null;
-          }
-        } catch (e) {
-          if (e.extraInfo && e.extraInfo.isFieldError) {
-            fragmentErrors[typename] = e;
-          } else {
-            throw e;
-          }
-        }
+        writeSelectionSetToStore({
+          result,
+          selectionSet: fragment.selectionSet,
+          dataId,
+          context,
+        });
       }
     }
   });
-
-  handleFragmentErrors(fragmentErrors);
 
   return store;
 }
@@ -252,20 +224,16 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
 function writeFieldToStore({
   field,
   value,
-  variables,
-  store,
   dataId,
-  dataIdFromObject,
-  fragmentMap,
+  context,
 }: {
   field: Field,
   value: any,
-  variables: {},
-  store: NormalizedCache,
   dataId: string,
-  dataIdFromObject: IdGetter,
-  fragmentMap?: FragmentMap,
+  context: WriteContext,
 }) {
+  const { variables, dataIdFromObject, store, fragmentMap } = context;
+
   let storeValue: any;
 
   const storeFieldName: string = storeKeyNameFromField(field, variables);
@@ -284,39 +252,10 @@ function writeFieldToStore({
       type: 'json',
       json: value,
     };
-  } else if (isArray(value)) {
-    // this is an array with sub-objects
-    const thisIdList: Array<string> = [];
+  } else if (Array.isArray(value)) {
+    const generatedId = `${dataId}.${storeFieldName}`;
 
-    value.forEach((item: any, index: any) => {
-      if (isNull(item)) {
-        thisIdList.push(null);
-      } else {
-        let itemDataId = `${dataId}.${storeFieldName}.${index}`;
-
-        if (dataIdFromObject) {
-          const semanticId = dataIdFromObject(item);
-
-          if (semanticId) {
-            itemDataId = semanticId;
-          }
-        }
-
-        thisIdList.push(itemDataId);
-
-        writeSelectionSetToStore({
-          dataId: itemDataId,
-          result: item,
-          store,
-          selectionSet: field.selectionSet,
-          variables,
-          dataIdFromObject,
-          fragmentMap,
-        });
-      }
-    });
-
-    storeValue = thisIdList;
+    storeValue = processArrayValue(value, generatedId, field.selectionSet, context);
   } else {
     // It's an object
     let valueDataId = `${dataId}.${storeFieldName}`;
@@ -348,11 +287,8 @@ function writeFieldToStore({
     writeSelectionSetToStore({
       dataId: valueDataId,
       result: value,
-      store,
       selectionSet: field.selectionSet,
-      variables,
-      dataIdFromObject,
-      fragmentMap,
+      context,
     });
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).
@@ -373,10 +309,8 @@ function writeFieldToStore({
       // are dealing with is generated, we throw an error.
       if (isIdValue(storeValue) && storeValue.generated
           && isIdValue(escapedId) && !escapedId.generated) {
-        throw new ApolloError({
-          errorMessage: `Store error: the application attempted to write an object with no provided id` +
-            ` but the store already contains an id of ${escapedId.id} for this object.`,
-        });
+        throw new Error(`Store error: the application attempted to write an object with no provided id` +
+            ` but the store already contains an id of ${escapedId.id} for this object.`);
       }
 
       if (isIdValue(escapedId) && escapedId.generated) {
@@ -393,8 +327,44 @@ function writeFieldToStore({
   if (shouldMerge) {
     mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);
   }
+
   if (!store[dataId] || storeValue !== store[dataId][storeFieldName]) {
     store[dataId] = newStoreObj;
   }
+}
 
+function processArrayValue(
+  value: any[],
+  generatedId: string,
+  selectionSet: SelectionSet,
+  context: WriteContext,
+): any[] {
+  return value.map((item: any, index: any) => {
+    if (isNull(item)) {
+      return null;
+    }
+
+    let itemDataId = `${generatedId}.${index}`;
+
+    if (Array.isArray(item)) {
+      return processArrayValue(item, itemDataId, selectionSet, context);
+    }
+
+    if (context.dataIdFromObject) {
+      const semanticId = context.dataIdFromObject(item);
+
+      if (semanticId) {
+        itemDataId = semanticId;
+      }
+    }
+
+    writeSelectionSetToStore({
+      dataId: itemDataId,
+      result: item,
+      selectionSet,
+      context,
+    });
+
+    return itemDataId;
+  });
 }

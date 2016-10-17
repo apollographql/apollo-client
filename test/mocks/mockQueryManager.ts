@@ -19,5 +19,6 @@ export default (...mockedResponses: MockedResponse[]) => {
     networkInterface: mockNetworkInterface(...mockedResponses),
     store: createApolloStore(),
     reduxRootSelector: defaultReduxRootSelector,
+    addTypename: false,
   });
 };

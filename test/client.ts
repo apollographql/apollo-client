@@ -14,8 +14,9 @@ import { fragmentDefinitionsMap } from '../src/fragments';
 
 import {
   GraphQLError,
-  OperationDefinition,
   GraphQLResult,
+  Document,
+  FragmentDefinition,
 } from 'graphql';
 
 import {
@@ -40,10 +41,6 @@ import {
 } from 'redux';
 
 import {
-  createApolloStore,
-} from '../src/store';
-
-import {
   QueryManager,
 } from '../src/core/QueryManager';
 
@@ -54,15 +51,21 @@ import {
   NetworkInterface,
 } from '../src/transport/networkInterface';
 
-import { addTypenameToSelectionSet } from '../src/queries/queryTransform';
-
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
-import { getFragmentDefinitions } from '../src/queries/getFromAST';
+import {
+  getFragmentDefinitions,
+} from '../src/queries/getFromAST';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors/ApolloError';
+
+import { withWarning } from './util/wrap';
+
+import observableToPromise from './util/observableToPromise';
+
+import cloneDeep = require('lodash.clonedeep');
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -169,6 +172,12 @@ describe('client', () => {
     assert.equal(client.reduxRootKey, 'apollo');
   });
 
+  it('throws on removed queryTransformer option', () => {
+    assert.throws(() => {
+      new ApolloClient({ queryTransformer: 'anything' });
+    }, /addTypename/);
+  });
+
   it('sets reduxRootKey if you use ApolloClient as middleware', () => {
     const client = new ApolloClient();
 
@@ -185,25 +194,27 @@ describe('client', () => {
     assert.equal(client.reduxRootKey, 'apollo');
   });
 
-  it('can allow passing in a top level key', () => {
-    const reduxRootKey = 'testApollo';
-    const client = new ApolloClient({
-      reduxRootKey,
-    });
+  it('can allow passing in a top level key (backcompat)', () => {
+    withWarning(() => {
+      const reduxRootKey = 'testApollo';
+      const client = new ApolloClient({
+        reduxRootKey,
+      });
 
-    // shouldn't throw
-    createStore(
-        combineReducers({
-          testApollo: client.reducer(),
-        } as any),
-        // here "client.setStore(store)" will be called internally,
-        // this method throws if "reduxRootSelector" or "reduxRootKey"
-        // are not configured properly
-        applyMiddleware(client.middleware())
-    );
+      // shouldn't throw
+      createStore(
+          combineReducers({
+            testApollo: client.reducer(),
+          } as any),
+          // here "client.setStore(store)" will be called internally,
+          // this method throws if "reduxRootSelector" or "reduxRootKey"
+          // are not configured properly
+          applyMiddleware(client.middleware())
+      );
 
-    // Check if the key is added to the client instance, like before
-    assert.equal(client.reduxRootKey, 'testApollo');
+      // Check if the key is added to the client instance, like before
+      assert.equal(client.reduxRootKey, 'testApollo');
+    }, /reduxRootKey/);
   });
 
   it('should allow passing in a selector function for apollo state', () => {
@@ -264,9 +275,12 @@ describe('client', () => {
   });
 
   it('should throw an error if "reduxRootKey" is provided and the client tries to create the store', () => {
-    const client = new ApolloClient({
-      reduxRootKey: 'test',
-    });
+    const client = withWarning(() => {
+      return new ApolloClient({
+        reduxRootKey: 'test',
+      });
+    }, /reduxRootKey/);
+
     try {
       client.initStore();
 
@@ -303,7 +317,6 @@ describe('client', () => {
   });
 
   it('should allow for a single query to take place', () => {
-
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -324,19 +337,33 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query },
-      result: { data },
-    });
+    clientRoundrip(query, data);
+  });
 
-    const client = new ApolloClient({
-      networkInterface,
-    });
+  it('should allow fragments on root query', () => {
+    const query = gql`
+      query {
+        ...QueryFragment
+        records {
+          id
+        }
+      }
 
-    return client.query({ query })
-      .then((result) => {
-        assert.deepEqual(result.data, data);
-      });
+      fragment QueryFragment on Query {
+        records {
+          name
+        }
+      }
+    `;
+
+    const data = {
+      records: [
+        { id: 1, name: 'One' },
+        { id: 2, name: 'Two' },
+      ],
+    };
+
+    clientRoundrip(query, data);
   });
 
   it('should allow for a single query with existing store', () => {
@@ -367,6 +394,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     createStore(
@@ -383,7 +411,7 @@ describe('client', () => {
       });
   });
 
-  it('can allow the store to be rehydrated from the server', () => {
+  it('store can be rehydrated from the server', () => {
 
     const query = gql`
       query people {
@@ -415,18 +443,12 @@ describe('client', () => {
         queries: {
           '0': {
             queryString: print(query),
-            query: {
-              id: 'ROOT_QUERY',
-              typeName: 'Query',
-              selectionSet: (query.definitions[0] as OperationDefinition).selectionSet,
-            },
             variables: undefined,
             loading: false,
             stopped: false,
             networkError: null,
             graphQLErrors: null,
             forceFetch: false,
-            fragmentMap: {},
             returnPartialData: false,
             lastRequestId: 1,
             previousVariables: null,
@@ -455,6 +477,7 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
       initialState,
+      addTypename: false,
     });
 
     return client.query({ query })
@@ -492,10 +515,13 @@ describe('client', () => {
       result: { data },
     });
 
-    const client = new ApolloClient({
-      reduxRootKey,
-      networkInterface,
-    });
+    const client = withWarning(() => {
+      return new ApolloClient({
+        reduxRootKey,
+        networkInterface,
+        addTypename: false,
+      });
+    }, /reduxRootKey/);
 
     createStore(
       combineReducers({
@@ -506,7 +532,7 @@ describe('client', () => {
     );
 
     return client.query({ query })
-      .then((result) => {
+      .then((result: any) => {
         assert.deepEqual(result.data, data);
       });
   });
@@ -536,12 +562,12 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     return client.query({ query })
-      .catch((error) => {
-        const apolloError = error as ApolloError;
-        assert.deepEqual(apolloError.graphQLErrors, errors);
+      .catch((error: ApolloError) => {
+        assert.deepEqual(error.graphQLErrors, errors);
       });
   });
 
@@ -574,6 +600,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
 
     const handle = client.watchQuery({ query });
@@ -629,7 +656,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypenameToSelectionSet,
+      addTypename: true,
     });
 
     client.query({ query }).then((actualResult) => {
@@ -679,7 +706,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      queryTransformer: addTypenameToSelectionSet,
+      addTypename: true,
     });
     client.query({ forceFetch: true, query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, transformedResult);
@@ -716,6 +743,7 @@ describe('client', () => {
       });
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
     client.mutate({ mutation }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
@@ -723,7 +751,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to handle named fragments on forced fetches', (done) => {
+  it('should be able to handle named fragments on forced fetches', () => {
     const query = gql`
       fragment authorDetails on Author {
         firstName
@@ -731,33 +759,38 @@ describe('client', () => {
       }
       query {
         author {
+          __typename
           ...authorDetails
         }
       }`;
     const result = {
       'author': {
+        __typename: 'Author',
         'firstName': 'John',
         'lastName': 'Smith',
       },
     };
-    const networkInterface = mockNetworkInterface(
-    {
+
+    const networkInterface = mockNetworkInterface({
       request: { query },
       result: { data: result },
     });
+
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
-    client.query({ forceFetch: true, query }).then((actualResult) => {
+
+    return client.query({ forceFetch: true, query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
-      done();
     });
   });
 
-  it('should be able to handle named fragments with multiple fragments', (done) => {
+  it('should be able to handle named fragments with multiple fragments', () => {
     const query = gql`
       query {
         author {
+          __typename
           ...authorDetails
           ...moreDetails
         }
@@ -771,6 +804,7 @@ describe('client', () => {
       }`;
     const result = {
       'author' : {
+        __typename: 'Author',
         'firstName': 'John',
         'lastName': 'Smith',
         'address': '1337 10th St.',
@@ -784,10 +818,11 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
-    client.query({ query }).then((actualResult) => {
+
+    return client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
-      done();
     });
   });
 
@@ -795,6 +830,7 @@ describe('client', () => {
     const query = gql`
       query {
         author {
+          __typename
           ...authorDetails
         }
       }
@@ -804,6 +840,7 @@ describe('client', () => {
       }`;
     const result = {
       'author' : {
+        __typename: 'Author',
         'firstName': 'John',
         'lastName': 'Smith',
       },
@@ -816,48 +853,11 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
     client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
       done();
-    });
-  });
-
-  describe('directives', () => {
-    it('should reject the query promise if skipped data arrives in the result', (done) => {
-      const query = gql`
-        query {
-          fortuneCookie @skip(if: true)
-          otherThing
-        }`;
-      const result = {
-        fortuneCookie: 'you will go far',
-        otherThing: 'false',
-      };
-      const networkInterface = mockNetworkInterface(
-        {
-          request: { query },
-          result: { data: result },
-        }
-      );
-      const client = new ApolloClient({
-        networkInterface,
-      });
-      // we need this so it doesn't print out a bunch of stuff we don't need
-      // when we're trying to test an exception.
-      client.store = createApolloStore({ reportCrashes: false });
-      client.queryManager = new QueryManager({
-        networkInterface,
-        store: client.store,
-        reduxRootSelector: (state) => state.apollo,
-      });
-
-      client.query({ query }).then(() => {
-        // do nothing
-      }).catch((error) => {
-        assert.include(error.message, 'Found extra field');
-        done();
-      });
     });
   });
 
@@ -877,6 +877,7 @@ describe('client', () => {
     };
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
     client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, data);
@@ -900,6 +901,7 @@ describe('client', () => {
     };
     const client = new ApolloClient({
       networkInterface,
+      addTypename: false,
     });
     client.mutate({ mutation }).then((actualResult) => {
       assert.deepEqual(actualResult.data, data);
@@ -939,6 +941,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
         dataIdFromObject: (obj: { id: any }) => obj.id,
+        addTypename: false,
       });
 
       return client.query({ query })
@@ -962,6 +965,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
         dataIdFromObject: (obj: { id: any }) => obj.id,
+        addTypename: false,
       });
 
       const store = createStore(
@@ -1027,6 +1031,7 @@ describe('client', () => {
     it('forces the query to rerun', () => {
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
 
       // Run a query first to initialize the store
@@ -1042,6 +1047,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
         ssrMode: true,
+        addTypename: false,
       });
 
       const options = { query, forceFetch: true };
@@ -1064,6 +1070,7 @@ describe('client', () => {
       const client = new ApolloClient({
         networkInterface,
         ssrForceFetchDelay: 100,
+        addTypename: false,
       });
 
       // Run a query first to initialize the store
@@ -1237,11 +1244,12 @@ describe('client', () => {
       console.warn = oldWarn;
     });
 
-    it('should issue a warning if we try query with a conflicting fragment name', (done) => {
+    it('should issue a warning if we try query with a conflicting fragment name', () => {
       enableFragmentWarnings();
 
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface(),
+        addTypename: false,
       });
       const fragmentDoc = gql`
         fragment authorDetails on Author {
@@ -1261,22 +1269,19 @@ describe('client', () => {
         }`;
       createFragment(fragmentDoc);
 
-      const oldWarn = console.warn;
-      console.warn = (str: string) => {
-        assert.include(str, 'Warning: fragment with name');
-        console.warn = oldWarn;
-        done();
-      };
-      client.query({ query: queryDoc });
+      withWarning(() => {
+        client.query({ query: queryDoc });
+      }, /Warning: fragment with name/);
 
       disableFragmentWarnings();
     });
 
-    it('should issue a warning if we try to watchQuery with a conflicting fragment name', (done) => {
+    it('should issue a warning if we try to watchQuery with a conflicting fragment name', () => {
       enableFragmentWarnings();
 
       const client = new ApolloClient({
         networkInterface: mockNetworkInterface(),
+        addTypename: false,
       });
       const fragmentDoc = gql`
         fragment authorDetails on Author {
@@ -1296,27 +1301,25 @@ describe('client', () => {
         }`;
       createFragment(fragmentDoc);
 
-      const oldWarn = console.warn;
-      console.warn = (str: string) => {
-        assert.include(str, 'Warning: fragment with name');
-        console.warn = oldWarn;
-        done();
-      };
-      client.watchQuery({ query: queryDoc });
+      withWarning(() => {
+        client.watchQuery({ query: queryDoc });
+      }, /Warning: fragment with name/);
 
       disableFragmentWarnings();
     });
 
-    it('should allow passing fragments to query', (done) => {
+    it('should allow passing fragments to query', () => {
       const queryDoc = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }`;
       const composedQuery = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }
@@ -1326,6 +1329,7 @@ describe('client', () => {
         }`;
       const data = {
         author: {
+          __typename: 'Author',
           firstName: 'John',
           lastName: 'Smith',
         },
@@ -1336,6 +1340,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
       const fragmentDefs = createFragment(gql`
         fragment authorDetails on Author {
@@ -1343,22 +1348,23 @@ describe('client', () => {
           lastName
         }`);
 
-      client.query({ query: queryDoc, fragments: fragmentDefs }).then((result) => {
+      return client.query({ query: queryDoc, fragments: fragmentDefs }).then((result) => {
         assert.deepEqual(result.data, data);
-        done();
       });
     });
 
-    it('show allow passing fragments to mutate', (done) => {
+    it('show allow passing fragments to mutate', () => {
       const mutationDoc = gql`
         mutation createAuthor {
           createAuthor {
+            __typename
             ...authorDetails
           }
         }`;
       const composedMutation = gql`
         mutation createAuthor {
           createAuthor {
+            __typename
             ...authorDetails
           }
         }
@@ -1368,6 +1374,7 @@ describe('client', () => {
         }`;
       const data = {
         createAuthor: {
+          __typename: 'Author',
           firstName: 'John',
           lastName: 'Smith',
         },
@@ -1378,6 +1385,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
       const fragmentDefs = createFragment(gql`
         fragment authorDetails on Author {
@@ -1385,22 +1393,23 @@ describe('client', () => {
           lastName
         }`);
 
-      client.mutate({ mutation: mutationDoc, fragments: fragmentDefs }).then((result) => {
+      return client.mutate({ mutation: mutationDoc, fragments: fragmentDefs }).then((result) => {
         assert.deepEqual(result, { data });
-        done();
       });
     });
 
-    it('should allow passing fragments to watchQuery', (done) => {
+    it('should allow passing fragments to watchQuery', () => {
       const queryDoc = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }`;
       const composedQuery = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }
@@ -1410,6 +1419,7 @@ describe('client', () => {
         }`;
       const data = {
         author: {
+          __typename: 'Author',
           firstName: 'John',
           lastName: 'Smith',
         },
@@ -1420,6 +1430,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
       const fragmentDefs = createFragment(gql`
         fragment authorDetails on Author {
@@ -1427,25 +1438,25 @@ describe('client', () => {
           lastName
         }`);
 
-      const observer = client.watchQuery({ query: queryDoc, fragments: fragmentDefs });
-      observer.subscribe({
-        next(result) {
-          assert.deepEqual(result.data, data);
-          done();
-        },
+      const observable = client.watchQuery({ query: queryDoc, fragments: fragmentDefs });
+
+      return observableToPromise({ observable }, (result) => {
+        assert.deepEqual(result.data, data);
       });
     });
 
-    it('should allow passing fragments in polling queries', (done) => {
+    it('should allow passing fragments in polling queries', () => {
       const queryDoc = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }`;
       const composedQuery = gql`
         query {
           author {
+            __typename
             ...authorDetails
           }
         }
@@ -1455,6 +1466,7 @@ describe('client', () => {
         }`;
       const data = {
         author: {
+          __typename: 'Author',
           firstName: 'John',
           lastName: 'Smith',
         },
@@ -1465,6 +1477,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         networkInterface,
+        addTypename: false,
       });
       const fragmentDefs = createFragment(gql`
         fragment authorDetails on Author {
@@ -1472,14 +1485,14 @@ describe('client', () => {
           lastName
         }`);
 
-      const observer = client.watchQuery(
-        { query: queryDoc, pollInterval: 30, fragments: fragmentDefs});
-      const subscription = observer.subscribe({
-        next(result) {
-          assert.deepEqual(result.data, data);
-          subscription.unsubscribe();
-          done();
-        },
+      const observable = client.watchQuery({
+        query: queryDoc,
+        pollInterval: 30,
+        fragments: fragmentDefs,
+      });
+
+      return observableToPromise({ observable }, (result) => {
+        assert.deepEqual(result.data, data);
       });
     });
 
@@ -1564,14 +1577,14 @@ describe('client', () => {
         result: { data },
         error: networkError,
       }),
+      addTypename: false,
     });
 
     client.mutate({ mutation }).then((result) => {
       done(new Error('Returned a result when it should not have.'));
-    }).catch((error) => {
-      const apolloError = error as ApolloError;
-      assert(apolloError.networkError);
-      assert.equal(apolloError.networkError.message, networkError.message);
+    }).catch((error: ApolloError) => {
+      assert(error.networkError);
+      assert.equal(error.networkError.message, networkError.message);
       done();
     });
   });
@@ -1598,14 +1611,14 @@ describe('client', () => {
         request: { query: mutation },
         result: { data, errors },
       }),
+      addTypename: false,
     });
     client.mutate({ mutation }).then((result) => {
       done(new Error('Returned a result when it should not have.'));
-    }).catch((error) => {
-      const apolloError = error as ApolloError;
-      assert(apolloError.graphQLErrors);
-      assert.equal(apolloError.graphQLErrors.length, 1);
-      assert.equal(apolloError.graphQLErrors[0].message, errors[0].message);
+    }).catch((error: ApolloError) => {
+      assert(error.graphQLErrors);
+      assert.equal(error.graphQLErrors.length, 1);
+      assert.equal(error.graphQLErrors[0].message, errors[0].message);
       done();
     });
   });
@@ -1693,3 +1706,24 @@ describe('client', () => {
   });
   */
 });
+
+function clientRoundrip(
+  query: Document,
+  data: GraphQLResult,
+  variables?: any,
+  fragments?: FragmentDefinition[]
+) {
+  const networkInterface = mockNetworkInterface({
+    request: { query: cloneDeep(query) },
+    result: { data },
+  });
+
+  const client = new ApolloClient({
+    networkInterface,
+  });
+
+  return client.query({ query, variables, fragments })
+    .then((result) => {
+      assert.deepEqual(result.data, data);
+    });
+}

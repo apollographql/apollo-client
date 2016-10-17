@@ -90,6 +90,24 @@ export function getQueryDefinition(doc: Document): OperationDefinition {
   return queryDef;
 }
 
+// TODO REFACTOR: fix this and query/mutation definition to not use map, please.
+export function getOperationDefinition(doc: Document): OperationDefinition {
+  checkDocument(doc);
+
+  let opDef: OperationDefinition = null;
+  doc.definitions.map((definition) => {
+    if (definition.kind === 'OperationDefinition') {
+      opDef = definition as OperationDefinition;
+    }
+  });
+
+  if (!opDef) {
+    throw new Error('Must contain a query definition.');
+  }
+
+  return opDef;
+}
+
 export function getFragmentDefinition(doc: Document): FragmentDefinition {
   if (doc.kind !== 'Document') {
     throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
@@ -131,6 +149,9 @@ export function createFragmentMap(fragments: FragmentDefinition[] = []): Fragmen
 // document.
 export function addFragmentsToDocument(queryDoc: Document,
   fragments: FragmentDefinition[]): Document {
+  if (!fragments) {
+    return queryDoc;
+  }
   checkDocument(queryDoc);
   return assign({}, queryDoc, {
     definitions: queryDoc.definitions.concat(fragments),

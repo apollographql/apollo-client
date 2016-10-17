@@ -7,8 +7,11 @@ import {
 
 import {
   data,
-  NormalizedCache,
 } from './data/store';
+
+import {
+  NormalizedCache,
+} from './data/storeUtils';
 
 import {
   queries,
@@ -67,6 +70,8 @@ const crashReporter = (store: any) => (next: any) => (action: any) => {
     throw err;
   }
 };
+
+export type ApolloReducer = (store: NormalizedCache, action: ApolloAction) => NormalizedCache;
 
 export function createApolloReducer(config: ApolloReducerConfig): Function {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {

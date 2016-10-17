@@ -38,7 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "es6-promise": "^4.0.3",
-    "graphql-anywhere": "^0.1.11",
+    "graphql-anywhere": "^0.2.3",
     "graphql-tag": "^0.1.13",
     "lodash.assign": "^4.0.8",
     "lodash.clonedeep": "^4.3.2",
@@ -48,7 +48,6 @@
     "lodash.has": "^4.3.1",
     "lodash.identity": "^3.0.0",
     "lodash.includes": "^4.1.2",
-    "lodash.isarray": "^4.0.0",
     "lodash.isboolean": "^3.0.3",
     "lodash.isequal": "^4.2.0",
     "lodash.isnull": "^3.0.0",
@@ -64,16 +63,9 @@
     "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {
-    "@types/async": "^2.0.31",
     "@types/chai": "^3.4.32",
     "@types/chai-as-promised": "0.0.28",
-    "@types/isomorphic-fetch": "0.0.30",
-    "@types/lodash": "^4.14.34",
     "@types/mocha": "^2.2.31",
-    "@types/node": "^6.0.38",
-    "@types/promises-a-plus": "0.0.26",
-    "@types/redux": "^3.5.29",
-    "@types/sinon": "^1.16.29",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
@@ -98,5 +90,14 @@
     "tslint": "3.15.1",
     "typescript": "2.0.3",
     "uglify-js": "^2.6.2"
+  },
+  "optionalDependencies": {
+    "@types/async": "^2.0.31",
+    "@types/isomorphic-fetch": "0.0.30",
+    "@types/lodash": "^4.14.34",
+    "@types/node": "^6.0.38",
+    "@types/promises-a-plus": "0.0.26",
+    "@types/redux": "^3.5.29",
+    "@types/sinon": "^1.16.29"
   }
 }

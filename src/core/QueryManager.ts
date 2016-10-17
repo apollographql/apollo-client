@@ -152,7 +152,6 @@ export class QueryManager {
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   private observableQueries: { [queryId: string]:  {
     observableQuery: ObservableQuery;
-    subscriptions: Subscription[];
   } };
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
@@ -553,7 +552,7 @@ export class QueryManager {
 
   // Adds an ObservableQuery to this.observableQueries and to this.observableQueriesByName.
   public addObservableQuery(queryId: string, observableQuery: ObservableQuery) {
-    this.observableQueries[queryId] = { observableQuery, subscriptions: [] };
+    this.observableQueries[queryId] = { observableQuery };
 
     // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
     const queryDef = getQueryDefinition(observableQuery.options.query);
@@ -563,18 +562,6 @@ export class QueryManager {
       // XXX we may we want to warn the user about query name conflicts in the future
       this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
       this.queryIdsByName[queryName].push(observableQuery.queryId);
-    }
-  }
-
-  // Associates a query subscription with an ObservableQuery in this.observableQueries
-  public addQuerySubscription(queryId: string, querySubscription: Subscription) {
-    if (this.observableQueries.hasOwnProperty(queryId)) {
-      this.observableQueries[queryId].subscriptions.push(querySubscription);
-    } else {
-      this.observableQueries[queryId] = {
-        observableQuery: null,
-        subscriptions: [querySubscription],
-      };
     }
   }
 

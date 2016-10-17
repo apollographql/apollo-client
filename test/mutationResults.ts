@@ -140,10 +140,6 @@ describe('mutation results', () => {
 
     return client.watchQuery({
       query,
-      // reducer: (state, action) => {
-      //  console.log('it ran!!!', action.type);
-      //  return state;
-      // }
     });
   }
 
@@ -1173,6 +1169,9 @@ describe('mutation results', () => {
           assert.equal(data.echo, '0');
           done();
         }
+      },
+      error: () => {
+        // Do nothing, but quash unhandled error
       },
     });
 

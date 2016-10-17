@@ -11,6 +11,10 @@ import {
 } from '../scheduler/scheduler';
 
 import {
+  ApolloError,
+} from '../errors/ApolloError';
+
+import {
   QueryManager,
   ApolloQueryResult,
 } from './QueryManager';
@@ -44,6 +48,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   private shouldSubscribe: boolean;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
+  private observers: Observer<ApolloQueryResult>[];
+
+  private lastResult: ApolloQueryResult;
+  private lastError: ApolloError;
 
   constructor({
     scheduler,
@@ -71,6 +79,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.queryManager = queryManager;
     this.queryId = queryId;
     this.shouldSubscribe = shouldSubscribe;
+    this.observers = [];
   }
 
   public result(): Promise<ApolloQueryResult> {
@@ -170,14 +179,22 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult> {
+    const oldOptions = this.options;
     this.options = assign({}, this.options, opts) as WatchQueryOptions;
-      if (opts.pollInterval) {
-        this.startPolling(opts.pollInterval);
-      } else if (opts.pollInterval === 0) {
-        this.stopPolling();
-      }
 
-      return this.setVariables(opts.variables);
+    if (opts.pollInterval) {
+      this.startPolling(opts.pollInterval);
+    } else if (opts.pollInterval === 0) {
+      this.stopPolling();
+    }
+
+    // If forceFetch went from false to true
+    if (!oldOptions.forceFetch && opts.forceFetch) {
+      return this.queryManager.fetchQuery(this.queryId, this.options)
+        .then(result => this.queryManager.transformResult(result));
+    }
+
+    return this.setVariables(this.options.variables);
   }
 
   /**
@@ -246,18 +263,37 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult>) {
+    this.observers.push(observer);
+
+    // Deliver initial result
+    if (observer.next && this.lastResult) {
+      observer.next(this.lastResult);
+    }
+
+    if (observer.error && this.lastError) {
+      observer.error(this.lastError);
+    }
+
+    if (this.observers.length === 1) {
+      this.setUpQuery();
+    }
+
     const retQuerySubscription = {
       unsubscribe: () => {
-        if (this.isPollingQuery) {
-          this.scheduler.stopPollingQuery(this.queryId);
+        this.observers = this.observers.filter((obs) => obs !== observer);
+
+        if (this.observers.length === 0) {
+          this.tearDownQuery();
         }
-        this.queryManager.stopQuery(this.queryId);
       },
     };
 
+    return retQuerySubscription;
+  }
+
+  private setUpQuery() {
     if (this.shouldSubscribe) {
       this.queryManager.addObservableQuery(this.queryId, this);
-      this.queryManager.addQuerySubscription(this.queryId, retQuerySubscription);
     }
 
     if (this.isPollingQuery) {
@@ -271,12 +307,42 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       );
     }
 
+    const observer: Observer<ApolloQueryResult> = {
+      next: (result: ApolloQueryResult) => {
+        this.observers.forEach((obs) => {
+          if (obs.next) {
+            obs.next(result);
+          }
+        });
+
+        this.lastResult = result;
+      },
+      error: (error: ApolloError) => {
+        this.observers.forEach((obs) => {
+          if (obs.error) {
+            obs.error(error);
+          } else {
+            console.error('Unhandled error', error.message, error.stack);
+          }
+        });
+
+        this.lastError = error;
+      },
+    };
+
     this.queryManager.startQuery(
       this.queryId,
       this.options,
       this.queryManager.queryListenerForObserver(this.queryId, this.options, observer)
     );
+  }
 
-    return retQuerySubscription;
+  private tearDownQuery() {
+    if (this.isPollingQuery) {
+      this.scheduler.stopPollingQuery(this.queryId);
+    }
+
+    this.queryManager.stopQuery(this.queryId);
+    this.observers = [];
   }
 }

@@ -40,6 +40,12 @@ export class ApolloError extends Error {
     this.extraInfo = extraInfo;
   }
 
+  public reason () {
+    return this.graphQLErrors
+      && this.graphQLErrors[0]
+      && this.graphQLErrors[0].message;
+  }
+
   // Sets the error message on this error according to the
   // the GraphQL and network errors that are present.
   // If the error message has already been set through the

@@ -140,10 +140,6 @@ describe('mutation results', () => {
 
     return client.watchQuery({
       query,
-      // reducer: (state, action) => {
-      //  console.log('it ran!!!', action.type);
-      //  return state;
-      // }
     });
   }
 

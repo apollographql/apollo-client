@@ -61,7 +61,7 @@ import {
 } from '../src/util/Observable';
 
 import wrap from './util/wrap';
-import subscribeAndCount from './util/subscribeAndCount';
+
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from './util/observableToPromise';
@@ -568,10 +568,18 @@ describe('QueryManager', () => {
       },
     };
 
-    const queryManager = mockRefetch({
+    const queryManager = mockQueryManager({
       request,
-      firstResult: { data: data1 },
-      secondResult: { data: data2 },
+      result: { data: data1 },
+    }, {
+      request,
+      result: { data: data2 },
+
+      // Wait for both to subscribe
+      delay: 100,
+    }, {
+      request,
+      result: { data: data3 },
     });
 
     let subOneCount = 0;

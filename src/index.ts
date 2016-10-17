@@ -38,6 +38,9 @@ import {
 } from './data/mutationResults';
 
 import {
+  getQueryDefinition,
+  getFragmentDefinitions,
+  FragmentMap,
   createFragmentMap,
 } from './queries/getFromAST';
 
@@ -52,6 +55,10 @@ import {
   disableFragmentWarnings,
   enableFragmentWarnings,
 } from './fragments';
+
+import {
+  Request,
+} from './transport/networkInterface';
 
 // We expose the print method from GraphQL so that people that implement
 // custom network interfaces can turn query ASTs into query strings as needed.
@@ -70,6 +77,12 @@ export {
   clearFragmentDefinitions,
   disableFragmentWarnings,
   enableFragmentWarnings,
+
+  getQueryDefinition,
+  getFragmentDefinitions,
+  FragmentMap,
+
+  Request,
 
   // internal type definitions for export
   WatchQueryOptions,

@@ -4,7 +4,7 @@ title: GitHunt Example and Schema
 
 In the documentation we'll show examples of using Apollo in React via the GitHunt example application.
 
-GitHunt is a Product Hunt-style application that shows a list of GitHub repositories, sorted by votes with attached comments. [The API server code](https://github.com/apollostack/GitHunt-API) demonstrates combining two data sources--a third-party API and a local database--in a single GraphQL endpoint.
+GitHunt is a [Product Hunt](http://www.producthunt.com)-style application that shows a list of GitHub repositories, sorted by votes with attached comments. [The API server code](https://github.com/apollostack/GitHunt-API) demonstrates combining two data sources--a third-party API and a local database--in a single GraphQL endpoint.
 
 The [React UI](https://github.com/apollostack/GitHunt-React), which we'll focus on in this guide, shows a lot of the techniques that you can use to build a great React UI for *any* GraphQL server. You can check out the full source code on GitHub or just read the snippets in the guide.
 

@@ -78,4 +78,15 @@ describe('ApolloError', () => {
     });
     assert(apolloError.stack, 'Does not contain a stack trace.');
   });
+
+  it('should return the first message when calling reason()', () => {
+    const message = 'graphql error message one';
+    const graphQLErrors = [ new Error(message), new Error('graphql error message two') ];
+    const networkError = new Error('network error message');
+    const apolloError = new ApolloError({
+      graphQLErrors,
+      networkError,
+    });
+    return assert.equal(apolloError.reason(), message);
+  });
 });

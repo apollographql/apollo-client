@@ -176,14 +176,22 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult> {
+    const oldOptions = this.options;
     this.options = assign({}, this.options, opts) as WatchQueryOptions;
-      if (opts.pollInterval) {
-        this.startPolling(opts.pollInterval);
-      } else if (opts.pollInterval === 0) {
-        this.stopPolling();
-      }
 
-      return this.setVariables(opts.variables);
+    if (opts.pollInterval) {
+      this.startPolling(opts.pollInterval);
+    } else if (opts.pollInterval === 0) {
+      this.stopPolling();
+    }
+
+    // If forceFetch went from false to true
+    if (!oldOptions.forceFetch && opts.forceFetch) {
+      return this.queryManager.fetchQuery(this.queryId, this.options)
+        .then(result => this.queryManager.transformResult(result));
+    }
+
+    return this.setVariables(this.options.variables);
   }
 
   /**
@@ -292,7 +300,13 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         this.observers.forEach((obs) => obs.next && obs.next(result));
       },
       error: (error: ApolloError) => {
-        this.observers.forEach((obs) => obs.error && obs.error(error));
+        this.observers.forEach((obs) => {
+          if (obs.error) {
+            obs.error(error);
+          } else {
+            console.error('Unhandled error', error.message, error.stack);
+          }
+        });
       },
     };
 

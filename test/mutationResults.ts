@@ -1174,6 +1174,9 @@ describe('mutation results', () => {
           done();
         }
       },
+      error: () => {
+        // Do nothing, but quash unhandled error
+      },
     });
 
     watchedQuery.refetch(variables2);

@@ -812,7 +812,7 @@ export class QueryManager {
           previousResult, {
             mutationResult,
             queryName,
-            variables,
+            queryVariables: variables,
           }));
 
         if (newResult) {

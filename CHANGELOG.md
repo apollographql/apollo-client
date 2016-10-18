@@ -6,7 +6,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 #### v0.5.0-0 first preview
 
-- ** new Feature **: Implement query reducers, which run on every query result/ mutation. [PR #766](https://github.com/apollostack/apollo-client/pull/766)
+- **Breaking change**: Change createNetworkInterface to accept only one argument, an object with options.The endpoint URL should be passed as the `uri` option. 
+- **Feature**: Implement query reducers, which run on every query result/ mutation. [PR #766](https://github.com/apollostack/apollo-client/pull/766)
 - **Refactor**: Reimplement internal store reading in terms of the [graphql-anywhere](https://github.com/apollostack/graphql-anywhere) package, which cleanly separates the GraphQL execution logic from Apollo's specific cache format. This will allow us to make the store reading much more extensible, including enabling developers to write their own custom client-side resolvers to implement client-side computed fields, read from Redux with GraphQL, and redirect cache reads.
 - **Feature removal**: Remove query diffing functionality to make client more predictable and simplify implementation. Queries will still read from the store, and if the store does not have all of the necessary data the entire query will fetch from the server. Read justification and discussion in [Issue #615](https://github.com/apollostack/apollo-client/issues/615) [PR #693](https://github.com/apollostack/apollo-client/pull/693)
 - **Breaking change**: Move batching to network interface and split off query merging into separate package [PR #734](https://github.com/apollostack/apollo-client/pull/734)

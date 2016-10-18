@@ -72,7 +72,7 @@ describe('subscribeToMore', () => {
         }
       `,
       updateQuery: (prev, { subscriptionData }) => {
-        return { entry: { value: subscriptionData.name } };
+        return { entry: { value: subscriptionData.data.name } };
       },
     });
 

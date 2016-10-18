@@ -84,7 +84,7 @@ export type SubscribeToMoreOptions = {
   document: Document;
   variables?: { [key: string]: any };
   updateQuery: (previousQueryResult: Object, options: {
-    subscriptionData: any,
+    subscriptionData: { data: any },
     variables: { [key: string]: any },
   }) => Object;
 }

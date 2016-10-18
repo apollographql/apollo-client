@@ -168,7 +168,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         const reducer = fetchMoreOptions.updateQuery;
         const mapFn = (previousResult: any, { variables }: {variables: any }) => {
 
-          // TODO REF: reached max recursion depth (fig) when renaming queryVariables to variables.
+          // TODO REFACTOR: reached max recursion depth (figuratively) when renaming queryVariables.
           // Continue renaming to variables further down when we have time.
           const queryVariables = variables;
           return reducer(
@@ -196,11 +196,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     const reducer = options.updateQuery;
 
     const subscription = observable.subscribe({
-      next: (subscriptionData) => {
+      next: (data) => {
         const mapFn = (previousResult: Object, { variables }: { variables: Object }) => {
           return reducer(
             previousResult, {
-              subscriptionData,
+              subscriptionData: { data },
               variables,
             }
           );
@@ -216,7 +216,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.subscriptionHandles.push(subscription);
 
     return () => {
-      // XXX technically we should also remove it from this.subscriptionHandles
       const i = this.subscriptionHandles.indexOf(subscription);
       if (i >= 0) {
         this.subscriptionHandles.splice(i, 1);
@@ -391,6 +390,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     // stop all active GraphQL subscriptions
     this.subscriptionHandles.forEach( sub => sub.unsubscribe() );
+    this.subscriptionHandles = [];
 
     this.queryManager.stopQuery(this.queryId);
     this.observers = [];

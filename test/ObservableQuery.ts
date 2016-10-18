@@ -155,6 +155,39 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('does not break refetch', (done) => {
+      // This query and variables are copied from react-apollo
+      const queryWithVars = gql`query people($first: Int) {
+        allPeople(first: $first) { people { name } }
+      }`;
+
+      const data = { allPeople: { people: [ { name: 'Luke Skywalker' } ] } };
+      const variables1 = { first: 0 };
+
+      const data2 = { allPeople: { people: [ { name: 'Leia Skywalker' } ] } };
+      const variables2 = { first: 1 };
+
+
+      const observable: ObservableQuery = mockWatchQuery({
+        request: { query: queryWithVars, variables: variables1 },
+        result: { data },
+      }, {
+        request: { query: queryWithVars, variables: variables2 },
+        result: { data: data2 },
+      });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          observable.setOptions({ forceFetch: false });
+          observable.refetch(variables2);
+        } else if (handleCount === 3) { // 3 because there is an intermediate loading state
+          assert.deepEqual(result.data, data2);
+          done();
+        }
+      });
+    });
+
     it('does a network request if forceFetch becomes true', (done) => {
       const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },

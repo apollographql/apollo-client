@@ -6,7 +6,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 #### v0.5.0-0 first preview
 
-- ** new Feature **: Implement query reducers, which run on every query result/ mutation. [PR #766](https://github.com/apollostack/apollo-client/pull/766)
+- **new Feature**: Implement query reducers, which run on every query result/ mutation. [PR #766](https://github.com/apollostack/apollo-client/pull/766)
 - **Refactor**: Reimplement internal store reading in terms of the [graphql-anywhere](https://github.com/apollostack/graphql-anywhere) package, which cleanly separates the GraphQL execution logic from Apollo's specific cache format. This will allow us to make the store reading much more extensible, including enabling developers to write their own custom client-side resolvers to implement client-side computed fields, read from Redux with GraphQL, and redirect cache reads.
 - **Feature removal**: Remove query diffing functionality to make client more predictable and simplify implementation. Queries will still read from the store, and if the store does not have all of the necessary data the entire query will fetch from the server. Read justification and discussion in [Issue #615](https://github.com/apollostack/apollo-client/issues/615) [PR #693](https://github.com/apollostack/apollo-client/pull/693)
 - **Breaking change**: Move batching to network interface and split off query merging into separate package [PR #734](https://github.com/apollostack/apollo-client/pull/734)
@@ -24,7 +24,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Fix multidimentional array handling. [Issue #776](https://github.com/apollostack/apollo-client/issues/776) [PR #785](https://github.com/apollostack/apollo-client/pull/785)
 - Add support for Enum inline arguments [Issue #183](https://github.com/apollostack/apollo-client/issues/183) [PR #788](https://github.com/apollostack/apollo-client/pull/788)
 - Make it possible to subscribe to the same observable query multiple times. The query is initialized on the first subscription, and torn down after the last. Now, QueryManager is only aware of one subscription from the ObservableQuery, no matter how many were actually registered. This fixes issues with `result()` and other ObservableQuery features that relied on subscribing multiple times to work. This should remove the need for the workaround in `0.4.21`. [Repro in PR #694](https://github.com/apollostack/apollo-client/pull/694) [PR #791](https://github.com/apollostack/apollo-client/pull/791)
-- ** new Feature **: Add fetchMore-style subscribeToMore function which updates a query result based on a subscription. [PR #797](https://github.com/apollostack/apollo-client/pull/797)
+- **new Feature**: Add fetchMore-style subscribeToMore function which updates a query result based on a subscription. [PR #797](https://github.com/apollostack/apollo-client/pull/797)
 
 ### v0.4.21
 - Added some temporary functions (`_setVariablesNoResult` and `_setOptionsNoResult`) to work around a `react-apollo` problem fundamentally caused by the issue highlighted in [PR #694](https://github.com/apollostack/apollo-client/pull/694). The code as been refactored on `master`, so we expect it to be fixed in 0.5.x, and is not worth resolving now.

@@ -215,7 +215,14 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     this.subscriptionHandles.push(subscription);
 
-    return () => { subscription.unsubscribe(); };
+    return () => {
+      // XXX technically we should also remove it from this.subscriptionHandles
+      const i = this.subscriptionHandles.indexOf(subscription);
+      if (i >= 0) {
+        this.subscriptionHandles.splice(i, 1);
+        subscription.unsubscribe();
+      }
+    };
   }
 
   public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult> {

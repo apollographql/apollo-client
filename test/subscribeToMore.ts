@@ -87,4 +87,6 @@ describe('subscribeToMore', () => {
       networkInterface.fireResult(0); // 0 is the id of the subscription for the NI
     }
   });
+
+  // TODO add a test that checks that subscriptions are cancelled when obs is unsubscribed from.
 });

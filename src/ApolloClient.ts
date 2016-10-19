@@ -26,6 +26,10 @@ import {
 } from './store';
 
 import {
+  CustomResolverMap,
+} from './data/readFromStore';
+
+import {
   QueryManager,
   ApolloQueryResult,
   ResultComparator,
@@ -98,6 +102,7 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+  public customResolvers: CustomResolverMap;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -145,6 +150,7 @@ export default class ApolloClient {
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
     addTypename = true,
     queryTransformer,
+    customResolvers,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -158,6 +164,7 @@ export default class ApolloClient {
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
     addTypename?: boolean,
     queryTransformer?: any,
+    customResolvers?: CustomResolverMap,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -198,6 +205,7 @@ export default class ApolloClient {
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.customResolvers = customResolvers;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -435,6 +443,7 @@ export default class ApolloClient {
       resultTransformer: this.resultTransformer,
       resultComparator: this.resultComparator,
       reducerConfig: this.reducerConfig,
+      customResolvers: this.customResolvers,
     });
   };
 }

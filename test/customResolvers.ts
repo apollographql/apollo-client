@@ -1,10 +1,7 @@
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import { createApolloStore } from '../src/store';
 import gql from 'graphql-tag';
-import { QueryManager } from '../src/core/QueryManager';
 import { assert } from 'chai';
-
-const defaultReduxRootSelector = (state: any) => state.apollo;
+import ApolloClient from '../src';
 
 describe('custom resolvers', () => {
   it(`works with client-side computed fields`, () => {
@@ -41,11 +38,8 @@ describe('custom resolvers', () => {
       result: { data },
     });
 
-    const qm = new QueryManager({
+    const client = new ApolloClient({
       networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
-      addTypename: true,
       customResolvers: {
         Person: {
           fullName: (root) => root.firstName + ' ' + root.lastName,
@@ -53,7 +47,7 @@ describe('custom resolvers', () => {
       },
     });
 
-    return qm.query({ query }).then((result) => {
+    return client.query({ query }).then((result) => {
       assert.deepEqual(result.data, {
         person: {
           firstName: 'Luke',
@@ -92,15 +86,8 @@ describe('custom resolvers', () => {
       result: { data: listData },
     });
 
-    const qm = new QueryManager({
+    const client = new ApolloClient({
       networkInterface,
-      store: createApolloStore({
-        config: {
-          dataIdFromObject,
-        },
-      }),
-      reduxRootSelector: defaultReduxRootSelector,
-      addTypename: true,
       customResolvers: {
         Query: {
           person: (_, args) => {
@@ -108,10 +95,11 @@ describe('custom resolvers', () => {
           },
         },
       },
+      dataIdFromObject,
     });
 
-    return qm.query({ query: listQuery }).then(() => {
-      return qm.query({ query: itemQuery });
+    return client.query({ query: listQuery }).then(() => {
+      return client.query({ query: itemQuery });
     }).then((itemResult) => {
       assert.deepEqual(itemResult, {
         loading: false,

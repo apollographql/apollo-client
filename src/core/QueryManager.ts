@@ -479,6 +479,7 @@ export class QueryManager {
         store: this.reduxRootSelector(this.store.getState()).data,
         returnPartialData: true,
         variables,
+        customResolvers: this.customResolvers,
       });
 
       // If we're in here, only fetch if we have missing fields

@@ -3167,4 +3167,59 @@ describe('QueryManager', () => {
     // We have an unhandled error warning from the `subscribe` above, which has no `error` cb
   });
 
+  it(`works with client-side computed fields`, () => {
+    const query = gql`
+      {
+        person {
+          firstName
+          lastName
+          fullName @client
+        }
+      }
+    `;
+
+    const data = {
+      person: {
+        firstName: 'Luke',
+        lastName: 'Skywalker',
+        __typename: 'Person',
+      },
+    };
+
+    const netQuery = gql`
+      {
+        person {
+          firstName
+          lastName
+          __typename
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const qm = new QueryManager({
+      networkInterface,
+      store: createApolloStore(),
+      reduxRootSelector: defaultReduxRootSelector,
+      addTypename: true,
+      customResolvers: {
+        Person: {
+          fullName: (root) => root.firstName + ' ' + root.lastName,
+        },
+      },
+    });
+
+    return qm.query({ query }).then((result) => {
+      assert.equal(result.data, {
+        person: {
+          firstName: 'Luke',
+          lastName: 'Skywalker',
+        },
+      })
+    })
+  });
 });

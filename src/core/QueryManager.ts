@@ -53,10 +53,8 @@ import { print } from 'graphql-tag/printer';
 import {
   readQueryFromStore,
   ReadQueryOptions,
-} from '../data/readFromStore';
-
-import {
   diffQueryAgainstStore,
+  CustomResolverMap,
 } from '../data/readFromStore';
 
 import {
@@ -141,6 +139,8 @@ export class QueryManager {
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private reducerConfig: ApolloReducerConfig;
+  private customResolvers: CustomResolverMap;
+
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
   // mutations and subscriptions as well.
@@ -178,6 +178,7 @@ export class QueryManager {
     resultTransformer,
     resultComparator,
     addTypename = true,
+    customResolvers = {},
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -186,6 +187,7 @@ export class QueryManager {
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
     addTypename?: boolean,
+    customResolvers?: CustomResolverMap,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -199,6 +201,7 @@ export class QueryManager {
     this.queryListeners = {};
     this.queryDocuments = {};
     this.addTypename = addTypename;
+    this.customResolvers = customResolvers;
 
     this.scheduler = new QueryScheduler({
       queryManager: this,

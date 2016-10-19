@@ -5,6 +5,8 @@ import {
   OperationDefinition,
   Field,
   InlineFragment,
+  Directive,
+  Selection,
 } from 'graphql';
 
 import {
@@ -37,6 +39,9 @@ function addTypenameToSelectionSet(
       }
     }
 
+    selectionSet.selections =
+      selectionSet.selections.filter((sel) => !selectionHasClientDirective(sel));
+
     selectionSet.selections.forEach((selection) => {
       if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
         addTypenameToSelectionSet((selection as Field | InlineFragment).selectionSet);
@@ -55,4 +60,10 @@ export function addTypenameToDocument(doc: Document) {
   });
 
   return docClone;
+}
+
+function selectionHasClientDirective(sel: Selection) {
+  return sel.directives && sel.directives.filter((dir: Directive) => {
+    return dir.name.value === 'client'
+  }).length > 0;
 }

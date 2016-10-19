@@ -41,6 +41,38 @@ describe('query transforms', () => {
     assert.equal(expectedQueryStr, print(newQueryDoc));
   });
 
+  it('should correctly remove client-only fields', () => {
+    let testQuery = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+            fullName @client
+          }
+          ...includedFragment @client
+        }
+      }
+    `;
+    const newQueryDoc = addTypenameToDocument(testQuery);
+
+    const expectedQuery = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+            __typename
+          }
+          __typename
+        }
+      }
+    `;
+    const expectedQueryStr = print(expectedQuery);
+
+    assert.equal(expectedQueryStr, print(newQueryDoc));
+  });
+
   it('should not add duplicates', () => {
     let testQuery = gql`
       query {

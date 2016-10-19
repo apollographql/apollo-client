@@ -1,5 +1,6 @@
 import {
   addTypenameToDocument,
+  removeClientFieldsFromDocument,
 } from '../src/queries/queryTransform';
 
 import {
@@ -54,7 +55,7 @@ describe('query transforms', () => {
         }
       }
     `;
-    const newQueryDoc = addTypenameToDocument(testQuery);
+    const newQueryDoc = removeClientFieldsFromDocument(testQuery);
 
     const expectedQuery = gql`
       query {
@@ -62,9 +63,7 @@ describe('query transforms', () => {
           name {
             firstName
             lastName
-            __typename
           }
-          __typename
         }
       }
     `;

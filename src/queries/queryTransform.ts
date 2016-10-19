@@ -39,9 +39,6 @@ function addTypenameToSelectionSet(
       }
     }
 
-    selectionSet.selections =
-      selectionSet.selections.filter((sel) => !selectionHasClientDirective(sel));
-
     selectionSet.selections.forEach((selection) => {
       if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
         addTypenameToSelectionSet((selection as Field | InlineFragment).selectionSet);
@@ -62,8 +59,35 @@ export function addTypenameToDocument(doc: Document) {
   return docClone;
 }
 
+function removeClientFieldsFromSelectionSet(
+  selectionSet: SelectionSet,
+) {
+  if (selectionSet && selectionSet.selections) {
+    // Remove all fields with the @client directive
+    selectionSet.selections =
+      selectionSet.selections.filter((sel) => !selectionHasClientDirective(sel));
+
+    selectionSet.selections.forEach((selection) => {
+      if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
+        removeClientFieldsFromSelectionSet((selection as Field | InlineFragment).selectionSet);
+      }
+    });
+  }
+}
+
+export function removeClientFieldsFromDocument(doc: Document) {
+  checkDocument(doc);
+  const docClone = cloneDeep(doc);
+
+  docClone.definitions.forEach((definition: Definition) => {
+    removeClientFieldsFromSelectionSet((definition as OperationDefinition).selectionSet);
+  });
+
+  return docClone;
+}
+
 function selectionHasClientDirective(sel: Selection) {
   return sel.directives && sel.directives.filter((dir: Directive) => {
-    return dir.name.value === 'client'
+    return dir.name.value === 'client';
   }).length > 0;
 }

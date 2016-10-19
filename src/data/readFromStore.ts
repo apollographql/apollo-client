@@ -146,7 +146,7 @@ const readStoreResolver: Resolver = (
   const fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
-    if (obj && (obj.__typename || objId === 'ROOT_QUERY')) {
+    if (context.customResolvers && obj && (obj.__typename || objId === 'ROOT_QUERY')) {
       const typename = obj.__typename || 'Query';
 
       // Look for the type in the custom resolver map
@@ -200,7 +200,7 @@ export function diffQueryAgainstStore({
     // Global settings
     store,
     returnPartialData,
-    customResolvers: config.customResolvers,
+    customResolvers: config && config.customResolvers,
 
     // Flag set during execution
     hasMissingField: false,

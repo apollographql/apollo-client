@@ -18,9 +18,9 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  // The contents of { ... } could be the result of client.store.getState(),
+  // The contents of { data } could be the result of client.store.getState().data,
   // or synthetically generated to look similar
-  window.__APOLLO_STATE__ = { ... };
+  window.__APOLLO_STATE__ = { data };
 </script>
 ```
 

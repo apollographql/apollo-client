@@ -142,7 +142,7 @@ const readStoreResolver: Resolver = (
   const fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
-    if (obj.__typename || objId === 'ROOT_QUERY') {
+    if (obj && (obj.__typename || objId === 'ROOT_QUERY')) {
       const typename = obj.__typename || 'Query';
 
       // Look for the type in the custom resolver map

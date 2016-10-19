@@ -17,6 +17,10 @@ import {
   storeKeyNameFromFieldNameAndArgs,
 } from './storeUtils';
 
+import {
+  getQueryDefinition,
+} from '../queries/getFromAST';
+
 export type DiffResult = {
   result?: any;
   isMissing?: boolean;
@@ -156,6 +160,9 @@ export function diffQueryAgainstStore({
   variables,
   returnPartialData = true,
 }: ReadQueryOptions): DiffResult {
+  // Throw the right validation error by trying to find a query in the document
+  getQueryDefinition(query);
+
   const context: ReadStoreContext = {
     store,
     returnPartialData,

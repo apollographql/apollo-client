@@ -22,6 +22,10 @@ import {
   getQueryDefinition,
 } from '../queries/getFromAST';
 
+import {
+  ApolloReducerConfig,
+} from '../store';
+
 export type DiffResult = {
   result?: any;
   isMissing?: boolean;
@@ -32,7 +36,7 @@ export type ReadQueryOptions = {
   query: Document,
   variables?: Object,
   returnPartialData?: boolean,
-  customResolvers?: CustomResolverMap,
+  config?: ApolloReducerConfig,
 }
 
 export type CustomResolver = (rootValue: any, args: { [argName: string]: any }) => any;
@@ -63,14 +67,14 @@ export function readQueryFromStore({
   query,
   variables,
   returnPartialData = false,
-  customResolvers = {},
+  config,
 }: ReadQueryOptions): Object {
   const { result } = diffQueryAgainstStore({
     query,
     store,
     returnPartialData,
     variables,
-    customResolvers,
+    config,
   });
 
   return result;
@@ -187,7 +191,7 @@ export function diffQueryAgainstStore({
   query,
   variables,
   returnPartialData = true,
-  customResolvers = {},
+  config,
 }: ReadQueryOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
   getQueryDefinition(query);
@@ -196,7 +200,7 @@ export function diffQueryAgainstStore({
     // Global settings
     store,
     returnPartialData,
-    customResolvers,
+    customResolvers: config.customResolvers,
 
     // Flag set during execution
     hasMissingField: false,

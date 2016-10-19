@@ -102,7 +102,6 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
-  public customResolvers: CustomResolverMap;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -205,7 +204,6 @@ export default class ApolloClient {
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
-    this.customResolvers = customResolvers;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -214,6 +212,7 @@ export default class ApolloClient {
     this.reducerConfig = {
       dataIdFromObject,
       mutationBehaviorReducers,
+      customResolvers,
     };
 
     this.watchQuery = this.watchQuery.bind(this);

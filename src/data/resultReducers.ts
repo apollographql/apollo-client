@@ -46,9 +46,12 @@ export function createStoreReducer(
       query: document,
       variables,
       returnPartialData: true,
+      config,
     });
     // TODO add info about networkStatus
+
     const nextResult = resultReducer(currentResult, action); // action should include operation name
+
     if (currentResult !== nextResult) {
       return writeResultToStore({
         dataId: 'ROOT_QUERY',

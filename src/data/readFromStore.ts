@@ -142,10 +142,11 @@ const readStoreResolver: Resolver = (
   const fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
-    // TODO handle ROOT_QUERY
-    if (obj.__typename) {
+    if (obj.__typename || objId === 'ROOT_QUERY') {
+      const typename = obj.__typename || 'Query';
+
       // Look for the type in the custom resolver map
-      const type = context.customResolvers[obj.__typename];
+      const type = context.customResolvers[typename];
       if (type) {
         // Look for the field in the custom resolver map
         const resolver = type[fieldName];

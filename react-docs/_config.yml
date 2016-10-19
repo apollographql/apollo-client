@@ -29,6 +29,7 @@ sidebar_categories:
     - prefetching
     - react-native
     - redux
+    - webpack
     - server-side-rendering
 github_repo: apollostack/react-docs
 content_root: source

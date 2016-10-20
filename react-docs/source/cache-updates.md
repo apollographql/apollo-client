@@ -41,6 +41,27 @@ const client = new ApolloClient({
 
 These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.
 
+Apollo Client exports a method to make adding the `__typename` automatic: you provide this method as a transformer to the Apollo Client constructor.  So to do `dataIdFromObject` most concisely, your client initialisation might look like this:
+
+```
+import ApolloClient, {createNetworkInterface, addTypename} from 'apollo-client'
+
+const networkInterface = createNetworkInterface('http://localhost:3000/graphql') // TBD: Need to provide the right path for production
+
+const apolloClient = new ApolloClient({
+    networkInterface: networkInterface,
+    queryTransformer: addTypename,
+    dataIdFromObject: (result) => {
+        if (result.id && result.__typename) {
+            return result.__typename + result.id
+        }
+        return null
+    }
+}) 
+```
+
+(Note: in 0.5.x, this will be the default behaviour)
+
 In some cases, just using `dataIdFromObject` is not enough for your application UI to update correctly. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that to which you can't assign an object identifier, Apollo Client cannot update existing queries for you.
 
 In those cases you have to use other features like `fetchMore` or the other methods listed on this page in order to make sure that your queries are updated with the right information and your UI updates correctly.
@@ -224,8 +245,10 @@ mutate({
 })
 ```
 
-Fundamentally, `updateQueries` is a map going from the name of a query (in our case, `Comment`) to a function that receives the previous result that this query received as well as the result returned by the mutation. In our case, the mutation returns information about the new comment. This function should then incorporate the mutation result into the result previously received by the query and return the combined result.
+Fundamentally, `updateQueries` is a map going from the name of a query (in our case, `Comment`) to a function that receives the previous result that this query received as well as the result returned by the mutation. In our case, the mutation returns information about the new comment. This function should then incorporate the mutation result into a new object containing the result previously received by the query (`prev`) and return that new object.  
 
-In our `updateQueries` function for the `Comment` query, we're doing something really simple: just adding the comment we just submitted to the list of comments that the query asks for. We're doing that using the `update` function from the `react-addons-update` package, just to do it concisely. But, if you wanted to, you could write some no-helper Javascript to combine the two objects.
+Note that the function must not alter the `prev` object (because `prev` is compared with the new object returned to see what changes the function made and hence what prop updates are needed).
+
+In our `updateQueries` function for the `Comment` query, we're doing something really simple: just adding the comment we just submitted to the list of comments that the query asks for. We're doing that using the `update` function from the `react-addons-update` package, just to do it concisely. But, if you wanted to, you could write some no-helper Javascript to combine the two incoming objects into a new one for the result.
 
 Once the mutation fires and the result arrives from the server (or, a result is provided through optimistic UI), our `updateQueries` function for the `Comment` query will be called and the `Comment` query will be updated accordingly. These changes in the result will be mapped to React props and our UI will update as well with the new information!

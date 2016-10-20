@@ -313,6 +313,30 @@ describe('ObservableQuery', () => {
         }
       });
     });
+
+    it('handles variables changing while a query is in-flight', (done) => {
+      const observable: ObservableQuery = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+        delay: 20,
+      }, {
+        request: { query, variables: differentVariables },
+        result: { data: dataTwo },
+        delay: 20,
+      });
+
+      setTimeout(() => observable.setVariables(differentVariables), 10);
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.isTrue(result.loading);
+        } else if (handleCount === 2) {
+          assert.isFalse(result.loading);
+          assert.deepEqual(result.data, dataTwo);
+          done();
+        }
+      });
+    });
   });
 
   describe('currentResult', () => {

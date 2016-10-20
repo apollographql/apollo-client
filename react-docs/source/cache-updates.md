@@ -53,6 +53,8 @@ const apolloClient = new ApolloClient({
 }) 
 ```
 
+(Note: in 0.5.x, this will be the default behaviour)
+
 In some cases, just using `dataIdFromObject` is not enough for your application UI to update correctly. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that to which you can't assign an object identifier, Apollo Client cannot update existing queries for you.
 
 In those cases you have to use other features like `fetchMore` or the other methods listed on this page in order to make sure that your queries are updated with the right information and your UI updates correctly.

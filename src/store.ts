@@ -131,6 +131,14 @@ export function createApolloStore({
   // XXX to avoid type fail
   const compose: (...args: any[]) => () => any = reduxCompose;
 
+  if ( initialState && initialState[reduxRootKey] && initialState[reduxRootKey]['queries']) {
+    throw new Error('Apollo initial state may not contain queries, only data');
+  }
+
+  if ( initialState && initialState[reduxRootKey] && initialState[reduxRootKey]['mutations']) {
+    throw new Error('Apollo initial state may not contain mutations, only data');
+  }
+
   return createStore(
     combineReducers({ [reduxRootKey]: createApolloReducer(config) as any }), // XXX see why this type fails
     initialState,

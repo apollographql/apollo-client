@@ -67,6 +67,8 @@ import observableToPromise from './util/observableToPromise';
 
 import cloneDeep = require('lodash.clonedeep');
 
+import assign = require('lodash.assign');
+
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
@@ -440,21 +442,6 @@ describe('client', () => {
 
     const initialState: any = {
       apollo: {
-        queries: {
-          '0': {
-            queryString: print(query),
-            variables: undefined,
-            loading: false,
-            stopped: false,
-            networkError: null,
-            graphQLErrors: null,
-            forceFetch: false,
-            returnPartialData: false,
-            lastRequestId: 1,
-            previousVariables: null,
-          },
-        },
-        mutations: {},
         data: {
           'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
             name: 'Luke Skywalker',
@@ -474,6 +461,24 @@ describe('client', () => {
       },
     };
 
+    const finalState = { apollo: assign({}, initialState.apollo, {
+      queries: {
+        '0': {
+          queryString: print(query),
+          variables: undefined,
+          loading: false,
+          stopped: false,
+          networkError: null,
+          graphQLErrors: null,
+          forceFetch: false,
+          returnPartialData: false,
+          lastRequestId: 1,
+          previousVariables: null,
+        },
+      },
+      mutations: {},
+    }) };
+
     const client = new ApolloClient({
       networkInterface,
       initialState,
@@ -483,7 +488,7 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result.data, data);
-        assert.deepEqual(initialState, client.store.getState());
+        assert.deepEqual(finalState, client.store.getState());
       });
   });
 

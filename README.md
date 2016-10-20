@@ -10,6 +10,7 @@ Apollo Client can be used in any JavaScript frontend where you want to use data 
 2. **Simple to get started with**, you can start loading data right away and learn about advanced features later.
 3. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
 4. **Built for interactive apps**, so your users can make changes and see them reflected in the UI immediately.
+4. **Small and flexible**, so you don't get stuff you don't need. The core is under 40kb compressed.
 5. **Community driven**, Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
 
 Get started on the [home page](http://dev.apollodata.com/), which has great examples for a variety of frameworks.

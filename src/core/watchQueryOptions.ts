@@ -80,6 +80,15 @@ export interface FetchMoreQueryOptions {
   variables?: { [key: string]: any };
 }
 
+export type SubscribeToMoreOptions = {
+  document: Document;
+  variables?: { [key: string]: any };
+  updateQuery: (previousQueryResult: Object, options: {
+    subscriptionData: { data: any },
+    variables: { [key: string]: any },
+  }) => Object;
+}
+
 export interface DeprecatedSubscriptionOptions {
   query: Document;
   variables?: { [key: string]: any };

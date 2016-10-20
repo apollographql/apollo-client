@@ -2,9 +2,10 @@ import {
   ModifiableWatchQueryOptions,
   WatchQueryOptions,
   FetchMoreQueryOptions,
+  SubscribeToMoreOptions,
 } from './watchQueryOptions';
 
-import { Observable, Observer } from '../util/Observable';
+import { Observable, Observer, Subscription } from '../util/Observable';
 
 import {
   QueryScheduler,
@@ -23,6 +24,12 @@ import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
+
+export type ApolloCurrentResult = {
+  data: any;
+  loading: boolean;
+  error?: ApolloError;
+}
 
 export interface FetchMoreOptions {
   updateQuery: (previousQueryResult: Object, options: {
@@ -49,6 +56,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
   private observers: Observer<ApolloQueryResult>[];
+  private subscriptionHandles: Subscription[];
 
   private lastResult: ApolloQueryResult;
   private lastError: ApolloError;
@@ -80,6 +88,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.queryId = queryId;
     this.shouldSubscribe = shouldSubscribe;
     this.observers = [];
+    this.subscriptionHandles = [];
   }
 
   public result(): Promise<ApolloQueryResult> {
@@ -98,9 +107,18 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     });
   }
 
-  public currentResult(): ApolloQueryResult {
+  public currentResult(): ApolloCurrentResult {
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
+
+    if (queryStoreValue && (queryStoreValue.graphQLErrors || queryStoreValue.networkError)) {
+      const error = new ApolloError({
+        graphQLErrors: queryStoreValue.graphQLErrors,
+        networkError: queryStoreValue.networkError,
+      });
+      return { data: {}, loading: false, error };
+    }
+
     const queryLoading = !queryStoreValue || queryStoreValue.loading;
 
     // We need to be careful about the loading state we show to the user, to try
@@ -165,7 +183,8 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         const reducer = fetchMoreOptions.updateQuery;
         const mapFn = (previousResult: any, { variables }: {variables: any }) => {
 
-          // TODO REFACTOR: reached max recursion depth (figuratively). Continue renaming to variables further down when we have time.
+          // TODO REFACTOR: reached max recursion depth (figuratively) when renaming queryVariables.
+          // Continue renaming to variables further down when we have time.
           const queryVariables = variables;
           return reducer(
             previousResult, {
@@ -176,6 +195,48 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         this.updateQuery(mapFn);
         return fetchMoreResult;
       });
+  }
+
+  // XXX the subscription variables are separate from the query variables.
+  // if you want to update subscription variables, right now you have to do that separately,
+  // and you can only do it by stopping the subscription and then subscribing again with new variables.
+  public subscribeToMore(
+    options: SubscribeToMoreOptions,
+  ): () => void {
+    const observable = this.queryManager.startGraphQLSubscription({
+      document: options.document,
+      variables: options.variables,
+    });
+
+    const reducer = options.updateQuery;
+
+    const subscription = observable.subscribe({
+      next: (data) => {
+        const mapFn = (previousResult: Object, { variables }: { variables: Object }) => {
+          return reducer(
+            previousResult, {
+              subscriptionData: { data },
+              variables,
+            }
+          );
+        };
+        this.updateQuery(mapFn);
+      },
+      error: (err) => {
+        // TODO implement something smart here when improving error handling
+        console.error(err);
+      },
+    });
+
+    this.subscriptionHandles.push(subscription);
+
+    return () => {
+      const i = this.subscriptionHandles.indexOf(subscription);
+      if (i >= 0) {
+        this.subscriptionHandles.splice(i, 1);
+        subscription.unsubscribe();
+      }
+    };
   }
 
   public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult> {
@@ -341,6 +402,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     if (this.isPollingQuery) {
       this.scheduler.stopPollingQuery(this.queryId);
     }
+
+    // stop all active GraphQL subscriptions
+    this.subscriptionHandles.forEach( sub => sub.unsubscribe() );
+    this.subscriptionHandles = [];
 
     this.queryManager.stopQuery(this.queryId);
     this.observers = [];

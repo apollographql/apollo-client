@@ -47,6 +47,10 @@ describe('ObservableQuery', () => {
     },
   };
 
+  const error = {
+    name: 'people_one',
+    message: 'is offline.',
+  };
 
   describe('setOptions', () => {
     describe('to change pollInterval', () => {
@@ -152,6 +156,39 @@ describe('ObservableQuery', () => {
 
         // trigger the first subscription callback
         timer.tick(0);
+      });
+    });
+
+    it('does not break refetch', (done) => {
+      // This query and variables are copied from react-apollo
+      const queryWithVars = gql`query people($first: Int) {
+        allPeople(first: $first) { people { name } }
+      }`;
+
+      const data = { allPeople: { people: [ { name: 'Luke Skywalker' } ] } };
+      const variables1 = { first: 0 };
+
+      const data2 = { allPeople: { people: [ { name: 'Leia Skywalker' } ] } };
+      const variables2 = { first: 1 };
+
+
+      const observable: ObservableQuery = mockWatchQuery({
+        request: { query: queryWithVars, variables: variables1 },
+        result: { data },
+      }, {
+        request: { query: queryWithVars, variables: variables2 },
+        result: { data: data2 },
+      });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          observable.setOptions({ forceFetch: false });
+          observable.refetch(variables2);
+        } else if (handleCount === 3) { // 3 because there is an intermediate loading state
+          assert.deepEqual(result.data, data2);
+          done();
+        }
       });
     });
 
@@ -327,6 +364,28 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: false,
           });
+        });
+    });
+
+    it('returns errors from the store immediately', () => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+      });
+
+      return observable.result()
+        .catch((theError: any) => {
+          assert.deepEqual(theError.graphQLErrors, [error]);
+
+          const currentResult = observable.currentResult();
+
+          assert.equal(currentResult.loading, false);
+          assert.deepEqual(currentResult.error.graphQLErrors, [error]);
         });
     });
 

@@ -3,10 +3,16 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### v0.5.0 (in preview)
+- Prevent store rehydration if queries and mutations are not empty. [PR #814](https://github.com/apollostack/apollo-client/pull/814)
+- Fix an issue with `observableQuery.currentResult()` when the query had returned an error.
+
+#### v0.5.0-1 first preview
+- **new Feature**: Add fetchMore-style subscribeToMore function which updates a query result based on a subscription. [PR #797](https://github.com/apollostack/apollo-client/pull/797)
+- Fix accidental breaking change in updateQueries that was introduced in 0.5.0-0 [PR 801](https://github.com/apollostack/apollo-client/pull/801)
 
 #### v0.5.0-0 first preview
 
-- ** new Feature **: Implement query reducers, which run on every query result/ mutation. [PR #766](https://github.com/apollostack/apollo-client/pull/766)
+- **new Feature**: Implement query reducers, which run on every query result/ mutation. [PR #766](https://github.com/apollostack/apollo-client/pull/766)
 - **Refactor**: Reimplement internal store reading in terms of the [graphql-anywhere](https://github.com/apollostack/graphql-anywhere) package, which cleanly separates the GraphQL execution logic from Apollo's specific cache format. This will allow us to make the store reading much more extensible, including enabling developers to write their own custom client-side resolvers to implement client-side computed fields, read from Redux with GraphQL, and redirect cache reads.
 - **Feature removal**: Remove query diffing functionality to make client more predictable and simplify implementation. Queries will still read from the store, and if the store does not have all of the necessary data the entire query will fetch from the server. Read justification and discussion in [Issue #615](https://github.com/apollostack/apollo-client/issues/615) [PR #693](https://github.com/apollostack/apollo-client/pull/693)
 - **Breaking change**: Move batching to network interface and split off query merging into separate package [PR #734](https://github.com/apollostack/apollo-client/pull/734)

@@ -7,6 +7,7 @@ Expect active development and potentially significant breaking changes in the `0
 #### v0.5.0-1 first preview
 - **new Feature**: Add fetchMore-style subscribeToMore function which updates a query result based on a subscription. [PR #797](https://github.com/apollostack/apollo-client/pull/797)
 - Fix accidental breaking change in updateQueries that was introduced in 0.5.0-0 [PR 801](https://github.com/apollostack/apollo-client/pull/801)
+- Prevent store rehydration if queries and mutations are not empty. [PR #814](https://github.com/apollostack/apollo-client/pull/814)
 
 #### v0.5.0-0 first preview
 

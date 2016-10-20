@@ -18,11 +18,7 @@ query CurrentUserForLayout {
 }
 ```
 
-You can load this file in 2 possible ways:
-
-<h2 id="using-connect">Default extension config</h2>
-
-You just need to add a rule in your webpack config file:
+You can load this file adding a rule in your webpack config file:
 
 ```js
 loaders: [

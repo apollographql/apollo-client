@@ -52,6 +52,14 @@ export function queries(
     const newState = assign({}, previousState) as QueryStore;
 
     const previousQuery = previousState[action.queryId];
+
+    if (previousQuery && previousQuery.queryString !== action.queryString) {
+      // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
+      // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
+      // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
+      throw new Error('Internal Error: may not update existing query string in store');
+    }
+
     let previousVariables: Object;
     if (action.storePreviousVariables && previousQuery) {
       if (!isEqual(previousQuery.variables, action.variables)) {

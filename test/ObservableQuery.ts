@@ -47,6 +47,10 @@ describe('ObservableQuery', () => {
     },
   };
 
+  const error = {
+    name: 'people_one',
+    message: 'is offline.',
+  };
 
   describe('setOptions', () => {
     describe('to change pollInterval', () => {
@@ -360,6 +364,28 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: false,
           });
+        });
+    });
+
+    it('returns errors from the store immediately', () => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+      });
+
+      return observable.result()
+        .catch((theError: any) => {
+          assert.deepEqual(theError.graphQLErrors, [error]);
+
+          const currentResult = observable.currentResult();
+
+          assert.equal(currentResult.loading, false);
+          assert.deepEqual(currentResult.error.graphQLErrors, [error]);
         });
     });
 

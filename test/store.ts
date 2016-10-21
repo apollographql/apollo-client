@@ -1,5 +1,6 @@
 import * as chai from 'chai';
 const { assert } = chai;
+import gql from 'graphql-tag';
 
 import {
   createApolloStore,
@@ -43,10 +44,6 @@ describe('createApolloStore', () => {
   it('can be rehydrated from the server', () => {
     const initialState = {
       apollo: {
-        queries: {
-          'test.0': true,
-        },
-        mutations: {},
         data: {
           'test.0': true,
         },
@@ -58,16 +55,55 @@ describe('createApolloStore', () => {
       initialState,
     });
 
-    assert.deepEqual(store.getState(), initialState);
+    assert.deepEqual(store.getState(), {
+      apollo: {
+        queries: {},
+        mutations: {},
+        data: initialState.apollo.data,
+        optimistic: initialState.apollo.optimistic,
+      },
+    });
   });
 
-  it('reset itself', () => {
+  it('throws an error if state contains a non-empty queries field', () => {
     const initialState = {
       apollo: {
         queries: {
           'test.0': true,
         },
         mutations: {},
+        data: {
+          'test.0': true,
+        },
+        optimistic: ([] as any[]),
+      },
+    };
+
+    assert.throws(() => createApolloStore({
+      initialState,
+    }));
+  });
+
+  it('throws an error if state contains a non-empty mutations field', () => {
+    const initialState = {
+      apollo: {
+        queries: {},
+        mutations: { 0: true },
+        data: {
+          'test.0': true,
+        },
+        optimistic: ([] as any[]),
+      },
+    };
+
+    assert.throws(() => createApolloStore({
+      initialState,
+    }));
+  });
+
+  it('reset itself', () => {
+    const initialState = {
+      apollo: {
         data: {
           'test.0': true,
         },
@@ -96,11 +132,6 @@ describe('createApolloStore', () => {
   it('can reset itself and keep the observable query ids', () => {
     const initialState = {
       apollo: {
-        queries: {
-          'test.0': true,
-          'test.1': false,
-        },
-        mutations: {},
         data: {
           'test.0': true,
           'test.1': true,
@@ -111,7 +142,18 @@ describe('createApolloStore', () => {
 
     const emptyState = {
       queries: {
-        'test.0': true,
+        'test.0': {
+          'forceFetch': false,
+          'graphQLErrors': null as any,
+          'lastRequestId': 1,
+          'loading': true,
+          'networkError': null as any,
+          'previousVariables': undefined as any,
+          'queryString': '',
+          'returnPartialData': false,
+          'stopped': false,
+          'variables': {},
+        },
       },
       mutations: {},
       data: {},
@@ -120,6 +162,18 @@ describe('createApolloStore', () => {
 
     const store = createApolloStore({
       initialState,
+    });
+
+    store.dispatch({
+      type: 'APOLLO_QUERY_INIT',
+      queryId: 'test.0',
+      queryString: '',
+      document: gql` query { abc }`,
+      variables: {},
+      forceFetch: false,
+      returnPartialData: false,
+      requestId: 1,
+      storePreviousVariables: false,
     });
 
     store.dispatch({

@@ -166,4 +166,61 @@ const CommentsWithData = graphql(Comment, {
 
 Relay, another popular GraphQL client, is opinionated about the input and output of paginated queries, so people sometimes build their server's pagination model around Relay's needs. If you have a server that is designed to work with the [Relay Cursor Connections](https://facebook.github.io/relay/graphql/connections.htm) spec, you can also call that server from Apollo Client with no problems.
 
-> This section coming soon. Refer to the cursor directions from above for now, and if you have time please contribute a Relay example here!
+Using Relay-style cursors is very similar to basic cursor-based pagination.  The main difference is in the format of the query response which affects where you get the cursor.  
+
+Relay provides a `pageInfo` object on the returned cursor connection which contains the cursor of the first and last items returned as the properties `startCursor` and `endCursor` respectively.  This object also contains a boolean property `hasNextPage` which can be used to determine if there are more results available.
+
+The following example specifies a request of 10 items at a time and that results should start after the provided `cursor`.  If `null` is passed for the cursor relay will ignore it and provide results starting from the beginning of the data set which allows the use of the same query for both initial and subsequent requests.
+
+```js
+const CommentsQuery = gql`
+  query Comments($cursor: String) {
+    Comments(first: 10, after: $cursor) {
+      comments {
+        edges {
+          node {
+            author
+            text
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+    }
+  }
+`;
+
+const CommentsWithData = graphql(CommentsQuery, {
+  // This function re-runs every time `data` changes, including after `updateQuery`,
+  // meaning our loadMoreEntries function will always have the right cursor
+  props({ data: { loading, comments, fetchMore } }) {
+    return {
+      loading,
+      comments,
+      loadMoreEntries: () => {
+        return fetchMore({
+          query: CommentsQuery,
+          variables: {
+            cursor: comments.pageInfo.endCursor,
+          },
+          updateQuery: (previousResult, { fetchMoreResult }) => {
+            const newEdges = fetchMoreResult.data.comments.edges;
+            const pageInfo = fetchMoreResult.data.comments.pageInfo;
+
+            return {
+              // Put the new comments at the end of the list and update `pageInfo`
+              // so we have the new `endCursor` and `hasNextPage` values
+              comments: {
+                edges: [...previousResult.comments.edges, ...newEdges],
+                pageInfo,
+              },
+            };
+          },
+        });
+      },
+    };
+  },
+})(Feed);
+```

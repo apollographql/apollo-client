@@ -33,6 +33,8 @@ import {
   print,
 } from 'graphql-tag/printer';
 
+import { NetworkStatus } from '../src/queries/store';
+
 import {
   createStore,
   Store as ReduxStore,
@@ -467,7 +469,7 @@ describe('client', () => {
           queryString: print(query),
           variables: undefined,
           loading: false,
-          networkStatus: 1,
+          networkStatus: NetworkStatus.ready,
           stopped: false,
           networkError: null,
           graphQLErrors: null,

@@ -18,6 +18,7 @@ import {
 import {
   QueryManager,
   ApolloQueryResult,
+  FetchType,
 } from './QueryManager';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
@@ -133,7 +134,15 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     const loading = (this.options.forceFetch && queryLoading)
       || (partial && !this.options.noFetch);
 
-    const networkStatus = queryStoreValue ? queryStoreValue.networkStatus : NetworkStatus.loading;
+    // if there is nothing in the query store, it means this query hasn't fired yet. Therefore the
+    // network status is dependent on queryLoading.
+    // XXX querying the currentResult before having fired the query is kind of weird and makes our code a lot more complicated.
+    let networkStatus: NetworkStatus;
+    if (queryStoreValue) {
+     networkStatus = queryStoreValue.networkStatus;
+    } else {
+      networkStatus = loading ? NetworkStatus.loading : NetworkStatus.ready;
+    }
 
     return { data, loading, networkStatus };
   }
@@ -155,7 +164,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       forceFetch: true,
     });
 
-    return this.queryManager.fetchQuery(this.queryId, combinedOptions)
+    return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
       .then(result => this.queryManager.transformResult(result));
   }
 

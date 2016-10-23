@@ -1012,7 +1012,7 @@ describe('mutation results', () => {
       });
 
       obsHandle.subscribe({
-        next() {
+        next(obj) {
           client.mutate({
             mutation,
             updateQueries: {

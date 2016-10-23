@@ -352,7 +352,7 @@ describe('ObservableQuery', () => {
         assert.deepEqual(observable.currentResult(), {
           data: dataOne,
           loading: false,
-          networkStatus: 1,
+          networkStatus: 7,
         });
         done();
       });
@@ -382,9 +382,8 @@ describe('ObservableQuery', () => {
           assert.deepEqual(result, {
             data: dataOne,
             loading: false,
-            networkStatus: 1,
+            networkStatus: 7,
           });
-
           const observable = queryManager.watchQuery({
             query,
             variables,
@@ -392,7 +391,7 @@ describe('ObservableQuery', () => {
           assert.deepEqual(observable.currentResult(), {
             data: dataOne,
             loading: false,
-            networkStatus: 1,
+            networkStatus: 7,
           });
         });
     });
@@ -455,7 +454,7 @@ describe('ObservableQuery', () => {
               assert.deepEqual(subResult, {
                 data: superDataOne,
                 loading: false,
-                networkStatus: 1,
+                networkStatus: 7,
               });
               done();
             }
@@ -492,7 +491,7 @@ describe('ObservableQuery', () => {
               assert.deepEqual(subResult, {
                 data: dataTwo,
                 loading: false,
-                networkStatus: 1,
+                networkStatus: 7,
               });
               done();
             }

@@ -81,7 +81,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 3);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 1 }
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 }
       );
       done();
     }, 50);

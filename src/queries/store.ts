@@ -33,6 +33,7 @@ export enum NetworkStatus {
   subscribeToMore = 5,
   poll = 6,
   ready = 7,
+  error = 8,
 }
 
 export type QueryStoreValue = {
@@ -101,7 +102,7 @@ export function queries(
       loading: true,
       networkError: null,
       graphQLErrors: null,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: newNetworkStatus,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,
@@ -126,6 +127,7 @@ export function queries(
       networkError: null,
       graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
       previousVariables: null,
+      networkStatus: NetworkStatus.ready,
     }) as QueryStoreValue;
 
     return newState;
@@ -144,6 +146,7 @@ export function queries(
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       loading: false,
       networkError: action.error,
+      networkStatus: NetworkStatus.error,
     }) as QueryStoreValue;
 
     return newState;
@@ -158,6 +161,10 @@ export function queries(
       loading: !action.complete,
       networkError: null,
       previousVariables: null,
+      // XXX I'm not sure what exactly action.complete really means. I assume it means we have the complete result
+      // and do not need to hit the server. Not sure when we'd fire this action if the result is not complete, so that bears explanation.
+      // We should write that down somewhere.
+      networkStatus: action.complete ? NetworkStatus.ready : NetworkStatus.loading,
     }) as QueryStoreValue;
 
     return newState;
@@ -167,6 +174,7 @@ export function queries(
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       loading: false,
       stopped: true,
+      networkStatus: NetworkStatus.ready,
     }) as QueryStoreValue;
 
     return newState;

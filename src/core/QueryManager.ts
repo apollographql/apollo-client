@@ -119,6 +119,12 @@ export type ResultTransformer = (resultData: ApolloQueryResult) => ApolloQueryRe
 // will not trigger re-renders.
 export type ResultComparator = (result1: ApolloQueryResult, result2: ApolloQueryResult) => boolean;
 
+export enum FetchType {
+  normal = 1,
+  refetch = 2,
+  poll = 3,
+}
+
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
   public scheduler: QueryScheduler;
@@ -433,7 +439,7 @@ export class QueryManager {
     return resPromise;
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<ApolloQueryResult> {
+  public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType?: FetchType): Promise<ApolloQueryResult> {
     const {
       variables,
       forceFetch = false,
@@ -483,8 +489,8 @@ export class QueryManager {
       // we store the old variables in order to trigger "loading new variables"
       // state if we know we will go to the server
       storePreviousVariables: shouldFetch,
-      isPoll: false,
-      isRefetch: false,
+      isPoll: fetchType === FetchType.poll,
+      isRefetch: fetchType === FetchType.refetch,
     });
 
     // If there is no part of the query we need to fetch from the server (or,

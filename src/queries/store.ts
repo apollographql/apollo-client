@@ -25,12 +25,23 @@ export interface QueryStore {
   [queryId: string]: QueryStoreValue;
 }
 
-export interface QueryStoreValue {
+export enum NetworkStatus {
+  loading = 1,
+  setVariables = 2,
+  fetchMore = 3,
+  refetch = 4,
+  subscribeToMore = 5,
+  poll = 6,
+  ready = 7,
+}
+
+export type QueryStoreValue = {
   queryString: string;
   variables: Object;
   previousVariables: Object;
-  loading: boolean;
   stopped: boolean;
+  loading: boolean;
+  networkStatus: NetworkStatus;
   networkError: Error;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
@@ -67,6 +78,18 @@ export function queries(
       }
     }
 
+    // TODO break this out into a separate function
+    let newNetworkStatus = NetworkStatus.loading;
+
+    if (action.isPoll) {
+      newNetworkStatus = NetworkStatus.poll;
+    } else if (action.isRefetch) {
+      newNetworkStatus = NetworkStatus.refetch;
+      // TODO: can we determine setVariables here if it's a refetch and the variables have changed?
+    } else if (action.isPoll) {
+      newNetworkStatus = NetworkStatus.poll;
+    }
+
     // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
     // the store. We probably want a refetch action instead, because I suspect that if you refetch
     // before the initial fetch is done, you'll get an error.
@@ -74,10 +97,11 @@ export function queries(
       queryString: action.queryString,
       variables: action.variables,
       previousVariables,
-      loading: true,
       stopped: false,
+      loading: true,
       networkError: null,
       graphQLErrors: null,
+      networkStatus: NetworkStatus.loading,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,

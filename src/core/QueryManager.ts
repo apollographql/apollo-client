@@ -367,6 +367,7 @@ export class QueryManager {
                 returnPartialData: options.returnPartialData || options.noFetch,
               }),
               loading: queryStoreValue.loading,
+              networkStatus: queryStoreValue.networkStatus,
             };
 
             if (observer.next) {
@@ -482,6 +483,8 @@ export class QueryManager {
       // we store the old variables in order to trigger "loading new variables"
       // state if we know we will go to the server
       storePreviousVariables: shouldFetch,
+      isPoll: false,
+      isRefetch: false,
     });
 
     // If there is no part of the query we need to fetch from the server (or,

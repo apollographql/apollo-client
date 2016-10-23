@@ -22,12 +22,15 @@ import {
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
+import { NetworkStatus } from '../queries/store';
+
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
 
 export type ApolloCurrentResult = {
   data: any;
   loading: boolean;
+  networkStatus: NetworkStatus;
   error?: ApolloError;
 }
 
@@ -116,7 +119,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         graphQLErrors: queryStoreValue.graphQLErrors,
         networkError: queryStoreValue.networkError,
       });
-      return { data: {}, loading: false, error };
+      return { data: {}, loading: false, networkStatus: queryStoreValue.networkStatus, error };
     }
 
     const queryLoading = !queryStoreValue || queryStoreValue.loading;
@@ -130,7 +133,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     const loading = (this.options.forceFetch && queryLoading)
       || (partial && !this.options.noFetch);
 
-    return { data, loading };
+    const networkStatus = queryStoreValue ? queryStoreValue.networkStatus : NetworkStatus.loading;
+
+    return { data, loading, networkStatus };
   }
 
   public refetch(variables?: any): Promise<ApolloQueryResult> {

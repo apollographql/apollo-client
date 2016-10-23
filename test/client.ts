@@ -467,6 +467,7 @@ describe('client', () => {
           queryString: print(query),
           variables: undefined,
           loading: false,
+          networkStatus: 1,
           stopped: false,
           networkError: null,
           graphQLErrors: null,

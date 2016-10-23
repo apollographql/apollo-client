@@ -79,7 +79,10 @@ describe('subscribeToMore', () => {
     setTimeout(() => {
       sub.unsubscribe();
       assert.equal(counter, 3);
-      assert.deepEqual(latestResult, { data: { entry: { value: 'Amanda Liu' } }, loading: false });
+      assert.deepEqual(
+        latestResult,
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 1 }
+      );
       done();
     }, 50);
 

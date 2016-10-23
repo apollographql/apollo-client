@@ -531,7 +531,7 @@ describe('QueryManager', () => {
       .map(result => (assign({ fromRx: true }, result)))
       .subscribe({
       next: wrap(done, (newResult) => {
-        const expectedResult = assign({ fromRx: true, loading: false }, expResult);
+        const expectedResult = assign({ fromRx: true, loading: false, networkStatus: 1 }, expResult);
         assert.deepEqual(newResult, expectedResult);
         done();
       }),

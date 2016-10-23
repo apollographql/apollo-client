@@ -28,7 +28,7 @@ import gql from 'graphql-tag';
 
 import { print } from 'graphql-tag/printer';
 
-// import { GraphQLResult } from 'graphql';
+import { withWarning } from './util/wrap';
 
 describe('network interface', () => {
   const swapiUrl = 'http://graphql-swapi.test/';
@@ -137,10 +137,22 @@ describe('network interface', () => {
   });
 
   describe('creating a network interface', () => {
-    it('should throw without an endpoint', () => {
+    it('should throw without an argument', () => {
       assert.throws(() => {
         createNetworkInterface(null);
+      }, /must pass an options argument/);
+    });
+
+    it('should throw without an endpoint', () => {
+      assert.throws(() => {
+        createNetworkInterface({});
       }, /A remote enpdoint is required for a network layer/);
+    });
+
+    it('should warn when the endpoint is passed as the first argument', () => {
+      withWarning(() => {
+        createNetworkInterface('/graphql');
+      }, /Passing the URI as the first argument to createNetworkInterface is deprecated/);
     });
 
     it('should create an instance with a given uri', () => {

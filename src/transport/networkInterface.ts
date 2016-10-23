@@ -218,15 +218,32 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
 }
 
 export interface NetworkInterfaceOptions {
-  uri: string;
+  uri?: string;
   opts?: RequestInit;
-  transportBatching?: boolean;
 }
 
-export function createNetworkInterface(interfaceOpts: NetworkInterfaceOptions): HTTPNetworkInterface {
-  const {
-    opts = {},
-    uri,
-  } = interfaceOpts || {} as NetworkInterfaceOptions;
+export function createNetworkInterface(
+  uriOrInterfaceOpts: string | NetworkInterfaceOptions,
+  secondArgOpts: NetworkInterfaceOptions = {},
+): HTTPNetworkInterface {
+  if (! uriOrInterfaceOpts) {
+    throw new Error('You must pass an options argument to createNetworkInterface.');
+  }
+
+  let uri: string;
+  let opts: RequestInit;
+
+  // We want to change the API in the future so that you just pass all of the options as one
+  // argument, so even though the internals work with two arguments we're warning here.
+  if (isString(uriOrInterfaceOpts)) {
+    console.warn(`Passing the URI as the first argument to createNetworkInterface is deprecated \
+as of Apollo Client 0.5. Please pass it as the "uri" property of the network interface options.`);
+    opts = secondArgOpts;
+    uri = uriOrInterfaceOpts as string;
+  } else {
+    opts = (uriOrInterfaceOpts as NetworkInterfaceOptions).opts;
+    uri = (uriOrInterfaceOpts as NetworkInterfaceOptions).uri;
+  }
+
   return new HTTPFetchNetworkInterface(uri, opts);
 }

@@ -241,7 +241,6 @@ describe('ObservableQuery', () => {
     });
 
     it('sets networkStatus to `setVariables` when fetching', (done) => {
-
       const mockedResponses = [{
         request: { query, variables },
         result: { data: dataOne },
@@ -263,6 +262,41 @@ describe('ObservableQuery', () => {
           assert.deepEqual(result.data, dataOne);
           assert.equal(result.networkStatus, NetworkStatus.ready);
           observable.setVariables(differentVariables);
+        } else if (handleCount === 2) {
+          assert.isTrue(result.loading);
+          assert.equal(result.networkStatus, NetworkStatus.setVariables);
+          assert.deepEqual(result.data, dataOne);
+        } else if (handleCount === 3) {
+          assert.isFalse(result.loading);
+          assert.equal(result.networkStatus, NetworkStatus.ready);
+          assert.deepEqual(result.data, dataTwo);
+          done();
+        }
+      });
+    });
+
+    it('sets networkStatus to `setVariables` when calling refetch with new variables', (done) => {
+      const mockedResponses = [{
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables: differentVariables },
+        result: { data: dataTwo },
+      }];
+
+      const queryManager = mockQueryManager(...mockedResponses);
+      const firstRequest = mockedResponses[0].request;
+      const observable =  queryManager.watchQuery({
+        query: firstRequest.query,
+        variables: firstRequest.variables,
+        notifyOnNetworkStatusChange: true,
+      });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, dataOne);
+          assert.equal(result.networkStatus, NetworkStatus.ready);
+          observable.refetch(differentVariables);
         } else if (handleCount === 2) {
           assert.isTrue(result.loading);
           assert.equal(result.networkStatus, NetworkStatus.setVariables);

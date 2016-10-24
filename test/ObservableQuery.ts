@@ -11,6 +11,8 @@ import { ObservableQuery } from '../src/core/ObservableQuery';
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
 
+import { NetworkStatus } from '../src/queries/store';
+
 describe('ObservableQuery', () => {
   // Standard data for all these tests
   const query = gql`
@@ -232,6 +234,42 @@ describe('ObservableQuery', () => {
           assert.deepEqual(result.data, dataOne);
         } else if (handleCount === 3) {
           assert.isFalse(result.loading);
+          assert.deepEqual(result.data, dataTwo);
+          done();
+        }
+      });
+    });
+
+    it('sets networkStatus to `setVariables` when fetching', (done) => {
+
+      const mockedResponses = [{
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables: differentVariables },
+        result: { data: dataTwo },
+      }];
+
+      const queryManager = mockQueryManager(...mockedResponses);
+      const firstRequest = mockedResponses[0].request;
+      const observable =  queryManager.watchQuery({
+        query: firstRequest.query,
+        variables: firstRequest.variables,
+        notifyOnNetworkStatusChange: true,
+      });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, dataOne);
+          assert.equal(result.networkStatus, NetworkStatus.ready);
+          observable.setVariables(differentVariables);
+        } else if (handleCount === 2) {
+          assert.isTrue(result.loading);
+          assert.equal(result.networkStatus, NetworkStatus.setVariables);
+          assert.deepEqual(result.data, dataOne);
+        } else if (handleCount === 3) {
+          assert.isFalse(result.loading);
+          assert.equal(result.networkStatus, NetworkStatus.ready);
           assert.deepEqual(result.data, dataTwo);
           done();
         }

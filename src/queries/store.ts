@@ -30,7 +30,6 @@ export enum NetworkStatus {
   setVariables = 2,
   fetchMore = 3,
   refetch = 4,
-  subscribeToMore = 5,
   poll = 6,
   ready = 7,
   error = 8,
@@ -72,9 +71,12 @@ export function queries(
       throw new Error('Internal Error: may not update existing query string in store');
     }
 
+    let isSetVariables = false;
+
     let previousVariables: Object;
     if (action.storePreviousVariables && previousQuery) {
       if (!isEqual(previousQuery.variables, action.variables)) {
+        isSetVariables = true;
         previousVariables = previousQuery.variables;
       }
     }
@@ -82,7 +84,9 @@ export function queries(
     // TODO break this out into a separate function
     let newNetworkStatus = NetworkStatus.loading;
 
-    if (action.isPoll) {
+    if (isSetVariables) {
+      newNetworkStatus = NetworkStatus.setVariables;
+    } else if (action.isPoll) {
       newNetworkStatus = NetworkStatus.poll;
     } else if (action.isRefetch) {
       newNetworkStatus = NetworkStatus.refetch;

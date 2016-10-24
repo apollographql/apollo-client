@@ -4,7 +4,7 @@ title: Introduction
 
 This is the official guide to using GraphQL in your [React](https://facebook.github.io/react/) app with the [Apollo](http://apollostack.com) JavaScript GraphQL client and the [react-apollo](https://github.com/apollostack/react-apollo) integration package.
 
-Note: this documentation describes react-apollo 0.4.x.   The bleeding edge is 0.5.x.   If you are on 0.5.x you can expect some differences - you can read about them in (the change log)[https://github.com/apollostack/react-apollo/commits/master] and you're welcome to ask about them on (the slack channel)p[http://www.apollostack.com/#slack]
+Note: this documentation describes react-apollo 0.4.x.   The bleeding edge is 0.5.x.   If you are on 0.5.x you can expect some differences - you can read about them in [the change log](https://github.com/apollostack/react-apollo/commits/master) and you're welcome to ask about them on [the slack channel](http://www.apollostack.com/#slack)
 
 [Get started now with the setup instructions.](/react/initialization.html)
 

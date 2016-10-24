@@ -386,8 +386,10 @@ describe('ObservableQuery', () => {
       });
     });
 
-    // TODO TEST (make this work work work work work)
-    it.skip('handles variables changing while a query is in-flight', (done) => {
+    it('handles variables changing while a query is in-flight', (done) => {
+      // The expected behavior is that the original variables are forgotten
+      // and the query stays in loading state until the result for the new variables
+      // has returned.
       const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
@@ -402,8 +404,7 @@ describe('ObservableQuery', () => {
 
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
-          assert.isTrue(result.loading);
-        } else if (handleCount === 2) {
+          assert.equal(result.networkStatus, NetworkStatus.ready);
           assert.isFalse(result.loading);
           assert.deepEqual(result.data, dataTwo);
           done();

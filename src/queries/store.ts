@@ -74,7 +74,12 @@ export function queries(
     let isSetVariables = false;
 
     let previousVariables: Object;
-    if (action.storePreviousVariables && previousQuery) {
+    if (
+      action.storePreviousVariables &&
+      previousQuery &&
+      previousQuery.networkStatus !== NetworkStatus.loading
+      // if the previous query was still loading, we don't want to remember it at all.
+    ) {
       if (!isEqual(previousQuery.variables, action.variables)) {
         isSetVariables = true;
         previousVariables = previousQuery.variables;

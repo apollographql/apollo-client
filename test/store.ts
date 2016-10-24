@@ -147,6 +147,7 @@ describe('createApolloStore', () => {
           'graphQLErrors': null as any,
           'lastRequestId': 1,
           'loading': true,
+          'networkStatus': 1,
           'networkError': null as any,
           'previousVariables': undefined as any,
           'queryString': '',
@@ -174,6 +175,8 @@ describe('createApolloStore', () => {
       returnPartialData: false,
       requestId: 1,
       storePreviousVariables: false,
+      isPoll: false,
+      isRefetch: false,
     });
 
     store.dispatch({

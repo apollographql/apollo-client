@@ -46,6 +46,8 @@ export interface QueryInitAction {
   queryId: string;
   requestId: number;
   storePreviousVariables: boolean;
+  isRefetch: boolean;
+  isPoll: boolean;
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {

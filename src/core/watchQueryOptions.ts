@@ -43,6 +43,11 @@ export interface ModifiableWatchQueryOptions {
   pollInterval?: number;
 
   /**
+   * Whether or not updates to the network status should trigger next on the observer of this query
+   */
+  notifyOnNetworkStatusChange?: boolean;
+
+  /**
    * A redux reducer that lets you update the result of this query in the store based on any action (including mutation and query results)
    */
   reducer?: OperationResultReducer;

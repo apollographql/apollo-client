@@ -85,6 +85,10 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
       optimistic: [] as any,
     };
 
+    // use the two lines below to debug tests :)
+    // console.log('ACTION', action.type);
+    // console.log('new state', newState);
+
     // Note, we need to have the results of the
     // APOLLO_MUTATION_INIT action to simulate
     // the APOLLO_MUTATION_RESULT action. That's

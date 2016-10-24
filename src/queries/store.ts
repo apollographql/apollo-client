@@ -25,12 +25,23 @@ export interface QueryStore {
   [queryId: string]: QueryStoreValue;
 }
 
-export interface QueryStoreValue {
+export enum NetworkStatus {
+  loading = 1,
+  setVariables = 2,
+  fetchMore = 3,
+  refetch = 4,
+  poll = 6,
+  ready = 7,
+  error = 8,
+}
+
+export type QueryStoreValue = {
   queryString: string;
   variables: Object;
   previousVariables: Object;
-  loading: boolean;
   stopped: boolean;
+  loading: boolean;
+  networkStatus: NetworkStatus;
   networkError: Error;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
@@ -60,11 +71,33 @@ export function queries(
       throw new Error('Internal Error: may not update existing query string in store');
     }
 
+    let isSetVariables = false;
+
     let previousVariables: Object;
-    if (action.storePreviousVariables && previousQuery) {
+    if (
+      action.storePreviousVariables &&
+      previousQuery &&
+      previousQuery.networkStatus !== NetworkStatus.loading
+      // if the previous query was still loading, we don't want to remember it at all.
+    ) {
       if (!isEqual(previousQuery.variables, action.variables)) {
+        isSetVariables = true;
         previousVariables = previousQuery.variables;
       }
+    }
+
+    // TODO break this out into a separate function
+    let newNetworkStatus = NetworkStatus.loading;
+
+    if (isSetVariables) {
+      newNetworkStatus = NetworkStatus.setVariables;
+    } else if (action.isPoll) {
+      newNetworkStatus = NetworkStatus.poll;
+    } else if (action.isRefetch) {
+      newNetworkStatus = NetworkStatus.refetch;
+      // TODO: can we determine setVariables here if it's a refetch and the variables have changed?
+    } else if (action.isPoll) {
+      newNetworkStatus = NetworkStatus.poll;
     }
 
     // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
@@ -74,10 +107,11 @@ export function queries(
       queryString: action.queryString,
       variables: action.variables,
       previousVariables,
-      loading: true,
       stopped: false,
+      loading: true,
       networkError: null,
       graphQLErrors: null,
+      networkStatus: newNetworkStatus,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,
@@ -102,6 +136,7 @@ export function queries(
       networkError: null,
       graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
       previousVariables: null,
+      networkStatus: NetworkStatus.ready,
     }) as QueryStoreValue;
 
     return newState;
@@ -120,6 +155,7 @@ export function queries(
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       loading: false,
       networkError: action.error,
+      networkStatus: NetworkStatus.error,
     }) as QueryStoreValue;
 
     return newState;
@@ -134,6 +170,10 @@ export function queries(
       loading: !action.complete,
       networkError: null,
       previousVariables: null,
+      // XXX I'm not sure what exactly action.complete really means. I assume it means we have the complete result
+      // and do not need to hit the server. Not sure when we'd fire this action if the result is not complete, so that bears explanation.
+      // We should write that down somewhere.
+      networkStatus: action.complete ? NetworkStatus.ready : NetworkStatus.loading,
     }) as QueryStoreValue;
 
     return newState;
@@ -143,6 +183,7 @@ export function queries(
     newState[action.queryId] = assign({}, previousState[action.queryId], {
       loading: false,
       stopped: true,
+      networkStatus: NetworkStatus.ready,
     }) as QueryStoreValue;
 
     return newState;

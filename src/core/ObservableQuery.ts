@@ -18,9 +18,12 @@ import {
 import {
   QueryManager,
   ApolloQueryResult,
+  FetchType,
 } from './QueryManager';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
+
+import { NetworkStatus } from '../queries/store';
 
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
@@ -28,6 +31,7 @@ import isEqual = require('lodash.isequal');
 export type ApolloCurrentResult = {
   data: any;
   loading: boolean;
+  networkStatus: NetworkStatus;
   error?: ApolloError;
 }
 
@@ -116,7 +120,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         graphQLErrors: queryStoreValue.graphQLErrors,
         networkError: queryStoreValue.networkError,
       });
-      return { data: {}, loading: false, error };
+      return { data: {}, loading: false, networkStatus: queryStoreValue.networkStatus, error };
     }
 
     const queryLoading = !queryStoreValue || queryStoreValue.loading;
@@ -130,7 +134,17 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     const loading = (this.options.forceFetch && queryLoading)
       || (partial && !this.options.noFetch);
 
-    return { data, loading };
+    // if there is nothing in the query store, it means this query hasn't fired yet. Therefore the
+    // network status is dependent on queryLoading.
+    // XXX querying the currentResult before having fired the query is kind of weird and makes our code a lot more complicated.
+    let networkStatus: NetworkStatus;
+    if (queryStoreValue) {
+     networkStatus = queryStoreValue.networkStatus;
+    } else {
+      networkStatus = loading ? NetworkStatus.loading : NetworkStatus.ready;
+    }
+
+    return { data, loading, networkStatus };
   }
 
   public refetch(variables?: any): Promise<ApolloQueryResult> {
@@ -150,7 +164,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       forceFetch: true,
     });
 
-    return this.queryManager.fetchQuery(this.queryId, combinedOptions)
+    return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
       .then(result => this.queryManager.transformResult(result));
   }
 

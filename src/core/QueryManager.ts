@@ -78,6 +78,10 @@ import {
   Observable,
 } from '../util/Observable';
 
+import {
+  NetworkStatus,
+} from '../queries/store';
+
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import {
@@ -98,6 +102,7 @@ export interface SubscriptionOptions {
 export type ApolloQueryResult = {
   data: any;
   loading: boolean;
+  networkStatus: NetworkStatus;
 
   // This type is different from the GraphQLResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.
@@ -118,6 +123,12 @@ export type ResultTransformer = (resultData: ApolloQueryResult) => ApolloQueryRe
 // Controls how Apollo compares two query results and considers their equality.  Two equal results
 // will not trigger re-renders.
 export type ResultComparator = (result1: ApolloQueryResult, result2: ApolloQueryResult) => boolean;
+
+export enum FetchType {
+  normal = 1,
+  refetch = 2,
+  poll = 3,
+}
 
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
@@ -341,7 +352,11 @@ export class QueryManager {
       const shouldNotifyIfLoading = queryStoreValue.returnPartialData
         || queryStoreValue.previousVariables;
 
-      if (!queryStoreValue.loading || shouldNotifyIfLoading) {
+      const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
+
+      if (!queryStoreValue.loading ||
+          ( networkStatusChanged && options.notifyOnNetworkStatusChange ) ||
+          shouldNotifyIfLoading) {
         // XXX Currently, returning errors and data is exclusive because we
         // don't handle partial results
 
@@ -367,6 +382,7 @@ export class QueryManager {
                 returnPartialData: options.returnPartialData || options.noFetch,
               }),
               loading: queryStoreValue.loading,
+              networkStatus: queryStoreValue.networkStatus,
             };
 
             if (observer.next) {
@@ -432,7 +448,7 @@ export class QueryManager {
     return resPromise;
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions): Promise<ApolloQueryResult> {
+  public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType?: FetchType): Promise<ApolloQueryResult> {
     const {
       variables,
       forceFetch = false,
@@ -482,6 +498,8 @@ export class QueryManager {
       // we store the old variables in order to trigger "loading new variables"
       // state if we know we will go to the server
       storePreviousVariables: shouldFetch,
+      isPoll: fetchType === FetchType.poll,
+      isRefetch: fetchType === FetchType.refetch,
     });
 
     // If there is no part of the query we need to fetch from the server (or,
@@ -935,7 +953,7 @@ export class QueryManager {
 
           // return a chainable promise
           this.removeFetchQueryPromise(requestId);
-          resolve({ data: resultFromStore, loading: false });
+          resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready });
         }).catch((error: Error) => {
           // This is for the benefit of `refetch` promises, which currently don't get their errors
           // through the store like watchQuery observers do

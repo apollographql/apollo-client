@@ -60,6 +60,8 @@ import {
   Observer,
 } from '../src/util/Observable';
 
+import { NetworkStatus } from '../src/queries/store';
+
 import wrap from './util/wrap';
 
 import observableToPromise, {
@@ -531,7 +533,7 @@ describe('QueryManager', () => {
       .map(result => (assign({ fromRx: true }, result)))
       .subscribe({
       next: wrap(done, (newResult) => {
-        const expectedResult = assign({ fromRx: true, loading: false }, expResult);
+        const expectedResult = assign({ fromRx: true, loading: false, networkStatus: 7 }, expResult);
         assert.deepEqual(newResult, expectedResult);
         done();
       }),
@@ -668,6 +670,51 @@ describe('QueryManager', () => {
         observable.refetch();
       },
       (result) => assert.deepEqual(result.data, data2)
+    );
+  });
+
+  it('sets networkStatus to `refetch` when refetching', () => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }`,
+      variables: {
+        id: '1',
+      },
+      notifyOnNetworkStatusChange: true,
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    const observable = queryManager.watchQuery(request);
+    return observableToPromise({ observable },
+      (result) => {
+        assert.deepEqual(result.data, data1);
+        observable.refetch();
+      },
+      (result) => assert.equal(result.networkStatus, NetworkStatus.refetch),
+      (result) => {
+        assert.equal(result.networkStatus, NetworkStatus.ready);
+        assert.deepEqual(result.data, data2);
+      }
     );
   });
 
@@ -902,6 +949,70 @@ describe('QueryManager', () => {
         assert(result);
       }
     );
+  });
+
+  it('sets networkStatus to `poll` if a polling query is in flight', (done) => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Patsy',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data: data1 },
+      },
+      {
+        request: { query },
+        result: { data: data2 },
+      },
+      {
+        request: { query },
+        result: { data: data3 },
+      }
+    );
+
+    const observable = queryManager.watchQuery({
+      query,
+      pollInterval: 30,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let counter = 0;
+    const handle = observable.subscribe({
+      next(result) {
+        counter += 1;
+
+        if (counter === 1) {
+          assert.equal(result.networkStatus, NetworkStatus.ready);
+        } else if (counter === 2) {
+          assert.equal(result.networkStatus, NetworkStatus.poll);
+          handle.unsubscribe();
+          done();
+        }
+      },
+    });
   });
 
   it('supports returnPartialData #193', () => {
@@ -3060,6 +3171,7 @@ describe('QueryManager', () => {
           return {
             data: assign({}, result.data, {transformCount}),
             loading: false,
+            networkStatus: NetworkStatus.ready,
           };
         },
       });

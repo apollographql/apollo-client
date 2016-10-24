@@ -673,6 +673,48 @@ describe('QueryManager', () => {
     );
   });
 
+  it('sets networkStatus to `refetch` when refetching', () => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }`,
+      variables: {
+        id: '1',
+      },
+      notifyOnNetworkStatusChange: true,
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    const observable = queryManager.watchQuery(request);
+    return observableToPromise({ observable },
+      (result) => {
+        assert.deepEqual(result.data, data1);
+        observable.refetch();
+      },
+      (result) => assert.equal(result.networkStatus, NetworkStatus.refetch),
+      (result) => assert.deepEqual(result.data, data2)
+    );
+  });
+
   it('allows you to refetch queries with promises', () => {
     const request = {
       query: gql`

@@ -711,7 +711,10 @@ describe('QueryManager', () => {
         observable.refetch();
       },
       (result) => assert.equal(result.networkStatus, NetworkStatus.refetch),
-      (result) => assert.deepEqual(result.data, data2)
+      (result) => {
+        assert.equal(result.networkStatus, NetworkStatus.ready);
+        assert.deepEqual(result.data, data2);
+      }
     );
   });
 

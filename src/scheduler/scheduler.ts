@@ -11,6 +11,7 @@
 import {
   QueryManager,
   QueryListener,
+  FetchType,
 } from '../core/QueryManager';
 
 import { ObservableQuery } from '../core/ObservableQuery';
@@ -54,9 +55,9 @@ export class QueryScheduler {
     return this.inFlightQueries.hasOwnProperty(queryId);
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions) {
+  public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType: FetchType) {
     return new Promise((resolve, reject) => {
-      this.queryManager.fetchQuery(queryId, options).then((result) => {
+      this.queryManager.fetchQuery(queryId, options, fetchType).then((result) => {
         this.removeInFlight(queryId);
         resolve(result);
       }).catch((error) => {
@@ -85,7 +86,7 @@ export class QueryScheduler {
 
     // Fire an initial fetch before we start the polling query
     if (firstFetch) {
-      this.fetchQuery(queryId, options);
+      this.fetchQuery(queryId, options, FetchType.normal);
     }
 
     if (listener) {
@@ -125,7 +126,7 @@ export class QueryScheduler {
       const queryOptions = this.registeredQueries[queryId];
       const pollingOptions = assign({}, queryOptions) as WatchQueryOptions;
       pollingOptions.forceFetch = true;
-      this.fetchQuery(queryId, pollingOptions);
+      this.fetchQuery(queryId, pollingOptions, FetchType.poll);
       return true;
     });
 

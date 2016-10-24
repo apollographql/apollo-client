@@ -60,6 +60,8 @@ import {
   Observer,
 } from '../src/util/Observable';
 
+import { NetworkStatus } from '../src/queries/store';
+
 import wrap from './util/wrap';
 
 import observableToPromise, {
@@ -902,6 +904,70 @@ describe('QueryManager', () => {
         assert(result);
       }
     );
+  });
+
+  it('sets networkStatus to `poll` if a polling query is in flight', (done) => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Patsy',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data: data1 },
+      },
+      {
+        request: { query },
+        result: { data: data2 },
+      },
+      {
+        request: { query },
+        result: { data: data3 },
+      }
+    );
+
+    const observable = queryManager.watchQuery({
+      query,
+      pollInterval: 30,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let counter = 0;
+    const handle = observable.subscribe({
+      next(result) {
+        counter += 1;
+
+        if (counter === 1) {
+          assert.equal(result.networkStatus, NetworkStatus.ready);
+        } else if (counter === 2) {
+          assert.equal(result.networkStatus, NetworkStatus.poll);
+          handle.unsubscribe();
+          done();
+        }
+      },
+    });
   });
 
   it('supports returnPartialData #193', () => {
@@ -3060,6 +3126,7 @@ describe('QueryManager', () => {
           return {
             data: assign({}, result.data, {transformCount}),
             loading: false,
+            networkStatus: NetworkStatus.ready,
           };
         },
       });

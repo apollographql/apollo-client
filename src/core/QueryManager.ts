@@ -78,6 +78,10 @@ import {
   Observable,
 } from '../util/Observable';
 
+import {
+  NetworkStatus,
+} from '../queries/store';
+
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import {
@@ -98,6 +102,7 @@ export interface SubscriptionOptions {
 export type ApolloQueryResult = {
   data: any;
   loading: boolean;
+  networkStatus: NetworkStatus;
 
   // This type is different from the GraphQLResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.
@@ -347,7 +352,11 @@ export class QueryManager {
       const shouldNotifyIfLoading = queryStoreValue.returnPartialData
         || queryStoreValue.previousVariables;
 
-      if (!queryStoreValue.loading || shouldNotifyIfLoading) {
+      const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
+
+      if (!queryStoreValue.loading ||
+          ( networkStatusChanged && options.notifyOnNetworkStatusChange ) ||
+          shouldNotifyIfLoading) {
         // XXX Currently, returning errors and data is exclusive because we
         // don't handle partial results
 
@@ -944,7 +953,7 @@ export class QueryManager {
 
           // return a chainable promise
           this.removeFetchQueryPromise(requestId);
-          resolve({ data: resultFromStore, loading: false });
+          resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready });
         }).catch((error: Error) => {
           // This is for the benefit of `refetch` promises, which currently don't get their errors
           // through the store like watchQuery observers do

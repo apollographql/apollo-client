@@ -1,5 +1,10 @@
 /// <reference types="typed-graphql" />
 
+// This should (and generally does) get picked up automatically as it's installed
+// at @types/es6-shim, but it doesn't work in typedoc (or Atom it seems),
+// so we include it here manually
+/// <reference types="es6-shim" />
+
 /*
 
   LODASH

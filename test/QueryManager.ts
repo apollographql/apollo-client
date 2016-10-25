@@ -198,12 +198,7 @@ describe('QueryManager', () => {
     variables?: Object,
   }) => {
     return mockMutation(opts).then(({ result }) => {
-      try {
-        assert.deepEqual(result.data, opts.data);
-        return Promise.resolve(true);
-      } catch (e) {
-        return Promise.reject(e);
-      }
+      assert.deepEqual(result.data, opts.data);
     });
   };
 
@@ -2609,11 +2604,13 @@ describe('QueryManager', () => {
     );
 
     const observable = queryManager.watchQuery({ query });
-    return Promise.all([
+    return Promise.all<any[] | void>([
       // we wait for a little bit to ensure the result of the second query
       // don't trigger another subscription event
       observableToPromise({ observable, wait: 100 },
-        (result) => assert.deepEqual(result.data, data)
+        (result) => {
+          assert.deepEqual(result.data, data);
+        }
       ),
       queryManager.query({ query }).then((result) => {
         assert.deepEqual(result.data, data);

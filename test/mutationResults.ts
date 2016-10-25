@@ -914,6 +914,55 @@ describe('mutation results', () => {
       });
     });
 
+    it('does not fail if the query is still loading', () => {
+      function setupReducerObsHandle(...mockedResponses: any[]) {
+        networkInterface = mockNetworkInterface({
+          request: { query },
+          result,
+          delay: 30,
+        }, ...mockedResponses);
+
+        client = new ApolloClient({
+          networkInterface,
+          addTypename: true,
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+
+          mutationBehaviorReducers: {
+            'CUSTOM_MUTATION_RESULT': customMutationReducer,
+          },
+        });
+
+        return client.watchQuery({
+          query,
+          reducer: (state, action) => {
+            if (isMutationResultAction(action)) {
+              // when the mutation returns, the query is still loading
+              assert.deepEqual(state, {});
+            }
+            return state;
+          },
+        });
+      }
+
+      const obsHandle = setupReducerObsHandle({
+        request: { query: mutation },
+        result: mutationResult,
+      });
+      const subs = obsHandle.subscribe({
+        next: () => null,
+      });
+      return client.mutate({
+        mutation,
+      }).then(res => {
+        subs.unsubscribe();
+      });
+    });
+
   });
 
 

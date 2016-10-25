@@ -41,7 +41,13 @@ export function createStoreReducer(
 ): ApolloReducer {
 
   return (store: NormalizedCache, action: ApolloAction) => {
-    const currentResult = readQueryFromStore({ store, query: document, variables });
+    const currentResult = readQueryFromStore({
+      store,
+      query: document,
+      variables,
+      returnPartialData: true,
+    });
+    // TODO add info about networkStatus
     const nextResult = resultReducer(currentResult, action); // action should include operation name
     if (currentResult !== nextResult) {
       return writeResultToStore({

@@ -32,7 +32,7 @@ const client = new ApolloClient({
     if (result.id && result.__typename) {
       return result.__typename + result.id;
     }
-    
+
     // Make sure to return null if this object doesn't have an ID
     return null;
   },
@@ -41,7 +41,7 @@ const client = new ApolloClient({
 
 These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.
 
-Apollo Client exports a method to make adding the `__typename` automatic: you provide this method as a transformer to the Apollo Client constructor.  So to do `dataIdFromObject` most concisely, your client initialisation might look like this:
+Apollo Client exports a method to make adding the `__typename` automatic: you provide this method as a transformer to the Apollo Client constructor.  So to do `dataIdFromObject` most concisely, your client initialization might look like this:
 
 ```
 import ApolloClient, {createNetworkInterface, addTypename} from 'apollo-client'
@@ -57,10 +57,10 @@ const apolloClient = new ApolloClient({
         }
         return null
     }
-}) 
+})
 ```
 
-(Note: in 0.5.x, this will be the default behaviour)
+(Note: in 0.5.x, this is the default behavior)
 
 In some cases, just using `dataIdFromObject` is not enough for your application UI to update correctly. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that to which you can't assign an object identifier, Apollo Client cannot update existing queries for you.
 
@@ -252,3 +252,49 @@ Note that the function must not alter the `prev` object (because `prev` is compa
 In our `updateQueries` function for the `Comment` query, we're doing something really simple: just adding the comment we just submitted to the list of comments that the query asks for. We're doing that using the `update` function from the `react-addons-update` package, just to do it concisely. But, if you wanted to, you could write some no-helper Javascript to combine the two incoming objects into a new one for the result.
 
 Once the mutation fires and the result arrives from the server (or, a result is provided through optimistic UI), our `updateQueries` function for the `Comment` query will be called and the `Comment` query will be updated accordingly. These changes in the result will be mapped to React props and our UI will update as well with the new information!
+
+
+<h2 id="resultReducers">Using `reducer`</h2>
+
+While `updateQueries` can only be used to update other queries based on the result of a mutation, the `reducer` option is a way that lets you update the query result based on any action, including results of other queries. It acts just like a Redux reducer on the non-normalized query result:
+
+```javascript
+import update from 'react-addons-update';
+
+const CommentsPageWithData = graphql(CommentsPageQuery, {
+  props({ data }) {
+    // ...
+  },
+  options({ params }) {
+    return {
+      reducer: (previousResult, action) => {
+        if (action.type === 'APOLLO_MUTATION_RESULT' && action.operationName === 'submitComment'){
+          return update(previousResult, {
+            entry: {
+              comments: {
+                $unshift: [newComment],
+              },
+            },
+          });
+        } else if (action.type === 'MY_CUSTOM_REDUX_ACTION') {
+          update(previousResult, {
+            currentUser: { $set: null },
+          },
+        }
+        return previousResult;
+      },
+    };
+  },
+})(CommentsPage);
+```
+
+As you can see, the `reducer` option can be used to achieve the same goal as `updateQueries`, but it is more flexible and works with any type of action, not just mutations. For example, the query result can be updated based on another query's result, or even a simple redux action.
+
+
+**When should you use reducer vs. updateQueries?**
+
+While `reducer` is more flexible, updates based on mutations can usually be done equally well with `udpateQueries`.
+
+The main difference between the two is where the update behavior is declared. With `reducer`, the update behavior is co-located with the query itself. That means the query needs to know what actions should lead to an updated result. With `updateQueries` it is the mutation's responsibility to update all the queries that may need to know about the results of this mutation.
+
+When either `reducer` or `updateQueries` can be used, the choice should be made based on which is easier to understand and maintain. Often that depends on the application architecture, but sometimes it is just a personal preference.

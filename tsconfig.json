@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
-    "lib": ["es6", "dom"],
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
@@ -12,8 +11,7 @@
     "removeComments": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "types": [ "mocha", "node" ]
+    "noFallthroughCasesInSwitch": true
   },
   "files": [
     "typings.d.ts",

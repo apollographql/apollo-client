@@ -69,4 +69,63 @@ Generally, you shouldn't have polling intervals that are very small, say, less t
 
 ## Subscriptions
 
-Coming soon!
+Subscriptions allow you to get near-realtime updates in your UI. Unlike polling, subscriptions are push-based, which means the server pushes updates to the client as soon as they are available.
+Subscriptions are more difficult to set up than polling, but they allow for more fine-grained control over updates, faster update times and may reduce the load on the server.
+
+Building on our feedEntry example from above, we can make the `score` field update in realtime by adding a subscription to it:
+
+```javascript
+
+const SUBSCRIPTION_QUERY = gql`
+  subscription scoreUpdates ($entryIds: [Int]){
+    newScore(entryIds: $entryIds){
+      id
+      score
+    }
+  }
+`;
+
+class Feed extends Component {
+  // ...
+  componentWillReceiveProps(newProps) {
+    if (!newProps.data.loading) {
+      if (this.subscription) {
+        if (newProps.data.feed !== this.props.data.feed) {
+          // if the feed has changed, we need to unsubscribe before resubscribing
+          this.subscription.unsubscribe();
+        } else {
+          // we already have an active subscription with the right params
+          return;
+        }
+      }
+      const entryIds = newProps.data.feed.map(item => item.id);
+      this.subscription = newProps.data.subscribeToMore({
+        query: SUBSCRIPTION_QUERY,
+        variables: { entryIds },
+
+        // this is where the magic happens.
+        updateQuery: (previousResult, { subscriptionData }) => {
+          const newScoreEntry = subscriptionData.data.newScore;
+          const newResult = clonedeep(previousResult); // never mutate state!
+          // update the score of the affected entry
+          newResult.feed = newResult.feed.forEach(entry => {
+            if(entry.id === newScoreEntry.id) {
+              entry.score = newScoreEntry.score;
+              return;
+            }
+          });
+          return newResult;
+        },
+      });      
+    }
+
+  }
+  // ...
+}
+```
+
+In the example above, we keep the scores of all entries in the Feed component updated by making a subscription that lists all the ids of the feed entries currently displayed in the component. Every time a score is updated, the server will send a single response which contains an entry id and the new score.
+
+`subscribeToMore` is a convenient way to update the result of a single query with a subscription. The `updateQuery` function passed to `subscribeToMore` runs every time a new subscription result arrives, and it's responsible for updating the query result.
+
+The `subscribeToMore` subscription is stopped automatically when its dependent query is stopped, so we don't need to unsubscribe manually. We do however need to unsubscribe manually if the props changed and we need to make a new subscription with different variables.

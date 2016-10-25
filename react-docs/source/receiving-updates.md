@@ -129,3 +129,5 @@ In the example above, we keep the scores of all entries in the Feed component up
 `subscribeToMore` is a convenient way to update the result of a single query with a subscription. The `updateQuery` function passed to `subscribeToMore` runs every time a new subscription result arrives, and it's responsible for updating the query result.
 
 The `subscribeToMore` subscription is stopped automatically when its dependent query is stopped, so we don't need to unsubscribe manually. We do however need to unsubscribe manually if the props changed and we need to make a new subscription with different variables.
+
+For a more in-depth introduction to subscriptions in GraphQL, you may find our [blog post](https://dev-blog.apollodata.com/graphql-subscriptions-in-apollo-client-9a2457f015fb) on the topic interesting.

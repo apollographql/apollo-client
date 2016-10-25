@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### v0.5.0 (in preview)
+- **new Feature**: add networkStatus to ApolloResult, which gives more fine-grained information than the loading boolean. Added notifyOnNetworkStatusChange option to WatchQuery options. [PR #827](https://github.com/apollostack/apollo-client/pull/827)
 
 #### v0.5.0-preview.2
 - Make `createNetworkInterface` backwards compatible, but print a deprecation warning if it's called with two arguments. The new way is to pass in an object with `uri` and `opts` properties. [PR #828](https://github.com/apollostack/apollo-client/pull/828) [Issue #806](https://github.com/apollostack/apollo-client/issues/806)

@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### v0.5.0 (in preview)
 - Add a `createdBatchingNetworkInterface` function and export it.
+- Add support for fragments to `fetchMore`
+- Patch for race condition in broadcastQueries that occasionally crashed the client.
 
 #### v0.5.0-preview.3
 - **new Feature**: add networkStatus to ApolloResult, which gives more fine-grained information than the loading boolean. Added notifyOnNetworkStatusChange option to WatchQuery options. [PR #827](https://github.com/apollostack/apollo-client/pull/827)

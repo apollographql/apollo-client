@@ -20,14 +20,14 @@ query getPerson {
 
 There are two principal uses for fragments in Apollo:
 
-  - Sharing logic between multiple queries, mutations or subscriptions.
+  - Sharing fields between multiple queries, mutations or subscriptions.
   - Breaking your queries up to allow you to co-locate field access with the places they are used.
 
-In this document we'll patterns to do both; we'll also make use of a helper package [`graphql-fragments`](https://github.com/apollostack/graphql-fragments) which aims to help us, especially with the second problem.
+In this document we'll outline patterns to do both; we'll also make use of a helper package [`graphql-fragments`](https://github.com/apollostack/graphql-fragments) which aims to help us, especially with the second problem.
 
 <h2 id="reusing-fragments">Reusing Fragments</h2>
 
-The most straightforward use of Fragments is to reuse parts of queries (or mutations or subscriptions) in various parts of your application. For instance, in GitHunt on the comments page, we want to fetch the same fields after posting a comment as we originally query. This way we can be sure that we render consistent comment objects as the data changes.
+The most straightforward use of fragments is to reuse parts of queries (or mutations or subscriptions) in various parts of your application. For instance, in GitHunt on the comments page, we want to fetch the same fields after posting a comment as we originally query. This way we can be sure that we render consistent comment objects as the data changes.
 
 To do so, we can simply share a fragment describing the fields we need for a comment:
 

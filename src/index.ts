@@ -1,6 +1,11 @@
 import {
+  Request,
   createNetworkInterface,
 } from './transport/networkInterface';
+
+import {
+  createBatchingNetworkInterface,
+} from './transport/batchedNetworkInterface';
 
 import {
   print,
@@ -56,14 +61,11 @@ import {
   enableFragmentWarnings,
 } from './fragments';
 
-import {
-  Request,
-} from './transport/networkInterface';
-
 // We expose the print method from GraphQL so that people that implement
 // custom network interfaces can turn query ASTs into query strings as needed.
 export {
   createNetworkInterface,
+  createBatchingNetworkInterface,
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,

@@ -9,6 +9,7 @@ import isNumber = require('lodash.isnumber');
 
 import {
   HTTPFetchNetworkInterface,
+  HTTPNetworkInterface,
   RequestAndOptions,
   Request,
   printRequest,
@@ -117,4 +118,17 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       method: 'POST',
     }));
   };
+}
+
+export interface BatchingNetworkInterfaceOptions {
+  uri: string;
+  batchInterval: number;
+  opts?: RequestInit;
+}
+
+export function createBatchingNetworkInterface(options: BatchingNetworkInterfaceOptions): HTTPNetworkInterface {
+  if (! options) {
+    throw new Error('You must pass an options argument to createNetworkInterface.');
+  }
+  return new HTTPBatchedNetworkInterface(options.uri, options.batchInterval, options.opts);
 }

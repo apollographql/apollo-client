@@ -89,3 +89,87 @@ const withData = graphql(COMMENT_QUERY, {
 ```
 
 You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollostack/GitHunt-React/blob/master/ui/routes/CommentsPage.js).
+
+<h2 id="colocating-fragments">Colocating Fragments</h2>
+
+A key advantage of GraphQL is the tree-like nature of the response data, which in many cases mirrors your rendered component hierarchy. This, combined with GraphQL's support for fragments, allows you to split your queries up in such a way that the various fields fetched by the queries are located right alongside the code that uses the field.
+
+Although this technique doesn't always make sense (for instance it's not always the case that the GraphQL schema is driven by the UI requirements), when it does, it's possible to use some patterns in Apollo client to take full advantage of it.
+
+In GitHunt, we show an example of this on the [`FeedPage`](https://github.com/apollostack/GitHunt-React/blob/master/ui/routes/FeedPage.js), which constructs the follow view hierarchy:
+
+```
+FeedPage
+└── Feed
+    └── FeedEntry
+        ├── RepoInfo
+        └── VoteButtons
+```
+
+The `FeedPage` conducts a query to fetch a list of `Entry`s, and each of the subcomponents requires different subfields of each `Entry`.
+
+The `Fragment` utility class that we saw in the section above gives us tools to easily construct a single query that provides all the fields that each subcomponent needs, and allows to easily pass the exact field that a component needs to it.
+
+<h3 id="creating-fragments">Creating Fragments</h3>
+
+To create the fragments, we again use the `Fragment` class and attach to subfields of `ComponentClass.fragment`, for example:
+
+```js
+VoteButtons.fragments = {
+  entry: new Fragment(gql`
+    fragment VoteButtons on Entry {
+      score
+      vote {
+        vote_value
+      }
+    }
+  `),
+};
+```
+
+One nice tool that the `Fragment` class gives us is a [`PropType`](https://facebook.github.io/react/docs/reusable-components.html) checker that we can use to ensure that we do indeed receive those fields in the component's `entry` prop:
+
+```js
+VoteButtons.propTypes = {
+  // ...
+  entry: VoteButtons.fragments.entry.propType,
+};
+```
+
+If our fragments include sub-fragments then we can pass them into the `Fragment` constructor:
+
+```js
+FeedEntry.fragments = {
+  entry: new Fragment(gql`
+    fragment FeedEntry on Entry {
+      commentCount
+      repository {
+        full_name
+        html_url
+        owner {
+          avatar_url
+        }
+      }
+      ...VoteButtons
+      ...RepoInfo
+    }
+  `, VoteButtons.fragments.entry, RepoInfo.fragments.entry),
+};
+```
+
+<h3 id="filtering-with-fragments">Filtering With Fragments</h3>
+
+We can also use the fragment class to filter the exact fields from the `entry` before passing them to the subcomponent. So when we render a `VoteButtons`, we can simply do:
+
+```jsx
+<VoteButtons
+  entry={VoteButtons.fragments.entry.filter(entry)}
+  canVote={loggedIn}
+  onVote={type => onVote({
+    repoFullName: full_name,
+    type,
+  })}
+/>
+```
+
+The `filter()` function on the fragment will grab exactly the fields from the `entry` that the fragment defines.

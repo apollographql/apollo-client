@@ -25,6 +25,8 @@ import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { NetworkStatus } from '../queries/store';
 
+import { addFragmentsToDocument } from '../queries/getFromAST';
+
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
 
@@ -188,7 +190,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           });
         }
 
+        // We add the fragments to the document to pass only the document around internally.
+        const fullQuery = addFragmentsToDocument(combinedOptions.query, combinedOptions.fragments);
+
         combinedOptions = assign({}, combinedOptions, {
+          query: fullQuery,
           forceFetch: true,
         }) as WatchQueryOptions;
         return this.queryManager.fetchQuery(qid, combinedOptions);

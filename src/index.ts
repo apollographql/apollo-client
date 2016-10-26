@@ -61,6 +61,10 @@ import {
   enableFragmentWarnings,
 } from './fragments';
 
+import {
+  ApolloQueryResult,
+} from './core/QueryManager';
+
 // We expose the print method from GraphQL so that people that implement
 // custom network interfaces can turn query ASTs into query strings as needed.
 export {
@@ -85,6 +89,8 @@ export {
   FragmentMap,
 
   Request,
+
+  ApolloQueryResult,
 
   // internal type definitions for export
   WatchQueryOptions,

@@ -48,7 +48,6 @@ export class MockFetch {
   public fetch(url: string, opts: RequestInit) {
     const key = this.fetchParamsToKey(url, opts);
     const responses = this.mockedResponsesByKey[key];
-
     if (!responses || responses.length === 0) {
       throw new Error(`No more mocked fetch responses for the params ${url} and ${opts}`);
     }

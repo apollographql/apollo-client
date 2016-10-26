@@ -53,11 +53,20 @@ import {
   NetworkInterface,
 } from '../src/transport/networkInterface';
 
+import {
+  createBatchingNetworkInterface,
+} from '../src/transport/batchedNetworkInterface';
+
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
 import {
   getFragmentDefinitions,
 } from '../src/queries/getFromAST';
+
+import {
+  createMockFetch,
+  createMockedIResponse,
+} from './mocks/mockFetch';
 
 import * as chaiAsPromised from 'chai-as-promised';
 
@@ -1641,8 +1650,6 @@ describe('client', () => {
     client.resetStore();
   });
 
-  /*
-  // TODO: refactor
   it('should allow us to create a network interface with transport-level batching', (done) => {
     const firstQuery = gql`
       query {
@@ -1687,32 +1694,111 @@ describe('client', () => {
           },
         ]),
         headers: {
-          Accept: '*',
+          Accept: '*/*',
           'Content-Type': 'application/json',
         },
         method: 'POST',
       },
       result: createMockedIResponse([firstResult, secondResult]),
     });
-    const networkInterface = createNetworkInterface({
+    const networkInterface = createBatchingNetworkInterface({
       uri: 'http://not-a-real-url.com',
+      batchInterval: 5,
       opts: {},
-      transportBatching: true,
     });
-    networkInterface.batchQuery([
-      {
-        query: firstQuery,
-      },
-      {
-        query: secondQuery,
-      },
+    Promise.all([
+      networkInterface.query({ query: firstQuery }),
+      networkInterface.query({ query: secondQuery }),
     ]).then((results) => {
       assert.deepEqual(results, [firstResult, secondResult]);
       fetch = oldFetch;
       done();
+    }).catch( e => {
+      console.error(e);
     });
   });
-  */
+
+  it('should not do transport-level batching when the interval is exceeded', (done) => {
+    const firstQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const firstResult = {
+      data: {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      },
+      loading: false,
+    };
+    const secondQuery = gql`
+      query {
+        person {
+          name
+        }
+      }`;
+    const secondResult = {
+      data: {
+        person: {
+          name: 'Jane Smith',
+        },
+      },
+    };
+    const url = 'http://not-a-real-url.com';
+    const oldFetch = fetch;
+    fetch = createMockFetch({
+      url,
+      opts: {
+        body: JSON.stringify([
+          {
+            query: print(firstQuery),
+          },
+        ]),
+        headers: {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      },
+      result: createMockedIResponse([firstResult]),
+    }, {
+      url,
+      opts: {
+        body: JSON.stringify([
+                    {
+            query: print(secondQuery),
+          },
+        ]),
+        headers: {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      },
+      result: createMockedIResponse([secondResult]),
+    });
+    const networkInterface = createBatchingNetworkInterface({
+      uri: 'http://not-a-real-url.com',
+      batchInterval: 5,
+      opts: {},
+    });
+    Promise.all([
+      networkInterface.query({ query: firstQuery }),
+      new Promise( (resolve, reject) =>
+        setTimeout(() => resolve(networkInterface.query({ query: secondQuery })), 10)),
+    ]).then((results) => {
+      assert.deepEqual(results, [firstResult, secondResult]);
+      fetch = oldFetch;
+      done();
+    }).catch( e => {
+      console.error(e);
+    });
+  });
+
 });
 
 function clientRoundrip(

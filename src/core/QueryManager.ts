@@ -1002,14 +1002,19 @@ export class QueryManager {
   private broadcastQueries() {
     const queries = this.getApolloState().queries;
     forOwn(this.queryListeners, (listeners: QueryListener[], queryId: string) => {
-      listeners.forEach((listener: QueryListener) => {
-        // it's possible for the listener to be undefined if the query is being stopped
-        // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
-        if (listener) {
-          const queryStoreValue = queries[queryId];
-          listener(queryStoreValue);
-        }
-      });
+      // XXX due to an unknown race condition listeners can sometimes be undefined here.
+      // this prevents a crash but doesn't solve the root cause
+      // see: https://github.com/apollostack/apollo-client/issues/833
+      if (listeners) {
+        listeners.forEach((listener: QueryListener) => {
+          // it's possible for the listener to be undefined if the query is being stopped
+          // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
+          if (listener) {
+            const queryStoreValue = queries[queryId];
+            listener(queryStoreValue);
+          }
+        });
+      }
     });
   }
 

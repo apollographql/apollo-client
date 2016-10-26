@@ -83,6 +83,7 @@ export interface DeprecatedWatchQueryOptions extends ModifiableWatchQueryOptions
 export interface FetchMoreQueryOptions {
   query?: Document;
   variables?: { [key: string]: any };
+  fragments?: FragmentDefinition[];
 }
 
 export type SubscribeToMoreOptions = {

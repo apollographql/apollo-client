@@ -19,7 +19,7 @@ export interface QueryFetchRequest {
 
 // QueryBatcher operates on a queue  of QueryFetchRequests. It polls and checks this queue
 // for new fetch requests. If there are multiple requests in the queue at a time, it will batch
-// them together into one query. Batching can be toggled with the shouldBatch option.
+// them together into one query.
 export class QueryBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   public queuedRequests: QueryFetchRequest[] = [];

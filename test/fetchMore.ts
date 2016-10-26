@@ -9,17 +9,27 @@ import clonedeep = require('lodash.clonedeep');
 
 import gql from 'graphql-tag';
 
+import { addFragmentsToDocument } from '../src/queries/getFromAST';
+
+import {
+  createFragment,
+} from '../src/index';
+
 describe('updateQuery on a simple query', () => {
   const query = gql`
     query thing {
       entry {
         value
+        __typename
       }
+      __typename
     }
   `;
   const result = {
     data: {
+      __typename: 'Query',
       entry: {
+        __typename: 'Entry',
         value: 1,
       },
     },
@@ -34,7 +44,7 @@ describe('updateQuery on a simple query', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      addTypename: false,
+      addTypename: true,
     });
 
     const obsHandle = client.watchQuery({
@@ -69,7 +79,9 @@ describe('fetchMore on an observable query', () => {
       entry(repoFullName: $repoName) {
         comments(start: $start, limit: $limit) {
           text
+          __typename
         }
+        __typename
       }
     }
   `;
@@ -77,7 +89,9 @@ describe('fetchMore on an observable query', () => {
     query NewComments($start: Int!, $limit: Int!) {
       comments(start: $start, limit: $limit) {
         text
+        __typename
       }
+      __typename
     }
   `;
   const variables = {
@@ -93,7 +107,9 @@ describe('fetchMore on an observable query', () => {
 
   const result: any = {
     data: {
+      __typename: 'Query',
       entry: {
+        __typename: 'Entry',
         comments: [],
       },
     },
@@ -101,15 +117,16 @@ describe('fetchMore on an observable query', () => {
   const resultMore = clonedeep(result);
   const result2: any = {
     data: {
+      __typename: 'Query',
       comments: [],
     },
   };
   for (let i = 1; i <= 10; i++) {
-    result.data.entry.comments.push({ text: `comment ${i}` });
+    result.data.entry.comments.push({ text: `comment ${i}`, __typename: 'Comment' });
   }
   for (let i = 11; i <= 20; i++) {
-    resultMore.data.entry.comments.push({ text: `comment ${i}` });
-    result2.data.comments.push({ text: `new comment ${i}` });
+    resultMore.data.entry.comments.push({ text: `comment ${i}`, __typename: 'Comment' });
+    result2.data.comments.push({ text: `new comment ${i}`, __typename: 'Comment' });
   }
 
   let latestResult: any = null;
@@ -129,7 +146,7 @@ describe('fetchMore on an observable query', () => {
 
     client = new ApolloClient({
       networkInterface,
-      addTypename: false,
+      addTypename: true,
     });
 
     const obsHandle = client.watchQuery({
@@ -192,6 +209,53 @@ describe('fetchMore on an observable query', () => {
       return watchedQuery.fetchMore({
         query: query2,
         variables: variables2,
+        updateQuery: (prev, options) => {
+          const state = clonedeep(prev) as any;
+          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.comments];
+          return state;
+        },
+      });
+    }).then(() => {
+      const comments = latestResult.data.entry.comments;
+      assert.lengthOf(comments, 20);
+      for (let i = 1; i <= 10; i++) {
+        assert.equal(comments[i - 1].text, `comment ${i}`);
+      }
+      for (let i = 11; i <= 20; i++) {
+        assert.equal(comments[i - 1].text, `new comment ${i}`);
+      }
+      unsetup();
+    });
+  });
+
+  it('fetching more with fragments', () => {
+    latestResult = null;
+      // identical to query2, but with a fragment
+      const query3 = gql`
+      query NewComments($start: Int!, $limit: Int!) {
+        comments(start: $start, limit: $limit) {
+          ...textFragment
+          __typename
+        }
+      }
+    `;
+    const fragment = createFragment(gql`
+      fragment textFragment on Comment {
+        text
+        __typename
+      }
+    `);
+    return setup({
+      request: {
+        query: addFragmentsToDocument(query3, fragment),
+        variables: variables2,
+      },
+      result: result2,
+    }).then((watchedQuery) => {
+      return watchedQuery.fetchMore({
+        query: query3,
+        variables: variables2,
+        fragments: fragment,
         updateQuery: (prev, options) => {
           const state = clonedeep(prev) as any;
           state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.comments];

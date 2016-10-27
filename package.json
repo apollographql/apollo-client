@@ -37,7 +37,6 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "es6-promise": "^4.0.3",
     "graphql-anywhere": "^0.2.4",
     "graphql-tag": "^0.1.13",
     "lodash.assign": "^4.0.8",

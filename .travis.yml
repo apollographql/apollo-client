@@ -1,21 +1,36 @@
 language: node_js
+
 node_js:
   - "6"
   - "4"
+
 cache:
   directories:
-    # cache node modules
+    - $HOME/.npm
+    - $HOME/.yarn-cache
     - node_modules
-install:
-  - npm install -g coveralls
-  - npm install
+
+before_install:
+  # Repo for Yarn
+  - sudo apt-key adv --keyserver pgp.mit.edu --recv D101F7899D41F3C3
+  - echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+  - sudo apt-get update -qq
+  - sudo apt-get install -y -qq yarn
+  # Global packages
+  - yarn global add coveralls
+
+install: yarn
+
+before_script:
+  # remove unused node modules from cache
   - npm prune
 
-script:
-  - npm test
+script: yarn test
+
+after_script:
   - npm run coverage
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error
   - npm run filesize
 
 # Allow Travis tests to run in containers.
-sudo: false
+sudo: true

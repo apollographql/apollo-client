@@ -6,9 +6,7 @@ node_js:
 
 cache:
   directories:
-    - $HOME/.npm
     - $HOME/.yarn-cache
-    - node_modules
 
 before_install:
   # Repo for Yarn

@@ -9,7 +9,7 @@
     "deploy": "rm -rf ./lib && npm run compile && ./scripts/deploy.sh",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
-    "posttest": "npm run lint",
+    "posttest": "npm run lint && npm run postcoverage",
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=42",
     "compile": "tsc",
     "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/src/index.js -o=./dist/index.js && npm run minify:browser",
@@ -17,9 +17,8 @@
     "watch": "tsc -w",
     "prepublish": "npm run compile",
     "lint": "grunt tslint",
-    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
-    "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
-    "testonly": "mocha --reporter spec --full-trace lib/test/tests.js"
+    "postcoverage": "remap-istanbul --input coverage/coverage-final.json --type lcovonly --output coverage/lcov.info",
+    "testonly": "jest"
   },
   "repository": {
     "type": "git",
@@ -65,7 +64,7 @@
     "@types/chai": "^3.4.32",
     "@types/chai-as-promised": "0.0.28",
     "@types/es6-shim": "^0.31.32",
-    "@types/mocha": "^2.2.31",
+    "@types/jest": "^15.1.32",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
@@ -77,6 +76,7 @@
     "gzip-size": "^3.0.0",
     "isomorphic-fetch": "^2.2.1",
     "istanbul": "^0.4.5",
+    "jest": "^16.0.2",
     "lodash": "^4.6.1",
     "minimist": "^1.2.0",
     "mocha": "^3.0.0",
@@ -99,5 +99,14 @@
     "@types/promises-a-plus": "0.0.26",
     "@types/redux": "^3.5.29",
     "@types/sinon": "^1.16.29"
-  }
+  },
+  "jest": {
+    "moduleFileExtensions": ["js"],
+    "testRegex": "\\.js$",
+    "testPathDirs": ["<rootDir>/lib/test"],
+    "browser": true,
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["json"]
+    }
 }

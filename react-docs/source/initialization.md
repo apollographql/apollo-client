@@ -33,7 +33,7 @@ The client takes a variety of [options](/core/apollo-client-api.html#constructor
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
 const client = new ApolloClient({
-  networkInterface: createNetworkInterface('http://my-api.graphql.com'),
+  networkInterface: createNetworkInterface({ uri: 'http://my-api.graphql.com' }),
 });
 ```
 

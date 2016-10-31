@@ -110,3 +110,20 @@ const MyComponentWithUpvote = graphql(Upvote, {
 
 // MyComponentWithUpvote.getWrappedInstance() returns MyComponent instance
 ```
+
+<h2 name='compose'>compose</h2>
+
+`react-apollo` exports a `compose` function. Adopting the following pattern allows you to reduce the number of reassignments you're doing every time you wrap your component with `graphql` and often `connect` from `redux`. 
+
+```js
+import { graphql, compose } from 'react-apollo';
+import { connect } from 'react-redux';
+
+export default compose(
+  graphql(query, queryOptions),
+  graphql(mutation, mutationOptions),
+  connect(mapStateToProps, mapDispatchToProps)
+)(Component);
+```
+
+

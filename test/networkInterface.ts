@@ -310,6 +310,30 @@ describe('network interface', () => {
         complexResult,
       );
     });
+
+    it('should chain use() calls', () => {
+      const testWare1 = TestWare([
+        { key: 'personNum', val: 1 },
+      ]);
+      const testWare2 = TestWare([
+        { key: 'filmNum', val: 1 },
+      ]);
+
+      const swapi = createNetworkInterface({ uri: swapiUrl });
+      swapi.use([testWare1])
+        .use([testWare2]);
+      const simpleRequest = {
+        query: complexQueryWithTwoVars,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        complexResult,
+      );
+    });
+
   });
 
   describe('afterware', () => {
@@ -345,6 +369,17 @@ describe('network interface', () => {
 
       const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.useAfter([testWare1, testWare2]);
+
+      assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
+    });
+
+    it('should chain useAfter() calls', () => {
+      const testWare1 = TestAfterWare();
+      const testWare2 = TestAfterWare();
+
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
+      networkInterface.useAfter([testWare1])
+        .useAfter([testWare2]);
 
       assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
     });

@@ -100,7 +100,7 @@ class Feed extends Component {
       }
       const entryIds = newProps.data.feed.map(item => item.id);
       this.subscription = newProps.data.subscribeToMore({
-        query: SUBSCRIPTION_QUERY,
+        document: SUBSCRIPTION_QUERY,
         variables: { entryIds },
 
         // this is where the magic happens.

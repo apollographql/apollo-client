@@ -113,7 +113,7 @@ const MyComponentWithUpvote = graphql(Upvote, {
 
 <h2 name='compose'>compose</h2>
 
-`react-apollo` exports a `compose` function. Adopting the following pattern allows you to reduce the number of reassignments you're doing every time you wrap your component with `graphql` and often `connect` from `redux`. 
+`react-apollo` exports a `compose` function. Adopting the following pattern allows you to reduce the number of reassignments you're doing every time you wrap your component with `graphql` and often `connect` from `react-redux`. 
 
 ```js
 import { graphql, compose } from 'react-apollo';

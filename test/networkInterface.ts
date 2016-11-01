@@ -334,6 +334,17 @@ describe('network interface', () => {
       );
     });
 
+    it('should chain use() and useAfter() calls', () => {
+      const testWare1 = TestWare();
+      const testWare2 = TestAfterWare();
+
+      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      networkInterface.use([testWare1])
+        .useAfter([testWare2]);
+      assert.deepEqual(networkInterface._middlewares, [testWare1]);
+      assert.deepEqual(networkInterface._afterwares, [testWare2]);
+    });
+
   });
 
   describe('afterware', () => {
@@ -383,6 +394,18 @@ describe('network interface', () => {
 
       assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
     });
+
+    it('should chain useAfter() and use() calls', () => {
+      const testWare1 = TestAfterWare();
+      const testWare2 = TestWare();
+
+      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      networkInterface.useAfter([testWare1])
+        .use([testWare2]);
+      assert.deepEqual(networkInterface._middlewares, [testWare2]);
+      assert.deepEqual(networkInterface._afterwares, [testWare1]);
+    });
+
   });
 
   describe('making a request', () => {

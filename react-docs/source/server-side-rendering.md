@@ -88,7 +88,8 @@ app.use((req, res) => {
       ssrMode: true,
       // Remember that this is the interface the SSR server will use to connect to the
       // API server, so we need to ensure it isn't firewalled, etc
-      networkInterface: createNetworkInterface('http://localhost:3010', {
+      networkInterface: createNetworkInterface({
+        uri: 'http://localhost:3010',
         credentials: 'same-origin',
         // transfer request headers to networkInterface so that they're accessible to proxy server
         // Addresses this issue: https://github.com/matthew-andrews/isomorphic-fetch/issues/83

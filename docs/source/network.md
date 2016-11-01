@@ -173,6 +173,17 @@ const client = new ApolloClient({
 This example shows how you can use more than one afterware to make multiple/separate
 modifications to the response being processed in the form of a chain.
 
+<h3 id="networkInterfaceChaining" title="Chaining">Chaining</h3>
+
+It is possible to build a chain made of `.use()` and `.useAfter()` calls in any order :
+
+```js
+networkInterface.use([exampleWare1])
+  .use([exampleWare2])
+  .useAfter([exampleWare3])
+  .useAfter([exampleWare4])
+  .use([exampleWare5]);
+```
 
 <h2 id="custom-network-interface">Custom network interface</h2>
 

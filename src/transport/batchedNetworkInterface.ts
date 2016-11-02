@@ -68,23 +68,26 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
             return result.json();
           })
           .then(responses => {
-            const afterwaresPromises = responses.map((response: IResponse, index: number) => {
+
+            type ResponseAndOptions = {
+              response: IResponse;
+              options: RequestInit;
+            }
+
+            const afterwaresPromises: ResponseAndOptions[] = responses.map((response: IResponse, index: number) => {
               return this.applyAfterwares({
                 response,
                 options: requestsAndOptions[index].options,
               });
             });
 
-            Promise.all(afterwaresPromises).then((responsesAndOptions: {
-              response: IResponse,
-              options: RequestInit,
-            }[]) => {
-              const results: Array<IResponse>  = [];
-              responsesAndOptions.forEach(({ response }) => {
-                results.push(response);
+            Promise.all(afterwaresPromises).then((responsesAndOptions: ResponseAndOptions[]) => {
+              const results: Array<IResponse> = [];
+              responsesAndOptions.forEach((result) => {
+                results.push(result.response);
               });
               resolve(results);
-            }).catch((error) => {
+            }).catch((error: Error) => {
               reject(error);
             });
           });

@@ -27,6 +27,7 @@ import {
 
 import {
   WatchQueryOptions,
+  MutationOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -94,6 +95,7 @@ export {
 
   // internal type definitions for export
   WatchQueryOptions,
+  MutationOptions,
   ObservableQuery,
   MutationBehavior,
   MutationQueryReducersMap,

@@ -4,9 +4,6 @@ import {
 } from './transport/networkInterface';
 
 import {
-  Document,
-  FragmentDefinition,
-
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
@@ -46,6 +43,7 @@ import {
 import {
   DeprecatedWatchQueryOptions,
   DeprecatedSubscriptionOptions,
+  MutationOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -53,9 +51,7 @@ import {
 } from './data/extensions';
 
 import {
-  MutationBehavior,
   MutationBehaviorReducerMap,
-  MutationQueryReducersMap,
 } from './data/mutationResults';
 
 import {
@@ -329,15 +325,7 @@ export default class ApolloClient {
    * for this, you can simply refetch the queries that will be affected and achieve a consistent
    * store once these queries return.
    */
-  public mutate(options: {
-    mutation: Document,
-    variables?: Object,
-    resultBehaviors?: MutationBehavior[],
-    fragments?: FragmentDefinition[],
-    optimisticResponse?: Object,
-    updateQueries?: MutationQueryReducersMap,
-    refetchQueries?: string[],
-  }): Promise<ApolloQueryResult> {
+  public mutate(options: MutationOptions): Promise<ApolloQueryResult> {
     this.initStore();
 
     // We add the fragments to the document to pass only the document around internally.

@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNext
 - **new Feature**: Enable chaining of `use` and `useAfter` function calls in network interface. [PR #860](https://github.com/apollostack/apollo-client/pull/860) [Issue #564](https://github.com/apollostack/apollo-client/issues/564)
+- Create and expose the `MutationOptions` [PR #866](https://github.com/apollostack/apollo-client/pull/866)
 
 ### v0.5.0
 - Add a `createdBatchingNetworkInterface` function and export it.

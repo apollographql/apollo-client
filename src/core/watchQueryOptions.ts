@@ -5,6 +5,8 @@ import {
 
 import {
   OperationResultReducer,
+  MutationBehavior,
+  MutationQueryReducersMap,
 } from '../data/mutationResults';
 
 /**
@@ -100,3 +102,13 @@ export interface DeprecatedSubscriptionOptions {
   variables?: { [key: string]: any };
   fragments?: FragmentDefinition[];
 };
+
+export interface MutationOptions {
+  mutation: Document;
+  variables?: Object;
+  resultBehaviors?: MutationBehavior[];
+  fragments?: FragmentDefinition[];
+  optimisticResponse?: Object;
+  updateQueries?: MutationQueryReducersMap;
+  refetchQueries?: string[];
+}

@@ -62,8 +62,8 @@ export interface HTTPNetworkInterface extends NetworkInterface {
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[];
   _afterwares: AfterwareInterface[];
-  use(middlewares: MiddlewareInterface[]): any;
-  useAfter(afterwares: AfterwareInterface[]): any;
+  use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface;
+  useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface;
 }
 
 export interface RequestAndOptions {
@@ -196,7 +196,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       });
   };
 
-  public use(middlewares: MiddlewareInterface[]) {
+  public use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface {
     middlewares.map((middleware) => {
       if (typeof middleware.applyMiddleware === 'function') {
         this._middlewares.push(middleware);
@@ -204,9 +204,10 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         throw new Error('Middleware must implement the applyMiddleware function');
       }
     });
+    return this;
   }
 
-  public useAfter(afterwares: AfterwareInterface[]) {
+  public useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface {
     afterwares.map(afterware => {
       if (typeof afterware.applyAfterware === 'function') {
         this._afterwares.push(afterware);
@@ -214,6 +215,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         throw new Error('Afterware must implement the applyAfterware function');
       }
     });
+    return this;
   }
 }
 

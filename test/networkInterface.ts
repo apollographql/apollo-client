@@ -310,6 +310,41 @@ describe('network interface', () => {
         complexResult,
       );
     });
+
+    it('should chain use() calls', () => {
+      const testWare1 = TestWare([
+        { key: 'personNum', val: 1 },
+      ]);
+      const testWare2 = TestWare([
+        { key: 'filmNum', val: 1 },
+      ]);
+
+      const swapi = createNetworkInterface({ uri: swapiUrl });
+      swapi.use([testWare1])
+        .use([testWare2]);
+      const simpleRequest = {
+        query: complexQueryWithTwoVars,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        complexResult,
+      );
+    });
+
+    it('should chain use() and useAfter() calls', () => {
+      const testWare1 = TestWare();
+      const testWare2 = TestAfterWare();
+
+      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      networkInterface.use([testWare1])
+        .useAfter([testWare2]);
+      assert.deepEqual(networkInterface._middlewares, [testWare1]);
+      assert.deepEqual(networkInterface._afterwares, [testWare2]);
+    });
+
   });
 
   describe('afterware', () => {
@@ -348,6 +383,29 @@ describe('network interface', () => {
 
       assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
     });
+
+    it('should chain useAfter() calls', () => {
+      const testWare1 = TestAfterWare();
+      const testWare2 = TestAfterWare();
+
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
+      networkInterface.useAfter([testWare1])
+        .useAfter([testWare2]);
+
+      assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
+    });
+
+    it('should chain useAfter() and use() calls', () => {
+      const testWare1 = TestAfterWare();
+      const testWare2 = TestWare();
+
+      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      networkInterface.useAfter([testWare1])
+        .use([testWare2]);
+      assert.deepEqual(networkInterface._middlewares, [testWare2]);
+      assert.deepEqual(networkInterface._afterwares, [testWare1]);
+    });
+
   });
 
   describe('making a request', () => {

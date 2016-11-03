@@ -64,7 +64,6 @@
   "devDependencies": {
     "@types/chai": "^3.4.32",
     "@types/chai-as-promised": "0.0.28",
-    "@types/es6-shim": "^0.31.32",
     "@types/mocha": "^2.2.31",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",

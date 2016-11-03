@@ -8,8 +8,8 @@ cache:
     - node_modules
 install:
   - npm install -g coveralls
-  - npm install
   - npm prune
+  - npm install
 
 script:
   - npm test

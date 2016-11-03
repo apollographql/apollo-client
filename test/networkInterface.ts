@@ -105,7 +105,7 @@ describe('network interface', () => {
   };
 
   // We mock the network interface to return the results that the SWAPI would.
-  before(() => {
+  beforeEach(() => {
     // We won't be too careful about counting calls or closely checking
     // parameters, but just do the basic stuff to ensure the request looks right
     fetchMock.post(swapiUrl, (url, opts) => {
@@ -132,7 +132,7 @@ describe('network interface', () => {
     });
   });
 
-  after(() => {
+  afterEach(() => {
     fetchMock.restore();
   });
 

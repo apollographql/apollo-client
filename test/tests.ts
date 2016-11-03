@@ -4,7 +4,6 @@
 // at @types/es6-shim, but it doesn't work in typedoc (or Atom it seems),
 // so we include them here manually
 /// <reference types="node" />
-/// <reference types="mocha" />
 
 // ensure support for fetch and promise
 import 'es6-promise';

@@ -115,7 +115,7 @@ describe('QueryManager', () => {
     delay,
     observer,
   }: {
-    done: MochaDone,
+    done: Function,
     query: Document,
     variables?: Object,
     queryOptions?: Object,
@@ -145,7 +145,7 @@ describe('QueryManager', () => {
     data,
     variables = {},
   }: {
-    done: MochaDone,
+    done: Function,
     query: Document,
     data: Object,
     variables?: Object

@@ -25,6 +25,7 @@ sidebar_categories:
   Integrations:
     - meteor
     - vue
+    - polymer
 
 # not sure if we should rename this?
 github_repo: apollostack/docs

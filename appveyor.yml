@@ -7,12 +7,9 @@ environment:
 
 # Install scripts. (runs after repo cloning)
 install:
-  # Get the latest stable version of Node.js or io.js
-  - ps: Install-Product node $env:nodejs_version
-  # install modules
-  - npm install
   # remove unused modules from node_modules directory
   - npm prune
+  - yarn
 
 # Post-install test scripts.
 test_script:
@@ -29,3 +26,4 @@ deploy: off
 
 cache:
   - node_modules
+  - "%LOCALAPPDATA%/Yarn"

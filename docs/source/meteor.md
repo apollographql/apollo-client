@@ -10,7 +10,7 @@ To install `apollo`, run these commands:
 
 ```text
 meteor add apollo
-meteor npm install --save apollo-client apollo-server express graphql graphql-tools body-parser
+meteor npm install --save apollo-client graphql-server-express express graphql graphql-tools body-parser
 ```
 
 ## Usage
@@ -51,15 +51,15 @@ createApolloServer({
 
 The [GraphiQL](https://github.com/graphql/graphiql) url by default is [http://localhost:3000/graphiql](http://localhost:3000/graphiql)
 
-Inside your resolvers, if the user is logged in, their id will be  `context.userId`:
+Inside your resolvers, if the user is logged in, their id will be `context.userId` and their user doc will be `context.user`:
 
 ```js
 export const resolvers = {
   Query: {
-    async user(root, args, context) {
+    user(root, args, context) {
       // Only return the current user, for security
       if (context.userId === args.id) {
-        return await Meteor.users.findOne(context.userId);
+        return context.user;
       }
     },
   },
@@ -95,6 +95,7 @@ Returns an [`options` object](http://dev.apollodata.com/core/apollo-client-api.h
 - `options`: [Apollo Server `options`](http://dev.apollodata.com/tools/apollo-server/setup.html#apolloOptions)
 - `config` may contain any of the following fields:
   - `path`: [Path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. Default: `'/graphql'`.
+  - `configServer`: Function that is given the express server for further configuration. For example: `{configServer: expressServer => expressServer.use(cors())}`
   - `maxAccountsCacheSizeInMB`: User account ids are cached in memory to reduce the response latency on multiple requests from the same user. Default: `1`.
   - `graphiql`: Whether to enable GraphiQL. Default: `true` in development and `false` in production.
   - `graphiqlPath`: Path for GraphiQL. Default: `/graphiql` (note the i).

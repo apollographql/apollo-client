@@ -3,6 +3,7 @@ const { assert } = chai;
 import gql from 'graphql-tag';
 
 import {
+  Store,
   createApolloStore,
 } from '../src/store';
 
@@ -21,6 +22,7 @@ describe('createApolloStore', () => {
         mutations: {},
         data: {},
         optimistic: [],
+        reducerError: null,
       }
     );
   });
@@ -37,6 +39,7 @@ describe('createApolloStore', () => {
         mutations: {},
         data: {},
         optimistic: [],
+        reducerError: null,
       }
     );
   });
@@ -61,6 +64,7 @@ describe('createApolloStore', () => {
         mutations: {},
         data: initialState.apollo.data,
         optimistic: initialState.apollo.optimistic,
+        reducerError: null,
       },
     });
   });
@@ -110,11 +114,12 @@ describe('createApolloStore', () => {
       },
     };
 
-    const emptyState = {
+    const emptyState: Store = {
       queries: { },
       mutations: { },
       data: { },
       optimistic: ([] as any[]),
+      reducerError: null,
     };
 
     const store = createApolloStore({
@@ -140,7 +145,7 @@ describe('createApolloStore', () => {
       },
     };
 
-    const emptyState = {
+    const emptyState: Store = {
       queries: {
         'test.0': {
           'forceFetch': false,
@@ -159,6 +164,7 @@ describe('createApolloStore', () => {
       mutations: {},
       data: {},
       optimistic: ([] as any[]),
+      reducerError: null,
     };
 
     const store = createApolloStore({

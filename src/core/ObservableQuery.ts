@@ -227,7 +227,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       variables: options.variables,
     });
 
-    const reducer = options.updateQuery;
+    const reducer = options.updateQuery || ((previousResult) => previousResult);
 
     const subscription = observable.subscribe({
       next: (data) => {

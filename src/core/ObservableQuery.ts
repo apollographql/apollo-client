@@ -114,7 +114,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public currentResult(): ApolloCurrentResult {
-    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
+    const { data, partial } = this.queryManager.getCurrentQueryResult(this, true);
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
 
     if (queryStoreValue && (queryStoreValue.graphQLErrors || queryStoreValue.networkError)) {

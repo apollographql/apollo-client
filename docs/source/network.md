@@ -17,7 +17,7 @@ Here's how you would instantiate a new client with a custom endpoint URL:
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
-const networkInterface = createNetworkInterface('https://example.com/graphql');
+const networkInterface = createNetworkInterface({ uri: 'https://example.com/graphql' });
 
 const client = new ApolloClient({
   networkInterface,
@@ -38,7 +38,7 @@ In both examples, we'll show how you would add an authentication token to the HT
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
-const networkInterface = createNetworkInterface('/graphql');
+const networkInterface = createNetworkInterface({ uri: '/graphql' });
 
 networkInterface.use([{
   applyMiddleware(req, next) {
@@ -62,7 +62,7 @@ The following example shows the use of multiple middlewares passed as an array:
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
-const networkInterface = createNetworkInterface('/graphql');
+const networkInterface = createNetworkInterface({ uri: '/graphql' });
 const token = 'first-token-value';
 const token2 = 'second-token-value';
 
@@ -117,7 +117,7 @@ Below are some examples of using afterwares.
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 import {logout} from './logout';
 
-const networkInterface = createNetworkInterface('/graphql');
+const networkInterface = createNetworkInterface({ uri: '/graphql' });
 
 networkInterface.useAfter([{
   applyAfterware({ response }, next) {
@@ -143,7 +143,7 @@ The following example shows the use of multiple afterwares passed as an array:
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 import {redirectTo} from './redirect';
 
-const networkInterface = createNetworkInterface('/graphql');
+const networkInterface = createNetworkInterface({ uri: '/graphql' });
 
 const exampleWare1 = {
   applyAfterware({ response }, next) {

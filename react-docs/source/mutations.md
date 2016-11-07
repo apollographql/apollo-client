@@ -116,7 +116,7 @@ import gql from 'graphql-tag';
 
 class NewEntry extends Component {
   render() {
-    return <div onClick={this.props.submit('apollostack/apollo-client')}>Click me</div>;
+    return <div onClick={() => this.props.submit('apollostack/apollo-client')}>Click me</div>;
   }
 }
 NewEntry.propTypes = {
@@ -127,9 +127,7 @@ const submitRepository = /* as above */;
 
 const NewEntryWithData = graphql(submitRepository, {
   props: ({ mutate }) => ({
-    submit(repoFullName){
-      return () => mutate({ variables: { repoFullName } }),
-    }
+    submit: (repoFullName) => mutate({ variables: { repoFullName } }),
   }),
 })(NewEntry);
 ```

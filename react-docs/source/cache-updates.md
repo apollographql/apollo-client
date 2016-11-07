@@ -18,7 +18,7 @@ import ApolloClient from 'apollo-client';
 // If your database has unique IDs across all types of objects, you can use
 // a very simple function!
 // Remember: You'll need to ensure that you select IDs in every query where
-// you need to results to be normalized.
+// you need the results to be normalized.
 const client = new ApolloClient({
   dataIdFromObject: o => o.id
 });

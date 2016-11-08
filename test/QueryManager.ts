@@ -2061,7 +2061,7 @@ describe('QueryManager', () => {
       });
     });
 
-    it.only('should not error on queries that are already in the store', () => {
+    it('should not error on queries that are already in the store', () => {
       let queryManager: QueryManager = null;
       const query = gql`
         query {
@@ -2092,10 +2092,9 @@ describe('QueryManager', () => {
       queryManager = createQueryManager({ networkInterface });
       const observable = queryManager.watchQuery({ query });
 
-      // wait just to make sure the observable doesn't fire again
-      return observableToPromise({ observable, wait: 0 },
-        (result) => assert.deepEqual(result.data, data),
-        (result) => assert.deepEqual(result.data, data),
+      // wait to make sure store reset happened
+      return observableToPromise({ observable, wait: 20 },
+        result => assert.deepEqual(result.data, data),
       ).then(() => {
         assert.equal(timesFired, 2);
       });

@@ -212,6 +212,7 @@ export default class ApolloClient {
     this.query = this.query.bind(this);
     this.mutate = this.mutate.bind(this);
     this.setStore = this.setStore.bind(this);
+    this.resetStore = this.resetStore.bind(this);
   }
 
   /**

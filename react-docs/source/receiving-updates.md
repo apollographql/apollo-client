@@ -116,6 +116,7 @@ class Feed extends Component {
           });
           return newResult;
         },
+        onError: (err) => console.error(err),
       });      
     }
 

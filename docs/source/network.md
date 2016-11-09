@@ -45,7 +45,7 @@ networkInterface.use([{
     if (!req.options.headers) {
       req.options.headers = {};  // Create the header object if needed.
     }
-    req.options.headers.authorization = localStorage.getItem('token') ? localStorage.getItem('token') : null;
+    req.options.headers['authorization'] = localStorage.getItem('token') ? localStorage.getItem('token') : null;
     next();
   }
 }]);
@@ -71,7 +71,7 @@ const exampleWare1 = {
     if (!req.options.headers) {
       req.options.headers = {};  // Create the headers object if needed.
     }
-    req.options.headers.authorization = token;
+    req.options.headers['authorization'] = token;
     next();
   }
 }
@@ -81,7 +81,7 @@ const exampleWare2 = {
     if (!req.options.headers) {
       req.options.headers = {};  // Create the headers object if needed.
     }
-    req.options.headers.authorization = token2;
+    req.options.headers['authorization'] = token2;
     next();
   }
 }

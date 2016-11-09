@@ -224,7 +224,7 @@ To use batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` c
 
 <h3 id="BatchingExample">Batching example</h3>
 
-Batching is supported in the default network interface, so to turn it on normally you just have to pass `shouldBatch: true` to the constructor:
+This example shows how to create the `BatchedNetworkInterface` that you'll pass to the `ApolloClient` constructor:
 
 ```javascript
 import ApolloClient, { createBatchingNetworkInterface } from 'apollo-client';

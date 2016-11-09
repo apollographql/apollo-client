@@ -58,3 +58,73 @@ The server can use that header to authenticate the user and attach it to the Gra
 Since Apollo caches all of your query results, it's important to get rid of them when the login state changes.
 
 The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. Another option is to reload the page, which will have a similar effect.
+
+
+```js
+class Profile extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.logout = () => {
+      App.logout() // or whatever else your logout flow is
+      .then(() =>
+        props.client.resetStore();
+      )
+      .catch(err =>
+        console.error('Logout failed', err);
+      );
+    }
+  }
+
+  render() {
+    const { loading, currentUser } = this.props;
+
+    if (loading) {
+      return (
+        <p className="navbar-text navbar-right">
+          Loading...
+        </p>
+      );
+    } else if (currentUser) {
+      return (
+        <span>
+          <p className="navbar-text navbar-right">
+            {currentUser.login}
+            &nbsp;
+            <button onClick={this.logout}>Log out</button>
+          </p>
+        </span>
+      );
+    }
+    return (
+      <p className="navbar-text navbar-right">
+        <a href="/login/github">Log in with GitHub</a>
+      </p>
+    );
+  }
+}
+
+Profile.propTypes = {
+  client: React.PropTypes.instanceOf(ApolloClient),
+  loading: React.PropTypes.bool,
+  currentUser: React.PropTypes.shape({
+    login: React.PropTypes.string.isRequired,
+  }),
+};
+
+const PROFILE_QUERY = gql`
+  query CurrentUserForLayout {
+    currentUser {
+      login
+      avatar_url
+    }
+  }
+`;
+
+export default withApollo(graphql(PROFILE_QUERY, {
+  options: { forceFetch: true },
+  props: ({ data: { loading, currentUser } }) => ({
+    loading, currentUser,
+  }),
+})(Profile));
+```

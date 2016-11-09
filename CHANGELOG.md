@@ -9,6 +9,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Expose `SubscriptionOptions` [PR #868](https://github.com/apollostack/apollo-client/pull/868)
 - Fix issue with `currentResult` and optimistic responses [Issue #877](https://github.com/apollostack/apollo-client/issues/877)
 - Bind `resetStore` to ApolloClient [PR #882](https://github.com/apollostack/apollo-client/issues/882)
+- Fix a bug with `resetStore` that caused existing queries to fail  [PR #885](https://github.com/apollostack/apollo-client/issues/885)
 
 ### v0.5.0
 - Add a `createdBatchingNetworkInterface` function and export it.

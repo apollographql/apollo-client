@@ -1718,6 +1718,67 @@ describe('client', () => {
     });
   });
 
+  it('should throw an error if response to batch request is not an array', (done) => {
+    const firstQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const firstResult = {
+      data: {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      },
+      loading: false,
+    };
+    const secondQuery = gql`
+      query {
+        person {
+          name
+        }
+      }`;
+    const url = 'http://not-a-real-url.com';
+    const oldFetch = fetch;
+    fetch = createMockFetch({
+      url,
+      opts: {
+        body: JSON.stringify([
+          {
+            query: print(firstQuery),
+          },
+          {
+            query: print(secondQuery),
+          },
+        ]),
+        headers: {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      },
+      result: createMockedIResponse(firstResult),
+    });
+    const networkInterface = createBatchingNetworkInterface({
+      uri: 'http://not-a-real-url.com',
+      batchInterval: 5,
+      opts: {},
+    });
+    Promise.all([
+      networkInterface.query({ query: firstQuery }),
+      networkInterface.query({ query: secondQuery }),
+    ]).then((results) => {
+      assert.equal(true, false, 'expected response to throw an error');
+    }).catch( e => {
+      assert.equal(e.message, 'BatchingNetworkInterface: server response is not an array');
+      fetch = oldFetch;
+      done();
+    });
+  });
+
   it('should not do transport-level batching when the interval is exceeded', (done) => {
     const firstQuery = gql`
       query {

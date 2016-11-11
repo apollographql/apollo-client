@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Print a warning if server response is not an array when using transport batching [PR #893](https://github.com/apollostack/apollo-client/pull/893)
+- apply addTypename in watchQuery for result reducers [PR #895](https://github.com/apollostack/apollo-client/pull/895)
 
 ### 0.5.1
 - **new Feature**: Enable chaining of `use` and `useAfter` function calls in network interface. [PR #860](https://github.com/apollostack/apollo-client/pull/860) [Issue #564](https://github.com/apollostack/apollo-client/issues/564)

@@ -413,9 +413,14 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
+    let transformedOptions = Object.assign({}, options) as WatchQueryOptions;
+    if (this.addTypename) {
+      transformedOptions.query = addTypenameToDocument(transformedOptions.query);
+    }
+
     let observableQuery = new ObservableQuery({
       scheduler: this.scheduler,
-      options: options,
+      options: transformedOptions,
       shouldSubscribe: shouldSubscribe,
     });
 

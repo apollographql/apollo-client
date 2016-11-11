@@ -130,7 +130,7 @@ All of these function-based forms of `options` will be recalculated whenever the
 
 <h2 id="graphql-skip">Skipping an operation</h2>
 
-Sometimes you may want to skip a query based on the available information, to do this you can pass `skip: true` as part of the options. This is useful if you want to ignore a query if a user isn't authenticated:
+Sometimes you may want to skip a query based on the available information. To do this you can pass `skip: true` as part of the options. This is useful if you want to ignore a query if a user isn't authenticated:
 
 ```js
 const ProfileWithData = graphql(CurrentUserForLayout, {

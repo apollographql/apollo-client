@@ -3,11 +3,11 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Print a warning if server response is not an array when using transport batching [PR #893](https://github.com/apollostack/apollo-client/pull/893)
 
 ### 0.5.1
 - **new Feature**: Enable chaining of `use` and `useAfter` function calls in network interface. [PR #860](https://github.com/apollostack/apollo-client/pull/860) [Issue #564](https://github.com/apollostack/apollo-client/issues/564)
-- Create and expose the `MutationOptions` [PR #866]
-(https://github.com/apollostack/apollo-client/pull/866)
+- Create and expose the `MutationOptions` [PR #866](https://github.com/apollostack/apollo-client/pull/866)
 - Expose `SubscriptionOptions` [PR #868](https://github.com/apollostack/apollo-client/pull/868)
 - Fix issue with `currentResult` and optimistic responses [Issue #877](https://github.com/apollostack/apollo-client/issues/877)
 - Provide an onError callback for subscribeToMore [PR #886](https://github.com/apollostack/apollo-client/issues/886)

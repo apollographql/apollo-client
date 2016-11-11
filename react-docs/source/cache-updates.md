@@ -301,4 +301,4 @@ While `reducer` is more flexible, updates based on mutations can usually be done
 
 The main difference between the two is where the update behavior is declared. With `reducer`, the update behavior is co-located with the query itself. That means the query needs to know what actions should lead to an updated result. With `updateQueries` it is the mutation's responsibility to update all the queries that may need to know about the results of this mutation.
 
-We recommend using always using the `reducer` option, except when there's a good reason to use `updateQueries` instead (eg. if it would make your app much easier to understand and maintain).
+We recommend using the `reducer` option, except when there's a good reason to use `updateQueries` instead (eg. if it would make your app much easier to understand and maintain).

@@ -205,7 +205,9 @@ function resetQueryState(state: QueryStore, action: StoreResetAction): QueryStor
   const newQueries = Object.keys(state).filter((queryId) => {
     return (observableQueryIds.indexOf(queryId) > -1);
   }).reduce((res, key) => {
-    res[key] = state[key];
+    // XXX set loading to true so listeners don't trigger unless they want results with partial data
+    res[key] = assign({}, state[key], { loading: true, networkStatus: NetworkStatus.loading });
+
     return res;
   }, {} as QueryStore);
 

@@ -2061,6 +2061,45 @@ describe('QueryManager', () => {
       });
     });
 
+    it('should not error on queries that are already in the store', () => {
+      let queryManager: QueryManager = null;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          if (timesFired === 0) {
+            timesFired += 1;
+            setTimeout(queryManager.resetStore.bind(queryManager), 10);
+          } else {
+            timesFired += 1;
+          }
+          return Promise.resolve({ data });
+        },
+      };
+      queryManager = createQueryManager({ networkInterface });
+      const observable = queryManager.watchQuery({ query });
+
+      // wait to make sure store reset happened
+      return observableToPromise({ observable, wait: 20 },
+        result => assert.deepEqual(result.data, data),
+      ).then(() => {
+        assert.equal(timesFired, 2);
+      });
+    });
+
 
     it('should throw an error on an inflight fetch query if the store is reset', (done) => {
       const query = gql`

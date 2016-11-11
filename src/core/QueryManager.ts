@@ -384,7 +384,6 @@ export class QueryManager {
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
             };
-
             if (observer.next) {
               if (this.isDifferentResult(lastResult, resultFromStore)) {
                 lastResult = resultFromStore;

@@ -243,8 +243,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         this.updateQuery(mapFn);
       },
       error: (err) => {
-        // TODO implement something smart here when improving error handling
-        console.error(err);
+        if (options.onError) {
+          options.onError(err);
+        } else {
+          console.error('Unhandled GraphQL subscription errror', err);
+        }
       },
     });
 

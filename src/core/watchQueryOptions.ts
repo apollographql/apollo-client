@@ -95,6 +95,7 @@ export type SubscribeToMoreOptions = {
     subscriptionData: { data: any },
     variables: { [key: string]: any },
   }) => Object;
+  onError?: (error: Error) => void;
 }
 
 export interface DeprecatedSubscriptionOptions {

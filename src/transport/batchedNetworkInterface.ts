@@ -69,6 +69,11 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
           })
           .then(responses => {
 
+
+            if (typeof responses.map !== 'function') {
+              throw new Error('BatchingNetworkInterface: server response is not an array');
+            }
+
             type ResponseAndOptions = {
               response: IResponse;
               options: RequestInit;

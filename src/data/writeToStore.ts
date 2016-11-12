@@ -350,6 +350,8 @@ function processArrayValue(
       return processArrayValue(item, itemDataId, selectionSet, context);
     }
 
+    let generated = true;
+
     if (context.dataIdFromObject) {
       const semanticId = context.dataIdFromObject(item);
 
@@ -365,6 +367,12 @@ function processArrayValue(
       context,
     });
 
-    return itemDataId as IdValue;
+    const idStoreValue: IdValue = {
+      type: 'id',
+      id: itemDataId,
+      generated,
+    };
+
+    return idStoreValue;
   });
 }

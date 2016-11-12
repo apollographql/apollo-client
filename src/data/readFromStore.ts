@@ -74,11 +74,13 @@ type ReadStoreContext = {
 let haveWarned = false;
 
 const fragmentMatcher: FragmentMatcher = (
-  objId: string,
+  idValue: IdValue,
   typeCondition: string,
   context: ReadStoreContext
 ): boolean => {
-  const obj = context.store[objId];
+  assertIdValue(idValue);
+
+  const obj = context.store[idValue.id];
 
   if (! obj) {
     return false;
@@ -120,11 +122,7 @@ const readStoreResolver: Resolver = (
   args: any,
   context: ReadStoreContext
 ) => {
-  if (! isIdValue(idValue)) {
-    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
-an object reference. This should never happen during normal use unless you have custom code \
-that is directly manipulating the store; please file an issue.`);
-  }
+  assertIdValue(idValue);
 
   const objId = idValue.id;
   const obj = context.store[objId];
@@ -188,4 +186,12 @@ export function diffQueryAgainstStore({
     result,
     isMissing: context.hasMissingField,
   };
+}
+
+function assertIdValue(idValue: IdValue) {
+  if (! isIdValue(idValue)) {
+    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
+an object reference. This should never happen during normal use unless you have custom code \
+that is directly manipulating the store; please file an issue.`);
+  }
 }

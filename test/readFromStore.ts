@@ -179,7 +179,6 @@ describe('reading from the store', () => {
         nestedObj: {
           type: 'id',
           id: 'abcde',
-          nullField: null,
           generated: false,
         },
       }) as StoreObject,
@@ -188,7 +187,6 @@ describe('reading from the store', () => {
           type: 'id',
           id: 'abcdef',
           generated: false,
-          nullField: null,
         },
       }) as StoreObject,
       abcdef: result.deepNestedObj as StoreObject,

@@ -365,6 +365,6 @@ function processArrayValue(
       context,
     });
 
-    return itemDataId;
+    return itemDataId as IdValue;
   });
 }

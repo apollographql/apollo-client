@@ -11,6 +11,7 @@ import {
   NormalizedCache,
   isJsonValue,
   isIdValue,
+  IdValue,
 } from './storeUtils';
 
 import {
@@ -115,10 +116,15 @@ match fragments.`);
 
 const readStoreResolver: Resolver = (
   fieldName: string,
-  objId: string,
+  idValue: IdValue,
   args: any,
   context: ReadStoreContext
 ) => {
+  if (! isIdValue(idValue)) {
+    throw new Error('Got incorrect root value during store execution. Please file an issue.');
+  }
+
+  const objId = idValue.id;
   const obj = context.store[objId];
   const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
   const fieldValue = (obj || {})[storeKeyName];
@@ -137,10 +143,6 @@ Perhaps you want to use the \`returnPartialData\` option?`);
   if (isJsonValue(fieldValue)) {
     // if this is an object scalar, it must be a json blob and we have to unescape it
     return fieldValue.json;
-  }
-
-  if (isIdValue(fieldValue)) {
-    return fieldValue.id;
   }
 
   return fieldValue;
@@ -171,7 +173,12 @@ export function diffQueryAgainstStore({
     hasMissingField: false,
   };
 
-  const result = graphqlAnywhere(readStoreResolver, query, 'ROOT_QUERY', context, variables, {
+  const rootIdValue = {
+    type: 'id',
+    id: 'ROOT_QUERY',
+  };
+
+  const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
     fragmentMatcher,
   });
 

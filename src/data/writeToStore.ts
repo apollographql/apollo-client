@@ -357,6 +357,7 @@ function processArrayValue(
 
       if (semanticId) {
         itemDataId = semanticId;
+        generated = false;
       }
     }
 

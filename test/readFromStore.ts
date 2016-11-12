@@ -270,8 +270,8 @@ describe('reading from the store', () => {
     const store = {
       'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
-          'abcd.nestedArray.0',
-          'abcd.nestedArray.1',
+          { type: 'id', generated: true, id: 'abcd.nestedArray.0' },
+          { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
         ],
       }) as StoreObject,
       'abcd.nestedArray.0': result.nestedArray[0],
@@ -329,7 +329,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          'abcd.nestedArray.1',
+          { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
         ],
       }) as StoreObject,
       'abcd.nestedArray.1': result.nestedArray[1],
@@ -384,7 +384,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          'abcde',
+          { type: 'id', generated: false, id: 'abcde' },
         ],
       }) as StoreObject,
       'abcde': result.nestedArray[1],

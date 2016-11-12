@@ -121,7 +121,9 @@ const readStoreResolver: Resolver = (
   context: ReadStoreContext
 ) => {
   if (! isIdValue(idValue)) {
-    throw new Error('Got incorrect root value during store execution. Please file an issue.');
+    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
+an object reference. This should never happen during normal use unless you have custom code \
+that is directly manipulating the store; please file an issue.`);
   }
 
   const objId = idValue.id;

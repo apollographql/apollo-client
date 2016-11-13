@@ -228,10 +228,17 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       variables: options.variables,
     });
 
-    const reducer = options.updateQuery || ((previousResult) => previousResult);
+    const observer: Observer<any> = {
+      error: (err) => {
+        // TODO implement something smart here when improving error handling
+        console.error(err);
+      },
+    };
 
-    const subscription = observable.subscribe({
-      next: (data) => {
+    if (options.updateQuery) {
+      const reducer = options.updateQuery;
+
+      observer.next = (data) => {
         const mapFn = (previousResult: Object, { variables }: { variables: Object }) => {
           return reducer(
             previousResult, {
@@ -241,12 +248,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           );
         };
         this.updateQuery(mapFn);
-      },
-      error: (err) => {
-        // TODO implement something smart here when improving error handling
-        console.error(err);
-      },
-    });
+      };
+    }
+
+    const subscription = observable.subscribe(observer);
 
     this.subscriptionHandles.push(subscription);
 

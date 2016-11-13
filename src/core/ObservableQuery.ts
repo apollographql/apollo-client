@@ -227,10 +227,20 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       variables: options.variables,
     });
 
-    const reducer = options.updateQuery || ((previousResult) => previousResult);
+    const observer: Observer<any> = {
+      error: (err) => {
+        if (options.onError) {
+          options.onError(err);
+        } else {
+          console.error('Unhandled GraphQL subscription errror', err);
+        }
+      },
+    };
 
-    const subscription = observable.subscribe({
-      next: (data) => {
+    if (options.updateQuery) {
+      const reducer = options.updateQuery;
+
+      observer.next = (data) => {
         const mapFn = (previousResult: Object, { variables }: { variables: Object }) => {
           return reducer(
             previousResult, {
@@ -240,15 +250,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           );
         };
         this.updateQuery(mapFn);
-      },
-      error: (err) => {
-        if (options.onError) {
-          options.onError(err);
-        } else {
-          console.error('Unhandled GraphQL subscription errror', err);
-        }
-      },
-    });
+      };
+    }
+
+    const subscription = observable.subscribe(observer);
+>>>>>>> subscribe doesn't need next function if SubscribeToMoreOptions has no updateQuery function
 
     this.subscriptionHandles.push(subscription);
 

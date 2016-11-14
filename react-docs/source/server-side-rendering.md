@@ -18,9 +18,9 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  // The contents of { data } could be the result of client.store.getState().apollo.data,
+  // The contents of { data } could be the result of client.store.getState()[client.reduxRootKey].data,
   // or synthetically generated to look similar
-  window.__APOLLO_STATE__ = { apollo: { data } };
+  window.__APOLLO_STATE__ = data;
 </script>
 ```
 
@@ -117,19 +117,22 @@ Next we'll see what that rendering code actually does.
 
 <h3 id="getDataFromTree">Using `getDataFromTree`</h3>
 
-The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all. It does this recursively down the whole tree if you have nested queries. It returns a promise which resolves to the React Context provided by `ApolloProvider`, and you can use this to get the current store state with `context.store.getState()`.
+The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all. It does this recursively down the whole tree if you have nested queries. It returns a promise which resolves when the data is ready in your Apollo Client store.
 
 At the point that the promise resolves, your Apollo Client store will be completely initialized, which should mean your app will now render instantly (since all queries are prefetched) and you can return the stringified results in the response:
 
 ```js
 import { getDataFromTree } from "react-apollo/server"
 
+const client = new ApolloClient(....);
+
 // during request (see above)
-getDataFromTree(app).then((context) => {
+getDataFromTree(app).then(() => {
   // We are ready to render for real
   const content = ReactDOM.renderToString(app);
+  const initialState = client.store.getState()[client.reduxRootKey].data;
 
-  const html = <Html content={content} state={context.store.getState()} />;
+  const html = <Html content={content} state={initialState} />;
 
   res.status(200);
   res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);
@@ -166,15 +169,18 @@ const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
 
 <h3 id="renderToStringWithData">Using `renderToStringWithData`</h3>
 
-The `renderToStringWithData` function simplifies the above and simply returns the content string and state that you need to render. So it reduces the number of steps slightly:
+The `renderToStringWithData` function simplifies the above and simply returns the content string  that you need to render. So it reduces the number of steps slightly:
 
 ```js
 // server application code (integrated usage)
 import { renderToStringWithData } from "react-apollo/server"
 
+const client = new ApolloClient(....);
+
 // during request
-renderToStringWithData(app).then(({ markup, initialState }) => {
-  const html = <Html content={markup} state={initialState} />;
+renderToStringWithData(app).then((content) => {
+  const initialState = client.store.getState()[client.reduxRootKey].data;
+  const html = <Html content={content} state={initialState} />;
 
   res.status(200);
   res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);

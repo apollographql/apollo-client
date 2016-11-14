@@ -284,4 +284,54 @@ fragment businessAreaInfo on BusinessArea {
 }
 `);
   });
+
+  it('should only attach distinct fragments', () => {
+    const subjectInfo = createFragment(gql`
+      fragment subjectInfo on Subject {
+        id
+        name
+      }`
+    );
+
+    const businessAreaInfo = createFragment(gql`
+      fragment businessAreaInfo on BusinessArea {
+        id
+        name
+        subjects {
+          ...subjectInfo
+        }
+      }`,
+      [subjectInfo, subjectInfo],
+    );
+
+    const query = gql`
+      query {
+        businessAreas {
+          ...businessAreaInfo
+        }
+      }
+    `;
+
+    const fullDoc = addFragmentsToDocument(query, businessAreaInfo);
+
+    assert.equal(print(fullDoc), `{
+  businessAreas {
+    ...businessAreaInfo
+  }
+}
+
+fragment subjectInfo on Subject {
+  id
+  name
+}
+
+fragment businessAreaInfo on BusinessArea {
+  id
+  name
+  subjects {
+    ...subjectInfo
+  }
+}
+`);
+  });
 });

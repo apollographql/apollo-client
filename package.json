@@ -59,7 +59,7 @@
     "lodash.pick": "^4.2.0",
     "redux": "^3.3.1",
     "symbol-observable": "^1.0.2",
-    "whatwg-fetch": "^1.0.0"
+    "whatwg-fetch": "^2.0.0"
   },
   "devDependencies": {
     "@types/chai": "^3.4.32",

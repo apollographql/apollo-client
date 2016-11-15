@@ -11,6 +11,7 @@ import {
   NormalizedCache,
   isJsonValue,
   isIdValue,
+  IdValue,
 } from './storeUtils';
 
 import {
@@ -73,11 +74,13 @@ type ReadStoreContext = {
 let haveWarned = false;
 
 const fragmentMatcher: FragmentMatcher = (
-  objId: string,
+  idValue: IdValue,
   typeCondition: string,
   context: ReadStoreContext
 ): boolean => {
-  const obj = context.store[objId];
+  assertIdValue(idValue);
+
+  const obj = context.store[idValue.id];
 
   if (! obj) {
     return false;
@@ -115,10 +118,13 @@ match fragments.`);
 
 const readStoreResolver: Resolver = (
   fieldName: string,
-  objId: string,
+  idValue: IdValue,
   args: any,
   context: ReadStoreContext
 ) => {
+  assertIdValue(idValue);
+
+  const objId = idValue.id;
   const obj = context.store[objId];
   const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
   const fieldValue = (obj || {})[storeKeyName];
@@ -137,10 +143,6 @@ Perhaps you want to use the \`returnPartialData\` option?`);
   if (isJsonValue(fieldValue)) {
     // if this is an object scalar, it must be a json blob and we have to unescape it
     return fieldValue.json;
-  }
-
-  if (isIdValue(fieldValue)) {
-    return fieldValue.id;
   }
 
   return fieldValue;
@@ -171,7 +173,12 @@ export function diffQueryAgainstStore({
     hasMissingField: false,
   };
 
-  const result = graphqlAnywhere(readStoreResolver, query, 'ROOT_QUERY', context, variables, {
+  const rootIdValue = {
+    type: 'id',
+    id: 'ROOT_QUERY',
+  };
+
+  const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
     fragmentMatcher,
   });
 
@@ -179,4 +186,12 @@ export function diffQueryAgainstStore({
     result,
     isMissing: context.hasMissingField,
   };
+}
+
+function assertIdValue(idValue: IdValue) {
+  if (! isIdValue(idValue)) {
+    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
+an object reference. This should never happen during normal use unless you have custom code \
+that is directly manipulating the store; please file an issue.`);
+  }
 }

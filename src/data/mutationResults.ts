@@ -122,6 +122,7 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
   });
 
   // OK, now we need to get a dataID to pass to writeSelectionSetToStore
+  // XXX Set 'generated' flag?
   const dataId = config.dataIdFromObject(scopedResult) || generateMutationResultDataId();
 
   // Step 2: insert object into store with writeSelectionSet
@@ -145,10 +146,12 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
     path: restStorePath,
   });
 
+  const idValue = { type: 'id', generated: false, id: dataId };
+
   if (where === 'PREPEND') {
-    array.unshift(dataId);
+    array.unshift(idValue);
   } else if (where === 'APPEND') {
-    array.push(dataId);
+    array.push(idValue);
   } else {
     throw new Error('Unsupported "where" option to ARRAY_INSERT.');
   }
@@ -191,7 +194,7 @@ function removeRefsFromStoreObj(storeObj: any, dataId: any) {
   let affected = false;
 
   const cleanedObj = mapValues(storeObj, (value: any) => {
-    if (value === dataId) {
+    if (value && value.id === dataId) {
       affected = true;
       return null;
     }
@@ -240,7 +243,7 @@ export function cleanArray(originalArray: any[], dataId: any): any[] {
 
     return filteredArray;
   } else {
-    const filteredArray = originalArray.filter((item) => item !== dataId);
+    const filteredArray = originalArray.filter((item) => item.id !== dataId);
 
     if (filteredArray.length === originalArray.length) {
       // No items were removed, return original array
@@ -267,7 +270,23 @@ function mutationResultArrayDeleteReducer(state: NormalizedCache, {
     path: restStorePath,
   });
 
-  array.splice(array.indexOf(dataId), 1);
+  // Find the index that matches the dataId
+  let index = -1;
+  array.some((item: any, i: number) => {
+    if (item && item.id === dataId) {
+      index = i;
+      return true;
+    }
+
+    return false;
+  });
+
+  if (index === -1) {
+    // We didn't have anything to remove, just return the same thing we had before
+    return state;
+  }
+
+  array.splice(index, 1);
 
   return assign(state, {
     [dataIdOfObj]: clonedObj,

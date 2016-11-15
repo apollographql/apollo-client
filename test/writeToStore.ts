@@ -332,7 +332,11 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     }), {
       'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
-        nestedArray: result.nestedArray.map(_.property('id')),
+        nestedArray: result.nestedArray.map((obj: any) => ({
+          type: 'id',
+          id: obj.id,
+          generated: false,
+        })),
       }),
       [result.nestedArray[0].id]: result.nestedArray[0],
       [result.nestedArray[1].id]: result.nestedArray[1],
@@ -378,7 +382,7 @@ describe('writing to the store', () => {
     }), {
       'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
-          result.nestedArray[0].id,
+          { type: 'id', id: result.nestedArray[0].id, generated: false },
           null,
         ],
       }),
@@ -428,8 +432,8 @@ describe('writing to the store', () => {
     assert.deepEqual(normalized, {
       'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
-          `ROOT_QUERY.nestedArray.0`,
-          `ROOT_QUERY.nestedArray.1`,
+          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.0` },
+          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.1` },
         ],
       }),
       [`ROOT_QUERY.nestedArray.0`]: result.nestedArray[0],
@@ -476,7 +480,7 @@ describe('writing to the store', () => {
       'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          `ROOT_QUERY.nestedArray.1`,
+          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.1` },
         ],
       }),
       [`ROOT_QUERY.nestedArray.1`]: result.nestedArray[1],

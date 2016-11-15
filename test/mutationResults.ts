@@ -561,17 +561,17 @@ describe('mutation results', () => {
     });
   });
 
-  describe('array cleaning for ARRAY_DELETE', () => {
+  describe('array cleaning for DELETE behavior', () => {
     it('maintains reference on flat array', () => {
-      const array = [1, 2, 3, 4, 5];
+      const array = [1, 2, 3, 4, 5].map(x => ({id: x}));
       assert.isTrue(cleanArray(array, 6) === array);
       assert.isFalse(cleanArray(array, 3) === array);
     });
 
     it('works on nested array', () => {
       const array = [
-        [1, 2, 3, 4, 5],
-        [6, 7, 8, 9, 10],
+        [1, 2, 3, 4, 5].map(x => ({id: x})),
+        [6, 7, 8, 9, 10].map(x => ({id: x})),
       ];
 
       const cleaned = cleanArray(array, 5);
@@ -581,8 +581,8 @@ describe('mutation results', () => {
 
     it('maintains reference on nested array', () => {
       const array = [
-        [1, 2, 3, 4, 5],
-        [6, 7, 8, 9, 10],
+        [1, 2, 3, 4, 5].map(x => ({id: x})),
+        [6, 7, 8, 9, 10].map(x => ({id: x})),
       ];
 
       assert.isTrue(cleanArray(array, 11) === array);

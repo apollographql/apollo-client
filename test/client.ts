@@ -458,7 +458,11 @@ describe('client', () => {
             name: 'Luke Skywalker',
           },
           'ROOT_QUERY.allPeople({"first":1})': {
-            people: [ 'ROOT_QUERY.allPeople({"first":"1"}).people.0' ],
+            people: [ {
+              type: 'id',
+              generated: true,
+              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
+            } ],
           },
           ROOT_QUERY: {
             'allPeople({"first":1})': {

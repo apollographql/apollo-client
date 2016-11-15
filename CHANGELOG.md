@@ -4,6 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### 0.5.3
+- Change the way IDs of objects in arrays are stored to make them consistent with the rest of the store [PR #901](https://github.com/apollostack/apollo-client/pull/901)
+
 
 ### 0.5.2
 - Print a warning if server response is not an array when using transport batching [PR #893](https://github.com/apollostack/apollo-client/pull/893)

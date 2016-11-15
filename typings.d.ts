@@ -105,6 +105,10 @@ declare module 'lodash.pick' {
   export = main.pick;
 }
 
+declare module 'lodash.uniq' {
+  import main = require('lodash');
+  export = main.uniq;
+}
 /*
 
   GRAPHQL

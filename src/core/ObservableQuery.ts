@@ -45,7 +45,7 @@ export interface UpdateQueryOptions {
   variables: Object;
 }
 
-export class ObservableQuery extends Observable<ApolloQueryResult> {
+export class ObservableQuery<QueryType, MutationType> extends Observable<ApolloQueryResult<QueryType | MutationType>> {
   public options: WatchQueryOptions;
   public queryId: string;
   /**
@@ -56,12 +56,12 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
   private isCurrentlyPolling: boolean;
   private shouldSubscribe: boolean;
-  private scheduler: QueryScheduler;
-  private queryManager: QueryManager;
-  private observers: Observer<ApolloQueryResult>[];
+  private scheduler: QueryScheduler<QueryType, MutationType>;
+  private queryManager: QueryManager<QueryType, MutationType>;
+  private observers: Observer<ApolloQueryResult<QueryType | MutationType>>[];
   private subscriptionHandles: Subscription[];
 
-  private lastResult: ApolloQueryResult;
+  private lastResult: ApolloQueryResult<QueryType | MutationType>;
   private lastError: ApolloError;
 
   constructor({
@@ -69,14 +69,14 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     options,
     shouldSubscribe = true,
   }: {
-    scheduler: QueryScheduler,
+    scheduler: QueryScheduler<QueryType, MutationType>,
     options: WatchQueryOptions,
     shouldSubscribe?: boolean,
   }) {
     const queryManager = scheduler.queryManager;
     const queryId = queryManager.generateQueryId();
 
-    const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
+    const subscriberFunction = (observer: Observer<ApolloQueryResult<QueryType | MutationType>>) => {
       return this.onSubscribe(observer);
     };
 
@@ -93,7 +93,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.subscriptionHandles = [];
   }
 
-  public result(): Promise<ApolloQueryResult> {
+  public result(): Promise<ApolloQueryResult<QueryType | MutationType>> {
     return new Promise((resolve, reject) => {
       const subscription = this.subscribe({
         next(result) {
@@ -145,7 +145,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     return { data, loading, networkStatus };
   }
 
-  public refetch(variables?: any): Promise<ApolloQueryResult> {
+  public refetch(variables?: any): Promise<ApolloQueryResult<QueryType | MutationType>> {
     this.variables = {
       ...this.variables,
       ...variables,
@@ -173,7 +173,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
   public fetchMore(
     fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
-  ): Promise<ApolloQueryResult> {
+  ): Promise<ApolloQueryResult<QueryType | MutationType>> {
     return Promise.resolve()
       .then(() => {
         const qid = this.queryManager.generateQueryId();
@@ -266,7 +266,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     };
   }
 
-  public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult> {
+  public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult<QueryType | MutationType>> {
     const oldOptions = this.options;
     this.options = {
       ...this.options,
@@ -298,7 +298,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public setVariables(variables: any): Promise<ApolloQueryResult> {
+  public setVariables(variables: any): Promise<ApolloQueryResult<QueryType | MutationType>> {
     const newVariables = {
       ...this.variables,
       ...variables,
@@ -360,7 +360,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.scheduler.startPollingQuery(this.options, this.queryId);
   }
 
-  private onSubscribe(observer: Observer<ApolloQueryResult>) {
+  private onSubscribe(observer: Observer<ApolloQueryResult<QueryType | MutationType>>) {
     this.observers.push(observer);
 
     // Deliver initial result
@@ -411,8 +411,8 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       );
     }
 
-    const observer: Observer<ApolloQueryResult> = {
-      next: (result: ApolloQueryResult) => {
+    const observer: Observer<ApolloQueryResult<QueryType | MutationType>> = {
+      next: (result: ApolloQueryResult<QueryType | MutationType>) => {
         this.observers.forEach((obs) => {
           if (obs.next) {
             obs.next(result);

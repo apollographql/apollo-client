@@ -4,8 +4,8 @@ import { Subscription } from '../../src/util/Observable';
 
 import wrap from './wrap';
 
-export default function(done: MochaDone, observable: ObservableQuery,
-    cb: (handleCount: number, result: ApolloQueryResult) => any): Subscription {
+export default function(done: MochaDone, observable: ObservableQuery<any, any>,
+    cb: (handleCount: number, result: ApolloQueryResult<any>) => any): Subscription {
   let handleCount = 0;
   return observable.subscribe({
     next: wrap(done, result => {

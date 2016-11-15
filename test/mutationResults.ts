@@ -182,7 +182,7 @@ describe('mutation results', () => {
     },
   };
 
-  let client: ApolloClient;
+  let client: ApolloClient<any, any>;
   let networkInterface: any;
 
   type CustomMutationBehavior = {

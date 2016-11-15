@@ -104,7 +104,7 @@ describe('optimistic mutation results', () => {
     },
   };
 
-  let client: ApolloClient<any, any>;
+  let client: ApolloClient;
   let networkInterface: any;
 
   type CustomMutationBehavior = {
@@ -133,7 +133,7 @@ describe('optimistic mutation results', () => {
       result,
     }, ...mockedResponses);
 
-    client = new ApolloClient<any, any>({
+    client = new ApolloClient({
       networkInterface,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
@@ -1037,7 +1037,7 @@ describe('optimistic mutation - githunt comments', () => {
     },
   };
 
-  let client: ApolloClient<any, any>;
+  let client: ApolloClient;
   let networkInterface: any;
 
   function setup(...mockedResponses: any[]) {

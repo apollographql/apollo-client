@@ -1650,7 +1650,7 @@ describe('client', () => {
       resetStore: () => {
         done();
       },
-    } as QueryManager<any, any>;
+    } as QueryManager;
     client.resetStore();
   });
 

@@ -131,7 +131,7 @@ describe('fetchMore on an observable query', () => {
 
   let latestResult: any = null;
 
-  let client: ApolloClient<any, any>;
+  let client: ApolloClient;
   let networkInterface: any;
   let sub: any;
 
@@ -144,7 +144,7 @@ describe('fetchMore on an observable query', () => {
       result,
     }, ...mockedResponses);
 
-    client = new ApolloClient<any, any>({
+    client = new ApolloClient({
       networkInterface,
       addTypename: true,
     });

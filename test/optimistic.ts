@@ -564,8 +564,8 @@ describe('optimistic mutation results', () => {
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
         assert.notProperty(dataInStore, 'Todo99');
         assert.property(dataInStore, 'Todo66');
-        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
-        assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
+        assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+        assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
       });
     });
     it('can run 2 mutations concurrently and handles all intermediate states well', () => {
@@ -574,8 +574,8 @@ describe('optimistic mutation results', () => {
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
         assert.property(dataInStore, 'Todo99');
         assert.property(dataInStore, 'Todo66');
-        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
-        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo99');
+        assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+        assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
         assert.equal((dataInStore['Todo99'] as any).text, expectedText1);
         assert.equal((dataInStore['Todo66'] as any).text, expectedText2);
       }
@@ -839,8 +839,8 @@ describe('optimistic mutation results', () => {
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
         assert.notProperty(dataInStore, 'Todo99');
         assert.property(dataInStore, 'Todo66');
-        assert.include((dataInStore['TodoList5'] as any).todos, 'Todo66');
-        assert.notInclude((dataInStore['TodoList5'] as any).todos, 'Todo99');
+        assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+        assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
       });
     });
   });
@@ -1170,3 +1170,11 @@ describe('optimistic mutation - githunt comments', () => {
     });
   });
 });
+
+function realIdValue(id: string) {
+  return {
+    type: 'id',
+    generated: false,
+    id,
+  };
+}

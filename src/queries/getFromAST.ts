@@ -7,8 +7,8 @@ import {
 import assign = require('lodash.assign');
 import countBy = require('lodash.countby');
 import identity = require('lodash.identity');
-import includes = require('lodash.includes');
-import uniq = require('lodash.uniq');
+import uniqwith = require('lodash.uniqwith');
+import isequal = require('lodash.isequal');
 
 export function getMutationDefinition(doc: Document): OperationDefinition {
   checkDocument(doc);
@@ -155,14 +155,7 @@ export function addFragmentsToDocument(queryDoc: Document,
     return queryDoc;
   }
   checkDocument(queryDoc);
-
-  const existingFragmentNames = getFragmentDefinitions(queryDoc)
-    .map((fragment) => fragment.name.value) as String[];
-   const distinctFragments = uniq(fragments.filter((fragment) => {
-     return !includes(existingFragmentNames, fragment.name.value);
-   })) as FragmentDefinition[];
-
   return assign({}, queryDoc, {
-    definitions: queryDoc.definitions.concat(distinctFragments),
+    definitions: uniqwith(queryDoc.definitions.concat(fragments), isequal),
   }) as Document;
 }

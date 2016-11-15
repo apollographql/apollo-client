@@ -57,6 +57,7 @@
     "lodash.mapvalues": "^4.4.0",
     "lodash.merge": "^4.6.0",
     "lodash.pick": "^4.2.0",
+    "lodash.uniq": "^4.5.0",
     "lodash.uniqwith": "^4.5.0",
     "redux": "^3.3.1",
     "symbol-observable": "^1.0.2",

@@ -20,7 +20,7 @@ import { WatchQueryOptions } from '../core/watchQueryOptions';
 
 import assign = require('lodash.assign');
 
-export class QueryScheduler {
+export class QueryScheduler<QueryType, MutationType> {
   // Map going from queryIds to query options that are in flight.
   public inFlightQueries: { [queryId: string]: WatchQueryOptions };
 
@@ -34,7 +34,7 @@ export class QueryScheduler {
 
   // We use this instance to actually fire queries (i.e. send them to the batching
   // mechanism).
-  public queryManager: QueryManager;
+  public queryManager: QueryManager<QueryType, MutationType>;
 
   // Map going from polling interval widths to polling timers.
   private pollingTimers: { [interval: number]: NodeJS.Timer | any }; // oddity in Typescript
@@ -42,7 +42,7 @@ export class QueryScheduler {
   constructor({
     queryManager,
   }: {
-    queryManager: QueryManager;
+    queryManager: QueryManager<QueryType, MutationType>;
   }) {
     this.queryManager = queryManager;
     this.pollingTimers = {};
@@ -156,11 +156,11 @@ export class QueryScheduler {
   }
 
   // Used only for unit testing.
-  public registerPollingQuery(queryOptions: WatchQueryOptions): ObservableQuery {
+  public registerPollingQuery(queryOptions: WatchQueryOptions): ObservableQuery<QueryType, MutationType> {
     if (!queryOptions.pollInterval) {
       throw new Error('Attempted to register a non-polling query with the scheduler.');
     }
-    return new ObservableQuery({
+    return new ObservableQuery<QueryType, MutationType>({
       scheduler: this,
       options: queryOptions,
     });

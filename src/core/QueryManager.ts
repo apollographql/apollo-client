@@ -99,8 +99,8 @@ export interface SubscriptionOptions {
   variables?: { [key: string]: any };
 };
 
-export type ApolloQueryResult = {
-  data: any;
+export type ApolloQueryResult<T> = {
+  data: T;
   loading: boolean;
   networkStatus: NetworkStatus;
 
@@ -118,11 +118,11 @@ export type ApolloQueryResult = {
 // will likely need to be paired with a custom resultComparator.  By default, Apollo performs a
 // deep equality comparsion on results, and skips those that are considered equal - reducing
 // re-renders.
-export type ResultTransformer = (resultData: ApolloQueryResult) => ApolloQueryResult;
+export type ResultTransformer<T> = (resultData: ApolloQueryResult<T>) => ApolloQueryResult<T>;
 
 // Controls how Apollo compares two query results and considers their equality.  Two equal results
 // will not trigger re-renders.
-export type ResultComparator = (result1: ApolloQueryResult, result2: ApolloQueryResult) => boolean;
+export type ResultComparator<T> = (result1: ApolloQueryResult<T>, result2: ApolloQueryResult<T>) => boolean;
 
 export enum FetchType {
   normal = 1,
@@ -130,16 +130,16 @@ export enum FetchType {
   poll = 3,
 }
 
-export class QueryManager {
+export class QueryManager<QueryType, MutationType> {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
-  public scheduler: QueryScheduler;
+  public scheduler: QueryScheduler<QueryType, MutationType>;
   public store: ApolloStore;
 
   private addTypename: boolean;
   private networkInterface: NetworkInterface;
   private reduxRootSelector: ApolloStateSelector;
-  private resultTransformer: ResultTransformer;
-  private resultComparator: ResultComparator;
+  private resultTransformer: ResultTransformer<QueryType | MutationType>;
+  private resultComparator: ResultComparator<QueryType | MutationType>;
   private reducerConfig: ApolloReducerConfig;
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -153,8 +153,8 @@ export class QueryManager {
   // track of queries that are inflight and reject them in case some
   // destabalizing action occurs (e.g. reset of the Apollo store).
   private fetchQueryPromises: { [requestId: string]: {
-    promise: Promise<ApolloQueryResult>;
-    resolve: (result: ApolloQueryResult) => void;
+    promise: Promise<ApolloQueryResult<QueryType | MutationType>>;
+    resolve: (result: ApolloQueryResult<QueryType | MutationType>) => void;
     reject: (error: Error) => void;
   } };
 
@@ -162,7 +162,7 @@ export class QueryManager {
   // these to keep track of queries that are inflight and error on the observers associated
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   private observableQueries: { [queryId: string]:  {
-    observableQuery: ObservableQuery;
+    observableQuery: ObservableQuery<QueryType, MutationType>;
   } };
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
@@ -183,8 +183,8 @@ export class QueryManager {
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
     reducerConfig?: ApolloReducerConfig,
-    resultTransformer?: ResultTransformer,
-    resultComparator?: ResultComparator,
+    resultTransformer?: ResultTransformer<QueryType | MutationType>,
+    resultComparator?: ResultComparator<QueryType | MutationType>,
     addTypename?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
@@ -200,7 +200,7 @@ export class QueryManager {
     this.queryDocuments = {};
     this.addTypename = addTypename;
 
-    this.scheduler = new QueryScheduler({
+    this.scheduler = new QueryScheduler<QueryType, MutationType>({
       queryManager: this,
     });
 
@@ -243,7 +243,7 @@ export class QueryManager {
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[],
-  }): Promise<ApolloQueryResult> {
+  }): Promise<ApolloQueryResult<MutationType>> {
     const mutationId = this.generateQueryId();
 
     if (this.addTypename) {
@@ -317,7 +317,7 @@ export class QueryManager {
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
           delete this.queryDocuments[mutationId];
-          resolve(this.transformResult(<ApolloQueryResult>result));
+          resolve(this.transformResult(<ApolloQueryResult<MutationType>>result));
         })
         .catch((err) => {
           this.store.dispatch({
@@ -339,9 +339,9 @@ export class QueryManager {
   public queryListenerForObserver(
     queryId: string,
     options: WatchQueryOptions,
-    observer: Observer<ApolloQueryResult>
+    observer: Observer<ApolloQueryResult<QueryType | MutationType>>
   ): QueryListener {
-    let lastResult: ApolloQueryResult;
+    let lastResult: ApolloQueryResult<QueryType | MutationType>;
     return (queryStoreValue: QueryStoreValue) => {
       // The query store value can be undefined in the event of a store
       // reset.
@@ -411,7 +411,7 @@ export class QueryManager {
   // supposed to be refetched in the event of a store reset. Once we unify error handling for
   // network errors and non-network errors, the shouldSubscribe option will go away.
 
-  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery {
+  public watchQuery(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery<QueryType, MutationType> {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
@@ -429,7 +429,7 @@ export class QueryManager {
     return observableQuery;
   }
 
-  public query(options: WatchQueryOptions): Promise<ApolloQueryResult> {
+  public query(options: WatchQueryOptions): Promise<ApolloQueryResult<QueryType>> {
     if (options.returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
@@ -454,7 +454,11 @@ export class QueryManager {
     return resPromise;
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType?: FetchType): Promise<ApolloQueryResult> {
+  public fetchQuery(
+    queryId: string,
+    options: WatchQueryOptions,
+    fetchType?: FetchType
+  ): Promise<ApolloQueryResult<QueryType | MutationType>> {
     const {
       variables,
       forceFetch = false,
@@ -562,8 +566,8 @@ export class QueryManager {
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.
-  public addFetchQueryPromise(requestId: number, promise: Promise<ApolloQueryResult>,
-    resolve: (result: ApolloQueryResult) => void,
+  public addFetchQueryPromise(requestId: number, promise: Promise<ApolloQueryResult<QueryType | MutationType>>,
+    resolve: (result: ApolloQueryResult<QueryType | MutationType>) => void,
     reject: (error: Error) => void) {
     this.fetchQueryPromises[requestId.toString()] = { promise, resolve, reject };
   }
@@ -575,7 +579,7 @@ export class QueryManager {
   }
 
   // Adds an ObservableQuery to this.observableQueries and to this.observableQueriesByName.
-  public addObservableQuery(queryId: string, observableQuery: ObservableQuery) {
+  public addObservableQuery(queryId: string, observableQuery: ObservableQuery<QueryType, MutationType>) {
     this.observableQueries[queryId] = { observableQuery };
 
     // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
@@ -719,7 +723,7 @@ export class QueryManager {
     this.stopQueryInStore(queryId);
   }
 
-  public getCurrentQueryResult(observableQuery: ObservableQuery, isOptimistic = false) {
+  public getCurrentQueryResult(observableQuery: ObservableQuery<QueryType, MutationType>, isOptimistic = false) {
     const {
       variables,
       document } = this.getQueryParts(observableQuery);
@@ -755,8 +759,8 @@ export class QueryManager {
     }
   }
 
-  public getQueryWithPreviousResult(queryIdOrObservable: string | ObservableQuery, isOptimistic = false) {
-    let observableQuery: ObservableQuery;
+  public getQueryWithPreviousResult(queryIdOrObservable: string | ObservableQuery<QueryType, MutationType>, isOptimistic = false) {
+    let observableQuery: ObservableQuery<QueryType, MutationType>;
     if (typeof queryIdOrObservable === 'string') {
       if (!this.observableQueries[queryIdOrObservable]) {
         throw new Error(`ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`);
@@ -781,7 +785,7 @@ export class QueryManager {
   }
 
   // Give the result transformer a chance to observe or modify result data before it is passed on.
-  public transformResult(result: ApolloQueryResult): ApolloQueryResult {
+  public transformResult(result: ApolloQueryResult<QueryType | MutationType>): ApolloQueryResult<QueryType | MutationType> {
     if (!this.resultTransformer) {
       return result;
     } else {
@@ -791,7 +795,7 @@ export class QueryManager {
 
   // XXX: I think we just store this on the observable query at creation time
   // TODO LATER: rename this function. Its main role is to apply the transform, nothing else!
-  private getQueryParts(observableQuery: ObservableQuery) {
+  private getQueryParts(observableQuery: ObservableQuery<QueryType, MutationType>) {
     const queryOptions = observableQuery.options;
 
     let transformedDoc = observableQuery.options.query;
@@ -910,7 +914,7 @@ export class QueryManager {
       operationName: getOperationName(document),
     };
 
-    const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
+    const retPromise = new Promise<ApolloQueryResult<QueryType | MutationType>>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
       this.networkInterface.query(request)
@@ -1000,7 +1004,10 @@ export class QueryManager {
   }
 
   // check to see if two results are the same, given our resultComparator
-  private isDifferentResult(lastResult: ApolloQueryResult, newResult: ApolloQueryResult): boolean {
+  private isDifferentResult(
+    lastResult: ApolloQueryResult<QueryType | MutationType>,
+    newResult: ApolloQueryResult<QueryType | MutationType>
+  ): boolean {
     const comparator = this.resultComparator || isEqual;
     return !comparator(lastResult, newResult);
   }

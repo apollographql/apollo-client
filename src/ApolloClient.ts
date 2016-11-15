@@ -84,17 +84,17 @@ function defaultReduxRootSelector(state: any) {
  * receive results from the server and cache the results in a Redux store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
-export default class ApolloClient {
+export default class ApolloClient<QueryType, MutationType> {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
   public reduxRootKey: string;
   public reduxRootSelector: ApolloStateSelector | null;
   public initialState: any;
-  public queryManager: QueryManager;
+  public queryManager: QueryManager<QueryType, MutationType>;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public resultTransformer: ResultTransformer;
-  public resultComparator: ResultComparator;
+  public resultTransformer: ResultTransformer<QueryType | MutationType>;
+  public resultComparator: ResultComparator<QueryType | MutationType>;
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
@@ -151,8 +151,8 @@ export default class ApolloClient {
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
-    resultTransformer?: ResultTransformer,
-    resultComparator?: ResultComparator,
+    resultTransformer?: ResultTransformer<QueryType | MutationType>,
+    resultComparator?: ResultComparator<QueryType | MutationType>,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
@@ -233,7 +233,7 @@ export default class ApolloClient {
    * a description of store reactivity.
    *
    */
-  public watchQuery(options: DeprecatedWatchQueryOptions): ObservableQuery {
+  public watchQuery(options: DeprecatedWatchQueryOptions): ObservableQuery<QueryType, MutationType> {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -267,7 +267,7 @@ export default class ApolloClient {
    * how this query should be treated e.g. whether it is a polling query, whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query(options: DeprecatedWatchQueryOptions): Promise<ApolloQueryResult> {
+  public query(options: DeprecatedWatchQueryOptions): Promise<ApolloQueryResult<QueryType>> {
     this.initStore();
 
     // XXX what if I pass pollInterval? Will it just keep running?
@@ -326,7 +326,7 @@ export default class ApolloClient {
    * for this, you can simply refetch the queries that will be affected and achieve a consistent
    * store once these queries return.
    */
-  public mutate(options: MutationOptions): Promise<ApolloQueryResult> {
+  public mutate(options: MutationOptions): Promise<ApolloQueryResult<MutationType>> {
     this.initStore();
 
     // We add the fragments to the document to pass only the document around internally.
@@ -427,7 +427,7 @@ export default class ApolloClient {
 
     this.store = store;
 
-    this.queryManager = new QueryManager({
+    this.queryManager = new QueryManager<QueryType, MutationType>({
       networkInterface: this.networkInterface,
       reduxRootSelector: reduxRootSelector,
       store,

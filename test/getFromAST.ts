@@ -310,6 +310,11 @@ fragment businessAreaInfo on BusinessArea {
           ...businessAreaInfo
         }
       }
+
+      fragment subjectInfo on Subject {
+        id
+        name
+      }
     `;
 
     const fullDoc = addFragmentsToDocument(query, businessAreaInfo);

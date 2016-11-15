@@ -1376,7 +1376,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       resetStore: () => {
         done();
       },
-    } as QueryManager<any, any>;
+    } as QueryManager;
     client.resetStore();
   });
 

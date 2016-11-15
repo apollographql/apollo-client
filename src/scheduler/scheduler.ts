@@ -20,7 +20,7 @@ import { WatchQueryOptions } from '../core/watchQueryOptions';
 
 import { NetworkStatus } from '../queries/store';
 
-export class QueryScheduler<QueryType, MutationType> {
+export class QueryScheduler {
   // Map going from queryIds to query options that are in flight.
   public inFlightQueries: { [queryId: string]: WatchQueryOptions };
 
@@ -34,7 +34,7 @@ export class QueryScheduler<QueryType, MutationType> {
 
   // We use this instance to actually fire queries (i.e. send them to the batching
   // mechanism).
-  public queryManager: QueryManager<QueryType, MutationType>;
+  public queryManager: QueryManager;
 
   // Map going from polling interval widths to polling timers.
   private pollingTimers: { [interval: number]: NodeJS.Timer | any }; // oddity in Typescript
@@ -42,7 +42,7 @@ export class QueryScheduler<QueryType, MutationType> {
   constructor({
     queryManager,
   }: {
-    queryManager: QueryManager<QueryType, MutationType>;
+    queryManager: QueryManager;
   }) {
     this.queryManager = queryManager;
     this.pollingTimers = {};
@@ -146,11 +146,11 @@ export class QueryScheduler<QueryType, MutationType> {
   }
 
   // Used only for unit testing.
-  public registerPollingQuery(queryOptions: WatchQueryOptions): ObservableQuery<QueryType, MutationType> {
+  public registerPollingQuery(queryOptions: WatchQueryOptions): ObservableQuery {
     if (!queryOptions.pollInterval) {
       throw new Error('Attempted to register a non-polling query with the scheduler.');
     }
-    return new ObservableQuery<QueryType, MutationType>({
+    return new ObservableQuery({
       scheduler: this,
       options: queryOptions,
     });

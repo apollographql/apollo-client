@@ -215,7 +215,7 @@ describe('ObservableQuery', () => {
       const variables2 = { first: 1 };
 
 
-      const observable: ObservableQuery<any, any> = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query: queryWithVars, variables: variables1 },
         result: { data },
       }, {
@@ -236,7 +236,7 @@ describe('ObservableQuery', () => {
     });
 
     it('does a network request if forceFetch becomes true', (done) => {
-      const observable: ObservableQuery<any, any> = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
       }, {
@@ -355,7 +355,7 @@ describe('ObservableQuery', () => {
 
   describe('setVariables', () => {
     it('reruns query if the variables change', (done) => {
-      const observable: ObservableQuery<any, any> = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
       }, {
@@ -449,7 +449,7 @@ describe('ObservableQuery', () => {
     });
 
     it('reruns observer callback if the variables change but data does not', (done) => {
-      const observable: ObservableQuery<any, any> = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
       }, {
@@ -482,7 +482,7 @@ describe('ObservableQuery', () => {
 
       manager.query({ query, variables: differentVariables })
         .then(() => {
-          const observable: ObservableQuery<any, any> = manager.watchQuery({ query, variables });
+          const observable: ObservableQuery = manager.watchQuery({ query, variables });
 
           let errored = false;
           subscribeAndCount(done, observable, (handleCount, result) => {
@@ -501,7 +501,7 @@ describe('ObservableQuery', () => {
     });
 
     it('does not rerun query if variables do not change', (done) => {
-      const observable: ObservableQuery<any, any> = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
       }, {
@@ -528,7 +528,7 @@ describe('ObservableQuery', () => {
       // The expected behavior is that the original variables are forgotten
       // and the query stays in loading state until the result for the new variables
       // has returned.
-      const observable: ObservableQuery<any, any> = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
         delay: 20,
@@ -553,7 +553,7 @@ describe('ObservableQuery', () => {
 
   describe('currentResult', () => {
     it('returns the current query status immediately', (done) => {
-      const observable: ObservableQuery<any, any> = mockWatchQuery({
+      const observable: ObservableQuery = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
         delay: 100,

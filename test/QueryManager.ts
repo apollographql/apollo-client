@@ -122,7 +122,7 @@ describe('QueryManager', () => {
     error?: Error,
     result?: GraphQLResult,
     delay?: number,
-    observer: Observer<ApolloQueryResult<any>>,
+    observer: Observer<ApolloQueryResult>,
   }) => {
     const queryManager = mockQueryManager({
       request: { query, variables },
@@ -183,7 +183,7 @@ describe('QueryManager', () => {
       result: { data },
     });
     const queryManager = createQueryManager({ networkInterface, store });
-    return new Promise<{ result: GraphQLResult, queryManager: QueryManager<any, any> }>((resolve, reject) => {
+    return new Promise<{ result: GraphQLResult, queryManager: QueryManager }>((resolve, reject) => {
       queryManager.mutate({ mutation, variables }).then((result) => {
         resolve({ result, queryManager });
       }).catch((error) => {
@@ -2103,7 +2103,7 @@ describe('QueryManager', () => {
     });
 
     it('should only refetch once when we store reset', () => {
-      let queryManager: QueryManager<any, any> = null;
+      let queryManager: QueryManager = null;
       const query = gql`
         query {
           author {
@@ -2187,7 +2187,7 @@ describe('QueryManager', () => {
     });
 
     it('should not error on queries that are already in the store', () => {
-      let queryManager: QueryManager<any, any> = null;
+      let queryManager: QueryManager = null;
       const query = gql`
         query {
           author {
@@ -2263,7 +2263,7 @@ describe('QueryManager', () => {
           }
         }`;
       const queryManager = mockQueryManager();
-      const mockObservableQuery: ObservableQuery<any, any> = {
+      const mockObservableQuery: ObservableQuery = {
         refetch(variables: any): Promise<GraphQLResult> {
           done();
           return null;
@@ -2272,7 +2272,7 @@ describe('QueryManager', () => {
           query: query,
         },
         scheduler: queryManager.scheduler,
-      } as any as ObservableQuery<any, any>;
+      } as any as ObservableQuery;
 
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery(queryId, mockObservableQuery);
@@ -2292,7 +2292,7 @@ describe('QueryManager', () => {
       options.noFetch = true;
       options.query = query;
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery<any, any> = {
+      const mockObservableQuery: ObservableQuery = {
         refetch(variables: any): Promise<GraphQLResult> {
           refetchCount ++;
           done();
@@ -2300,7 +2300,7 @@ describe('QueryManager', () => {
         },
         options,
         queryManager: queryManager,
-      } as any as ObservableQuery<any, any>;
+      } as any as ObservableQuery;
 
       const queryId = 'super-fake-id';
       queryManager.addObservableQuery(queryId, mockObservableQuery);
@@ -2313,7 +2313,7 @@ describe('QueryManager', () => {
     });
 
     it('should throw an error on an inflight query() if the store is reset', (done) => {
-      let queryManager: QueryManager<any, any> = null;
+      let queryManager: QueryManager = null;
       const query = gql`
         query {
           author {
@@ -3154,7 +3154,7 @@ describe('QueryManager', () => {
 
   describe('result transformation', () => {
 
-    let client: ApolloClient<any, any>;
+    let client: ApolloClient;
     let response: any;
     let transformCount: number;
 
@@ -3167,7 +3167,7 @@ describe('QueryManager', () => {
         },
       };
 
-      client = new ApolloClient<any, any>({
+      client = new ApolloClient({
         networkInterface,
         resultTransformer(result: GraphQLResult) {
           transformCount++;
@@ -3183,7 +3183,7 @@ describe('QueryManager', () => {
     it('transforms query() results', () => {
       response = {data: {foo: 123}};
       return client.query({query: gql`{ foo }`})
-        .then((result: ApolloQueryResult<any>) => {
+        .then((result: ApolloQueryResult) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
         });
     });
@@ -3224,7 +3224,7 @@ describe('QueryManager', () => {
     it('transforms mutate() results', () => {
       response = {data: {foo: 123}};
       return client.mutate({mutation: gql`mutation makeChanges { foo }`})
-        .then((result: ApolloQueryResult<any>) => {
+        .then((result: ApolloQueryResult) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
         });
     });
@@ -3235,7 +3235,7 @@ describe('QueryManager', () => {
 
     class Model {}
 
-    let client: ApolloClient<any, any>;
+    let client: ApolloClient;
     let response: any;
 
     beforeEach(() => {
@@ -3245,13 +3245,13 @@ describe('QueryManager', () => {
         },
       };
 
-      client = new ApolloClient<any, any>({
+      client = new ApolloClient({
         networkInterface,
-        resultTransformer(result: ApolloQueryResult<any>) {
+        resultTransformer(result: ApolloQueryResult) {
           result.data.__proto__ = Model.prototype;
           return result;
         },
-        resultComparator(result1: ApolloQueryResult<any>, result2: ApolloQueryResult<any>) {
+        resultComparator(result1: ApolloQueryResult, result2: ApolloQueryResult) {
           // A real example would, say, deep compare the two while ignoring prototypes.
           const foo1 = result1 && result1.data && result1.data.foo;
           const foo2 = result2 && result2.data && result2.data.foo;

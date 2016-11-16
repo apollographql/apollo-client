@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 ### 0.5.4
+- Fix a bug that caused apollo-client to catch errors thrown in Observer.next callbacks [PR #910](https://github.com/apollostack/apollo-client/pull/910)
 - Make sure only one copy of each fragment is attached to a document [PR #906](https://github.com/apollostack/apollo-client/pull/906)
 
 ### 0.5.3

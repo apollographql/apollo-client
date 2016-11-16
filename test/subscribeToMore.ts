@@ -3,7 +3,7 @@ const { assert } = chai;
 
 import {
   mockSubscriptionNetworkInterface,
-} from './mocks/mockNetworkInterface';
+} from '../src/mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 
 // import assign = require('lodash.assign');

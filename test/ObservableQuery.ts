@@ -4,8 +4,8 @@ import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
 
-import mockQueryManager from './mocks/mockQueryManager';
-import mockWatchQuery from './mocks/mockWatchQuery';
+import mockQueryManager from '../src/mocks/mockQueryManager';
+import mockWatchQuery from '../src/mocks/mockWatchQuery';
 import { ObservableQuery } from '../src/core/ObservableQuery';
 
 import wrap from './util/wrap';

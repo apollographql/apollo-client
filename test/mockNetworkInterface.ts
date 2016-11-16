@@ -5,7 +5,7 @@ import {
 import {
   mockSubscriptionNetworkInterface,
   MockedSubscription,
-} from './mocks/mockNetworkInterface';
+} from '../src/mocks/mockNetworkInterface';
 
 import * as _ from 'lodash';
 

@@ -57,7 +57,7 @@ import {
   createBatchingNetworkInterface,
 } from '../src/transport/batchedNetworkInterface';
 
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import mockNetworkInterface from '../src/mocks/mockNetworkInterface';
 
 import {
   getFragmentDefinitions,
@@ -66,7 +66,7 @@ import {
 import {
   createMockFetch,
   createMockedIResponse,
-} from './mocks/mockFetch';
+} from '../src/mocks/mockFetch';
 
 import * as chaiAsPromised from 'chai-as-promised';
 

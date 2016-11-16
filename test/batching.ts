@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import { Request } from '../src/transport/networkInterface';
 import {
   mockBatchedNetworkInterface,
-} from './mocks/mockNetworkInterface';
+} from '../src/mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
 import { GraphQLResult } from 'graphql';
 

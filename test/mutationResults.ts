@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import mockNetworkInterface from '../src/mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';

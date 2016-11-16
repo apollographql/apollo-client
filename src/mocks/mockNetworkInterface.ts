@@ -3,7 +3,7 @@ import {
   BatchedNetworkInterface,
   Request,
   SubscriptionNetworkInterface,
-} from '../../src/transport/networkInterface';
+} from '../transport/networkInterface';
 
 import {
   GraphQLResult,

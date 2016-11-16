@@ -3,6 +3,9 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
+### 0.5.5
+- Add back missing dependency on lodash.isequal that was mistakenly removed in 0.5.4 [#925](https://github.com/apollostack/apollo-client/pull/925)
 - Implement cache redirects with custom resolvers [PR #921](https://github.com/apollostack/apollo-client/pull/921)
 
 ### 0.5.4

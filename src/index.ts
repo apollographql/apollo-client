@@ -67,6 +67,12 @@ import {
   ApolloQueryResult,
 } from './core/QueryManager';
 
+import {
+  mockNetworkInterface,
+  mockBatchedNetworkInterface,
+  mockSubscriptionNetworkInterface,
+} from './mocks/mockNetworkInterface';
+
 // We expose the print method from GraphQL so that people that implement
 // custom network interfaces can turn query ASTs into query strings as needed.
 export {
@@ -93,6 +99,11 @@ export {
   Request,
 
   ApolloQueryResult,
+
+  // mock NetworkInterfaces for testing
+  mockNetworkInterface,
+  mockBatchedNetworkInterface,
+  mockSubscriptionNetworkInterface,
 
   // internal type definitions for export
   WatchQueryOptions,

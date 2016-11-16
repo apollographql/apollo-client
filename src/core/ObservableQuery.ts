@@ -30,8 +30,8 @@ import { addFragmentsToDocument } from '../queries/getFromAST';
 import assign = require('lodash.assign');
 import isEqual = require('lodash.isequal');
 
-export type ApolloCurrentResult = {
-  data: any;
+export type ApolloCurrentResult<T> = {
+  data: T | {};
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
@@ -48,7 +48,7 @@ export interface UpdateQueryOptions {
   variables: Object;
 }
 
-export class ObservableQuery extends Observable<ApolloQueryResult> {
+export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   public options: WatchQueryOptions;
   public queryId: string;
   /**
@@ -61,10 +61,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   private shouldSubscribe: boolean;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
-  private observers: Observer<ApolloQueryResult>[];
+  private observers: Observer<ApolloQueryResult<T>>[];
   private subscriptionHandles: Subscription[];
 
-  private lastResult: ApolloQueryResult;
+  private lastResult: ApolloQueryResult<T>;
   private lastError: ApolloError;
 
   constructor({
@@ -80,7 +80,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     const queryId = queryManager.generateQueryId();
     const isPollingQuery = !!options.pollInterval;
 
-    const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
+    const subscriberFunction = (observer: Observer<ApolloQueryResult<T>>) => {
       return this.onSubscribe(observer);
     };
 
@@ -97,7 +97,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.subscriptionHandles = [];
   }
 
-  public result(): Promise<ApolloQueryResult> {
+  public result(): Promise<ApolloQueryResult<T>> {
     return new Promise((resolve, reject) => {
       const subscription = this.subscribe({
         next(result) {
@@ -113,7 +113,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     });
   }
 
-  public currentResult(): ApolloCurrentResult {
+  public currentResult(): ApolloCurrentResult<T> {
     const { data, partial } = this.queryManager.getCurrentQueryResult(this, true);
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
 
@@ -149,7 +149,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     return { data, loading, networkStatus };
   }
 
-  public refetch(variables?: any): Promise<ApolloQueryResult> {
+  public refetch(variables?: any): Promise<ApolloQueryResult<T>> {
     this.variables = assign({}, this.variables, variables);
 
     if (this.options.noFetch) {
@@ -172,7 +172,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
   public fetchMore(
     fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions
-  ): Promise<ApolloQueryResult> {
+  ): Promise<ApolloQueryResult<T>> {
     return Promise.resolve()
       .then(() => {
         const qid = this.queryManager.generateQueryId();
@@ -262,7 +262,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     };
   }
 
-  public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult> {
+  public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult<T>> {
     const oldOptions = this.options;
     this.options = assign({}, this.options, opts) as WatchQueryOptions;
 
@@ -291,7 +291,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public setVariables(variables: any): Promise<ApolloQueryResult> {
+  public setVariables(variables: any): Promise<ApolloQueryResult<T>> {
     const newVariables = assign({}, this.variables, variables);
 
     if (isEqual(newVariables, this.variables)) {
@@ -346,7 +346,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.scheduler.startPollingQuery(this.options, this.queryId, false);
   }
 
-  private onSubscribe(observer: Observer<ApolloQueryResult>) {
+  private onSubscribe(observer: Observer<ApolloQueryResult<T>>) {
     this.observers.push(observer);
 
     // Deliver initial result
@@ -377,7 +377,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
   private setUpQuery() {
     if (this.shouldSubscribe) {
-      this.queryManager.addObservableQuery(this.queryId, this);
+      this.queryManager.addObservableQuery<T>(this.queryId, this);
     }
 
     if (this.isPollingQuery) {
@@ -385,14 +385,14 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
         throw new Error('noFetch option should not use query polling.');
       }
 
-      this.scheduler.startPollingQuery(
+      this.scheduler.startPollingQuery<T>(
         this.options,
         this.queryId
       );
     }
 
-    const observer: Observer<ApolloQueryResult> = {
-      next: (result: ApolloQueryResult) => {
+    const observer: Observer<ApolloQueryResult<T>> = {
+      next: (result: ApolloQueryResult<T>) => {
         this.observers.forEach((obs) => {
           if (obs.next) {
             obs.next(result);
@@ -414,7 +414,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       },
     };
 
-    this.queryManager.startQuery(
+    this.queryManager.startQuery<T>(
       this.queryId,
       this.options,
       this.queryManager.queryListenerForObserver(this.queryId, this.options, observer)

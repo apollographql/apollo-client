@@ -233,7 +233,7 @@ export default class ApolloClient {
    * a description of store reactivity.
    *
    */
-  public watchQuery(options: DeprecatedWatchQueryOptions): ObservableQuery {
+  public watchQuery<T>(options: DeprecatedWatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -255,7 +255,7 @@ export default class ApolloClient {
     });
     delete realOptions.fragments;
 
-    return this.queryManager.watchQuery(realOptions);
+    return this.queryManager.watchQuery<T>(realOptions);
   };
 
   /**
@@ -267,7 +267,7 @@ export default class ApolloClient {
    * how this query should be treated e.g. whether it is a polling query, whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query(options: DeprecatedWatchQueryOptions): Promise<ApolloQueryResult> {
+  public query<T>(options: DeprecatedWatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
     // XXX what if I pass pollInterval? Will it just keep running?
@@ -292,7 +292,7 @@ export default class ApolloClient {
     });
     delete realOptions.fragments;
 
-    return this.queryManager.query(realOptions);
+    return this.queryManager.query<T>(realOptions);
   };
 
   /**
@@ -326,7 +326,7 @@ export default class ApolloClient {
    * for this, you can simply refetch the queries that will be affected and achieve a consistent
    * store once these queries return.
    */
-  public mutate(options: MutationOptions): Promise<ApolloQueryResult> {
+  public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
     // We add the fragments to the document to pass only the document around internally.
@@ -337,7 +337,7 @@ export default class ApolloClient {
     });
     delete realOptions.fragments;
 
-    return this.queryManager.mutate(realOptions);
+    return this.queryManager.mutate<T>(realOptions);
   };
 
   public subscribe(options: DeprecatedSubscriptionOptions): Observable<any> {

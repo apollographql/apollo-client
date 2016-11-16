@@ -149,7 +149,7 @@ describe('fetchMore on an observable query', () => {
       addTypename: true,
     });
 
-    const obsHandle = client.watchQuery({
+    const obsHandle = client.watchQuery<any>({
       query,
       variables,
     });

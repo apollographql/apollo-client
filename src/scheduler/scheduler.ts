@@ -55,9 +55,9 @@ export class QueryScheduler {
     return this.inFlightQueries.hasOwnProperty(queryId);
   }
 
-  public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType: FetchType) {
+  public fetchQuery<T>(queryId: string, options: WatchQueryOptions, fetchType: FetchType) {
     return new Promise((resolve, reject) => {
-      this.queryManager.fetchQuery(queryId, options, fetchType).then((result) => {
+      this.queryManager.fetchQuery<T>(queryId, options, fetchType).then((result) => {
         this.removeInFlight(queryId);
         resolve(result);
       }).catch((error) => {
@@ -72,7 +72,7 @@ export class QueryScheduler {
   // "first fetch" before we start polling. If startPollingQuery() is being called
   // from an existing ObservableQuery, the first fetch has already been fired which
   // means that firstFetch should be false.
-  public startPollingQuery(
+  public startPollingQuery<T>(
     options: WatchQueryOptions,
     queryId?: string,
     firstFetch: boolean = true,
@@ -86,13 +86,13 @@ export class QueryScheduler {
 
     // Fire an initial fetch before we start the polling query
     if (firstFetch) {
-      this.fetchQuery(queryId, options, FetchType.normal);
+      this.fetchQuery<T>(queryId, options, FetchType.normal);
     }
 
     if (listener) {
       this.queryManager.addQueryListener(queryId, listener);
     }
-    this.addQueryOnInterval(queryId, options);
+    this.addQueryOnInterval<T>(queryId, options);
 
     return queryId;
   }
@@ -104,7 +104,7 @@ export class QueryScheduler {
   }
 
   // Fires the all of the queries on a particular interval. Called on a setInterval.
-  public fetchQueriesOnInterval(interval: number) {
+  public fetchQueriesOnInterval<T>(interval: number) {
     // XXX this "filter" here is nasty, because it does two things at the same time.
     // 1. remove queries that have stopped polling
     // 2. call fetchQueries for queries that are polling and not in flight.
@@ -126,7 +126,7 @@ export class QueryScheduler {
       const queryOptions = this.registeredQueries[queryId];
       const pollingOptions = assign({}, queryOptions) as WatchQueryOptions;
       pollingOptions.forceFetch = true;
-      this.fetchQuery(queryId, pollingOptions, FetchType.poll);
+      this.fetchQuery<T>(queryId, pollingOptions, FetchType.poll);
       return true;
     });
 
@@ -139,7 +139,7 @@ export class QueryScheduler {
   // Adds a query on a particular interval to this.intervalQueries and then fires
   // that query with all the other queries executing on that interval. Note that the query id
   // and query options must have been added to this.registeredQueries before this function is called.
-  public addQueryOnInterval(queryId: string, queryOptions: WatchQueryOptions) {
+  public addQueryOnInterval<T>(queryId: string, queryOptions: WatchQueryOptions) {
     const interval = queryOptions.pollInterval;
 
     // If there are other queries on this interval, this query will just fire with those
@@ -150,17 +150,17 @@ export class QueryScheduler {
       this.intervalQueries[interval] = [queryId];
       // set up the timer for the function that will handle this interval
       this.pollingTimers[interval] = setInterval(() => {
-        this.fetchQueriesOnInterval(interval);
+        this.fetchQueriesOnInterval<T>(interval);
       }, interval);
     }
   }
 
   // Used only for unit testing.
-  public registerPollingQuery(queryOptions: WatchQueryOptions): ObservableQuery {
+  public registerPollingQuery<T>(queryOptions: WatchQueryOptions): ObservableQuery<T> {
     if (!queryOptions.pollInterval) {
       throw new Error('Attempted to register a non-polling query with the scheduler.');
     }
-    return new ObservableQuery({
+    return new ObservableQuery<T>({
       scheduler: this,
       options: queryOptions,
     });

@@ -284,4 +284,86 @@ fragment businessAreaInfo on BusinessArea {
 }
 `);
   });
+
+  it('should only attach distinct fragments', () => {
+    const subjectInfo = createFragment(gql`
+      fragment subjectInfo on Subject {
+        id
+        name
+      }`
+    );
+
+    const businessAreaInfo = createFragment(gql`
+      fragment businessAreaInfo on BusinessArea {
+        id
+        name
+        subjects {
+          ...subjectInfo
+        }
+      }`,
+      [subjectInfo, subjectInfo],
+    );
+
+    // to test that depending on the same fragment twice in different fragments won't add it twice.
+    const whateverAreaInfo = createFragment(gql`
+      fragment whateverAreaInfo on WhateverArea {
+        subject {
+          ...subjectInfo
+        }
+      }`,
+      [subjectInfo],
+    );
+
+    // XXX we don't attach a fragment here, because if we do, it won't be === to
+    // the same fragment created with createFragment.
+    const query = gql`
+      query {
+        businessAreas {
+          ...businessAreaInfo
+        }
+        whateverAreas {
+          ...whateverAreaInfo
+        }
+      }
+
+      #fragment subjectInfo on Subject {
+      #  id
+      #  name
+      #}
+    `;
+
+    let fullDoc = addFragmentsToDocument(query, businessAreaInfo);
+    fullDoc = addFragmentsToDocument(fullDoc, whateverAreaInfo);
+    // tests to make sure we can't add subjectInfo twice, even in separate call
+    fullDoc = addFragmentsToDocument(fullDoc, subjectInfo);
+
+    assert.equal(print(fullDoc), `{
+  businessAreas {
+    ...businessAreaInfo
+  }
+  whateverAreas {
+    ...whateverAreaInfo
+  }
+}
+
+fragment subjectInfo on Subject {
+  id
+  name
+}
+
+fragment businessAreaInfo on BusinessArea {
+  id
+  name
+  subjects {
+    ...subjectInfo
+  }
+}
+
+fragment whateverAreaInfo on WhateverArea {
+  subject {
+    ...subjectInfo
+  }
+}
+`);
+  });
 });

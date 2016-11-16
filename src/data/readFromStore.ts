@@ -22,6 +22,10 @@ import {
   getQueryDefinition,
 } from '../queries/getFromAST';
 
+import {
+  ApolloReducerConfig,
+} from '../store';
+
 export type DiffResult = {
   result?: any;
   isMissing?: boolean;
@@ -32,7 +36,16 @@ export type ReadQueryOptions = {
   query: Document,
   variables?: Object,
   returnPartialData?: boolean,
+  config?: ApolloReducerConfig,
 }
+
+export type CustomResolver = (rootValue: any, args: { [argName: string]: any }) => any;
+
+export type CustomResolverMap = {
+  [typeName: string]: {
+    [fieldName: string]: CustomResolver
+  }
+};
 
 /**
  * Resolves the result of a query solely from the store (i.e. never hits the server).
@@ -54,12 +67,14 @@ export function readQueryFromStore({
   query,
   variables,
   returnPartialData = false,
+  config,
 }: ReadQueryOptions): Object {
   const { result } = diffQueryAgainstStore({
     query,
     store,
     returnPartialData,
     variables,
+    config,
   });
 
   return result;
@@ -69,6 +84,7 @@ type ReadStoreContext = {
   store: NormalizedCache;
   returnPartialData: boolean;
   hasMissingField: boolean;
+  customResolvers: CustomResolverMap;
 }
 
 let haveWarned = false;
@@ -130,6 +146,20 @@ const readStoreResolver: Resolver = (
   const fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
+    if (context.customResolvers && obj && (obj.__typename || objId === 'ROOT_QUERY')) {
+      const typename = obj.__typename || 'Query';
+
+      // Look for the type in the custom resolver map
+      const type = context.customResolvers[typename];
+      if (type) {
+        // Look for the field in the custom resolver map
+        const resolver = type[fieldName];
+        if (resolver) {
+          return resolver(obj, args);
+        }
+      }
+    }
+
     if (! context.returnPartialData) {
       throw new Error(`Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
 Perhaps you want to use the \`returnPartialData\` option?`);
@@ -161,15 +191,18 @@ export function diffQueryAgainstStore({
   query,
   variables,
   returnPartialData = true,
+  config,
 }: ReadQueryOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
   getQueryDefinition(query);
 
   const context: ReadStoreContext = {
+    // Global settings
     store,
     returnPartialData,
+    customResolvers: config && config.customResolvers,
 
-    // Filled in during execution
+    // Flag set during execution
     hasMissingField: false,
   };
 

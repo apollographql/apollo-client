@@ -1,5 +1,6 @@
 import {
   addTypenameToDocument,
+  removeClientFieldsFromDocument,
 } from '../src/queries/queryTransform';
 
 import {
@@ -33,6 +34,36 @@ describe('query transforms', () => {
             __typename
           }
           __typename
+        }
+      }
+    `;
+    const expectedQueryStr = print(expectedQuery);
+
+    assert.equal(expectedQueryStr, print(newQueryDoc));
+  });
+
+  it('should correctly remove client-only fields', () => {
+    let testQuery = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+            fullName @client
+          }
+          ...includedFragment @client
+        }
+      }
+    `;
+    const newQueryDoc = removeClientFieldsFromDocument(testQuery);
+
+    const expectedQuery = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
         }
       }
     `;

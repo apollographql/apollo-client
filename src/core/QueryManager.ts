@@ -26,6 +26,7 @@ import {
 
 import {
   addTypenameToDocument,
+  removeClientFieldsFromDocument,
 } from '../queries/queryTransform';
 
 import {
@@ -53,9 +54,6 @@ import { print } from 'graphql-tag/printer';
 import {
   readQueryFromStore,
   ReadQueryOptions,
-} from '../data/readFromStore';
-
-import {
   diffQueryAgainstStore,
 } from '../data/readFromStore';
 
@@ -141,6 +139,7 @@ export class QueryManager {
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private reducerConfig: ApolloReducerConfig;
+
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
   // mutations and subscriptions as well.
@@ -381,6 +380,7 @@ export class QueryManager {
                 query: this.queryDocuments[queryId],
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
+                config: this.reducerConfig,
               }),
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
@@ -479,6 +479,7 @@ export class QueryManager {
         store: this.reduxRootSelector(this.store.getState()).data,
         returnPartialData: true,
         variables,
+        config: this.reducerConfig,
       });
 
       // If we're in here, only fetch if we have missing fields
@@ -719,10 +720,16 @@ export class QueryManager {
     this.stopQueryInStore(queryId);
   }
 
-  public getCurrentQueryResult(observableQuery: ObservableQuery, isOptimistic = false) {
+  public getCurrentQueryResult(
+    observableQuery: ObservableQuery,
+    isOptimistic = false,
+    includeClientFields = false,
+  ) {
+
     const {
       variables,
-      document } = this.getQueryParts(observableQuery);
+      document,
+    } = this.getQueryParts(observableQuery);
 
     const queryOptions = observableQuery.options;
     const readOptions: ReadQueryOptions = {
@@ -733,6 +740,7 @@ export class QueryManager {
       query: document,
       variables,
       returnPartialData: false,
+      config: this.reducerConfig,
     };
 
     try {
@@ -904,10 +912,15 @@ export class QueryManager {
       noFetch,
       returnPartialData,
     } = options;
+
+    // The document we actually send to the server has @client fields removed
+    // We use the original one to read from the store
+    const netDocument = removeClientFieldsFromDocument(document);
+
     const request: Request = {
-      query: document,
+      query: netDocument,
       variables,
-      operationName: getOperationName(document),
+      operationName: getOperationName(netDocument),
     };
 
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
@@ -921,8 +934,8 @@ export class QueryManager {
           // XXX handle multiple ApolloQueryResults
           this.store.dispatch({
             type: 'APOLLO_QUERY_RESULT',
-            document,
-            operationName: getOperationName(document),
+            document: netDocument,
+            operationName: getOperationName(netDocument),
             result,
             queryId,
             requestId,
@@ -951,6 +964,7 @@ export class QueryManager {
               variables,
               returnPartialData: returnPartialData || noFetch,
               query: document,
+              config: this.reducerConfig,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */

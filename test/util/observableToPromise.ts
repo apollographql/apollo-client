@@ -12,13 +12,13 @@ import { Subscription } from '../../src/util/Observable';
  * @param errorCallbacks an expected set of errors
  */
 export type Options = {
-  observable: ObservableQuery,
+  observable: ObservableQuery<any>,
   shouldResolve?: boolean,
   wait?: number,
   errorCallbacks?: ((error: Error) => any)[],
 };
 
-export type ResultCallback = ((result: ApolloQueryResult) => any);
+export type ResultCallback = ((result: ApolloQueryResult<any>) => any);
 
 // Take an observable and N callbacks, and observe the observable,
 // ensuring it is called exactly N times, resolving once it has done so.

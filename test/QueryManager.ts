@@ -122,7 +122,7 @@ describe('QueryManager', () => {
     error?: Error,
     result?: GraphQLResult,
     delay?: number,
-    observer: Observer<ApolloQueryResult>,
+    observer: Observer<ApolloQueryResult<any>>,
   }) => {
     const queryManager = mockQueryManager({
       request: { query, variables },
@@ -131,7 +131,7 @@ describe('QueryManager', () => {
       delay,
     });
     const finalOptions = assign({ query, variables }, queryOptions) as WatchQueryOptions;
-    return queryManager.watchQuery(finalOptions).subscribe({
+    return queryManager.watchQuery<any>(finalOptions).subscribe({
       next: wrap(done, observer.next),
       error: observer.error,
     });
@@ -582,9 +582,9 @@ describe('QueryManager', () => {
     let subOneCount = 0;
 
     // pre populate data to avoid contention
-    queryManager.query(request)
+    queryManager.query<any>(request)
       .then(() => {
-        const handle = queryManager.watchQuery(request);
+        const handle = queryManager.watchQuery<any>(request);
 
         const subOne = handle.subscribe({
           next(result) {
@@ -658,7 +658,7 @@ describe('QueryManager', () => {
       secondResult: { data: data2 },
     });
 
-    const observable = queryManager.watchQuery(request);
+    const observable = queryManager.watchQuery<any>(request);
     return observableToPromise({ observable },
       (result) => {
         assert.deepEqual(result.data, data1);
@@ -699,7 +699,7 @@ describe('QueryManager', () => {
       secondResult: { data: data2 },
     });
 
-    const observable = queryManager.watchQuery(request);
+    const observable = queryManager.watchQuery<any>(request);
     return observableToPromise({ observable },
       (result) => {
         assert.deepEqual(result.data, data1);
@@ -740,7 +740,7 @@ describe('QueryManager', () => {
       secondResult: { data: data2 },
     });
 
-    const handle = queryManager.watchQuery(request);
+    const handle = queryManager.watchQuery<any>(request);
     handle.subscribe({});
 
     return handle.refetch().then(
@@ -808,7 +808,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery({ query });
+    const observable = queryManager.watchQuery<any>({ query });
     return observableToPromise({ observable },
       (result) => {
         assert.deepEqual(result.data, data1);
@@ -868,7 +868,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery({ query });
+    const observable = queryManager.watchQuery<any>({ query });
     const originalOptions = assign({}, observable.options);
     return observableToPromise({ observable },
       (result) => {
@@ -927,7 +927,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery({
+    const observable = queryManager.watchQuery<any>({
       query,
       pollInterval: 200,
     });
@@ -988,7 +988,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery({
+    const observable = queryManager.watchQuery<any>({
       query,
       pollInterval: 30,
       notifyOnNetworkStatusChange: true,
@@ -1063,10 +1063,10 @@ describe('QueryManager', () => {
     );
 
     // First, prime the store so that query diffing removes the query
-    return queryManager.query({
+    return queryManager.query<any>({
       query: primeQuery,
     }).then(() => {
-      const handle = queryManager.watchQuery({
+      const handle = queryManager.watchQuery<any>({
         query: complexQuery,
         returnPartialData: true,
       });
@@ -1134,10 +1134,10 @@ describe('QueryManager', () => {
     );
 
     // First, prime the cache
-    return queryManager.query({
+    return queryManager.query<any>({
       query: primeQuery,
     }).then(() => {
-      const handle = queryManager.watchQuery({
+      const handle = queryManager.watchQuery<any>({
         query: complexQuery,
         noFetch: true,
       });
@@ -1460,8 +1460,8 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable1 = queryManager.watchQuery({ query: query1 });
-    const observable2 = queryManager.watchQuery({ query: query2 });
+    const observable1 = queryManager.watchQuery<any>({ query: query1 });
+    const observable2 = queryManager.watchQuery<any>({ query: query2 });
 
     return Promise.all([
       observableToPromise({ observable: observable1 },
@@ -1518,11 +1518,11 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery({ query: query1 });
+    const observable = queryManager.watchQuery<any>({ query: query1 });
     return observableToPromise({ observable },
       (result) => {
         assert.deepEqual(result.data, data1);
-        queryManager.query({ query: query2 });
+        queryManager.query<any>({ query: query2 });
       },
       // 3 because the query init action for the second query causes a callback
       (result) => assert.deepEqual(result.data, {
@@ -1569,7 +1569,7 @@ describe('QueryManager', () => {
           result: { data: data2 },
         },
       );
-      const observable = queryManager.watchQuery({
+      const observable = queryManager.watchQuery<any>({
         query,
         variables,
         pollInterval: 50,
@@ -1579,6 +1579,7 @@ describe('QueryManager', () => {
         (result) => assert.deepEqual(result.data, data1),
         (result) => assert.deepEqual(result.data, data2),
       );
+
     });
 
     it('should let you handle multiple polled queries and unsubscribe from one of them', (done) => {
@@ -1788,7 +1789,7 @@ describe('QueryManager', () => {
         },
       );
 
-      const observable = queryManager.watchQuery({
+      const observable = queryManager.watchQuery<any>({
         query,
         variables,
         pollInterval: 50,
@@ -1846,7 +1847,7 @@ describe('QueryManager', () => {
         },
       );
 
-      const observable = queryManager.watchQuery({ query, variables });
+      const observable = queryManager.watchQuery<any>({ query, variables });
       observable.startPolling(50);
 
       return observableToPromise({ observable },
@@ -1890,7 +1891,7 @@ describe('QueryManager', () => {
           result: { data: data2 },
         },
       );
-      const observable = queryManager.watchQuery({
+      const observable = queryManager.watchQuery<any>({
         query,
         variables,
         pollInterval: 50,
@@ -1967,7 +1968,7 @@ describe('QueryManager', () => {
   it('warns if you forget the template literal tag', () => {
     const queryManager = mockQueryManager();
     assert.throws(() => {
-      queryManager.query({
+      queryManager.query<any>({
         // Bamboozle TypeScript into letting us do this
         query: 'string' as any as Document,
       });
@@ -1981,7 +1982,7 @@ describe('QueryManager', () => {
     }, /wrap the query string in a "gql" tag/);
 
     assert.throws(() => {
-      queryManager.watchQuery({
+      queryManager.watchQuery<any>({
         // Bamboozle TypeScript into letting us do this
         query: 'string' as any as Document,
       });
@@ -2131,7 +2132,7 @@ describe('QueryManager', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      const observable = queryManager.watchQuery({ query });
+      const observable = queryManager.watchQuery<any>({ query });
 
       // wait just to make sure the observable doesn't fire again
       return observableToPromise({ observable, wait: 0 },
@@ -2215,7 +2216,7 @@ describe('QueryManager', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      const observable = queryManager.watchQuery({ query });
+      const observable = queryManager.watchQuery<any>({ query });
 
       // wait to make sure store reset happened
       return observableToPromise({ observable, wait: 20 },
@@ -2263,7 +2264,7 @@ describe('QueryManager', () => {
           }
         }`;
       const queryManager = mockQueryManager();
-      const mockObservableQuery: ObservableQuery = {
+      const mockObservableQuery: ObservableQuery<any> = {
         refetch(variables: any): Promise<GraphQLResult> {
           done();
           return null;
@@ -2272,10 +2273,10 @@ describe('QueryManager', () => {
           query: query,
         },
         scheduler: queryManager.scheduler,
-      } as any as ObservableQuery;
+      } as any as ObservableQuery<any>;
 
       const queryId = 'super-fake-id';
-      queryManager.addObservableQuery(queryId, mockObservableQuery);
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
     });
 
@@ -2292,7 +2293,7 @@ describe('QueryManager', () => {
       options.noFetch = true;
       options.query = query;
       let refetchCount = 0;
-      const mockObservableQuery: ObservableQuery = {
+      const mockObservableQuery: ObservableQuery<any> = {
         refetch(variables: any): Promise<GraphQLResult> {
           refetchCount ++;
           done();
@@ -2300,10 +2301,10 @@ describe('QueryManager', () => {
         },
         options,
         queryManager: queryManager,
-      } as any as ObservableQuery;
+      } as any as ObservableQuery<any>;
 
       const queryId = 'super-fake-id';
-      queryManager.addObservableQuery(queryId, mockObservableQuery);
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
       queryManager.resetStore();
       setTimeout(() => {
         assert.equal(refetchCount, 0);
@@ -2337,7 +2338,7 @@ describe('QueryManager', () => {
       };
 
       queryManager = createQueryManager({ networkInterface });
-      queryManager.query({ query }).then((result) => {
+      queryManager.query<any>({ query }).then((result) => {
         done(new Error('query() gave results on a store reset'));
       }).catch((error) => {
         done();
@@ -2451,10 +2452,10 @@ describe('QueryManager', () => {
         error: new Error('Network error ocurred'),
       },
     );
-    queryManager.query({ query }).then((result) => {
+    queryManager.query<any>({ query }).then((result) => {
       assert.deepEqual(result.data, data);
 
-      queryManager.query({ query, forceFetch: true }).then(() => {
+      queryManager.query<any>({ query, forceFetch: true }).then(() => {
         done(new Error('Returned a result when it was not supposed to.'));
       }).catch((error) => {
         // make that the error thrown doesn't empty the state
@@ -2522,7 +2523,7 @@ describe('QueryManager', () => {
         error: new Error('Network error occurred.'),
       },
     );
-    const observable = queryManager.watchQuery({ query, pollInterval: 20 });
+    const observable = queryManager.watchQuery<any>({ query, pollInterval: 20 });
 
     return observableToPromise({
         observable,
@@ -2572,7 +2573,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery({ query });
+    const observable = queryManager.watchQuery<any>({ query });
     return Promise.all<any[] | void>([
       // we wait for a little bit to ensure the result of the second query
       // don't trigger another subscription event
@@ -2581,7 +2582,7 @@ describe('QueryManager', () => {
           assert.deepEqual(result.data, data);
         },
       ),
-      queryManager.query({ query }).then((result) => {
+      queryManager.query<any>({ query }).then((result) => {
         assert.deepEqual(result.data, data);
       }),
     ]);
@@ -2684,8 +2685,8 @@ describe('QueryManager', () => {
       store,
     });
 
-    const observable1 = queryManager.watchQuery({ query: query1 });
-    const observable2 = queryManager.watchQuery({ query: query2 });
+    const observable1 = queryManager.watchQuery<any>({ query: query1 });
+    const observable2 = queryManager.watchQuery<any>({ query: query2 });
 
     // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
@@ -2755,8 +2756,8 @@ describe('QueryManager', () => {
       store,
     });
 
-    const observableWithId = queryManager.watchQuery({ query: queryWithId });
-    const observableWithoutId = queryManager.watchQuery({ query: queryWithoutId });
+    const observableWithId = queryManager.watchQuery<any>({ query: queryWithId });
+    const observableWithoutId = queryManager.watchQuery<any>({ query: queryWithoutId });
 
     // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
@@ -2843,8 +2844,8 @@ describe('QueryManager', () => {
       store,
     });
 
-    const observableWithId = queryManager.watchQuery({ query: queryWithId });
-    const observableWithoutId = queryManager.watchQuery({ query: queryWithoutId });
+    const observableWithId = queryManager.watchQuery<any>({ query: queryWithId });
+    const observableWithoutId = queryManager.watchQuery<any>({ query: queryWithoutId });
 
     // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
@@ -2906,8 +2907,8 @@ describe('QueryManager', () => {
         },
       );
 
-      return queryManager.query({ query: primeQuery }).then((primeResult) => {
-        const observable = queryManager.watchQuery({ query, returnPartialData: true });
+      return queryManager.query<any>({ query: primeQuery }).then((primeResult) => {
+        const observable = queryManager.watchQuery<any>({ query, returnPartialData: true });
 
         return observableToPromise({ observable },
           (result) => {
@@ -3014,7 +3015,7 @@ describe('QueryManager', () => {
           result: { data: mutationData },
         },
       );
-      const observable = queryManager.watchQuery({ query });
+      const observable = queryManager.watchQuery<any>({ query });
       return observableToPromise({ observable },
         (result) => {
           assert.deepEqual(result.data, data);
@@ -3071,7 +3072,7 @@ describe('QueryManager', () => {
           result: { data: mutationData },
         },
       );
-      const observable = queryManager.watchQuery({ query });
+      const observable = queryManager.watchQuery<any>({ query });
       return observableToPromise({ observable },
         (result) => {
           assert.deepEqual(result.data, data);
@@ -3133,7 +3134,7 @@ describe('QueryManager', () => {
         },
       );
 
-      const observable = queryManager.watchQuery({ query });
+      const observable = queryManager.watchQuery<any>({ query });
       return observableToPromise({ observable },
         (result) => {
           assert.deepEqual(result.data, data);
@@ -3183,7 +3184,7 @@ describe('QueryManager', () => {
     it('transforms query() results', () => {
       response = {data: {foo: 123}};
       return client.query({query: gql`{ foo }`})
-        .then((result: ApolloQueryResult) => {
+        .then((result: ApolloQueryResult<any>) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
         });
     });
@@ -3224,7 +3225,7 @@ describe('QueryManager', () => {
     it('transforms mutate() results', () => {
       response = {data: {foo: 123}};
       return client.mutate({mutation: gql`mutation makeChanges { foo }`})
-        .then((result: ApolloQueryResult) => {
+        .then((result: ApolloQueryResult<any>) => {
           assert.deepEqual(result.data, {foo: 123, transformCount: 1});
         });
     });
@@ -3247,11 +3248,11 @@ describe('QueryManager', () => {
 
       client = new ApolloClient({
         networkInterface,
-        resultTransformer(result: ApolloQueryResult) {
+        resultTransformer(result: ApolloQueryResult<any>) {
           result.data.__proto__ = Model.prototype;
           return result;
         },
-        resultComparator(result1: ApolloQueryResult, result2: ApolloQueryResult) {
+        resultComparator(result1: ApolloQueryResult<any>, result2: ApolloQueryResult<any>) {
           // A real example would, say, deep compare the two while ignoring prototypes.
           const foo1 = result1 && result1.data && result1.data.foo;
           const foo2 = result2 && result2.data && result2.data.foo;
@@ -3310,7 +3311,7 @@ describe('QueryManager', () => {
 
     const queryManager = mockRefetch({ request, firstResult, secondResult });
 
-    const handle = queryManager.watchQuery(request);
+    const handle = queryManager.watchQuery<any>(request);
 
     handle.subscribe({
       error: () => { /* nothing */ },

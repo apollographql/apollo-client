@@ -24,6 +24,24 @@ const client = new ApolloClient({
 });
 ```
 
+And if you needed to pass additional options to [`fetch`](https://github.github.io/fetch/):
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+
+const networkInterface = createNetworkInterface({ 
+  uri: 'https://example.com/graphql',
+  opts: {
+    // Additional fetch options like `credentials` or `headers`
+    credentials: 'same-origin',
+  }
+});
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```
+
 <h3 id="networkInterfaceMiddleware" title="Middleware">Middleware</h3>
 
 It is possible to use middleware with the network interface created via `createNetworkInterface`. Middleware is used to inspect and modify every request made over the `netWorkInterface`, for example, adding authentication tokens to every query. In order to add middleware, you must pass an array of objects into the interface created with `createNetworkInterface()`.  Each object must contain an `applyMiddleware` method with the following parameters:
@@ -220,7 +238,7 @@ This represents a result that comes back from the GraphQL server.
 
 Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. This batching supports all GraphQL endpoints, including those that do not implement transport-level batching, by merging together queries into one top-level query with multiple fields.
 
-To use batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server.
+To use batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object (the same as `createNetworkInterface`) with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server.
 
 <h3 id="BatchingExample">Batching example</h3>
 
@@ -231,8 +249,11 @@ import ApolloClient, { createBatchingNetworkInterface } from 'apollo-client';
 
 const batchingNetworkInterface = createBatchingNetworkInterface({
   uri: 'localhost:3000',
-  batchInterval: 10
-  });
+  batchInterval: 10,
+  opts: {
+    // Options to pass along to `fetch`
+  }
+});
 
 const apolloClient = new ApolloClient({
   networkInterface: batchingNetworkInterface,

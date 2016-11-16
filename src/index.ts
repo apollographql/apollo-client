@@ -67,8 +67,7 @@ import {
   ApolloQueryResult,
 } from './core/QueryManager';
 
-import {
-  mockNetworkInterface,
+import mockNetworkInterface, {
   mockBatchedNetworkInterface,
   mockSubscriptionNetworkInterface,
 } from './mocks/mockNetworkInterface';

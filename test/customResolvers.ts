@@ -4,6 +4,8 @@ import { assert } from 'chai';
 import ApolloClient from '../src';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 
+import { NetworkStatus } from '../src/queries/store';
+
 describe('custom resolvers', () => {
   it(`works with client-side computed fields`, () => {
     const query = gql`
@@ -92,7 +94,11 @@ describe('custom resolvers', () => {
       customResolvers: {
         Query: {
           person: (_, args) => {
-            return args['id'];
+            return {
+              type: 'id',
+              id: args['id'],
+              generated: false,
+            };
           },
         },
       },
@@ -104,6 +110,7 @@ describe('custom resolvers', () => {
     }).then((itemResult) => {
       assert.deepEqual(itemResult, {
         loading: false,
+        networkStatus: NetworkStatus.ready,
         data: {
           person: {
             __typename: 'Person',
@@ -198,6 +205,7 @@ describe('custom resolvers', () => {
           ],
         },
         'loading': false,
+        networkStatus: NetworkStatus.ready,
       });
     });
   });

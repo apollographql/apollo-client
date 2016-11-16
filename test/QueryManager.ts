@@ -3166,5 +3166,4 @@ describe('QueryManager', () => {
 
     // We have an unhandled error warning from the `subscribe` above, which has no `error` cb
   });
-
 });

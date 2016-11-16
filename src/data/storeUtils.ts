@@ -149,6 +149,14 @@ export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
 }
 
+export function toIdValue(id: string, generated = false): IdValue {
+  return {
+    type: 'id',
+    id,
+    generated,
+  };
+}
+
 export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
   return (isObject(jsonObject) && (jsonObject as (IdValue | JsonValue)).type === 'json');
 }

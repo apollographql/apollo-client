@@ -569,4 +569,81 @@ describe('reading from the store', () => {
       simpleArray: [null, 'two', 'three'],
     });
   });
+
+  it('runs a query with custom resolvers for a computed field', () => {
+    const result = {
+      __typename: 'Thing',
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    } as StoreObject;
+
+    const store = {
+      'ROOT_QUERY': result,
+    } as NormalizedCache;
+
+    const queryResult = readQueryFromStore({
+      store,
+      query: gql`
+        query {
+          stringField
+          numberField
+          computedField(extra: "bit") @client
+        }
+      `,
+      config: {
+        customResolvers: {
+          Thing: {
+            computedField: (obj, args) => obj.stringField + obj.numberField + args['extra'],
+          },
+        },
+      },
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: result['stringField'],
+      numberField: result['numberField'],
+      computedField: 'This is a string!5bit',
+    });
+  });
+
+  it('runs a query with custom resolvers for a computed field on root Query', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    } as StoreObject;
+
+    const store = {
+      'ROOT_QUERY': result,
+    } as NormalizedCache;
+
+    const queryResult = readQueryFromStore({
+      store,
+      query: gql`
+        query {
+          stringField
+          numberField
+          computedField(extra: "bit") @client
+        }
+      `,
+      config: {
+        customResolvers: {
+          Query: {
+            computedField: (obj, args) => obj.stringField + obj.numberField + args['extra'],
+          },
+        },
+      },
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: result['stringField'],
+      numberField: result['numberField'],
+      computedField: 'This is a string!5bit',
+    });
+  });
 });

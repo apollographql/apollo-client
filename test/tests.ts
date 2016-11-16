@@ -48,3 +48,4 @@ import './graphqlSubscriptions';
 import './batchedNetworkInterface';
 import './ObservableQuery';
 import './subscribeToMore';
+import './customResolvers';

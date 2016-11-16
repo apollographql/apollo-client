@@ -1,7 +1,7 @@
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
 import { assert } from 'chai';
-import ApolloClient from '../src';
+import ApolloClient, { toIdValue } from '../src';
 
 import { NetworkStatus } from '../src/queries/store';
 
@@ -37,13 +37,7 @@ describe('custom resolvers', () => {
       networkInterface,
       customResolvers: {
         Query: {
-          person: (_, args) => {
-            return {
-              type: 'id',
-              id: args['id'],
-              generated: false,
-            };
-          },
+          person: (_, args) => toIdValue(args['id']),
         },
       },
       dataIdFromObject,

@@ -5,9 +5,12 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - ApolloClient class now takes two generics, the first for Query and second for Mutation
 
+### 0.5.4
+- Fix a bug that caused apollo-client to catch errors thrown in Observer.next callbacks [PR #910](https://github.com/apollostack/apollo-client/pull/910)
+- Make sure only one copy of each fragment is attached to a document [PR #906](https://github.com/apollostack/apollo-client/pull/906)
+
 ### 0.5.3
 - Change the way IDs of objects in arrays are stored to make them consistent with the rest of the store [PR #901](https://github.com/apollostack/apollo-client/pull/901)
-
 
 ### 0.5.2
 - Print a warning if server response is not an array when using transport batching [PR #893](https://github.com/apollostack/apollo-client/pull/893)

@@ -7,7 +7,7 @@ import { WatchQueryOptions } from '../src/core/watchQueryOptions';
 import {
   createApolloStore,
 } from '../src/store';
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import mockNetworkInterface from '../src/mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
 
 describe('QueryScheduler', () => {

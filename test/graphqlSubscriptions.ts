@@ -1,6 +1,6 @@
 import {
   mockSubscriptionNetworkInterface,
-} from './mocks/mockNetworkInterface';
+} from '../src/mocks/mockNetworkInterface';
 
 import {
   assert,

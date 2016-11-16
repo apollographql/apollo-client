@@ -7,7 +7,7 @@ import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInte
 import {
   createMockFetch,
   createMockedIResponse,
-} from './mocks/mockFetch';
+} from '../src/mocks/mockFetch';
 
 import {
   Request,

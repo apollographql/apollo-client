@@ -1,7 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import mockNetworkInterface from '../src/mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 
 import assign = require('lodash.assign');

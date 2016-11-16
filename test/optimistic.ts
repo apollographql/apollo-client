@@ -1,7 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import mockNetworkInterface from '../src/mocks/mockNetworkInterface';
 import ApolloClient, { createFragment } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';

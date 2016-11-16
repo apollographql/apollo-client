@@ -2,9 +2,9 @@ import {
   QueryManager,
 } from '../src/core/QueryManager';
 
-import mockQueryManager from './mocks/mockQueryManager';
+import mockQueryManager from '../src/mocks/mockQueryManager';
 
-import mockWatchQuery from './mocks/mockWatchQuery';
+import mockWatchQuery from '../src/mocks/mockWatchQuery';
 
 import { ObservableQuery } from '../src/core/ObservableQuery';
 
@@ -46,7 +46,7 @@ import assign = require('lodash.assign');
 
 import mockNetworkInterface, {
   ParsedRequest,
-} from './mocks/mockNetworkInterface';
+} from '../src/mocks/mockNetworkInterface';
 
 import {
   NetworkInterface,

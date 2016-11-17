@@ -23,7 +23,7 @@ There are two principal uses for fragments in Apollo:
   - Sharing fields between multiple queries, mutations or subscriptions.
   - Breaking your queries up to allow you to co-locate field access with the places they are used.
 
-In this document we'll outline patterns to do both; we'll also make use of a helper package [`graphql-fragments`](https://github.com/apollostack/graphql-fragments) which aims to help us, especially with the second problem.
+In this document we'll outline patterns to do both; we'll also make use of utilities in the [`graphql-anywhere`](https://github.com/apollostack/graphql-anywhere) and [`graphql-tag`](https://github.com/apollostack/graphql-tag) packages which aim to help us, especially with the second problem.
 
 <h2 id="reusing-fragments">Reusing Fragments</h2>
 
@@ -32,10 +32,10 @@ The most straightforward use of fragments is to reuse parts of queries (or mutat
 To do so, we can simply share a fragment describing the fields we need for a comment:
 
 ```js
-import Fragment from 'graphql-fragments';
+import gql from 'graphql-tag';
 
 CommentsPage.fragments = {
-  comment: new Fragment(gql`
+  comment: gql`
     fragment CommentsPageComment on Comment {
       id
       postedBy {
@@ -45,13 +45,11 @@ CommentsPage.fragments = {
       createdAt
       content
     }
-  `),
+  `,
 };
 ```
 
-We put the fragment on `CommentsPage.fragments.comment` by convention, and use the `Fragment` class exported by the `graphql-fragments` package to create it.
-
-> In this case, there's no great advantage in using the `Fragment` class, but (as we'll see an example of in the next section), it makes it easier to nest fragments, so it makes sense to use it in all cases.
+We put the fragment on `CommentsPage.fragments.comment` by convention, and use the familiar `gql` helper to create it.
 
 When it's time to embed the fragment in a query, we simply use the `...Name` syntax in our GraphQL, and pass the fragment object into our `graphql` HOC:
 
@@ -62,12 +60,8 @@ const SUBMIT_COMMENT_MUTATION = gql`
       ...CommentsPageComment
     }
   }
+  ${CommentsPage.fragments.comment}
 `;
-
-const withMutations = graphql(SUBMIT_COMMENT_MUTATION, {
-  options: { fragments: CommentsPage.fragments.comment.fragments() },
-  ...
-}
 
 export const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
@@ -80,13 +74,8 @@ export const COMMENT_QUERY = gql`
       # ...
     }
   }
+  ${CommentsPage.fragments.comment}
 `;
-
-const withData = graphql(COMMENT_QUERY, {
-  options({ params }) {
-    return {
-      fragments: CommentsPage.fragments.comment.fragments(),
-```
 
 You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollostack/GitHunt-React/blob/master/ui/routes/CommentsPage.js).
 
@@ -108,39 +97,41 @@ FeedPage
 
 The `FeedPage` conducts a query to fetch a list of `Entry`s, and each of the subcomponents requires different subfields of each `Entry`.
 
-The `Fragment` utility class that we saw in the section above gives us tools to easily construct a single query that provides all the fields that each subcomponent needs, and allows to easily pass the exact field that a component needs to it.
+The `graphql-anywhere` package gives us tools to easily construct a single query that provides all the fields that each subcomponent needs, and allows to easily pass the exact field that a component needs to it.
 
 <h3 id="creating-fragments">Creating Fragments</h3>
 
-To create the fragments, we again use the `Fragment` class and attach to subfields of `ComponentClass.fragment`, for example:
+To create the fragments, we again use the `gql` helper and attach to subfields of `ComponentClass.fragment`, for example:
 
 ```js
 VoteButtons.fragments = {
-  entry: new Fragment(gql`
+  entry: gql`
     fragment VoteButtons on Entry {
       score
       vote {
         vote_value
       }
     }
-  `),
+  `,
 };
 ```
 
-One nice tool that the `Fragment` class gives us is a [`PropType`](https://facebook.github.io/react/docs/reusable-components.html) checker that we can use to ensure that we do indeed receive those fields in the component's `entry` prop:
+One nice tool that the `graphql-anywhere` package gives us is a [`PropType`](https://facebook.github.io/react/docs/reusable-components.html) checker that we can use to ensure that we do indeed receive those fields in the component's `entry` prop:
 
 ```js
+import { propType } from 'graphql-anywhere';
+
 VoteButtons.propTypes = {
   // ...
-  entry: VoteButtons.fragments.entry.propType,
+  entry: propType(VoteButtons.fragments.entry).isRequired,
 };
 ```
 
-If our fragments include sub-fragments then we can pass them into the `Fragment` constructor:
+If our fragments include sub-fragments then we can pass them into the `gql` helper:
 
 ```js
 FeedEntry.fragments = {
-  entry: new Fragment(gql`
+  entry: gql`
     fragment FeedEntry on Entry {
       commentCount
       repository {
@@ -153,17 +144,21 @@ FeedEntry.fragments = {
       ...VoteButtons
       ...RepoInfo
     }
-  `, VoteButtons.fragments.entry, RepoInfo.fragments.entry),
+    ${VoteButtons.fragments.entry}
+    ${RepoInfo.fragments.entry}
+  `,
 };
 ```
 
 <h3 id="filtering-with-fragments">Filtering With Fragments</h3>
 
-We can also use the fragment class to filter the exact fields from the `entry` before passing them to the subcomponent. So when we render a `VoteButtons`, we can simply do:
+We can also use the `graphql-anywhere` package to filter the exact fields from the `entry` before passing them to the subcomponent. So when we render a `VoteButtons`, we can simply do:
 
 ```jsx
+import { filter } from 'graphql-anywhere';
+
 <VoteButtons
-  entry={VoteButtons.fragments.entry.filter(entry)}
+  entry={filter(VoteButtons.fragments.entry, entry)}
   canVote={loggedIn}
   onVote={type => onVote({
     repoFullName: full_name,
@@ -172,4 +167,4 @@ We can also use the fragment class to filter the exact fields from the `entry` b
 />
 ```
 
-The `filter()` function on the fragment will grab exactly the fields from the `entry` that the fragment defines.
+The `filter()` function will grab exactly the fields from the `entry` that the fragment defines.

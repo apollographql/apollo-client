@@ -37,7 +37,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "graphql-anywhere": "^0.2.4",
+    "graphql-anywhere": "^0.3.0",
     "graphql-tag": "^0.1.13",
     "lodash.assign": "^4.0.8",
     "lodash.clonedeep": "^4.3.2",

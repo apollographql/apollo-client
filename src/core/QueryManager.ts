@@ -141,6 +141,7 @@ export class QueryManager {
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private reducerConfig: ApolloReducerConfig;
+
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
   // mutations and subscriptions as well.
@@ -381,6 +382,7 @@ export class QueryManager {
                 query: this.queryDocuments[queryId],
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || options.noFetch,
+                config: this.reducerConfig,
               }),
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
@@ -479,6 +481,7 @@ export class QueryManager {
         store: this.reduxRootSelector(this.store.getState()).data,
         returnPartialData: true,
         variables,
+        config: this.reducerConfig,
       });
 
       // If we're in here, only fetch if we have missing fields
@@ -733,6 +736,7 @@ export class QueryManager {
       query: document,
       variables,
       returnPartialData: false,
+      config: this.reducerConfig,
     };
 
     try {
@@ -951,6 +955,7 @@ export class QueryManager {
               variables,
               returnPartialData: returnPartialData || noFetch,
               query: document,
+              config: this.reducerConfig,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */

@@ -40,6 +40,10 @@ import {
   MutationBehaviorReducerMap,
 } from './data/mutationResults';
 
+import {
+  CustomResolverMap,
+} from './data/readFromStore';
+
 import assign = require('lodash.assign');
 
 export interface Store {
@@ -151,9 +155,10 @@ export function createApolloStore({
 }
 
 
-export interface ApolloReducerConfig {
+export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   mutationBehaviorReducers?: MutationBehaviorReducerMap;
+  customResolvers?: CustomResolverMap;
 }
 
 export function getDataWithOptimisticResults(store: Store): NormalizedCache {

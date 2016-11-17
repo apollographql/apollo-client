@@ -117,13 +117,14 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       return printRequest(request);
     });
 
-    return fetch(this._uri, assign({}, this._opts, options, {
+    return fetch(this._uri, assign({}, this._opts, {
       body: JSON.stringify(printedRequests),
-      headers: assign({}, options.headers, {
+      method: 'POST',
+    }, options, {
+      headers: assign({}, {
         Accept: '*/*',
         'Content-Type': 'application/json',
-      }),
-      method: 'POST',
+      }, options.headers),
     }));
   };
 }

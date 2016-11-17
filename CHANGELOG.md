@@ -4,9 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Implement cache redirects with custom resolvers [PR #921](https://github.com/apollostack/apollo-client/pull/921)
-
-### 0.5.5
-- Fix issue that caused `createBatchingNetworkInterface` unable to specify request headers by `opts` or `applyMiddleware`. [Issue #920](https://github.com/apollostack/apollo-client/issues/920)
+- Fix issue that caused `createBatchingNetworkInterface` unable to specify request headers by `opts` or `applyMiddleware`. [PR #922](https://github.com/apollostack/apollo-client/pull/922) [Issue #920](https://github.com/apollostack/apollo-client/issues/920)
 
 ### 0.5.4
 - Fix a bug that caused apollo-client to catch errors thrown in Observer.next callbacks [PR #910](https://github.com/apollostack/apollo-client/pull/910)

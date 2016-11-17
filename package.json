@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
@@ -37,7 +37,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "graphql-anywhere": "^0.2.4",
+    "graphql-anywhere": "^0.3.0",
     "graphql-tag": "^0.1.13",
     "lodash.assign": "^4.0.8",
     "lodash.clonedeep": "^4.3.2",
@@ -48,6 +48,7 @@
     "lodash.identity": "^3.0.0",
     "lodash.includes": "^4.1.2",
     "lodash.isboolean": "^3.0.3",
+    "lodash.isequal": "^4.2.0",
     "lodash.isnull": "^3.0.0",
     "lodash.isnumber": "^3.0.3",
     "lodash.isobject": "^3.0.2",

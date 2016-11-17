@@ -1,4 +1,5 @@
 # Apollo Client Roadmap to version 1.0
+expected by January 2017
 
 This roadmap serves as a rough guide of features and changes we hope to accomplish until Apollo Client 1.0. There will almost certainly be things in version 1.0 that are not in this list, and there may be the odd thing on this list that doesn't make it into version 1.0.
 

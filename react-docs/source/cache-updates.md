@@ -66,6 +66,50 @@ In some cases, just using `dataIdFromObject` is not enough for your application 
 
 In those cases you have to use other features like `fetchMore` or the other methods listed on this page in order to make sure that your queries are updated with the right information and your UI updates correctly.
 
+<h2 id="cacheRedirect">Cache redirects with `customResolvers`</h2>
+
+In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
+
+```
+query ListView {
+  books {
+    id
+    title
+    abstract
+  }
+}
+```
+
+When a specific book is selected, the detail view displays an individual item using this query:
+
+```
+query DetailView {
+  book(id: $id) {
+    id
+    title
+    abstract
+  }
+}
+```
+
+We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
+
+```
+import ApolloClient, { toIdValue } from 'apollo-client';
+
+const client = new ApolloClient({
+      networkInterface,
+      customResolvers: {
+        Query: {
+          book: (_, args) => toIdValue(dataIdFromObject({ __typename: 'book', id: args['id']` })),
+        },
+      },
+      dataIdFromObject,
+    });
+```
+
+Apollo Client will use the return value of the custom resolver to look up the item in its cache. `toIdValue` must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object.
+
 <h2 id="fetchMore">Using `fetchMore`</h2>
 
 `fetchMore` can be used to manually update the result of one query based on the data returned by another query. Most often, it is used to handle pagination. In our GitHunt example, we have a paginated feed that displays a list of GitHub respositories. When we hit the "Load More" button, we don't want Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.

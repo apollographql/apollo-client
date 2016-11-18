@@ -413,6 +413,10 @@ export default class ApolloClient {
     this.queryManager.resetStore();
   };
 
+  public getInitialState(): { data: Object } {
+    return this.queryManager.getInitialState();
+  }
+
   private setStore(store: ApolloStore) {
     let reduxRootSelector: ApolloStateSelector;
     if (this.reduxRootSelector) {

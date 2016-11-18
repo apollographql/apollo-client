@@ -555,6 +555,10 @@ export class QueryManager {
     return this.reduxRootSelector(this.store.getState());
   }
 
+  public getInitialState(): { data: Object } {
+    return { data: this.getApolloState().data };
+  }
+
   public getDataWithOptimisticResults(): NormalizedCache {
     return getDataWithOptimisticResults(this.getApolloState());
   }

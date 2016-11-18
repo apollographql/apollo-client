@@ -21,11 +21,11 @@ import {
 } from '../src/data/storeUtils';
 
 import {
-  Selection,
-  Field,
-  Definition,
-  OperationDefinition,
-  Node,
+  SelectionNode,
+  FieldNode,
+  DefinitionNode,
+  OperationDefinitionNode,
+  ASTNode,
 } from 'graphql';
 
 import gql from 'graphql-tag';
@@ -716,16 +716,16 @@ describe('writing to the store', () => {
       },
     ];
 
-    function isOperationDefinition(definition: Definition): definition is OperationDefinition {
+    function isOperationDefinition(definition: DefinitionNode): definition is OperationDefinitionNode {
       return definition.kind === 'OperationDefinition';
     }
 
-    function isField(selection: Selection): selection is Field {
+    function isField(selection: SelectionNode): selection is FieldNode {
       return selection.kind === 'Field';
     }
 
     testData.forEach((data) => {
-      data.mutation.definitions.forEach((definition: OperationDefinition) => {
+      data.mutation.definitions.forEach((definition: OperationDefinitionNode) => {
         if (isOperationDefinition(definition)) {
           definition.selectionSet.selections.forEach((selection) => {
             if (isField(selection)) {
@@ -784,11 +784,11 @@ describe('writing to the store', () => {
       },
     };
 
-    function isOperationDefinition(value: Node): value is OperationDefinition {
+    function isOperationDefinition(value: ASTNode): value is OperationDefinitionNode {
       return value.kind === 'OperationDefinition';
     }
 
-    mutation.definitions.map((def: OperationDefinition) => {
+    mutation.definitions.map((def: OperationDefinitionNode) => {
       if (isOperationDefinition(def)) {
         assert.deepEqual(writeSelectionSetToStore({
           dataId: '5',
@@ -1028,12 +1028,12 @@ describe('writing to the store', () => {
 
     const result: any = { mut: { id: '1' } };
 
-    function isOperationDefinition(value: Node): value is OperationDefinition {
+    function isOperationDefinition(value: ASTNode): value is OperationDefinitionNode {
       return value.kind === 'OperationDefinition';
     }
 
     testData.forEach(({mutation, variables, expected}) => {
-      mutation.definitions.map((def: OperationDefinition) => {
+      mutation.definitions.map((def: OperationDefinitionNode) => {
         assert.throws(() => {
           if (isOperationDefinition(def)) {
             writeSelectionSetToStore({

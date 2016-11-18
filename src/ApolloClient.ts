@@ -8,7 +8,7 @@ import {
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
   /* tslint:disable */
-  SelectionSet,
+  SelectionSetNode,
   /* tslint:enable */
 
 } from 'graphql';

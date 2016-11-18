@@ -14,7 +14,7 @@ import {
 } from '../data/storeUtils';
 
 import {
-  SelectionSet,
+  SelectionSetNode,
   GraphQLError,
 } from 'graphql';
 
@@ -53,7 +53,7 @@ export type QueryStoreValue = {
 export interface SelectionSetWithRoot {
   id: string;
   typeName: string;
-  selectionSet: SelectionSet;
+  selectionSet: SelectionSetNode;
 }
 
 export function queries(

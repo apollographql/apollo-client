@@ -1,5 +1,5 @@
 import {
-  Document,
+  DocumentNode,
 } from 'graphql';
 
 import {
@@ -34,7 +34,7 @@ import {
  */
 export function createStoreReducer(
   resultReducer: OperationResultReducer,
-  document: Document,
+  document: DocumentNode,
   variables: Object,
   config: ApolloReducerConfig,
   // TODO: maybe turn the arguments into a single object argument

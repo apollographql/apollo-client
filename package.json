@@ -38,7 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "graphql-anywhere": "^0.3.0",
-    "graphql-tag": "^0.1.13",
+    "graphql-tag": "^0.1.17",
     "lodash.assign": "^4.0.8",
     "lodash.clonedeep": "^4.3.2",
     "lodash.countby": "^4.4.0",

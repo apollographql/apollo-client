@@ -57,7 +57,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
    */
   public variables: { [key: string]: any };
 
-  private isPollingQuery: boolean;
+  private isCurrentlyPolling: boolean;
   private shouldSubscribe: boolean;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
@@ -78,7 +78,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }) {
     const queryManager = scheduler.queryManager;
     const queryId = queryManager.generateQueryId();
-    const isPollingQuery = !!options.pollInterval;
 
     const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
       return this.onSubscribe(observer);
@@ -86,7 +85,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     super(subscriberFunction);
 
-    this.isPollingQuery = isPollingQuery;
+    this.isCurrentlyPolling = false;
     this.options = options;
     this.variables = this.options.variables || {};
     this.scheduler = scheduler;
@@ -329,7 +328,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public stopPolling() {
-    if (this.isPollingQuery) {
+    if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
     }
   }
@@ -339,10 +338,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       throw new Error('noFetch option should not use query polling.');
     }
 
-    if (this.isPollingQuery) {
+    if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
     }
     this.options.pollInterval = pollInterval;
+    this.isCurrentlyPolling = true;
     this.scheduler.startPollingQuery(this.options, this.queryId, false);
   }
 
@@ -380,11 +380,12 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       this.queryManager.addObservableQuery(this.queryId, this);
     }
 
-    if (this.isPollingQuery) {
+    if (!!this.options.pollInterval) {
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query polling.');
       }
 
+      this.isCurrentlyPolling = true;
       this.scheduler.startPollingQuery(
         this.options,
         this.queryId
@@ -422,7 +423,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   private tearDownQuery() {
-    if (this.isPollingQuery) {
+    if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
     }
 

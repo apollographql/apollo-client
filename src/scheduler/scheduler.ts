@@ -86,11 +86,6 @@ export class QueryScheduler {
 
     this.registeredQueries[queryId] = options;
 
-    // Fire an initial fetch before we start the polling query
-    if (firstFetch) {
-      this.fetchQuery(queryId, options, FetchType.normal);
-    }
-
     if (listener) {
       this.queryManager.addQueryListener(queryId, listener);
     }

@@ -77,7 +77,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', false, (queryStoreValue) => {
+    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', (queryStoreValue) => {
       timesFired += 1;
     });
     setTimeout(() => {
@@ -122,7 +122,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', false, (queryStoreValue) => {
+    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', (queryStoreValue) => {
       if (queryStoreValue.networkStatus !== NetworkStatus.poll) {
         timesFired += 1;
         scheduler.stopPollingQuery(queryId);
@@ -485,7 +485,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', false, (queryStoreValue) => {
+    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', (queryStoreValue) => {
       timesFired += 1;
     });
     setTimeout(() => {
@@ -529,11 +529,11 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', false, (queryStoreValue) => {
+    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', (queryStoreValue) => {
       scheduler.stopPollingQuery(queryId);
     });
     setTimeout(() => {
-      let queryId2 = scheduler.startPollingQuery(queryOptions, 'fake-id2', false, (queryStoreValue) => {
+      let queryId2 = scheduler.startPollingQuery(queryOptions, 'fake-id2', (queryStoreValue) => {
         timesFired += 1;
       });
       assert.equal(scheduler.intervalQueries[20].length, 1);

@@ -70,14 +70,9 @@ export class QueryScheduler {
     });
   }
 
-  // The firstFetch option is used to denote whether we want to fire off a
-  // "first fetch" before we start polling. If startPollingQuery() is being called
-  // from an existing ObservableQuery, the first fetch has already been fired which
-  // means that firstFetch should be false.
   public startPollingQuery(
     options: WatchQueryOptions,
     queryId?: string,
-    firstFetch: boolean = true,
     listener?: QueryListener
   ): string {
     if (!options.pollInterval) {

@@ -343,7 +343,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     }
     this.options.pollInterval = pollInterval;
     this.isCurrentlyPolling = true;
-    this.scheduler.startPollingQuery(this.options, this.queryId, false);
+    this.scheduler.startPollingQuery(this.options, this.queryId);
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult>) {
@@ -389,7 +389,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       this.scheduler.startPollingQuery(
         this.options,
         this.queryId,
-        false,
       );
     }
 

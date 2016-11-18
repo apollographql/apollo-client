@@ -8,7 +8,7 @@ import {
 } from '../src/queries/getFromAST';
 
 import {
-  Document,
+  DocumentNode,
 } from 'graphql';
 
 import gql from 'graphql-tag';
@@ -408,7 +408,7 @@ describe('roundtrip', () => {
   });
 });
 
-function storeRoundtrip(query: Document, result: any, variables = {}) {
+function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
   const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
   const store = writeQueryToStore({
     result,

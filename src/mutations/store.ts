@@ -7,7 +7,7 @@ import {
 } from '../actions';
 
 import {
-  SelectionSet,
+  SelectionSetNode,
 } from 'graphql';
 
 import assign = require('lodash/assign');
@@ -26,7 +26,7 @@ export interface MutationStoreValue {
 export interface SelectionSetWithRoot {
   id: string;
   typeName: string;
-  selectionSet: SelectionSet;
+  selectionSet: SelectionSetNode;
 }
 
 export function mutations(

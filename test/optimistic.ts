@@ -938,7 +938,7 @@ describe('optimistic mutation results', () => {
             counter++;
             if (isMutationResultAction(action)) {
               const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              newResult.todoList.todos.unshift(action.result.data['createTodo']);
               return newResult;
             }
             return previousResult;

@@ -1,7 +1,7 @@
 import {
-  Document,
-  OperationDefinition,
-  FragmentDefinition,
+  DocumentNode,
+  OperationDefinitionNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import assign = require('lodash/assign');
@@ -9,14 +9,14 @@ import countBy = require('lodash/countBy');
 import identity = require('lodash/identity');
 import uniq = require('lodash/uniq');
 
-export function getMutationDefinition(doc: Document): OperationDefinition {
+export function getMutationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let mutationDef: OperationDefinition = null;
+  let mutationDef: OperationDefinitionNode = null;
   doc.definitions.forEach((definition) => {
     if (definition.kind === 'OperationDefinition'
-        && (definition as OperationDefinition).operation === 'mutation') {
-      mutationDef = definition as OperationDefinition;
+        && (definition as OperationDefinitionNode).operation === 'mutation') {
+      mutationDef = definition as OperationDefinitionNode;
     }
   });
 
@@ -28,7 +28,7 @@ export function getMutationDefinition(doc: Document): OperationDefinition {
 }
 
 // Checks the document for errors and throws an exception if there is an error.
-export function checkDocument(doc: Document) {
+export function checkDocument(doc: DocumentNode) {
   if (doc.kind !== 'Document') {
     throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
@@ -49,38 +49,38 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   }
 }
 
-export function getOperationName(doc: Document): string {
+export function getOperationName(doc: DocumentNode): string {
   let res: string = '';
   doc.definitions.forEach((definition) => {
     if (definition.kind === 'OperationDefinition'
-        && (definition as OperationDefinition).name) {
-      res = (definition as OperationDefinition).name.value;
+        && (definition as OperationDefinitionNode).name) {
+      res = (definition as OperationDefinitionNode).name.value;
     }
   });
   return res;
 }
 
 // Returns the FragmentDefinitions from a particular document as an array
-export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
-  let fragmentDefinitions: FragmentDefinition[] = doc.definitions.filter((definition) => {
+export function getFragmentDefinitions(doc: DocumentNode): FragmentDefinitionNode[] {
+  let fragmentDefinitions: FragmentDefinitionNode[] = doc.definitions.filter((definition) => {
     if (definition.kind === 'FragmentDefinition') {
       return true;
     } else {
       return false;
     }
-  }) as FragmentDefinition[];
+  }) as FragmentDefinitionNode[];
 
   return fragmentDefinitions;
 }
 
-export function getQueryDefinition(doc: Document): OperationDefinition {
+export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let queryDef: OperationDefinition = null;
+  let queryDef: OperationDefinitionNode = null;
   doc.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition'
-       && (definition as OperationDefinition).operation === 'query') {
-      queryDef = definition as OperationDefinition;
+       && (definition as OperationDefinitionNode).operation === 'query') {
+      queryDef = definition as OperationDefinitionNode;
     }
   });
 
@@ -92,13 +92,13 @@ export function getQueryDefinition(doc: Document): OperationDefinition {
 }
 
 // TODO REFACTOR: fix this and query/mutation definition to not use map, please.
-export function getOperationDefinition(doc: Document): OperationDefinition {
+export function getOperationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let opDef: OperationDefinition = null;
+  let opDef: OperationDefinitionNode = null;
   doc.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition') {
-      opDef = definition as OperationDefinition;
+      opDef = definition as OperationDefinitionNode;
     }
   });
 
@@ -109,7 +109,7 @@ export function getOperationDefinition(doc: Document): OperationDefinition {
   return opDef;
 }
 
-export function getFragmentDefinition(doc: Document): FragmentDefinition {
+export function getFragmentDefinition(doc: DocumentNode): FragmentDefinitionNode {
   if (doc.kind !== 'Document') {
     throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
@@ -119,25 +119,25 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
     throw new Error('Fragment must have exactly one definition.');
   }
 
-  const fragmentDef = doc.definitions[0] as FragmentDefinition;
+  const fragmentDef = doc.definitions[0] as FragmentDefinitionNode;
 
   if (fragmentDef.kind !== 'FragmentDefinition') {
     throw new Error('Must be a fragment definition.');
   }
 
-  return fragmentDef as FragmentDefinition;
+  return fragmentDef as FragmentDefinitionNode;
 }
 
 /**
  * This is an interface that describes a map from fragment names to fragment definitions.
  */
 export interface FragmentMap {
-  [fragmentName: string]: FragmentDefinition;
+  [fragmentName: string]: FragmentDefinitionNode;
 }
 
 // Utility function that takes a list of fragment definitions and makes a hash out of them
 // that maps the name of the fragment to the fragment definition.
-export function createFragmentMap(fragments: FragmentDefinition[] = []): FragmentMap {
+export function createFragmentMap(fragments: FragmentDefinitionNode[] = []): FragmentMap {
   const symTable: FragmentMap = {};
   fragments.forEach((fragment) => {
     symTable[fragment.name.value] = fragment;
@@ -148,13 +148,13 @@ export function createFragmentMap(fragments: FragmentDefinition[] = []): Fragmen
 
 // Utility function that takes a list of fragment definitions and adds them to a particular
 // document.
-export function addFragmentsToDocument(queryDoc: Document,
-  fragments: FragmentDefinition[]): Document {
+export function addFragmentsToDocument(queryDoc: DocumentNode,
+  fragments: FragmentDefinitionNode[]): DocumentNode {
   if (!fragments) {
     return queryDoc;
   }
   checkDocument(queryDoc);
   return assign({}, queryDoc, {
     definitions: uniq(queryDoc.definitions.concat(fragments)),
-  }) as Document;
+  }) as DocumentNode;
 }

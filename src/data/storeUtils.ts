@@ -1,55 +1,55 @@
 import {
-  Field,
-  IntValue,
-  FloatValue,
-  StringValue,
-  BooleanValue,
-  ObjectValue,
-  ListValue,
-  EnumValue,
-  Variable,
-  InlineFragment,
-  Value,
-  Selection,
-  GraphQLResult,
-  Name,
+  FieldNode,
+  IntValueNode,
+  FloatValueNode,
+  StringValueNode,
+  BooleanValueNode,
+  ObjectValueNode,
+  ListValueNode,
+  EnumValueNode,
+  VariableNode,
+  InlineFragmentNode,
+  ValueNode,
+  SelectionNode,
+  ExecutionResult,
+  NameNode,
 } from 'graphql';
 
 import isObject = require('lodash/isObject');
 
-function isStringValue(value: Value): value is StringValue {
+function isStringValue(value: ValueNode): value is StringValueNode {
   return value.kind === 'StringValue';
 }
 
-function isBooleanValue(value: Value): value is BooleanValue {
+function isBooleanValue(value: ValueNode): value is BooleanValueNode {
   return value.kind === 'BooleanValue';
 }
 
-function isIntValue(value: Value): value is IntValue {
+function isIntValue(value: ValueNode): value is IntValueNode {
   return value.kind === 'IntValue';
 }
 
-function isFloatValue(value: Value): value is FloatValue {
+function isFloatValue(value: ValueNode): value is FloatValueNode {
   return value.kind === 'FloatValue';
 }
 
-function isVariable(value: Value): value is Variable {
+function isVariable(value: ValueNode): value is VariableNode {
   return value.kind === 'Variable';
 }
 
-function isObjectValue(value: Value): value is ObjectValue {
+function isObjectValue(value: ValueNode): value is ObjectValueNode {
   return value.kind === 'ObjectValue';
 }
 
-function isListValue(value: Value): value is ListValue {
+function isListValue(value: ValueNode): value is ListValueNode {
   return value.kind === 'ListValue';
 }
 
-function isEnumValue(value: Value): value is EnumValue {
+function isEnumValue(value: ValueNode): value is EnumValueNode {
   return value.kind === 'EnumValue';
 }
 
-function valueToObjectRepresentation(argObj: any, name: Name, value: Value, variables?: Object) {
+function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNode, variables?: Object) {
   if (isIntValue(value) || isFloatValue(value)) {
     argObj[name.value] = Number(value.value);
   } else if (isBooleanValue(value) || isStringValue(value)) {
@@ -78,7 +78,7 @@ function valueToObjectRepresentation(argObj: any, name: Name, value: Value, vari
   }
 }
 
-export function storeKeyNameFromField(field: Field, variables?: Object): string {
+export function storeKeyNameFromField(field: FieldNode, variables?: Object): string {
   if (field.arguments && field.arguments.length) {
     const argObj: Object = {};
 
@@ -101,21 +101,21 @@ export function storeKeyNameFromFieldNameAndArgs(fieldName: string, args?: Objec
   return fieldName;
 }
 
-export function resultKeyNameFromField(field: Field): string {
+export function resultKeyNameFromField(field: FieldNode): string {
   return field.alias ?
     field.alias.value :
     field.name.value;
 }
 
-export function isField(selection: Selection): selection is Field {
+export function isField(selection: SelectionNode): selection is FieldNode {
   return selection.kind === 'Field';
 }
 
-export function isInlineFragment(selection: Selection): selection is InlineFragment {
+export function isInlineFragment(selection: SelectionNode): selection is InlineFragmentNode {
   return selection.kind === 'InlineFragment';
 }
 
-export function graphQLResultHasError(result: GraphQLResult) {
+export function graphQLResultHasError(result: ExecutionResult) {
   return result.errors && result.errors.length;
 }
 

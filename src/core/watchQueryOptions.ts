@@ -1,6 +1,6 @@
 import {
-  Document,
-  FragmentDefinition,
+  DocumentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import {
@@ -64,7 +64,7 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
    * server.
    */
   // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a lot of tests.
-  query: Document;
+  query: DocumentNode;
 
   /**
    * Arbitrary metadata stored in Redux with this query.  Designed for debugging,
@@ -79,13 +79,13 @@ export interface DeprecatedWatchQueryOptions extends ModifiableWatchQueryOptions
    * A GraphQL document that consists of a single query to be sent down to the
    * server.
    */
-  query: Document;
+  query: DocumentNode;
 
   /**
    * A list of fragments that are returned by {@link createFragment} which can be
    * referenced from the query document.
    */
-  fragments?: FragmentDefinition[];
+  fragments?: FragmentDefinitionNode[];
 
   /**
    * Arbitrary metadata stored in Redux with this query.  Designed for debugging,
@@ -95,13 +95,13 @@ export interface DeprecatedWatchQueryOptions extends ModifiableWatchQueryOptions
 }
 
 export interface FetchMoreQueryOptions {
-  query?: Document;
+  query?: DocumentNode;
   variables?: { [key: string]: any };
-  fragments?: FragmentDefinition[];
+  fragments?: FragmentDefinitionNode[];
 }
 
 export type SubscribeToMoreOptions = {
-  document: Document;
+  document: DocumentNode;
   variables?: { [key: string]: any };
   updateQuery: (previousQueryResult: Object, options: {
     subscriptionData: { data: any },
@@ -111,16 +111,16 @@ export type SubscribeToMoreOptions = {
 };
 
 export interface DeprecatedSubscriptionOptions {
-  query: Document;
+  query: DocumentNode;
   variables?: { [key: string]: any };
-  fragments?: FragmentDefinition[];
+  fragments?: FragmentDefinitionNode[];
 };
 
 export interface MutationOptions {
-  mutation: Document;
+  mutation: DocumentNode;
   variables?: Object;
   resultBehaviors?: MutationBehavior[];
-  fragments?: FragmentDefinition[];
+  fragments?: FragmentDefinitionNode[];
   optimisticResponse?: Object;
   updateQueries?: MutationQueryReducersMap;
   refetchQueries?: string[];

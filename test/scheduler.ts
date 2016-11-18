@@ -8,6 +8,7 @@ import {
   createApolloStore,
 } from '../src/store';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
+import { NetworkStatus } from '../src/queries/store';
 import gql from 'graphql-tag';
 
 describe('QueryScheduler', () => {
@@ -106,7 +107,9 @@ describe('QueryScheduler', () => {
     };
     const networkInterface = mockNetworkInterface(
       {
-        request: queryOptions,
+        request: {
+          query: queryOptions.query,
+        },
         result: { data },
       }
     );
@@ -119,9 +122,11 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     let timesFired = 0;
-    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', true, (queryStoreValue) => {
-      timesFired += 1;
-      scheduler.stopPollingQuery(queryId);
+    let queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', false, (queryStoreValue) => {
+      if (queryStoreValue.networkStatus !== NetworkStatus.poll) {
+        timesFired += 1;
+        scheduler.stopPollingQuery(queryId);
+      }
     });
 
     setTimeout(() => {

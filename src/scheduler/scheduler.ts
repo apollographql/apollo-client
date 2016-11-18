@@ -54,7 +54,10 @@ export class QueryScheduler {
   }
 
   public checkInFlight(queryId: string) {
-    return this.queryManager.getApolloState().queries[queryId].networkStatus !== NetworkStatus.ready;
+    const queries = this.queryManager.getApolloState().queries;
+
+    // XXX we do this because some legacy tests use a fake queryId. We should rewrite those tests
+    return queries[queryId] && queries[queryId].networkStatus !== NetworkStatus.ready;
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType: FetchType) {

@@ -20,6 +20,8 @@ import { WatchQueryOptions } from '../core/watchQueryOptions';
 
 import assign = require('lodash.assign');
 
+import { NetworkStatus } from '../queries/store';
+
 export class QueryScheduler {
   // Map going from queryIds to query options that are in flight.
   public inFlightQueries: { [queryId: string]: WatchQueryOptions };
@@ -52,19 +54,16 @@ export class QueryScheduler {
   }
 
   public checkInFlight(queryId: string) {
-    return this.inFlightQueries.hasOwnProperty(queryId);
+    return this.queryManager.getApolloState().queries[queryId].networkStatus !== NetworkStatus.ready;
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType: FetchType) {
     return new Promise((resolve, reject) => {
       this.queryManager.fetchQuery(queryId, options, fetchType).then((result) => {
-        this.removeInFlight(queryId);
         resolve(result);
       }).catch((error) => {
-        this.removeInFlight(queryId);
         reject(error);
       });
-      this.addInFlight(queryId, options);
     });
   }
 
@@ -164,13 +163,5 @@ export class QueryScheduler {
       scheduler: this,
       options: queryOptions,
     });
-  }
-
-  private addInFlight(queryId: string, options: WatchQueryOptions) {
-    this.inFlightQueries[queryId] = options;
-  }
-
-  private removeInFlight(queryId: string) {
-    delete this.inFlightQueries[queryId];
   }
 }

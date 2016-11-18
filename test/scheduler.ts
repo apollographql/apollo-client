@@ -257,55 +257,9 @@ describe('QueryScheduler', () => {
     });
   });
 
-  it('should keep track of in flight queries', (done) => {
-    const query = gql`
-      query {
-        fortuneCookie
-      }`;
-    const data = {
-      'fortuneCookie': 'lol',
-    };
-    const queryOptions = {
-      query,
-      pollInterval: 70,
-      forceFetch: true,
-    };
-    const networkInterface = mockNetworkInterface(
-      {
-        request: queryOptions,
-        result: { data },
-        delay: 20000, //i.e. should never return
-      },
-      {
-        request: queryOptions,
-        result: { data },
-        delay: 20000,
-      }
-    );
-    const queryManager = new QueryManager({
-      networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
-    });
-    const scheduler = new QueryScheduler({
-      queryManager,
-    });
-    const observer = scheduler.registerPollingQuery(queryOptions);
-    const subscription = observer.subscribe({});
-
-    // as soon as we register a query, there should be an addition to the query map.
-    assert.equal(Object.keys(scheduler.inFlightQueries).length, 1);
-    setTimeout(() => {
-      assert.equal(Object.keys(scheduler.inFlightQueries).length, 1);
-      assert.deepEqual(scheduler.inFlightQueries[0], queryOptions);
-      subscription.unsubscribe();
-      done();
-    }, 100);
-  });
-
   it('should not fire another query if one with the same id is in flight', (done) => {
     const query = gql`
-      query {
+      query B {
         fortuneCookie
       }`;
     const data = {
@@ -333,7 +287,6 @@ describe('QueryScheduler', () => {
     const observer = scheduler.registerPollingQuery(queryOptions);
     const subscription = observer.subscribe({});
     setTimeout(() => {
-      assert.equal(Object.keys(scheduler.inFlightQueries).length, 1);
       subscription.unsubscribe();
       done();
     }, 100);

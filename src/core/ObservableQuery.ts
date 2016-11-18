@@ -388,7 +388,8 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       this.isCurrentlyPolling = true;
       this.scheduler.startPollingQuery(
         this.options,
-        this.queryId
+        this.queryId,
+        false,
       );
     }
 

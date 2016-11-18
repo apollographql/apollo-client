@@ -634,11 +634,7 @@ export class QueryManager {
   public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.addQueryListener(queryId, listener);
 
-    // If the pollInterval is present, the scheduler has already taken care of firing the first
-    // fetch so we don't have to worry about it here.
-    if (!options.pollInterval) {
-      this.fetchQuery(queryId, options);
-    }
+    this.fetchQuery(queryId, options);
 
     return queryId;
   }

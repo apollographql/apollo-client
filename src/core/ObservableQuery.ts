@@ -330,6 +330,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   public stopPolling() {
     if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
+      this.isCurrentlyPolling = false;
     }
   }
 
@@ -340,6 +341,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
+      this.isCurrentlyPolling = false;
     }
     this.options.pollInterval = pollInterval;
     this.isCurrentlyPolling = true;
@@ -425,6 +427,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   private tearDownQuery() {
     if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
+      this.isCurrentlyPolling = false;
     }
 
     // stop all active GraphQL subscriptions

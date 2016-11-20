@@ -192,4 +192,67 @@ describe('createApolloStore', () => {
 
     assert.deepEqual(store.getState().apollo, emptyState);
   });
+
+  it('can\'t crash the reducer', () => {
+    const initialState = {
+      apollo: {
+        data: {},
+        optimistic: ([] as any[]),
+        reducerError: (null as Error | null),
+      },
+    };
+
+    const store = createApolloStore({
+      initialState,
+    });
+
+    // Try to crash the store with a bad behavior update
+    const mutationString = `mutation Increment { incrementer { counter } }`;
+    const mutation = gql`${mutationString}`;
+
+    store.dispatch({
+      type: 'APOLLO_MUTATION_INIT',
+      mutationString,
+      mutation,
+      variables: {},
+      operationName: 'Increment',
+      mutationId: '1',
+      optimisticResponse: {data: {incrementer: {counter: 1}}},
+    });
+    const throwingBehavior: any = [
+      {
+        type: 'UnknownBehavior',
+      },
+    ];
+    store.dispatch({
+      type: 'APOLLO_MUTATION_RESULT',
+      result: {data: {incrementer: {counter: 1}}},
+      document: mutation,
+      operationName: 'Increment',
+      mutationId: '1',
+      resultBehaviors: throwingBehavior,
+    });
+
+    assert(/UnknownBehavior/.test(store.getState().apollo.reducerError));
+
+    const resetState = {
+      queries: {},
+      mutations: {},
+      data: {},
+      optimistic: [
+        {
+          data: {},
+          mutationId: '1',
+        },
+      ],
+      reducerError: (null as Error | null),
+    };
+
+    store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+      observableQueryIds: ['test.0'],
+    });
+
+    assert.deepEqual(store.getState().apollo, resetState);
+  });
 });

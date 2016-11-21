@@ -20,6 +20,7 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 
 <h2 id="ObservableQuery">ObservableQuery</h2>
 
+{% tsapibox ObservableQuery.subscribe %}
 {% tsapibox ObservableQuery.variables %}
 {% tsapibox ObservableQuery.result %}
 {% tsapibox ObservableQuery.currentResult %}

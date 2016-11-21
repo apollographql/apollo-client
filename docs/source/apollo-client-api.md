@@ -64,3 +64,5 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox Request %}
 {% tsapibox StoreObject %}
 {% tsapibox FragmentMap %}
+{% tsapibox Observer %}
+{% tsapibox Subscription %}

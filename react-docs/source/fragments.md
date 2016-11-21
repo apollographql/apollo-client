@@ -76,6 +76,7 @@ export const COMMENT_QUERY = gql`
   }
   ${CommentsPage.fragments.comment}
 `;
+```
 
 You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollostack/GitHunt-React/blob/master/ui/routes/CommentsPage.js).
 

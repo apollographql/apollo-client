@@ -254,8 +254,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     }
 
     const subscription = observable.subscribe(observer);
->>>>>>> subscribe doesn't need next function if SubscribeToMoreOptions has no updateQuery function
-
     this.subscriptionHandles.push(subscription);
 
     return () => {

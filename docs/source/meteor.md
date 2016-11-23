@@ -83,7 +83,6 @@ Returns an [`options` object](http://dev.apollodata.com/core/apollo-client-api.h
 ```
 {
   networkInterface
-  queryTransformer: addTypenameToSelectionSet
   dataIdFromObject: object.__typename + object._id
 }
 ```

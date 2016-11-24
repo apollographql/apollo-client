@@ -1,6 +1,8 @@
 import {
   Request,
   createNetworkInterface,
+  NetworkInterface,
+  HTTPFetchNetworkInterface,
 } from './transport/networkInterface';
 
 import {
@@ -101,6 +103,8 @@ export {
   toIdValue,
 
   // internal type definitions for export
+  NetworkInterface,
+  HTTPFetchNetworkInterface,
   WatchQueryOptions,
   MutationOptions,
   ObservableQuery,

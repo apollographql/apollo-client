@@ -87,9 +87,7 @@ In the example above, `loadMoreEntries` is a function which calls `fetchMore` wi
 Here is how the `loadMoreEntries` function from above is called from the UI component:
 
 ```js
-const Feed = () => {
-  const { vote, loading, currentUser, feed, loadMoreEntries } = this.props;
-
+const Feed = ({ vote, loading, currentUser, feed, loadMoreEntries }) => {
   return (
     <div>
       <FeedContent

@@ -90,10 +90,12 @@ app.use((req, res) => {
       // API server, so we need to ensure it isn't firewalled, etc
       networkInterface: createNetworkInterface({
         uri: 'http://localhost:3010',
-        credentials: 'same-origin',
-        // transfer request headers to networkInterface so that they're accessible to proxy server
-        // Addresses this issue: https://github.com/matthew-andrews/isomorphic-fetch/issues/83
-        headers: req.headers,
+        opts: {
+          credentials: 'same-origin',
+          // transfer request headers to networkInterface so that they're accessible to proxy server
+          // Addresses this issue: https://github.com/matthew-andrews/isomorphic-fetch/issues/83
+          headers: req.headers,
+        },
       }),
     });
 

@@ -6,6 +6,9 @@ Expect active development and potentially significant breaking changes in the `0
 - Added `HTTPFetchNetworkInterface` and `NetworkInterface` as index exports to make them easier
 to subclass externally.
 
+### 0.5.7
+- Catch uncaught promise errors in startQuery [#950](https://github.com/apollostack/apollo-client/pull/950)
+
 ### 0.5.6
 - Refactor polling query logic to fix startPolling and stopPolling [#938](https://github.com/apollostack/apollo-client/pull/938)
 - Add convenience method to obtain initial state from SSR [#941](https://github.com/apollostack/apollo-client/pull/941)

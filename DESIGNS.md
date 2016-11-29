@@ -6,6 +6,7 @@ Design docs are written with the purpose of helping community members and contri
 
 A good design document should:
 - state the problem that is being solved as clearly as possible
+- explain why the problem should be solved in this package, and not a different one (or possibly a new one)
 - show that the proposed solution fits in with the stated vision for Apollo Client
   - incrementally adoptable
   - universally compatible

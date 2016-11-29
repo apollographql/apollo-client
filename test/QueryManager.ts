@@ -1457,432 +1457,434 @@ describe('QueryManager', () => {
     );
   });
 
-  it('allows you to poll queries', () => {
-    const query = gql`
-      query fetchLuke($id: String) {
-        people_one(id: $id) {
-          name
+  describe('polling queries', () => {
+    it('allows you to poll queries', () => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
         }
-      }
-    `;
+      `;
 
-    const variables = {
-      id: '1',
-    };
+      const variables = {
+        id: '1',
+      };
 
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
 
-    const data2 = {
-      people_one: {
-        name: 'Luke Skywalker has a new name',
-      },
-    };
-    const queryManager = mockQueryManager(
-      {
-        request: { query, variables },
-        result: { data: data1 },
-      },
-      {
-        request: { query, variables },
-        result: { data: data2 },
-      }
-    );
-    const observable = queryManager.watchQuery({
-      query,
-      variables,
-      pollInterval: 50,
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        }
+      );
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        pollInterval: 50,
+      });
+
+      return observableToPromise({ observable },
+        (result) => assert.deepEqual(result.data, data1),
+        (result) => assert.deepEqual(result.data, data2),
+      );
     });
 
-    return observableToPromise({ observable },
-      (result) => assert.deepEqual(result.data, data1),
-      (result) => assert.deepEqual(result.data, data2),
-    );
-  });
+    it('should let you handle multiple polled queries and unsubscribe from one of them', (done) => {
+      const query1 = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const query2 = gql`
+        query {
+          person {
+            name
+          }
+        }`;
+      const data11 = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const data12 = {
+        author: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const data13 = {
+        author: {
+          firstName: 'Jolly',
+          lastName: 'Smith',
+        },
+      };
+      const data14 = {
+        author: {
+          firstName: 'Jared',
+          lastName: 'Smith',
+        },
+      };
+      const data21 = {
+        person: {
+          name: 'Jane Smith',
+        },
+      };
+      const data22 = {
+        person: {
+          name: 'Josey Smith',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query: query1 },
+          result: { data: data11 },
+        },
+        {
+          request: { query: query1 },
+          result: { data: data12 },
+        },
+        {
+          request: { query: query1 },
+          result: { data: data13},
+        },
+        {
+          request: {query: query1 },
+          result: { data: data14 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data21 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data22 },
+        }
+      );
+      let handle1Count = 0;
+      let handleCount = 0;
+      let setMilestone = false;
 
-  it('should let you handle multiple polled queries and unsubscribe from one of them', (done) => {
-    const query1 = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-    const query2 = gql`
-      query {
-        person {
-          name
-        }
-      }`;
-    const data11 = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-    const data12 = {
-      author: {
-        firstName: 'Jack',
-        lastName: 'Smith',
-      },
-    };
-    const data13 = {
-      author: {
-        firstName: 'Jolly',
-        lastName: 'Smith',
-      },
-    };
-    const data14 = {
-      author: {
-        firstName: 'Jared',
-        lastName: 'Smith',
-      },
-    };
-    const data21 = {
-      person: {
-        name: 'Jane Smith',
-      },
-    };
-    const data22 = {
-      person: {
-        name: 'Josey Smith',
-      },
-    };
-    const queryManager = mockQueryManager(
-      {
-        request: { query: query1 },
-        result: { data: data11 },
-      },
-      {
-        request: { query: query1 },
-        result: { data: data12 },
-      },
-      {
-        request: { query: query1 },
-        result: { data: data13},
-      },
-      {
-        request: {query: query1 },
-        result: { data: data14 },
-      },
-      {
-        request: { query: query2 },
-        result: { data: data21 },
-      },
-      {
-        request: { query: query2 },
-        result: { data: data22 },
-      }
-    );
-    let handle1Count = 0;
-    let handleCount = 0;
-    let setMilestone = false;
+      const subscription1 = queryManager.watchQuery({
+        query: query1,
+        pollInterval: 150,
+      }).subscribe({
+        next(result) {
+          handle1Count++;
+          handleCount++;
+          if (handle1Count > 1 && !setMilestone) {
+            subscription1.unsubscribe();
+            setMilestone = true;
+          }
+        },
+      });
 
-    const subscription1 = queryManager.watchQuery({
-      query: query1,
-      pollInterval: 150,
-    }).subscribe({
-      next(result) {
-        handle1Count++;
-        handleCount++;
-        if (handle1Count > 1 && !setMilestone) {
-          subscription1.unsubscribe();
-          setMilestone = true;
-        }
-      },
+      const subscription2 = queryManager.watchQuery({
+        query: query2,
+        pollInterval: 2000,
+      }).subscribe({
+        next(result) {
+          handleCount++;
+        },
+      });
+
+      setTimeout(() => {
+        assert.equal(handleCount, 3);
+        subscription1.unsubscribe();
+        subscription2.unsubscribe();
+
+        done();
+      }, 400);
     });
 
-    const subscription2 = queryManager.watchQuery({
-      query: query2,
-      pollInterval: 2000,
-    }).subscribe({
-      next(result) {
-        handleCount++;
-      },
+    it('allows you to unsubscribe from polled queries', () => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '1',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        }
+      );
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        pollInterval: 50,
+      });
+
+      const { promise, subscription } = observableToPromiseAndSubscription({
+          observable,
+          wait: 60,
+        },
+        (result) => assert.deepEqual(result.data, data1),
+        (result) => {
+          assert.deepEqual(result.data, data2);
+
+          // we unsubscribe here manually, rather than waiting for the timeout.
+          subscription.unsubscribe();
+        }
+      );
+
+      return promise;
     });
 
-    setTimeout(() => {
-      assert.equal(handleCount, 3);
-      subscription1.unsubscribe();
-      subscription2.unsubscribe();
-
-      done();
-    }, 400);
-  });
-
-  it('allows you to unsubscribe from polled queries', () => {
-    const query = gql`
-      query fetchLuke($id: String) {
-        people_one(id: $id) {
-          name
+    it('allows you to unsubscribe from polled query errors', () => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
         }
-      }
-    `;
+      `;
 
-    const variables = {
-      id: '1',
-    };
+      const variables = {
+        id: '1',
+      };
 
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
 
-    const data2 = {
-      people_one: {
-        name: 'Luke Skywalker has a new name',
-      },
-    };
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
 
-    const queryManager = mockQueryManager(
-      {
-        request: { query, variables },
-        result: { data: data1 },
-      },
-      {
-        request: { query, variables },
-        result: { data: data2 },
-      }
-    );
-    const observable = queryManager.watchQuery({
-      query,
-      variables,
-      pollInterval: 50,
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          error: new Error('Network error'),
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        }
+      );
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        pollInterval: 50,
+      });
+
+      const { promise, subscription } = observableToPromiseAndSubscription({
+          observable,
+          wait: 60,
+          errorCallbacks: [
+            (error) => {
+              assert.include(error.message, 'Network error');
+              subscription.unsubscribe();
+            },
+          ],
+        },
+        (result) => assert.deepEqual(result.data, data1)
+      );
+
+      return promise;
     });
 
-    const { promise, subscription } = observableToPromiseAndSubscription({
-        observable,
-        wait: 60,
-      },
-      (result) => assert.deepEqual(result.data, data1),
-      (result) => {
-        assert.deepEqual(result.data, data2);
-
-        // we unsubscribe here manually, rather than waiting for the timeout.
-        subscription.unsubscribe();
-      }
-    );
-
-    return promise;
-  });
-
-  it('allows you to unsubscribe from polled query errors', () => {
-    const query = gql`
-      query fetchLuke($id: String) {
-        people_one(id: $id) {
-          name
+    it('exposes a way to start a polling query', () => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
         }
-      }
-    `;
+      `;
 
-    const variables = {
-      id: '1',
-    };
+      const variables = {
+        id: '1',
+      };
 
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
 
-    const data2 = {
-      people_one: {
-        name: 'Luke Skywalker has a new name',
-      },
-    };
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
 
-    const queryManager = mockQueryManager(
-      {
-        request: { query, variables },
-        result: { data: data1 },
-      },
-      {
-        request: { query, variables },
-        error: new Error('Network error'),
-      },
-      {
-        request: { query, variables },
-        result: { data: data2 },
-      }
-    );
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        }
+      );
 
-    const observable = queryManager.watchQuery({
-      query,
-      variables,
-      pollInterval: 50,
+      const observable = queryManager.watchQuery({ query, variables });
+      observable.startPolling(50);
+
+      return observableToPromise({ observable },
+        (result) => assert.deepEqual(result.data, data1),
+        (result) => assert.deepEqual(result.data, data2)
+      );
     });
 
-    const { promise, subscription } = observableToPromiseAndSubscription({
-        observable,
-        wait: 60,
-        errorCallbacks: [
-          (error) => {
-            assert.include(error.message, 'Network error');
-            subscription.unsubscribe();
-          },
-        ],
-      },
-      (result) => assert.deepEqual(result.data, data1)
-    );
-
-    return promise;
-  });
-
-  it('exposes a way to start a polling query', () => {
-    const query = gql`
-      query fetchLuke($id: String) {
-        people_one(id: $id) {
-          name
+    it('exposes a way to stop a polling query', () => {
+      const query = gql`
+        query fetchLeia($id: String) {
+          people_one(id: $id) {
+            name
+          }
         }
-      }
-    `;
+      `;
 
-    const variables = {
-      id: '1',
-    };
+      const variables = {
+        id: '2',
+      };
 
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
+      const data1 = {
+        people_one: {
+          name: 'Leia Skywalker',
+        },
+      };
 
-    const data2 = {
-      people_one: {
-        name: 'Luke Skywalker has a new name',
-      },
-    };
+      const data2 = {
+        people_one: {
+          name: 'Leia Skywalker has a new name',
+        },
+      };
 
-    const queryManager = mockQueryManager(
-      {
-        request: { query, variables },
-        result: { data: data1 },
-      },
-      {
-        request: { query, variables },
-        result: { data: data2 },
-      }
-    );
-
-    const observable = queryManager.watchQuery({ query, variables });
-    observable.startPolling(50);
-
-    return observableToPromise({ observable },
-      (result) => assert.deepEqual(result.data, data1),
-      (result) => assert.deepEqual(result.data, data2)
-    );
-  });
-
-  it('exposes a way to stop a polling query', () => {
-    const query = gql`
-      query fetchLeia($id: String) {
-        people_one(id: $id) {
-          name
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
         }
-      }
-    `;
+      );
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        pollInterval: 50,
+      });
 
-    const variables = {
-      id: '2',
-    };
-
-    const data1 = {
-      people_one: {
-        name: 'Leia Skywalker',
-      },
-    };
-
-    const data2 = {
-      people_one: {
-        name: 'Leia Skywalker has a new name',
-      },
-    };
-
-    const queryManager = mockQueryManager(
-      {
-        request: { query, variables },
-        result: { data: data1 },
-      },
-      {
-        request: { query, variables },
-        result: { data: data2 },
-      }
-    );
-    const observable = queryManager.watchQuery({
-      query,
-      variables,
-      pollInterval: 50,
-    });
-
-    return observableToPromise({ observable, wait: 60},
-      (result) => {
-        assert.deepEqual(result.data, data1);
-        observable.stopPolling();
-      }
-    );
-  });
-
-  it('stopped polling queries still get updates', () => {
-    const query = gql`
-      query fetchLeia($id: String) {
-        people_one(id: $id) {
-          name
-        }
-      }
-    `;
-
-    const variables = {
-      id: '2',
-    };
-
-    const data1 = {
-      people_one: {
-        name: 'Leia Skywalker',
-      },
-    };
-
-    const data2 = {
-      people_one: {
-        name: 'Leia Skywalker has a new name',
-      },
-    };
-
-    const queryManager = mockQueryManager(
-      {
-        request: { query, variables },
-        result: { data: data1 },
-      },
-      {
-        request: { query, variables },
-        result: { data: data2 },
-      }
-    );
-    const observable = queryManager.watchQuery({
-      query,
-      variables,
-      pollInterval: 50,
-    });
-
-    let timeout: Function;
-    return Promise.race([
-      observableToPromise({ observable },
+      return observableToPromise({ observable, wait: 60},
         (result) => {
           assert.deepEqual(result.data, data1);
-          queryManager.query({ query, variables, forceFetch: true })
-            .then(() => timeout(new Error('Should have two results by now')));
+          observable.stopPolling();
+        }
+      );
+    });
+
+    it('stopped polling queries still get updates', () => {
+      const query = gql`
+        query fetchLeia($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '2',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Leia Skywalker',
         },
-        (result) => assert.deepEqual(result.data, data2)
-      ),
-      // Ensure that the observable has recieved 2 results *before*
-      // the rejection triggered above
-      new Promise((resolve, reject) => {
-        timeout = (error: Error) => reject(error);
-      }),
-    ]);
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Leia Skywalker has a new name',
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        }
+      );
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        pollInterval: 50,
+      });
+
+      let timeout: Function;
+      return Promise.race([
+        observableToPromise({ observable },
+          (result) => {
+            assert.deepEqual(result.data, data1);
+            queryManager.query({ query, variables, forceFetch: true })
+              .then(() => timeout(new Error('Should have two results by now')));
+          },
+          (result) => assert.deepEqual(result.data, data2)
+        ),
+        // Ensure that the observable has recieved 2 results *before*
+        // the rejection triggered above
+        new Promise((resolve, reject) => {
+          timeout = (error: Error) => reject(error);
+        }),
+      ]);
+    });
   });
 
   it('warns if you forget the template literal tag', () => {

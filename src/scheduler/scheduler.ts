@@ -20,6 +20,8 @@ import { WatchQueryOptions } from '../core/watchQueryOptions';
 
 import assign = require('lodash.assign');
 
+import { NetworkStatus } from '../queries/store';
+
 export class QueryScheduler {
   // Map going from queryIds to query options that are in flight.
   public inFlightQueries: { [queryId: string]: WatchQueryOptions };
@@ -52,30 +54,25 @@ export class QueryScheduler {
   }
 
   public checkInFlight(queryId: string) {
-    return this.inFlightQueries.hasOwnProperty(queryId);
+    const queries = this.queryManager.getApolloState().queries;
+
+    // XXX we do this because some legacy tests use a fake queryId. We should rewrite those tests
+    return queries[queryId] && queries[queryId].networkStatus !== NetworkStatus.ready;
   }
 
   public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType: FetchType) {
     return new Promise((resolve, reject) => {
       this.queryManager.fetchQuery(queryId, options, fetchType).then((result) => {
-        this.removeInFlight(queryId);
         resolve(result);
       }).catch((error) => {
-        this.removeInFlight(queryId);
         reject(error);
       });
-      this.addInFlight(queryId, options);
     });
   }
 
-  // The firstFetch option is used to denote whether we want to fire off a
-  // "first fetch" before we start polling. If startPollingQuery() is being called
-  // from an existing ObservableQuery, the first fetch has already been fired which
-  // means that firstFetch should be false.
   public startPollingQuery(
     options: WatchQueryOptions,
     queryId?: string,
-    firstFetch: boolean = true,
     listener?: QueryListener
   ): string {
     if (!options.pollInterval) {
@@ -83,11 +80,6 @@ export class QueryScheduler {
     }
 
     this.registeredQueries[queryId] = options;
-
-    // Fire an initial fetch before we start the polling query
-    if (firstFetch) {
-      this.fetchQuery(queryId, options, FetchType.normal);
-    }
 
     if (listener) {
       this.queryManager.addQueryListener(queryId, listener);
@@ -164,13 +156,5 @@ export class QueryScheduler {
       scheduler: this,
       options: queryOptions,
     });
-  }
-
-  private addInFlight(queryId: string, options: WatchQueryOptions) {
-    this.inFlightQueries[queryId] = options;
-  }
-
-  private removeInFlight(queryId: string) {
-    delete this.inFlightQueries[queryId];
   }
 }

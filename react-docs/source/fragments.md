@@ -51,7 +51,7 @@ CommentsPage.fragments = {
 
 We put the fragment on `CommentsPage.fragments.comment` by convention, and use the familiar `gql` helper to create it.
 
-When it's time to embed the fragment in a query, we simply use the `...Name` syntax in our GraphQL, and pass the fragment object into our `graphql` HOC:
+When it's time to embed the fragment in a query, we simply use the `...Name` syntax in our GraphQL, and embed the fragment inside our query GraphQL document:
 
 ```
 const SUBMIT_COMMENT_MUTATION = gql`
@@ -77,6 +77,8 @@ export const COMMENT_QUERY = gql`
   ${CommentsPage.fragments.comment}
 `;
 ```
+
+> NOTE: you may get a warning about fragments already existing, this will be fixed in a release of Apollo Client soon.
 
 You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollostack/GitHunt-React/blob/master/ui/routes/CommentsPage.js).
 

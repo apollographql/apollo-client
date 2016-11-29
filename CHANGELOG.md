@@ -5,7 +5,8 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Prevent Redux from crashing when an uncatched apollo error is raised in an Apollo reducer. [PR #874](https://github.com/apollostack/apollo-client/pull/874)
 
-- Catch uncaught promise errors in QueryManager [#950](https://github.com/apollostack/apollo-client/pull/950)
+### 0.5.7
+- Catch uncaught promise errors in startQuery [#950](https://github.com/apollostack/apollo-client/pull/950)
 
 ### 0.5.6
 - Refactor polling query logic to fix startPolling and stopPolling [#938](https://github.com/apollostack/apollo-client/pull/938)

@@ -4,9 +4,17 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### 0.5.7
+- Catch uncaught promise errors in startQuery [#950](https://github.com/apollostack/apollo-client/pull/950)
+
+### 0.5.6
+- Refactor polling query logic to fix startPolling and stopPolling [#938](https://github.com/apollostack/apollo-client/pull/938)
+- Add convenience method to obtain initial state from SSR [#941](https://github.com/apollostack/apollo-client/pull/941)
+
 ### 0.5.5
 - Add back missing dependency on lodash.isequal that was mistakenly removed in 0.5.4 [#925](https://github.com/apollostack/apollo-client/pull/925)
 - Implement cache redirects with custom resolvers [PR #921](https://github.com/apollostack/apollo-client/pull/921)
+- Fix issue that caused `createBatchingNetworkInterface` unable to specify request headers by `opts` or `applyMiddleware`. [PR #922](https://github.com/apollostack/apollo-client/pull/922) [Issue #920](https://github.com/apollostack/apollo-client/issues/920)
 
 ### 0.5.4
 - Fix a bug that caused apollo-client to catch errors thrown in Observer.next callbacks [PR #910](https://github.com/apollostack/apollo-client/pull/910)

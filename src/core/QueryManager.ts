@@ -555,6 +555,10 @@ export class QueryManager {
     return this.reduxRootSelector(this.store.getState());
   }
 
+  public getInitialState(): { data: Object } {
+    return { data: this.getApolloState().data };
+  }
+
   public getDataWithOptimisticResults(): NormalizedCache {
     return getDataWithOptimisticResults(this.getApolloState());
   }
@@ -634,11 +638,10 @@ export class QueryManager {
   public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.addQueryListener(queryId, listener);
 
-    // If the pollInterval is present, the scheduler has already taken care of firing the first
-    // fetch so we don't have to worry about it here.
-    if (!options.pollInterval) {
-      this.fetchQuery(queryId, options);
-    }
+    this.fetchQuery(queryId, options)
+    // `fetchQuery` returns a Promise. In case of a failure it should be caucht or else the
+    // console will show an `Uncaught (in promise)` message. Ignore the error for now.
+    .catch((error: Error) => undefined);
 
     return queryId;
   }

@@ -57,14 +57,14 @@ describe('HTTPBatchedNetworkInterface', () => {
 
     fetch = fetchFunc || createMockFetch({
       url,
-      opts: merge(opts, {
+      opts: merge({
         body: JSON.stringify(printedRequests),
         headers:  {
           Accept: '*/*',
           'Content-Type': 'application/json',
         },
         method: 'POST',
-      }),
+      }, opts),
       result: createMockedIResponse(resultList),
     });
 
@@ -221,6 +221,21 @@ describe('HTTPBatchedNetworkInterface', () => {
       }],
       opts: options,
       middlewares: [ changeMiddleware ],
+    });
+  });
+
+  it('opts should be able to modify request headers and method (#920)', () => {
+    const customHeaders: { [index: string]: string } = {
+      Accept: 'application/json, text/plain, */*',
+      'Content-Type': 'x-www-form-urlencoded',
+    };
+    const options = { method: 'GET', headers: customHeaders };
+    return assertRoundtrip({
+      requestResultPairs: [{
+        request: { query: authorQuery },
+        result: authorResult,
+      }],
+      opts: options,
     });
   });
 });

@@ -3,7 +3,7 @@ expected by January 2017
 
 This roadmap serves as a rough guide of features and changes we hope to accomplish until Apollo Client 1.0. There will almost certainly be things in version 1.0 that are not in this list, and there may be the odd thing on this list that doesn't make it into version 1.0.
 
-Since version 0.5 Apollo Client is already being used in production by many people, including Meteor Development Group. Version 1.0 will mark the point where we think we've reached a stable external API that will only see infrequent breaking changes.
+Since version 0.5 Apollo Client is already being used in production by many people, including Meteor Development Group. Version 1.0 will mark the point where we think we've reached a stable external API that will not see any breaking changes until version 2.0.
 
 As a reminder, here are the goals of Apollo Client as stated in the readme file:
 1. **Incrementally adoptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
@@ -43,6 +43,7 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 
 ## Refactors planned for 1.0
 * Simplify how polling queries work
+* Remove fragment handling from Apollo Client (and put it in graphql-tag)
 * Streamline network interface and API for middlewares and afterwares
 * simplify core and push view-layer integration logic to the edge
 

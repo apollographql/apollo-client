@@ -101,7 +101,7 @@ const client = new ApolloClient({
       networkInterface,
       customResolvers: {
         Query: {
-          book: (_, args) => toIdValue(dataIdFromObject({ __typename: 'book', id: args['id']` })),
+          book: (_, args) => toIdValue(dataIdFromObject({ __typename: 'book', id: args['id'] })),
         },
       },
       dataIdFromObject,

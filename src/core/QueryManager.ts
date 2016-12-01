@@ -369,7 +369,11 @@ export class QueryManager {
             networkError: queryStoreValue.networkError,
           });
           if (observer.error) {
-            observer.error(apolloError);
+            try {
+              observer.error(apolloError);
+            } catch (e) {
+              console.error(`Error in observer.error \n${e.stack}`);
+            }
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
           }

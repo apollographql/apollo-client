@@ -599,6 +599,101 @@ describe('client', () => {
       });
   });
 
+it('should not let errors in observer.next reach the store', (done) => {
+
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+   const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const handle = client.watchQuery({ query });
+
+    const consoleDotError = console.error;
+    console.error = (err: string) => {
+      console.error = consoleDotError;
+      if (err.match(/Error in observer.next/)) {
+        done();
+      } else {
+        done(new Error('Expected error in observer.next to be caught'));
+      }
+    };
+
+    handle.subscribe({
+      next(result) {
+        throw new Error('this error should not reach the store');
+      },
+    });
+  });
+
+  it('should not let errors in observer.error reach the store', (done) => {
+
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const handle = client.watchQuery({ query });
+
+    const consoleDotError = console.error;
+    console.error = (err: string) => {
+      console.error = consoleDotError;
+      if (err.match(/Error in observer.error/)) {
+        done();
+      } else {
+        done(new Error('Expected error in observer.error to be caught'));
+      }
+    };
+
+    handle.subscribe({
+      next() {
+        done(new Error('did not expect next to be called'));
+      },
+      error(err) {
+        throw new Error('this error should not reach the store');
+      },
+    });
+  });
+
   it('should allow for subscribing to a request', (done) => {
 
     const query = gql`

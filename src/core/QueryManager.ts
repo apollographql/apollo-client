@@ -369,14 +369,24 @@ export class QueryManager {
             networkError: queryStoreValue.networkError,
           });
           if (observer.error) {
-            observer.error(apolloError);
+            try {
+              observer.error(apolloError);
+            } catch (e) {
+              console.error(`Error in observer.error \n${e.stack}`);
+            }
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
+            if (process.env.NODE_ENV !== 'production') {
+              /* tslint:disable-next-line */
+              console.info(
+                'An unhandled error was thrown because no error handler is registered ' +
+                'for the query ' + options.query.loc.source
+              );
+            }
           }
         } else {
-          let resultFromStore: any;
           try {
-            resultFromStore = {
+            const resultFromStore = {
               data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
@@ -387,6 +397,16 @@ export class QueryManager {
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
             };
+            if (observer.next) {
+              if (this.isDifferentResult(lastResult, resultFromStore)) {
+                lastResult = resultFromStore;
+                try {
+                  observer.next(this.transformResult(resultFromStore));
+                } catch (e) {
+                  console.error(`Error in observer.next \n${e.stack}`);
+                }
+              }
+            }
           } catch (error) {
             if (observer.error) {
               observer.error(new ApolloError({
@@ -394,12 +414,6 @@ export class QueryManager {
               }));
             }
             return;
-          }
-          if (observer.next) {
-            if (this.isDifferentResult(lastResult, resultFromStore)) {
-              lastResult = resultFromStore;
-              observer.next(this.transformResult(resultFromStore));
-            }
           }
         }
       }

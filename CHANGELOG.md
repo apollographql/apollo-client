@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Prevent Redux from crashing when an uncaught ApolloError is raised in an Apollo reducer. [PR #874](https://github.com/apollostack/apollo-client/pull/874)
+- Catch errors in observer.next and observer.errors callback [PR #980](https://github.com/apollostack/apollo-client/pull/980)
 
 ### 0.5.8
 

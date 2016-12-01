@@ -376,6 +376,13 @@ export class QueryManager {
             }
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
+            if (process.env.NODE_ENV !== 'production') {
+              /* tslint:disable-next-line */
+              console.info(
+                'An unhandled error was thrown because no error handler is registered ' +
+                'for the query ' + options.query.loc.source
+              );
+            }
           }
         } else {
           try {

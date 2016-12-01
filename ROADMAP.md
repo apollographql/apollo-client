@@ -6,6 +6,7 @@ This roadmap serves as a rough guide of features and changes we hope to accompli
 Since version 0.5 Apollo Client is already being used in production by many people, including Meteor Development Group. Version 1.0 will mark the point where we think we've reached a stable external API that will not see any breaking changes until version 2.0.
 
 As a reminder, here are the goals of Apollo Client as stated in the readme file:
+
 1. **Incrementally adoptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
 2. **Universally compatible**, so that Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
 3. **Simple to get started with**, you can start loading data right away and learn about advanced features later.

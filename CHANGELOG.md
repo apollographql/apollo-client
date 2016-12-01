@@ -5,6 +5,11 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Prevent Redux from crashing when an uncatched apollo error is raised in an Apollo reducer. [PR #874](https://github.com/apollostack/apollo-client/pull/874)
 
+### 0.5.8
+
+- Added `HTTPFetchNetworkInterface` and `NetworkInterface` as index exports to make them easier
+to subclass externally. [#969](https://github.com/apollostack/apollo-client/pull/969)
+
 ### 0.5.7
 - Catch uncaught promise errors in startQuery [#950](https://github.com/apollostack/apollo-client/pull/950)
 

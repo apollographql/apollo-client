@@ -965,9 +965,15 @@ export class QueryManager {
           } catch (e) {}
           /* tslint:enable */
 
+          const {reducerError} = this.getApolloState();
+          if (!resultFromStore && reducerError) {
+            return Promise.reject(reducerError);
+          }
+
           // return a chainable promise
           this.removeFetchQueryPromise(requestId);
           resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready });
+          return null;
         }).catch((error: Error) => {
           // This is for the benefit of `refetch` promises, which currently don't get their errors
           // through the store like watchQuery observers do

@@ -177,6 +177,7 @@ describe('client', () => {
           mutations: {},
           data: {},
           optimistic: [],
+          reducerError: null,
         },
       }
     );
@@ -498,6 +499,7 @@ describe('client', () => {
         },
       },
       mutations: {},
+      reducerError: null,
     }) };
 
     const client = new ApolloClient({

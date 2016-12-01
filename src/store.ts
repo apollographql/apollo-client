@@ -51,6 +51,7 @@ export interface Store {
   queries: QueryStore;
   mutations: MutationStore;
   optimistic: OptimisticStore;
+  reducerError: Error | null;
 }
 
 /**
@@ -79,32 +80,40 @@ export type ApolloReducer = (store: NormalizedCache, action: ApolloAction) => No
 
 export function createApolloReducer(config: ApolloReducerConfig): Function {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
-    const newState = {
-      queries: queries(state.queries, action),
-      mutations: mutations(state.mutations, action),
+    try {
+      const newState: Store = {
+        queries: queries(state.queries, action),
+        mutations: mutations(state.mutations, action),
 
-      // Note that we are passing the queries into this, because it reads them to associate
-      // the query ID in the result with the actual query
-      data: data(state.data, action, state.queries, state.mutations, config),
-      optimistic: [] as any,
-    };
+        // Note that we are passing the queries into this, because it reads them to associate
+        // the query ID in the result with the actual query
+        data: data(state.data, action, state.queries, state.mutations, config),
+        optimistic: [] as any,
 
-    // use the two lines below to debug tests :)
-    // console.log('ACTION', action.type);
-    // console.log('new state', newState);
+        reducerError: null,
+      };
 
-    // Note, we need to have the results of the
-    // APOLLO_MUTATION_INIT action to simulate
-    // the APOLLO_MUTATION_RESULT action. That's
-    // why we pass in newState
-    newState.optimistic = optimistic(
-      state.optimistic,
-      action,
-      newState,
-      config
-    );
+      // use the two lines below to debug tests :)
+      // console.log('ACTION', action.type);
+      // console.log('new state', newState);
 
-    return newState;
+      // Note, we need to have the results of the
+      // APOLLO_MUTATION_INIT action to simulate
+      // the APOLLO_MUTATION_RESULT action. That's
+      // why we pass in newState
+      newState.optimistic = optimistic(
+        state.optimistic,
+        action,
+        newState,
+        config
+      );
+
+      return newState;
+    } catch (reducerError) {
+      return Object.assign({}, state, {
+         reducerError,
+       });
+    }
   };
 }
 

@@ -10,6 +10,10 @@ import ApolloClient, {
   enableFragmentWarnings,
 } from '../src';
 
+import {
+  disableFragmentWarnings as graphqlTagDisableFragmentWarnings,
+} from 'graphql-tag';
+
 import { fragmentDefinitionsMap } from '../src/fragments';
 
 import {
@@ -85,6 +89,7 @@ chai.use(chaiAsPromised);
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
+graphqlTagDisableFragmentWarnings();
 
 describe('client', () => {
   it('does not require any arguments and creates store lazily', () => {

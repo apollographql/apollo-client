@@ -66,7 +66,7 @@ const NewEntryWithData =  graphql(submitNewUser, {name : 'newUserMutation'})(
 )
 ```
 
-Note the use of the [`name` option on the `graphql()` call](higher-order-components.html#graphql-api) to name the prop that will receive the mutation function for each mutation (by defaut that name is 'mutate').
+Note the use of the [`name` option on the `graphql()` call](higher-order-components.html#graphql-api) to name the prop that will receive the mutation function for each mutation (by default that name is 'mutate').
 
 <h3 id="calling-mutations">Calling mutations</h3>
 

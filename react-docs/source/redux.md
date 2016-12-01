@@ -70,7 +70,9 @@ import { connect } from 'react-redux';
 import { CLONE_LIST } from './mutations';
 import { viewList } from './actions';
 
-const List = function({ listId, onSelectList });
+const List = ({ listId, cloneList }) => (
+  <div>List ID: {listId} <button onClick={cloneList}>Clone</button></div>
+);
 
 const withCloneList = graphql(CLONE_LIST, {
   props: ({ ownProps, mutate }) => ({

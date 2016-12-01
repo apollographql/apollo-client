@@ -27,7 +27,7 @@ const MyComponent = (props) => <div>...</div>;
 
 // Initialize GraphQL queries or mutations with the `gql` tag
 const MyQuery = gql`query MyQuery { todos { text } }`;
-const MyMutation = gql`mutation MyMutation { addTodo(text: "Test 123") }`;
+const MyMutation = gql`mutation MyMutation { addTodo(text: "Test 123") { id } }`;
 
 // We then can use `graphql` to pass the query results returned by MyQuery
 // to MyComponent as a prop (and update them as the results change)
@@ -105,7 +105,7 @@ import { graphql } from 'react-apollo';
 class MyComponent extends Component { ... }
 
 const MyComponentWithUpvote = graphql(Upvote, {
-  withRef: 'true'
+  withRef: true,
 })(MyComponent);
 
 // MyComponentWithUpvote.getWrappedInstance() returns MyComponent instance

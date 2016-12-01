@@ -599,6 +599,59 @@ describe('client', () => {
       });
   });
 
+it('should not let errors in observer.next reach the store', (done) => {
+
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+   const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const handle = client.watchQuery({ query });
+
+    const consoleDotError = console.error;
+    console.error = (err: string) => {
+      if (err.match(/Error in observer.next/)) {
+        console.error = consoleDotError;
+        done();
+      } else {
+        done(new Error('Expected error in observer.next to be caught'));
+      }
+    };
+
+    handle.subscribe({
+      next(result) {
+        throw new Error('this error should not reach the store');
+      },
+    });
+  });
+
+  // TODO write test to catch errors in observer.error
+
   it('should allow for subscribing to a request', (done) => {
 
     const query = gql`

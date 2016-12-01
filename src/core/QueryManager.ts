@@ -374,9 +374,8 @@ export class QueryManager {
             console.error('Unhandled error', apolloError, apolloError.stack);
           }
         } else {
-          let resultFromStore: any;
           try {
-            resultFromStore = {
+            const resultFromStore = {
               data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
@@ -387,6 +386,16 @@ export class QueryManager {
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
             };
+            if (observer.next) {
+              if (this.isDifferentResult(lastResult, resultFromStore)) {
+                lastResult = resultFromStore;
+                try {
+                  observer.next(this.transformResult(resultFromStore));
+                } catch (e) {
+                  console.error(`Error in observer.next \n${e.stack}`);
+                }
+              }
+            }
           } catch (error) {
             if (observer.error) {
               observer.error(new ApolloError({
@@ -394,12 +403,6 @@ export class QueryManager {
               }));
             }
             return;
-          }
-          if (observer.next) {
-            if (this.isDifferentResult(lastResult, resultFromStore)) {
-              lastResult = resultFromStore;
-              observer.next(this.transformResult(resultFromStore));
-            }
           }
         }
       }

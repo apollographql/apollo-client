@@ -49,7 +49,9 @@ If there's been some kind of update on the server (e.g. a new repository added t
 
 In order for refetches to be a viable strategy, you need to know when to refetch a query. There are few different ways you could do this. For example, you could imagine refetching the whole feed when the user adds a new repository to it.
 
-But, there are cases in which responding to user input to update the UI doesn't help, for example if some *other* user decides to insert a repository into the GitHunt feed and we want to show it. Our client has no idea that this has happened and won't see the new feed item until the page is refreshed. One solution to that problem is polling.
+Another common situation where a refetch might be necessary is when a mutation changes data that was previously fetched by a given query. Adding comments to a post, for example. In this case you can use [refetchQueries](http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.mutate) and/or [updateQueries](http://dev.apollodata.com/react/cache-updates.html#updateQueries) options for the mutation.
+
+But, there are cases in which responding to user input or a mutation to update the UI doesn't help, for example if some *other* user decides to insert a repository into the GitHunt feed and we want to show it. Our client has no idea that this has happened and won't see the new feed item until the page is refreshed. One solution to that problem is polling.
 
 ## Polling
 

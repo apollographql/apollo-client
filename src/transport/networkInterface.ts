@@ -177,14 +177,11 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       request,
       options,
     }).then(this.fetchFromRemoteEndpoint.bind(this))
-      .then(response => {
-        this.applyAfterwares({
-          response: response as IResponse,
-          options,
-        });
-        return response;
-      })
-      .then(result => (result as IResponse).json())
+      .then(response => this.applyAfterwares({
+        response: response as IResponse,
+        options,
+      }))
+      .then(({ response }) => (response as IResponse).json())
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(

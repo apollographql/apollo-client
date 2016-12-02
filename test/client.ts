@@ -1358,7 +1358,9 @@ it('should not let errors in observer.next reach the store', (done) => {
       // hacky solution that allows us to test whether the warning is printed
       const oldWarn = console.warn;
       console.warn = (str: string) => {
-        assert.include(str, 'Warning: fragment with name');
+        if (!str.match(/deprecated/)) {
+          assert.include(str, 'Warning: fragment with name');
+        }
       };
 
       createFragment(fragmentDoc);
@@ -1622,7 +1624,9 @@ it('should not let errors in observer.next reach the store', (done) => {
     it('should not print a warning if we call disableFragmentWarnings', (done) => {
       const oldWarn = console.warn;
       console.warn = (str: string) => {
-        done(new Error('Returned a warning despite calling disableFragmentWarnings'));
+        if (!str.match(/deprecated/)) {
+          done(new Error('Returned a warning despite calling disableFragmentWarnings'));
+        }
       };
       disableFragmentWarnings();
       createFragment(gql`

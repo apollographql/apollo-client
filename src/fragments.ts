@@ -24,10 +24,31 @@ let printFragmentWarnings = true;
 // that the fragment in the document depends on. The fragment definition array from the document
 // is concatenated with the fragment definition array passed as the second argument and this
 // concatenated array is returned.
+let haveWarned = false;
+
 export function createFragment(
   doc: Document,
-  fragments: (FragmentDefinition[] | FragmentDefinition[][]) = []
+  fragments: (FragmentDefinition[] | FragmentDefinition[][]) = [],
+  internalUse = false,
 ): FragmentDefinition[] {
+
+  if (!internalUse) {
+    if (! haveWarned) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+            '"createFragment" is deprecated and will be removed in the upcoming versions, ' +
+            'please refer to the documentation for how to define fragments: ' +
+            'http://dev.apollodata.com/react/fragments.html.'
+        );
+      }
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'test') {
+        // When running tests, we want to print the warning every time
+        haveWarned = true;
+      }
+    }
+  }
+
   fragments = flatten(fragments) as FragmentDefinition[] ;
   const fragmentDefinitions = getFragmentDefinitions(doc);
   fragmentDefinitions.forEach((fragmentDefinition: FragmentDefinition) => {

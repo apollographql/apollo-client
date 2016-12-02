@@ -97,8 +97,8 @@ NewEntry.propTypes = {
 };
 
 const submitRepository = gql`
-  mutation submitRepository {
-    submitRepository(repoFullName: "apollostack/apollo-client") {
+  mutation submitRepository($repoFullName: String!) {
+    submitRepository(repoFullName: $repoFullName) {
       createdAt
     }
   }

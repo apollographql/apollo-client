@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Deprecate usage of fragment option and createFragment function [PR #984](https://github.com/apollostack/apollo-client/pull/984)
 
 ### 0.5.9
 - Prevent Redux from crashing when an uncaught ApolloError is raised in an Apollo reducer. [PR #874](https://github.com/apollostack/apollo-client/pull/874)

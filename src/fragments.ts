@@ -36,7 +36,7 @@ export function createFragment(
     if (! haveWarned) {
       if (process.env.NODE_ENV !== 'production') {
         console.warn(
-            '"createFragment" is deprecated and will be removed in the upcoming versions, ' +
+            '"createFragment" is deprecated and will be removed in version 0.6, ' +
             'please refer to the documentation for how to define fragments: ' +
             'http://dev.apollodata.com/react/fragments.html.'
         );

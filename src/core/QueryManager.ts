@@ -442,15 +442,17 @@ export class QueryManager {
 
     const requestId = this.idCounter;
     const resPromise = new Promise((resolve, reject) => {
-      this.addFetchQueryPromise(requestId, resPromise, resolve, reject);
+      setTimeout(() => {
+        this.addFetchQueryPromise(requestId, resPromise, resolve, reject);
 
-      return this.watchQuery(options, false).result().then((result) => {
-        this.removeFetchQueryPromise(requestId);
-        resolve(result);
-      }).catch((error) => {
-        this.removeFetchQueryPromise(requestId);
-        reject(error);
-      });
+        return this.watchQuery(options, false).result().then((result) => {
+          this.removeFetchQueryPromise(requestId);
+          resolve(result);
+        }).catch((error) => {
+          this.removeFetchQueryPromise(requestId);
+          reject(error);
+        });
+      })
     });
 
     return resPromise;
@@ -918,76 +920,78 @@ export class QueryManager {
     };
 
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
-      this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
+      setTimeout(() => {
+        this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      this.networkInterface.query(request)
-        .then((result: GraphQLResult) => {
+        this.networkInterface.query(request)
+          .then((result: GraphQLResult) => {
 
-          const extraReducers = this.getExtraReducers();
+            const extraReducers = this.getExtraReducers();
 
-          // XXX handle multiple ApolloQueryResults
-          this.store.dispatch({
-            type: 'APOLLO_QUERY_RESULT',
-            document,
-            operationName: getOperationName(document),
-            result,
-            queryId,
-            requestId,
-            extraReducers,
-          });
-
-          this.removeFetchQueryPromise(requestId);
-
-          // XXX this duplicates some logic in the store about identifying errors
-          if (result.errors) {
-            throw new ApolloError({
-              graphQLErrors: result.errors,
-            });
-          }
-
-          return result;
-        }).then(() => {
-
-          let resultFromStore: any;
-          try {
-            // ensure result is combined with data already in store
-            // this will throw an error if there are missing fields in
-            // the results if returnPartialData is false.
-            resultFromStore = readQueryFromStore({
-              store: this.getApolloState().data,
-              variables,
-              returnPartialData: returnPartialData || noFetch,
-              query: document,
-              config: this.reducerConfig,
-            });
-            // ensure multiple errors don't get thrown
-            /* tslint:disable */
-          } catch (e) {}
-          /* tslint:enable */
-
-          // return a chainable promise
-          this.removeFetchQueryPromise(requestId);
-          resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready });
-        }).catch((error: Error) => {
-          // This is for the benefit of `refetch` promises, which currently don't get their errors
-          // through the store like watchQuery observers do
-          if (error instanceof ApolloError) {
-            reject(error);
-          } else {
+            // XXX handle multiple ApolloQueryResults
             this.store.dispatch({
-              type: 'APOLLO_QUERY_ERROR',
-              error,
+              type: 'APOLLO_QUERY_RESULT',
+              document,
+              operationName: getOperationName(document),
+              result,
               queryId,
               requestId,
+              extraReducers,
             });
 
             this.removeFetchQueryPromise(requestId);
 
-            reject(new ApolloError({
-              networkError: error,
-            }));
-          }
-        });
+            // XXX this duplicates some logic in the store about identifying errors
+            if (result.errors) {
+              throw new ApolloError({
+                graphQLErrors: result.errors,
+              });
+            }
+
+            return result;
+          }).then(() => {
+
+            let resultFromStore: any;
+            try {
+              // ensure result is combined with data already in store
+              // this will throw an error if there are missing fields in
+              // the results if returnPartialData is false.
+              resultFromStore = readQueryFromStore({
+                store: this.getApolloState().data,
+                variables,
+                returnPartialData: returnPartialData || noFetch,
+                query: document,
+                config: this.reducerConfig,
+              });
+              // ensure multiple errors don't get thrown
+              /* tslint:disable */
+            } catch (e) {}
+            /* tslint:enable */
+
+            // return a chainable promise
+            this.removeFetchQueryPromise(requestId);
+            resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready });
+          }).catch((error: Error) => {
+            // This is for the benefit of `refetch` promises, which currently don't get their errors
+            // through the store like watchQuery observers do
+            if (error instanceof ApolloError) {
+              reject(error);
+            } else {
+              this.store.dispatch({
+                type: 'APOLLO_QUERY_ERROR',
+                error,
+                queryId,
+                requestId,
+              });
+
+              this.removeFetchQueryPromise(requestId);
+
+              reject(new ApolloError({
+                networkError: error,
+              }));
+            }
+          });
+      });
     });
 
     return retPromise;

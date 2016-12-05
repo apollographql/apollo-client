@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 
 export class ApolloError extends Error {
   public message: string;
+  public reason: string;
   public graphQLErrors: GraphQLError[];
   public networkError: Error;
 
@@ -35,6 +36,7 @@ export class ApolloError extends Error {
       this.generateErrorMessage();
     } else {
       this.message = errorMessage;
+      this.reason = errorMessage;
     }
 
     this.extraInfo = extraInfo;
@@ -51,19 +53,25 @@ export class ApolloError extends Error {
     }
 
     let message = '';
+    let reason = '';
     // If we have GraphQL errors present, add that to the error message.
     if (Array.isArray(this.graphQLErrors) && this.graphQLErrors.length !== 0) {
       this.graphQLErrors.forEach((graphQLError) => {
         message += 'GraphQL error: ' + graphQLError.message + '\n';
+        reason += graphQLError.message + '\n';
       });
     }
 
     if (this.networkError) {
       message += 'Network error: ' + this.networkError.message + '\n';
+      reason += this.networkError.message + '\n';
     }
 
     // strip newline from the end of the message
     message = message.replace(/\n$/, '');
+    reason = reason.replace(/\n$/, '');
+
     this.message = message;
+    this.reason = reason;
   }
 }

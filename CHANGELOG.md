@@ -3,6 +3,8 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Move typed-graphql and chai typings to optionalDependencies [PR #988](https://github.com/apollostack/apollo-client/pull/988)
+- Fix issue with typings that prevented compilation in typescript [PR #986](https://github.com/apollostack/apollo-client/pull/986)
 
 ### 0.5.10
 - Deprecate usage of fragment option and createFragment function [PR #984](https://github.com/apollostack/apollo-client/pull/984)

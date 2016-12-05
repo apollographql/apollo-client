@@ -26,6 +26,3 @@ test_script:
 # nothing to compile in this project
 build: off
 deploy: off
-
-cache:
-  - node_modules

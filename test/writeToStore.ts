@@ -1,5 +1,8 @@
 import { assert } from 'chai';
-import * as _ from 'lodash';
+import assign = require('lodash/assign');
+import omit = require('lodash/omit');
+import property = require('lodash/property');
+import cloneDeep = require('lodash/cloneDeep');
 
 import {
   writeFragmentToStore,
@@ -49,7 +52,7 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
       [result.id]: result,
     });
@@ -192,10 +195,10 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     }), {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      [result.id]: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: result.nestedObj.id,
@@ -235,9 +238,9 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      [result.id]: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: `$${result.id}.nestedObj`,
@@ -277,9 +280,9 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      [result.id]: assign({}, assign({}, omit(result, 'nestedObj')), {
         'nestedObj({"arg":"val"})': {
           type: 'id',
           id: `$${result.id}.nestedObj({"arg":"val"})`,
@@ -329,11 +332,11 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     }), {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
-        nestedArray: result.nestedArray.map(_.property('id')),
+      [result.id]: assign({}, assign({}, omit(result, 'nestedArray')), {
+        nestedArray: result.nestedArray.map(property('id')),
       }),
       [result.nestedArray[0].id]: result.nestedArray[0],
       [result.nestedArray[1].id]: result.nestedArray[1],
@@ -374,10 +377,10 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     }), {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      [result.id]: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           result.nestedArray[0].id,
           null,
@@ -423,11 +426,11 @@ describe('writing to the store', () => {
 
     const normalized = writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     });
 
     assert.deepEqual(normalized, {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      [result.id]: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           `${result.id}.nestedArray.0`,
           `${result.id}.nestedArray.1`,
@@ -470,11 +473,11 @@ describe('writing to the store', () => {
 
     const normalized = writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     });
 
     assert.deepEqual(normalized, {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      [result.id]: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
           `${result.id}.nestedArray.1`,
@@ -505,12 +508,12 @@ describe('writing to the store', () => {
 
     const normalized = writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     });
 
     assert.deepEqual(normalized, {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
+      [result.id]: assign({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           'json': [
@@ -544,11 +547,11 @@ describe('writing to the store', () => {
 
     const normalized = writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     });
 
     assert.deepEqual(normalized, {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
+      [result.id]: assign({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           json: [
@@ -578,7 +581,7 @@ describe('writing to the store', () => {
 
     const store = writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     });
 
@@ -604,7 +607,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(store2, {
-      'abcd': _.assign({}, result, result2),
+      'abcd': assign({}, result, result2),
     });
   });
 
@@ -634,9 +637,9 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
-      [result.id]: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      [result.id]: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: null,
       }),
     });
@@ -661,7 +664,7 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
       'ROOT_QUERY': {
         'people_one({"id":"5"})': {
@@ -788,7 +791,7 @@ describe('writing to the store', () => {
         assert.deepEqual(writeSelectionSetToStore({
           dataId: '5',
           selectionSet: def.selectionSet,
-          result: _.cloneDeep(result),
+          result: cloneDeep(result),
           variables: variables,
           dataIdFromObject: () => '5',
         }), {
@@ -1036,7 +1039,7 @@ describe('writing to the store', () => {
             writeSelectionSetToStore({
               dataId: '5',
               selectionSet: def.selectionSet,
-              result: _.cloneDeep(result),
+              result: cloneDeep(result),
               variables: variables,
               dataIdFromObject: () => '5',
             });
@@ -1083,13 +1086,13 @@ describe('writing to the store', () => {
     };
     const store = writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     });
 
     const newStore = writeFragmentToStore({
       fragment,
-      result: _.cloneDeep(result),
-      store: _.assign({}, store) as NormalizedCache,
+      result: cloneDeep(result),
+      store: assign({}, store) as NormalizedCache,
     });
 
     Object.keys(store).forEach((field) => {

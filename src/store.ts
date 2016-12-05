@@ -37,7 +37,7 @@ import {
   MutationBehaviorReducerMap,
 } from './data/mutationResults';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 export interface Store {
   data: NormalizedCache;

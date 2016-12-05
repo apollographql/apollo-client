@@ -12,7 +12,7 @@ import {
   checkDocument,
 } from './getFromAST';
 
-import cloneDeep = require('lodash.clonedeep');
+import cloneDeep = require('lodash/cloneDeep');
 
 // A QueryTransformer takes a SelectionSet and transforms it in someway (in place).
 export type QueryTransformer = (selectionSet: SelectionSet) => void

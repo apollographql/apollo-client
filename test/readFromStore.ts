@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import * as _ from 'lodash';
+import assign = require('lodash/assign');
+import omit = require('lodash/omit');
 
 import {
   readFragmentFromStore,
@@ -121,7 +122,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      abcd: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: 'abcde',
@@ -178,7 +179,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj', 'deepNestedObj')), {
+      abcd: assign({}, assign({}, omit(result, 'nestedObj', 'deepNestedObj')), {
         nestedObj: {
           type: 'id',
           id: 'abcde',
@@ -186,7 +187,7 @@ describe('reading from the store', () => {
           generated: false,
         },
       }) as StoreObject,
-      abcde: _.assign({}, result.nestedObj, {
+      abcde: assign({}, result.nestedObj, {
         deepNestedObj: {
           type: 'id',
           id: 'abcdef',
@@ -272,7 +273,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      abcd: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           'abcd.nestedArray.0',
           'abcd.nestedArray.1',
@@ -331,7 +332,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      abcd: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
           'abcd.nestedArray.1',
@@ -387,7 +388,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      abcd: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
           'abcde',
@@ -486,7 +487,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: null }) as StoreObject,
+      abcd: assign({}, assign({}, omit(result, 'nestedObj')), { nestedObj: null }) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readFragmentFromStore({
@@ -522,7 +523,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: {
+      abcd: assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
       }}) as StoreObject,
@@ -558,7 +559,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      abcd: _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: {
+      abcd: assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
       }}) as StoreObject,

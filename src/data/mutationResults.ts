@@ -9,10 +9,10 @@ import {
   FragmentDefinition,
 } from 'graphql';
 
-import mapValues = require('lodash.mapvalues');
-import isArray = require('lodash.isarray');
-import cloneDeep = require('lodash.clonedeep');
-import assign = require('lodash.assign');
+import mapValues = require('lodash/mapValues');
+import isArray = require('lodash/isArray');
+import cloneDeep = require('lodash/cloneDeep');
+import assign = require('lodash/assign');
 
 import { replaceQueryResults } from './replaceQueryResults';
 

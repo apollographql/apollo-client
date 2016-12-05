@@ -14,7 +14,7 @@ import {
   FragmentMap,
 } from '../queries/getFromAST';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 export interface MutationStore {
   [mutationId: string]: MutationStoreValue;

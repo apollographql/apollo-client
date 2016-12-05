@@ -4,8 +4,8 @@ import {
   Request,
 } from '../transport/networkInterface';
 
-import forOwn = require('lodash.forown');
-import isEqual = require('lodash.isequal');
+import forOwn = require('lodash/forOwn');
+import isEqual = require('lodash/isEqual');
 
 import {
   ApolloStore,

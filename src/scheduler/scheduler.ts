@@ -17,7 +17,7 @@ import { ObservableQuery } from '../core/ObservableQuery';
 
 import { WatchQueryOptions } from '../core/watchQueryOptions';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 export class QueryScheduler {
   // Map going from queryIds to query options that are in flight.

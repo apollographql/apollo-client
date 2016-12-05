@@ -3,7 +3,7 @@ import {
   FragmentDefinition,
 } from 'graphql';
 
-import flatten = require('lodash.flatten');
+import flatten = require('lodash/flatten');
 
 import {
   getFragmentDefinitions,

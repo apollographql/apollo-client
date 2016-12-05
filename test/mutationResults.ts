@@ -4,8 +4,8 @@ import ApolloClient, { addTypename } from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/store';
 
-import assign = require('lodash.assign');
-import clonedeep = require('lodash.clonedeep');
+import assign = require('lodash/assign');
+import clonedeep = require('lodash/cloneDeep');
 
 import gql from 'graphql-tag';
 

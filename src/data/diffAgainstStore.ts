@@ -1,8 +1,8 @@
-import isArray = require('lodash.isarray');
-import isNull = require('lodash.isnull');
-import isObject = require('lodash.isobject');
-import has = require('lodash.has');
-import merge = require('lodash.merge');
+import isArray = require('lodash/isArray');
+import isNull = require('lodash/isNull');
+import isObject = require('lodash/isObject');
+import has = require('lodash/has');
+import merge = require('lodash/merge');
 
 import {
   storeKeyNameFromField,

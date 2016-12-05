@@ -17,8 +17,8 @@ import {
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
-import assign = require('lodash.assign');
-import isEqual = require('lodash.isequal');
+import assign = require('lodash/assign');
+import isEqual = require('lodash/isEqual');
 
 export interface FetchMoreOptions {
   updateQuery: (previousQueryResult: Object, options: {

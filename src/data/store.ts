@@ -10,8 +10,8 @@ import {
   writeSelectionSetToStore,
 } from './writeToStore';
 
-import assign = require('lodash.assign');
-import isObject = require('lodash.isobject');
+import assign = require('lodash/assign');
+import isObject = require('lodash/isObject');
 
 import {
   QueryStore,

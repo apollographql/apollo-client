@@ -7,7 +7,7 @@ import {
   MockedSubscription,
 } from './mocks/mockNetworkInterface';
 
-import * as _ from 'lodash';
+import omit = require('lodash/omit');
 
 import gql from 'graphql-tag';
 
@@ -80,7 +80,7 @@ describe('MockSubscriptionNetworkInterface', () => {
   });
 
   it('throws an error when firing a result array is empty', () => {
-    const noResultSub = _.omit(sub1, 'results') as MockedSubscription;
+    const noResultSub = omit(sub1, 'results') as MockedSubscription;
 
     assert.throw(() => {
       const networkInterface = mockSubscriptionNetworkInterface([noResultSub]);
@@ -107,7 +107,7 @@ describe('MockSubscriptionNetworkInterface', () => {
 
 
   it('throws an error when firing a subscription id that does not exist', () => {
-    const noResultSub = _.omit(sub1, 'results') as MockedSubscription;
+    const noResultSub = omit(sub1, 'results') as MockedSubscription;
 
     assert.throw(() => {
       const networkInterface = mockSubscriptionNetworkInterface([noResultSub]);

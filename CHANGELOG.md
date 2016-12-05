@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- Replaced individual lodash packages with original lodash package [PR #996]
+- Replaced individual lodash packages with original lodash package [PR #997]
 
 ### 0.5.11
 - Move typed-graphql and chai typings to optionalDependencies [PR #988](https://github.com/apollostack/apollo-client/pull/988)

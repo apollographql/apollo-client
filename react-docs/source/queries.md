@@ -187,7 +187,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 })(Profile);
 ```
 
-<h3 id="graphql-props">Using `props`</h3>
+<h3 id="graphql-props-option">Using `props`</h3>
 
 If you want complete control over the props of the child component, use the `props` option to map the query `data` object into any number of props that will be passed into the child:
 

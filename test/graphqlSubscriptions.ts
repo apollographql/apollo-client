@@ -6,7 +6,7 @@ import {
   assert,
 } from 'chai';
 
-import clonedeep = require('lodash.clonedeep');
+import clonedeep = require('lodash/cloneDeep');
 
 import { isSubscriptionResultAction } from '../src/actions';
 

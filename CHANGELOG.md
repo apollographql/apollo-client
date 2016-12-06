@@ -3,9 +3,10 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Errors thrown in afterwares are not ignored anymore [PR #982](https://github.com/apollostack/apollo-client/pull/982)
 
-- Replaced individual lodash packages with original lodash package [PR #997]
+### 0.5.12
+- Errors thrown in afterwares bubble up [PR #982](https://github.com/apollostack/apollo-client/pull/982)
+- Replaced individual lodash packages with original lodash package [PR #997](https://github.com/apollostack/apollo-client/pull/997)
 
 ### 0.5.11
 - Move typed-graphql and chai typings to optionalDependencies [PR #988](https://github.com/apollostack/apollo-client/pull/988)

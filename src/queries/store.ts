@@ -18,8 +18,8 @@ import {
   GraphQLError,
 } from 'graphql';
 
-import assign = require('lodash.assign');
-import isEqual = require('lodash.isequal');
+import assign = require('lodash/assign');
+import isEqual = require('lodash/isEqual');
 
 export interface QueryStore {
   [queryId: string]: QueryStoreValue;

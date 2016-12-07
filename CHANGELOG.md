@@ -4,6 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### 0.5.13
+- Replace usages of `Object.assign` with lodash's assign function.
+
 ### 0.5.12
 - Errors thrown in afterwares bubble up [PR #982](https://github.com/apollostack/apollo-client/pull/982)
 - Replaced individual lodash packages with original lodash package [PR #997](https://github.com/apollostack/apollo-client/pull/997)

@@ -148,6 +148,9 @@ export function createApolloStore({
   // XXX to avoid type fail
   const compose: (...args: any[]) => () => any = reduxCompose;
 
+  // Note: The below checks are what make it OK for QueryManager to start from 0 when generating
+  // new query IDs. If we let people rehydrate query state for some reason, we would need to make
+  // sure newly generated IDs don't overlap with old queries.
   if ( initialState && initialState[reduxRootKey] && initialState[reduxRootKey]['queries']) {
     throw new Error('Apollo initial state may not contain queries, only data');
   }

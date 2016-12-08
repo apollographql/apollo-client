@@ -48,6 +48,7 @@ export interface QueryInitAction {
   storePreviousVariables: boolean;
   isRefetch: boolean;
   isPoll: boolean;
+  metadata: any;
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {

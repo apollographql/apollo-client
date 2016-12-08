@@ -1,8 +1,8 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { assign } from 'lodash';
-import isequal = require('lodash.isequal');
+import assign = require('lodash/assign');
+import isequal = require('lodash/isEqual');
 import * as fetchMock from 'fetch-mock';
 
 // make it easy to assert with promises
@@ -348,6 +348,26 @@ describe('network interface', () => {
   });
 
   describe('afterware', () => {
+    it('should return errors thrown in afterwares', () => {
+      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      networkInterface.useAfter([{
+        applyAfterware() {
+          throw Error('Afterware error');
+        },
+      }]);
+
+      const simpleRequest = {
+        query: simpleQueryWithNoVars,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.isRejected(
+        networkInterface.query(simpleRequest),
+        Error,
+        'Afterware error'
+      );
+    });
     it('should throw an error if you pass something bad', () => {
       const malWare = TestAfterWare();
       delete malWare.applyAfterware;

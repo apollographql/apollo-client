@@ -11,7 +11,7 @@ import {
 
 import gql from 'graphql-tag';
 
-import cloneDeep = require('lodash.clonedeep');
+import cloneDeep = require('lodash/cloneDeep');
 
 describe('query directives', () => {
   it('should should not include a skipped field', () => {

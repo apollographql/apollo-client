@@ -18,8 +18,8 @@ import {
   GraphQLError,
 } from 'graphql';
 
-import assign = require('lodash.assign');
-import isEqual = require('lodash.isequal');
+import assign = require('lodash/assign');
+import isEqual = require('lodash/isEqual');
 
 export interface QueryStore {
   [queryId: string]: QueryStoreValue;
@@ -47,6 +47,7 @@ export type QueryStoreValue = {
   forceFetch: boolean;
   returnPartialData: boolean;
   lastRequestId: number;
+  metadata: any;
 }
 
 export interface SelectionSetWithRoot {
@@ -115,6 +116,7 @@ export function queries(
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,
+      metadata: action.metadata,
     };
 
     return newState;

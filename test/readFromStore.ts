@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import * as _ from 'lodash';
+import assign = require('lodash/assign');
+import omit = require('lodash/omit');
 
 import {
   readQueryFromStore,
@@ -117,7 +118,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: 'abcde',
@@ -174,7 +175,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj', 'deepNestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj', 'deepNestedObj')), {
         __typename: 'Query',
         nestedObj: {
           type: 'id',
@@ -182,7 +183,7 @@ describe('reading from the store', () => {
           generated: false,
         },
       }) as StoreObject,
-      abcde: _.assign({}, result.nestedObj, {
+      abcde: assign({}, result.nestedObj, {
         deepNestedObj: {
           type: 'id',
           id: 'abcdef',
@@ -266,7 +267,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           { type: 'id', generated: true, id: 'abcd.nestedArray.0' },
           { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
@@ -324,7 +325,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
           { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
@@ -379,7 +380,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
           { type: 'id', generated: false, id: 'abcde' },
@@ -475,7 +476,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: null }) as StoreObject,
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), { nestedObj: null }) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
@@ -510,7 +511,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
       }}) as StoreObject,
@@ -545,7 +546,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
       }}) as StoreObject,

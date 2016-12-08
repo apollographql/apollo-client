@@ -18,7 +18,7 @@ import { ObservableQuery } from '../core/ObservableQuery';
 
 import { WatchQueryOptions } from '../core/watchQueryOptions';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 import { NetworkStatus } from '../queries/store';
 

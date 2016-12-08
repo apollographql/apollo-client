@@ -42,7 +42,7 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 
 import * as Rx from 'rxjs';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 import mockNetworkInterface, {
   ParsedRequest,
@@ -2463,6 +2463,43 @@ describe('QueryManager', () => {
         assert.deepEqual(result.data, data);
       }),
     ]);
+  });
+
+  it('should store metadata with watched queries', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data },
+      }
+    );
+
+    const observable = queryManager.watchQuery({
+      query,
+      metadata: { foo: 'bar' },
+    });
+    return observableToPromise({ observable },
+      (result) => {
+        assert.deepEqual(result.data, data);
+        assert.deepEqual(
+          queryManager.getApolloState().queries[observable.queryId].metadata,
+          { foo: 'bar' }
+        );
+      }
+    );
   });
 
   it('should error when we orphan a real-id node in the store with a real-id node', () => {

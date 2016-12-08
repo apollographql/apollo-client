@@ -13,9 +13,9 @@ import {
 
 } from 'graphql';
 
-import isUndefined = require('lodash.isundefined');
-import assign = require('lodash.assign');
-import isString = require('lodash.isstring');
+import isUndefined = require('lodash/isUndefined');
+import assign = require('lodash/assign');
+import isString = require('lodash/isString');
 
 import {
   createApolloStore,
@@ -276,7 +276,7 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       query: fullDocument,
     });
     delete realOptions.fragments;
@@ -326,7 +326,7 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       query: fullDocument,
     });
     delete realOptions.fragments;
@@ -384,7 +384,7 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.mutation, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       mutation: fullDocument,
     });
     delete realOptions.fragments;
@@ -411,7 +411,7 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       document: fullDocument,
     });
     delete realOptions.fragments;

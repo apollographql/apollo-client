@@ -15,7 +15,7 @@ import {
   Name,
 } from 'graphql';
 
-import isObject = require('lodash.isobject');
+import isObject = require('lodash/isObject');
 
 function isStringValue(value: Value): value is StringValue {
   return value.kind === 'StringValue';

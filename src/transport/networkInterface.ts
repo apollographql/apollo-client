@@ -1,6 +1,6 @@
-import isString = require('lodash.isstring');
-import assign = require('lodash.assign');
-import mapValues = require('lodash.mapvalues');
+import isString = require('lodash/isString');
+import assign = require('lodash/assign');
+import mapValues = require('lodash/mapValues');
 import 'whatwg-fetch';
 
 import {
@@ -177,14 +177,11 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       request,
       options,
     }).then(this.fetchFromRemoteEndpoint.bind(this))
-      .then(response => {
-        this.applyAfterwares({
-          response: response as IResponse,
-          options,
-        });
-        return response;
-      })
-      .then(result => (result as IResponse).json())
+      .then(response => this.applyAfterwares({
+        response: response as IResponse,
+        options,
+      }))
+      .then(({ response }) => (response as IResponse).json())
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(

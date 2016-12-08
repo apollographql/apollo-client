@@ -80,9 +80,9 @@ import { withWarning } from './util/wrap';
 
 import observableToPromise from './util/observableToPromise';
 
-import cloneDeep = require('lodash.clonedeep');
+import cloneDeep = require('lodash/cloneDeep');
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -496,6 +496,7 @@ describe('client', () => {
           returnPartialData: false,
           lastRequestId: 1,
           previousVariables: null,
+          metadata: null,
         },
       },
       mutations: {},

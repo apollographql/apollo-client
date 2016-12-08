@@ -27,8 +27,8 @@ import { NetworkStatus } from '../queries/store';
 
 import { addFragmentsToDocument } from '../queries/getFromAST';
 
-import assign = require('lodash.assign');
-import isEqual = require('lodash.isequal');
+import assign = require('lodash/assign');
+import isEqual = require('lodash/isEqual');
 
 export type ApolloCurrentResult = {
   data: any;

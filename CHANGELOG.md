@@ -4,6 +4,14 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### 0.5.13
+- Replace usages of `Object.assign` with lodash's assign function [PR #1009](https://github.com/apollostack/apollo-client/pull/1009)
+- Calls to watchQuery can include metadata, for use with debugging. [PR #1010](https://github.com/apollostack/apollo-client/pull/1010)
+
+### 0.5.12
+- Errors thrown in afterwares bubble up [PR #982](https://github.com/apollostack/apollo-client/pull/982)
+- Replaced individual lodash packages with original lodash package [PR #997](https://github.com/apollostack/apollo-client/pull/997)
+
 ### 0.5.11
 - Move typed-graphql and chai typings to optionalDependencies [PR #988](https://github.com/apollostack/apollo-client/pull/988)
 - Fix issue with typings that prevented compilation in typescript [PR #986](https://github.com/apollostack/apollo-client/pull/986)

@@ -11,7 +11,7 @@ import {
   writeResultToStore,
 } from './writeToStore';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 import {
   QueryStore,

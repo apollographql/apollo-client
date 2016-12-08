@@ -7,8 +7,8 @@ import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 import { addFragmentsToDocument } from '../src/queries/getFromAST';
 
-import assign = require('lodash.assign');
-import clonedeep = require('lodash.clonedeep');
+import assign = require('lodash/assign');
+import clonedeep = require('lodash/cloneDeep');
 
 import gql from 'graphql-tag';
 

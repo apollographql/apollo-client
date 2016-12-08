@@ -4,8 +4,8 @@ import {
   Request,
 } from '../transport/networkInterface';
 
-import forOwn = require('lodash.forown');
-import isEqual = require('lodash.isequal');
+import forOwn = require('lodash/forOwn');
+import isEqual = require('lodash/isEqual');
 
 import {
   ApolloStore,
@@ -369,14 +369,24 @@ export class QueryManager {
             networkError: queryStoreValue.networkError,
           });
           if (observer.error) {
-            observer.error(apolloError);
+            try {
+              observer.error(apolloError);
+            } catch (e) {
+              console.error(`Error in observer.error \n${e.stack}`);
+            }
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
+            if (process.env.NODE_ENV !== 'production') {
+              /* tslint:disable-next-line */
+              console.info(
+                'An unhandled error was thrown because no error handler is registered ' +
+                'for the query ' + options.query.loc.source
+              );
+            }
           }
         } else {
-          let resultFromStore: any;
           try {
-            resultFromStore = {
+            const resultFromStore = {
               data: readQueryFromStore({
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
@@ -387,6 +397,16 @@ export class QueryManager {
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
             };
+            if (observer.next) {
+              if (this.isDifferentResult(lastResult, resultFromStore)) {
+                lastResult = resultFromStore;
+                try {
+                  observer.next(this.transformResult(resultFromStore));
+                } catch (e) {
+                  console.error(`Error in observer.next \n${e.stack}`);
+                }
+              }
+            }
           } catch (error) {
             if (observer.error) {
               observer.error(new ApolloError({
@@ -394,12 +414,6 @@ export class QueryManager {
               }));
             }
             return;
-          }
-          if (observer.next) {
-            if (this.isDifferentResult(lastResult, resultFromStore)) {
-              lastResult = resultFromStore;
-              observer.next(this.transformResult(resultFromStore));
-            }
           }
         }
       }
@@ -642,7 +656,10 @@ export class QueryManager {
   public startQuery(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.addQueryListener(queryId, listener);
 
-    this.fetchQuery(queryId, options);
+    this.fetchQuery(queryId, options)
+    // `fetchQuery` returns a Promise. In case of a failure it should be caucht or else the
+    // console will show an `Uncaught (in promise)` message. Ignore the error for now.
+    .catch((error: Error) => undefined);
 
     return queryId;
   }
@@ -966,9 +983,15 @@ export class QueryManager {
           } catch (e) {}
           /* tslint:enable */
 
+          const {reducerError} = this.getApolloState();
+          if (!resultFromStore && reducerError) {
+            return Promise.reject(reducerError);
+          }
+
           // return a chainable promise
           this.removeFetchQueryPromise(requestId);
           resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready });
+          return null;
         }).catch((error: Error) => {
           // This is for the benefit of `refetch` promises, which currently don't get their errors
           // through the store like watchQuery observers do

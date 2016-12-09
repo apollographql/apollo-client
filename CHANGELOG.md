@@ -6,6 +6,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.17
+- For devtools hook, report the state _after_ the action, not before. [PR #1023](https://github.com/apollostack/apollo-client/pull/1023)
+
 ### 0.5.16
 - Make sure Redux devtools enhancer is added last. [PR #1022](https://github.com/apollostack/apollo-client/pull/1022)
 

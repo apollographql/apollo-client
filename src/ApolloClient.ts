@@ -493,6 +493,8 @@ export default class ApolloClient {
       initialState: this.initialState,
       config: this.reducerConfig,
       logger: (store: any) => (next: any) => (action: any) => {
+        const result = next(action);
+
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
             action,
@@ -500,7 +502,8 @@ export default class ApolloClient {
             dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
           });
         }
-        return next(action);
+
+        return result;
       },
     }));
     // for backcompatibility, ensure that reduxRootKey is set to selector return value

@@ -496,6 +496,7 @@ describe('client', () => {
           returnPartialData: false,
           lastRequestId: 1,
           previousVariables: null,
+          metadata: null,
         },
       },
       mutations: {},

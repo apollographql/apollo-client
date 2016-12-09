@@ -47,6 +47,4 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 * Remove fragment handling from Apollo Client (and put it in graphql-tag)
 * Streamline network interface and API for middlewares and afterwares
 * simplify core and push view-layer integration logic to the edge
-
-
-
+* Remove stopped queries from the store without breaking storeReset (#902)

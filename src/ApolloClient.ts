@@ -286,7 +286,7 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       query: fullDocument,
     });
     delete realOptions.fragments;
@@ -336,7 +336,7 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       query: fullDocument,
     });
     delete realOptions.fragments;
@@ -394,7 +394,7 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.mutation, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       mutation: fullDocument,
     });
     delete realOptions.fragments;
@@ -421,7 +421,7 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       document: fullDocument,
     });
     delete realOptions.fragments;

@@ -108,6 +108,7 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+  private devToolsHookCb: Function;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -427,6 +428,10 @@ export default class ApolloClient {
     return createApolloReducer(this.reducerConfig);
   }
 
+  public __actionHookForDevTools(cb: Function) {
+    this.devToolsHookCb = cb;
+  }
+
   public middleware = () => {
     return (store: ApolloStore) => {
       this.setStore(store);
@@ -434,6 +439,15 @@ export default class ApolloClient {
       return (next: any) => (action: any) => {
         const returnValue = next(action);
         this.queryManager.broadcastNewStore(store.getState());
+
+        if (this.devToolsHookCb) {
+          this.devToolsHookCb({
+            action,
+            state: this.queryManager.getApolloState(),
+            dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
+          });
+        }
+
         return returnValue;
       };
     };

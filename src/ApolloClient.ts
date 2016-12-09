@@ -234,7 +234,7 @@ export default class ApolloClient {
     // development mode
     const defaultConnectToDevTools =
       typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development' &&
-      typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__)
+      typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__);
 
     if (typeof connectToDevTools === 'undefined') {
       connectToDevTools = defaultConnectToDevTools;

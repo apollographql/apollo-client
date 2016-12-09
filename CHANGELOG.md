@@ -6,6 +6,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.16
+- Make sure Redux devtools enhancer is added last. [PR #1022](https://github.com/apollostack/apollo-client/pull/1022)
+
 ### 0.5.15
 - Make sure devtools hook added in 0.5.14 also works when the store is initialized by Apollo Client. [PR #1021](https://github.com/apollostack/apollo-client/pull/1021)
 

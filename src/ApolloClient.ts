@@ -157,6 +157,7 @@ export default class ApolloClient {
     addTypename = true,
     queryTransformer,
     customResolvers,
+    connectToDevTools,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -171,6 +172,7 @@ export default class ApolloClient {
     addTypename?: boolean,
     queryTransformer?: any,
     customResolvers?: CustomResolverMap,
+    connectToDevTools?: boolean,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -230,10 +232,15 @@ export default class ApolloClient {
 
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
-    if (
+    const defaultConnectToDevTools =
       typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development' &&
       typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__)
-    ) {
+
+    if (typeof connectToDevTools === 'undefined') {
+      connectToDevTools = defaultConnectToDevTools;
+    }
+
+    if (connectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
     }
   }

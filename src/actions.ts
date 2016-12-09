@@ -60,6 +60,7 @@ export interface QueryResultClientAction {
   result: GraphQLResult;
   complete: boolean;
   queryId: string;
+  requestId: number;
 }
 
 export function isQueryResultClientAction(action: ApolloAction): action is QueryResultClientAction {

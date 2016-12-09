@@ -538,6 +538,7 @@ export class QueryManager {
         document: queryDoc,
         complete: !shouldFetch,
         queryId,
+        requestId,
       });
     }
 

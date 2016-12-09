@@ -6,6 +6,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.18
+- Make sure `APOLLO_QUERY_RESULT_CLIENT` action has a `requestId`, just like `APOLLO_QUERY_RESULT` does, so that it can be associated with the relevant `APOLLO_QUERY_INIT` action.
+
 ### 0.5.17
 - For devtools hook, report the state _after_ the action, not before. [PR #1023](https://github.com/apollostack/apollo-client/pull/1023)
 

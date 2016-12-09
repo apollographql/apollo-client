@@ -2011,6 +2011,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       return client.query({ query })
         .then(() => {
           assert.equal(log.length, 2);
+          assert.equal(log[1].state.queries['0'].loading, false);
         });
     });
 

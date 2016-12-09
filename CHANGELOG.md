@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+- Add hook for chrome devtools to get a log of actions and states. [PR #1017](https://github.com/apollostack/apollo-client/pull/1017)
+
 ### 0.5.13
 - Replace usages of `Object.assign` with lodash's assign function [PR #1009](https://github.com/apollostack/apollo-client/pull/1009)
 - Calls to watchQuery can include metadata, for use with debugging. [PR #1010](https://github.com/apollostack/apollo-client/pull/1010)

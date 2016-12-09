@@ -227,6 +227,15 @@ export default class ApolloClient {
     this.mutate = this.mutate.bind(this);
     this.setStore = this.setStore.bind(this);
     this.resetStore = this.resetStore.bind(this);
+
+    // Attach the client instance to window to let us be found by chrome devtools, but only in
+    // development mode
+    if (
+      typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development' &&
+      typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__)
+    ) {
+      (window as any).__APOLLO_CLIENT__ = this;
+    }
   }
 
   /**

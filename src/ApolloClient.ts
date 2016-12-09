@@ -492,6 +492,16 @@ export default class ApolloClient {
       reduxRootKey: DEFAULT_REDUX_ROOT_KEY,
       initialState: this.initialState,
       config: this.reducerConfig,
+      logger: (store: any) => (next: any) => (action: any) => {
+        if (this.devToolsHookCb) {
+          this.devToolsHookCb({
+            action,
+            state: this.queryManager.getApolloState(),
+            dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
+          });
+        }
+        return next(action);
+      },
     }));
     // for backcompatibility, ensure that reduxRootKey is set to selector return value
     this.reduxRootKey = DEFAULT_REDUX_ROOT_KEY;

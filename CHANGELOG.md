@@ -6,6 +6,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.15
+- Make sure devtools hook added in 0.5.14 also works when the store is initialized by Apollo Client. [PR #1021](https://github.com/apollostack/apollo-client/pull/1021)
+
 ### 0.5.14
 - Add internal hook for chrome devtools, `__actionHookForDevTools`, to get a log of actions and states. Apollo Client automatically attaches itself to `window.__APOLLO_CLIENT__` when initialized if `process.env.NODE_ENV === 'development'`. This can be forced or disabled by setting the `connectToDevTools` option in the constructor to `true` or `false`. [PR #1017](https://github.com/apollostack/apollo-client/pull/1017)
 

@@ -132,14 +132,6 @@ export function createApolloStore({
   logger?: Middleware,
 } = {}): ApolloStore {
   const enhancers: any[] = [];
-
-  if (typeof window !== 'undefined') {
-    const anyWindow = window as any;
-    if (anyWindow.devToolsExtension) {
-      enhancers.push(anyWindow.devToolsExtension());
-    }
-  }
-
   const middlewares: Middleware[] = [];
 
   if (reportCrashes) {
@@ -152,6 +144,14 @@ export function createApolloStore({
 
   if (middlewares.length > 0) {
     enhancers.push(applyMiddleware(...middlewares));
+  }
+
+  // Dev tools enhancer should be last
+  if (typeof window !== 'undefined') {
+    const anyWindow = window as any;
+    if (anyWindow.devToolsExtension) {
+      enhancers.push(anyWindow.devToolsExtension());
+    }
   }
 
   // XXX to avoid type fail

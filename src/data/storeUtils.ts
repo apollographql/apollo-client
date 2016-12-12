@@ -71,7 +71,7 @@ function valueToObjectRepresentation(argObj: any, name: Name, value: Value, vari
       return (nestedArgArrayObj as any)[name.value];
     });
   } else if (isEnumValue(value)) {
-    argObj[name.value] = value.value;
+    argObj[name.value] = (value as EnumValue).value;
   } else {
     throw new Error(`The inline argument "${name.value}" of kind "${(value as any).kind}" is not supported.
                     Use variables instead of inline arguments to overcome this limitation.`);

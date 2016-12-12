@@ -3,6 +3,7 @@ const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient from '../src';
+import { ObservableQuery } from '../src/core/ObservableQuery';
 
 import assign = require('lodash/assign');
 import clonedeep = require('lodash/cloneDeep');
@@ -59,9 +60,9 @@ describe('updateQuery on a simple query', () => {
 
     return new Promise((resolve) => setTimeout(resolve))
       .then(() => obsHandle)
-      .then((watchedQuery) => {
+      .then((watchedQuery: ObservableQuery) => {
         assert.equal(latestResult.data.entry.value, 1);
-        watchedQuery.updateQuery((prevResult) => {
+        watchedQuery.updateQuery((prevResult: any) => {
           const res = clonedeep(prevResult);
           res.entry.value = 2;
           return res;

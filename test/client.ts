@@ -1971,6 +1971,80 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
   });
 
+  it('should enable dev tools logging', () => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    it('with self-made store', () => {
+      const networkInterface = mockNetworkInterface({
+        request: { query: cloneDeep(query) },
+        result: { data },
+      });
+
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      const log: any[] = [];
+      client.__actionHookForDevTools((entry: any) => {
+        log.push(entry);
+      });
+
+      return client.query({ query })
+        .then(() => {
+          assert.equal(log.length, 2);
+          assert.equal(log[1].state.queries['0'].loading, false);
+        });
+    });
+
+    it('with passed in store', () => {
+      const networkInterface = mockNetworkInterface({
+        request: { query: cloneDeep(query) },
+        result: { data },
+      });
+
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      createStore(
+        combineReducers({
+          apollo: client.reducer() as any,
+        }),
+        {}, // initial state
+        applyMiddleware(client.middleware()),
+      );
+
+      const log: any[] = [];
+      client.__actionHookForDevTools((entry: any) => {
+        log.push(entry);
+      });
+
+      return client.query({ query })
+        .then(() => {
+          assert.equal(log.length, 2);
+        });
+    });
+  });
 });
 
 function clientRoundrip(

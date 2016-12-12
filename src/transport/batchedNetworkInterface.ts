@@ -65,7 +65,8 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
         return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
           .then(result => {
-            return result.json();
+            // XXX can we be stricter with the type here?
+            return result.json() as any;
           })
           .then(responses => {
 

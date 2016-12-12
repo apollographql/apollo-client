@@ -108,6 +108,7 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+  private devToolsHookCb: Function;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -156,6 +157,7 @@ export default class ApolloClient {
     addTypename = true,
     queryTransformer,
     customResolvers,
+    connectToDevTools,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -170,6 +172,7 @@ export default class ApolloClient {
     addTypename?: boolean,
     queryTransformer?: any,
     customResolvers?: CustomResolverMap,
+    connectToDevTools?: boolean,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -226,6 +229,20 @@ export default class ApolloClient {
     this.mutate = this.mutate.bind(this);
     this.setStore = this.setStore.bind(this);
     this.resetStore = this.resetStore.bind(this);
+
+    // Attach the client instance to window to let us be found by chrome devtools, but only in
+    // development mode
+    const defaultConnectToDevTools =
+      typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development' &&
+      typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__);
+
+    if (typeof connectToDevTools === 'undefined') {
+      connectToDevTools = defaultConnectToDevTools;
+    }
+
+    if (connectToDevTools) {
+      (window as any).__APOLLO_CLIENT__ = this;
+    }
   }
 
   /**
@@ -427,6 +444,10 @@ export default class ApolloClient {
     return createApolloReducer(this.reducerConfig);
   }
 
+  public __actionHookForDevTools(cb: Function) {
+    this.devToolsHookCb = cb;
+  }
+
   public middleware = () => {
     return (store: ApolloStore) => {
       this.setStore(store);
@@ -434,6 +455,15 @@ export default class ApolloClient {
       return (next: any) => (action: any) => {
         const returnValue = next(action);
         this.queryManager.broadcastNewStore(store.getState());
+
+        if (this.devToolsHookCb) {
+          this.devToolsHookCb({
+            action,
+            state: this.queryManager.getApolloState(),
+            dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
+          });
+        }
+
         return returnValue;
       };
     };
@@ -462,6 +492,19 @@ export default class ApolloClient {
       reduxRootKey: DEFAULT_REDUX_ROOT_KEY,
       initialState: this.initialState,
       config: this.reducerConfig,
+      logger: (store: any) => (next: any) => (action: any) => {
+        const result = next(action);
+
+        if (this.devToolsHookCb) {
+          this.devToolsHookCb({
+            action,
+            state: this.queryManager.getApolloState(),
+            dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
+          });
+        }
+
+        return result;
+      },
     }));
     // for backcompatibility, ensure that reduxRootKey is set to selector return value
     this.reduxRootKey = DEFAULT_REDUX_ROOT_KEY;

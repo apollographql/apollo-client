@@ -176,7 +176,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
     return this.applyMiddlewares({
       request,
       options,
-    }).then(this.fetchFromRemoteEndpoint.bind(this))
+    }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
       .then(response => this.applyAfterwares({
         response: response as IResponse,
         options,

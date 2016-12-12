@@ -2465,6 +2465,43 @@ describe('QueryManager', () => {
     ]);
   });
 
+  it('should store metadata with watched queries', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data },
+      }
+    );
+
+    const observable = queryManager.watchQuery({
+      query,
+      metadata: { foo: 'bar' },
+    });
+    return observableToPromise({ observable },
+      (result) => {
+        assert.deepEqual(result.data, data);
+        assert.deepEqual(
+          queryManager.getApolloState().queries[observable.queryId].metadata,
+          { foo: 'bar' }
+        );
+      }
+    );
+  });
+
   it('should error when we orphan a real-id node in the store with a real-id node', () => {
     const query1 = gql`
       query {
@@ -3157,7 +3194,11 @@ describe('QueryManager', () => {
       error: () => { /* nothing */ },
     });
 
-    handle.refetch().catch((error) => {
+    handle.refetch()
+    .then(() => {
+      done(new Error('Error on refetch should reject promise'));
+    })
+    .catch((error) => {
       assert.deepEqual(error.graphQLErrors, [
         {
           name: 'PeopleError',

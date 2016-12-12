@@ -3,6 +3,7 @@ import {
   compose as reduxCompose,
   applyMiddleware,
   combineReducers,
+  Middleware,
 } from 'redux';
 
 import {
@@ -121,28 +122,36 @@ export function createApolloStore({
   reduxRootKey = 'apollo',
   initialState,
   config = {},
-  reportCrashes,
+  reportCrashes = true,
+  logger,
 }: {
   reduxRootKey?: string,
   initialState?: any,
   config?: ApolloReducerConfig,
   reportCrashes?: boolean,
+  logger?: Middleware,
 } = {}): ApolloStore {
   const enhancers: any[] = [];
+  const middlewares: Middleware[] = [];
 
-  if (reportCrashes === undefined) {
-    reportCrashes = true;
+  if (reportCrashes) {
+    middlewares.push(crashReporter);
   }
 
+  if (logger) {
+    middlewares.push(logger);
+  }
+
+  if (middlewares.length > 0) {
+    enhancers.push(applyMiddleware(...middlewares));
+  }
+
+  // Dev tools enhancer should be last
   if (typeof window !== 'undefined') {
     const anyWindow = window as any;
     if (anyWindow.devToolsExtension) {
       enhancers.push(anyWindow.devToolsExtension());
     }
-  }
-
-  if (reportCrashes) {
-    enhancers.push(applyMiddleware(crashReporter));
   }
 
   // XXX to avoid type fail

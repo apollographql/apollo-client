@@ -6,6 +6,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.19
+- Make sure stopped queries are not refetched on store reset [PR #960](https://github.com/apollostack/apollo-client/pull/960)
+
 ### 0.5.18
 - Make sure `APOLLO_QUERY_RESULT_CLIENT` action has a `requestId`, just like `APOLLO_QUERY_RESULT` does, so that it can be associated with the relevant `APOLLO_QUERY_INIT` action.
 

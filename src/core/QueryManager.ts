@@ -648,7 +648,11 @@ export class QueryManager {
     // the promise for it will be rejected and its results will not be written to the
     // store.
     Object.keys(this.observableQueries).forEach((queryId) => {
-      if (! this.observableQueries[queryId].observableQuery.options.noFetch) {
+      const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
+
+      if (! this.observableQueries[queryId].observableQuery.options.noFetch &&
+        ! (storeQuery && storeQuery.stopped)
+      ) {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });

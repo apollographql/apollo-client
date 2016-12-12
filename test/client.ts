@@ -10,6 +10,10 @@ import ApolloClient, {
   enableFragmentWarnings,
 } from '../src';
 
+import {
+  disableFragmentWarnings as graphqlTagDisableFragmentWarnings,
+} from 'graphql-tag';
+
 import { fragmentDefinitionsMap } from '../src/fragments';
 
 import {
@@ -76,15 +80,16 @@ import { withWarning } from './util/wrap';
 
 import observableToPromise from './util/observableToPromise';
 
-import cloneDeep = require('lodash.clonedeep');
+import cloneDeep = require('lodash/cloneDeep');
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
+graphqlTagDisableFragmentWarnings();
 
 describe('client', () => {
   it('does not require any arguments and creates store lazily', () => {
@@ -172,6 +177,7 @@ describe('client', () => {
           mutations: {},
           data: {},
           optimistic: [],
+          reducerError: null,
         },
       }
     );
@@ -493,6 +499,7 @@ describe('client', () => {
         },
       },
       mutations: {},
+      reducerError: null,
     }) };
 
     const client = new ApolloClient({
@@ -590,6 +597,101 @@ describe('client', () => {
       .catch((error: ApolloError) => {
         assert.deepEqual(error.graphQLErrors, errors);
       });
+  });
+
+it('should not let errors in observer.next reach the store', (done) => {
+
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+   const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const handle = client.watchQuery({ query });
+
+    const consoleDotError = console.error;
+    console.error = (err: string) => {
+      console.error = consoleDotError;
+      if (err.match(/Error in observer.next/)) {
+        done();
+      } else {
+        done(new Error('Expected error in observer.next to be caught'));
+      }
+    };
+
+    handle.subscribe({
+      next(result) {
+        throw new Error('this error should not reach the store');
+      },
+    });
+  });
+
+  it('should not let errors in observer.error reach the store', (done) => {
+
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const handle = client.watchQuery({ query });
+
+    const consoleDotError = console.error;
+    console.error = (err: string) => {
+      console.error = consoleDotError;
+      if (err.match(/Error in observer.error/)) {
+        done();
+      } else {
+        done(new Error('Expected error in observer.error to be caught'));
+      }
+    };
+
+    handle.subscribe({
+      next() {
+        done(new Error('did not expect next to be called'));
+      },
+      error(err) {
+        throw new Error('this error should not reach the store');
+      },
+    });
   });
 
   it('should allow for subscribing to a request', (done) => {
@@ -1256,7 +1358,9 @@ describe('client', () => {
       // hacky solution that allows us to test whether the warning is printed
       const oldWarn = console.warn;
       console.warn = (str: string) => {
-        assert.include(str, 'Warning: fragment with name');
+        if (!str.match(/deprecated/)) {
+          assert.include(str, 'Warning: fragment with name');
+        }
       };
 
       createFragment(fragmentDoc);
@@ -1520,7 +1624,9 @@ describe('client', () => {
     it('should not print a warning if we call disableFragmentWarnings', (done) => {
       const oldWarn = console.warn;
       console.warn = (str: string) => {
-        done(new Error('Returned a warning despite calling disableFragmentWarnings'));
+        if (!str.match(/deprecated/)) {
+          done(new Error('Returned a warning despite calling disableFragmentWarnings'));
+        }
       };
       disableFragmentWarnings();
       createFragment(gql`

@@ -42,7 +42,7 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 
 import * as Rx from 'rxjs';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 import mockNetworkInterface, {
   ParsedRequest,
@@ -2019,6 +2019,7 @@ describe('QueryManager', () => {
         mutations: {},
         queries: {},
         optimistic: [],
+        reducerError: null,
       };
 
       assert.deepEqual(currentState, expectedState);

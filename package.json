@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.5.6",
+  "version": "0.5.12",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
@@ -37,33 +37,14 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "graphql-anywhere": "^0.3.0",
-    "graphql-tag": "^0.1.17",
-    "lodash.assign": "^4.0.8",
-    "lodash.clonedeep": "^4.3.2",
-    "lodash.countby": "^4.4.0",
-    "lodash.flatten": "^4.2.0",
-    "lodash.forown": "^4.1.0",
-    "lodash.has": "^4.3.1",
-    "lodash.identity": "^3.0.0",
-    "lodash.includes": "^4.1.2",
-    "lodash.isboolean": "^3.0.3",
-    "lodash.isequal": "^4.2.0",
-    "lodash.isnull": "^3.0.0",
-    "lodash.isnumber": "^3.0.3",
-    "lodash.isobject": "^3.0.2",
-    "lodash.isstring": "^4.0.1",
-    "lodash.isundefined": "^3.0.1",
-    "lodash.mapvalues": "^4.4.0",
-    "lodash.merge": "^4.6.0",
-    "lodash.pick": "^4.2.0",
-    "lodash.uniq": "^4.5.0",
+    "graphql-anywhere": "^1.0.0",
+    "graphql-tag": "^1.1.1",
+    "lodash": "^4.17.2",
     "redux": "^3.3.1",
     "symbol-observable": "^1.0.2",
     "whatwg-fetch": "^2.0.0"
   },
   "devDependencies": {
-    "@types/chai": "^3.4.32",
     "@types/chai-as-promised": "0.0.28",
     "@types/mocha": "^2.2.31",
     "browserify": "^13.0.0",
@@ -87,17 +68,18 @@
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "tslint": "3.15.1",
-    "typed-graphql": "1.0.2",
     "typescript": "2.0.10",
     "uglify-js": "^2.6.2"
   },
   "optionalDependencies": {
     "@types/async": "^2.0.31",
+    "@types/chai": "^3.4.32",
     "@types/isomorphic-fetch": "0.0.30",
     "@types/lodash": "^4.14.34",
     "@types/node": "^6.0.38",
     "@types/promises-a-plus": "0.0.26",
     "@types/redux": "^3.5.29",
-    "@types/sinon": "^1.16.29"
+    "@types/sinon": "^1.16.29",
+    "typed-graphql": "1.0.2"
   }
 }

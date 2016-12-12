@@ -13,9 +13,9 @@ import {
 
 } from 'graphql';
 
-import isUndefined = require('lodash.isundefined');
-import assign = require('lodash.assign');
-import isString = require('lodash.isstring');
+import isUndefined = require('lodash/isUndefined');
+import assign = require('lodash/assign');
+import isString = require('lodash/isString');
 
 import {
   createApolloStore,
@@ -81,6 +81,12 @@ const DEFAULT_REDUX_ROOT_KEY = 'apollo';
 function defaultReduxRootSelector(state: any) {
   return state[DEFAULT_REDUX_ROOT_KEY];
 }
+
+// deprecation warning flags
+let haveWarnedQuery = false;
+let haveWarnedWatchQuery = false;
+let haveWarnedMutation = false;
+let haveWarnedSubscription = false;
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -249,15 +255,28 @@ export default class ApolloClient {
       }) as DeprecatedWatchQueryOptions;
     }
 
+    if (options.fragments && !haveWarnedWatchQuery && process.env.NODE_ENV !== 'production') {
+      console.warn(
+            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
+            'please refer to the documentation for how to define fragments: ' +
+            'http://dev.apollodata.com/react/fragments.html.'
+      );
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'test') {
+        // When running tests, we want to print the warning every time
+        haveWarnedWatchQuery = true;
+      }
+    }
+
     // Register each of the fragments present in the query document. The point
     // is to prevent fragment name collisions with fragments that are in the query
     // document itself.
-    createFragment(options.query);
+    createFragment(options.query, undefined, true);
 
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       query: fullDocument,
     });
     delete realOptions.fragments;
@@ -286,15 +305,28 @@ export default class ApolloClient {
       }) as DeprecatedWatchQueryOptions;
     }
 
+    if (options.fragments && !haveWarnedQuery && process.env.NODE_ENV !== 'production') {
+      console.warn(
+            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
+            'please refer to the documentation for how to define fragments: ' +
+            'http://dev.apollodata.com/react/fragments.html.'
+      );
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'test') {
+        // When running tests, we want to print the warning every time
+        haveWarnedQuery = true;
+      }
+    }
+
     // Register each of the fragments present in the query document. The point
     // is to prevent fragment name collisions with fragments that are in the query
     // document itself.
-    createFragment(options.query);
+    createFragment(options.query, undefined, true);
 
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       query: fullDocument,
     });
     delete realOptions.fragments;
@@ -336,10 +368,23 @@ export default class ApolloClient {
   public mutate(options: MutationOptions): Promise<ApolloQueryResult> {
     this.initStore();
 
+    if (options.fragments && !haveWarnedMutation && process.env.NODE_ENV !== 'production') {
+      console.warn(
+            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
+            'please refer to the documentation for how to define fragments: ' +
+            'http://dev.apollodata.com/react/fragments.html.'
+      );
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'test') {
+        // When running tests, we want to print the warning every time
+        haveWarnedMutation = true;
+      }
+    }
+
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.mutation, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       mutation: fullDocument,
     });
     delete realOptions.fragments;
@@ -350,10 +395,23 @@ export default class ApolloClient {
   public subscribe(options: DeprecatedSubscriptionOptions): Observable<any> {
     this.initStore();
 
+    if (options.fragments && !haveWarnedSubscription && process.env.NODE_ENV !== 'production') {
+      console.warn(
+            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
+            'please refer to the documentation for how to define fragments: ' +
+            'http://dev.apollodata.com/react/fragments.html.'
+      );
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'test') {
+        // When running tests, we want to print the warning every time
+        haveWarnedSubscription = true;
+      }
+    }
+
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = Object.assign({}, options, {
+    const realOptions = assign({}, options, {
       document: fullDocument,
     });
     delete realOptions.fragments;

@@ -159,6 +159,7 @@ describe('createApolloStore', () => {
           'returnPartialData': false,
           'stopped': false,
           'variables': {},
+          'metadata': null,
         },
       },
       mutations: {},
@@ -183,6 +184,7 @@ describe('createApolloStore', () => {
       storePreviousVariables: false,
       isPoll: false,
       isRefetch: false,
+      metadata: null,
     });
 
     store.dispatch({

@@ -86,6 +86,7 @@ import {
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import {
+  isApolloError,
   ApolloError,
 } from '../errors/ApolloError';
 
@@ -477,6 +478,7 @@ export class QueryManager {
       forceFetch = false,
       returnPartialData = false,
       noFetch = false,
+      metadata = null,
     } = options;
 
     const {
@@ -524,6 +526,7 @@ export class QueryManager {
       storePreviousVariables: shouldFetch,
       isPoll: fetchType === FetchType.poll,
       isRefetch: fetchType === FetchType.refetch,
+      metadata,
     });
 
     // If there is no part of the query we need to fetch from the server (or,
@@ -536,6 +539,7 @@ export class QueryManager {
         document: queryDoc,
         complete: !shouldFetch,
         queryId,
+        requestId,
       });
     }
 
@@ -996,7 +1000,7 @@ export class QueryManager {
         }).catch((error: Error) => {
           // This is for the benefit of `refetch` promises, which currently don't get their errors
           // through the store like watchQuery observers do
-          if (error instanceof ApolloError) {
+          if (isApolloError(error)) {
             reject(error);
           } else {
             this.store.dispatch({

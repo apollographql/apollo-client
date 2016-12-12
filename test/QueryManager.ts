@@ -3194,7 +3194,11 @@ describe('QueryManager', () => {
       error: () => { /* nothing */ },
     });
 
-    handle.refetch().catch((error) => {
+    handle.refetch()
+    .then(() => {
+      done(new Error('Error on refetch should reject promise'));
+    })
+    .catch((error) => {
       assert.deepEqual(error.graphQLErrors, [
         {
           name: 'PeopleError',

@@ -2105,7 +2105,7 @@ describe('QueryManager', () => {
           assert.equal(timesFired, 1);
 
           done();
-        }, 400);
+        }, 50);
       });
     });
 

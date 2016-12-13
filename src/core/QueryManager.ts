@@ -108,7 +108,7 @@ export type ApolloQueryResult = {
 
   // This type is different from the GraphQLResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.
-}
+};
 
 // A result transformer is given the data that is to be returned from the store from a query or
 // mutation, and can modify or observe it before the value is provided to your application.
@@ -342,7 +342,7 @@ export class QueryManager {
   public queryListenerForObserver(
     queryId: string,
     options: WatchQueryOptions,
-    observer: Observer<ApolloQueryResult>
+    observer: Observer<ApolloQueryResult>,
   ): QueryListener {
     let lastResult: ApolloQueryResult;
     return (queryStoreValue: QueryStoreValue) => {
@@ -382,7 +382,7 @@ export class QueryManager {
               /* tslint:disable-next-line */
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +
-                'for the query ' + options.query.loc.source
+                'for the query ' + options.query.loc.source,
               );
             }
           }
@@ -670,7 +670,7 @@ export class QueryManager {
   }
 
   public startGraphQLSubscription(
-    options: SubscriptionOptions
+    options: SubscriptionOptions,
   ): Observable<any> {
     const {
       document,
@@ -840,7 +840,7 @@ export class QueryManager {
   private collectResultBehaviorsFromUpdateQueries(
     updateQueries: MutationQueryReducersMap,
     mutationResult: Object,
-    isOptimistic = false
+    isOptimistic = false,
   ): MutationBehavior[] {
     if (!updateQueries) {
       return [];

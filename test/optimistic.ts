@@ -112,7 +112,7 @@ describe('optimistic mutation results', () => {
     dataId: string,
     field: string,
     value: any,
-  }
+  };
 
   // This is an example of a basic mutation reducer that just sets a field in the store
   function customMutationReducer(state: NormalizedCache, {

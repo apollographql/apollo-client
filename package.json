@@ -54,7 +54,7 @@
     "es6-promise": "^4.0.4",
     "fetch-mock": "^5.5.0",
     "grunt": "1.0.1",
-    "grunt-tslint": "3.3.0",
+    "grunt-tslint": "4.0.0",
     "gzip-size": "^3.0.0",
     "isomorphic-fetch": "^2.2.1",
     "istanbul": "^0.4.5",
@@ -67,7 +67,7 @@
     "rxjs": "^5.0.0-beta.11",
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
-    "tslint": "3.15.1",
+    "tslint": "4.0.2",
     "typescript": "2.1.4",
     "uglify-js": "^2.6.2"
   },

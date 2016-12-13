@@ -78,7 +78,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
             type ResponseAndOptions = {
               response: IResponse;
               options: RequestInit;
-            }
+            };
 
             const afterwaresPromises: ResponseAndOptions[] = responses.map((response: IResponse, index: number) => {
               return this.applyAfterwares({
@@ -104,7 +104,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
   }
 
   private batchedFetchFromRemoteEndpoint(
-    requestsAndOptions: RequestAndOptions[]
+    requestsAndOptions: RequestAndOptions[],
   ): Promise<IResponse> {
     const options: RequestInit = {};
 

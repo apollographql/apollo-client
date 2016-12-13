@@ -106,7 +106,7 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
         state.optimistic,
         action,
         newState,
-        config
+        config,
       );
 
       return newState;
@@ -180,7 +180,7 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   mutationBehaviorReducers?: MutationBehaviorReducerMap;
   customResolvers?: CustomResolverMap;
-}
+};
 
 export function getDataWithOptimisticResults(store: Store): NormalizedCache {
   if (store.optimistic.length === 0) {

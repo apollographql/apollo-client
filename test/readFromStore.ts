@@ -1,6 +1,6 @@
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import { assert } from 'chai';
-import ApolloClient, { toIdValue } from '../src';
+import ApolloClient from '../src';
 import assign = require('lodash/assign');
 import omit = require('lodash/omit');
 

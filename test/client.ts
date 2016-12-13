@@ -136,7 +136,7 @@ describe('client', () => {
         todos: todosReducer,
         apollo: client.reducer()as any,
       }),
-      applyMiddleware(client.middleware())
+      applyMiddleware(client.middleware()),
     );
 
     assert.deepEqual(client.store.getState(), store.getState());
@@ -150,7 +150,7 @@ describe('client', () => {
         combineReducers({
           todos: todosReducer,
         }),
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
       );
 
       assert.fail();
@@ -158,7 +158,7 @@ describe('client', () => {
       assert.equal(
         error.message,
         'Existing store does not use apolloReducer. Please make sure the store ' +
-        'is properly configured and "reduxRootSelector" is correctly specified.'
+        'is properly configured and "reduxRootSelector" is correctly specified.',
       );
     }
 
@@ -179,7 +179,7 @@ describe('client', () => {
           optimistic: [],
           reducerError: null,
         },
-      }
+      },
     );
   });
 
@@ -207,7 +207,7 @@ describe('client', () => {
         // here "client.setStore(store)" will be called internally,
         // this method throws if "reduxRootSelector" or "reduxRootKey"
         // are not configured properly
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
     );
 
     assert.equal(client.reduxRootKey, 'apollo');
@@ -228,7 +228,7 @@ describe('client', () => {
           // here "client.setStore(store)" will be called internally,
           // this method throws if "reduxRootSelector" or "reduxRootKey"
           // are not configured properly
-          applyMiddleware(client.middleware())
+          applyMiddleware(client.middleware()),
       );
 
       // Check if the key is added to the client instance, like before
@@ -250,7 +250,7 @@ describe('client', () => {
         // here "client.setStore(store)" will be called internally,
         // this method throws if "reduxRootSelector" or "reduxRootKey"
         // are not configured properly
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
     );
   });
 
@@ -268,7 +268,7 @@ describe('client', () => {
         // here "client.setStore(store)" will be called internally,
         // this method throws if "reduxRootSelector" or "reduxRootKey"
         // are not configured properly
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
     );
 
     // Check if the key is added to the client instance, like before
@@ -287,7 +287,7 @@ describe('client', () => {
     } catch (error) {
       assert.equal(
           error.message,
-          'Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.'
+          'Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.',
       );
     }
 
@@ -310,7 +310,7 @@ describe('client', () => {
           'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
           'They should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`
+          `Please remove that option from ApolloClient constructor.`,
       );
     }
   });
@@ -330,7 +330,7 @@ describe('client', () => {
           'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
           'They should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`
+          `Please remove that option from ApolloClient constructor.`,
       );
     }
   });
@@ -421,7 +421,7 @@ describe('client', () => {
         todos: todosReducer,
         apollo: client.reducer() as any, // XXX see why this type fails
       }),
-      applyMiddleware(client.middleware())
+      applyMiddleware(client.middleware()),
     );
 
     return client.query({ query })
@@ -557,7 +557,7 @@ describe('client', () => {
         todos: todosReducer,
         [reduxRootKey]: client.reducer()as any,
       }),
-      applyMiddleware(client.middleware())
+      applyMiddleware(client.middleware()),
     );
 
     return client.query({ query })
@@ -1075,7 +1075,7 @@ it('should not let errors in observer.next reach the store', (done) => {
             {
               id: '1',
               name: 'Luke Skywalker',
-            }
+            },
           );
         });
     });
@@ -1096,7 +1096,7 @@ it('should not let errors in observer.next reach the store', (done) => {
         combineReducers({
           apollo: client.reducer()as any,
         }),
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
       );
 
 
@@ -1107,7 +1107,7 @@ it('should not let errors in observer.next reach the store', (done) => {
             {
               id: '1',
               name: 'Luke Skywalker',
-            }
+            },
           );
         });
     });
@@ -2051,7 +2051,7 @@ function clientRoundrip(
   query: Document,
   data: GraphQLResult,
   variables?: any,
-  fragments?: FragmentDefinition[]
+  fragments?: FragmentDefinition[],
 ) {
   const networkInterface = mockNetworkInterface({
     request: { query: cloneDeep(query) },

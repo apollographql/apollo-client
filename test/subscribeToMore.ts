@@ -30,7 +30,7 @@ describe('subscribeToMore', () => {
   const req1 = { request: { query }, result };
 
   const results = ['Dahivat Pandya', 'Amanda Liu'].map(
-    name => ({ result: { name: name }, delay: 10 })
+    name => ({ result: { name: name }, delay: 10 }),
   );
 
   const sub1 = {
@@ -115,7 +115,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 3);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 }
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
       );
       done();
     }, 50);
@@ -165,7 +165,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 2);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 }
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
       );
       assert.equal(errorCount, 1);
       done();
@@ -216,7 +216,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 2);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 }
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
       );
       assert.equal(errorCount, 1);
       console.error = consoleErr;

@@ -185,7 +185,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
-            `Server response was missing for query '${request.debugName}'.`
+            `Server response was missing for query '${request.debugName}'.`,
           );
         } else {
           return payload as GraphQLResult;

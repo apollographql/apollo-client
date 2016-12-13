@@ -29,7 +29,7 @@ import {
 export type DiffResult = {
   result?: any;
   isMissing?: boolean;
-}
+};
 
 export type ReadQueryOptions = {
   store: NormalizedCache,
@@ -37,14 +37,14 @@ export type ReadQueryOptions = {
   variables?: Object,
   returnPartialData?: boolean,
   config?: ApolloReducerConfig,
-}
+};
 
 export type CustomResolver = (rootValue: any, args: { [argName: string]: any }) => any;
 
 export type CustomResolverMap = {
   [typeName: string]: {
-    [fieldName: string]: CustomResolver
-  }
+    [fieldName: string]: CustomResolver,
+  },
 };
 
 /**
@@ -85,14 +85,14 @@ type ReadStoreContext = {
   returnPartialData: boolean;
   hasMissingField: boolean;
   customResolvers: CustomResolverMap;
-}
+};
 
 let haveWarned = false;
 
 const fragmentMatcher: FragmentMatcher = (
   idValue: IdValue,
   typeCondition: string,
-  context: ReadStoreContext
+  context: ReadStoreContext,
 ): boolean => {
   assertIdValue(idValue);
 
@@ -136,7 +136,7 @@ const readStoreResolver: Resolver = (
   fieldName: string,
   idValue: IdValue,
   args: any,
-  context: ReadStoreContext
+  context: ReadStoreContext,
 ) => {
   assertIdValue(idValue);
 

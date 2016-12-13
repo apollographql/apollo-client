@@ -23,7 +23,7 @@ describe('createApolloStore', () => {
         data: {},
         optimistic: [],
         reducerError: null,
-      }
+      },
     );
   });
 
@@ -40,7 +40,7 @@ describe('createApolloStore', () => {
         data: {},
         optimistic: [],
         reducerError: null,
-      }
+      },
     );
   });
 

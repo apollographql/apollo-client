@@ -2064,6 +2064,51 @@ describe('QueryManager', () => {
       });
     });
 
+    it('should not refetch toredown queries', (done) => {
+      let queryManager: QueryManager = null;
+      let observable: ObservableQuery = null;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          timesFired += 1;
+          return Promise.resolve({ data });
+        },
+      };
+      queryManager = createQueryManager({ networkInterface });
+      observable = queryManager.watchQuery({ query });
+
+
+      observableToPromise({ observable, wait: 0 },
+        (result) => assert.deepEqual(result.data, data)
+      ).then(() => {
+        assert.equal(timesFired, 1);
+
+        // at this point the observable query has been toredown
+        // because observableToPromise unsubscribe before resolving
+        queryManager.resetStore();
+
+        setTimeout(() => {
+          assert.equal(timesFired, 1);
+
+          done();
+        }, 50);
+      });
+    });
+
     it('should not error on queries that are already in the store', () => {
       let queryManager: QueryManager = null;
       const query = gql`

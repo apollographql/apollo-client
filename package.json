@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.5.18",
+  "version": "0.5.19",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
@@ -62,7 +62,7 @@
     "minimist": "^1.2.0",
     "mocha": "^3.0.0",
     "pretty-bytes": "^4.0.0",
-    "remap-istanbul": "^0.5.1",
+    "remap-istanbul": "^0.8.0",
     "request": "^2.75.0",
     "rxjs": "^5.0.0-beta.11",
     "sinon": "^1.17.4",

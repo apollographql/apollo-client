@@ -6,6 +6,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.20
+
+- Attach to `window` for devtools if not in production, so that improperly configured environments do get the dev tools. [PR #1037](https://github.com/apollostack/apollo-client/pull/1037)
+
 ### 0.5.19
 - Make sure stopped queries are not refetched on store reset [PR #960](https://github.com/apollostack/apollo-client/pull/960)
 

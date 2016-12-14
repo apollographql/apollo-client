@@ -233,7 +233,7 @@ export default class ApolloClient {
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
     const defaultConnectToDevTools =
-      typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development' &&
+      typeof process === 'undefined' || (process.env && process.env.NODE_ENV !== 'production') &&
       typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__);
 
     if (typeof connectToDevTools === 'undefined') {

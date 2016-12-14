@@ -67,7 +67,7 @@ You would get a prop like:
 ```js
 data: {
   user: { name: "James" },
-  likes: { count: 10 } },
+  likes: { count: 10 },
   loading: false,
   error: null,
   refetch() { ... },

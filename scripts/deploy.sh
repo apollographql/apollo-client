@@ -19,7 +19,7 @@ node -e "var package = require('./package.json'); \
   delete package.babel; delete package.scripts; delete package.options; \
   package.main = 'index.js'; \
   var fs = require('fs'); \
-  fs.writeFileSync('./npm/version.js', 'module.exports = { version: \"' + package.version + '\" }'); \
+  fs.writeFileSync('./npm/version.js', 'exports.version = \"' + package.version + '\"); \
   fs.writeFileSync('./npm/package.json', JSON.stringify(package, null, 2));"
 
 cp README.md npm/

@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- ...
+- Added a new analyze script to the package.json that makes it possible to inspect what modules make it into the published package and how efficiently it bundles in a webpack v2 project. [PR #1044](https://github.com/apollostack/apollo-client/pull/1044)
 
 ### 0.5.21
 

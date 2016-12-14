@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- ...
+- Switch to `@types/graphql` instead of `typed-graphql` for typings. [PR 1041](https://github.com/apollostack/apollo-client/pull/1041) [PR #934](https://github.com/apollostack/apollo-client/issues/934)
 
 ### 0.5.21
 

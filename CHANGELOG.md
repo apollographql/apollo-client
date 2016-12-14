@@ -6,6 +6,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.21
+
+- Include a `version` field on every `ApolloClient` instance that represents the version of the 'apollo-client' package used to create it. [PR #1038](https://github.com/apollostack/apollo-client/pull/1038)
+
 ### 0.5.20
 
 - Attach to `window` for devtools if not in production, so that improperly configured environments do get the dev tools. [PR #1037](https://github.com/apollostack/apollo-client/pull/1037)

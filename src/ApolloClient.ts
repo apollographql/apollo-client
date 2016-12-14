@@ -68,6 +68,10 @@ import {
   addFragmentsToDocument,
 } from './queries/getFromAST';
 
+import {
+  version,
+} from './version';
+
 /**
  * This type defines a "selector" function that receives state from the Redux store
  * and returns the part of it that is managed by ApolloClient
@@ -108,6 +112,8 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+  public version: string;
+
   private devToolsHookCb: Function;
 
   /**
@@ -243,6 +249,8 @@ export default class ApolloClient {
     if (connectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
     }
+
+    this.version = version;
   }
 
   /**

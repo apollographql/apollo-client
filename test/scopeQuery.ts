@@ -12,7 +12,7 @@ import {
 import gql from 'graphql-tag';
 
 import {
-  Document,
+  DocumentNode,
 } from 'graphql';
 
 import {
@@ -275,7 +275,7 @@ function extractMainSelectionSet(doc: any) {
   return mainDefinition.selectionSet;
 }
 
-function scope(doc: Document, path: (string | number)[]) {
+function scope(doc: DocumentNode, path: (string | number)[]) {
   const fragmentMap = createFragmentMap(getFragmentDefinitions(doc));
 
   const selectionSet = extractMainSelectionSet(doc);

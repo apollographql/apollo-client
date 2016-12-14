@@ -4,8 +4,8 @@ import mapValues = require('lodash/mapValues');
 import 'whatwg-fetch';
 
 import {
-  GraphQLResult,
-  Document,
+  ExecutionResult,
+  DocumentNode,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -27,7 +27,7 @@ import { AfterwareInterface } from './afterware';
  */
 export interface Request {
   debugName?: string;
-  query?: Document;
+  query?: DocumentNode;
   variables?: Object;
   operationName?: string;
   [additionalKey: string]: any;
@@ -44,11 +44,11 @@ export interface PrintedRequest {
 
 export interface NetworkInterface {
   [others: string]: any;
-  query(request: Request): Promise<GraphQLResult>;
+  query(request: Request): Promise<ExecutionResult>;
 }
 
 export interface BatchedNetworkInterface extends NetworkInterface {
-  batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
+  batchQuery(requests: Request[]): Promise<ExecutionResult[]>;
 }
 
 // XXX why does this have to extend network interface? does it even have a 'query' function?
@@ -170,7 +170,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
     }));
   };
 
-  public query(request: Request): Promise<GraphQLResult> {
+  public query(request: Request): Promise<ExecutionResult> {
     const options = assign({}, this._opts);
 
     return this.applyMiddlewares({
@@ -182,13 +182,13 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         options,
       }))
       .then(({ response }) => (response as IResponse).json())
-      .then((payload: GraphQLResult) => {
+      .then((payload: ExecutionResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
             `Server response was missing for query '${request.debugName}'.`,
           );
         } else {
-          return payload as GraphQLResult;
+          return payload as ExecutionResult;
         }
       });
   };

@@ -18,11 +18,13 @@ cd ./lib/src && cp -r ./ ../../npm/ && cd ../../
 node -e "var package = require('./package.json'); \
   delete package.babel; delete package.scripts; delete package.options; \
   package.main = 'index.js'; \
-  require('fs').writeFileSync('./npm/package.json', JSON.stringify(package, null, 2));"
+  var fs = require('fs'); \
+  fs.writeFileSync('./npm/version.js', 'module.exports = { version: "' + package.version + '" }'); \
+  fs.writeFileSync('./npm/package.json', JSON.stringify(package, null, 2));"
 
 cp README.md npm/
 cp LICENSE npm/
 cp .npmignore npm/
 
 echo 'deploying to npm...'
-cd npm && npm publish
+cd npm && npm publish --tag test-version

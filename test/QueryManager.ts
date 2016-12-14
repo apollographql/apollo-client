@@ -2083,7 +2083,7 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           timesFired += 1;
           return Promise.resolve({ data });
         },

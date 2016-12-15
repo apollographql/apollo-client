@@ -18,7 +18,6 @@ import {
   Store,
 } from '../store';
 
-import assign = require('lodash/assign');
 import pick = require('lodash/pick');
 
 // a stack of patches of new or changed documents
@@ -46,7 +45,12 @@ export function optimistic(
       extraReducers: action.extraReducers,
     };
 
-    const fakeStore = assign({}, store, { optimistic: previousState }) as Store;
+    const fakeStore = {
+      ...store,
+      ...{
+        optimistic: previousState,
+      },
+    } as Store;
     const optimisticData = getDataWithOptimisticResults(fakeStore);
     const fakeDataResultState = data(
       optimisticData,

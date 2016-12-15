@@ -159,6 +159,10 @@ function Html({ content, state }) {
 }
 ```
 
+<h3 id="local-queries">Avoiding the network for local queries</h3>
+
+If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work. One solution to this problem is the [apollo-local-query](https://github.com/af/apollo-local-query) module, which lets you create a `networkInterface` for apollo that doesn't actually use the network.
+
 <h3 id="skip-for-ssr">Skipping queries for SSR</h3>
 
 If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in it's loading state on the server. For example:

@@ -27,7 +27,6 @@ import { NetworkStatus } from '../queries/store';
 
 import { addFragmentsToDocument } from '../queries/getFromAST';
 
-import assign = require('lodash/assign');
 import isEqual = require('lodash/isEqual');
 
 export type ApolloCurrentResult = {
@@ -149,21 +148,28 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public refetch(variables?: any): Promise<ApolloQueryResult> {
-    this.variables = assign({}, this.variables, variables);
+    this.variables = {
+      ...this.variables,
+      ...variables,
+    };
 
     if (this.options.noFetch) {
       throw new Error('noFetch option should not use query refetch.');
     }
 
     // Update the existing options with new variables
-    assign(this.options, {
-      variables: this.variables,
-    });
+    this.options.variables = {
+      ...this.options.variables,
+      ...this.variables,
+    };
 
     // Override forceFetch for this call only
-    const combinedOptions = assign({}, this.options, {
-      forceFetch: true,
-    });
+    const combinedOptions = {
+      ...this.options,
+      ...{
+        forceFetch: true,
+      },
+    };
 
     return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
       .then(result => this.queryManager.transformResult(result));
@@ -182,20 +188,30 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           combinedOptions = fetchMoreOptions;
         } else {
           // fetch the same query with a possibly new variables
-          const variables = assign({}, this.variables, fetchMoreOptions.variables);
+          const variables = {
+            ...this.variables,
+            ...fetchMoreOptions.variables,
+          };
 
-          combinedOptions = assign({}, this.options, fetchMoreOptions, {
-            variables,
-          });
+          combinedOptions = {
+            ...this.options,
+            ...fetchMoreOptions,
+            ...{
+              variables,
+            },
+          };
         }
 
         // We add the fragments to the document to pass only the document around internally.
         const fullQuery = addFragmentsToDocument(combinedOptions.query, combinedOptions.fragments);
 
-        combinedOptions = assign({}, combinedOptions, {
-          query: fullQuery,
-          forceFetch: true,
-        }) as WatchQueryOptions;
+        combinedOptions = {
+          ...combinedOptions,
+          ...{
+            query: fullQuery,
+            forceFetch: true,
+          },
+        } as WatchQueryOptions;
         return this.queryManager.fetchQuery(qid, combinedOptions);
       })
       .then((fetchMoreResult) => {
@@ -263,7 +279,10 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
   public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult> {
     const oldOptions = this.options;
-    this.options = assign({}, this.options, opts) as WatchQueryOptions;
+    this.options = {
+      ...this.options,
+      ...opts,
+    } as WatchQueryOptions;
 
     if (opts.pollInterval) {
       this.startPolling(opts.pollInterval);
@@ -291,16 +310,22 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
    * the previous values of those variables will be used.
    */
   public setVariables(variables: any): Promise<ApolloQueryResult> {
-    const newVariables = assign({}, this.variables, variables);
+    const newVariables = {
+      ...this.variables,
+      ...variables,
+    };
 
     if (isEqual(newVariables, this.variables)) {
       return this.result();
     } else {
       this.variables = newVariables;
       // Use the same options as before, but with new variables
-      return this.queryManager.fetchQuery(this.queryId, assign(this.options, {
-        variables: this.variables,
-      }) as WatchQueryOptions)
+      return this.queryManager.fetchQuery(this.queryId, {
+        ...this.options,
+        ...{
+          variables: this.variables,
+        },
+      } as WatchQueryOptions)
         .then(result => this.queryManager.transformResult(result));
     }
   }

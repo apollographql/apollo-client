@@ -1,10 +1,14 @@
+import mockNetworkInterface from './mocks/mockNetworkInterface';
 import { assert } from 'chai';
+import ApolloClient from '../src';
 import assign = require('lodash/assign');
 import omit = require('lodash/omit');
 
 import {
   readQueryFromStore,
 } from '../src/data/readFromStore';
+
+import { NetworkStatus } from '../src/queries/store';
 
 import {
   NormalizedCache,
@@ -645,6 +649,55 @@ describe('reading from the store', () => {
       stringField: result['stringField'],
       numberField: result['numberField'],
       computedField: 'This is a string!5bit',
+    });
+  });
+
+  it(`does cache lookups for id arguments`, () => {
+    const dataIdFromObject = (obj: any) => {
+      return obj.id;
+    };
+
+    const listQuery = gql`{ people { id name } }`;
+
+    const listData = {
+      people: [
+        {
+          id: '4',
+          name: 'Luke Skywalker',
+          __typename: 'Person',
+        },
+      ],
+    };
+
+    const netListQuery = gql`{ people { id name __typename } }`;
+
+    const itemQuery = gql`{ person(id: 4) { id name } }`;
+
+    // We don't expect the item query to go to the server at all
+    const networkInterface = mockNetworkInterface({
+      request: { query: netListQuery },
+      result: { data: listData },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      dataIdFromObject,
+    });
+
+    return client.query({ query: listQuery }).then(() => {
+      return client.query({ query: itemQuery });
+    }).then((itemResult) => {
+      assert.deepEqual(itemResult, {
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          person: {
+            __typename: 'Person',
+            id: '4',
+            name: 'Luke Skywalker',
+          },
+        },
+      });
     });
   });
 });

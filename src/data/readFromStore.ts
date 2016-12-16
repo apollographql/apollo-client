@@ -11,6 +11,7 @@ import {
   NormalizedCache,
   isJsonValue,
   isIdValue,
+  toIdValue,
   IdValue,
 } from './storeUtils';
 
@@ -158,6 +159,10 @@ const readStoreResolver: Resolver = (
           return resolver(obj, args);
         }
       }
+    }
+
+    if (args && context.store[args.id]) {
+      return toIdValue(args.id);
     }
 
     if (! context.returnPartialData) {

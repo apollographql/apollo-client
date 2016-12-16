@@ -5,6 +5,34 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Ensure transporters are using `isomorphic-fetch` instead of `whatwg-fetch` for universal compatibility [PR #1018](https://github.com/apollostack/apollo-client/pull/1018)
 
+- ...
+
+### 0.5.21
+
+- Include a `version` field on every `ApolloClient` instance that represents the version of the 'apollo-client' package used to create it. [PR #1038](https://github.com/apollostack/apollo-client/pull/1038)
+
+### 0.5.20
+
+- Attach to `window` for devtools if not in production, so that improperly configured environments do get the dev tools. [PR #1037](https://github.com/apollostack/apollo-client/pull/1037)
+
+### 0.5.19
+- Make sure stopped queries are not refetched on store reset [PR #960](https://github.com/apollostack/apollo-client/pull/960)
+
+### 0.5.18
+- Make sure `APOLLO_QUERY_RESULT_CLIENT` action has a `requestId`, just like `APOLLO_QUERY_RESULT` does, so that it can be associated with the relevant `APOLLO_QUERY_INIT` action.
+
+### 0.5.17
+- For devtools hook, report the state _after_ the action, not before. [PR #1023](https://github.com/apollostack/apollo-client/pull/1023)
+
+### 0.5.16
+- Make sure Redux devtools enhancer is added last. [PR #1022](https://github.com/apollostack/apollo-client/pull/1022)
+
+### 0.5.15
+- Make sure devtools hook added in 0.5.14 also works when the store is initialized by Apollo Client. [PR #1021](https://github.com/apollostack/apollo-client/pull/1021)
+
+### 0.5.14
+- Add internal hook for chrome devtools, `__actionHookForDevTools`, to get a log of actions and states. Apollo Client automatically attaches itself to `window.__APOLLO_CLIENT__` when initialized if `process.env.NODE_ENV === 'development'`. This can be forced or disabled by setting the `connectToDevTools` option in the constructor to `true` or `false`. [PR #1017](https://github.com/apollostack/apollo-client/pull/1017)
+
 ### 0.5.13
 - Replace usages of `Object.assign` with lodash's assign function [PR #1009](https://github.com/apollostack/apollo-client/pull/1009)
 - Calls to watchQuery can include metadata, for use with debugging. [PR #1010](https://github.com/apollostack/apollo-client/pull/1010)

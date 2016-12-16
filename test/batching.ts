@@ -77,7 +77,7 @@ describe('QueryBatcher', () => {
       {
         request: { query },
         result: { data },
-      }
+      },
     );
     const batcher = new QueryBatcher({
       batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
@@ -113,7 +113,7 @@ describe('QueryBatcher', () => {
           {
             request: { query },
             result: { data },
-          }
+          },
         );
 
       const myBatcher = new QueryBatcher({
@@ -138,7 +138,7 @@ describe('QueryBatcher', () => {
           {
             request: { query },
             result: { data },
-          }
+          },
         );
       const myBatcher = new QueryBatcher({
         batchFetchFunction: NI.batchQuery.bind(NI),
@@ -193,7 +193,7 @@ describe('QueryBatcher', () => {
       {
         request: { query },
         error,
-      }
+      },
     );
     const batcher = new QueryBatcher({
       batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),

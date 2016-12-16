@@ -95,7 +95,7 @@ export type WriteContext = {
   variables?: any;
   dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
-}
+};
 
 export function writeResultToStore({
   result,

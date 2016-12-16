@@ -86,6 +86,7 @@ import {
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import {
+  isApolloError,
   ApolloError,
 } from '../errors/ApolloError';
 
@@ -107,7 +108,7 @@ export type ApolloQueryResult = {
 
   // This type is different from the GraphQLResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.
-}
+};
 
 // A result transformer is given the data that is to be returned from the store from a query or
 // mutation, and can modify or observe it before the value is provided to your application.
@@ -341,7 +342,7 @@ export class QueryManager {
   public queryListenerForObserver(
     queryId: string,
     options: WatchQueryOptions,
-    observer: Observer<ApolloQueryResult>
+    observer: Observer<ApolloQueryResult>,
   ): QueryListener {
     let lastResult: ApolloQueryResult;
     return (queryStoreValue: QueryStoreValue) => {
@@ -381,7 +382,7 @@ export class QueryManager {
               /* tslint:disable-next-line */
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +
-                'for the query ' + options.query.loc.source
+                'for the query ' + options.query.loc.source,
               );
             }
           }
@@ -538,6 +539,7 @@ export class QueryManager {
         document: queryDoc,
         complete: !shouldFetch,
         queryId,
+        requestId,
       });
     }
 
@@ -646,7 +648,11 @@ export class QueryManager {
     // the promise for it will be rejected and its results will not be written to the
     // store.
     Object.keys(this.observableQueries).forEach((queryId) => {
-      if (! this.observableQueries[queryId].observableQuery.options.noFetch) {
+      const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
+
+      if (! this.observableQueries[queryId].observableQuery.options.noFetch &&
+        ! (storeQuery && storeQuery.stopped)
+      ) {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });
@@ -664,7 +670,7 @@ export class QueryManager {
   }
 
   public startGraphQLSubscription(
-    options: SubscriptionOptions
+    options: SubscriptionOptions,
   ): Observable<any> {
     const {
       document,
@@ -834,7 +840,7 @@ export class QueryManager {
   private collectResultBehaviorsFromUpdateQueries(
     updateQueries: MutationQueryReducersMap,
     mutationResult: Object,
-    isOptimistic = false
+    isOptimistic = false,
   ): MutationBehavior[] {
     if (!updateQueries) {
       return [];
@@ -994,7 +1000,7 @@ export class QueryManager {
         }).catch((error: Error) => {
           // This is for the benefit of `refetch` promises, which currently don't get their errors
           // through the store like watchQuery observers do
-          if (error instanceof ApolloError) {
+          if (isApolloError(error)) {
             reject(error);
           } else {
             this.store.dispatch({

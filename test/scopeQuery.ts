@@ -47,7 +47,7 @@ describe('scoping selection set', () => {
           }
         }
       `,
-      ['a']
+      ['a'],
     );
 
     testScope(
@@ -66,7 +66,7 @@ describe('scoping selection set', () => {
           d
         }
       `,
-      ['a', 'c']
+      ['a', 'c'],
     );
   });
 
@@ -90,7 +90,7 @@ describe('scoping selection set', () => {
           }
         }
       `,
-      ['a']
+      ['a'],
     );
   });
 
@@ -114,7 +114,7 @@ describe('scoping selection set', () => {
           }
         }
       `,
-      ['alias']
+      ['alias'],
     );
   });
 
@@ -140,7 +140,7 @@ describe('scoping selection set', () => {
           }
         }
       `,
-      ['a']
+      ['a'],
     );
   });
 
@@ -168,7 +168,7 @@ describe('scoping selection set', () => {
           }
         }
       `,
-      ['a']
+      ['a'],
     );
   });
 
@@ -183,7 +183,7 @@ describe('scoping selection set', () => {
               }
             }
           `,
-          ['c']
+          ['c'],
         );
       }, /No matching field/);
     });
@@ -201,7 +201,7 @@ describe('scoping selection set', () => {
               }
             }
           `,
-          ['a']
+          ['a'],
         );
       }, /Multiple fields found/);
     });
@@ -226,7 +226,7 @@ describe('scoping selection set', () => {
               }
             }
           `,
-          ['a']
+          ['a'],
         );
       }, /Multiple fields found/);
     });
@@ -248,7 +248,7 @@ describe('scoping selection set', () => {
               }
             }
           `,
-          ['a']
+          ['a'],
         );
       }, /Multiple fields found/);
     });
@@ -290,6 +290,6 @@ function scope(doc: Document, path: (string | number)[]) {
 function testScope(firstDoc: any, secondDoc: any, path: any) {
   assert.equal(
     print(scope(firstDoc, path)).trim(),
-    print(secondDoc).trim()
+    print(secondDoc).trim(),
   );
 }

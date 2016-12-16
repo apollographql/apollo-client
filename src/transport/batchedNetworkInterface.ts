@@ -65,7 +65,8 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
         return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
           .then(result => {
-            return result.json();
+            // XXX can we be stricter with the type here?
+            return result.json() as any;
           })
           .then(responses => {
 
@@ -77,7 +78,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
             type ResponseAndOptions = {
               response: IResponse;
               options: RequestInit;
-            }
+            };
 
             const afterwaresPromises: ResponseAndOptions[] = responses.map((response: IResponse, index: number) => {
               return this.applyAfterwares({
@@ -103,7 +104,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
   }
 
   private batchedFetchFromRemoteEndpoint(
-    requestsAndOptions: RequestAndOptions[]
+    requestsAndOptions: RequestAndOptions[],
   ): Promise<IResponse> {
     const options: RequestInit = {};
 

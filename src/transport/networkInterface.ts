@@ -176,7 +176,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
     return this.applyMiddlewares({
       request,
       options,
-    }).then(this.fetchFromRemoteEndpoint.bind(this))
+    }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
       .then(response => this.applyAfterwares({
         response: response as IResponse,
         options,
@@ -185,7 +185,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
-            `Server response was missing for query '${request.debugName}'.`
+            `Server response was missing for query '${request.debugName}'.`,
           );
         } else {
           return payload as GraphQLResult;

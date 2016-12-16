@@ -48,7 +48,7 @@ export type QueryStoreValue = {
   returnPartialData: boolean;
   lastRequestId: number;
   metadata: any;
-}
+};
 
 export interface SelectionSetWithRoot {
   id: string;
@@ -58,7 +58,7 @@ export interface SelectionSetWithRoot {
 
 export function queries(
   previousState: QueryStore = {},
-  action: ApolloAction
+  action: ApolloAction,
 ): QueryStore {
   if (isQueryInitAction(action)) {
     const newState = assign({}, previousState) as QueryStore;

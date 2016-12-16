@@ -35,7 +35,7 @@ export type ApolloCurrentResult = {
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
-}
+};
 
 export interface FetchMoreOptions {
   updateQuery: (previousQueryResult: Object, options: {
@@ -170,7 +170,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public fetchMore(
-    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions
+    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
   ): Promise<ApolloQueryResult> {
     return Promise.resolve()
       .then(() => {
@@ -236,7 +236,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
             previousResult, {
               subscriptionData: { data },
               variables,
-            }
+            },
           );
         };
         this.updateQuery(mapFn);
@@ -306,7 +306,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public updateQuery(
-    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any
+    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any,
   ): void {
     const {
       previousResult,
@@ -420,7 +420,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.queryManager.startQuery(
       this.queryId,
       this.options,
-      this.queryManager.queryListenerForObserver(this.queryId, this.options, observer)
+      this.queryManager.queryListenerForObserver(this.queryId, this.options, observer),
     );
   }
 

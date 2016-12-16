@@ -24,7 +24,7 @@ const TYPENAME_FIELD: Field = {
 
 function addTypenameToSelectionSet(
   selectionSet: SelectionSet,
-  isRoot = false
+  isRoot = false,
 ) {
   if (selectionSet && selectionSet.selections) {
     if (! isRoot) {

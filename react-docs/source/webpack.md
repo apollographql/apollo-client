@@ -42,3 +42,8 @@ Profile.propTypes = { ... };
 
 export default graphql(currentUserQuery)(Profile)
 ```
+
+### Jest
+
+[Jest](https://facebook.github.io/jest/) can't use the Webpack loaders. To make the same transformation work in Jest, use [jest-transform-graphql](https://github.com/remind101/jest-transform-graphql).
+

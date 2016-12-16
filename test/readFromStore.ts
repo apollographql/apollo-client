@@ -652,9 +652,13 @@ describe('reading from the store', () => {
     });
   });
 
-  it(`does cache lookups for id arguments`, () => {
+  it(`does cache lookups when defaultIdLookup is supplied`, () => {
     const dataIdFromObject = (obj: any) => {
       return obj.id;
+    };
+
+    const defaultIdLookup = (obj: any, args: any): string => {
+      return args.id;
     };
 
     const listQuery = gql`{ people { id name } }`;
@@ -682,6 +686,7 @@ describe('reading from the store', () => {
     const client = new ApolloClient({
       networkInterface,
       dataIdFromObject,
+      defaultIdLookup,
     });
 
     return client.query({ query: listQuery }).then(() => {

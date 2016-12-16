@@ -27,6 +27,7 @@ import {
 
 import {
   CustomResolverMap,
+  CustomResolver,
 } from './data/readFromStore';
 
 import {
@@ -129,6 +130,9 @@ export default class ApolloClient {
    * @param dataIdFromObject A function that returns a object identifier given a particular result
    * object.
    *
+   * @param defaultIdLookup A function used to find objects in the cache by their key.
+   * Should return an object identifer given a particular result object and arguments.
+   *
    * @param queryTransformer A function that takes a {@link SelectionSet} and modifies it in place
    * in some way. The query transformer is then applied to the every GraphQL document before it is
    * sent to the server.
@@ -149,6 +153,7 @@ export default class ApolloClient {
     reduxRootSelector,
     initialState,
     dataIdFromObject,
+    defaultIdLookup,
     resultTransformer,
     resultComparator,
     ssrMode = false,
@@ -164,6 +169,7 @@ export default class ApolloClient {
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
+    defaultIdLookup?: CustomResolver,
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
     ssrMode?: boolean,
@@ -220,6 +226,7 @@ export default class ApolloClient {
 
     this.reducerConfig = {
       dataIdFromObject,
+      defaultIdLookup,
       mutationBehaviorReducers,
       customResolvers,
     };

@@ -86,6 +86,7 @@ type ReadStoreContext = {
   returnPartialData: boolean;
   hasMissingField: boolean;
   customResolvers: CustomResolverMap;
+  defaultIdLookup: CustomResolver;
 }
 
 let haveWarned = false;
@@ -147,22 +148,29 @@ const readStoreResolver: Resolver = (
   const fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
-    if (context.customResolvers && obj && (obj.__typename || objId === 'ROOT_QUERY')) {
+    if (obj && (obj.__typename || objId === 'ROOT_QUERY')) {
       const typename = obj.__typename || 'Query';
 
-      // Look for the type in the custom resolver map
-      const type = context.customResolvers[typename];
-      if (type) {
-        // Look for the field in the custom resolver map
-        const resolver = type[fieldName];
-        if (resolver) {
-          return resolver(obj, args);
+      if (context.customResolvers) {
+
+        // Look for the type in the custom resolver map
+        const type = context.customResolvers[typename];
+        if (type) {
+          // Look for the field in the custom resolver map
+          const resolver = type[fieldName];
+          if (resolver) {
+            return resolver(obj, args);
+          }
         }
       }
-    }
 
-    if (args && context.store[args.id]) {
-      return toIdValue(args.id);
+      if (args && context.defaultIdLookup) {
+        const defaultId = context.defaultIdLookup(obj, args);
+
+        if (defaultId && context.store[defaultId]) {
+          return toIdValue(defaultId);
+        }
+      }
     }
 
     if (! context.returnPartialData) {
@@ -206,7 +214,7 @@ export function diffQueryAgainstStore({
     store,
     returnPartialData,
     customResolvers: config && config.customResolvers,
-
+    defaultIdLookup: config && config.defaultIdLookup,
     // Flag set during execution
     hasMissingField: false,
   };

@@ -43,6 +43,7 @@ import {
 
 import {
   CustomResolverMap,
+  CustomResolver,
 } from './data/readFromStore';
 
 import assign = require('lodash/assign');
@@ -178,6 +179,7 @@ export function createApolloStore({
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
+  defaultIdLookup?: CustomResolver;
   mutationBehaviorReducers?: MutationBehaviorReducerMap;
   customResolvers?: CustomResolverMap;
 }

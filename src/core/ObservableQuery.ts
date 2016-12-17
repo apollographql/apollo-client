@@ -366,6 +366,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     const retQuerySubscription = {
       unsubscribe: () => {
+        if (this.observers.findIndex(el => el === observer) < 0 ) {
+          // XXX can't unsubscribe if you've already unsubscribed...
+          // for some reason unsubscribe gets called multiple times by some of the tests
+          return;
+        }
         this.observers = this.observers.filter((obs) => obs !== observer);
 
         if (this.observers.length === 0) {
@@ -435,6 +440,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.subscriptionHandles = [];
 
     this.queryManager.stopQuery(this.queryId);
+    if (this.shouldSubscribe) {
+      this.queryManager.removeObservableQuery(this.queryId);
+    }
     this.observers = [];
   }
 }

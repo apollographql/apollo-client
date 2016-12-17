@@ -157,7 +157,6 @@ describe('createApolloStore', () => {
           'previousVariables': undefined as any,
           'queryString': '',
           'returnPartialData': false,
-          'stopped': false,
           'variables': {},
           'metadata': null,
         },

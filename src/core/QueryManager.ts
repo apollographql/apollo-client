@@ -271,19 +271,6 @@ export class QueryManager {
 
     this.queryDocuments[mutationId] = mutation;
 
-    const extraReducers = Object.keys(this.observableQueries).map( queryId => {
-      const queryOptions = this.observableQueries[queryId].observableQuery.options;
-      if (queryOptions.reducer) {
-        return createStoreReducer(
-          queryOptions.reducer,
-          queryOptions.query,
-          queryOptions.variables,
-          this.reducerConfig,
-          );
-      }
-      return null;
-    }).filter( reducer => reducer !== null );
-
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
@@ -293,7 +280,7 @@ export class QueryManager {
       mutationId,
       optimisticResponse,
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
-      extraReducers,
+      extraReducers: this.getExtraReducers(),
     });
 
     return new Promise((resolve, reject) => {
@@ -315,7 +302,7 @@ export class QueryManager {
                 ...resultBehaviors,
                 ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
             ],
-            extraReducers,
+            extraReducers: this.getExtraReducers(),
           });
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });

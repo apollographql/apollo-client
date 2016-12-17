@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 - ...
+- Fix bug that caused updateQuery and reducers to run on stopped queries [PR #1054](https://github.com/apollostack/apollo-client/pull/1054)
 
 ### 0.5.21
 

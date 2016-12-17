@@ -825,6 +825,12 @@ describe('optimistic mutation results', () => {
       }, {
         request: { query: mutation },
         result: mutationResult2,
+        // XXX this test will uncover a flaw in the design of optimistic responses combined with
+        // updateQueries or result reducers if you un-comment the line below. The issue is that
+        // optimistic updates are not commutative but are treated as such. When undoing an
+        // optimistic update, other optimistic updates should be rolled back and re-applied in the
+        // same order as before, otherwise the store can end up in an inconsistent state.
+        // delay: 50,
       })
       .then(() => {
         // we have to actually subscribe to the query to be able to update it

@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Ensure transporters are using `isomorphic-fetch` instead of `whatwg-fetch` for universal compatibility [PR #1018](https://github.com/apollostack/apollo-client/pull/1018)
 
 - Added a new analyze script to the package.json that makes it possible to inspect what modules make it into the published package and how efficiently it bundles in a webpack v2 project. [PR #1044](https://github.com/apollostack/apollo-client/pull/1044)
 

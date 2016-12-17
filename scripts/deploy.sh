@@ -27,4 +27,4 @@ cp LICENSE npm/
 cp .npmignore npm/
 
 echo 'deploying to npm...'
-cd npm && npm publish --tag test-version
+cd npm && npm publish

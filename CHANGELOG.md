@@ -5,8 +5,6 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Ensure transporters are using `isomorphic-fetch` instead of `whatwg-fetch` for universal compatibility [PR #1018](https://github.com/apollostack/apollo-client/pull/1018)
 
-- ...
-
 ### 0.5.21
 
 - Include a `version` field on every `ApolloClient` instance that represents the version of the 'apollo-client' package used to create it. [PR #1038](https://github.com/apollostack/apollo-client/pull/1038)

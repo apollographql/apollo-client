@@ -10,6 +10,8 @@ import { addFragmentsToDocument } from '../src/queries/getFromAST';
 import assign = require('lodash/assign');
 import clonedeep = require('lodash/cloneDeep');
 
+import { Subscription } from '../src/util/Observable';
+
 import gql from 'graphql-tag';
 
 import {
@@ -608,8 +610,8 @@ describe('optimistic mutation results', () => {
         }).then((res) => {
           checkBothMutationsAreApplied('This one was created with a mutation.', 'Optimistically generated 2');
           const mutationsState = client.store.getState().apollo.mutations;
-          assert.equal(mutationsState[2].loading, false);
-          assert.equal(mutationsState[3].loading, true);
+          assert.equal(mutationsState['3'].loading, false);
+          assert.equal(mutationsState['4'].loading, true);
 
           return res;
         });
@@ -621,15 +623,15 @@ describe('optimistic mutation results', () => {
         }).then((res) => {
           checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
           const mutationsState = client.store.getState().apollo.mutations;
-          assert.equal(mutationsState[2].loading, false);
           assert.equal(mutationsState[3].loading, false);
+          assert.equal(mutationsState[4].loading, false);
 
           return res;
         });
 
         const mutationsState = client.store.getState().apollo.mutations;
-        assert.equal(mutationsState[2].loading, true);
         assert.equal(mutationsState[3].loading, true);
+        assert.equal(mutationsState[4].loading, true);
 
         checkBothMutationsAreApplied('Optimistically generated', 'Optimistically generated 2');
 
@@ -697,9 +699,19 @@ describe('optimistic mutation results', () => {
     };
 
     it('analogous of ARRAY_INSERT', () => {
+      let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
         result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
       })
       .then(() => {
         const promise = client.mutate({
@@ -727,6 +739,7 @@ describe('optimistic mutation results', () => {
         return client.query({ query });
       })
       .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
         // There should be one more todo item than before
         assert.equal(newResult.data.todoList.todos.length, 4);
 
@@ -736,6 +749,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('two ARRAY_INSERT like mutations', () => {
+      let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
         result: mutationResult,
@@ -743,6 +757,15 @@ describe('optimistic mutation results', () => {
         request: { query: mutation },
         result: mutationResult2,
         delay: 50,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
       })
       .then(() => {
         const updateQueries = {
@@ -783,6 +806,7 @@ describe('optimistic mutation results', () => {
         return client.query({ query });
       })
       .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
         // There should be one more todo item than before
         assert.equal(newResult.data.todoList.todos.length, 5);
 
@@ -793,12 +817,23 @@ describe('optimistic mutation results', () => {
     });
 
     it('two mutations, one fails', () => {
+      let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
         error: new Error('forbidden (test error)'),
+        delay: 20,
       }, {
         request: { query: mutation },
         result: mutationResult2,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
       })
       .then(() => {
         const updateQueries = {
@@ -835,6 +870,7 @@ describe('optimistic mutation results', () => {
         return Promise.all([promise, promise2]);
       })
       .then(() => {
+        subscriptionHandle.unsubscribe();
         const dataInStore = client.queryManager.getDataWithOptimisticResults();
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
         assert.notProperty(dataInStore, 'Todo99');
@@ -1123,13 +1159,24 @@ describe('optimistic mutation - githunt comments', () => {
       commentContent: 'New Comment',
     };
 
+    let subscriptionHandle: Subscription;
     return setup({
       request: {
         query: addTypenameToDocument(mutation),
         variables: mutationVariables,
       },
       result: mutationResult,
-    }).then(() => {
+    })
+    .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query, variables });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
+      })
+    .then(() => {
       return client.mutate({
         mutation,
         optimisticResponse,
@@ -1139,6 +1186,7 @@ describe('optimistic mutation - githunt comments', () => {
     }).then(() => {
       return client.query({ query, variables });
     }).then((newResult: any) => {
+      subscriptionHandle.unsubscribe();
       assert.equal(newResult.data.entry.comments.length, 2);
     });
   });
@@ -1149,13 +1197,28 @@ describe('optimistic mutation - githunt comments', () => {
       commentContent: 'New Comment',
     };
 
+    let subscriptionHandle: Subscription;
     return setup({
       request: {
         query: addFragmentsToDocument(addTypenameToDocument(mutationWithFragment), fragmentWithTypenames),
         variables: mutationVariables,
       },
       result: mutationResult,
-    }).then(() => {
+    })
+    .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({
+            query: queryWithFragment,
+            variables,
+            fragments: fragment,
+          });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
+      })
+    .then(() => {
       return client.mutate({
         mutation: mutationWithFragment,
         optimisticResponse,
@@ -1166,6 +1229,7 @@ describe('optimistic mutation - githunt comments', () => {
     }).then(() => {
       return client.query({ query: queryWithFragment, variables, fragments: fragment });
     }).then((newResult: any) => {
+      subscriptionHandle.unsubscribe();
       assert.equal(newResult.data.entry.comments.length, 2);
     });
   });

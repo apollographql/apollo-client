@@ -39,7 +39,6 @@ export type QueryStoreValue = {
   queryString: string;
   variables: Object;
   previousVariables: Object;
-  stopped: boolean;
   loading: boolean;
   networkStatus: NetworkStatus;
   networkError: Error;
@@ -108,7 +107,6 @@ export function queries(
       queryString: action.queryString,
       variables: action.variables,
       previousVariables,
-      stopped: false,
       loading: true,
       networkError: null,
       graphQLErrors: null,

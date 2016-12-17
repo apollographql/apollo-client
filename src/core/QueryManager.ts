@@ -640,9 +640,7 @@ export class QueryManager {
     Object.keys(this.observableQueries).forEach((queryId) => {
       const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
 
-      if (! this.observableQueries[queryId].observableQuery.options.noFetch &&
-        ! (storeQuery && storeQuery.stopped)
-      ) {
+      if (!this.observableQueries[queryId].observableQuery.options.noFetch) {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });

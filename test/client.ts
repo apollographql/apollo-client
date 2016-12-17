@@ -489,7 +489,6 @@ describe('client', () => {
           variables: undefined,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stopped: false,
           networkError: null,
           graphQLErrors: null,
           forceFetch: false,

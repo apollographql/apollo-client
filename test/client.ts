@@ -484,7 +484,7 @@ describe('client', () => {
 
     const finalState = { apollo: assign({}, initialState.apollo, {
       queries: {
-        '0': {
+        '1': {
           queryString: print(query),
           variables: undefined,
           loading: false,
@@ -494,7 +494,7 @@ describe('client', () => {
           graphQLErrors: null,
           forceFetch: false,
           returnPartialData: false,
-          lastRequestId: 1,
+          lastRequestId: 2,
           previousVariables: null,
           metadata: null,
         },

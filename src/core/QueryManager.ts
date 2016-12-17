@@ -150,7 +150,7 @@ export class QueryManager {
   private queryListeners: { [queryId: string]: QueryListener[] };
   private queryDocuments: { [queryId: string]: Document };
 
-  private idCounter = 0;
+  private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
 
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
@@ -594,7 +594,7 @@ export class QueryManager {
     // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
     const queryDef = getQueryDefinition(observableQuery.options.query);
     if (queryDef.name && queryDef.name.value) {
-      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+      const queryName = queryDef.name.value;
 
       // XXX we may we want to warn the user about query name conflicts in the future
       this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
@@ -604,11 +604,14 @@ export class QueryManager {
 
   public removeObservableQuery(queryId: string) {
     const observableQuery = this.observableQueries[queryId].observableQuery;
-    const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+    const definition = getQueryDefinition(observableQuery.options.query);
+    const queryName = definition.name ? definition.name.value : null;
     delete this.observableQueries[queryId];
-    this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter((val) => {
-      return !(observableQuery.queryId === val);
-    });
+    if (queryName) {
+      this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter((val) => {
+        return !(observableQuery.queryId === val);
+      });
+    }
   }
 
   public resetStore(): void {

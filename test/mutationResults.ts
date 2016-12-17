@@ -5,6 +5,8 @@ import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../sr
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 import { isMutationResultAction, isQueryResultAction } from '../src/actions';
 
+import { Subscription } from '../src/util/Observable';
+
 import assign = require('lodash/assign');
 import clonedeep = require('lodash/cloneDeep');
 
@@ -993,9 +995,19 @@ describe('mutation results', () => {
     };
 
     it('analogous of ARRAY_INSERT', () => {
+      let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
         result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
       })
       .then(() => {
         return client.mutate({
@@ -1017,6 +1029,8 @@ describe('mutation results', () => {
         return client.query({ query });
       })
       .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+
         // There should be one more todo item than before
         assert.equal(newResult.data.todoList.todos.length, 4);
 
@@ -1105,9 +1119,19 @@ describe('mutation results', () => {
         errors.push(msg);
       };
 
+      let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
         result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
       })
       .then(() => {
         return client.mutate({
@@ -1120,6 +1144,7 @@ describe('mutation results', () => {
         });
       })
       .then(() => {
+        subscriptionHandle.unsubscribe();
         assert.lengthOf(errors, 1);
         assert.equal(errors[0].message, `Hello... It's me.`);
         console.error = oldError;

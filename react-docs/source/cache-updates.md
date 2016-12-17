@@ -290,7 +290,7 @@ Fundamentally, `updateQueries` is a map going from the name of a query (in our c
 
 Note that the function must not alter the `prev` object (because `prev` is compared with the new object returned to see what changes the function made and hence what prop updates are needed).
 
-In our `updateQueries` function for the `Comment` query, we're doing something really simple: just adding the comment we just submitted to the list of comments that the query asks for. We're doing that using the `update` function from the `react-addons-update` package, just to do it concisely. But, if you wanted to, you could write some no-helper Javascript to combine the two incoming objects into a new one for the result.
+In our `updateQueries` function for the `Comment` query, we're doing something really simple: just adding the comment we just submitted to the list of comments that the query asks for. We're doing that using the `update` function from the `immutability-helper` package, just to do it concisely. But, if you wanted to, you could write some no-helper Javascript to combine the two incoming objects into a new one for the result.
 
 Once the mutation fires and the result arrives from the server (or, a result is provided through optimistic UI), our `updateQueries` function for the `Comment` query will be called and the `Comment` query will be updated accordingly. These changes in the result will be mapped to React props and our UI will update as well with the new information!
 
@@ -300,7 +300,7 @@ Once the mutation fires and the result arrives from the server (or, a result is 
 While `updateQueries` can only be used to update other queries based on the result of a mutation, the `reducer` option is a way that lets you update the query result based on any action, including results of other queries. It acts just like a Redux reducer on the non-normalized query result:
 
 ```javascript
-import update from 'react-addons-update';
+import update from 'immutability-helper';
 
 const CommentsPageWithData = graphql(CommentsPageQuery, {
   props({ data }) {

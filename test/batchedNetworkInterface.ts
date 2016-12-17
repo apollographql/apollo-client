@@ -19,7 +19,7 @@ import { AfterwareInterface } from '../src/transport/afterware';
 
 import { GraphQLResult } from 'graphql';
 
-import 'whatwg-fetch';
+import 'isomorphic-fetch';
 
 import gql from 'graphql-tag';
 

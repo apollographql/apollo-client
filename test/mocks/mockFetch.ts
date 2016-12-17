@@ -1,7 +1,7 @@
-import 'whatwg-fetch';
+import 'isomorphic-fetch';
 
-// This is an implementation of a mocked window.fetch implementation similar in
-// structure to the MockedNetworkInterface.
+// This is an implementation of a mocked window.fetch/global.fetch implementation
+// similar in structure to the MockedNetworkInterface.
 
 export interface MockedIResponse {
   json(): Promise<JSON>;

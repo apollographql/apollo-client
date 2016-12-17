@@ -182,13 +182,7 @@ export function queries(
   } else if (isQueryStopAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
 
-    // TODO (NOW): actually remove stopped queries from store. Fix for real this time.
-    newState[action.queryId] = assign({}, previousState[action.queryId], {
-      loading: false,
-      stopped: true,
-      networkStatus: NetworkStatus.ready,
-    }) as QueryStoreValue;
-
+    delete newState[action.queryId];
     return newState;
   } else if (isStoreResetAction(action)) {
     return resetQueryState(previousState, action);

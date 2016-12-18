@@ -2,7 +2,7 @@ import {
   GraphQLResult,
 } from 'graphql';
 
-import 'isomorphic-fetch';
+import 'whatwg-fetch';
 
 import assign = require('lodash/assign');
 import isNumber = require('lodash/isNumber');

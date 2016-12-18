@@ -83,7 +83,6 @@ Returns an [`options` object](http://dev.apollodata.com/core/apollo-client-api.h
 ```
 {
   networkInterface
-  queryTransformer: addTypenameToSelectionSet
   dataIdFromObject: object.__typename + object._id
 }
 ```
@@ -104,3 +103,8 @@ Returns an [`options` object](http://dev.apollodata.com/core/apollo-client-api.h
 
 
 It will use the same port as your Meteor server. Don't put a route or static asset at the same path as the Apollo route or the GraphiQL route if in use (defaults are `/graphql` and `/graphiql` respectively).
+
+## Accounts
+
+You may still use the authentication based on DDP (Meteor's default data layer) and apollo will send the current user's login token to the GraphQL server with each request. But if you want to use only GraphQL in your app you can use [nicolaslopezj:apollo-accounts](https://github.com/nicolaslopezj/meteor-apollo-accounts). This package uses the Meteor Accounts methods in GraphQL, it's compatible with the accounts you have saved in your database and you may use apollo-accounts and Meteor's DPP accounts at the same time.
+

@@ -6,7 +6,7 @@ import {
   assert,
 } from 'chai';
 
-import clonedeep = require('lodash.clonedeep');
+import clonedeep = require('lodash/cloneDeep');
 
 import { isSubscriptionResultAction } from '../src/actions';
 
@@ -24,7 +24,7 @@ import {
 
 describe('GraphQL Subscriptions', () => {
   const results = ['Dahivat Pandya', 'Vyacheslav Kim', 'Changping Chen', 'Amanda Liu'].map(
-    name => ({ result: { user: { name: name } }, delay: 10 })
+    name => ({ result: { user: { name: name } }, delay: 10 }),
   );
 
   let sub1: any;

@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
-import { assign } from 'lodash';
+import assign = require('lodash/assign');
 
 import {
   ADD_TODO,

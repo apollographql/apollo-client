@@ -10,7 +10,7 @@ import {
   SelectionSet,
 } from 'graphql';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 export interface MutationStore {
   [mutationId: string]: MutationStoreValue;
@@ -31,7 +31,7 @@ export interface SelectionSetWithRoot {
 
 export function mutations(
   previousState: MutationStore = {},
-  action: ApolloAction
+  action: ApolloAction,
 ): MutationStore {
   if (isMutationInitAction(action)) {
     const newState = assign({}, previousState) as MutationStore;

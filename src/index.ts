@@ -1,6 +1,8 @@
 import {
   Request,
   createNetworkInterface,
+  NetworkInterface,
+  HTTPFetchNetworkInterface,
 } from './transport/networkInterface';
 
 import {
@@ -27,6 +29,8 @@ import {
 
 import {
   WatchQueryOptions,
+  MutationOptions,
+  DeprecatedSubscriptionOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -65,6 +69,10 @@ import {
   ApolloQueryResult,
 } from './core/QueryManager';
 
+import {
+  toIdValue,
+} from './data/storeUtils';
+
 // We expose the print method from GraphQL so that people that implement
 // custom network interfaces can turn query ASTs into query strings as needed.
 export {
@@ -92,12 +100,18 @@ export {
 
   ApolloQueryResult,
 
+  toIdValue,
+
   // internal type definitions for export
+  NetworkInterface,
+  HTTPFetchNetworkInterface,
   WatchQueryOptions,
+  MutationOptions,
   ObservableQuery,
   MutationBehavior,
   MutationQueryReducersMap,
   Subscription,
+  DeprecatedSubscriptionOptions as SubscriptionOptions,
   ApolloStore,
   ApolloClient
 };

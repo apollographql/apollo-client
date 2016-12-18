@@ -2,7 +2,98 @@
 
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
-### vNext
+### vNEXT
+
+- ...
+
+### 0.5.23
+- Revert back to using `whatwg-fetch` because `isomorphic-fetch` does not work in react native  [PR #1058](https://github.com/apollostack/apollo-client/pull/1058)
+
+### 0.5.22
+- Fix bug that caused updateQuery and reducers to run on stopped queries [PR #1054](https://github.com/apollostack/apollo-client/pull/1054)
+- Ensure transporters are using `isomorphic-fetch` instead of `whatwg-fetch` for universal compatibility [PR #1018](https://github.com/apollostack/apollo-client/pull/1018)
+
+### 0.5.21
+
+- Include a `version` field on every `ApolloClient` instance that represents the version of the 'apollo-client' package used to create it. [PR #1038](https://github.com/apollostack/apollo-client/pull/1038)
+
+### 0.5.20
+
+- Attach to `window` for devtools if not in production, so that improperly configured environments do get the dev tools. [PR #1037](https://github.com/apollostack/apollo-client/pull/1037)
+
+### 0.5.19
+- Make sure stopped queries are not refetched on store reset [PR #960](https://github.com/apollostack/apollo-client/pull/960)
+
+### 0.5.18
+- Make sure `APOLLO_QUERY_RESULT_CLIENT` action has a `requestId`, just like `APOLLO_QUERY_RESULT` does, so that it can be associated with the relevant `APOLLO_QUERY_INIT` action.
+
+### 0.5.17
+- For devtools hook, report the state _after_ the action, not before. [PR #1023](https://github.com/apollostack/apollo-client/pull/1023)
+
+### 0.5.16
+- Make sure Redux devtools enhancer is added last. [PR #1022](https://github.com/apollostack/apollo-client/pull/1022)
+
+### 0.5.15
+- Make sure devtools hook added in 0.5.14 also works when the store is initialized by Apollo Client. [PR #1021](https://github.com/apollostack/apollo-client/pull/1021)
+
+### 0.5.14
+- Add internal hook for chrome devtools, `__actionHookForDevTools`, to get a log of actions and states. Apollo Client automatically attaches itself to `window.__APOLLO_CLIENT__` when initialized if `process.env.NODE_ENV === 'development'`. This can be forced or disabled by setting the `connectToDevTools` option in the constructor to `true` or `false`. [PR #1017](https://github.com/apollostack/apollo-client/pull/1017)
+
+### 0.5.13
+- Replace usages of `Object.assign` with lodash's assign function [PR #1009](https://github.com/apollostack/apollo-client/pull/1009)
+- Calls to watchQuery can include metadata, for use with debugging. [PR #1010](https://github.com/apollostack/apollo-client/pull/1010)
+
+### 0.5.12
+- Errors thrown in afterwares bubble up [PR #982](https://github.com/apollostack/apollo-client/pull/982)
+- Replaced individual lodash packages with original lodash package [PR #997](https://github.com/apollostack/apollo-client/pull/997)
+
+### 0.5.11
+- Move typed-graphql and chai typings to optionalDependencies [PR #988](https://github.com/apollostack/apollo-client/pull/988)
+- Fix issue with typings that prevented compilation in typescript [PR #986](https://github.com/apollostack/apollo-client/pull/986)
+
+### 0.5.10
+- Deprecate usage of fragment option and createFragment function [PR #984](https://github.com/apollostack/apollo-client/pull/984)
+
+### 0.5.9
+- Prevent Redux from crashing when an uncaught ApolloError is raised in an Apollo reducer. [PR #874](https://github.com/apollostack/apollo-client/pull/874)
+- Catch errors in observer.next and observer.errors callback [PR #980](https://github.com/apollostack/apollo-client/pull/980)
+
+### 0.5.8
+
+- Added `HTTPFetchNetworkInterface` and `NetworkInterface` as index exports to make them easier
+to subclass externally. [#969](https://github.com/apollostack/apollo-client/pull/969)
+
+### 0.5.7
+- Catch uncaught promise errors in startQuery [#950](https://github.com/apollostack/apollo-client/pull/950)
+
+### 0.5.6
+- Refactor polling query logic to fix startPolling and stopPolling [#938](https://github.com/apollostack/apollo-client/pull/938)
+- Add convenience method to obtain initial state from SSR [#941](https://github.com/apollostack/apollo-client/pull/941)
+
+### 0.5.5
+- Add back missing dependency on lodash.isequal that was mistakenly removed in 0.5.4 [#925](https://github.com/apollostack/apollo-client/pull/925)
+- Implement cache redirects with custom resolvers [PR #921](https://github.com/apollostack/apollo-client/pull/921)
+- Fix issue that caused `createBatchingNetworkInterface` unable to specify request headers by `opts` or `applyMiddleware`. [PR #922](https://github.com/apollostack/apollo-client/pull/922) [Issue #920](https://github.com/apollostack/apollo-client/issues/920)
+
+### 0.5.4
+- Fix a bug that caused apollo-client to catch errors thrown in Observer.next callbacks [PR #910](https://github.com/apollostack/apollo-client/pull/910)
+- Make sure only one copy of each fragment is attached to a document [PR #906](https://github.com/apollostack/apollo-client/pull/906)
+
+### 0.5.3
+- Change the way IDs of objects in arrays are stored to make them consistent with the rest of the store [PR #901](https://github.com/apollostack/apollo-client/pull/901)
+
+### 0.5.2
+- Print a warning if server response is not an array when using transport batching [PR #893](https://github.com/apollostack/apollo-client/pull/893)
+- apply addTypename in watchQuery for result reducers [PR #895](https://github.com/apollostack/apollo-client/pull/895)
+
+### 0.5.1
+- **new Feature**: Enable chaining of `use` and `useAfter` function calls in network interface. [PR #860](https://github.com/apollostack/apollo-client/pull/860) [Issue #564](https://github.com/apollostack/apollo-client/issues/564)
+- Create and expose the `MutationOptions` [PR #866](https://github.com/apollostack/apollo-client/pull/866)
+- Expose `SubscriptionOptions` [PR #868](https://github.com/apollostack/apollo-client/pull/868)
+- Fix issue with `currentResult` and optimistic responses [Issue #877](https://github.com/apollostack/apollo-client/issues/877)
+- Provide an onError callback for subscribeToMore [PR #886](https://github.com/apollostack/apollo-client/issues/886)
+- Bind `resetStore` to ApolloClient [PR #882](https://github.com/apollostack/apollo-client/issues/882)
+- Fix a bug with `resetStore` that caused existing queries to fail  [PR #885](https://github.com/apollostack/apollo-client/issues/885)
 
 ### v0.5.0
 - Add a `createdBatchingNetworkInterface` function and export it.

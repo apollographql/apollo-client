@@ -16,14 +16,14 @@ import { NetworkStatus } from '../src/queries/store';
 describe('ObservableQuery', () => {
   // Standard data for all these tests
   const query = gql`
-    query($id: ID!) {
+    query query($id: ID!) {
       people_one(id: $id) {
         name
       }
     }
   `;
   const superQuery = gql`
-    query($id: ID!) {
+    query superQuery($id: ID!) {
       people_one(id: $id) {
         name
         age
@@ -570,6 +570,62 @@ describe('ObservableQuery', () => {
             }
           });
         });
+    });
+
+    describe('mutations', () => {
+      const mutation = gql`
+        mutation setName {
+          name
+        }
+      `;
+
+      const mutationData = {
+        name: 'Leia Skywalker',
+      };
+
+      const optimisticResponse = {
+        name: 'Leia Skywalker (optimistic)',
+      };
+
+      const updateQueries = {
+        query: (previousQueryResult: any, { mutationResult }: any ) => {
+          return {
+            people_one: { name: mutationResult.data.name },
+          };
+        },
+      };
+
+      it('returns optimistic mutation results from the store', (done) => {
+        const queryManager = mockQueryManager({
+          request: { query, variables },
+          result: { data: dataOne },
+        }, {
+          request: { query: mutation },
+          result: { data: mutationData },
+        });
+
+        const observable = queryManager.watchQuery({
+          query,
+          variables,
+        });
+
+        subscribeAndCount(done, observable, (count, result) => {
+          assert.deepEqual(result, observable.currentResult());
+          if (count === 1) {
+            assert.deepEqual(result, {
+              data: dataOne,
+              loading: false,
+              networkStatus: 7,
+            });
+            queryManager.mutate({ mutation, optimisticResponse, updateQueries });
+          } else if (count === 2) {
+            assert.deepEqual(result.data.people_one, optimisticResponse);
+          } else if (count === 3) {
+            assert.deepEqual(result.data.people_one, mutationData);
+            done();
+          }
+        });
+      });
     });
   });
 });

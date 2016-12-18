@@ -1,5 +1,7 @@
 import { assert } from 'chai';
-import * as _ from 'lodash';
+import cloneDeep = require('lodash/cloneDeep');
+import assign = require('lodash/assign');
+import omit = require('lodash/omit');
 
 import {
   writeQueryToStore,
@@ -48,7 +50,7 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
       'ROOT_QUERY': result,
     });
@@ -191,10 +193,10 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     }), {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: result.nestedObj.id,
@@ -234,9 +236,9 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: `$ROOT_QUERY.nestedObj`,
@@ -276,9 +278,9 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
         'nestedObj({"arg":"val"})': {
           type: 'id',
           id: `$ROOT_QUERY.nestedObj({"arg":"val"})`,
@@ -328,11 +330,15 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     }), {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
-        nestedArray: result.nestedArray.map(_.property('id')),
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
+        nestedArray: result.nestedArray.map((obj: any) => ({
+          type: 'id',
+          id: obj.id,
+          generated: false,
+        })),
       }),
       [result.nestedArray[0].id]: result.nestedArray[0],
       [result.nestedArray[1].id]: result.nestedArray[1],
@@ -373,12 +379,12 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     }), {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
-          result.nestedArray[0].id,
+          { type: 'id', id: result.nestedArray[0].id, generated: false },
           null,
         ],
       }),
@@ -422,14 +428,14 @@ describe('writing to the store', () => {
 
     const normalized = writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
-          `ROOT_QUERY.nestedArray.0`,
-          `ROOT_QUERY.nestedArray.1`,
+          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.0` },
+          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.1` },
         ],
       }),
       [`ROOT_QUERY.nestedArray.0`]: result.nestedArray[0],
@@ -469,14 +475,14 @@ describe('writing to the store', () => {
 
     const normalized = writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          `ROOT_QUERY.nestedArray.1`,
+          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.1` },
         ],
       }),
       [`ROOT_QUERY.nestedArray.1`]: result.nestedArray[1],
@@ -504,12 +510,12 @@ describe('writing to the store', () => {
 
     const normalized = writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           'json': [
@@ -543,11 +549,11 @@ describe('writing to the store', () => {
 
     const normalized = writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           json: [
@@ -577,7 +583,7 @@ describe('writing to the store', () => {
 
     const store = writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
       dataIdFromObject: getIdField,
     });
 
@@ -603,7 +609,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(store2, {
-      'ROOT_QUERY': _.assign({}, result, result2),
+      'ROOT_QUERY': assign({}, result, result2),
     });
   });
 
@@ -633,9 +639,9 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: null,
       }),
     });
@@ -660,7 +666,7 @@ describe('writing to the store', () => {
 
     assert.deepEqual(writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     }), {
       'ROOT_QUERY': {
         'people_one({"id":"5"})': {
@@ -787,7 +793,7 @@ describe('writing to the store', () => {
         assert.deepEqual(writeSelectionSetToStore({
           dataId: '5',
           selectionSet: def.selectionSet,
-          result: _.cloneDeep(result),
+          result: cloneDeep(result),
           context: {
             store: {},
             variables,
@@ -1033,7 +1039,7 @@ describe('writing to the store', () => {
             writeSelectionSetToStore({
               dataId: '5',
               selectionSet: def.selectionSet,
-              result: _.cloneDeep(result),
+              result: cloneDeep(result),
               context: {
                 store: {},
                 variables,
@@ -1083,13 +1089,13 @@ describe('writing to the store', () => {
     };
     const store = writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
+      result: cloneDeep(result),
     });
 
     const newStore = writeQueryToStore({
       query,
-      result: _.cloneDeep(result),
-      store: _.assign({}, store) as NormalizedCache,
+      result: cloneDeep(result),
+      store: assign({}, store) as NormalizedCache,
     });
 
     Object.keys(store).forEach((field) => {

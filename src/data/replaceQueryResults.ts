@@ -14,7 +14,7 @@ import {
   Document,
 } from 'graphql';
 
-import assign = require('lodash.assign');
+import assign = require('lodash/assign');
 
 export function replaceQueryResults(state: NormalizedCache, {
   variables,

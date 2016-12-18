@@ -1,6 +1,6 @@
-import isString = require('lodash.isstring');
-import assign = require('lodash.assign');
-import mapValues = require('lodash.mapvalues');
+import isString = require('lodash/isString');
+import assign = require('lodash/assign');
+import mapValues = require('lodash/mapValues');
 import 'whatwg-fetch';
 
 import {
@@ -62,8 +62,8 @@ export interface HTTPNetworkInterface extends NetworkInterface {
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[];
   _afterwares: AfterwareInterface[];
-  use(middlewares: MiddlewareInterface[]): any;
-  useAfter(afterwares: AfterwareInterface[]): any;
+  use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface;
+  useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface;
 }
 
 export interface RequestAndOptions {
@@ -176,19 +176,16 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
     return this.applyMiddlewares({
       request,
       options,
-    }).then(this.fetchFromRemoteEndpoint.bind(this))
-      .then(response => {
-        this.applyAfterwares({
-          response: response as IResponse,
-          options,
-        });
-        return response;
-      })
-      .then(result => (result as IResponse).json())
+    }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
+      .then(response => this.applyAfterwares({
+        response: response as IResponse,
+        options,
+      }))
+      .then(({ response }) => (response as IResponse).json())
       .then((payload: GraphQLResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
-            `Server response was missing for query '${request.debugName}'.`
+            `Server response was missing for query '${request.debugName}'.`,
           );
         } else {
           return payload as GraphQLResult;
@@ -196,7 +193,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       });
   };
 
-  public use(middlewares: MiddlewareInterface[]) {
+  public use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface {
     middlewares.map((middleware) => {
       if (typeof middleware.applyMiddleware === 'function') {
         this._middlewares.push(middleware);
@@ -204,9 +201,10 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         throw new Error('Middleware must implement the applyMiddleware function');
       }
     });
+    return this;
   }
 
-  public useAfter(afterwares: AfterwareInterface[]) {
+  public useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface {
     afterwares.map(afterware => {
       if (typeof afterware.applyAfterware === 'function') {
         this._afterwares.push(afterware);
@@ -214,6 +212,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         throw new Error('Afterware must implement the applyAfterware function');
       }
     });
+    return this;
   }
 }
 

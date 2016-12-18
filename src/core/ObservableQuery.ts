@@ -27,15 +27,15 @@ import { NetworkStatus } from '../queries/store';
 
 import { addFragmentsToDocument } from '../queries/getFromAST';
 
-import assign = require('lodash.assign');
-import isEqual = require('lodash.isequal');
+import assign = require('lodash/assign');
+import isEqual = require('lodash/isEqual');
 
 export type ApolloCurrentResult = {
   data: any;
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
-}
+};
 
 export interface FetchMoreOptions {
   updateQuery: (previousQueryResult: Object, options: {
@@ -57,7 +57,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
    */
   public variables: { [key: string]: any };
 
-  private isPollingQuery: boolean;
+  private isCurrentlyPolling: boolean;
   private shouldSubscribe: boolean;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
@@ -78,7 +78,6 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }) {
     const queryManager = scheduler.queryManager;
     const queryId = queryManager.generateQueryId();
-    const isPollingQuery = !!options.pollInterval;
 
     const subscriberFunction = (observer: Observer<ApolloQueryResult>) => {
       return this.onSubscribe(observer);
@@ -86,7 +85,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     super(subscriberFunction);
 
-    this.isPollingQuery = isPollingQuery;
+    this.isCurrentlyPolling = false;
     this.options = options;
     this.variables = this.options.variables || {};
     this.scheduler = scheduler;
@@ -114,7 +113,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public currentResult(): ApolloCurrentResult {
-    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
+    const { data, partial } = this.queryManager.getCurrentQueryResult(this, true);
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
 
     if (queryStoreValue && (queryStoreValue.graphQLErrors || queryStoreValue.networkError)) {
@@ -171,7 +170,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public fetchMore(
-    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions
+    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
   ): Promise<ApolloQueryResult> {
     return Promise.resolve()
       .then(() => {
@@ -237,14 +236,17 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
             previousResult, {
               subscriptionData: { data },
               variables,
-            }
+            },
           );
         };
         this.updateQuery(mapFn);
       },
       error: (err) => {
-        // TODO implement something smart here when improving error handling
-        console.error(err);
+        if (options.onError) {
+          options.onError(err);
+        } else {
+          console.error('Unhandled GraphQL subscription errror', err);
+        }
       },
     });
 
@@ -304,7 +306,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public updateQuery(
-    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any
+    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any,
   ): void {
     const {
       previousResult,
@@ -326,8 +328,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public stopPolling() {
-    if (this.isPollingQuery) {
+    if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
+      this.isCurrentlyPolling = false;
     }
   }
 
@@ -336,11 +339,13 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       throw new Error('noFetch option should not use query polling.');
     }
 
-    if (this.isPollingQuery) {
+    if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
+      this.isCurrentlyPolling = false;
     }
     this.options.pollInterval = pollInterval;
-    this.scheduler.startPollingQuery(this.options, this.queryId, false);
+    this.isCurrentlyPolling = true;
+    this.scheduler.startPollingQuery(this.options, this.queryId);
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult>) {
@@ -361,6 +366,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     const retQuerySubscription = {
       unsubscribe: () => {
+        if (this.observers.findIndex(el => el === observer) < 0 ) {
+          // XXX can't unsubscribe if you've already unsubscribed...
+          // for some reason unsubscribe gets called multiple times by some of the tests
+          return;
+        }
         this.observers = this.observers.filter((obs) => obs !== observer);
 
         if (this.observers.length === 0) {
@@ -377,14 +387,15 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       this.queryManager.addObservableQuery(this.queryId, this);
     }
 
-    if (this.isPollingQuery) {
+    if (!!this.options.pollInterval) {
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query polling.');
       }
 
+      this.isCurrentlyPolling = true;
       this.scheduler.startPollingQuery(
         this.options,
-        this.queryId
+        this.queryId,
       );
     }
 
@@ -414,13 +425,14 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.queryManager.startQuery(
       this.queryId,
       this.options,
-      this.queryManager.queryListenerForObserver(this.queryId, this.options, observer)
+      this.queryManager.queryListenerForObserver(this.queryId, this.options, observer),
     );
   }
 
   private tearDownQuery() {
-    if (this.isPollingQuery) {
+    if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
+      this.isCurrentlyPolling = false;
     }
 
     // stop all active GraphQL subscriptions
@@ -428,6 +440,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.subscriptionHandles = [];
 
     this.queryManager.stopQuery(this.queryId);
+    if (this.shouldSubscribe) {
+      this.queryManager.removeObservableQuery(this.queryId);
+    }
     this.observers = [];
   }
 }

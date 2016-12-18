@@ -1,7 +1,7 @@
-import isNull = require('lodash.isnull');
-import isUndefined = require('lodash.isundefined');
-import isObject = require('lodash.isobject');
-import assign = require('lodash.assign');
+import isNull = require('lodash/isNull');
+import isUndefined = require('lodash/isUndefined');
+import isObject = require('lodash/isObject');
+import assign = require('lodash/assign');
 
 import {
   getOperationDefinition,
@@ -95,7 +95,7 @@ export type WriteContext = {
   variables?: any;
   dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
-}
+};
 
 export function writeResultToStore({
   result,
@@ -350,11 +350,14 @@ function processArrayValue(
       return processArrayValue(item, itemDataId, selectionSet, context);
     }
 
+    let generated = true;
+
     if (context.dataIdFromObject) {
       const semanticId = context.dataIdFromObject(item);
 
       if (semanticId) {
         itemDataId = semanticId;
+        generated = false;
       }
     }
 
@@ -365,6 +368,12 @@ function processArrayValue(
       context,
     });
 
-    return itemDataId;
+    const idStoreValue: IdValue = {
+      type: 'id',
+      id: itemDataId,
+      generated,
+    };
+
+    return idStoreValue;
   });
 }

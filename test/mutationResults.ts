@@ -5,8 +5,10 @@ import { MutationBehaviorReducerArgs, MutationBehavior, cleanArray } from '../sr
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 import { isMutationResultAction, isQueryResultAction } from '../src/actions';
 
-import assign = require('lodash.assign');
-import clonedeep = require('lodash.clonedeep');
+import { Subscription } from '../src/util/Observable';
+
+import assign = require('lodash/assign');
+import clonedeep = require('lodash/cloneDeep');
 
 import gql from 'graphql-tag';
 
@@ -102,7 +104,7 @@ describe('mutation results', () => {
     dataId: string,
     field: string,
     value: any,
-  }
+  };
 
   // This is an example of a basic mutation reducer that just sets a field in the store
   function customMutationReducer(state: NormalizedCache, {
@@ -561,17 +563,17 @@ describe('mutation results', () => {
     });
   });
 
-  describe('array cleaning for ARRAY_DELETE', () => {
+  describe('array cleaning for DELETE behavior', () => {
     it('maintains reference on flat array', () => {
-      const array = [1, 2, 3, 4, 5];
+      const array = [1, 2, 3, 4, 5].map(x => ({id: x}));
       assert.isTrue(cleanArray(array, 6) === array);
       assert.isFalse(cleanArray(array, 3) === array);
     });
 
     it('works on nested array', () => {
       const array = [
-        [1, 2, 3, 4, 5],
-        [6, 7, 8, 9, 10],
+        [1, 2, 3, 4, 5].map(x => ({id: x})),
+        [6, 7, 8, 9, 10].map(x => ({id: x})),
       ];
 
       const cleaned = cleanArray(array, 5);
@@ -581,8 +583,8 @@ describe('mutation results', () => {
 
     it('maintains reference on nested array', () => {
       const array = [
-        [1, 2, 3, 4, 5],
-        [6, 7, 8, 9, 10],
+        [1, 2, 3, 4, 5].map(x => ({id: x})),
+        [6, 7, 8, 9, 10].map(x => ({id: x})),
       ];
 
       assert.isTrue(cleanArray(array, 11) === array);
@@ -993,9 +995,19 @@ describe('mutation results', () => {
     };
 
     it('analogous of ARRAY_INSERT', () => {
+      let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
         result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
       })
       .then(() => {
         return client.mutate({
@@ -1017,6 +1029,8 @@ describe('mutation results', () => {
         return client.query({ query });
       })
       .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+
         // There should be one more todo item than before
         assert.equal(newResult.data.todoList.todos.length, 4);
 
@@ -1105,9 +1119,19 @@ describe('mutation results', () => {
         errors.push(msg);
       };
 
+      let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
         result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
       })
       .then(() => {
         return client.mutate({
@@ -1120,6 +1144,7 @@ describe('mutation results', () => {
         });
       })
       .then(() => {
+        subscriptionHandle.unsubscribe();
         assert.lengthOf(errors, 1);
         assert.equal(errors[0].message, `Hello... It's me.`);
         console.error = oldError;

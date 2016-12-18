@@ -15,7 +15,7 @@ import {
   Name,
 } from 'graphql';
 
-import isObject = require('lodash.isobject');
+import isObject = require('lodash/isObject');
 
 function isStringValue(value: Value): value is StringValue {
   return value.kind === 'StringValue';
@@ -71,7 +71,7 @@ function valueToObjectRepresentation(argObj: any, name: Name, value: Value, vari
       return (nestedArgArrayObj as any)[name.value];
     });
   } else if (isEnumValue(value)) {
-    argObj[name.value] = value.value;
+    argObj[name.value] = (value as EnumValue).value;
   } else {
     throw new Error(`The inline argument "${name.value}" of kind "${(value as any).kind}" is not supported.
                     Use variables instead of inline arguments to overcome this limitation.`);
@@ -147,6 +147,14 @@ export type StoreValue = number | string | string[] | IdValue | JsonValue | void
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
+}
+
+export function toIdValue(id: string, generated = false): IdValue {
+  return {
+    type: 'id',
+    id,
+    generated,
+  };
 }
 
 export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {

@@ -4,8 +4,8 @@ import {
 
 import 'whatwg-fetch';
 
-import assign = require('lodash.assign');
-import isNumber = require('lodash.isnumber');
+import assign = require('lodash/assign');
+import isNumber = require('lodash/isNumber');
 
 import {
   HTTPFetchNetworkInterface,
@@ -65,26 +65,35 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
         return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
           .then(result => {
-            return result.json();
+            // XXX can we be stricter with the type here?
+            return result.json() as any;
           })
           .then(responses => {
-            const afterwaresPromises = responses.map((response: IResponse, index: number) => {
+
+
+            if (typeof responses.map !== 'function') {
+              throw new Error('BatchingNetworkInterface: server response is not an array');
+            }
+
+            type ResponseAndOptions = {
+              response: IResponse;
+              options: RequestInit;
+            };
+
+            const afterwaresPromises: ResponseAndOptions[] = responses.map((response: IResponse, index: number) => {
               return this.applyAfterwares({
                 response,
                 options: requestsAndOptions[index].options,
               });
             });
 
-            Promise.all(afterwaresPromises).then((responsesAndOptions: {
-              response: IResponse,
-              options: RequestInit,
-            }[]) => {
-              const results: Array<IResponse>  = [];
-              responsesAndOptions.forEach(({ response }) => {
-                results.push(response);
+            Promise.all(afterwaresPromises).then((responsesAndOptions: ResponseAndOptions[]) => {
+              const results: Array<IResponse> = [];
+              responsesAndOptions.forEach((result) => {
+                results.push(result.response);
               });
               resolve(results);
-            }).catch((error) => {
+            }).catch((error: Error) => {
               reject(error);
             });
           });
@@ -95,7 +104,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
   }
 
   private batchedFetchFromRemoteEndpoint(
-    requestsAndOptions: RequestAndOptions[]
+    requestsAndOptions: RequestAndOptions[],
   ): Promise<IResponse> {
     const options: RequestInit = {};
 
@@ -109,13 +118,14 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       return printRequest(request);
     });
 
-    return fetch(this._uri, assign({}, this._opts, options, {
+    return fetch(this._uri, assign({}, this._opts, {
       body: JSON.stringify(printedRequests),
-      headers: assign({}, options.headers, {
+      method: 'POST',
+    }, options, {
+      headers: assign({}, {
         Accept: '*/*',
         'Content-Type': 'application/json',
-      }),
-      method: 'POST',
+      }, options.headers),
     }));
   };
 }

@@ -11,7 +11,7 @@ import {
   checkDocument,
 } from './getFromAST';
 
-import cloneDeep = require('lodash.clonedeep');
+import cloneDeep = require('lodash/cloneDeep');
 
 const TYPENAME_FIELD: Field = {
   kind: 'Field',
@@ -24,7 +24,7 @@ const TYPENAME_FIELD: Field = {
 
 function addTypenameToSelectionSet(
   selectionSet: SelectionSet,
-  isRoot = false
+  isRoot = false,
 ) {
   if (selectionSet && selectionSet.selections) {
     if (! isRoot) {

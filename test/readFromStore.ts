@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import * as _ from 'lodash';
+import assign = require('lodash/assign');
+import omit = require('lodash/omit');
 
 import {
   readQueryFromStore,
@@ -117,7 +118,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: 'abcde',
@@ -174,21 +175,19 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj', 'deepNestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj', 'deepNestedObj')), {
         __typename: 'Query',
         nestedObj: {
           type: 'id',
           id: 'abcde',
-          nullField: null,
           generated: false,
         },
       }) as StoreObject,
-      abcde: _.assign({}, result.nestedObj, {
+      abcde: assign({}, result.nestedObj, {
         deepNestedObj: {
           type: 'id',
           id: 'abcdef',
           generated: false,
-          nullField: null,
         },
       }) as StoreObject,
       abcdef: result.deepNestedObj as StoreObject,
@@ -268,10 +267,10 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
-          'abcd.nestedArray.0',
-          'abcd.nestedArray.1',
+          { type: 'id', generated: true, id: 'abcd.nestedArray.0' },
+          { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
         ],
       }) as StoreObject,
       'abcd.nestedArray.0': result.nestedArray[0],
@@ -326,10 +325,10 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          'abcd.nestedArray.1',
+          { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
         ],
       }) as StoreObject,
       'abcd.nestedArray.1': result.nestedArray[1],
@@ -381,10 +380,10 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          'abcde',
+          { type: 'id', generated: false, id: 'abcde' },
         ],
       }) as StoreObject,
       'abcde': result.nestedArray[1],
@@ -477,7 +476,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'nestedObj')), { nestedObj: null }) as StoreObject,
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), { nestedObj: null }) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
@@ -512,7 +511,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
       }}) as StoreObject,
@@ -547,7 +546,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': _.assign({}, _.assign({}, _.omit(result, 'simpleArray')), { simpleArray: {
+      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
       }}) as StoreObject,
@@ -569,6 +568,83 @@ describe('reading from the store', () => {
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: [null, 'two', 'three'],
+    });
+  });
+
+  it('runs a query with custom resolvers for a computed field', () => {
+    const result = {
+      __typename: 'Thing',
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    } as StoreObject;
+
+    const store = {
+      'ROOT_QUERY': result,
+    } as NormalizedCache;
+
+    const queryResult = readQueryFromStore({
+      store,
+      query: gql`
+        query {
+          stringField
+          numberField
+          computedField(extra: "bit") @client
+        }
+      `,
+      config: {
+        customResolvers: {
+          Thing: {
+            computedField: (obj, args) => obj.stringField + obj.numberField + args['extra'],
+          },
+        },
+      },
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: result['stringField'],
+      numberField: result['numberField'],
+      computedField: 'This is a string!5bit',
+    });
+  });
+
+  it('runs a query with custom resolvers for a computed field on root Query', () => {
+    const result = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+    } as StoreObject;
+
+    const store = {
+      'ROOT_QUERY': result,
+    } as NormalizedCache;
+
+    const queryResult = readQueryFromStore({
+      store,
+      query: gql`
+        query {
+          stringField
+          numberField
+          computedField(extra: "bit") @client
+        }
+      `,
+      config: {
+        customResolvers: {
+          Query: {
+            computedField: (obj, args) => obj.stringField + obj.numberField + args['extra'],
+          },
+        },
+      },
+    });
+
+    // The result of the query shouldn't contain __data_id fields
+    assert.deepEqual(queryResult, {
+      stringField: result['stringField'],
+      numberField: result['numberField'],
+      computedField: 'This is a string!5bit',
     });
   });
 });

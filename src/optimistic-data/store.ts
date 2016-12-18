@@ -18,8 +18,8 @@ import {
   Store,
 } from '../store';
 
-import assign = require('lodash.assign');
-import pick = require('lodash.pick');
+import assign = require('lodash/assign');
+import pick = require('lodash/pick');
 
 // a stack of patches of new or changed documents
 export type OptimisticStore = {
@@ -33,7 +33,7 @@ export function optimistic(
   previousState = optimisticDefaultState,
   action: any,
   store: any,
-  config: any
+  config: any,
 ): OptimisticStore {
   if (isMutationInitAction(action) && action.optimisticResponse) {
     const fakeMutationResultAction: MutationResultAction = {
@@ -53,7 +53,7 @@ export function optimistic(
       fakeMutationResultAction,
       store.queries,
       store.mutations,
-      config
+      config,
     );
 
     // TODO: apply extra reducers and resultBehaviors to optimistic store?

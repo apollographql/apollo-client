@@ -6,8 +6,8 @@ import {
 } from './mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 
-// import assign = require('lodash.assign');
-// import clonedeep = require('lodash.clonedeep');
+// import assign = require('lodash/assign');
+// import clonedeep = require('lodash/cloneDeep');
 
 import gql from 'graphql-tag';
 
@@ -30,7 +30,7 @@ describe('subscribeToMore', () => {
   const req1 = { request: { query }, result };
 
   const results = ['Dahivat Pandya', 'Amanda Liu'].map(
-    name => ({ result: { name: name }, delay: 10 })
+    name => ({ result: { name: name }, delay: 10 }),
   );
 
   const sub1 = {
@@ -43,6 +43,40 @@ describe('subscribeToMore', () => {
     },
     id: 0,
     results: [...results],
+  };
+
+  const results2 = [
+    { error: new Error('You cant touch this'), delay: 10 },
+    { result: { name: 'Amanda Liu' }, delay: 10 },
+  ];
+
+  const sub2 = {
+    request: {
+      query: gql`
+        subscription newValues {
+          notAnActualField
+        }
+      `,
+    },
+    id: 0,
+    results: [...results2],
+  };
+
+  const results3 = [
+    { error: new Error('You cant touch this'), delay: 10 },
+    { result: { name: 'Amanda Liu' }, delay: 10 },
+  ];
+
+  const sub3 = {
+    request: {
+      query: gql`
+        subscription newValues {
+          notAnActualField
+        }
+      `,
+    },
+    id: 0,
+    results: [...results3],
   };
 
   it('triggers new result from subscription data', (done) => {
@@ -81,8 +115,111 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 3);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 }
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
       );
+      done();
+    }, 50);
+
+    for (let i = 0; i < 2; i++) {
+      networkInterface.fireResult(0); // 0 is the id of the subscription for the NI
+    }
+  });
+
+
+  it('calls error callback on error', (done) => {
+    let latestResult: any = null;
+    const networkInterface = mockSubscriptionNetworkInterface([sub2], req1);
+    let counter = 0;
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const obsHandle = client.watchQuery({
+      query,
+    });
+    const sub = obsHandle.subscribe({
+      next(queryResult) {
+        latestResult = queryResult;
+        counter++;
+      },
+    });
+
+    let errorCount = 0;
+
+    obsHandle.subscribeToMore({
+      document: gql`
+        subscription newValues {
+          notAnActualField
+        }
+      `,
+      updateQuery: (prev, { subscriptionData }) => {
+        return { entry: { value: subscriptionData.data.name } };
+      },
+      onError: (err) => { errorCount += 1; },
+    });
+
+    setTimeout(() => {
+      sub.unsubscribe();
+      assert.equal(counter, 2);
+      assert.deepEqual(
+        latestResult,
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
+      );
+      assert.equal(errorCount, 1);
+      done();
+    }, 50);
+
+    for (let i = 0; i < 2; i++) {
+      networkInterface.fireResult(0); // 0 is the id of the subscription for the NI
+    }
+  });
+
+  it('prints unhandled subscription errors to the console', (done) => {
+    let latestResult: any = null;
+    const networkInterface = mockSubscriptionNetworkInterface([sub3], req1);
+    let counter = 0;
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const obsHandle = client.watchQuery({
+      query,
+    });
+    const sub = obsHandle.subscribe({
+      next(queryResult) {
+        latestResult = queryResult;
+        counter++;
+      },
+    });
+
+    let errorCount = 0;
+    const consoleErr = console.error;
+    console.error = (err: Error) => { errorCount += 1; };
+
+    obsHandle.subscribeToMore({
+      document: gql`
+        subscription newValues {
+          notAnActualField
+        }
+      `,
+      updateQuery: (prev, { subscriptionData }) => {
+        return { entry: { value: subscriptionData.data.name } };
+      },
+    });
+
+    setTimeout(() => {
+      sub.unsubscribe();
+      assert.equal(counter, 2);
+      assert.deepEqual(
+        latestResult,
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
+      );
+      assert.equal(errorCount, 1);
+      console.error = consoleErr;
       done();
     }, 50);
 

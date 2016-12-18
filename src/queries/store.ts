@@ -18,8 +18,8 @@ import {
   GraphQLError,
 } from 'graphql';
 
-import assign = require('lodash.assign');
-import isEqual = require('lodash.isequal');
+import assign = require('lodash/assign');
+import isEqual = require('lodash/isEqual');
 
 export interface QueryStore {
   [queryId: string]: QueryStoreValue;
@@ -39,7 +39,6 @@ export type QueryStoreValue = {
   queryString: string;
   variables: Object;
   previousVariables: Object;
-  stopped: boolean;
   loading: boolean;
   networkStatus: NetworkStatus;
   networkError: Error;
@@ -47,7 +46,8 @@ export type QueryStoreValue = {
   forceFetch: boolean;
   returnPartialData: boolean;
   lastRequestId: number;
-}
+  metadata: any;
+};
 
 export interface SelectionSetWithRoot {
   id: string;
@@ -57,7 +57,7 @@ export interface SelectionSetWithRoot {
 
 export function queries(
   previousState: QueryStore = {},
-  action: ApolloAction
+  action: ApolloAction,
 ): QueryStore {
   if (isQueryInitAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
@@ -107,7 +107,6 @@ export function queries(
       queryString: action.queryString,
       variables: action.variables,
       previousVariables,
-      stopped: false,
       loading: true,
       networkError: null,
       graphQLErrors: null,
@@ -115,6 +114,7 @@ export function queries(
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,
+      metadata: action.metadata,
     };
 
     return newState;
@@ -180,12 +180,7 @@ export function queries(
   } else if (isQueryStopAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
 
-    newState[action.queryId] = assign({}, previousState[action.queryId], {
-      loading: false,
-      stopped: true,
-      networkStatus: NetworkStatus.ready,
-    }) as QueryStoreValue;
-
+    delete newState[action.queryId];
     return newState;
   } else if (isStoreResetAction(action)) {
     return resetQueryState(previousState, action);
@@ -205,7 +200,9 @@ function resetQueryState(state: QueryStore, action: StoreResetAction): QueryStor
   const newQueries = Object.keys(state).filter((queryId) => {
     return (observableQueryIds.indexOf(queryId) > -1);
   }).reduce((res, key) => {
-    res[key] = state[key];
+    // XXX set loading to true so listeners don't trigger unless they want results with partial data
+    res[key] = assign({}, state[key], { loading: true, networkStatus: NetworkStatus.loading });
+
     return res;
   }, {} as QueryStore);
 

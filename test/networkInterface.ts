@@ -1,8 +1,8 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { assign } from 'lodash';
-import isequal = require('lodash.isequal');
+import assign = require('lodash/assign');
+import isequal = require('lodash/isEqual');
 import * as fetchMock from 'fetch-mock';
 
 // make it easy to assert with promises
@@ -197,7 +197,7 @@ describe('network interface', () => {
       } catch (error) {
         assert.equal(
           error.message,
-          'Middleware must implement the applyMiddleware function'
+          'Middleware must implement the applyMiddleware function',
         );
       }
 
@@ -283,7 +283,7 @@ describe('network interface', () => {
             variables: { personNum: 1 },
             debugName: 'People query',
             newParam: '0123456789',
-          }
+          },
         );
       });
     });
@@ -310,9 +310,64 @@ describe('network interface', () => {
         complexResult,
       );
     });
+
+    it('should chain use() calls', () => {
+      const testWare1 = TestWare([
+        { key: 'personNum', val: 1 },
+      ]);
+      const testWare2 = TestWare([
+        { key: 'filmNum', val: 1 },
+      ]);
+
+      const swapi = createNetworkInterface({ uri: swapiUrl });
+      swapi.use([testWare1])
+        .use([testWare2]);
+      const simpleRequest = {
+        query: complexQueryWithTwoVars,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        complexResult,
+      );
+    });
+
+    it('should chain use() and useAfter() calls', () => {
+      const testWare1 = TestWare();
+      const testWare2 = TestAfterWare();
+
+      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      networkInterface.use([testWare1])
+        .useAfter([testWare2]);
+      assert.deepEqual(networkInterface._middlewares, [testWare1]);
+      assert.deepEqual(networkInterface._afterwares, [testWare2]);
+    });
+
   });
 
   describe('afterware', () => {
+    it('should return errors thrown in afterwares', () => {
+      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      networkInterface.useAfter([{
+        applyAfterware() {
+          throw Error('Afterware error');
+        },
+      }]);
+
+      const simpleRequest = {
+        query: simpleQueryWithNoVars,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.isRejected(
+        networkInterface.query(simpleRequest),
+        Error,
+        'Afterware error',
+      );
+    });
     it('should throw an error if you pass something bad', () => {
       const malWare = TestAfterWare();
       delete malWare.applyAfterware;
@@ -324,7 +379,7 @@ describe('network interface', () => {
       } catch (error) {
         assert.equal(
           error.message,
-          'Afterware must implement the applyAfterware function'
+          'Afterware must implement the applyAfterware function',
         );
       }
 
@@ -348,6 +403,29 @@ describe('network interface', () => {
 
       assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
     });
+
+    it('should chain useAfter() calls', () => {
+      const testWare1 = TestAfterWare();
+      const testWare2 = TestAfterWare();
+
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
+      networkInterface.useAfter([testWare1])
+        .useAfter([testWare2]);
+
+      assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
+    });
+
+    it('should chain useAfter() and use() calls', () => {
+      const testWare1 = TestAfterWare();
+      const testWare2 = TestWare();
+
+      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      networkInterface.useAfter([testWare1])
+        .use([testWare2]);
+      assert.deepEqual(networkInterface._middlewares, [testWare2]);
+      assert.deepEqual(networkInterface._afterwares, [testWare1]);
+    });
+
   });
 
   describe('making a request', () => {
@@ -386,7 +464,7 @@ describe('network interface', () => {
 function TestWare(
   variables: Array<{ key: string, val: any }> = [],
   options: Array<{ key: string, val: any }> = [],
-  bodyParams: Array<{ key: string, val: any }> = []
+  bodyParams: Array<{ key: string, val: any }> = [],
 ) {
 
   return {
@@ -410,7 +488,7 @@ function TestWare(
 
 // simulate afterware by altering variables and options
 function TestAfterWare(
-  options: Array<{ key: string, val: any }> = []
+  options: Array<{ key: string, val: any }> = [],
 ) {
 
   return {

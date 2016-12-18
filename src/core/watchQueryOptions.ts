@@ -5,6 +5,8 @@ import {
 
 import {
   OperationResultReducer,
+  MutationBehavior,
+  MutationQueryReducersMap,
 } from '../data/mutationResults';
 
 /**
@@ -63,6 +65,12 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
    */
   // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a lot of tests.
   query: Document;
+
+  /**
+   * Arbitrary metadata stored in Redux with this query.  Designed for debugging,
+   * developer tools, etc.
+   */
+  metadata?: any;
 }
 
 // This interface is deprecated because we no longer pass around fragments separately in the core.
@@ -78,6 +86,12 @@ export interface DeprecatedWatchQueryOptions extends ModifiableWatchQueryOptions
    * referenced from the query document.
    */
   fragments?: FragmentDefinition[];
+
+  /**
+   * Arbitrary metadata stored in Redux with this query.  Designed for debugging,
+   * developer tools, etc.
+   */
+  metadata?: any;
 }
 
 export interface FetchMoreQueryOptions {
@@ -93,10 +107,21 @@ export type SubscribeToMoreOptions = {
     subscriptionData: { data: any },
     variables: { [key: string]: any },
   }) => Object;
-}
+  onError?: (error: Error) => void;
+};
 
 export interface DeprecatedSubscriptionOptions {
   query: Document;
   variables?: { [key: string]: any };
   fragments?: FragmentDefinition[];
 };
+
+export interface MutationOptions {
+  mutation: Document;
+  variables?: Object;
+  resultBehaviors?: MutationBehavior[];
+  fragments?: FragmentDefinition[];
+  optimisticResponse?: Object;
+  updateQueries?: MutationQueryReducersMap;
+  refetchQueries?: string[];
+}

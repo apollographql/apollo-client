@@ -19,7 +19,7 @@ export type QueryResultAction = {
   operationName: string;
   requestId: number;
   extraReducers?: ApolloReducer[];
-}
+};
 
 export function isQueryResultAction(action: ApolloAction): action is QueryResultAction {
   return action.type === 'APOLLO_QUERY_RESULT';
@@ -48,6 +48,7 @@ export interface QueryInitAction {
   storePreviousVariables: boolean;
   isRefetch: boolean;
   isPoll: boolean;
+  metadata: any;
 }
 
 export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {
@@ -59,6 +60,7 @@ export interface QueryResultClientAction {
   result: GraphQLResult;
   complete: boolean;
   queryId: string;
+  requestId: number;
 }
 
 export function isQueryResultClientAction(action: ApolloAction): action is QueryResultClientAction {
@@ -144,7 +146,7 @@ export type SubscriptionResultAction = {
   document: Document;
   operationName: string;
   extraReducers?: ApolloReducer[];
-}
+};
 
 export function isSubscriptionResultAction(action: ApolloAction): action is SubscriptionResultAction {
   return action.type === 'APOLLO_SUBSCRIPTION_RESULT';

@@ -7,7 +7,7 @@ import {
   MockedSubscription,
 } from './mocks/mockNetworkInterface';
 
-import * as _ from 'lodash';
+import omit = require('lodash/omit');
 
 import gql from 'graphql-tag';
 
@@ -80,7 +80,7 @@ describe('MockSubscriptionNetworkInterface', () => {
   });
 
   it('throws an error when firing a result array is empty', () => {
-    const noResultSub = _.omit(sub1, 'results') as MockedSubscription;
+    const noResultSub = omit(sub1, 'results') as MockedSubscription;
 
     assert.throw(() => {
       const networkInterface = mockSubscriptionNetworkInterface([noResultSub]);
@@ -99,7 +99,7 @@ describe('MockSubscriptionNetworkInterface', () => {
         },
         (error, result) => {
           assert.deepEqual(result, result1.result);
-        }
+        },
       );
       networkInterface.fireResult(0);
     });
@@ -107,7 +107,7 @@ describe('MockSubscriptionNetworkInterface', () => {
 
 
   it('throws an error when firing a subscription id that does not exist', () => {
-    const noResultSub = _.omit(sub1, 'results') as MockedSubscription;
+    const noResultSub = omit(sub1, 'results') as MockedSubscription;
 
     assert.throw(() => {
       const networkInterface = mockSubscriptionNetworkInterface([noResultSub]);
@@ -126,7 +126,7 @@ describe('MockSubscriptionNetworkInterface', () => {
         },
         (error, result) => {
           assert.deepEqual(result, result1.result);
-        }
+        },
       );
       networkInterface.fireResult(4);
     });
@@ -149,7 +149,7 @@ describe('MockSubscriptionNetworkInterface', () => {
       (error, result) => {
         assert.deepEqual(result, result1.result);
         done();
-      }
+      },
     );
     networkInterface.fireResult(0);
     assert.equal(id, 0);
@@ -174,7 +174,7 @@ describe('MockSubscriptionNetworkInterface', () => {
       (error, result) => {
         assert.deepEqual(result, result1.result);
         done();
-      }
+      },
     );
     networkInterface.fireResult(0);
   });
@@ -197,7 +197,7 @@ describe('MockSubscriptionNetworkInterface', () => {
       },
       (error, result) => {
         allResults.push(result);
-      }
+      },
     );
 
       for (let i = 0; i < 4; i++) {
@@ -206,7 +206,7 @@ describe('MockSubscriptionNetworkInterface', () => {
       setTimeout(() => {
         assert.deepEqual(
           allResults,
-          [result1.result, result2.result, result3.result, result4.result]
+          [result1.result, result2.result, result3.result, result4.result],
         );
         done();
       }, 50);
@@ -231,7 +231,7 @@ describe('MockSubscriptionNetworkInterface', () => {
       },
       (error, result) => {
         assert(false);
-      }
+      },
     );
     networkInterface.unsubscribe(0);
     assert.throw(() => {

@@ -13,7 +13,7 @@ import {
   resultKeyNameFromField,
 } from './storeUtils';
 
-import isNumber = require('lodash.isnumber');
+import isNumber = require('lodash/isNumber');
 
 // The type of a path
 export type StorePath = (string|number)[];
@@ -63,7 +63,7 @@ export function scopeSelectionSetToResultPath({
 function followOnePathSegment(
   currSelSet: SelectionSet,
   pathSegment: string,
-  fragmentMap: FragmentMap
+  fragmentMap: FragmentMap,
 ): SelectionSet {
   const matchingFields: Field[] = getMatchingFields(currSelSet, pathSegment, fragmentMap);
 
@@ -83,7 +83,7 @@ Please file an issue on Apollo Client if you run into this situation.`);
 function getMatchingFields(
   currSelSet: SelectionSet,
   pathSegment: string,
-  fragmentMap: FragmentMap
+  fragmentMap: FragmentMap,
 ): Field[] {
   let matching: any[] = [];
 

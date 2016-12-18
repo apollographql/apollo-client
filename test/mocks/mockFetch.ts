@@ -68,7 +68,7 @@ export class MockFetch {
   public fetchParamsToKey(url: string, opts: RequestInit): string {
     return JSON.stringify({
       url,
-      opts,
+      opts: sortByKey(opts),
     });
   }
 
@@ -78,6 +78,19 @@ export class MockFetch {
   public getFetch() {
     return this.fetch.bind(this);
   }
+}
+
+function sortByKey(obj: any): Object {
+  return Object.keys(obj).sort().reduce(
+    (ret: any, key: string): Object => (
+      Object.assign({
+        [key]: Object.prototype.toString.call(obj[key]).slice(8, -1) === 'Object'
+          ? sortByKey(obj[key])
+          : obj[key],
+      }, ret)
+    ),
+    {},
+  );
 }
 
 export function createMockFetch(...mockedResponses: MockedFetchResponse[]) {

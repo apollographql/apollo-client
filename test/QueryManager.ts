@@ -1149,6 +1149,70 @@ describe('QueryManager', () => {
     });
   });
 
+  it('supports noFetch fetching only cached data with fragments', () => {
+    const primeQuery = gql`
+      query primeQuery {
+        luke: people_one(id: 1) {
+          name
+          __typename
+          ... on jedi {
+            age
+          }
+        }
+      }
+    `;
+
+    const complexQuery = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          name
+          __typename
+          ... on jedi {
+            age
+          }
+        }
+        vader: people_one(id: 4) {
+          name
+          __typename
+          ... on jedi {
+            age
+          }
+        }
+      }
+    `;
+
+    const data1 = {
+      luke: {
+        name: 'Luke Skywalker',
+        age: 50,
+        __typename: 'jedi',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query: primeQuery },
+        result: { data: data1 },
+      },
+    );
+
+    // First, prime the cache
+    return queryManager.query({
+      query: primeQuery,
+    }).then(() => {
+      const handle = queryManager.watchQuery({
+        query: complexQuery,
+        noFetch: true,
+      });
+
+      return handle.result().then((result) => {
+        assert.equal(result.data['luke'].name, 'Luke Skywalker');
+        assert.equal(result.data['luke'].age, '50');
+        assert.notProperty(result.data, 'vader');
+      });
+    });
+  });
+
   it('runs a mutation', () => {
     return assertMutationRoundtrip({
       mutation: gql`

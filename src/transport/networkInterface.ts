@@ -1,7 +1,7 @@
 import isString = require('lodash/isString');
 import assign = require('lodash/assign');
 import mapValues = require('lodash/mapValues');
-import 'isomorphic-fetch';
+import 'whatwg-fetch';
 
 import {
   GraphQLResult,

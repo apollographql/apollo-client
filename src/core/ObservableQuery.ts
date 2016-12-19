@@ -271,8 +271,8 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       this.stopPolling();
     }
 
-    // If forceFetch went from false to true
-    if (!oldOptions.forceFetch && opts.forceFetch) {
+    // If forceFetch went from false to true or noFetch went from true to false
+    if ((!oldOptions.forceFetch && opts.forceFetch) || (oldOptions.noFetch && !opts.noFetch)) {
       return this.queryManager.fetchQuery(this.queryId, this.options)
         .then(result => this.queryManager.transformResult(result));
     }

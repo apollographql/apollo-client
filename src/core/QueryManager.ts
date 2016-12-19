@@ -340,7 +340,7 @@ export class QueryManager {
       }
 
       const shouldNotifyIfLoading = queryStoreValue.returnPartialData
-        || queryStoreValue.previousVariables;
+        || queryStoreValue.previousVariables || options.noFetch;
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 

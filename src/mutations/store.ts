@@ -31,7 +31,7 @@ export interface SelectionSetWithRoot {
 
 export function mutations(
   previousState: MutationStore = {},
-  action: ApolloAction
+  action: ApolloAction,
 ): MutationStore {
   if (isMutationInitAction(action)) {
     const newState = assign({}, previousState) as MutationStore;

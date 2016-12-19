@@ -6,6 +6,24 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.23
+- Revert back to using `whatwg-fetch` because `isomorphic-fetch` does not work in react native  [PR #1058](https://github.com/apollostack/apollo-client/pull/1058)
+
+### 0.5.22
+- Fix bug that caused updateQuery and reducers to run on stopped queries [PR #1054](https://github.com/apollostack/apollo-client/pull/1054)
+- Ensure transporters are using `isomorphic-fetch` instead of `whatwg-fetch` for universal compatibility [PR #1018](https://github.com/apollostack/apollo-client/pull/1018)
+
+### 0.5.21
+
+- Include a `version` field on every `ApolloClient` instance that represents the version of the 'apollo-client' package used to create it. [PR #1038](https://github.com/apollostack/apollo-client/pull/1038)
+
+### 0.5.20
+
+- Attach to `window` for devtools if not in production, so that improperly configured environments do get the dev tools. [PR #1037](https://github.com/apollostack/apollo-client/pull/1037)
+
+### 0.5.19
+- Make sure stopped queries are not refetched on store reset [PR #960](https://github.com/apollostack/apollo-client/pull/960)
+
 ### 0.5.18
 - Make sure `APOLLO_QUERY_RESULT_CLIENT` action has a `requestId`, just like `APOLLO_QUERY_RESULT` does, so that it can be associated with the relevant `APOLLO_QUERY_INIT` action.
 

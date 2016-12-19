@@ -45,7 +45,7 @@ export function data(
   action: ApolloAction,
   queries: QueryStore,
   mutations: MutationStore,
-  config: ApolloReducerConfig
+  config: ApolloReducerConfig,
 ): NormalizedCache {
   // XXX This is hopefully a temporary binding to get around
   // https://github.com/Microsoft/TypeScript/issues/7719

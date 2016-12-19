@@ -39,7 +39,6 @@ export type QueryStoreValue = {
   queryString: string;
   variables: Object;
   previousVariables: Object;
-  stopped: boolean;
   loading: boolean;
   networkStatus: NetworkStatus;
   networkError: Error;
@@ -48,7 +47,7 @@ export type QueryStoreValue = {
   returnPartialData: boolean;
   lastRequestId: number;
   metadata: any;
-}
+};
 
 export interface SelectionSetWithRoot {
   id: string;
@@ -58,7 +57,7 @@ export interface SelectionSetWithRoot {
 
 export function queries(
   previousState: QueryStore = {},
-  action: ApolloAction
+  action: ApolloAction,
 ): QueryStore {
   if (isQueryInitAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
@@ -108,7 +107,6 @@ export function queries(
       queryString: action.queryString,
       variables: action.variables,
       previousVariables,
-      stopped: false,
       loading: true,
       networkError: null,
       graphQLErrors: null,
@@ -182,12 +180,7 @@ export function queries(
   } else if (isQueryStopAction(action)) {
     const newState = assign({}, previousState) as QueryStore;
 
-    newState[action.queryId] = assign({}, previousState[action.queryId], {
-      loading: false,
-      stopped: true,
-      networkStatus: NetworkStatus.ready,
-    }) as QueryStoreValue;
-
+    delete newState[action.queryId];
     return newState;
   } else if (isStoreResetAction(action)) {
     return resetQueryState(previousState, action);

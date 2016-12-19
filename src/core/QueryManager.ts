@@ -108,7 +108,7 @@ export type ApolloQueryResult = {
 
   // This type is different from the GraphQLResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.
-}
+};
 
 // A result transformer is given the data that is to be returned from the store from a query or
 // mutation, and can modify or observe it before the value is provided to your application.
@@ -150,7 +150,7 @@ export class QueryManager {
   private queryListeners: { [queryId: string]: QueryListener[] };
   private queryDocuments: { [queryId: string]: Document };
 
-  private idCounter = 0;
+  private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
 
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
@@ -271,19 +271,6 @@ export class QueryManager {
 
     this.queryDocuments[mutationId] = mutation;
 
-    const extraReducers = Object.keys(this.observableQueries).map( queryId => {
-      const queryOptions = this.observableQueries[queryId].observableQuery.options;
-      if (queryOptions.reducer) {
-        return createStoreReducer(
-          queryOptions.reducer,
-          queryOptions.query,
-          queryOptions.variables,
-          this.reducerConfig,
-          );
-      }
-      return null;
-    }).filter( reducer => reducer !== null );
-
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
@@ -293,7 +280,7 @@ export class QueryManager {
       mutationId,
       optimisticResponse,
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
-      extraReducers,
+      extraReducers: this.getExtraReducers(),
     });
 
     return new Promise((resolve, reject) => {
@@ -315,7 +302,7 @@ export class QueryManager {
                 ...resultBehaviors,
                 ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
             ],
-            extraReducers,
+            extraReducers: this.getExtraReducers(),
           });
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
@@ -342,7 +329,7 @@ export class QueryManager {
   public queryListenerForObserver(
     queryId: string,
     options: WatchQueryOptions,
-    observer: Observer<ApolloQueryResult>
+    observer: Observer<ApolloQueryResult>,
   ): QueryListener {
     let lastResult: ApolloQueryResult;
     return (queryStoreValue: QueryStoreValue) => {
@@ -382,7 +369,7 @@ export class QueryManager {
               /* tslint:disable-next-line */
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +
-                'for the query ' + options.query.loc.source
+                'for the query ' + options.query.loc.source,
               );
             }
           }
@@ -607,7 +594,7 @@ export class QueryManager {
     // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
     const queryDef = getQueryDefinition(observableQuery.options.query);
     if (queryDef.name && queryDef.name.value) {
-      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+      const queryName = queryDef.name.value;
 
       // XXX we may we want to warn the user about query name conflicts in the future
       this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
@@ -617,11 +604,14 @@ export class QueryManager {
 
   public removeObservableQuery(queryId: string) {
     const observableQuery = this.observableQueries[queryId].observableQuery;
-    const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+    const definition = getQueryDefinition(observableQuery.options.query);
+    const queryName = definition.name ? definition.name.value : null;
     delete this.observableQueries[queryId];
-    this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter((val) => {
-      return !(observableQuery.queryId === val);
-    });
+    if (queryName) {
+      this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter((val) => {
+        return !(observableQuery.queryId === val);
+      });
+    }
   }
 
   public resetStore(): void {
@@ -648,7 +638,9 @@ export class QueryManager {
     // the promise for it will be rejected and its results will not be written to the
     // store.
     Object.keys(this.observableQueries).forEach((queryId) => {
-      if (! this.observableQueries[queryId].observableQuery.options.noFetch) {
+      const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
+
+      if (!this.observableQueries[queryId].observableQuery.options.noFetch) {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });
@@ -666,7 +658,7 @@ export class QueryManager {
   }
 
   public startGraphQLSubscription(
-    options: SubscriptionOptions
+    options: SubscriptionOptions,
   ): Observable<any> {
     const {
       document,
@@ -836,7 +828,7 @@ export class QueryManager {
   private collectResultBehaviorsFromUpdateQueries(
     updateQueries: MutationQueryReducersMap,
     mutationResult: Object,
-    isOptimistic = false
+    isOptimistic = false,
   ): MutationBehavior[] {
     if (!updateQueries) {
       return [];

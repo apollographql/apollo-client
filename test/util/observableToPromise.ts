@@ -30,7 +30,7 @@ export function observableToPromiseAndSubscription({
     wait = -1,
     errorCallbacks = [],
   }: Options,
-  ...cbs: ResultCallback[]
+  ...cbs: ResultCallback[],
 ): { promise: Promise<any[]>, subscription: Subscription } {
 
   let subscription: Subscription;
@@ -98,7 +98,7 @@ export function observableToPromiseAndSubscription({
 
 export default function(
   options: Options,
-  ...cbs: ResultCallback[]
+  ...cbs: ResultCallback[],
 ): Promise<any[]> {
   return observableToPromiseAndSubscription(options, ...cbs).promise;
 }

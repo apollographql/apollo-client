@@ -35,7 +35,7 @@ export type ApolloCurrentResult = {
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
-}
+};
 
 export interface FetchMoreOptions {
   updateQuery: (previousQueryResult: Object, options: {
@@ -170,7 +170,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public fetchMore(
-    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions
+    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
   ): Promise<ApolloQueryResult> {
     return Promise.resolve()
       .then(() => {
@@ -236,7 +236,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
             previousResult, {
               subscriptionData: { data },
               variables,
-            }
+            },
           );
         };
         this.updateQuery(mapFn);
@@ -306,7 +306,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
   }
 
   public updateQuery(
-    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any
+    mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any,
   ): void {
     const {
       previousResult,
@@ -366,6 +366,11 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
     const retQuerySubscription = {
       unsubscribe: () => {
+        if (this.observers.findIndex(el => el === observer) < 0 ) {
+          // XXX can't unsubscribe if you've already unsubscribed...
+          // for some reason unsubscribe gets called multiple times by some of the tests
+          return;
+        }
         this.observers = this.observers.filter((obs) => obs !== observer);
 
         if (this.observers.length === 0) {
@@ -420,7 +425,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.queryManager.startQuery(
       this.queryId,
       this.options,
-      this.queryManager.queryListenerForObserver(this.queryId, this.options, observer)
+      this.queryManager.queryListenerForObserver(this.queryId, this.options, observer),
     );
   }
 
@@ -435,6 +440,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     this.subscriptionHandles = [];
 
     this.queryManager.stopQuery(this.queryId);
+    if (this.shouldSubscribe) {
+      this.queryManager.removeObservableQuery(this.queryId);
+    }
     this.observers = [];
   }
 }

@@ -1150,28 +1150,9 @@ describe('QueryManager', () => {
   });
 
   it('supports noFetch fetching only cached data with fragments', () => {
-    const primeQuery = gql`
-      query primeQuery {
+    const query = gql`
+      query query {
         luke: people_one(id: 1) {
-          name
-          __typename
-          ... on jedi {
-            age
-          }
-        }
-      }
-    `;
-
-    const complexQuery = gql`
-      query complexQuery {
-        luke: people_one(id: 1) {
-          name
-          __typename
-          ... on jedi {
-            age
-          }
-        }
-        vader: people_one(id: 4) {
           name
           __typename
           ... on jedi {
@@ -1191,17 +1172,17 @@ describe('QueryManager', () => {
 
     const queryManager = mockQueryManager(
       {
-        request: { query: primeQuery },
+        request: { query },
         result: { data: data1 },
       },
     );
 
     // First, prime the cache
     return queryManager.query({
-      query: primeQuery,
+      query,
     }).then(() => {
       const handle = queryManager.watchQuery({
-        query: complexQuery,
+        query,
         noFetch: true,
       });
 

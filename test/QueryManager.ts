@@ -1150,11 +1150,23 @@ describe('QueryManager', () => {
   });
 
   it('supports noFetch fetching only cached data with fragments', () => {
-    const query = gql`
+    const cachedQuery = gql`
       query query {
         luke: people_one(id: 1) {
           name
           __typename
+          ... on jedi {
+            age
+            __typename
+          }
+        }
+      }
+    `;
+
+    const query = gql`
+      query query {
+        luke: people_one(id: 1) {
+          name
           ... on jedi {
             age
           }
@@ -1170,16 +1182,17 @@ describe('QueryManager', () => {
       },
     };
 
-    const queryManager = mockQueryManager(
-      {
-        request: { query },
+    const queryManager = createQueryManager({
+      networkInterface: mockNetworkInterface({
+        request: { query: cachedQuery },
         result: { data: data1 },
-      },
-    );
+      }),
+      addTypename: true,
+    });
 
     // First, prime the cache
     return queryManager.query({
-      query,
+      query: cachedQuery,
     }).then(() => {
       const handle = queryManager.watchQuery({
         query,
@@ -1188,8 +1201,7 @@ describe('QueryManager', () => {
 
       return handle.result().then((result) => {
         assert.equal(result.data['luke'].name, 'Luke Skywalker');
-        assert.equal(result.data['luke'].age, '50');
-        assert.notProperty(result.data, 'vader');
+        assert.equal(result.data['luke'].age, 50);
       });
     });
   });

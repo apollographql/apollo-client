@@ -36,6 +36,9 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 - [ ] Deep-freezing of results in development mode
 - [ ] `fetchMore` network status
 
+### Performance
+- [ ] Query deduplication
+
 ### GraphQL features
 * support for custom scalars
 * fragment matching for unions + interface types

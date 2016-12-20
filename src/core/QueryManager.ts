@@ -4,6 +4,10 @@ import {
   Request,
 } from '../transport/networkInterface';
 
+import {
+  Deduplicator,
+} from '../transport/Deduplicator';
+
 import forOwn = require('lodash/forOwn');
 import isEqual = require('lodash/isEqual');
 import assign = require('lodash/assign');
@@ -139,6 +143,7 @@ export class QueryManager {
 
   private addTypename: boolean;
   private networkInterface: NetworkInterface;
+  private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
@@ -193,6 +198,7 @@ export class QueryManager {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
+    this.deduplicator = new Deduplicator(networkInterface);
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
@@ -931,7 +937,7 @@ export class QueryManager {
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      this.networkInterface.query(request)
+      this.deduplicator.query(request)
         .then((result: GraphQLResult) => {
 
           const extraReducers = this.getExtraReducers();

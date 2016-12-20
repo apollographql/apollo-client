@@ -1,4 +1,7 @@
-import { isString, assign, mapValues } from 'lodash';
+import isString from 'lodash/isString';
+import assign from 'lodash/assign';
+import mapValues from 'lodash/mapValues';
+
 import 'whatwg-fetch';
 
 import {

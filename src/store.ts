@@ -45,7 +45,7 @@ import {
   CustomResolverMap,
 } from './data/readFromStore';
 
-import { assign } from 'lodash';
+import assign from 'lodash/assign';
 
 export interface Store {
   data: NormalizedCache;

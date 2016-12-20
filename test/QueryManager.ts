@@ -42,7 +42,7 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 
 import * as Rx from 'rxjs';
 
-import assign = require('lodash/assign');
+import { assign } from 'lodash';
 
 import mockNetworkInterface, {
   ParsedRequest,

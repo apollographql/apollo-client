@@ -1,7 +1,5 @@
 // For development only!
-import isObject = require('lodash/isObject');
-import omit = require('lodash/omit');
-import mapValues = require('lodash/mapValues');
+import { isObject, omit, mapValues } from 'lodash';
 
 export function stripLoc(obj: Object) {
   if (Array.isArray(obj)) {

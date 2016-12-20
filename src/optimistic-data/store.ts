@@ -18,7 +18,7 @@ import {
   Store,
 } from '../store';
 
-import pick = require('lodash/pick');
+import pick from 'lodash/pick';
 
 // a stack of patches of new or changed documents
 export type OptimisticStore = {

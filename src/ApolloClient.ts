@@ -13,8 +13,8 @@ import {
 
 } from 'graphql';
 
-import isUndefined = require('lodash/isUndefined');
-import isString = require('lodash/isString');
+import isUndefined from 'lodash/isUndefined';
+import isString from 'lodash/isString';
 
 import {
   createApolloStore,

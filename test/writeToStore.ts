@@ -1,7 +1,5 @@
 import { assert } from 'chai';
-import cloneDeep = require('lodash/cloneDeep');
-import assign = require('lodash/assign');
-import omit = require('lodash/omit');
+import { cloneDeep, assign, omit } from 'lodash';
 
 import {
   writeQueryToStore,

@@ -7,7 +7,7 @@ import {
   MockedSubscription,
 } from './mocks/mockNetworkInterface';
 
-import omit = require('lodash/omit');
+import { omit } from 'lodash';
 
 import gql from 'graphql-tag';
 

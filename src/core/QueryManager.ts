@@ -148,6 +148,7 @@ export class QueryManager {
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private reducerConfig: ApolloReducerConfig;
+  private queryDeduplication: boolean;
 
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -186,6 +187,7 @@ export class QueryManager {
     resultTransformer,
     resultComparator,
     addTypename = true,
+    queryDeduplication = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -194,6 +196,7 @@ export class QueryManager {
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
     addTypename?: boolean,
+    queryDeduplication?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -937,7 +940,7 @@ export class QueryManager {
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      this.deduplicator.query(request)
+      this.deduplicator.query(request, this.queryDeduplication)
         .then((result: GraphQLResult) => {
 
           const extraReducers = this.getExtraReducers();

@@ -113,6 +113,7 @@ export default class ApolloClient {
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
+  public queryDeduplication: boolean;
 
   private devToolsHookCb: Function;
 
@@ -164,6 +165,7 @@ export default class ApolloClient {
     queryTransformer,
     customResolvers,
     connectToDevTools,
+    queryDeduplication = false,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -179,6 +181,7 @@ export default class ApolloClient {
     queryTransformer?: any,
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
+    queryDeduplication?: boolean,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -219,6 +222,7 @@ export default class ApolloClient {
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.queryDeduplication = queryDeduplication;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -555,6 +559,7 @@ export default class ApolloClient {
       resultTransformer: this.resultTransformer,
       resultComparator: this.resultComparator,
       reducerConfig: this.reducerConfig,
+      queryDeduplication: this.queryDeduplication,
     });
   };
 }

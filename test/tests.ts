@@ -30,6 +30,7 @@ import './readFromStore';
 import './roundtrip';
 import './diffAgainstStore';
 import './networkInterface';
+import './deduplicator';
 import './QueryManager';
 import './client';
 import './store';

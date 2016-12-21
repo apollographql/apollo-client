@@ -6,6 +6,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.24
 - Add option to deduplicate in-flight queries  [PR #1070](https://github.com/apollostack/apollo-client/pull/1070)
 
 ### 0.5.23

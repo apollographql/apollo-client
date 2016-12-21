@@ -6,6 +6,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+- Add option to deduplicate in-flight queries  [PR #1070](https://github.com/apollostack/apollo-client/pull/1070)
+
 ### 0.5.23
 - Revert back to using `whatwg-fetch` because `isomorphic-fetch` does not work in react native  [PR #1058](https://github.com/apollostack/apollo-client/pull/1058)
 

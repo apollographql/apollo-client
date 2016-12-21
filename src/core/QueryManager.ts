@@ -4,6 +4,10 @@ import {
   Request,
 } from '../transport/networkInterface';
 
+import {
+  Deduplicator,
+} from '../transport/Deduplicator';
+
 import forOwn = require('lodash/forOwn');
 import isEqual = require('lodash/isEqual');
 import assign = require('lodash/assign');
@@ -139,10 +143,12 @@ export class QueryManager {
 
   private addTypename: boolean;
   private networkInterface: NetworkInterface;
+  private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private reducerConfig: ApolloReducerConfig;
+  private queryDeduplication: boolean;
 
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -181,6 +187,7 @@ export class QueryManager {
     resultTransformer,
     resultComparator,
     addTypename = true,
+    queryDeduplication = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -189,10 +196,12 @@ export class QueryManager {
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
     addTypename?: boolean,
+    queryDeduplication?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
+    this.deduplicator = new Deduplicator(networkInterface);
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
@@ -202,6 +211,7 @@ export class QueryManager {
     this.queryListeners = {};
     this.queryDocuments = {};
     this.addTypename = addTypename;
+    this.queryDeduplication = queryDeduplication;
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -931,7 +941,7 @@ export class QueryManager {
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      this.networkInterface.query(request)
+      this.deduplicator.query(request, this.queryDeduplication)
         .then((result: GraphQLResult) => {
 
           const extraReducers = this.getExtraReducers();

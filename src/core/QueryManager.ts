@@ -211,6 +211,7 @@ export class QueryManager {
     this.queryListeners = {};
     this.queryDocuments = {};
     this.addTypename = addTypename;
+    this.queryDeduplication = queryDeduplication;
 
     this.scheduler = new QueryScheduler({
       queryManager: this,

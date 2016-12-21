@@ -136,14 +136,6 @@ export default class ApolloClient {
    * @param dataIdFromObject A function that returns a object identifier given a particular result
    * object.
    *
-   * @param queryTransformer A function that takes a {@link SelectionSet} and modifies it in place
-   * in some way. The query transformer is then applied to the every GraphQL document before it is
-   * sent to the server.
-   *
-   * For example, a query transformer can add the __typename field to every level of a GraphQL
-   * document. In fact, the @{addTypename} query transformer does exactly this.
-   *
-   *
    * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
    *
    * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
@@ -162,13 +154,11 @@ export default class ApolloClient {
     reduxRootSelector,
     initialState,
     dataIdFromObject,
-    resultTransformer,
     resultComparator,
     ssrMode = false,
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
     addTypename = true,
-    queryTransformer,
     customResolvers,
     connectToDevTools,
     queryDeduplication = false,
@@ -184,7 +174,6 @@ export default class ApolloClient {
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
     addTypename?: boolean,
-    queryTransformer?: any,
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
@@ -199,11 +188,6 @@ export default class ApolloClient {
           'please use the "reduxRootSelector" instead.',
       );
       this.reduxRootKey = reduxRootKey;
-    }
-
-    if (queryTransformer) {
-      throw new Error('queryTransformer option no longer supported in Apollo Client 0.5. ' +
-        'Instead, there is a new "addTypename" option, which is on by default.');
     }
 
     if (!reduxRootSelector && reduxRootKey) {

@@ -149,6 +149,9 @@ export default class ApolloClient {
    * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
    * server side render.
    *
+   * @param queryDeduplication If set to true, a query will not be sent to the server if a query
+   * with identical parameters (query, variables, operationName) is already in flight.
+   *
    */
   constructor({
     networkInterface,

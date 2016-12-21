@@ -191,12 +191,6 @@ describe('client', () => {
     assert.equal(client.reduxRootKey, 'apollo');
   });
 
-  it('throws on removed queryTransformer option', () => {
-    assert.throws(() => {
-      new ApolloClient({ queryTransformer: 'anything' });
-    }, /addTypename/);
-  });
-
   it('sets reduxRootKey if you use ApolloClient as middleware', () => {
     const client = new ApolloClient();
 

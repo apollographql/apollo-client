@@ -15,14 +15,14 @@ For errors of the first category, the server does not return any data that can b
 
 For errors of the second category, the server returns data *and* errors, so there is data that can be displayed to the user and Apollo Client should call `observer.error` with `{ data, errors }`, and write as much of the result to the store as possible. Any `null` fields in `result.data` should not be written to the store if there is an error with a path corresponding to that field.
 
-Note: We call `observer.error` with the partial result instead of `observer.next` in order to make error handling stay as close as possible to the current behavior.
+Note: We call `observer.error` with the partial result instead of `observer.next` in order to make error handling stay as close as possible to the current behavior. This is definitely debatable because calling `observer.error` also means the observable will stop at this point and needs to be restarted by the user if more responses are expected (as would be the case with a polling query). If we called `observer.next` instead, then the user could deal with transient GraphQL errors in a more "voluntary" way.
 
 Because initially not all servers will have support for error paths, the current behavior (discarding all data) will be used when errors without path are encountered in the result.
 
 ## Implementation steps / changes needed
 1. Call `observer.error` and discard the result if not all errors have an error path
 2. Write result to store if at least partial data is available. Ignore fields if there's an error with a path to that field.
-3. Call `observer.next` with data and errors if there is at least a partial result.
+3. Call `observer.error` with data and errors if there is at least a partial result.
 
 ## Changes to the external API
 * ApolloClient will have a new configuration option to keep using the current error behavior. Initially this could be on by default to provide a non-breaking change & smooth transition.

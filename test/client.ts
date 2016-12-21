@@ -1032,6 +1032,94 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
   });
 
+  it('does not deduplicate queries by default', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }`;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const networkInterface = mockNetworkInterface({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    },
+    {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc });
+
+    // if deduplication happened, result2.data will equal data.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      assert.deepEqual(result1.data, data);
+      assert.deepEqual(result2.data, data2);
+    });
+  });
+
+  it('deduplicates queries if the option is set', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }`;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const networkInterface = mockNetworkInterface({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    },
+    {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+      queryDeduplication: true,
+    });
+
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc });
+
+    // if deduplication didn't happen, result.data will equal data2.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      assert.deepEqual(result1.data, result2.data);
+    });
+  });
+
   describe('accepts dataIdFromObject option', () => {
     const query = gql`
       query people {

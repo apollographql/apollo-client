@@ -159,6 +159,7 @@ export default class ApolloClient {
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
     addTypename = true,
+    resultTransformer,
     customResolvers,
     connectToDevTools,
     queryDeduplication = false,

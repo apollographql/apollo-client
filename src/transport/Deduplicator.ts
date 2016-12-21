@@ -22,7 +22,13 @@ export class Deduplicator {
     this.inFlightRequestPromises = {};
   }
 
-  public query(request: Request) {
+  public query(request: Request, deduplicate = true) {
+
+    // sometimes we might not want to deduplicate a request, for example when we want to force fetch it.
+    if (!deduplicate) {
+      return this.networkInterface.query(request);
+    }
+
     const key = this.getKey(request);
     if (!this.inFlightRequestPromises[key]) {
       this.inFlightRequestPromises[key] = this.networkInterface.query(request);

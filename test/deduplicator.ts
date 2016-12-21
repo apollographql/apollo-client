@@ -81,4 +81,40 @@ describe('query deduplication', () => {
     assert.equal(called, 1);
 
   });
+
+  it(`can bypass deduplication if desired`, () => {
+
+    const document: Document = gql`query test1($x: String){
+      test(x: $x)
+    }`;
+    const variables1 = { x: 'Hello World' };
+    const variables2 = { x: 'Hello World' };
+
+    const request1: Request = {
+      query: document,
+      variables: variables1,
+      operationName: getOperationName(document),
+    };
+
+    const request2: Request = {
+      query: document,
+      variables: variables2,
+      operationName: getOperationName(document),
+    };
+
+    let called = 0;
+    const deduper = new Deduplicator({
+      query: () => {
+        called += 1;
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, 5);
+        });
+      },
+    } as any );
+
+    deduper.query(request1, false);
+    deduper.query(request2, false);
+    assert.equal(called, 2);
+
+  });
 });

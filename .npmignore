@@ -10,6 +10,5 @@ design.md
 Gruntfile.js
 rollup.config.js
 tsconfig.json
-tsconfig.test.json
 tslint.json
 typings.json

@@ -1,7 +1,8 @@
 export default {
   entry: 'lib/src/index.js',
-  dest: 'lib/bundles/apollo.umd.js',
+  dest: 'lib/apollo.umd.js',
   format: 'umd',
+  sourceMap: true,
   moduleName: 'apollo',
   globals: {
     'lodash': '_'

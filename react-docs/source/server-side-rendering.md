@@ -124,7 +124,7 @@ The `getDataFromTree` function takes your React tree, determines which queries a
 At the point that the promise resolves, your Apollo Client store will be completely initialized, which should mean your app will now render instantly (since all queries are prefetched) and you can return the stringified results in the response:
 
 ```js
-import { getDataFromTree } from "react-apollo/server"
+import { getDataFromTree } from "react-apollo"
 
 const client = new ApolloClient(....);
 
@@ -179,7 +179,7 @@ The `renderToStringWithData` function simplifies the above and simply returns th
 
 ```js
 // server application code (integrated usage)
-import { renderToStringWithData } from "react-apollo/server"
+import { renderToStringWithData } from "react-apollo"
 
 const client = new ApolloClient(....);
 

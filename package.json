@@ -13,7 +13,7 @@
     "posttest": "npm run lint",
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=38",
     "compile": "tsc",
-    "compile:test": "tsc -p tsconfig.test.json",
+    "compile:test": "npm run compile && babel lib --out-dir lib",
     "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/src/index.js -o=./dist/index.js && npm run minify:browser",
     "minify:browser": "uglifyjs --compress --mangle --screw-ie8 -o=./dist/index.min.js -- ./dist/index.js",
     "watch": "tsc -w",
@@ -53,6 +53,8 @@
   "devDependencies": {
     "@types/chai-as-promised": "0.0.28",
     "@types/mocha": "^2.2.31",
+    "babel-cli": "^6.18.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",

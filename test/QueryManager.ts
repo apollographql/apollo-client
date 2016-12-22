@@ -36,7 +36,7 @@ import ApolloClient, {
 
 import {
   ApolloQueryResult,
-} from '../src/core/QueryManager';
+} from '../src/core/types';
 
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 

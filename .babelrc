@@ -4,6 +4,7 @@
   ],
   "ignore": [
     "lib/**/*.d.ts",
-    "lib/bundles/**"
+    "lib/bundles/**",
+    "node_modules/**"
   ]
 }

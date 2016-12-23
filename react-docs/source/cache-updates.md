@@ -324,7 +324,7 @@ const CommentsPageWithData = graphql(CommentsPageQuery, {
         } else if (action.type === 'MY_CUSTOM_REDUX_ACTION') {
           return update(previousResult, {
             currentUser: { $set: null },
-          },
+          });
         }
         return previousResult;
       },

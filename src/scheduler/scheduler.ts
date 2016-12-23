@@ -18,8 +18,6 @@ import { ObservableQuery } from '../core/ObservableQuery';
 
 import { WatchQueryOptions } from '../core/watchQueryOptions';
 
-import assign = require('lodash/assign');
-
 import { NetworkStatus } from '../queries/store';
 
 export class QueryScheduler {
@@ -116,7 +114,7 @@ export class QueryScheduler {
       }
 
       const queryOptions = this.registeredQueries[queryId];
-      const pollingOptions = assign({}, queryOptions) as WatchQueryOptions;
+      const pollingOptions = { ...queryOptions } as WatchQueryOptions;
       pollingOptions.forceFetch = true;
       this.fetchQuery(queryId, pollingOptions, FetchType.poll);
       return true;

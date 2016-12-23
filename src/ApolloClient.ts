@@ -14,7 +14,6 @@ import {
 } from 'graphql';
 
 import isUndefined = require('lodash/isUndefined');
-import assign = require('lodash/assign');
 import isString = require('lodash/isString');
 
 import {
@@ -270,9 +269,10 @@ export default class ApolloClient {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
-      options = assign({}, options, {
+      options = {
+        ...options,
         forceFetch: false,
-      }) as DeprecatedWatchQueryOptions;
+      } as DeprecatedWatchQueryOptions;
     }
 
     if (options.fragments && !haveWarnedWatchQuery && process.env.NODE_ENV !== 'production') {
@@ -296,9 +296,10 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = assign({}, options, {
+    const realOptions = {
+      ...options,
       query: fullDocument,
-    });
+    };
     delete realOptions.fragments;
 
     return this.queryManager.watchQuery(realOptions);
@@ -320,9 +321,10 @@ export default class ApolloClient {
     // XXX why doesn't this stop the query after it's done?
 
     if (!this.shouldForceFetch && options.forceFetch) {
-      options = assign({}, options, {
+      options = {
+        ...options,
         forceFetch: false,
-      }) as DeprecatedWatchQueryOptions;
+      } as DeprecatedWatchQueryOptions;
     }
 
     if (options.fragments && !haveWarnedQuery && process.env.NODE_ENV !== 'production') {
@@ -346,9 +348,10 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = assign({}, options, {
+    const realOptions = {
+      ...options,
       query: fullDocument,
-    });
+    };
     delete realOptions.fragments;
 
     return this.queryManager.query(realOptions);
@@ -404,9 +407,10 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.mutation, options.fragments);
 
-    const realOptions = assign({}, options, {
+    const realOptions = {
+      ...options,
       mutation: fullDocument,
-    });
+    };
     delete realOptions.fragments;
 
     return this.queryManager.mutate(realOptions);
@@ -431,9 +435,10 @@ export default class ApolloClient {
     // We add the fragments to the document to pass only the document around internally.
     const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
-    const realOptions = assign({}, options, {
+    const realOptions = {
+      ...options,
       document: fullDocument,
-    });
+    };
     delete realOptions.fragments;
     delete realOptions.query;
 

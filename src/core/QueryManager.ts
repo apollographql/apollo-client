@@ -10,7 +10,6 @@ import {
 
 import forOwn = require('lodash/forOwn');
 import isEqual = require('lodash/isEqual');
-import assign = require('lodash/assign');
 
 import {
   ApolloStore,
@@ -433,7 +432,7 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
-    let transformedOptions = assign({}, options) as WatchQueryOptions;
+    let transformedOptions = { ...options } as WatchQueryOptions;
     if (this.addTypename) {
       transformedOptions.query = addTypenameToDocument(transformedOptions.query);
     }

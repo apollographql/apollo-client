@@ -932,10 +932,11 @@ export class QueryManager {
       noFetch,
       returnPartialData,
     } = options;
-    const request: Request = assign({}, options, {
+    const request: Request = {
+      ...options,
       query: document,
       operationName: getOperationName(document),
-    });
+    };
 
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);

@@ -240,7 +240,7 @@ describe('AST utility functions', () => {
       fragment subjectInfo on Subject {
         id
         name
-      }`
+      }`,
     );
 
     const businessAreaInfo = createFragment(gql`
@@ -290,7 +290,7 @@ fragment businessAreaInfo on BusinessArea {
       fragment subjectInfo on Subject {
         id
         name
-      }`
+      }`,
     );
 
     const businessAreaInfo = createFragment(gql`

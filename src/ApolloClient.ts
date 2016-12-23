@@ -68,6 +68,10 @@ import {
   addFragmentsToDocument,
 } from './queries/getFromAST';
 
+import {
+  version,
+} from './version';
+
 /**
  * This type defines a "selector" function that receives state from the Redux store
  * and returns the part of it that is managed by ApolloClient
@@ -108,6 +112,9 @@ export default class ApolloClient {
   public shouldForceFetch: boolean;
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
+  public version: string;
+  public queryDeduplication: boolean;
+
   private devToolsHookCb: Function;
 
   /**
@@ -129,18 +136,16 @@ export default class ApolloClient {
    * @param dataIdFromObject A function that returns a object identifier given a particular result
    * object.
    *
-   * @param queryTransformer A function that takes a {@link SelectionSet} and modifies it in place
-   * in some way. The query transformer is then applied to the every GraphQL document before it is
-   * sent to the server.
-   *
-   * For example, a query transformer can add the __typename field to every level of a GraphQL
-   * document. In fact, the @{addTypename} query transformer does exactly this.
-   *
-   *
    * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
    *
    * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
    * server side render.
+   *
+   * @param addTypename Adds the __typename field to every level of a GraphQL document, required
+   * to support certain queries that contain fragments.
+   *
+   * @param queryDeduplication If set to true, a query will not be sent to the server if a query
+   * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
   constructor({
@@ -149,15 +154,15 @@ export default class ApolloClient {
     reduxRootSelector,
     initialState,
     dataIdFromObject,
-    resultTransformer,
     resultComparator,
     ssrMode = false,
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
     addTypename = true,
-    queryTransformer,
+    resultTransformer,
     customResolvers,
     connectToDevTools,
+    queryDeduplication = false,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -170,9 +175,9 @@ export default class ApolloClient {
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
     addTypename?: boolean,
-    queryTransformer?: any,
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
+    queryDeduplication?: boolean,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -181,14 +186,9 @@ export default class ApolloClient {
     if (reduxRootKey) {
       console.warn(
           '"reduxRootKey" option is deprecated and might be removed in the upcoming versions, ' +
-          'please use the "reduxRootSelector" instead.'
+          'please use the "reduxRootSelector" instead.',
       );
       this.reduxRootKey = reduxRootKey;
-    }
-
-    if (queryTransformer) {
-      throw new Error('queryTransformer option no longer supported in Apollo Client 0.5. ' +
-        'Instead, there is a new "addTypename" option, which is on by default.');
     }
 
     if (!reduxRootSelector && reduxRootKey) {
@@ -213,6 +213,7 @@ export default class ApolloClient {
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.queryDeduplication = queryDeduplication;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -233,7 +234,7 @@ export default class ApolloClient {
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
     const defaultConnectToDevTools =
-      typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development' &&
+      typeof process === 'undefined' || (process.env && process.env.NODE_ENV !== 'production') &&
       typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__);
 
     if (typeof connectToDevTools === 'undefined') {
@@ -243,6 +244,8 @@ export default class ApolloClient {
     if (connectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
     }
+
+    this.version = version;
   }
 
   /**
@@ -276,7 +279,7 @@ export default class ApolloClient {
       console.warn(
             '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
             'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.'
+            'http://dev.apollodata.com/react/fragments.html.',
       );
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'test') {
@@ -326,7 +329,7 @@ export default class ApolloClient {
       console.warn(
             '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
             'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.'
+            'http://dev.apollodata.com/react/fragments.html.',
       );
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'test') {
@@ -389,7 +392,7 @@ export default class ApolloClient {
       console.warn(
             '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
             'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.'
+            'http://dev.apollodata.com/react/fragments.html.',
       );
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'test') {
@@ -416,7 +419,7 @@ export default class ApolloClient {
       console.warn(
             '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
             'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.'
+            'http://dev.apollodata.com/react/fragments.html.',
       );
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'test') {
@@ -467,7 +470,7 @@ export default class ApolloClient {
         return returnValue;
       };
     };
-  };
+  }
 
   /**
    * This initializes the Redux store that we use as a reactive cache.
@@ -483,7 +486,7 @@ export default class ApolloClient {
           'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
           'They should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`
+          `Please remove that option from ApolloClient constructor.`,
       );
     }
 
@@ -533,7 +536,7 @@ export default class ApolloClient {
     if (isUndefined(reduxRootSelector(store.getState()))) {
       throw new Error(
           'Existing store does not use apolloReducer. Please make sure the store ' +
-          'is properly configured and "reduxRootSelector" is correctly specified.'
+          'is properly configured and "reduxRootSelector" is correctly specified.',
       );
     }
 
@@ -547,6 +550,7 @@ export default class ApolloClient {
       resultTransformer: this.resultTransformer,
       resultComparator: this.resultComparator,
       reducerConfig: this.reducerConfig,
+      queryDeduplication: this.queryDeduplication,
     });
   };
 }

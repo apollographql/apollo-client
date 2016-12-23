@@ -17,19 +17,19 @@ import {
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server
 export default function mockNetworkInterface(
-  ...mockedResponses: MockedResponse[]
+  ...mockedResponses: MockedResponse[],
 ): NetworkInterface {
   return new MockNetworkInterface(mockedResponses);
 }
 
 export function mockSubscriptionNetworkInterface(
-  mockedSubscriptions: MockedSubscription[], ...mockedResponses: MockedResponse[]
+  mockedSubscriptions: MockedSubscription[], ...mockedResponses: MockedResponse[],
 ): MockSubscriptionNetworkInterface {
   return new MockSubscriptionNetworkInterface(mockedSubscriptions, mockedResponses);
 }
 
 export function mockBatchedNetworkInterface(
-    ...mockedResponses: MockedResponse[]
+    ...mockedResponses: MockedResponse[],
 ): BatchedNetworkInterface {
   return new MockBatchedNetworkInterface(mockedResponses);
 }

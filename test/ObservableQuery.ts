@@ -3,10 +3,30 @@ const { assert } = chai;
 import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
+import {
+  GraphQLResult,
+} from 'graphql';
+
+import {
+  QueryManager,
+} from '../src/core/QueryManager';
+import {
+  createApolloStore,
+  ApolloStore,
+} from '../src/store';
+import ApolloClient, {
+  ApolloStateSelector,
+} from '../src/ApolloClient';
 
 import mockQueryManager from './mocks/mockQueryManager';
 import mockWatchQuery from './mocks/mockWatchQuery';
+import mockNetworkInterface, {
+  ParsedRequest,
+} from './mocks/mockNetworkInterface';
 import { ObservableQuery } from '../src/core/ObservableQuery';
+import {
+  NetworkInterface,
+} from '../src/transport/networkInterface';
 
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
@@ -52,6 +72,27 @@ describe('ObservableQuery', () => {
   const error = {
     name: 'people_one',
     message: 'is offline.',
+  };
+
+  const defaultReduxRootSelector = (state: any) => state.apollo;
+  const createQueryManager = ({
+    networkInterface,
+    store,
+    reduxRootSelector,
+    addTypename = false,
+  }: {
+    networkInterface?: NetworkInterface,
+    store?: ApolloStore,
+    reduxRootSelector?: ApolloStateSelector,
+    addTypename?: boolean,
+  }) => {
+
+    return new QueryManager({
+      networkInterface: networkInterface || mockNetworkInterface(),
+      store: store || createApolloStore(),
+      reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
+      addTypename,
+    });
   };
 
   describe('setOptions', () => {
@@ -209,6 +250,103 @@ describe('ObservableQuery', () => {
           observable.setOptions({ forceFetch: true });
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, dataTwo);
+          done();
+        }
+      });
+    });
+
+    it('does a network request if noFetch becomes true then store is reset then noFetch becomes false', (done) => {
+      let queryManager: QueryManager = null;
+      let observable: ObservableQuery = null;
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          timesFired += 1;
+          return Promise.resolve({ data });
+        },
+      };
+      queryManager = createQueryManager({ networkInterface });
+      observable = queryManager.watchQuery({ query: testQuery });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          assert.equal(timesFired, 1);
+
+          setTimeout(() => {
+            observable.setOptions({noFetch: true});
+
+            queryManager.resetStore();
+          }, 0);
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, {});
+          assert.equal(timesFired, 1);
+
+          setTimeout(() => {
+            observable.setOptions({noFetch: false});
+          }, 0);
+        } else if (handleCount === 3) {
+          assert.deepEqual(result.data, data);
+          assert.equal(timesFired, 2);
+
+          done();
+        }
+      });
+    });
+
+    it('does a network request if noFetch becomes false', (done) => {
+      let queryManager: QueryManager = null;
+      let observable: ObservableQuery = null;
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<GraphQLResult> {
+          timesFired += 1;
+          return Promise.resolve({ data });
+        },
+      };
+      queryManager = createQueryManager({ networkInterface });
+      observable = queryManager.watchQuery({ query: testQuery, noFetch: true });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 2) {
+          assert.deepEqual(result.data, {});
+          assert.equal(timesFired, 0);
+
+          setTimeout(() => {
+            observable.setOptions({noFetch: false});
+          }, 0);
+        } else if (handleCount === 3) {
+          assert.deepEqual(result.data, data);
+          assert.equal(timesFired, 1);
+
           done();
         }
       });

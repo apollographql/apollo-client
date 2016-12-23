@@ -51,18 +51,18 @@ export type MutationArrayInsertBehavior = {
   resultPath: StorePath;
   storePath: StorePath;
   where: ArrayInsertWhere;
-}
+};
 
 export type MutationDeleteBehavior = {
   type: 'DELETE';
   dataId: string;
-}
+};
 
 export type MutationArrayDeleteBehavior = {
   type: 'ARRAY_DELETE';
   storePath: StorePath;
   dataId: string;
-}
+};
 
 export type MutationQueryResultBehavior = {
   type: 'QUERY_RESULT';
@@ -83,11 +83,11 @@ export type MutationBehaviorReducerArgs = {
   variables: any;
   document: Document;
   config: ApolloReducerConfig;
-}
+};
 
 export type MutationBehaviorReducerMap = {
   [type: string]: MutationBehaviorReducer;
-}
+};
 
 export type MutationBehaviorReducer = (state: NormalizedCache, args: MutationBehaviorReducerArgs) => NormalizedCache;
 

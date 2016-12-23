@@ -73,7 +73,7 @@ export class QueryScheduler {
   public startPollingQuery(
     options: WatchQueryOptions,
     queryId?: string,
-    listener?: QueryListener
+    listener?: QueryListener,
   ): string {
     if (!options.pollInterval) {
       throw new Error('Attempted to start a polling query without a polling interval.');

@@ -65,7 +65,7 @@ describe('QueryScheduler', () => {
       {
         request: queryOptions,
         result: { data },
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface: networkInterface,
@@ -111,7 +111,7 @@ describe('QueryScheduler', () => {
           query: queryOptions.query,
         },
         result: { data },
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface: networkInterface,
@@ -157,7 +157,7 @@ describe('QueryScheduler', () => {
       {
         request: queryOptions,
         result: { data },
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface,
@@ -201,7 +201,7 @@ describe('QueryScheduler', () => {
       {
         request: queryOptions,
         error,
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface,
@@ -242,7 +242,7 @@ describe('QueryScheduler', () => {
       {
         request: queryOptions,
         result: { errors },
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface,
@@ -279,7 +279,7 @@ describe('QueryScheduler', () => {
         request: queryOptions,
         result: { data },
         delay: 20000,
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface,
@@ -313,7 +313,7 @@ describe('QueryScheduler', () => {
       {
         request: queryOptions,
         result: { data },
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface,
@@ -371,7 +371,7 @@ describe('QueryScheduler', () => {
         {
           request: { query: query2 },
           result: { data: data2 },
-        }
+        },
       ),
       store: createApolloStore(),
       reduxRootSelector: defaultReduxRootSelector,
@@ -423,7 +423,7 @@ describe('QueryScheduler', () => {
         {
           request: { query },
           result: { data },
-        }
+        },
       ),
       store: createApolloStore(),
       reduxRootSelector: defaultReduxRootSelector,
@@ -473,7 +473,7 @@ describe('QueryScheduler', () => {
       {
         request: queryOptions,
         result: { data },
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface: networkInterface,
@@ -517,7 +517,7 @@ describe('QueryScheduler', () => {
       {
         request: queryOptions,
         result: { data },
-      }
+      },
     );
     const queryManager = new QueryManager({
       networkInterface: networkInterface,

@@ -197,7 +197,7 @@ describe('network interface', () => {
       } catch (error) {
         assert.equal(
           error.message,
-          'Middleware must implement the applyMiddleware function'
+          'Middleware must implement the applyMiddleware function',
         );
       }
 
@@ -283,7 +283,7 @@ describe('network interface', () => {
             variables: { personNum: 1 },
             debugName: 'People query',
             newParam: '0123456789',
-          }
+          },
         );
       });
     });
@@ -365,7 +365,7 @@ describe('network interface', () => {
       return assert.isRejected(
         networkInterface.query(simpleRequest),
         Error,
-        'Afterware error'
+        'Afterware error',
       );
     });
     it('should throw an error if you pass something bad', () => {
@@ -379,7 +379,7 @@ describe('network interface', () => {
       } catch (error) {
         assert.equal(
           error.message,
-          'Afterware must implement the applyAfterware function'
+          'Afterware must implement the applyAfterware function',
         );
       }
 
@@ -464,7 +464,7 @@ describe('network interface', () => {
 function TestWare(
   variables: Array<{ key: string, val: any }> = [],
   options: Array<{ key: string, val: any }> = [],
-  bodyParams: Array<{ key: string, val: any }> = []
+  bodyParams: Array<{ key: string, val: any }> = [],
 ) {
 
   return {
@@ -488,7 +488,7 @@ function TestWare(
 
 // simulate afterware by altering variables and options
 function TestAfterWare(
-  options: Array<{ key: string, val: any }> = []
+  options: Array<{ key: string, val: any }> = [],
 ) {
 
   return {

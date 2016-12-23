@@ -38,7 +38,7 @@ export function createFragment(
         console.warn(
             '"createFragment" is deprecated and will be removed in version 0.6, ' +
             'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.'
+            'http://dev.apollodata.com/react/fragments.html.',
         );
       }
       /* istanbul ignore if */

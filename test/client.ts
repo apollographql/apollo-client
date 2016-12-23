@@ -136,7 +136,7 @@ describe('client', () => {
         todos: todosReducer,
         apollo: client.reducer()as any,
       }),
-      applyMiddleware(client.middleware())
+      applyMiddleware(client.middleware()),
     );
 
     assert.deepEqual(client.store.getState(), store.getState());
@@ -150,7 +150,7 @@ describe('client', () => {
         combineReducers({
           todos: todosReducer,
         }),
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
       );
 
       assert.fail();
@@ -158,7 +158,7 @@ describe('client', () => {
       assert.equal(
         error.message,
         'Existing store does not use apolloReducer. Please make sure the store ' +
-        'is properly configured and "reduxRootSelector" is correctly specified.'
+        'is properly configured and "reduxRootSelector" is correctly specified.',
       );
     }
 
@@ -179,7 +179,7 @@ describe('client', () => {
           optimistic: [],
           reducerError: null,
         },
-      }
+      },
     );
   });
 
@@ -189,12 +189,6 @@ describe('client', () => {
     client.initStore();
 
     assert.equal(client.reduxRootKey, 'apollo');
-  });
-
-  it('throws on removed queryTransformer option', () => {
-    assert.throws(() => {
-      new ApolloClient({ queryTransformer: 'anything' });
-    }, /addTypename/);
   });
 
   it('sets reduxRootKey if you use ApolloClient as middleware', () => {
@@ -207,7 +201,7 @@ describe('client', () => {
         // here "client.setStore(store)" will be called internally,
         // this method throws if "reduxRootSelector" or "reduxRootKey"
         // are not configured properly
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
     );
 
     assert.equal(client.reduxRootKey, 'apollo');
@@ -228,7 +222,7 @@ describe('client', () => {
           // here "client.setStore(store)" will be called internally,
           // this method throws if "reduxRootSelector" or "reduxRootKey"
           // are not configured properly
-          applyMiddleware(client.middleware())
+          applyMiddleware(client.middleware()),
       );
 
       // Check if the key is added to the client instance, like before
@@ -250,7 +244,7 @@ describe('client', () => {
         // here "client.setStore(store)" will be called internally,
         // this method throws if "reduxRootSelector" or "reduxRootKey"
         // are not configured properly
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
     );
   });
 
@@ -268,7 +262,7 @@ describe('client', () => {
         // here "client.setStore(store)" will be called internally,
         // this method throws if "reduxRootSelector" or "reduxRootKey"
         // are not configured properly
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
     );
 
     // Check if the key is added to the client instance, like before
@@ -287,7 +281,7 @@ describe('client', () => {
     } catch (error) {
       assert.equal(
           error.message,
-          'Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.'
+          'Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.',
       );
     }
 
@@ -310,7 +304,7 @@ describe('client', () => {
           'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
           'They should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`
+          `Please remove that option from ApolloClient constructor.`,
       );
     }
   });
@@ -330,7 +324,7 @@ describe('client', () => {
           'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
           'They should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`
+          `Please remove that option from ApolloClient constructor.`,
       );
     }
   });
@@ -421,7 +415,7 @@ describe('client', () => {
         todos: todosReducer,
         apollo: client.reducer() as any, // XXX see why this type fails
       }),
-      applyMiddleware(client.middleware())
+      applyMiddleware(client.middleware()),
     );
 
     return client.query({ query })
@@ -484,17 +478,16 @@ describe('client', () => {
 
     const finalState = { apollo: assign({}, initialState.apollo, {
       queries: {
-        '0': {
+        '1': {
           queryString: print(query),
           variables: undefined,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stopped: false,
           networkError: null,
           graphQLErrors: null,
           forceFetch: false,
           returnPartialData: false,
-          lastRequestId: 1,
+          lastRequestId: 2,
           previousVariables: null,
           metadata: null,
         },
@@ -557,7 +550,7 @@ describe('client', () => {
         todos: todosReducer,
         [reduxRootKey]: client.reducer()as any,
       }),
-      applyMiddleware(client.middleware())
+      applyMiddleware(client.middleware()),
     );
 
     return client.query({ query })
@@ -1033,6 +1026,94 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
   });
 
+  it('does not deduplicate queries by default', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }`;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const networkInterface = mockNetworkInterface({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    },
+    {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc });
+
+    // if deduplication happened, result2.data will equal data.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      assert.deepEqual(result1.data, data);
+      assert.deepEqual(result2.data, data2);
+    });
+  });
+
+  it('deduplicates queries if the option is set', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }`;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const networkInterface = mockNetworkInterface({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    },
+    {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+      queryDeduplication: true,
+    });
+
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc });
+
+    // if deduplication didn't happen, result.data will equal data2.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      assert.deepEqual(result1.data, result2.data);
+    });
+  });
+
   describe('accepts dataIdFromObject option', () => {
     const query = gql`
       query people {
@@ -1075,7 +1156,7 @@ it('should not let errors in observer.next reach the store', (done) => {
             {
               id: '1',
               name: 'Luke Skywalker',
-            }
+            },
           );
         });
     });
@@ -1096,7 +1177,7 @@ it('should not let errors in observer.next reach the store', (done) => {
         combineReducers({
           apollo: client.reducer()as any,
         }),
-        applyMiddleware(client.middleware())
+        applyMiddleware(client.middleware()),
       );
 
 
@@ -1107,7 +1188,7 @@ it('should not let errors in observer.next reach the store', (done) => {
             {
               id: '1',
               name: 'Luke Skywalker',
-            }
+            },
           );
         });
     });
@@ -2051,7 +2132,7 @@ function clientRoundrip(
   query: Document,
   data: GraphQLResult,
   variables?: any,
-  fragments?: FragmentDefinition[]
+  fragments?: FragmentDefinition[],
 ) {
   const networkInterface = mockNetworkInterface({
     request: { query: cloneDeep(query) },

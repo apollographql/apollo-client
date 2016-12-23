@@ -28,7 +28,7 @@ import gql from 'graphql-tag';
 
 import { print } from 'graphql-tag/printer';
 
-import { withWarning } from './util/wrap';
+import { withWarning } from './util/wrap'; import {MiddlewareInterface} from "../src/transport/middleware";
 
 describe('network interface', () => {
   const swapiUrl = 'http://graphql-swapi.test/';
@@ -345,6 +345,27 @@ describe('network interface', () => {
       assert.deepEqual(networkInterface._afterwares, [testWare2]);
     });
 
+    it('should pass through arbitrary request vars', (done) => {
+      const testWare:MiddlewareInterface = {
+        applyMiddleware(req:MiddlewareRequest, next:Function): void {
+          assert.equal(req.request['foo'], 'bar');
+          done();
+          next();
+        }
+      };
+
+      const swapi = createNetworkInterface({uri: swapiUrl});
+      swapi.use([testWare]);
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: simpleQueryWithNoVars,
+        variables: {},
+        debugName: 'People query',
+        foo: 'bar'
+      };
+
+      swapi.query(simpleRequest);
+    });
   });
 
   describe('afterware', () => {

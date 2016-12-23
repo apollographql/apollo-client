@@ -166,9 +166,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
     // Override forceFetch for this call only
     const combinedOptions = {
       ...this.options,
-      ...{
-        forceFetch: true,
-      },
+      forceFetch: true,
     };
 
     return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
@@ -196,9 +194,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           combinedOptions = {
             ...this.options,
             ...fetchMoreOptions,
-            ...{
-              variables,
-            },
+            variables,
           };
         }
 
@@ -207,10 +203,8 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
 
         combinedOptions = {
           ...combinedOptions,
-          ...{
-            query: fullQuery,
-            forceFetch: true,
-          },
+          query: fullQuery,
+          forceFetch: true,
         } as WatchQueryOptions;
         return this.queryManager.fetchQuery(qid, combinedOptions);
       })
@@ -322,9 +316,7 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
       // Use the same options as before, but with new variables
       return this.queryManager.fetchQuery(this.queryId, {
         ...this.options,
-        ...{
-          variables: this.variables,
-        },
+        variables: this.variables,
       } as WatchQueryOptions)
         .then(result => this.queryManager.transformResult(result));
     }

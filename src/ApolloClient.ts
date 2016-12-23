@@ -271,9 +271,7 @@ export default class ApolloClient {
     if (!this.shouldForceFetch && options.forceFetch) {
       options = {
         ...options,
-        ...{
-          forceFetch: false,
-        },
+        forceFetch: false,
       } as DeprecatedWatchQueryOptions;
     }
 
@@ -300,9 +298,7 @@ export default class ApolloClient {
 
     const realOptions = {
       ...options,
-      ...{
-        query: fullDocument,
-      },
+      query: fullDocument,
     };
     delete realOptions.fragments;
 
@@ -327,9 +323,7 @@ export default class ApolloClient {
     if (!this.shouldForceFetch && options.forceFetch) {
       options = {
         ...options,
-        ...{
-          forceFetch: false,
-        },
+        forceFetch: false,
       } as DeprecatedWatchQueryOptions;
     }
 
@@ -356,9 +350,7 @@ export default class ApolloClient {
 
     const realOptions = {
       ...options,
-      ...{
-        query: fullDocument,
-      },
+      query: fullDocument,
     };
     delete realOptions.fragments;
 
@@ -417,9 +409,7 @@ export default class ApolloClient {
 
     const realOptions = {
       ...options,
-      ...{
-        mutation: fullDocument,
-      },
+      mutation: fullDocument,
     };
     delete realOptions.fragments;
 
@@ -447,9 +437,7 @@ export default class ApolloClient {
 
     const realOptions = {
       ...options,
-      ...{
-        document: fullDocument,
-      },
+      document: fullDocument,
     };
     delete realOptions.fragments;
     delete realOptions.query;

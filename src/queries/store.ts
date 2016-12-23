@@ -132,13 +132,11 @@ export function queries(
 
     newState[action.queryId] = {
       ...previousState[action.queryId],
-      ...{
-        loading: false,
-        networkError: null,
-        graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
-        previousVariables: null,
-        networkStatus: NetworkStatus.ready,
-      },
+      loading: false,
+      networkError: null,
+      graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
+      previousVariables: null,
+      networkStatus: NetworkStatus.ready,
     } as QueryStoreValue;
 
     return newState;
@@ -156,11 +154,9 @@ export function queries(
 
     newState[action.queryId] = {
       ...previousState[action.queryId],
-      ...{
-        loading: false,
-        networkError: action.error,
-        networkStatus: NetworkStatus.error,
-      },
+      loading: false,
+      networkError: action.error,
+      networkStatus: NetworkStatus.error,
     } as QueryStoreValue;
 
     return newState;
@@ -173,15 +169,13 @@ export function queries(
 
     newState[action.queryId] = {
       ...previousState[action.queryId],
-      ...{
-        loading: !action.complete,
-        networkError: null,
-        previousVariables: null,
-        // XXX I'm not sure what exactly action.complete really means. I assume it means we have the complete result
-        // and do not need to hit the server. Not sure when we'd fire this action if the result is not complete, so that bears explanation.
-        // We should write that down somewhere.
-        networkStatus: action.complete ? NetworkStatus.ready : NetworkStatus.loading,
-      },
+      loading: !action.complete,
+      networkError: null,
+      previousVariables: null,
+      // XXX I'm not sure what exactly action.complete really means. I assume it means we have the complete result
+      // and do not need to hit the server. Not sure when we'd fire this action if the result is not complete, so that bears explanation.
+      // We should write that down somewhere.
+      networkStatus: action.complete ? NetworkStatus.ready : NetworkStatus.loading,
     } as QueryStoreValue;
 
     return newState;
@@ -211,10 +205,8 @@ function resetQueryState(state: QueryStore, action: StoreResetAction): QueryStor
     // XXX set loading to true so listeners don't trigger unless they want results with partial data
     res[key] = {
       ...state[key],
-      ...{
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-      },
+      loading: true,
+      networkStatus: NetworkStatus.loading,
     };
 
     return res;

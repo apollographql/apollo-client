@@ -47,9 +47,7 @@ export function optimistic(
 
     const fakeStore = {
       ...store,
-      ...{
-        optimistic: previousState,
-      },
+      optimistic: previousState,
     } as Store;
     const optimisticData = getDataWithOptimisticResults(fakeStore);
     const fakeDataResultState = data(

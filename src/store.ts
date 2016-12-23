@@ -113,9 +113,7 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
     } catch (reducerError) {
       return {
         ...state,
-        ...{
-          reducerError,
-        },
+        reducerError,
       };
     }
   };

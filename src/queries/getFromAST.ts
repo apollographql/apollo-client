@@ -155,8 +155,6 @@ export function addFragmentsToDocument(queryDoc: Document,
   checkDocument(queryDoc);
   return {
     ...queryDoc,
-    ...{
-      definitions: uniq(queryDoc.definitions.concat(fragments)),
-    },
+    definitions: uniq(queryDoc.definitions.concat(fragments)),
   } as Document;
 }

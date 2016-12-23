@@ -47,10 +47,8 @@ export function mutations(
 
     newState[action.mutationId] = {
       ...previousState[action.mutationId],
-      ...{
-        loading: false,
-        error: null,
-      },
+      loading: false,
+      error: null,
     } as MutationStoreValue;
 
     return newState;
@@ -59,10 +57,8 @@ export function mutations(
 
     newState[action.mutationId] = {
       ...previousState[action.mutationId],
-      ...{
-        loading: false,
-        error: action.error,
-      },
+      loading: false,
+      error: action.error,
     } as MutationStoreValue;
   } else if (isStoreResetAction(action)) {
     // if we are resetting the store, we no longer need information about the mutations

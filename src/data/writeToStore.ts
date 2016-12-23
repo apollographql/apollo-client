@@ -321,9 +321,7 @@ function writeFieldToStore({
 
   const newStoreObj = {
     ...store[dataId],
-    ...{
-      [storeFieldName]: storeValue,
-    },
+    [storeFieldName]: storeValue,
   } as StoreObject;
 
   if (shouldMerge) {

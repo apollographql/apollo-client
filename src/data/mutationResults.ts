@@ -157,9 +157,7 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
 
   return {
     ...state,
-    ...{
-      [dataIdOfObj]: clonedObj,
-    },
+    [dataIdOfObj]: clonedObj,
   } as NormalizedCache;
 }
 
@@ -292,9 +290,7 @@ function mutationResultArrayDeleteReducer(state: NormalizedCache, {
 
   return {
     ...state,
-    ...{
-      [dataIdOfObj]: clonedObj,
-    },
+    [dataIdOfObj]: clonedObj,
   } as NormalizedCache;
 }
 

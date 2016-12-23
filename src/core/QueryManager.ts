@@ -349,8 +349,10 @@ export class QueryManager {
         return;
       }
 
+      const noFetch = this.observableQueries[queryId] ? this.observableQueries[queryId].observableQuery.options.noFetch : options.noFetch;
+
       const shouldNotifyIfLoading = queryStoreValue.returnPartialData
-        || queryStoreValue.previousVariables;
+        || queryStoreValue.previousVariables || noFetch;
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
@@ -390,12 +392,13 @@ export class QueryManager {
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
-                returnPartialData: options.returnPartialData || options.noFetch,
+                returnPartialData: options.returnPartialData || noFetch,
                 config: this.reducerConfig,
               }),
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
             };
+
             if (observer.next) {
               if (this.isDifferentResult(lastResult, resultFromStore)) {
                 lastResult = resultFromStore;

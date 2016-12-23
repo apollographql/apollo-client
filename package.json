@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.5.23",
+  "version": "0.5.24",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
@@ -69,7 +69,7 @@
     "rxjs": "^5.0.0-beta.11",
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
-    "tslint": "4.1.1",
+    "tslint": "4.2.0",
     "typescript": "2.1.4",
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",

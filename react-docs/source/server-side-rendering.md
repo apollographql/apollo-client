@@ -18,9 +18,12 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  // The contents of { data } could be the result of client.store.getState()[client.reduxRootKey].data,
-  // or synthetically generated to look similar
-  window.__APOLLO_STATE__ = data;
+  // `initialState` should have the shape of the Apollo store
+  // state. Make sure to include only the data though. E.g.:
+  // const initialState = {[client.reduxRootKey]: {
+  //   data: client.store.getState()[client.reduxRootKey].data
+  // }};
+  window.__APOLLO_STATE__ = initialState;
 </script>
 ```
 
@@ -132,7 +135,9 @@ const client = new ApolloClient(....);
 getDataFromTree(app).then(() => {
   // We are ready to render for real
   const content = ReactDOM.renderToString(app);
-  const initialState = client.store.getState()[client.reduxRootKey].data;
+  const initialState = {[client.reduxRootKey]: {
+    data: client.store.getState()[client.reduxRootKey].data
+  }};
 
   const html = <Html content={content} state={initialState} />;
 
@@ -185,7 +190,9 @@ const client = new ApolloClient(....);
 
 // during request
 renderToStringWithData(app).then((content) => {
-  const initialState = client.store.getState()[client.reduxRootKey].data;
+  const initialState = {[client.reduxRootKey]: {
+    data: client.store.getState()[client.reduxRootKey].data
+  }};
   const html = <Html content={content} state={initialState} />;
 
   res.status(200);

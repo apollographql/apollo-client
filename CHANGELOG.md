@@ -6,6 +6,16 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+### 0.5.24
+- Add option to deduplicate in-flight queries  [PR #1070](https://github.com/apollostack/apollo-client/pull/1070)
+
+### 0.5.23
+- Revert back to using `whatwg-fetch` because `isomorphic-fetch` does not work in react native  [PR #1058](https://github.com/apollostack/apollo-client/pull/1058)
+
+### 0.5.22
+- Fix bug that caused updateQuery and reducers to run on stopped queries [PR #1054](https://github.com/apollostack/apollo-client/pull/1054)
+- Ensure transporters are using `isomorphic-fetch` instead of `whatwg-fetch` for universal compatibility [PR #1018](https://github.com/apollostack/apollo-client/pull/1018)
+
 ### 0.5.21
 
 - Include a `version` field on every `ApolloClient` instance that represents the version of the 'apollo-client' package used to create it. [PR #1038](https://github.com/apollostack/apollo-client/pull/1038)

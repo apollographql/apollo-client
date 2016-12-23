@@ -38,7 +38,6 @@ export type QueryStoreValue = {
   queryString: string;
   variables: Object;
   previousVariables: Object;
-  stopped: boolean;
   loading: boolean;
   networkStatus: NetworkStatus;
   networkError: Error;
@@ -107,7 +106,6 @@ export function queries(
       queryString: action.queryString,
       variables: action.variables,
       previousVariables,
-      stopped: false,
       loading: true,
       networkError: null,
       graphQLErrors: null,
@@ -190,15 +188,7 @@ export function queries(
   } else if (isQueryStopAction(action)) {
     const newState = { ...previousState } as QueryStore;
 
-    newState[action.queryId] = {
-      ...previousState[action.queryId],
-      ...{
-        loading: false,
-        stopped: true,
-        networkStatus: NetworkStatus.ready,
-      },
-    } as QueryStoreValue;
-
+    delete newState[action.queryId];
     return newState;
   } else if (isStoreResetAction(action)) {
     return resetQueryState(previousState, action);

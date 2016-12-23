@@ -112,6 +112,7 @@ export default class ApolloClient {
   public dataId: IdGetter;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
+  public queryDeduplication: boolean;
 
   private devToolsHookCb: Function;
 
@@ -134,18 +135,16 @@ export default class ApolloClient {
    * @param dataIdFromObject A function that returns a object identifier given a particular result
    * object.
    *
-   * @param queryTransformer A function that takes a {@link SelectionSet} and modifies it in place
-   * in some way. The query transformer is then applied to the every GraphQL document before it is
-   * sent to the server.
-   *
-   * For example, a query transformer can add the __typename field to every level of a GraphQL
-   * document. In fact, the @{addTypename} query transformer does exactly this.
-   *
-   *
    * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
    *
    * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
    * server side render.
+   *
+   * @param addTypename Adds the __typename field to every level of a GraphQL document, required
+   * to support certain queries that contain fragments.
+   *
+   * @param queryDeduplication If set to true, a query will not be sent to the server if a query
+   * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
   constructor({
@@ -154,15 +153,15 @@ export default class ApolloClient {
     reduxRootSelector,
     initialState,
     dataIdFromObject,
-    resultTransformer,
     resultComparator,
     ssrMode = false,
     ssrForceFetchDelay = 0,
     mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
     addTypename = true,
-    queryTransformer,
+    resultTransformer,
     customResolvers,
     connectToDevTools,
+    queryDeduplication = false,
   }: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
@@ -175,9 +174,9 @@ export default class ApolloClient {
     ssrForceFetchDelay?: number
     mutationBehaviorReducers?: MutationBehaviorReducerMap,
     addTypename?: boolean,
-    queryTransformer?: any,
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
+    queryDeduplication?: boolean,
   } = {}) {
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
@@ -189,11 +188,6 @@ export default class ApolloClient {
           'please use the "reduxRootSelector" instead.',
       );
       this.reduxRootKey = reduxRootKey;
-    }
-
-    if (queryTransformer) {
-      throw new Error('queryTransformer option no longer supported in Apollo Client 0.5. ' +
-        'Instead, there is a new "addTypename" option, which is on by default.');
     }
 
     if (!reduxRootSelector && reduxRootKey) {
@@ -218,6 +212,7 @@ export default class ApolloClient {
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.queryDeduplication = queryDeduplication;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
@@ -572,6 +567,7 @@ export default class ApolloClient {
       resultTransformer: this.resultTransformer,
       resultComparator: this.resultComparator,
       reducerConfig: this.reducerConfig,
+      queryDeduplication: this.queryDeduplication,
     });
   };
 }

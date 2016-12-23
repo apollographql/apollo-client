@@ -4,6 +4,10 @@ import {
   Request,
 } from '../transport/networkInterface';
 
+import {
+  Deduplicator,
+} from '../transport/Deduplicator';
+
 import forOwn = require('lodash/forOwn');
 import isEqual = require('lodash/isEqual');
 
@@ -138,10 +142,12 @@ export class QueryManager {
 
   private addTypename: boolean;
   private networkInterface: NetworkInterface;
+  private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
   private resultTransformer: ResultTransformer;
   private resultComparator: ResultComparator;
   private reducerConfig: ApolloReducerConfig;
+  private queryDeduplication: boolean;
 
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -149,7 +155,7 @@ export class QueryManager {
   private queryListeners: { [queryId: string]: QueryListener[] };
   private queryDocuments: { [queryId: string]: Document };
 
-  private idCounter = 0;
+  private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
 
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
@@ -180,6 +186,7 @@ export class QueryManager {
     resultTransformer,
     resultComparator,
     addTypename = true,
+    queryDeduplication = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -188,10 +195,12 @@ export class QueryManager {
     resultTransformer?: ResultTransformer,
     resultComparator?: ResultComparator,
     addTypename?: boolean,
+    queryDeduplication?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
+    this.deduplicator = new Deduplicator(networkInterface);
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
@@ -201,6 +210,7 @@ export class QueryManager {
     this.queryListeners = {};
     this.queryDocuments = {};
     this.addTypename = addTypename;
+    this.queryDeduplication = queryDeduplication;
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -270,19 +280,6 @@ export class QueryManager {
 
     this.queryDocuments[mutationId] = mutation;
 
-    const extraReducers = Object.keys(this.observableQueries).map( queryId => {
-      const queryOptions = this.observableQueries[queryId].observableQuery.options;
-      if (queryOptions.reducer) {
-        return createStoreReducer(
-          queryOptions.reducer,
-          queryOptions.query,
-          queryOptions.variables,
-          this.reducerConfig,
-          );
-      }
-      return null;
-    }).filter( reducer => reducer !== null );
-
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
@@ -292,7 +289,7 @@ export class QueryManager {
       mutationId,
       optimisticResponse,
       resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
-      extraReducers,
+      extraReducers: this.getExtraReducers(),
     });
 
     return new Promise((resolve, reject) => {
@@ -314,7 +311,7 @@ export class QueryManager {
                 ...resultBehaviors,
                 ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
             ],
-            extraReducers,
+            extraReducers: this.getExtraReducers(),
           });
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
@@ -351,8 +348,10 @@ export class QueryManager {
         return;
       }
 
+      const noFetch = this.observableQueries[queryId] ? this.observableQueries[queryId].observableQuery.options.noFetch : options.noFetch;
+
       const shouldNotifyIfLoading = queryStoreValue.returnPartialData
-        || queryStoreValue.previousVariables;
+        || queryStoreValue.previousVariables || noFetch;
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
@@ -392,12 +391,13 @@ export class QueryManager {
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
-                returnPartialData: options.returnPartialData || options.noFetch,
+                returnPartialData: options.returnPartialData || noFetch,
                 config: this.reducerConfig,
               }),
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
             };
+
             if (observer.next) {
               if (this.isDifferentResult(lastResult, resultFromStore)) {
                 lastResult = resultFromStore;
@@ -606,7 +606,7 @@ export class QueryManager {
     // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
     const queryDef = getQueryDefinition(observableQuery.options.query);
     if (queryDef.name && queryDef.name.value) {
-      const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+      const queryName = queryDef.name.value;
 
       // XXX we may we want to warn the user about query name conflicts in the future
       this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
@@ -616,11 +616,14 @@ export class QueryManager {
 
   public removeObservableQuery(queryId: string) {
     const observableQuery = this.observableQueries[queryId].observableQuery;
-    const queryName = getQueryDefinition(observableQuery.options.query).name.value;
+    const definition = getQueryDefinition(observableQuery.options.query);
+    const queryName = definition.name ? definition.name.value : null;
     delete this.observableQueries[queryId];
-    this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter((val) => {
-      return !(observableQuery.queryId === val);
-    });
+    if (queryName) {
+      this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter((val) => {
+        return !(observableQuery.queryId === val);
+      });
+    }
   }
 
   public resetStore(): void {
@@ -649,9 +652,7 @@ export class QueryManager {
     Object.keys(this.observableQueries).forEach((queryId) => {
       const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
 
-      if (! this.observableQueries[queryId].observableQuery.options.noFetch &&
-        ! (storeQuery && storeQuery.stopped)
-      ) {
+      if (!this.observableQueries[queryId].observableQuery.options.noFetch) {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });
@@ -942,7 +943,7 @@ export class QueryManager {
     const retPromise = new Promise<ApolloQueryResult>((resolve, reject) => {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
-      this.networkInterface.query(request)
+      this.deduplicator.query(request, this.queryDeduplication)
         .then((result: GraphQLResult) => {
 
           const extraReducers = this.getExtraReducers();

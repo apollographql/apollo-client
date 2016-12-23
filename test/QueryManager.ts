@@ -1152,11 +1152,15 @@ describe('QueryManager', () => {
   it('supports noFetch fetching only cached data with fragments', () => {
     const cachedQuery = gql`
       query query {
-        luke: people_one(id: 1) {
+        allPeople: allPeople(page: 1) {
           name
           __typename
-          ... on jedi {
+          ... on human {
             age
+            __typename
+          }
+          ... on nonhuman {
+            species
             __typename
           }
         }
@@ -1165,21 +1169,31 @@ describe('QueryManager', () => {
 
     const query = gql`
       query query {
-        luke: people_one(id: 1) {
+        allPeople: allPeople(page: 1) {
           name
-          ... on jedi {
+          ... on human {
             age
+          }
+          ... on nonhuman {
+            species
           }
         }
       }
     `;
 
     const data1 = {
-      luke: {
-        name: 'Luke Skywalker',
-        age: 50,
-        __typename: 'jedi',
-      },
+      allPeople: [
+        {
+          name: 'Luke Skywalker',
+          age: 50,
+          __typename: 'human',
+        },
+        {
+          name: 'Yoda',
+          species: 'Yodan',
+          __typename: 'nonhuman',
+        },
+      ]
     };
 
     const queryManager = createQueryManager({
@@ -1200,8 +1214,9 @@ describe('QueryManager', () => {
       });
 
       return handle.result().then((result) => {
-        assert.equal(result.data['luke'].name, 'Luke Skywalker');
-        assert.equal(result.data['luke'].age, 50);
+        assert.equal(result.data.length, 2);
+        assert.equal(result.data[0]['luke'].name, 'Luke Skywalker');
+        assert.equal(result.data[0]['luke'].age, 50);
       });
     });
   });

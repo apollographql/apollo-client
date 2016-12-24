@@ -54,6 +54,10 @@ import {
 } from './queries/getFromAST';
 
 import {
+  NetworkStatus,
+} from './queries/store';
+
+import {
   ApolloError,
 } from './errors/ApolloError';
 
@@ -84,6 +88,7 @@ export {
   writeQueryToStore,
   print as printAST,
   createFragmentMap,
+  NetworkStatus,
   ApolloError,
 
   // fragment stuff

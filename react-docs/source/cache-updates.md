@@ -308,11 +308,14 @@ const CommentsPageWithData = graphql(CommentsPageQuery, {
   },
   options({ params }) {
     return {
-      reducer: (previousResult, action) => {
+      reducer: (previousResult, action, variables) => {
         if (action.type === 'APOLLO_MUTATION_RESULT' && action.operationName === 'submitComment'){
           // NOTE: some more sanity checks are usually recommended here to make
           // sure the previousResult is not empty and that the mutation results
           // contains the data we expect.
+          
+          // NOTE: variables contains the current query variables, 
+          // not the variables of the query or mutation that caused the action.
 
           return update(previousResult, {
             entry: {

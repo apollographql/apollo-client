@@ -11,8 +11,6 @@ import {
   writeResultToStore,
 } from './writeToStore';
 
-import assign = require('lodash/assign');
-
 import {
   QueryStore,
 } from '../queries/store';
@@ -68,7 +66,7 @@ export function data(
       const queryStoreValue = queries[action.queryId];
 
       // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as NormalizedCache;
+      const clonedState = { ...previousState } as NormalizedCache;
 
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
@@ -97,7 +95,7 @@ export function data(
     if (! graphQLResultHasError(action.result)) {
 
       // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as NormalizedCache;
+      const clonedState = { ...previousState } as NormalizedCache;
 
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
@@ -126,7 +124,7 @@ export function data(
       const queryStoreValue = mutations[constAction.mutationId];
 
       // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as NormalizedCache;
+      const clonedState = { ...previousState } as NormalizedCache;
 
       let newState = writeResultToStore({
         result: constAction.result.data,

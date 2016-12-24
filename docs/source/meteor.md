@@ -106,5 +106,5 @@ It will use the same port as your Meteor server. Don't put a route or static ass
 
 ## Accounts
 
-You may still use the authentication based on DDP (Meteor's default data layer) and apollo will send the current user's login token to the GraphQL server with each request. But if you want to use only GraphQL in your app you can use [nicolaslopezj:apollo-accounts](https://github.com/nicolaslopezj/meteor-apollo-accounts). This package uses the Meteor Accounts methods in GraphQL, it's compatible with the accounts you have saved in your database and you may use apollo-accounts and Meteor's DPP accounts at the same time.
+You may still use the authentication based on DDP (Meteor's default data layer) and apollo will send the current user's login token to the GraphQL server with each request. But if you want to use only GraphQL in your app you can use [nicolaslopezj:apollo-accounts](https://github.com/nicolaslopezj/meteor-apollo-accounts). This package uses the Meteor Accounts methods in GraphQL, it's compatible with the accounts you have saved in your database and you may use apollo-accounts and Meteor's DDP accounts at the same time.
 

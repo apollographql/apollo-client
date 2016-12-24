@@ -10,6 +10,8 @@ import { Subscription } from '../src/util/Observable';
 import assign = require('lodash/assign');
 import clonedeep = require('lodash/cloneDeep');
 
+import { ObservableQuery } from '../src/core/ObservableQuery';
+
 import gql from 'graphql-tag';
 
 describe('mutation results', () => {
@@ -36,6 +38,28 @@ describe('mutation results', () => {
         __typename
         id
         todos {
+          __typename
+          text
+          completed
+        }
+      }
+    }
+  `;
+
+  const queryWithVars = gql`
+    query todoList ($id: Int){
+      __typename
+      todoList(id: $id) {
+        __typename
+        id
+        todos {
+          id
+          __typename
+          text
+          completed
+        }
+        filteredTodos: todos(completed: true) {
+          id
           __typename
           text
           completed
@@ -92,6 +116,68 @@ describe('mutation results', () => {
             completed: false,
           },
         ],
+      },
+    },
+  };
+
+  const result6: any = {
+    data: {
+      __typename: 'Query',
+      todoList: {
+        __typename: 'TodoList',
+        id: '6',
+        todos: [
+          {
+            __typename: 'Todo',
+            id: '13',
+            text: 'Hello world',
+            completed: false,
+          },
+          {
+            __typename: 'Todo',
+            id: '16',
+            text: 'Second task',
+            completed: false,
+          },
+          {
+            __typename: 'Todo',
+            id: '112',
+            text: 'Do other stuff',
+            completed: false,
+          },
+        ],
+        filteredTodos: [],
+      },
+    },
+  };
+
+  const result5: any = {
+    data: {
+      __typename: 'Query',
+      todoList: {
+        __typename: 'TodoList',
+        id: '5',
+        todos: [
+          {
+            __typename: 'Todo',
+            id: '13',
+            text: 'Hello world',
+            completed: false,
+          },
+          {
+            __typename: 'Todo',
+            id: '16',
+            text: 'Second task',
+            completed: false,
+          },
+          {
+            __typename: 'Todo',
+            id: '112',
+            text: 'Do other stuff',
+            completed: false,
+          },
+        ],
+        filteredTodos: [],
       },
     },
   };
@@ -681,6 +767,72 @@ describe('mutation results', () => {
         assert.equal(counter, 1);
 
         // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('passes variables', () => {
+      let counter = 0;
+      let observableQuery: ObservableQuery;
+      let subscription: any;
+
+      return setup({
+        request: { query: queryWithVars, variables: { id: 5 } },
+        result: result5,
+      }, {
+        request: { query: mutation},
+        result: mutationResult,
+      }, {
+        request: { query: queryWithVars, variables: { id: 6 } },
+        result: result6,
+      }, {
+        request: { query: mutation},
+        result: mutationResult,
+      })
+      .then(() => {
+        observableQuery = client.watchQuery({
+          query: queryWithVars,
+          variables: { id: 5 },
+          reducer: (previousResult, action, variables: any) => {
+            counter++;
+            if (isMutationResultAction(action) && variables['id'] === 5) {
+              const newResult = clonedeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              return newResult;
+            }
+            return previousResult;
+          },
+        });
+
+        subscription = observableQuery.subscribe({
+          next: () => null, // TODO: we should actually check the new result
+        });
+        return client.mutate({
+          mutation,
+        });
+      })
+      .then(() => {
+        return observableQuery.setOptions({ variables: { id: 6 } });
+      })
+      .then((res) => {
+        return client.mutate({
+          mutation,
+        });
+      })
+      .then(() => {
+        // going back to check the result of the original query
+        return observableQuery.setOptions({ variables: { id: 5 } });
+      })
+      .then((newResult: any) => {
+        subscription.unsubscribe();
+
+        // The reducer should have been called twice
+        assert.equal(counter, 3);
+
+        // But there should be one more todo item than before, because variables only matched once
         assert.equal(newResult.data.todoList.todos.length, 4);
 
         // Since we used `prepend` it should be at the front

@@ -312,7 +312,7 @@ export type MutationQueryReducersMap = {
   [queryName: string]: MutationQueryReducer;
 };
 
-export type OperationResultReducer = (previousResult: Object, action: ApolloAction) => Object;
+export type OperationResultReducer = (previousResult: Object, action: ApolloAction, variables: Object) => Object;
 
 export type OperationResultReducerMap = {
   [queryId: string]: OperationResultReducer;

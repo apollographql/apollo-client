@@ -50,7 +50,7 @@ export function createStoreReducer(
     });
     // TODO add info about networkStatus
 
-    const nextResult = resultReducer(currentResult, action); // action should include operation name
+    const nextResult = resultReducer(currentResult, action, variables); // action should include operation name
 
     if (currentResult !== nextResult) {
       return writeResultToStore({

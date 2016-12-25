@@ -10,8 +10,6 @@ import {
   disableFragmentWarnings as graphqlTagDisableFragmentWarnings,
 } from 'graphql-tag';
 
-import { fragmentDefinitionsMap } from '../src/fragments';
-
 import {
   GraphQLError,
   GraphQLResult,

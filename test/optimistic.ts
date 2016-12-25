@@ -1196,49 +1196,6 @@ describe('optimistic mutation - githunt comments', () => {
       assert.equal(newResult.data.entry.comments.length, 2);
     });
   });
-
-  it('can post a new comment (with fragments)', () => {
-    const mutationVariables = {
-      repoFullName: 'org/repo',
-      commentContent: 'New Comment',
-    };
-
-    let subscriptionHandle: Subscription;
-    return setup({
-      request: {
-        query: addFragmentsToDocument(addTypenameToDocument(mutationWithFragment), fragmentWithTypenames),
-        variables: mutationVariables,
-      },
-      result: mutationResult,
-    })
-    .then(() => {
-        // we have to actually subscribe to the query to be able to update it
-        return new Promise( (resolve, reject) => {
-          const handle = client.watchQuery({
-            query: queryWithFragment,
-            variables,
-            fragments: fragment,
-          });
-          subscriptionHandle = handle.subscribe({
-            next(res) { resolve(res); },
-          });
-        });
-      })
-    .then(() => {
-      return client.mutate({
-        mutation: mutationWithFragment,
-        optimisticResponse,
-        variables: mutationVariables,
-        updateQueries,
-        fragments: fragment,
-      });
-    }).then(() => {
-      return client.query({ query: queryWithFragment, variables, fragments: fragment });
-    }).then((newResult: any) => {
-      subscriptionHandle.unsubscribe();
-      assert.equal(newResult.data.entry.comments.length, 2);
-    });
-  });
 });
 
 function realIdValue(id: string) {

@@ -275,34 +275,7 @@ export default class ApolloClient {
       } as DeprecatedWatchQueryOptions;
     }
 
-    if (options.fragments && !haveWarnedWatchQuery && process.env.NODE_ENV !== 'production') {
-      console.warn(
-            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
-            'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.',
-      );
-      /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
-        // When running tests, we want to print the warning every time
-        haveWarnedWatchQuery = true;
-      }
-    }
-
-    // Register each of the fragments present in the query document. The point
-    // is to prevent fragment name collisions with fragments that are in the query
-    // document itself.
-    createFragment(options.query, undefined, true);
-
-    // We add the fragments to the document to pass only the document around internally.
-    const fullDocument = addFragmentsToDocument(options.query, options.fragments);
-
-    const realOptions = {
-      ...options,
-      query: fullDocument,
-    };
-    delete realOptions.fragments;
-
-    return this.queryManager.watchQuery(realOptions);
+    return this.queryManager.watchQuery(options);
   };
 
   /**

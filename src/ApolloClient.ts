@@ -61,12 +61,6 @@ import {
   storeKeyNameFromFieldNameAndArgs,
 } from './data/storeUtils';
 
-import { createFragment } from './fragments';
-
-import {
-  addFragmentsToDocument,
-} from './queries/getFromAST';
-
 import {
   version,
 } from './version';

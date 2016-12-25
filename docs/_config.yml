@@ -26,6 +26,7 @@ sidebar_categories:
     - meteor
     - vue
     - polymer
+    - ember
 
 # not sure if we should rename this?
 github_repo: apollostack/docs

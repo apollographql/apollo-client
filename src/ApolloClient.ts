@@ -316,9 +316,6 @@ export default class ApolloClient {
    * @param options.variables An object that maps from the name of a variable as used in the mutation
    * GraphQL document to that variable's value.
    *
-   * @param options.fragments A list of fragments as returned by {@link createFragment}. These fragments
-   * can be referenced from within the GraphQL mutation document.
-   *
    * @param options.optimisticResponse An object that represents the result of this mutation that will be
    * optimistically stored before the server has actually returned a result. This is most often
    * used for optimistic UI, where we want to be able to see the result of a mutation immediately,

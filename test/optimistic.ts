@@ -2,7 +2,7 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { createFragment } from '../src';
+import ApolloClient from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 import { addFragmentsToDocument } from '../src/queries/getFromAST';
@@ -1028,30 +1028,19 @@ describe('optimistic mutation - githunt comments', () => {
       }
     }
   `;
-  const fragment = createFragment(gql`
-    fragment authorFields on User {
-      postedBy {
-        login
-        html_url
-      }
-    }
-  `);
-  const fragmentWithTypenames = createFragment(gql`
-    fragment authorFields on User {
-      postedBy {
-        login
-        html_url
-        __typename
-      }
-      __typename
-    }
-  `);
   const queryWithFragment = gql`
     query Comment($repoName: String!) {
       entry(repoFullName: $repoName) {
         comments {
           ...authorFields
         }
+      }
+    }
+
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
       }
     }
   `;
@@ -1091,7 +1080,7 @@ describe('optimistic mutation - githunt comments', () => {
       result,
     }, {
       request: {
-        query: addFragmentsToDocument(addTypenameToDocument(queryWithFragment), fragment),
+        query: addTypenameToDocument(queryWithFragment),
         variables,
       },
       result,

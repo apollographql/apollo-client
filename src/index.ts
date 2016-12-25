@@ -62,12 +62,6 @@ import {
 } from './errors/ApolloError';
 
 import ApolloClient from './ApolloClient';
-import {
-  createFragment,
-  clearFragmentDefinitions,
-  disableFragmentWarnings,
-  enableFragmentWarnings,
-} from './fragments';
 
 import {
   ApolloQueryResult,
@@ -90,12 +84,6 @@ export {
   createFragmentMap,
   NetworkStatus,
   ApolloError,
-
-  // fragment stuff
-  createFragment,
-  clearFragmentDefinitions,
-  disableFragmentWarnings,
-  enableFragmentWarnings,
 
   getQueryDefinition,
   getFragmentDefinitions,

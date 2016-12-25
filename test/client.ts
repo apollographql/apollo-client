@@ -3,11 +3,7 @@ const { assert } = chai;
 import * as sinon from 'sinon';
 
 import ApolloClient, {
-  createFragment,
-  clearFragmentDefinitions,
-  disableFragmentWarnings,
   printAST,
-  enableFragmentWarnings,
 } from '../src';
 
 import {
@@ -88,7 +84,6 @@ import assign = require('lodash/assign');
 chai.use(chaiAsPromised);
 
 // Turn off warnings for repeated fragment names
-disableFragmentWarnings();
 graphqlTagDisableFragmentWarnings();
 
 describe('client', () => {
@@ -1308,193 +1303,6 @@ it('should not let errors in observer.next reach the store', (done) => {
       }`;
 
     assert.equal(printAST(query), print(query));
-  });
-
-  describe('fragment referencing', () => {
-    afterEach(() => {
-      // after each test, we have to empty out fragmentDefinitionsMap since that is
-      // global state that will be held across all client instances.
-      clearFragmentDefinitions();
-    });
-
-    it('should return a fragment def with a unique name', () => {
-      const fragment = gql`
-        fragment authorDetails on Author {
-          author {
-            firstName
-            lastName
-          }
-        }
-      `;
-      const fragmentDefs = createFragment(fragment);
-      assert.equal(fragmentDefs.length, 1);
-      assert.equal(print(fragmentDefs[0]), print(getFragmentDefinitions(fragment)[0]));
-    });
-
-    it('should correctly return multiple fragments from a single document', () => {
-      const fragmentDoc = gql`
-        fragment authorDetails on Author {
-          firstName
-          lastName
-        }
-        fragment personDetails on Person {
-          name
-        }
-        `;
-      const fragmentDefs = createFragment(fragmentDoc);
-      assert.equal(fragmentDefs.length, 2);
-      const expFragmentDefs = getFragmentDefinitions(fragmentDoc);
-      assert.equal(print(fragmentDefs[0]), print(expFragmentDefs[0]));
-      assert.equal(print(fragmentDefs[1]), print(expFragmentDefs[1]));
-    });
-
-    it('should correctly return fragment defs with one fragment depending on another', () => {
-      const fragmentDoc = gql`
-        fragment authorDetails on Author {
-          firstName
-          lastName
-          ...otherAuthorDetails
-        }`;
-      const otherFragmentDoc = gql`
-        fragment otherFragmentDoc on Author {
-          address
-        }`;
-      const fragmentDefs = createFragment(fragmentDoc, getFragmentDefinitions(otherFragmentDoc));
-      assert.equal(fragmentDefs.length, 2);
-      const expFragmentDefs = getFragmentDefinitions(otherFragmentDoc)
-        .concat(getFragmentDefinitions(fragmentDoc));
-      assert.deepEqual(fragmentDefs.map(print), expFragmentDefs.map(print));
-    });
-
-    it('should return fragment defs with a multiple fragments depending on other fragments', () => {
-      const fragmentDoc = gql`
-        fragment authorDetails on Author {
-          firstName
-          lastName
-          ...otherAuthorDetails
-        }
-
-        fragment onlineAuthorDetails on Author {
-          email
-          ...otherAuthorDetails
-        }`;
-      const otherFragmentDoc = gql`
-        fragment otherAuthorDetails on Author {
-          address
-        }`;
-      const fragmentDefs = createFragment(fragmentDoc, getFragmentDefinitions(otherFragmentDoc));
-      assert.equal(fragmentDefs.length, 3);
-
-      const expFragmentDefs = getFragmentDefinitions(otherFragmentDoc)
-        .concat(getFragmentDefinitions(fragmentDoc));
-      assert.deepEqual(fragmentDefs.map(print), expFragmentDefs.map(print));
-    });
-
-    it('should always return a flat array of fragment defs', () => {
-      const fragmentDoc1 = gql`
-        fragment authorDetails on Author {
-          firstName
-          lastName
-          ...otherAuthorDetails
-        }`;
-      const fragmentDoc2 = gql`
-        fragment otherAuthorDetails on Author {
-          address
-        }`;
-      const fragmentDoc3 = gql`
-        fragment personDetails on Person {
-          personDetails
-        }`;
-      const fragments1 = createFragment(fragmentDoc1);
-      const fragments2 = createFragment(fragmentDoc2);
-      const fragments3 = createFragment(fragmentDoc3, [fragments1, fragments2]);
-      assert.equal(fragments1.length, 1);
-      assert.equal(fragments2.length, 1);
-      assert.equal(fragments3.length, 3);
-    });
-
-    it('should add a fragment to the fragmentDefinitionsMap', () => {
-      const fragmentDoc = gql`
-        fragment authorDetails on Author {
-          firstName
-          lastName
-        }`;
-      assert.equal(Object.keys(fragmentDefinitionsMap).length, 0);
-      createFragment(fragmentDoc);
-      assert.equal(Object.keys(fragmentDefinitionsMap).length, 1);
-      assert(fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
-      assert.equal(fragmentDefinitionsMap['authorDetails'].length, 1);
-      assert.equal(print(fragmentDefinitionsMap['authorDetails']), print(getFragmentDefinitions(fragmentDoc)[0]));
-    });
-
-    it('should add fragments with the same name to fragmentDefinitionsMap + print warning', () => {
-      const fragmentDoc = gql`
-        fragment authorDetails on Author {
-          firstName
-          lastName
-        }
-        fragment authorDetails on Author {
-          address
-        }`;
-
-      // hacky solution that allows us to test whether the warning is printed
-      const oldWarn = console.warn;
-      console.warn = (str: string) => {
-        if (!str.match(/deprecated/)) {
-          assert.include(str, 'Warning: fragment with name');
-        }
-      };
-
-      createFragment(fragmentDoc);
-      assert.equal(Object.keys(fragmentDefinitionsMap).length, 1);
-      assert.equal(fragmentDefinitionsMap['authorDetails'].length, 2);
-      console.warn = oldWarn;
-    });
-
-    it('should not print a warning if we call disableFragmentWarnings', (done) => {
-      const oldWarn = console.warn;
-      console.warn = (str: string) => {
-        if (!str.match(/deprecated/)) {
-          done(new Error('Returned a warning despite calling disableFragmentWarnings'));
-        }
-      };
-      disableFragmentWarnings();
-      createFragment(gql`
-        fragment authorDetails on Author {
-          firstName
-        }
-      `);
-      createFragment(gql`
-        fragment authorDetails on Author {
-          lastName
-        }`);
-
-      // create fragment operates synchronously so if it returns and doesn't call
-      // console.warn, we are done.
-      setTimeout(() => {
-        console.warn = oldWarn;
-        done();
-      }, 100);
-    });
-
-    it('should not add multiple instances of the same fragment to fragmentDefinitionsMap', () => {
-      createFragment(gql`
-        fragment authorDetails on Author {
-          author {
-            firstName
-            lastName
-          }
-        }`);
-      createFragment(gql`
-        fragment authorDetails on Author {
-          author {
-            firstName
-            lastName
-          }
-        }`);
-      assert(fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
-      assert.equal(fragmentDefinitionsMap['authorDetails'].length, 1);
-    });
   });
 
   it('should pass a network error correctly on a mutation', (done) => {

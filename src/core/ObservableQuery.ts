@@ -25,8 +25,6 @@ import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { NetworkStatus } from '../queries/store';
 
-import { addFragmentsToDocument } from '../queries/getFromAST';
-
 import isEqual = require('lodash/isEqual');
 
 export type ApolloCurrentResult = {
@@ -198,12 +196,9 @@ export class ObservableQuery extends Observable<ApolloQueryResult> {
           };
         }
 
-        // We add the fragments to the document to pass only the document around internally.
-        const fullQuery = addFragmentsToDocument(combinedOptions.query, combinedOptions.fragments);
-
         combinedOptions = {
           ...combinedOptions,
-          query: fullQuery,
+          query: combinedOptions.query,
           forceFetch: true,
         } as WatchQueryOptions;
         return this.queryManager.fetchQuery(qid, combinedOptions);

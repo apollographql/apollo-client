@@ -2,10 +2,9 @@ import * as chai from 'chai';
 const { assert } = chai;
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import ApolloClient, { createFragment } from '../src';
+import ApolloClient from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
-import { addFragmentsToDocument } from '../src/queries/getFromAST';
 
 import assign = require('lodash/assign');
 import clonedeep = require('lodash/cloneDeep');
@@ -1028,30 +1027,19 @@ describe('optimistic mutation - githunt comments', () => {
       }
     }
   `;
-  const fragment = createFragment(gql`
-    fragment authorFields on User {
-      postedBy {
-        login
-        html_url
-      }
-    }
-  `);
-  const fragmentWithTypenames = createFragment(gql`
-    fragment authorFields on User {
-      postedBy {
-        login
-        html_url
-        __typename
-      }
-      __typename
-    }
-  `);
   const queryWithFragment = gql`
     query Comment($repoName: String!) {
       entry(repoFullName: $repoName) {
         comments {
           ...authorFields
         }
+      }
+    }
+
+    fragment authorFields on User {
+      postedBy {
+        login
+        html_url
       }
     }
   `;
@@ -1091,7 +1079,7 @@ describe('optimistic mutation - githunt comments', () => {
       result,
     }, {
       request: {
-        query: addFragmentsToDocument(addTypenameToDocument(queryWithFragment), fragment),
+        query: addTypenameToDocument(queryWithFragment),
         variables,
       },
       result,
@@ -1191,49 +1179,6 @@ describe('optimistic mutation - githunt comments', () => {
       });
     }).then(() => {
       return client.query({ query, variables });
-    }).then((newResult: any) => {
-      subscriptionHandle.unsubscribe();
-      assert.equal(newResult.data.entry.comments.length, 2);
-    });
-  });
-
-  it('can post a new comment (with fragments)', () => {
-    const mutationVariables = {
-      repoFullName: 'org/repo',
-      commentContent: 'New Comment',
-    };
-
-    let subscriptionHandle: Subscription;
-    return setup({
-      request: {
-        query: addFragmentsToDocument(addTypenameToDocument(mutationWithFragment), fragmentWithTypenames),
-        variables: mutationVariables,
-      },
-      result: mutationResult,
-    })
-    .then(() => {
-        // we have to actually subscribe to the query to be able to update it
-        return new Promise( (resolve, reject) => {
-          const handle = client.watchQuery({
-            query: queryWithFragment,
-            variables,
-            fragments: fragment,
-          });
-          subscriptionHandle = handle.subscribe({
-            next(res) { resolve(res); },
-          });
-        });
-      })
-    .then(() => {
-      return client.mutate({
-        mutation: mutationWithFragment,
-        optimisticResponse,
-        variables: mutationVariables,
-        updateQueries,
-        fragments: fragment,
-      });
-    }).then(() => {
-      return client.query({ query: queryWithFragment, variables, fragments: fragment });
     }).then((newResult: any) => {
       subscriptionHandle.unsubscribe();
       assert.equal(newResult.data.entry.comments.length, 2);

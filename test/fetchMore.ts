@@ -10,12 +10,6 @@ import clonedeep = require('lodash/cloneDeep');
 
 import gql from 'graphql-tag';
 
-import { addFragmentsToDocument } from '../src/queries/getFromAST';
-
-import {
-  createFragment,
-} from '../src/index';
-
 describe('updateQuery on a simple query', () => {
   const query = gql`
     query thing {
@@ -210,53 +204,6 @@ describe('fetchMore on an observable query', () => {
       return watchedQuery.fetchMore({
         query: query2,
         variables: variables2,
-        updateQuery: (prev, options) => {
-          const state = clonedeep(prev) as any;
-          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.comments];
-          return state;
-        },
-      });
-    }).then(() => {
-      const comments = latestResult.data.entry.comments;
-      assert.lengthOf(comments, 20);
-      for (let i = 1; i <= 10; i++) {
-        assert.equal(comments[i - 1].text, `comment ${i}`);
-      }
-      for (let i = 11; i <= 20; i++) {
-        assert.equal(comments[i - 1].text, `new comment ${i}`);
-      }
-      unsetup();
-    });
-  });
-
-  it('fetching more with fragments', () => {
-    latestResult = null;
-      // identical to query2, but with a fragment
-      const query3 = gql`
-      query NewComments($start: Int!, $limit: Int!) {
-        comments(start: $start, limit: $limit) {
-          ...textFragment
-          __typename
-        }
-      }
-    `;
-    const fragment = createFragment(gql`
-      fragment textFragment on Comment {
-        text
-        __typename
-      }
-    `);
-    return setup({
-      request: {
-        query: addFragmentsToDocument(query3, fragment),
-        variables: variables2,
-      },
-      result: result2,
-    }).then((watchedQuery) => {
-      return watchedQuery.fetchMore({
-        query: query3,
-        variables: variables2,
-        fragments: fragment,
         updateQuery: (prev, options) => {
           const state = clonedeep(prev) as any;
           state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.comments];

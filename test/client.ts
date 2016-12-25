@@ -1495,22 +1495,6 @@ it('should not let errors in observer.next reach the store', (done) => {
       assert(fragmentDefinitionsMap.hasOwnProperty('authorDetails'));
       assert.equal(fragmentDefinitionsMap['authorDetails'].length, 1);
     });
-
-    it('should not mutate the input document when querying', () => {
-      const client = new ApolloClient();
-
-      const fragments = createFragment(gql`
-        fragment authorDetails on Author {
-          author {
-            firstName
-            lastName
-          }
-        }`);
-      const query = gql`{ author { ...authorDetails } }`;
-      const initialDefinitions = query.definitions;
-      client.query({query, fragments});
-      assert.equal(query.definitions, initialDefinitions);
-    });
   });
 
   it('should pass a network error correctly on a mutation', (done) => {
@@ -1880,7 +1864,6 @@ function clientRoundrip(
   query: Document,
   data: GraphQLResult,
   variables?: any,
-  fragments?: FragmentDefinition[],
 ) {
   const networkInterface = mockNetworkInterface({
     request: { query: cloneDeep(query) },
@@ -1891,7 +1874,7 @@ function clientRoundrip(
     networkInterface,
   });
 
-  return client.query({ query, variables, fragments })
+  return client.query({ query, variables })
     .then((result) => {
       assert.deepEqual(result.data, data);
     });

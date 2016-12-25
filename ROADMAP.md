@@ -37,7 +37,7 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 - [ ] `fetchMore` network status
 
 ### Performance
-- [ ] Query deduplication
+- [x] Query deduplication
 
 ### GraphQL features
 * support for custom scalars

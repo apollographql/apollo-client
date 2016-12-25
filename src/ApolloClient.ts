@@ -85,12 +85,6 @@ function defaultReduxRootSelector(state: any) {
   return state[DEFAULT_REDUX_ROOT_KEY];
 }
 
-// deprecation warning flags
-let haveWarnedQuery = false;
-let haveWarnedWatchQuery = false;
-let haveWarnedMutation = false;
-let haveWarnedSubscription = false;
-
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,

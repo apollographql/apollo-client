@@ -6,7 +6,6 @@ import {
   createFragmentMap,
   FragmentMap,
   getOperationName,
-  addFragmentsToDocument,
 } from '../src/queries/getFromAST';
 
 import {

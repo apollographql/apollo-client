@@ -10,12 +10,6 @@ import clonedeep = require('lodash/cloneDeep');
 
 import gql from 'graphql-tag';
 
-import { addFragmentsToDocument } from '../src/queries/getFromAST';
-
-import {
-  createFragment,
-} from '../src/index';
-
 describe('updateQuery on a simple query', () => {
   const query = gql`
     query thing {

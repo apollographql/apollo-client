@@ -30,7 +30,7 @@ import {
 import {
   WatchQueryOptions,
   MutationOptions,
-  DeprecatedSubscriptionOptions,
+  SubscriptionOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -116,7 +116,7 @@ export {
   MutationBehavior,
   MutationQueryReducersMap,
   Subscription,
-  DeprecatedSubscriptionOptions as SubscriptionOptions,
+  SubscriptionOptions,
   ApolloStore,
   ApolloClient
 };

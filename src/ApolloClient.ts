@@ -44,8 +44,8 @@ import {
 } from './util/Observable';
 
 import {
-  DeprecatedWatchQueryOptions,
-  DeprecatedSubscriptionOptions,
+  WatchQueryOptions,
+  SubscriptionOptions,
   MutationOptions,
 } from './core/watchQueryOptions';
 
@@ -265,14 +265,14 @@ export default class ApolloClient {
    * a description of store reactivity.
    *
    */
-  public watchQuery(options: DeprecatedWatchQueryOptions): ObservableQuery {
+  public watchQuery(options: WatchQueryOptions): ObservableQuery {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
       options = {
         ...options,
         forceFetch: false,
-      } as DeprecatedWatchQueryOptions;
+      } as WatchQueryOptions;
     }
 
     return this.queryManager.watchQuery(options);
@@ -287,7 +287,7 @@ export default class ApolloClient {
    * how this query should be treated e.g. whether it is a polling query, whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query(options: DeprecatedWatchQueryOptions): Promise<ApolloQueryResult> {
+  public query(options: WatchQueryOptions): Promise<ApolloQueryResult> {
     this.initStore();
 
     // XXX what if I pass pollInterval? Will it just keep running?
@@ -297,7 +297,7 @@ export default class ApolloClient {
       options = {
         ...options,
         forceFetch: false,
-      } as DeprecatedWatchQueryOptions;
+      } as WatchQueryOptions;
     }
 
     return this.queryManager.query(options);
@@ -337,7 +337,7 @@ export default class ApolloClient {
     return this.queryManager.mutate(options);
   };
 
-  public subscribe(options: DeprecatedSubscriptionOptions): Observable<any> {
+  public subscribe(options: SubscriptionOptions): Observable<any> {
     this.initStore();
 
     const realOptions = {

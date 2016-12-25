@@ -1451,51 +1451,6 @@ it('should not let errors in observer.next reach the store', (done) => {
       console.warn = oldWarn;
     });
 
-    it('show allow passing fragments to mutate', () => {
-      const mutationDoc = gql`
-        mutation createAuthor {
-          createAuthor {
-            __typename
-            ...authorDetails
-          }
-        }`;
-      const composedMutation = gql`
-        mutation createAuthor {
-          createAuthor {
-            __typename
-            ...authorDetails
-          }
-        }
-        fragment authorDetails on Author {
-          firstName
-          lastName
-        }`;
-      const data = {
-        createAuthor: {
-          __typename: 'Author',
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      };
-      const networkInterface = mockNetworkInterface({
-        request: { query: composedMutation },
-        result: { data },
-      });
-      const client = new ApolloClient({
-        networkInterface,
-        addTypename: false,
-      });
-      const fragmentDefs = createFragment(gql`
-        fragment authorDetails on Author {
-          firstName
-          lastName
-        }`);
-
-      return client.mutate({ mutation: mutationDoc, fragments: fragmentDefs }).then((result) => {
-        assert.deepEqual(result, { data });
-      });
-    });
-
     it('should not print a warning if we call disableFragmentWarnings', (done) => {
       const oldWarn = console.warn;
       console.warn = (str: string) => {

@@ -337,29 +337,7 @@ export default class ApolloClient {
   public mutate(options: MutationOptions): Promise<ApolloQueryResult> {
     this.initStore();
 
-    if (options.fragments && !haveWarnedMutation && process.env.NODE_ENV !== 'production') {
-      console.warn(
-            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
-            'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.',
-      );
-      /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
-        // When running tests, we want to print the warning every time
-        haveWarnedMutation = true;
-      }
-    }
-
-    // We add the fragments to the document to pass only the document around internally.
-    const fullDocument = addFragmentsToDocument(options.mutation, options.fragments);
-
-    const realOptions = {
-      ...options,
-      mutation: fullDocument,
-    };
-    delete realOptions.fragments;
-
-    return this.queryManager.mutate(realOptions);
+    return this.queryManager.mutate(options);
   };
 
   public subscribe(options: DeprecatedSubscriptionOptions): Observable<any> {

@@ -5,7 +5,6 @@ import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
-import { addFragmentsToDocument } from '../src/queries/getFromAST';
 
 import assign = require('lodash/assign');
 import clonedeep = require('lodash/cloneDeep');

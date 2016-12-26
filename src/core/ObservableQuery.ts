@@ -35,6 +35,7 @@ export type ApolloCurrentResult<T> = {
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
+  partial?: boolean;
 };
 
 export interface FetchMoreOptions {
@@ -145,7 +146,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       networkStatus = loading ? NetworkStatus.loading : NetworkStatus.ready;
     }
 
-    return { data, loading, networkStatus };
+    return { data, loading, networkStatus, partial };
   }
 
   // Returns the last result that observer.next was called with. This is not the same as

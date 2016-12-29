@@ -236,11 +236,11 @@ This represents a result that comes back from the GraphQL server.
 
 <h2 id="query-batching">Query batching</h2>
 
-Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. This batching supports all GraphQL endpoints, including those that do not implement transport-level batching, by merging together queries into one top-level query with multiple fields.
+Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. This query-level batching is supported by all GraphQL endpoints, including those that do not implement transport-level batching, by merging together queries into one top-level query with multiple fields.
 
-To use batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object (the same as `createNetworkInterface`) with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server.
+To use query-level batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object (the same as `createNetworkInterface`) with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server.
 
-<h3 id="BatchingExample">Batching example</h3>
+<h3 id="BatchingExample">Query-level batching example</h3>
 
 This example shows how to create the `BatchedNetworkInterface` that you'll pass to the `ApolloClient` constructor:
 
@@ -267,8 +267,8 @@ apolloClient.query({ query: secondQuery });
 // You don't have to do anything special - Apollo will send the two queries as one request.
 ```
 
-<h3 id="BatchingExplained">How query batching works</h3>
-Query batching is a transport-level mechanism that works only with servers that support it (for example Apollo's [graphql-server](https://github.com/apollostack/graphql-server). Requests to servers that don't support transport batching will fail. If transport batching is turned on, multiple requests are batched together in an array:
+<h3 id="BatchingExplained">How transport-level query batching works</h3>
+Transport-level query batching is a transport-level mechanism that works only with servers that support it (for example Apollo's [graphql-server](https://github.com/apollostack/graphql-server)). Requests to servers that don't support transport-level batching will fail. If transport-level batching is turned on, multiple requests are batched together in an array:
 
 ```
 [{

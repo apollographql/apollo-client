@@ -210,12 +210,13 @@ describe('createApolloStore', () => {
     // Try to crash the store with a bad behavior update
     const mutationString = `mutation Increment { incrementer { counter } }`;
     const mutation = gql`${mutationString}`;
+    const variables = {};
 
     store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
       mutation,
-      variables: {},
+      variables,
       operationName: 'Increment',
       mutationId: '1',
       optimisticResponse: {data: {incrementer: {counter: 1}}},
@@ -230,6 +231,7 @@ describe('createApolloStore', () => {
       result: {data: {incrementer: {counter: 1}}},
       document: mutation,
       operationName: 'Increment',
+      variables,
       mutationId: '1',
       resultBehaviors: throwingBehavior,
     });

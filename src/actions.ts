@@ -98,7 +98,7 @@ export interface MutationResultAction {
   result: GraphQLResult;
   document: Document;
   operationName: string;
-  // XXX maybe provide variables as well?
+  variables: Object;
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
   extraReducers?: ApolloReducer[];

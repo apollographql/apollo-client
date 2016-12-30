@@ -40,6 +40,7 @@ export function optimistic(
       result: { data: action.optimisticResponse },
       document: action.mutation,
       operationName: action.operationName,
+      variables: action.variables,
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
       extraReducers: action.extraReducers,

@@ -199,3 +199,27 @@ app.use((req, res, next) => {
 // #1 connect your express server with meteor's
 WebApp.connectHandlers.use(Meteor.bindEnvironment(app));
 ```
+
+## Apollo Optics
+
+Here's a minimal example of [Apollo Optics](http://www.apollodata.com/optics) integration:
+
+```js
+import { createApolloServer } from 'meteor/apollo';
+import OpticsAgent from 'optics-agent';
+
+import executableSchema from 'schema.js';
+
+OpticsAgent.instrumentSchema(executableSchema);
+
+createApolloServer(req => ({
+  schema: executableSchema,
+  context: {
+    opticsContext: OpticsAgent.context(req),
+  },
+}), {
+  configServer: (graphQLServer) => {
+    graphQLServer.use('/graphql', OpticsAgent.middleware());
+  },
+});
+```

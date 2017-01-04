@@ -253,7 +253,7 @@ export default class ApolloClient {
    * a description of store reactivity.
    *
    */
-  public watchQuery<T>(options: DeprecatedWatchQueryOptions): ObservableQuery<T> {
+  public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -275,7 +275,7 @@ export default class ApolloClient {
    * how this query should be treated e.g. whether it is a polling query, whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query<T>(options: DeprecatedWatchQueryOptions): Promise<ApolloQueryResult<T>> {
+  public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
     // XXX what if I pass pollInterval? Will it just keep running?

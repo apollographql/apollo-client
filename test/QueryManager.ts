@@ -2144,7 +2144,7 @@ describe('QueryManager', () => {
 
     it('should not refetch toredown queries', (done) => {
       let queryManager: QueryManager = null;
-      let observable: ObservableQuery = null;
+      let observable: ObservableQuery<any> = null;
       const query = gql`
         query {
           author {

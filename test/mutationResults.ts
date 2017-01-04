@@ -776,7 +776,7 @@ describe('mutation results', () => {
 
     it('passes variables', () => {
       let counter = 0;
-      let observableQuery: ObservableQuery;
+      let observableQuery: ObservableQuery<any>;
       let subscription: any;
 
       return setup({

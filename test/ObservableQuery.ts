@@ -257,7 +257,7 @@ describe('ObservableQuery', () => {
 
     it('does a network request if noFetch becomes true then store is reset then noFetch becomes false', (done) => {
       let queryManager: QueryManager = null;
-      let observable: ObservableQuery = null;
+      let observable: ObservableQuery<any> = null;
       const testQuery = gql`
         query {
           author {
@@ -310,7 +310,7 @@ describe('ObservableQuery', () => {
 
     it('does a network request if noFetch becomes false', (done) => {
       let queryManager: QueryManager = null;
-      let observable: ObservableQuery = null;
+      let observable: ObservableQuery<any> = null;
       const testQuery = gql`
         query {
           author {

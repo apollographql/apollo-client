@@ -62,13 +62,13 @@ export type CustomResolverMap = {
  * be present in the returned object. If set to false, an error will be thrown if there are fields
  * that cannot be resolved from the store.
  */
-export function readQueryFromStore({
+export function readQueryFromStore<QueryType>({
   store,
   query,
   variables,
   returnPartialData = false,
   config,
-}: ReadQueryOptions): Object {
+}: ReadQueryOptions): QueryType {
   const { result } = diffQueryAgainstStore({
     query,
     store,

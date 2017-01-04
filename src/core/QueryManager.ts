@@ -388,7 +388,7 @@ export class QueryManager {
         } else {
           try {
             const resultFromStore = {
-              data: readQueryFromStore({
+              data: readQueryFromStore<T>({
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,

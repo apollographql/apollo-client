@@ -146,7 +146,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   public refetch(variables?: any): Promise<ApolloQueryResult<T>> {
-    this.variables = assign({}, this.variables, variables);
+    this.variables = {
+      ...this.variables,
+      ...variables,
+    };
 
     if (this.options.noFetch) {
       throw new Error('noFetch option should not use query refetch.');
@@ -296,7 +299,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
    * the previous values of those variables will be used.
    */
   public setVariables(variables: any): Promise<ApolloQueryResult<T>> {
-    const newVariables = assign({}, this.variables, variables);
+    const newVariables = {
+      ...this.variables,
+      ...variables,
+    };
 
     if (isEqual(newVariables, this.variables)) {
       return this.result();

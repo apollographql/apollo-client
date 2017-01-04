@@ -4,6 +4,7 @@
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/src/index.js",
+  "jsnext:main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
   "scripts": {
     "dev": "./scripts/dev.sh",

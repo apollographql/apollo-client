@@ -6,7 +6,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Add variables to MutationResultAction [PR #1106](https://github.com/apollostack/apollo-client/pull/1106)
 
 - ...
-
+- Fix incorrect network status after first refetch [PR #1105](https://github.com/apollostack/apollo-client/pull/1105)
 
 ### 0.5.25
 - Pass variables into result reducers [PR #1088](https://github.com/apollostack/apollo-client/pull/1088)

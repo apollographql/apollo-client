@@ -474,7 +474,7 @@ export class QueryManager {
 
   public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType?: FetchType): Promise<ApolloQueryResult> {
     const {
-      variables,
+      variables = {},
       forceFetch = false,
       returnPartialData = false,
       noFetch = false,

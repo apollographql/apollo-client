@@ -666,7 +666,7 @@ export class QueryManager {
   public startQuery<T>(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
     this.addQueryListener(queryId, listener);
 
-    this.fetchQuery(queryId, options)
+    this.fetchQuery<T>(queryId, options)
     // `fetchQuery` returns a Promise. In case of a failure it should be caucht or else the
     // console will show an `Uncaught (in promise)` message. Ignore the error for now.
     .catch((error: Error) => undefined);

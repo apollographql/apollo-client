@@ -3,9 +3,9 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Add variables to MutationResultAction [PR #1106](https://github.com/apollostack/apollo-client/pull/1106)
 
-- ...
+### 0.5.26
+- Add variables to MutationResultAction [PR #1106](https://github.com/apollostack/apollo-client/pull/1106)
 - Fix incorrect network status after first refetch [PR #1105](https://github.com/apollostack/apollo-client/pull/1105)
 
 ### 0.5.25

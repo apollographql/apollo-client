@@ -798,7 +798,7 @@ describe('mutation results', () => {
           reducer: (previousResult, action, variables: any) => {
             counter++;
             if (isMutationResultAction(action) && variables['id'] === 5) {
-              const newResult = clonedeep(previousResult) as any;
+              const newResult = cloneDeep(previousResult) as any;
               newResult.todoList.todos.unshift(action.result.data.createTodo);
               return newResult;
             }

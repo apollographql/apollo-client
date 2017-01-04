@@ -353,8 +353,13 @@ export default class ApolloClient {
       this.setStore(store);
 
       return (next: any) => (action: any) => {
+        const previousApolloState = this.queryManager.selectApolloState(store);
         const returnValue = next(action);
-        this.queryManager.broadcastNewStore(store.getState());
+        const newApolloState = this.queryManager.selectApolloState(store);
+
+        if (newApolloState !== previousApolloState) {
+          this.queryManager.broadcastNewStore(store.getState());
+        }
 
         if (this.devToolsHookCb) {
           this.devToolsHookCb({

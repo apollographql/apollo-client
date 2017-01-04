@@ -1342,6 +1342,83 @@ describe('QueryManager', () => {
     );
   });
 
+  it('does not call broadcastNewStore when Apollo state is not affected by an action', () => {
+    const query = gql`
+      query fetchLuke($id: String) {
+        people_one(id: $id) {
+          name
+        }
+      }
+    `;
+
+    const variables = {
+      id: '1',
+    };
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    function testReducer (state = false, action: any): boolean {
+      if (action.type === 'TOGGLE') {
+        return true;
+      }
+      return state;
+    }
+    const client = new ApolloClient();
+    const store = createStore(
+      combineReducers({
+        test: testReducer,
+        apollo: client.reducer() as any, // XXX see why this type fails
+      }),
+      applyMiddleware(client.middleware()),
+    );
+    const qm = createQueryManager({
+      networkInterface: mockNetworkInterface(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+      ),
+      store: store,
+    });
+
+    const observable = qm.watchQuery({ query, variables });
+
+    return observableToPromise({ observable },
+      (result) => {
+        assert.deepEqual(result.data, data1);
+        observable.refetch();
+      },
+      (result) => {
+        assert.deepEqual(result.data, data2);
+
+        // here's the actual test. Everything else is just setup.
+        let called = false;
+        client.queryManager.broadcastNewStore = (s: any) => {
+          called = true;
+        };
+        store.dispatch({
+          type: 'TOGGLE',
+        });
+        assert.equal((store.getState() as any).test, true, 'test state should have been updated');
+        assert.equal(called, false, 'broadcastNewStore should not have been called');
+      },
+    );
+  });
+
   it(`doesn't return data while query is loading`, () => {
     const query1 = gql`
       {

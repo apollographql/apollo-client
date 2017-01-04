@@ -109,6 +109,14 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
         config,
       );
 
+      if (state.data === newState.data &&
+      state.mutations === newState.mutations &&
+      state.queries === newState.queries &&
+      state.optimistic === newState.optimistic &&
+      state.reducerError === newState.reducerError) {
+        return state;
+      }
+
       return newState;
     } catch (reducerError) {
       return {

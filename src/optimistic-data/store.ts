@@ -18,8 +18,6 @@ import {
   Store,
 } from '../store';
 
-import pick = require('lodash/pick');
-
 // a stack of patches of new or changed documents
 export type OptimisticStore = {
   mutationId: string,
@@ -61,9 +59,13 @@ export function optimistic(
 
     // TODO: apply extra reducers and resultBehaviors to optimistic store?
 
-    const changedKeys = Object.keys(fakeDataResultState).filter(
-      key => optimisticData[key] !== fakeDataResultState[key]);
-    const patch = pick(fakeDataResultState, changedKeys);
+    const patch: any = {};
+
+    Object.keys(fakeDataResultState).forEach(key => {
+      if (optimisticData[key] !== fakeDataResultState[key]) {
+        patch[key] = fakeDataResultState[key];
+      }
+    });
 
     const optimisticState = {
       data: patch,

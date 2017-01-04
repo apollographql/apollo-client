@@ -4,9 +4,6 @@ import {
 
 import 'whatwg-fetch';
 
-import assign = require('lodash/assign');
-import isNumber = require('lodash/isNumber');
-
 import {
   HTTPFetchNetworkInterface,
   HTTPNetworkInterface,
@@ -18,6 +15,8 @@ import {
 import {
   QueryBatcher,
 } from './batching';
+
+import { assign } from '../util/assign';
 
 // An implementation of the network interface that operates over HTTP and batches
 // together requests over the HTTP transport. Note that this implementation will only work correctly
@@ -31,7 +30,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
   constructor(uri: string, pollInterval: number, fetchOpts: RequestInit) {
     super(uri, fetchOpts);
 
-    if (!isNumber(pollInterval)) {
+    if (typeof pollInterval !== 'number') {
       throw new Error(`pollInterval must be a number, got ${pollInterval}`);
     }
 
@@ -50,7 +49,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
 
   // made public for testing only
   public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
-    const options = assign({}, this._opts);
+    const options = { ...this._opts };
 
     // Apply the middlewares to each of the requests
     const middlewarePromises: Promise<RequestAndOptions>[] = [];
@@ -118,15 +117,17 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       return printRequest(request);
     });
 
-    return fetch(this._uri, assign({}, this._opts, {
+    return fetch(this._uri, {
+      ...this._opts,
       body: JSON.stringify(printedRequests),
       method: 'POST',
-    }, options, {
-      headers: assign({}, {
+      ...options,
+      headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-      }, options.headers),
-    }));
+        ...(options.headers as { [headerName: string]: string }),
+      },
+    });
   };
 }
 

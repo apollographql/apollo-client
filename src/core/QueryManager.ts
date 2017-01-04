@@ -8,8 +8,7 @@ import {
   Deduplicator,
 } from '../transport/Deduplicator';
 
-import forOwn = require('lodash/forOwn');
-import isEqual = require('lodash/isEqual');
+import { isEqual } from '../util/isEqual';
 
 import {
   ApolloStore,
@@ -1049,7 +1048,8 @@ export class QueryManager {
 
   private broadcastQueries() {
     const queries = this.getApolloState().queries;
-    forOwn(this.queryListeners, (listeners: QueryListener[], queryId: string) => {
+    Object.keys(this.queryListeners).forEach((queryId: string) => {
+      const listeners = this.queryListeners[queryId];
       // XXX due to an unknown race condition listeners can sometimes be undefined here.
       // this prevents a crash but doesn't solve the root cause
       // see: https://github.com/apollostack/apollo-client/issues/833

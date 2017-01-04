@@ -13,9 +13,6 @@ import {
 
 } from 'graphql';
 
-import isUndefined = require('lodash/isUndefined');
-import isString = require('lodash/isString');
-
 import {
   createApolloStore,
   ApolloStore,
@@ -180,7 +177,7 @@ export default class ApolloClient {
 
     if (!reduxRootSelector && reduxRootKey) {
       this.reduxRootSelector = (state: any) => state[reduxRootKey];
-    } else if (isString(reduxRootSelector)) {
+    } else if (typeof reduxRootSelector === 'string') {
       // for backwards compatibility, we set reduxRootKey if reduxRootSelector is a string
       this.reduxRootKey = reduxRootSelector as string;
       this.reduxRootSelector = (state: any) => state[reduxRootSelector as string];
@@ -435,7 +432,7 @@ export default class ApolloClient {
     }
 
     // ensure existing store has apolloReducer
-    if (isUndefined(reduxRootSelector(store.getState()))) {
+    if (reduxRootSelector(store.getState()) === undefined) {
       throw new Error(
           'Existing store does not use apolloReducer. Please make sure the store ' +
           'is properly configured and "reduxRootSelector" is correctly specified.',

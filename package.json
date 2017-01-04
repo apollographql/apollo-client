@@ -41,7 +41,6 @@
   "dependencies": {
     "graphql-anywhere": "^1.0.0",
     "graphql-tag": "^1.1.1",
-    "lodash": "^4.17.2",
     "redux": "^3.3.1",
     "symbol-observable": "^1.0.2",
     "whatwg-fetch": "^2.0.0"

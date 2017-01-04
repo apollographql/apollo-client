@@ -573,6 +573,10 @@ export class QueryManager {
     return this.reduxRootSelector(this.store.getState());
   }
 
+  public selectApolloState(store: any) {
+    return this.reduxRootSelector(store.getState());
+  }
+
   public getInitialState(): { data: Object } {
     return { data: this.getApolloState().data };
   }

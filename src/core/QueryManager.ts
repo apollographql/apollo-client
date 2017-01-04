@@ -307,6 +307,7 @@ export class QueryManager {
             mutationId,
             document: mutation,
             operationName: getOperationName(mutation),
+            variables,
             resultBehaviors: [
                 ...resultBehaviors,
                 ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
@@ -473,7 +474,7 @@ export class QueryManager {
 
   public fetchQuery(queryId: string, options: WatchQueryOptions, fetchType?: FetchType): Promise<ApolloQueryResult> {
     const {
-      variables,
+      variables = {},
       forceFetch = false,
       returnPartialData = false,
       noFetch = false,

@@ -473,7 +473,7 @@ describe('client', () => {
       queries: {
         '1': {
           queryString: print(query),
-          variables: undefined,
+          variables: {},
           loading: false,
           networkStatus: NetworkStatus.ready,
           networkError: null,

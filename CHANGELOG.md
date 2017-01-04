@@ -9,6 +9,10 @@ Expect active development and potentially significant breaking changes in the `0
 - Remove fragment option from query, watchQuery etc. [PR #1096](https://github.com/apollostack/apollo-client/pull/1096)
 - Broadcast new store state only when Apollo state was affected by an action [PR #1118](https://github.com/apollostack/apollo-client/pull/1118)
 
+### 0.5.26
+- Add variables to MutationResultAction [PR #1106](https://github.com/apollostack/apollo-client/pull/1106)
+- Fix incorrect network status after first refetch [PR #1105](https://github.com/apollostack/apollo-client/pull/1105)
+
 ### 0.5.25
 - Pass variables into result reducers [PR #1088](https://github.com/apollostack/apollo-client/pull/1088)
 

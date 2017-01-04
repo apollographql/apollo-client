@@ -1,5 +1,4 @@
 // For development only!
-// import { isObject, omit, mapValues } from 'lodash';
 import isObject from 'lodash/isObject';
 import omit from 'lodash/omit';
 import mapValues from 'lodash/mapValues';

@@ -37,7 +37,7 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 - [ ] `fetchMore` network status
 
 ### Performance
-- [ ] Query deduplication
+- [x] Query deduplication
 
 ### GraphQL features
 * support for custom scalars
@@ -52,3 +52,4 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 - [ ] Simplify core and push view-layer integration logic to the edge
 - [x] Remove stopped queries from the store without breaking storeReset (#902)
 - [ ] Remove custom build step to move files around before publishing to npm
+- [ ] Find low-hanging fruit to reduce bundle size (#684)

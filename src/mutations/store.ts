@@ -10,8 +10,6 @@ import {
   SelectionSetNode,
 } from 'graphql';
 
-import assign = require('lodash/assign');
-
 export interface MutationStore {
   [mutationId: string]: MutationStoreValue;
 }
@@ -34,7 +32,7 @@ export function mutations(
   action: ApolloAction,
 ): MutationStore {
   if (isMutationInitAction(action)) {
-    const newState = assign({}, previousState) as MutationStore;
+    const newState = { ...previousState } as MutationStore;
 
     newState[action.mutationId] = {
       mutationString: action.mutationString,
@@ -45,21 +43,23 @@ export function mutations(
 
     return newState;
   } else if (isMutationResultAction(action)) {
-    const newState = assign({}, previousState) as MutationStore;
+    const newState = { ...previousState } as MutationStore;
 
-    newState[action.mutationId] = assign({}, previousState[action.mutationId], {
+    newState[action.mutationId] = {
+      ...previousState[action.mutationId],
       loading: false,
       error: null,
-    }) as MutationStoreValue;
+    } as MutationStoreValue;
 
     return newState;
   } else if (isMutationErrorAction(action)) {
-    const newState = assign({}, previousState) as MutationStore;
+    const newState = { ...previousState } as MutationStore;
 
-    newState[action.mutationId] = assign({}, previousState[action.mutationId], {
+    newState[action.mutationId] = {
+      ...previousState[action.mutationId],
       loading: false,
       error: action.error,
-    }) as MutationStoreValue;
+    } as MutationStoreValue;
   } else if (isStoreResetAction(action)) {
     // if we are resetting the store, we no longer need information about the mutations
     // that are currently in the store so we can just throw them all away.

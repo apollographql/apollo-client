@@ -4,7 +4,6 @@ import {
   FragmentDefinitionNode,
 } from 'graphql';
 
-import assign = require('lodash/assign');
 import countBy = require('lodash/countBy');
 import identity = require('lodash/identity');
 import uniq = require('lodash/uniq');
@@ -154,7 +153,8 @@ export function addFragmentsToDocument(queryDoc: DocumentNode,
     return queryDoc;
   }
   checkDocument(queryDoc);
-  return assign({}, queryDoc, {
+  return ({
+    ...queryDoc,
     definitions: uniq(queryDoc.definitions.concat(fragments)),
   }) as DocumentNode;
 }

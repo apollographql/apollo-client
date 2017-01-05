@@ -14,8 +14,6 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import assign = require('lodash/assign');
-
 export function replaceQueryResults(state: NormalizedCache, {
   variables,
   document,
@@ -25,7 +23,7 @@ export function replaceQueryResults(state: NormalizedCache, {
   document: DocumentNode;
   newResult: Object;
 }, config: ApolloReducerConfig) {
-  const clonedState = assign({}, state) as NormalizedCache;
+  const clonedState = { ...state } as NormalizedCache;
 
   return writeResultToStore({
     result: newResult,

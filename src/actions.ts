@@ -98,7 +98,7 @@ export interface MutationResultAction {
   result: ExecutionResult;
   document: DocumentNode;
   operationName: string;
-  // XXX maybe provide variables as well?
+  variables: Object;
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
   extraReducers?: ApolloReducer[];

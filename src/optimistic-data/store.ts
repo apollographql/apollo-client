@@ -18,7 +18,6 @@ import {
   Store,
 } from '../store';
 
-import assign = require('lodash/assign');
 import pick = require('lodash/pick');
 
 // a stack of patches of new or changed documents
@@ -41,12 +40,16 @@ export function optimistic(
       result: { data: action.optimisticResponse },
       document: action.mutation,
       operationName: action.operationName,
+      variables: action.variables,
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
       extraReducers: action.extraReducers,
     };
 
-    const fakeStore = assign({}, store, { optimistic: previousState }) as Store;
+    const fakeStore = {
+      ...store,
+      optimistic: previousState,
+    } as Store;
     const optimisticData = getDataWithOptimisticResults(fakeStore);
     const fakeDataResultState = data(
       optimisticData,

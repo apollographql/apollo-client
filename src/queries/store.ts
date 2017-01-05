@@ -18,7 +18,6 @@ import {
   GraphQLError,
 } from 'graphql';
 
-import assign = require('lodash/assign');
 import isEqual = require('lodash/isEqual');
 
 export interface QueryStore {
@@ -39,7 +38,6 @@ export type QueryStoreValue = {
   queryString: string;
   variables: Object;
   previousVariables: Object;
-  stopped: boolean;
   loading: boolean;
   networkStatus: NetworkStatus;
   networkError: Error;
@@ -61,7 +59,7 @@ export function queries(
   action: ApolloAction,
 ): QueryStore {
   if (isQueryInitAction(action)) {
-    const newState = assign({}, previousState) as QueryStore;
+    const newState = { ...previousState } as QueryStore;
 
     const previousQuery = previousState[action.queryId];
 
@@ -108,7 +106,6 @@ export function queries(
       queryString: action.queryString,
       variables: action.variables,
       previousVariables,
-      stopped: false,
       loading: true,
       networkError: null,
       graphQLErrors: null,
@@ -130,16 +127,17 @@ export function queries(
       return previousState;
     }
 
-    const newState = assign({}, previousState) as QueryStore;
+    const newState = { ...previousState } as QueryStore;
     const resultHasGraphQLErrors = graphQLResultHasError(action.result);
 
-    newState[action.queryId] = assign({}, previousState[action.queryId], {
+    newState[action.queryId] = {
+      ...previousState[action.queryId],
       loading: false,
       networkError: null,
       graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
       previousVariables: null,
       networkStatus: NetworkStatus.ready,
-    }) as QueryStoreValue;
+    } as QueryStoreValue;
 
     return newState;
   } else if (isQueryErrorAction(action)) {
@@ -152,13 +150,14 @@ export function queries(
       return previousState;
     }
 
-    const newState = assign({}, previousState) as QueryStore;
+    const newState = { ...previousState } as QueryStore;
 
-    newState[action.queryId] = assign({}, previousState[action.queryId], {
+    newState[action.queryId] = {
+      ...previousState[action.queryId],
       loading: false,
       networkError: action.error,
       networkStatus: NetworkStatus.error,
-    }) as QueryStoreValue;
+    } as QueryStoreValue;
 
     return newState;
   } else if (isQueryResultClientAction(action)) {
@@ -166,9 +165,10 @@ export function queries(
       return previousState;
     }
 
-    const newState = assign({}, previousState) as QueryStore;
+    const newState = { ...previousState } as QueryStore;
 
-    newState[action.queryId] = assign({}, previousState[action.queryId], {
+    newState[action.queryId] = {
+      ...previousState[action.queryId],
       loading: !action.complete,
       networkError: null,
       previousVariables: null,
@@ -176,18 +176,13 @@ export function queries(
       // and do not need to hit the server. Not sure when we'd fire this action if the result is not complete, so that bears explanation.
       // We should write that down somewhere.
       networkStatus: action.complete ? NetworkStatus.ready : NetworkStatus.loading,
-    }) as QueryStoreValue;
+    } as QueryStoreValue;
 
     return newState;
   } else if (isQueryStopAction(action)) {
-    const newState = assign({}, previousState) as QueryStore;
+    const newState = { ...previousState } as QueryStore;
 
-    newState[action.queryId] = assign({}, previousState[action.queryId], {
-      loading: false,
-      stopped: true,
-      networkStatus: NetworkStatus.ready,
-    }) as QueryStoreValue;
-
+    delete newState[action.queryId];
     return newState;
   } else if (isStoreResetAction(action)) {
     return resetQueryState(previousState, action);
@@ -208,7 +203,11 @@ function resetQueryState(state: QueryStore, action: StoreResetAction): QueryStor
     return (observableQueryIds.indexOf(queryId) > -1);
   }).reduce((res, key) => {
     // XXX set loading to true so listeners don't trigger unless they want results with partial data
-    res[key] = assign({}, state[key], { loading: true, networkStatus: NetworkStatus.loading });
+    res[key] = {
+      ...state[key],
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+    };
 
     return res;
   }, {} as QueryStore);

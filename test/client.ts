@@ -191,12 +191,6 @@ describe('client', () => {
     assert.equal(client.reduxRootKey, 'apollo');
   });
 
-  it('throws on removed queryTransformer option', () => {
-    assert.throws(() => {
-      new ApolloClient({ queryTransformer: 'anything' });
-    }, /addTypename/);
-  });
-
   it('sets reduxRootKey if you use ApolloClient as middleware', () => {
     const client = new ApolloClient();
 
@@ -484,17 +478,16 @@ describe('client', () => {
 
     const finalState = { apollo: assign({}, initialState.apollo, {
       queries: {
-        '0': {
+        '1': {
           queryString: print(query),
-          variables: undefined,
+          variables: {},
           loading: false,
           networkStatus: NetworkStatus.ready,
-          stopped: false,
           networkError: null,
           graphQLErrors: null,
           forceFetch: false,
           returnPartialData: false,
-          lastRequestId: 1,
+          lastRequestId: 2,
           previousVariables: null,
           metadata: null,
         },
@@ -1030,6 +1023,94 @@ it('should not let errors in observer.next reach the store', (done) => {
     client.mutate({ mutation }).then((actualResult) => {
       assert.deepEqual(actualResult.data, data);
       done();
+    });
+  });
+
+  it('does not deduplicate queries by default', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }`;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const networkInterface = mockNetworkInterface({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    },
+    {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc });
+
+    // if deduplication happened, result2.data will equal data.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      assert.deepEqual(result1.data, data);
+      assert.deepEqual(result2.data, data2);
+    });
+  });
+
+  it('deduplicates queries if the option is set', () => {
+    const queryDoc = gql`
+      query {
+        author {
+          name
+        }
+      }`;
+    const data = {
+      author: {
+        name: 'Jonas',
+      },
+    };
+    const data2 = {
+      author: {
+        name: 'Dhaivat',
+      },
+    };
+
+    // we have two responses for identical queries, but only the first should be requested.
+    // the second one should never make it through to the network interface.
+    const networkInterface = mockNetworkInterface({
+      request: { query: queryDoc },
+      result: { data },
+      delay: 10,
+    },
+    {
+      request: { query: queryDoc },
+      result: { data: data2 },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+      queryDeduplication: true,
+    });
+
+    const q1 = client.query({ query: queryDoc });
+    const q2 = client.query({ query: queryDoc });
+
+    // if deduplication didn't happen, result.data will equal data2.
+    return Promise.all([q1, q2]).then(([result1, result2]) => {
+      assert.deepEqual(result1.data, result2.data);
     });
   });
 

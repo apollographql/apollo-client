@@ -1,7 +1,6 @@
 import isNull = require('lodash/isNull');
 import isUndefined = require('lodash/isUndefined');
 import isObject = require('lodash/isObject');
-import assign = require('lodash/assign');
 
 import {
   getOperationDefinition,
@@ -217,7 +216,7 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
       mergeWithGenerated(value.id, realValue.id, cache);
     }
     delete cache[generatedKey];
-    cache[realKey] = assign({}, generated, real) as StoreObject;
+    cache[realKey] = { ...generated, ...real } as StoreObject;
   });
 }
 
@@ -320,9 +319,10 @@ function writeFieldToStore({
     }
   }
 
-  const newStoreObj = assign({}, store[dataId], {
+  const newStoreObj = {
+    ...store[dataId],
     [storeFieldName]: storeValue,
-  }) as StoreObject;
+  } as StoreObject;
 
   if (shouldMerge) {
     mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);

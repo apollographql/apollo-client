@@ -6,6 +6,23 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Switch to `@types/graphql` instead of `typed-graphql` for typings. [PR 1041](https://github.com/apollostack/apollo-client/pull/1041) [PR #934](https://github.com/apollostack/apollo-client/issues/934)
 
+### 0.5.26
+- Add variables to MutationResultAction [PR #1106](https://github.com/apollostack/apollo-client/pull/1106)
+- Fix incorrect network status after first refetch [PR #1105](https://github.com/apollostack/apollo-client/pull/1105)
+
+### 0.5.25
+- Pass variables into result reducers [PR #1088](https://github.com/apollostack/apollo-client/pull/1088)
+
+### 0.5.24
+- Add option to deduplicate in-flight queries  [PR #1070](https://github.com/apollostack/apollo-client/pull/1070)
+
+### 0.5.23
+- Revert back to using `whatwg-fetch` because `isomorphic-fetch` does not work in react native  [PR #1058](https://github.com/apollostack/apollo-client/pull/1058)
+
+### 0.5.22
+- Fix bug that caused updateQuery and reducers to run on stopped queries [PR #1054](https://github.com/apollostack/apollo-client/pull/1054)
+- Ensure transporters are using `isomorphic-fetch` instead of `whatwg-fetch` for universal compatibility [PR #1018](https://github.com/apollostack/apollo-client/pull/1018)
+
 ### 0.5.21
 
 - Include a `version` field on every `ApolloClient` instance that represents the version of the 'apollo-client' package used to create it. [PR #1038](https://github.com/apollostack/apollo-client/pull/1038)

@@ -95,7 +95,7 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
       };
 
       // use the two lines below to debug tests :)
-      // console.log('ACTION', action.type);
+      // console.log('ACTION', action.type, action);
       // console.log('new state', newState);
 
       // Note, we need to have the results of the
@@ -111,9 +111,10 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
 
       return newState;
     } catch (reducerError) {
-      return assign({}, state, {
-         reducerError,
-       });
+      return {
+        ...state,
+        reducerError,
+      };
     }
   };
 }

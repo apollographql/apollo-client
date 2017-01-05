@@ -10,7 +10,6 @@ import {
 
 import mapValues = require('lodash/mapValues');
 import cloneDeep = require('lodash/cloneDeep');
-import assign = require('lodash/assign');
 
 import { replaceQueryResults } from './replaceQueryResults';
 
@@ -156,9 +155,10 @@ function mutationResultArrayInsertReducer(state: NormalizedCache, {
     throw new Error('Unsupported "where" option to ARRAY_INSERT.');
   }
 
-  return assign(state, {
+  return {
+    ...state,
     [dataIdOfObj]: clonedObj,
-  }) as NormalizedCache;
+  } as NormalizedCache;
 }
 
 // Helper for ARRAY_INSERT.
@@ -288,9 +288,10 @@ function mutationResultArrayDeleteReducer(state: NormalizedCache, {
 
   array.splice(index, 1);
 
-  return assign(state, {
+  return {
+    ...state,
     [dataIdOfObj]: clonedObj,
-  }) as NormalizedCache;
+  } as NormalizedCache;
 }
 
 export function mutationResultQueryResultReducer(state: NormalizedCache, {
@@ -311,7 +312,7 @@ export type MutationQueryReducersMap = {
   [queryName: string]: MutationQueryReducer;
 };
 
-export type OperationResultReducer = (previousResult: Object, action: ApolloAction) => Object;
+export type OperationResultReducer = (previousResult: Object, action: ApolloAction, variables: Object) => Object;
 
 export type OperationResultReducerMap = {
   [queryId: string]: OperationResultReducer;

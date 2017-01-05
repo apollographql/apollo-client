@@ -37,7 +37,7 @@ import {
 
 import {
   IdGetter,
-} from './data/extensions';
+} from './core/types';
 
 import {
   MutationBehaviorReducerMap,

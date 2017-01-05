@@ -6,10 +6,6 @@ import {
 
 import { writeQueryToStore } from '../src/data/writeToStore';
 
-import {
-  getIdField,
-} from '../src/data/extensions';
-
 import gql from 'graphql-tag';
 
 describe('diffing queries against the store', () => {
@@ -57,6 +53,8 @@ describe('diffing queries against the store', () => {
         name: 'Luke Skywalker',
       },
     };
+
+    const getIdField = ({id}: {id: string}) => id;
 
     const store = writeQueryToStore({
       result,

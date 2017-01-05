@@ -15,10 +15,6 @@ import {
   ApolloStore,
 } from '../src/store';
 
-import {
-  getIdField,
-} from '../src/data/extensions';
-
 import gql from 'graphql-tag';
 
 import {
@@ -1169,6 +1165,8 @@ describe('QueryManager', () => {
       data: { makeListPrivate: true },
     });
   });
+
+  const getIdField = ({id}: {id: string}) => id;
 
   it('runs a mutation with object parameters and puts the result in the store', () => {
     const data = {

@@ -17,15 +17,18 @@ import {
 
 import {
   QueryManager,
+} from './QueryManager';
+
+import {
   ApolloQueryResult,
   FetchType,
-} from './QueryManager';
+} from './types';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
-import { NetworkStatus } from '../queries/store';
+import { isEqual } from '../util/isEqual';
 
-import isEqual = require('lodash/isEqual');
+import { NetworkStatus } from '../queries/store';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
@@ -172,7 +175,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   public fetchMore(
-    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions
+    fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
   ): Promise<ApolloQueryResult<T>> {
     return Promise.resolve()
       .then(() => {

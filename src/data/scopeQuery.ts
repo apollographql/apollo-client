@@ -3,8 +3,8 @@ import {
 } from '../queries/getFromAST';
 
 import {
-  SelectionSet,
-  Field,
+  SelectionSetNode,
+  FieldNode,
 } from 'graphql';
 
 import {
@@ -12,8 +12,6 @@ import {
   isInlineFragment,
   resultKeyNameFromField,
 } from './storeUtils';
-
-import isNumber = require('lodash/isNumber');
 
 // The type of a path
 export type StorePath = (string|number)[];
@@ -42,16 +40,16 @@ export function scopeSelectionSetToResultPath({
   fragmentMap,
   path,
 }: {
-  selectionSet: SelectionSet,
+  selectionSet: SelectionSetNode,
   fragmentMap?: FragmentMap,
   // Path segment is string for objects, number for arrays
   path: StorePath,
-}): SelectionSet {
+}): SelectionSetNode {
   let currSelSet = selectionSet;
 
   path
     // Arrays are not represented in GraphQL AST
-    .filter((pathSegment) => !isNumber(pathSegment))
+    .filter((pathSegment) => typeof pathSegment !== 'number')
     .forEach((pathSegment) => {
       currSelSet = followOnePathSegment(currSelSet, pathSegment as string, fragmentMap);
     });
@@ -61,11 +59,11 @@ export function scopeSelectionSetToResultPath({
 
 // Helper function for scopeSelectionSetToResultPath
 function followOnePathSegment(
-  currSelSet: SelectionSet,
+  currSelSet: SelectionSetNode,
   pathSegment: string,
   fragmentMap: FragmentMap,
-): SelectionSet {
-  const matchingFields: Field[] = getMatchingFields(currSelSet, pathSegment, fragmentMap);
+): SelectionSetNode {
+  const matchingFields: FieldNode[] = getMatchingFields(currSelSet, pathSegment, fragmentMap);
 
   if (matchingFields.length < 1) {
     throw new Error(`No matching field found in query for path segment: ${pathSegment}`);
@@ -81,10 +79,10 @@ Please file an issue on Apollo Client if you run into this situation.`);
 
 // Helper function for followOnePathSegment
 function getMatchingFields(
-  currSelSet: SelectionSet,
+  currSelSet: SelectionSetNode,
   pathSegment: string,
   fragmentMap: FragmentMap,
-): Field[] {
+): FieldNode[] {
   let matching: any[] = [];
 
   currSelSet.selections.forEach((selection) => {

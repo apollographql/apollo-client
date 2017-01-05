@@ -4,12 +4,12 @@
 
 */
 declare module 'graphql-tag/parser' {
-  import { Source, ParseOptions, Document } from 'graphql';
+  import { Source, ParseOptions, DocumentNode } from 'graphql';
   // XXX figure out how to directly export this method
   function parse(
       source: Source | string,
       options?: ParseOptions
-  ): Document;
+  ): DocumentNode;
 }
 
 declare module 'graphql-tag/printer' {

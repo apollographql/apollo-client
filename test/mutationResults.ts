@@ -7,8 +7,7 @@ import { isMutationResultAction, isQueryResultAction } from '../src/actions';
 
 import { Subscription } from '../src/util/Observable';
 
-import assign = require('lodash/assign');
-import clonedeep = require('lodash/cloneDeep');
+import { assign, cloneDeep } from 'lodash';
 
 import { ObservableQuery } from '../src/core/ObservableQuery';
 
@@ -743,8 +742,8 @@ describe('mutation results', () => {
           reducer: (previousResult, action) => {
             counter++;
             if (isMutationResultAction(action)) {
-              const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -799,8 +798,8 @@ describe('mutation results', () => {
           reducer: (previousResult, action, variables: any) => {
             counter++;
             if (isMutationResultAction(action) && variables['id'] === 5) {
-              const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -854,8 +853,8 @@ describe('mutation results', () => {
           reducer: (previousResult, action) => {
             if (isMutationResultAction(action) && action.operationName === 'createTodo') {
               counter++;
-              const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -871,8 +870,8 @@ describe('mutation results', () => {
           reducer: (previousResult, action) => {
             if (isMutationResultAction(action) && action.operationName === 'wrongName') {
               counter++; // shouldn't be called, so counter shouldn't increase.
-              const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -919,8 +918,8 @@ describe('mutation results', () => {
           reducer: (previousResult, action) => {
             counter++;
             if (isQueryResultAction(action)) {
-              const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.newTodos[0]);
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data['newTodos'][0]);
               return newResult;
             }
             return previousResult;
@@ -1003,8 +1002,8 @@ describe('mutation results', () => {
           reducer: (previousResult, action) => {
             counter++;
             if (isMutationResultAction(action)) {
-              const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -1017,9 +1016,9 @@ describe('mutation results', () => {
           forceFetch: true, // need force-fetch to get the filteredTodos,
           reducer: (previousResult, action) => {
             counter2++;
-            if (isMutationResultAction(action) && action.result.data.createTodo.completed) {
-              const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.filteredTodos.unshift(action.result.data.createTodo);
+            if (isMutationResultAction(action) && action.result.data['createTodo'].completed) {
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.todoList.filteredTodos.unshift(action.result.data['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -1170,7 +1169,7 @@ describe('mutation results', () => {
               assert.equal(mResult.data.createTodo.id, '99');
               assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
 
-              const state = clonedeep(prev) as any;
+              const state = cloneDeep(prev) as any;
               state.todoList.todos.unshift(mResult.data.createTodo);
               return state;
             },
@@ -1209,7 +1208,7 @@ describe('mutation results', () => {
             assert.equal(mResult.data.createTodo.id, '99');
             assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
 
-            const state = clonedeep(prev) as any;
+            const state = cloneDeep(prev) as any;
             state.todoList.todos.unshift(mResult.data.createTodo);
             return state;
           },
@@ -1233,7 +1232,7 @@ describe('mutation results', () => {
             updateQueries: {
               todoList: (prev, options) => {
                 const mResult = options.mutationResult as any;
-                const state = clonedeep(prev) as any;
+                const state = cloneDeep(prev) as any;
                 // It's unfortunate that this function is called at all, but we are removing
                 // the updateQueries API soon so it won't matter.
                 state.todoList.todos.unshift(mResult.data && mResult.data.createTodo);
@@ -1248,7 +1247,7 @@ describe('mutation results', () => {
               updateQueries: {
                 todoList: (prev, options) => {
                   const mResult = options.mutationResult as any;
-                  const state = clonedeep(prev) as any;
+                  const state = cloneDeep(prev) as any;
                   state.todoList.todos.unshift(mResult.data.createTodo);
                   return state;
                 },

@@ -50,3 +50,6 @@ import './batchedNetworkInterface';
 import './ObservableQuery';
 import './subscribeToMore';
 import './customResolvers';
+import './isEqual';
+import './cloneDeep';
+import './assign';

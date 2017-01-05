@@ -6,7 +6,7 @@ import {
   assert,
 } from 'chai';
 
-import clonedeep = require('lodash/cloneDeep');
+import { cloneDeep } from 'lodash';
 
 import { isSubscriptionResultAction } from '../src/actions';
 
@@ -282,7 +282,7 @@ describe('GraphQL Subscriptions', () => {
       reducer: (previousResult, action) => {
         counter++;
         if (isSubscriptionResultAction(action)) {
-          const newResult = clonedeep(previousResult) as any;
+          const newResult = cloneDeep(previousResult) as any;
           newResult.number++;
           return newResult;
         }

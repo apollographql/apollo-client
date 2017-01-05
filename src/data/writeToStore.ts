@@ -1,6 +1,3 @@
-import isNull = require('lodash/isNull');
-import isUndefined = require('lodash/isUndefined');
-import isObject = require('lodash/isObject');
 
 import {
   getOperationDefinition,
@@ -18,12 +15,12 @@ import {
 } from './storeUtils';
 
 import {
-  OperationDefinition,
-  SelectionSet,
-  Field,
-  Document,
-  InlineFragment,
-  FragmentDefinition,
+  OperationDefinitionNode,
+  SelectionSetNode,
+  FieldNode,
+  DocumentNode,
+  InlineFragmentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import {
@@ -35,7 +32,7 @@ import {
 
 import {
   IdGetter,
-} from './extensions';
+} from '../core/types';
 
 import {
   shouldInclude,
@@ -68,13 +65,13 @@ export function writeQueryToStore({
   fragmentMap = {} as FragmentMap,
 }: {
   result: Object,
-  query: Document,
+  query: DocumentNode,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
   fragmentMap?: FragmentMap,
 }): NormalizedCache {
-  const queryDefinition: OperationDefinition = getQueryDefinition(query);
+  const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
 
   return writeSelectionSetToStore({
     dataId: 'ROOT_QUERY',
@@ -106,7 +103,7 @@ export function writeResultToStore({
 }: {
   dataId: string,
   result: any,
-  document: Document,
+  document: DocumentNode,
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
@@ -137,7 +134,7 @@ export function writeSelectionSetToStore({
 }: {
   dataId: string,
   result: any,
-  selectionSet: SelectionSet,
+  selectionSet: SelectionSetNode,
   context: WriteContext,
 }): NormalizedCache {
   const { variables, store, dataIdFromObject, fragmentMap } = context;
@@ -149,7 +146,7 @@ export function writeSelectionSetToStore({
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
 
-      if (!isUndefined(value)) {
+      if (value !== undefined) {
         writeFieldToStore({
           dataId,
           value,
@@ -169,7 +166,7 @@ export function writeSelectionSetToStore({
       }
     } else {
       // This is not a field, so it must be a fragment, either inline or named
-      let fragment: InlineFragment | FragmentDefinition;
+      let fragment: InlineFragmentNode | FragmentDefinitionNode;
 
       if (isInlineFragment(selection)) {
         fragment = selection;
@@ -226,7 +223,7 @@ function writeFieldToStore({
   dataId,
   context,
 }: {
-  field: Field,
+  field: FieldNode,
   value: any,
   dataId: string,
   context: WriteContext,
@@ -241,16 +238,15 @@ function writeFieldToStore({
   // If we merge, this will be the generatedKey
   let generatedKey: string;
 
-  // If it's a scalar that's not a JSON blob, just store it in the store
-  if ((!field.selectionSet || isNull(value)) && !isObject(value)) {
-    storeValue = value;
-  } else if ((!field.selectionSet || isNull(value)) && isObject(value)) {
-    // If it is a scalar that's a JSON blob, we have to "escape" it so it can't
-    // pretend to be an id
-    storeValue = {
-      type: 'json',
-      json: value,
-    };
+  // If this is a scalar value...
+  if (!field.selectionSet || value === null) {
+    storeValue =
+      value != null && typeof value === 'object'
+        // If the scalar value is a JSON blob, we have to "escape" it so it can’t pretend to be
+        // an id.
+        ? { type: 'json', json: value }
+        // Otherwise, just store the scalar directly in the store.
+        : value;
   } else if (Array.isArray(value)) {
     const generatedId = `${dataId}.${storeFieldName}`;
 
@@ -336,11 +332,11 @@ function writeFieldToStore({
 function processArrayValue(
   value: any[],
   generatedId: string,
-  selectionSet: SelectionSet,
+  selectionSet: SelectionSetNode,
   context: WriteContext,
 ): any[] {
   return value.map((item: any, index: any) => {
-    if (isNull(item)) {
+    if (item === null) {
       return null;
     }
 

@@ -1,8 +1,7 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import assign = require('lodash/assign');
-import isequal = require('lodash/isEqual');
+import { assign, isEqual } from 'lodash';
 import * as fetchMock from 'fetch-mock';
 
 // make it easy to assert with promises
@@ -116,12 +115,12 @@ describe('network interface', () => {
       }
 
       if (query === print(simpleQueryWithVar)
-          && isequal(variables, { personNum: 1 })) {
+          && isEqual(variables, { personNum: 1 })) {
         return simpleResult;
       }
 
       if (query === print(complexQueryWithTwoVars)
-          && isequal(variables, { personNum: 1, filmNum: 1 })) {
+          && isEqual(variables, { personNum: 1, filmNum: 1 })) {
         return complexResult;
       }
 

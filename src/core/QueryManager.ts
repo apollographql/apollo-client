@@ -8,8 +8,21 @@ import {
   Deduplicator,
 } from '../transport/Deduplicator';
 
-import forOwn = require('lodash/forOwn');
-import isEqual = require('lodash/isEqual');
+import { isEqual } from '../util/isEqual';
+
+import {
+  ResultTransformer,
+  ResultComparator,
+  QueryListener,
+  ApolloQueryResult,
+  FetchType,
+  SubscriptionOptions,
+} from './types';
+
+import {
+  QueryStoreValue,
+  NetworkStatus,
+} from '../queries/store';
 
 import {
   ApolloStore,
@@ -17,10 +30,6 @@ import {
   getDataWithOptimisticResults,
   ApolloReducerConfig,
 } from '../store';
-
-import {
-  QueryStoreValue,
-} from '../queries/store';
 
 import {
   checkDocument,
@@ -41,14 +50,14 @@ import {
 } from '../data/resultReducers';
 
 import {
-  GraphQLResult,
-  Document,
+  ExecutionResult,
+  DocumentNode,
   // TODO REFACTOR: do we still need this??
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
   /* tslint:disable */
-  SelectionSet,
+  SelectionSetNode,
   /* tslint:enable */
 } from 'graphql';
 
@@ -82,10 +91,6 @@ import {
   Observable,
 } from '../util/Observable';
 
-import {
-  NetworkStatus,
-} from '../queries/store';
-
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import {
@@ -96,44 +101,6 @@ import {
 import { WatchQueryOptions } from './watchQueryOptions';
 
 import { ObservableQuery } from './ObservableQuery';
-
-export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
-
-export interface SubscriptionOptions {
-  document: Document;
-  variables?: { [key: string]: any };
-};
-
-export type ApolloQueryResult<T> = {
-  data: T;
-  loading: boolean;
-  networkStatus: NetworkStatus;
-
-  // This type is different from the GraphQLResult type because it doesn't include errors.
-  // Those are thrown via the standard promise/observer catch mechanism.
-};
-
-// A result transformer is given the data that is to be returned from the store from a query or
-// mutation, and can modify or observe it before the value is provided to your application.
-//
-// For watched queries, the transformer is only called when the data retrieved from the server is
-// different from previous.
-//
-// If the transformer wants to mutate results (say, by setting the prototype of result data), it
-// will likely need to be paired with a custom resultComparator.  By default, Apollo performs a
-// deep equality comparsion on results, and skips those that are considered equal - reducing
-// re-renders.
-export type ResultTransformer = (resultData: ApolloQueryResult<any>) => ApolloQueryResult<any>;
-
-// Controls how Apollo compares two query results and considers their equality.  Two equal results
-// will not trigger re-renders.
-export type ResultComparator = (result1: ApolloQueryResult<any>, result2: ApolloQueryResult<any>) => boolean;
-
-export enum FetchType {
-  normal = 1,
-  refetch = 2,
-  poll = 3,
-}
 
 export class QueryManager {
   public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
@@ -153,7 +120,7 @@ export class QueryManager {
   // this should be combined with ObservableQuery, but that needs to be expanded to support
   // mutations and subscriptions as well.
   private queryListeners: { [queryId: string]: QueryListener[] };
-  private queryDocuments: { [queryId: string]: Document };
+  private queryDocuments: { [queryId: string]: DocumentNode };
 
   private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
 
@@ -249,7 +216,7 @@ export class QueryManager {
     updateQueries,
     refetchQueries = [],
   }: {
-    mutation: Document,
+    mutation: DocumentNode,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
     optimisticResponse?: Object,
@@ -339,7 +306,7 @@ export class QueryManager {
   public queryListenerForObserver<T>(
     queryId: string,
     options: WatchQueryOptions,
-    observer: Observer<ApolloQueryResult<T>>
+    observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
     let lastResult: ApolloQueryResult<T>;
     return (queryStoreValue: QueryStoreValue) => {
@@ -597,7 +564,6 @@ export class QueryManager {
     reject: (error: Error) => void) {
     this.fetchQueryPromises[requestId.toString()] = { promise, resolve, reject };
   }
-
 
   // Removes the promise in this.fetchQueryPromises for a particular request ID.
   public removeFetchQueryPromise(requestId: number) {
@@ -891,7 +857,7 @@ export class QueryManager {
   // Takes a set of WatchQueryOptions and transforms the query document
   // accordingly. Specifically, it applies the queryTransformer (if there is one defined)
   private transformQueryDocument(options: WatchQueryOptions): {
-    queryDoc: Document,
+    queryDoc: DocumentNode,
   } {
     let queryDoc = options.query;
 
@@ -931,9 +897,9 @@ export class QueryManager {
   }: {
     requestId: number,
     queryId: string,
-    document: Document,
+    document: DocumentNode,
     options: WatchQueryOptions,
-  }): Promise<GraphQLResult> {
+  }): Promise<ExecutionResult> {
     const {
       variables,
       noFetch,
@@ -949,7 +915,7 @@ export class QueryManager {
       this.addFetchQueryPromise<T>(requestId, retPromise, resolve, reject);
 
       this.deduplicator.query(request, this.queryDeduplication)
-        .then((result: GraphQLResult) => {
+        .then((result: ExecutionResult) => {
 
           const extraReducers = this.getExtraReducers();
 
@@ -1049,7 +1015,8 @@ export class QueryManager {
 
   private broadcastQueries() {
     const queries = this.getApolloState().queries;
-    forOwn(this.queryListeners, (listeners: QueryListener[], queryId: string) => {
+    Object.keys(this.queryListeners).forEach((queryId: string) => {
+      const listeners = this.queryListeners[queryId];
       // XXX due to an unknown race condition listeners can sometimes be undefined here.
       // this prevents a crash but doesn't solve the root cause
       // see: https://github.com/apollostack/apollo-client/issues/833

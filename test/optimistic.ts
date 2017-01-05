@@ -6,8 +6,7 @@ import ApolloClient from '../src';
 import { MutationBehaviorReducerArgs, MutationBehavior, MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 
-import assign = require('lodash/assign');
-import clonedeep = require('lodash/cloneDeep');
+import { assign, cloneDeep} from 'lodash';
 
 import { Subscription } from '../src/util/Observable';
 
@@ -721,7 +720,7 @@ describe('optimistic mutation results', () => {
               const mResult = options.mutationResult as any;
               assert.equal(mResult.data.createTodo.id, '99');
 
-              const state = clonedeep(prev) as any;
+              const state = cloneDeep(prev) as any;
               state.todoList.todos.unshift(mResult.data.createTodo);
               return state;
             },
@@ -771,7 +770,7 @@ describe('optimistic mutation results', () => {
           todoList: (prev, options) => {
             const mResult = options.mutationResult as any;
 
-            const state = clonedeep(prev) as any;
+            const state = cloneDeep(prev) as any;
             state.todoList.todos.unshift(mResult.data.createTodo);
             return state;
           },
@@ -845,7 +844,7 @@ describe('optimistic mutation results', () => {
           todoList: (prev, options) => {
             const mResult = options.mutationResult as any;
 
-            const state = clonedeep(prev) as any;
+            const state = cloneDeep(prev) as any;
             state.todoList.todos.unshift(mResult.data.createTodo);
             return state;
           },
@@ -950,7 +949,7 @@ describe('optimistic mutation results', () => {
           reducer: (previousResult, action) => {
             counter++;
             if (isMutationResultAction(action)) {
-              const newResult = clonedeep(previousResult) as any;
+              const newResult = cloneDeep(previousResult) as any;
               newResult.todoList.todos.unshift(action.result.data.createTodo);
               return newResult;
             }
@@ -978,8 +977,8 @@ describe('optimistic mutation results', () => {
           reducer: (previousResult, action) => {
             counter++;
             if (isMutationResultAction(action)) {
-              const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.todoList.todos.unshift(action.result.data['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -1134,7 +1133,7 @@ describe('optimistic mutation - githunt comments', () => {
   const updateQueries = {
     Comment: (prev, { mutationResult: mutationResultArg }) => {
       const newComment = (mutationResultArg as any).data.submitComment;
-      const state = clonedeep(prev);
+      const state = cloneDeep(prev);
       (state as any).entry.comments.unshift(newComment);
       return state;
     },

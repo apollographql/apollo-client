@@ -10,9 +10,12 @@
 
 import {
   QueryManager,
-  QueryListener,
-  FetchType,
 } from '../core/QueryManager';
+
+import {
+  FetchType,
+  QueryListener,
+} from '../core/types';
 
 import { ObservableQuery } from '../core/ObservableQuery';
 

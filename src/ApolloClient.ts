@@ -8,13 +8,10 @@ import {
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
   /* tslint:disable */
-  SelectionSet,
+  SelectionSetNode,
   /* tslint:enable */
 
 } from 'graphql';
-
-import isUndefined = require('lodash/isUndefined');
-import isString = require('lodash/isString');
 
 import {
   createApolloStore,
@@ -30,10 +27,14 @@ import {
 
 import {
   QueryManager,
+} from './core/QueryManager';
+
+import {
   ApolloQueryResult,
   ResultComparator,
   ResultTransformer,
-} from './core/QueryManager';
+  IdGetter,
+} from './core/types';
 
 import {
   ObservableQuery,
@@ -48,10 +49,6 @@ import {
   SubscriptionOptions,
   MutationOptions,
 } from './core/watchQueryOptions';
-
-import {
-  IdGetter,
-} from './data/extensions';
 
 import {
   MutationBehaviorReducerMap,
@@ -180,7 +177,7 @@ export default class ApolloClient {
 
     if (!reduxRootSelector && reduxRootKey) {
       this.reduxRootSelector = (state: any) => state[reduxRootKey];
-    } else if (isString(reduxRootSelector)) {
+    } else if (typeof reduxRootSelector === 'string') {
       // for backwards compatibility, we set reduxRootKey if reduxRootSelector is a string
       this.reduxRootKey = reduxRootSelector as string;
       this.reduxRootSelector = (state: any) => state[reduxRootSelector as string];
@@ -435,7 +432,7 @@ export default class ApolloClient {
     }
 
     // ensure existing store has apolloReducer
-    if (isUndefined(reduxRootSelector(store.getState()))) {
+    if (typeof reduxRootSelector(store.getState()) === 'undefined') {
       throw new Error(
           'Existing store does not use apolloReducer. Please make sure the store ' +
           'is properly configured and "reduxRootSelector" is correctly specified.',

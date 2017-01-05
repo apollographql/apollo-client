@@ -1,11 +1,8 @@
-import isString = require('lodash/isString');
-import assign = require('lodash/assign');
-import mapValues = require('lodash/mapValues');
 import 'whatwg-fetch';
 
 import {
-  GraphQLResult,
-  Document,
+  ExecutionResult,
+  DocumentNode,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -27,7 +24,7 @@ import { AfterwareInterface } from './afterware';
  */
 export interface Request {
   debugName?: string;
-  query?: Document;
+  query?: DocumentNode;
   variables?: Object;
   operationName?: string;
   [additionalKey: string]: any;
@@ -44,11 +41,11 @@ export interface PrintedRequest {
 
 export interface NetworkInterface {
   [others: string]: any;
-  query(request: Request): Promise<GraphQLResult>;
+  query(request: Request): Promise<ExecutionResult>;
 }
 
 export interface BatchedNetworkInterface extends NetworkInterface {
-  batchQuery(requests: Request[]): Promise<GraphQLResult[]>;
+  batchQuery(requests: Request[]): Promise<ExecutionResult[]>;
 }
 
 // XXX why does this have to extend network interface? does it even have a 'query' function?
@@ -77,9 +74,10 @@ export interface ResponseAndOptions {
 }
 
 export function printRequest(request: Request): PrintedRequest {
-  return mapValues(request, (val: any, key: any) => {
-    return key === 'query' ? print(val) : val;
-  }) as any as PrintedRequest;
+  return {
+    ...request,
+    query: print(request.query),
+  };
 }
 
 // TODO: refactor
@@ -95,12 +93,12 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       throw new Error('A remote enpdoint is required for a network layer');
     }
 
-    if (!isString(uri)) {
+    if (typeof uri !== 'string') {
       throw new Error('Remote endpoint must be a string');
     }
 
     this._uri = uri;
-    this._opts = assign({}, opts);
+    this._opts = { ...opts };
     this._middlewares = [];
     this._afterwares = [];
   }
@@ -159,19 +157,21 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
     request,
     options,
   }: RequestAndOptions): Promise<IResponse> {
-    return fetch(this._uri, assign({}, this._opts, {
+    return fetch(this._uri, {
+      ...this._opts,
       body: JSON.stringify(printRequest(request)),
       method: 'POST',
-    }, options, {
-      headers: assign({}, {
+      ...options,
+      headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-      }, options.headers),
-    }));
+        ...(options.headers as { [headerName: string]: string }),
+      },
+    });
   };
 
-  public query(request: Request): Promise<GraphQLResult> {
-    const options = assign({}, this._opts);
+  public query(request: Request): Promise<ExecutionResult> {
+    const options = { ...this._opts };
 
     return this.applyMiddlewares({
       request,
@@ -182,13 +182,13 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         options,
       }))
       .then(({ response }) => (response as IResponse).json())
-      .then((payload: GraphQLResult) => {
+      .then((payload: ExecutionResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
             `Server response was missing for query '${request.debugName}'.`,
           );
         } else {
-          return payload as GraphQLResult;
+          return payload as ExecutionResult;
         }
       });
   };
@@ -234,7 +234,7 @@ export function createNetworkInterface(
 
   // We want to change the API in the future so that you just pass all of the options as one
   // argument, so even though the internals work with two arguments we're warning here.
-  if (isString(uriOrInterfaceOpts)) {
+  if (typeof uriOrInterfaceOpts === 'string') {
     console.warn(`Passing the URI as the first argument to createNetworkInterface is deprecated \
 as of Apollo Client 0.5. Please pass it as the "uri" property of the network interface options.`);
     opts = secondArgOpts;

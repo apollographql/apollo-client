@@ -1,13 +1,13 @@
 // Provides the methods that allow QueryManager to handle
 // the `skip` and `include` directives within GraphQL.
 import {
-  Selection,
-  Variable,
-  BooleanValue,
+  SelectionNode,
+  VariableNode,
+  BooleanValueNode,
 } from 'graphql';
 
 
-export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): boolean {
+export function shouldInclude(selection: SelectionNode, variables?: { [name: string]: any }): boolean {
   if (!variables) {
     variables = {};
   }
@@ -44,13 +44,13 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
       if (ifValue.kind !== 'Variable') {
         throw new Error(`Argument for the @${directiveName} directive must be a variable or a bool ean value.`);
       } else {
-        evaledValue = variables[(ifValue as Variable).name.value];
+        evaledValue = variables[(ifValue as VariableNode).name.value];
         if (evaledValue === undefined) {
           throw new Error(`Invalid variable referenced in @${directiveName} directive.`);
         }
       }
     } else {
-      evaledValue = (ifValue as BooleanValue).value;
+      evaledValue = (ifValue as BooleanValueNode).value;
     }
 
     if (directiveName === 'skip') {

@@ -7,8 +7,16 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
+- Support AMD [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
+- Support ES6 Modules and tree-shaking (`module`, `jsnext:main`) [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
+- Replace `@types/redux` with official typescript definitions [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
 - Remove fragment option from query, watchQuery etc. [PR #1096](https://github.com/apollostack/apollo-client/pull/1096)
 - Broadcast new store state only when Apollo state was affected by an action [PR #1118](https://github.com/apollostack/apollo-client/pull/1118)
+- Remove lodash as a production dependency [PR #1122](https://github.com/apollostack/apollo-client/pull/1122)
+- Minor fix to write to `ROOT_SUBSCRIPTION` ID in the store for subscription results. [PR #1122](https://github.com/apollostack/apollo-client/pull/1127)
+
+### 0.6.0
+- Switch to `@types/graphql` instead of `typed-graphql` for typings. [PR 1041](https://github.com/apollostack/apollo-client/pull/1041) [PR #934](https://github.com/apollostack/apollo-client/issues/934)
 
 ### 0.5.26
 - Add variables to MutationResultAction [PR #1106](https://github.com/apollostack/apollo-client/pull/1106)

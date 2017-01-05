@@ -12,9 +12,9 @@ import {
 
 import {
   GraphQLError,
-  GraphQLResult,
-  Document,
-  FragmentDefinition,
+  ExecutionResult,
+  DocumentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import {
@@ -74,9 +74,7 @@ import { withWarning } from './util/wrap';
 
 import observableToPromise from './util/observableToPromise';
 
-import cloneDeep = require('lodash/cloneDeep');
-
-import assign = require('lodash/assign');
+import { cloneDeep, assign } from 'lodash';
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -980,7 +978,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       'fortuneCookie': 'The waiter spit in your food',
     };
     const networkInterface: NetworkInterface = {
-      query(request: Request): Promise<GraphQLResult> {
+      query(request: Request): Promise<ExecutionResult> {
         assert.equal(request.operationName, 'myQueryName');
         return Promise.resolve({ data });
       },
@@ -1004,7 +1002,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       'fortuneCookie': 'The waiter spit in your food',
     };
     const networkInterface: NetworkInterface = {
-      query(request: Request): Promise<GraphQLResult> {
+      query(request: Request): Promise<ExecutionResult> {
         assert.equal(request.operationName, 'myMutationName');
         return Promise.resolve({ data });
       },
@@ -1667,8 +1665,8 @@ it('should not let errors in observer.next reach the store', (done) => {
 });
 
 function clientRoundrip(
-  query: Document,
-  data: GraphQLResult,
+  query: DocumentNode,
+  data: ExecutionResult,
   variables?: any,
 ) {
   const networkInterface = mockNetworkInterface({

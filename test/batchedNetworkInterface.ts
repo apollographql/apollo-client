@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import merge = require('lodash/merge');
+import { merge } from 'lodash';
 
 import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInterface';
 
@@ -17,7 +17,7 @@ import {
 import { MiddlewareInterface } from '../src/transport/middleware';
 import { AfterwareInterface } from '../src/transport/afterware';
 
-import { GraphQLResult } from 'graphql';
+import { ExecutionResult } from 'graphql';
 
 import 'whatwg-fetch';
 
@@ -35,7 +35,7 @@ describe('HTTPBatchedNetworkInterface', () => {
   }: {
     requestResultPairs: {
       request: Request,
-      result: GraphQLResult,
+      result: ExecutionResult,
     }[];
     fetchFunc?: any;
     middlewares?: MiddlewareInterface[];

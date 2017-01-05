@@ -50,8 +50,12 @@
     "whatwg-fetch": "^2.0.0"
   },
   "devDependencies": {
+    "@types/chai": "^3.4.32",
     "@types/chai-as-promised": "0.0.28",
+    "@types/lodash": "4.14.42",
     "@types/mocha": "^2.2.31",
+    "@types/node": "^6.0.38",
+    "@types/sinon": "^1.16.29",
     "babel-core": "^6.21.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
     "browserify": "^13.0.0",
@@ -83,12 +87,8 @@
   },
   "optionalDependencies": {
     "@types/async": "^2.0.31",
-    "@types/chai": "^3.4.32",
     "@types/isomorphic-fetch": "0.0.30",
-    "@types/lodash": "4.14.42",
-    "@types/node": "^6.0.38",
     "@types/promises-a-plus": "0.0.26",
-    "@types/sinon": "^1.16.29",
     "@types/graphql": "^0.8.0"
   }
 }

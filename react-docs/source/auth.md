@@ -32,7 +32,9 @@ Another common way to identify yourself when using HTTP is to send along an auth
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
-const networkInterface = createNetworkInterface('/graphql');
+const networkInterface = createNetworkInterface({
+  uri: '/graphql',
+});
 
 networkInterface.use([{
   applyMiddleware(req, next) {

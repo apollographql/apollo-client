@@ -17,6 +17,8 @@ import {
   Store,
 } from '../store';
 
+  import { assign } from '../util/assign';
+
 // a stack of patches of new or changed documents
 export type OptimisticStore = {
   mutationId: string,

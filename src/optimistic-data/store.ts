@@ -17,8 +17,7 @@ import {
   Store,
 } from '../store';
 
-import assign from 'lodash/assign';
-import pick from 'lodash/pick';
+  import { assign } from '../util/assign';
 
 // a stack of patches of new or changed documents
 export type OptimisticStore = {
@@ -69,9 +68,13 @@ export function optimistic(
 
     // TODO: apply extra reducers and resultBehaviors to optimistic store?
 
-    const changedKeys = Object.keys(fakeDataResultState).filter(
-      key => optimisticData[key] !== fakeDataResultState[key]);
-    const patch = pick(fakeDataResultState, changedKeys);
+    const patch: any = {};
+
+    Object.keys(fakeDataResultState).forEach(key => {
+      if (optimisticData[key] !== fakeDataResultState[key]) {
+        patch[key] = fakeDataResultState[key];
+      }
+    });
 
     const optimisticState = {
       data: patch,

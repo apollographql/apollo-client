@@ -1,22 +1,23 @@
 // For development only!
-import isObject from 'lodash/isObject';
-import omit from 'lodash/omit';
-import mapValues from 'lodash/mapValues';
 
 export function stripLoc(obj: Object) {
   if (Array.isArray(obj)) {
     return obj.map(stripLoc);
   }
 
-  if (! isObject(obj)) {
+  if (obj === null || typeof obj !== 'object') {
     return obj;
   }
 
-  const omitted: Object = omit(obj, ['loc']);
+  const nextObj = {};
 
-  return mapValues(omitted, (value) => {
-    return stripLoc(value);
+  Object.keys(obj).forEach(key => {
+    if (key !== 'loc') {
+      nextObj[key] = stripLoc(obj[key]);
+    }
   });
+
+  return nextObj;
 }
 
 export function printAST(fragAst: Object) {

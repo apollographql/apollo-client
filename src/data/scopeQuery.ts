@@ -13,8 +13,6 @@ import {
   resultKeyNameFromField,
 } from './storeUtils';
 
-import isNumber from 'lodash/isNumber';
-
 // The type of a path
 export type StorePath = (string|number)[];
 
@@ -51,7 +49,7 @@ export function scopeSelectionSetToResultPath({
 
   path
     // Arrays are not represented in GraphQL AST
-    .filter((pathSegment) => !isNumber(pathSegment))
+    .filter((pathSegment) => typeof pathSegment !== 'number')
     .forEach((pathSegment) => {
       currSelSet = followOnePathSegment(currSelSet, pathSegment as string, fragmentMap);
     });

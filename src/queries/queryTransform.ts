@@ -11,7 +11,7 @@ import {
   checkDocument,
 } from './getFromAST';
 
-import cloneDeep from 'lodash/cloneDeep';
+import { cloneDeep } from '../util/cloneDeep';
 
 const TYPENAME_FIELD: Field = {
   kind: 'Field',

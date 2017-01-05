@@ -12,6 +12,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 - Remove fragment option from query, watchQuery etc. [PR #1096](https://github.com/apollostack/apollo-client/pull/1096)
 - Broadcast new store state only when Apollo state was affected by an action [PR #1118](https://github.com/apollostack/apollo-client/pull/1118)
+- Remove lodash as a production dependency [PR #1122](https://github.com/apollostack/apollo-client/pull/1122)
 
 ### 0.5.26
 - Add variables to MutationResultAction [PR #1106](https://github.com/apollostack/apollo-client/pull/1106)

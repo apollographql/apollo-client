@@ -26,9 +26,9 @@ import {
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
-import { NetworkStatus } from '../queries/store';
+import { isEqual } from '../util/isEqual';
 
-import isEqual from 'lodash/isEqual';
+import { NetworkStatus } from '../queries/store';
 
 export type ApolloCurrentResult = {
   data: any;

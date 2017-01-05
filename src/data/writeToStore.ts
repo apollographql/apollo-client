@@ -1,6 +1,3 @@
-import isNull from 'lodash/isNull';
-import isUndefined from 'lodash/isUndefined';
-import isObject from 'lodash/isObject';
 
 import {
   getOperationDefinition,
@@ -149,7 +146,7 @@ export function writeSelectionSetToStore({
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
 
-      if (!isUndefined(value)) {
+      if (value !== undefined) {
         writeFieldToStore({
           dataId,
           value,
@@ -241,16 +238,15 @@ function writeFieldToStore({
   // If we merge, this will be the generatedKey
   let generatedKey: string;
 
-  // If it's a scalar that's not a JSON blob, just store it in the store
-  if ((!field.selectionSet || isNull(value)) && !isObject(value)) {
-    storeValue = value;
-  } else if ((!field.selectionSet || isNull(value)) && isObject(value)) {
-    // If it is a scalar that's a JSON blob, we have to "escape" it so it can't
-    // pretend to be an id
-    storeValue = {
-      type: 'json',
-      json: value,
-    };
+  // If this is a scalar value...
+  if (!field.selectionSet || value === null) {
+    storeValue =
+      value != null && typeof value === 'object'
+        // If the scalar value is a JSON blob, we have to "escape" it so it can’t pretend to be
+        // an id.
+        ? { type: 'json', json: value }
+        // Otherwise, just store the scalar directly in the store.
+        : value;
   } else if (Array.isArray(value)) {
     const generatedId = `${dataId}.${storeFieldName}`;
 
@@ -340,7 +336,7 @@ function processArrayValue(
   context: WriteContext,
 ): any[] {
   return value.map((item: any, index: any) => {
-    if (isNull(item)) {
+    if (item === null) {
       return null;
     }
 

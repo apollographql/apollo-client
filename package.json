@@ -39,7 +39,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "graphql-anywhere": "^1.0.0",
+    "graphql-anywhere": "^2.0.0",
     "graphql-tag": "^1.1.1",
     "lodash": "^4.17.2",
     "redux": "^3.3.1",
@@ -84,6 +84,6 @@
     "@types/promises-a-plus": "0.0.26",
     "@types/redux": "^3.5.29",
     "@types/sinon": "^1.16.29",
-    "typed-graphql": "1.0.2"
+    "@types/graphql": "^0.8.0"
   }
 }

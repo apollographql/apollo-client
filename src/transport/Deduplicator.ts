@@ -4,11 +4,6 @@ import {
 } from '../transport/networkInterface';
 
 import {
-  Document,
-  GraphQLResult,
-} from 'graphql';
-
-import {
   print,
 } from 'graphql-tag/printer';
 

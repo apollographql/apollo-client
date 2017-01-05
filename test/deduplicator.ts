@@ -5,14 +5,14 @@ import ApolloClient, { toIdValue } from '../src';
 import { Request, NetworkInterface } from '../src/transport/networkInterface';
 import { Deduplicator } from '../src/transport/Deduplicator';
 import { getOperationName } from '../src/queries/getFromAST';
-import { Document } from 'graphql';
+import { DocumentNode } from 'graphql';
 
 import { NetworkStatus } from '../src/queries/store';
 
 describe('query deduplication', () => {
   it(`does not affect different queries`, () => {
 
-    const document: Document = gql`query test1($x: String){
+    const document: DocumentNode = gql`query test1($x: String){
       test(x: $x)
     }`;
     const variables1 = { x: 'Hello World' };
@@ -48,7 +48,7 @@ describe('query deduplication', () => {
 
   it(`deduplicates identical queries`, () => {
 
-    const document: Document = gql`query test1($x: String){
+    const document: DocumentNode = gql`query test1($x: String){
       test(x: $x)
     }`;
     const variables1 = { x: 'Hello World' };
@@ -84,7 +84,7 @@ describe('query deduplication', () => {
 
   it(`can bypass deduplication if desired`, () => {
 
-    const document: Document = gql`query test1($x: String){
+    const document: DocumentNode = gql`query test1($x: String){
       test(x: $x)
     }`;
     const variables1 = { x: 'Hello World' };

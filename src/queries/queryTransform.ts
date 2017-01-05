@@ -1,10 +1,10 @@
 import {
-  Document,
-  SelectionSet,
-  Definition,
-  OperationDefinition,
-  Field,
-  InlineFragment,
+  DocumentNode,
+  SelectionSetNode,
+  DefinitionNode,
+  OperationDefinitionNode,
+  FieldNode,
+  InlineFragmentNode,
 } from 'graphql';
 
 import {
@@ -13,7 +13,7 @@ import {
 
 import cloneDeep = require('lodash/cloneDeep');
 
-const TYPENAME_FIELD: Field = {
+const TYPENAME_FIELD: FieldNode = {
   kind: 'Field',
   alias: null,
   name: {
@@ -23,13 +23,13 @@ const TYPENAME_FIELD: Field = {
 };
 
 function addTypenameToSelectionSet(
-  selectionSet: SelectionSet,
+  selectionSet: SelectionSetNode,
   isRoot = false,
 ) {
   if (selectionSet && selectionSet.selections) {
     if (! isRoot) {
       const alreadyHasThisField = selectionSet.selections.some((selection) => {
-        return selection.kind === 'Field' && (selection as Field).name.value === '__typename';
+        return selection.kind === 'Field' && (selection as FieldNode).name.value === '__typename';
       });
 
       if (! alreadyHasThisField) {
@@ -39,19 +39,19 @@ function addTypenameToSelectionSet(
 
     selectionSet.selections.forEach((selection) => {
       if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
-        addTypenameToSelectionSet((selection as Field | InlineFragment).selectionSet);
+        addTypenameToSelectionSet((selection as FieldNode | InlineFragmentNode).selectionSet);
       }
     });
   }
 }
 
-export function addTypenameToDocument(doc: Document) {
+export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
 
-  docClone.definitions.forEach((definition: Definition) => {
+  docClone.definitions.forEach((definition: DefinitionNode) => {
     const isRoot = definition.kind === 'OperationDefinition';
-    addTypenameToSelectionSet((definition as OperationDefinition).selectionSet, isRoot);
+    addTypenameToSelectionSet((definition as OperationDefinitionNode).selectionSet, isRoot);
   });
 
   return docClone;

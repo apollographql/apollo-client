@@ -11,7 +11,7 @@ import {
 } from '../store';
 
 import {
-  Document,
+  DocumentNode,
 } from 'graphql';
 
 export function replaceQueryResults(state: NormalizedCache, {
@@ -20,7 +20,7 @@ export function replaceQueryResults(state: NormalizedCache, {
   newResult,
 }: {
   variables: any;
-  document: Document;
+  document: DocumentNode;
   newResult: Object;
 }, config: ApolloReducerConfig) {
   const clonedState = { ...state } as NormalizedCache;

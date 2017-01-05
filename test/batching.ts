@@ -7,7 +7,7 @@ import {
   mockBatchedNetworkInterface,
 } from './mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
-import { GraphQLResult } from 'graphql';
+import { ExecutionResult } from 'graphql';
 
 const networkInterface = mockBatchedNetworkInterface();
 
@@ -92,7 +92,7 @@ describe('QueryBatcher', () => {
       });
 
       myBatcher.enqueueRequest(request);
-      const promises: Promise<GraphQLResult>[] = myBatcher.consumeQueue();
+      const promises: Promise<ExecutionResult>[] = myBatcher.consumeQueue();
       assert.equal(promises.length, 1);
       promises[0].then((resultObj) => {
         assert.equal(myBatcher.queuedRequests.length, 0);
@@ -121,7 +121,7 @@ describe('QueryBatcher', () => {
       });
       myBatcher.enqueueRequest(request);
       myBatcher.enqueueRequest(request2);
-      const promises: Promise<GraphQLResult>[] = myBatcher.consumeQueue();
+      const promises: Promise<ExecutionResult>[] = myBatcher.consumeQueue();
       assert.equal(batcher.queuedRequests.length, 0);
       assert.equal(promises.length, 2);
       promises[0].then((resultObj1) => {

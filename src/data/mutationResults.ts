@@ -4,8 +4,8 @@ import {
 } from './storeUtils';
 
 import {
-  Document,
-  GraphQLResult,
+  DocumentNode,
+  ExecutionResult,
 } from 'graphql';
 
 import mapValues = require('lodash/mapValues');
@@ -66,7 +66,7 @@ export type MutationArrayDeleteBehavior = {
 export type MutationQueryResultBehavior = {
   type: 'QUERY_RESULT';
   variables: any;
-  document: Document;
+  document: DocumentNode;
   newResult: Object;
 };
 
@@ -78,9 +78,9 @@ export type ArrayInsertWhere =
 // The `behavior` field is specific to each reducer
 export type MutationBehaviorReducerArgs = {
   behavior: MutationBehavior;
-  result: GraphQLResult;
+  result: ExecutionResult;
   variables: any;
-  document: Document;
+  document: DocumentNode;
   config: ApolloReducerConfig;
 };
 

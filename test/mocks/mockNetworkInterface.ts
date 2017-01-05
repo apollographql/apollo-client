@@ -6,8 +6,8 @@ import {
 } from '../../src/transport/networkInterface';
 
 import {
-  GraphQLResult,
-  Document,
+  ExecutionResult,
+  DocumentNode,
 } from 'graphql';
 
 import {
@@ -36,19 +36,19 @@ export function mockBatchedNetworkInterface(
 
 export interface ParsedRequest {
   variables?: Object;
-  query?: Document;
+  query?: DocumentNode;
   debugName?: string;
 }
 
 export interface MockedResponse {
   request: ParsedRequest;
-  result?: GraphQLResult;
+  result?: ExecutionResult;
   error?: Error;
   delay?: number;
 }
 
 export interface MockedSubscriptionResult {
-  result?: GraphQLResult;
+  result?: ExecutionResult;
   error?: Error;
   delay?: number;
 }
@@ -185,8 +185,8 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
 export class MockBatchedNetworkInterface
 extends MockNetworkInterface implements BatchedNetworkInterface {
 
-  public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
-    const resultPromises: Promise<GraphQLResult>[] = [];
+  public batchQuery(requests: Request[]): Promise<ExecutionResult[]> {
+    const resultPromises: Promise<ExecutionResult>[] = [];
     requests.forEach((request) => {
       resultPromises.push(this.query(request));
     });

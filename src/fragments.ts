@@ -1,6 +1,6 @@
 import {
-  Document,
-  FragmentDefinition,
+  DocumentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import flatten = require('lodash/flatten');
@@ -14,7 +14,7 @@ import {
 // fragments that have the same name, i.e. the values *should* be of arrays of length 1.
 // Note: this variable is exported solely for unit testing purposes. It should not be touched
 // directly by application code.
-export let fragmentDefinitionsMap: { [fragmentName: string]: FragmentDefinition[] } = {};
+export let fragmentDefinitionsMap: { [fragmentName: string]: FragmentDefinitionNode[] } = {};
 
 // Specifies whether or not we should print warnings about conflicting fragment names.
 let printFragmentWarnings = true;
@@ -27,10 +27,10 @@ let printFragmentWarnings = true;
 let haveWarned = false;
 
 export function createFragment(
-  doc: Document,
-  fragments: (FragmentDefinition[] | FragmentDefinition[][]) = [],
+  doc: DocumentNode,
+  fragments: (FragmentDefinitionNode[] | FragmentDefinitionNode[][]) = [],
   internalUse = false,
-): FragmentDefinition[] {
+): FragmentDefinitionNode[] {
 
   if (!internalUse) {
     if (! haveWarned) {
@@ -49,9 +49,9 @@ export function createFragment(
     }
   }
 
-  fragments = flatten(fragments) as FragmentDefinition[] ;
+  fragments = flatten(fragments) as FragmentDefinitionNode[];
   const fragmentDefinitions = getFragmentDefinitions(doc);
-  fragmentDefinitions.forEach((fragmentDefinition: FragmentDefinition) => {
+  fragmentDefinitions.forEach((fragmentDefinition: FragmentDefinitionNode) => {
     const fragmentName = fragmentDefinition.name.value;
     if (fragmentDefinitionsMap.hasOwnProperty(fragmentName) &&
         fragmentDefinitionsMap[fragmentName].indexOf(fragmentDefinition) === -1) {

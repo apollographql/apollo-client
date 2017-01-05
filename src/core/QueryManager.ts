@@ -41,14 +41,14 @@ import {
 } from '../data/resultReducers';
 
 import {
-  GraphQLResult,
-  Document,
+  ExecutionResult,
+  DocumentNode,
   // TODO REFACTOR: do we still need this??
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
   /* tslint:disable */
-  SelectionSet,
+  SelectionSetNode,
   /* tslint:enable */
 } from 'graphql';
 
@@ -100,7 +100,7 @@ import { ObservableQuery } from './ObservableQuery';
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export interface SubscriptionOptions {
-  document: Document;
+  document: DocumentNode;
   variables?: { [key: string]: any };
 };
 
@@ -109,7 +109,7 @@ export type ApolloQueryResult = {
   loading: boolean;
   networkStatus: NetworkStatus;
 
-  // This type is different from the GraphQLResult type because it doesn't include errors.
+  // This type is different from the ExecutionResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.
 };
 
@@ -153,7 +153,7 @@ export class QueryManager {
   // this should be combined with ObservableQuery, but that needs to be expanded to support
   // mutations and subscriptions as well.
   private queryListeners: { [queryId: string]: QueryListener[] };
-  private queryDocuments: { [queryId: string]: Document };
+  private queryDocuments: { [queryId: string]: DocumentNode };
 
   private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
 
@@ -249,7 +249,7 @@ export class QueryManager {
     updateQueries,
     refetchQueries = [],
   }: {
-    mutation: Document,
+    mutation: DocumentNode,
     variables?: Object,
     resultBehaviors?: MutationBehavior[],
     optimisticResponse?: Object,
@@ -887,7 +887,7 @@ export class QueryManager {
   // Takes a set of WatchQueryOptions and transforms the query document
   // accordingly. Specifically, it applies the queryTransformer (if there is one defined)
   private transformQueryDocument(options: WatchQueryOptions): {
-    queryDoc: Document,
+    queryDoc: DocumentNode,
   } {
     let queryDoc = options.query;
 
@@ -927,9 +927,9 @@ export class QueryManager {
   }: {
     requestId: number,
     queryId: string,
-    document: Document,
+    document: DocumentNode,
     options: WatchQueryOptions,
-  }): Promise<GraphQLResult> {
+  }): Promise<ExecutionResult> {
     const {
       variables,
       noFetch,
@@ -945,7 +945,7 @@ export class QueryManager {
       this.addFetchQueryPromise(requestId, retPromise, resolve, reject);
 
       this.deduplicator.query(request, this.queryDeduplication)
-        .then((result: GraphQLResult) => {
+        .then((result: ExecutionResult) => {
 
           const extraReducers = this.getExtraReducers();
 

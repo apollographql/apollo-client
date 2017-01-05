@@ -41,3 +41,5 @@ export enum FetchType {
   refetch = 2,
   poll = 3,
 }
+
+export type IdGetter = (value: Object) => string;

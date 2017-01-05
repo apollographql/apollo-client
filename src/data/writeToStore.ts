@@ -32,7 +32,7 @@ import {
 
 import {
   IdGetter,
-} from './extensions';
+} from '../core/types';
 
 import {
   shouldInclude,

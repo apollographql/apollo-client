@@ -33,6 +33,7 @@ import {
   ApolloQueryResult,
   ResultComparator,
   ResultTransformer,
+  IdGetter,
 } from './core/types';
 
 import {
@@ -48,10 +49,6 @@ import {
   SubscriptionOptions,
   MutationOptions,
 } from './core/watchQueryOptions';
-
-import {
-  IdGetter,
-} from './data/extensions';
 
 import {
   MutationBehaviorReducerMap,

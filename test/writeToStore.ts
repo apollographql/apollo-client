@@ -11,10 +11,6 @@ import {
 } from '../src/data/storeUtils';
 
 import {
-  getIdField,
-} from '../src/data/extensions';
-
-import {
   NormalizedCache,
 } from '../src/data/storeUtils';
 
@@ -27,6 +23,8 @@ import {
 } from 'graphql';
 
 import gql from 'graphql-tag';
+
+const getIdField = ({id}: {id: string}) => id;
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {

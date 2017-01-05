@@ -15,7 +15,7 @@ import {
   NameNode,
 } from 'graphql';
 
-function isStringValue(value: Value): value is StringValueNode {
+function isStringValue(value: ValueNode): value is StringValueNode {
 
   return value.kind === 'StringValue';
 }

@@ -101,7 +101,7 @@ export function data(
       // write to "the" store?
       let newState = writeResultToStore({
         result: action.result.data,
-        dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
+        dataId: 'ROOT_SUBSCRIPTION',
         document: action.document,
         variables: action.variables,
         store: clonedState,

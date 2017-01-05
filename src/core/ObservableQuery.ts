@@ -17,16 +17,18 @@ import {
 
 import {
   QueryManager,
+} from './QueryManager';
+
+import {
   ApolloQueryResult,
   FetchType,
-} from './QueryManager';
+} from './types';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { isEqual } from '../util/isEqual';
 
 import { NetworkStatus } from '../queries/store';
-
 
 export type ApolloCurrentResult = {
   data: any;

@@ -1,5 +1,5 @@
 import { ObservableQuery } from '../../src/core/ObservableQuery';
-import { ApolloQueryResult } from '../../src/core/QueryManager';
+import { ApolloQueryResult } from '../../src/core/types';
 import { Subscription } from '../../src/util/Observable';
 
 import wrap from './wrap';

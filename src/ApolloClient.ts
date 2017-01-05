@@ -27,10 +27,13 @@ import {
 
 import {
   QueryManager,
+} from './core/QueryManager';
+
+import {
   ApolloQueryResult,
   ResultComparator,
   ResultTransformer,
-} from './core/QueryManager';
+} from './core/types';
 
 import {
   ObservableQuery,

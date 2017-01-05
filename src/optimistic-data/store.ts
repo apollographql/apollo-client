@@ -14,7 +14,6 @@ import {
 } from '../data/storeUtils';
 
 import {
-  getDataWithOptimisticResults,
   Store,
 } from '../store';
 
@@ -25,6 +24,14 @@ export type OptimisticStore = {
 }[];
 
 const optimisticDefaultState: any[] = [];
+
+export function getDataWithOptimisticResults(store: Store): NormalizedCache {
+  if (store.optimistic.length === 0) {
+    return store.data;
+  }
+  const patches = store.optimistic.map(opt => opt.data);
+  return assign({}, store.data, ...patches) as NormalizedCache;
+}
 
 export function optimistic(
   previousState = optimisticDefaultState,
@@ -47,7 +54,7 @@ export function optimistic(
     const fakeStore = {
       ...store,
       optimistic: previousState,
-    } as Store;
+    };
     const optimisticData = getDataWithOptimisticResults(fakeStore);
     const fakeDataResultState = data(
       optimisticData,

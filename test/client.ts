@@ -1662,6 +1662,27 @@ it('should not let errors in observer.next reach the store', (done) => {
         });
     });
   });
+
+  it('should propagate errors from network interface to observers', (done) => {
+
+    const networkInterface = {
+      query: () => Promise.reject(new Error('Uh oh!')),
+    };
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const handle = client.watchQuery({ query: gql`query { a b c }` });
+
+    handle.subscribe({
+      error(error) {
+        assert.equal(error.message, 'Network error: Uh oh!');
+        done();
+      },
+    });
+  });
 });
 
 function clientRoundrip(

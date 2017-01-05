@@ -1,3 +1,5 @@
+import './fetch';
+
 import {
   Request,
   createNetworkInterface,

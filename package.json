@@ -47,8 +47,7 @@
     "graphql-anywhere": "^2.0.0",
     "graphql-tag": "^1.1.1",
     "redux": "^3.4.0",
-    "symbol-observable": "^1.0.2",
-    "whatwg-fetch": "^2.0.0"
+    "symbol-observable": "^1.0.2"
   },
   "devDependencies": {
     "@types/chai": "^3.4.32",

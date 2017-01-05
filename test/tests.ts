@@ -53,3 +53,4 @@ import './customResolvers';
 import './isEqual';
 import './cloneDeep';
 import './assign';
+import './fetch';

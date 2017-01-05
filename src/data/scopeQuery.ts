@@ -13,7 +13,7 @@ import {
   resultKeyNameFromField,
 } from './storeUtils';
 
-import isNumber = require('lodash/isNumber');
+import isNumber from 'lodash/isNumber';
 
 // The type of a path
 export type StorePath = (string|number)[];

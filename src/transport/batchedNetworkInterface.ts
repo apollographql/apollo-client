@@ -4,8 +4,8 @@ import {
 
 import 'whatwg-fetch';
 
-import assign = require('lodash/assign');
-import isNumber = require('lodash/isNumber');
+import assign from 'lodash/assign';
+import isNumber from 'lodash/isNumber';
 
 import {
   HTTPFetchNetworkInterface,

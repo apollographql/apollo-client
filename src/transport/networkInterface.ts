@@ -1,6 +1,7 @@
-import isString = require('lodash/isString');
-import assign = require('lodash/assign');
-import mapValues = require('lodash/mapValues');
+import isString from 'lodash/isString';
+import assign from 'lodash/assign';
+import mapValues from 'lodash/mapValues';
+
 import 'whatwg-fetch';
 
 import {

@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import merge = require('lodash/merge');
+import { merge } from 'lodash';
 
 import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInterface';
 

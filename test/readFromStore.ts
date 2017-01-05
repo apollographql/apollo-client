@@ -1,6 +1,5 @@
 import { assert } from 'chai';
-import assign = require('lodash/assign');
-import omit = require('lodash/omit');
+import { assign, omit } from 'lodash';
 
 import {
   readQueryFromStore,

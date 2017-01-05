@@ -4,10 +4,8 @@ const { assert } = chai;
 import {
   mockSubscriptionNetworkInterface,
 } from './mocks/mockNetworkInterface';
-import ApolloClient from '../src';
 
-// import assign = require('lodash/assign');
-// import clonedeep = require('lodash/cloneDeep');
+import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
 

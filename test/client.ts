@@ -66,7 +66,7 @@ import {
   createMockedIResponse,
 } from './mocks/mockFetch';
 
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors/ApolloError';
 
@@ -74,9 +74,7 @@ import { withWarning } from './util/wrap';
 
 import observableToPromise from './util/observableToPromise';
 
-import cloneDeep = require('lodash/cloneDeep');
-
-import assign = require('lodash/assign');
+import { cloneDeep, assign } from 'lodash';
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);

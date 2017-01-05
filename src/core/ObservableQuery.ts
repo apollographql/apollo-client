@@ -17,15 +17,18 @@ import {
 
 import {
   QueryManager,
+} from './QueryManager';
+
+import {
   ApolloQueryResult,
   FetchType,
-} from './QueryManager';
+} from './types';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { NetworkStatus } from '../queries/store';
 
-import isEqual = require('lodash/isEqual');
+import isEqual from 'lodash/isEqual';
 
 export type ApolloCurrentResult = {
   data: any;

@@ -1,5 +1,5 @@
 import {
-  Document,
+  DocumentNode,
 } from 'graphql';
 
 import graphqlAnywhere, {
@@ -33,7 +33,7 @@ export type DiffResult = {
 
 export type ReadQueryOptions = {
   store: NormalizedCache,
-  query: Document,
+  query: DocumentNode,
   variables?: Object,
   returnPartialData?: boolean,
   config?: ApolloReducerConfig,
@@ -181,7 +181,7 @@ Perhaps you want to use the \`returnPartialData\` option?`);
 /**
  * Given a store and a query, return as much of the result as possible and
  * identify if any data was missing from the store.
- * @param  {Document} query A parsed GraphQL query document
+ * @param  {DocumentNode} query A parsed GraphQL query document
  * @param  {Store} store The Apollo Client store object
  * @param  {boolean} [returnPartialData] Whether to throw an error if any fields are missing
  * @return {result: Object, isMissing: [boolean]}

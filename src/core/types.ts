@@ -1,11 +1,11 @@
-import { Document } from 'graphql';
+import { DocumentNode } from 'graphql';
 import {
   QueryStoreValue,
   NetworkStatus,
 } from '../queries/store';
 
 export interface SubscriptionOptions {
-  document: Document;
+  document: DocumentNode;
   variables?: { [key: string]: any };
 };
 

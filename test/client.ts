@@ -12,9 +12,9 @@ import {
 
 import {
   GraphQLError,
-  GraphQLResult,
-  Document,
-  FragmentDefinition,
+  ExecutionResult,
+  DocumentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import {
@@ -978,7 +978,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       'fortuneCookie': 'The waiter spit in your food',
     };
     const networkInterface: NetworkInterface = {
-      query(request: Request): Promise<GraphQLResult> {
+      query(request: Request): Promise<ExecutionResult> {
         assert.equal(request.operationName, 'myQueryName');
         return Promise.resolve({ data });
       },
@@ -1002,7 +1002,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       'fortuneCookie': 'The waiter spit in your food',
     };
     const networkInterface: NetworkInterface = {
-      query(request: Request): Promise<GraphQLResult> {
+      query(request: Request): Promise<ExecutionResult> {
         assert.equal(request.operationName, 'myMutationName');
         return Promise.resolve({ data });
       },
@@ -1665,8 +1665,8 @@ it('should not let errors in observer.next reach the store', (done) => {
 });
 
 function clientRoundrip(
-  query: Document,
-  data: GraphQLResult,
+  query: DocumentNode,
+  data: ExecutionResult,
   variables?: any,
 ) {
   const networkInterface = mockNetworkInterface({

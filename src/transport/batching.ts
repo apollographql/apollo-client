@@ -3,7 +3,7 @@ import {
 } from './networkInterface';
 
 import {
-  GraphQLResult,
+  ExecutionResult,
 } from 'graphql';
 
 export interface QueryFetchRequest {
@@ -12,8 +12,8 @@ export interface QueryFetchRequest {
   // promise is created when the query fetch request is
   // added to the queue and is resolved once the result is back
   // from the server.
-  promise?: Promise<GraphQLResult>;
-  resolve?: (result: GraphQLResult) => void;
+  promise?: Promise<ExecutionResult>;
+  resolve?: (result: ExecutionResult) => void;
   reject?: (error: Error) => void;
 };
 
@@ -28,18 +28,18 @@ export class QueryBatcher {
   private pollTimer: NodeJS.Timer | any; //oddity in Typescript
 
   //This function is called to the queries in the queue to the server.
-  private batchFetchFunction: (request: Request[]) => Promise<GraphQLResult[]>;
+  private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
 
   constructor({
     batchFetchFunction,
   }: {
-    batchFetchFunction: (request: Request[]) => Promise<GraphQLResult[]>,
+    batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>,
   }) {
     this.queuedRequests = [];
     this.batchFetchFunction = batchFetchFunction;
   }
 
-  public enqueueRequest(request: Request): Promise<GraphQLResult> {
+  public enqueueRequest(request: Request): Promise<ExecutionResult> {
     const fetchRequest: QueryFetchRequest = {
       request,
     };
@@ -54,7 +54,7 @@ export class QueryBatcher {
 
   // Consumes the queue. Called on a polling interval.
   // Returns a list of promises (one for each query).
-  public consumeQueue(): Promise<GraphQLResult>[] | undefined {
+  public consumeQueue(): Promise<ExecutionResult>[] | undefined {
     if (this.queuedRequests.length < 1) {
       return undefined;
     }
@@ -67,7 +67,7 @@ export class QueryBatcher {
       };
     });
 
-    const promises: Promise<GraphQLResult>[] = [];
+    const promises: Promise<ExecutionResult>[] = [];
     const resolvers: any[] = [];
     const rejecters: any[] = [];
     this.queuedRequests.forEach((fetchRequest, index) => {

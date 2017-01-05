@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.5.26",
+  "version": "0.6.0",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/src/index.js",
@@ -43,7 +43,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "graphql-anywhere": "^1.0.0",
+    "graphql-anywhere": "^2.0.0",
     "graphql-tag": "^1.1.1",
     "redux": "^3.4.0",
     "symbol-observable": "^1.0.2",
@@ -89,6 +89,6 @@
     "@types/node": "^6.0.38",
     "@types/promises-a-plus": "0.0.26",
     "@types/sinon": "^1.16.29",
-    "typed-graphql": "1.0.2"
+    "@types/graphql": "^0.8.0"
   }
 }

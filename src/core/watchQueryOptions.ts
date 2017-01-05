@@ -1,5 +1,6 @@
 import {
-  Document,
+  DocumentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import {
@@ -63,7 +64,7 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
    * server.
    */
   // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a lot of tests.
-  query: Document;
+  query: DocumentNode;
 
   /**
    * Arbitrary metadata stored in Redux with this query.  Designed for debugging,
@@ -73,12 +74,12 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
 }
 
 export interface FetchMoreQueryOptions {
-  query?: Document;
+  query?: DocumentNode;
   variables?: { [key: string]: any };
 }
 
 export type SubscribeToMoreOptions = {
-  document: Document;
+  document: DocumentNode;
   variables?: { [key: string]: any };
   updateQuery: (previousQueryResult: Object, options: {
     subscriptionData: { data: any },
@@ -88,12 +89,12 @@ export type SubscribeToMoreOptions = {
 };
 
 export interface SubscriptionOptions {
-  query: Document;
+  query: DocumentNode;
   variables?: { [key: string]: any };
 };
 
 export interface MutationOptions {
-  mutation: Document;
+  mutation: DocumentNode;
   variables?: Object;
   resultBehaviors?: MutationBehavior[];
   optimisticResponse?: Object;

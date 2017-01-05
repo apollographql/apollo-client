@@ -795,7 +795,7 @@ describe('mutation results', () => {
         observableQuery = client.watchQuery({
           query: queryWithVars,
           variables: { id: 5 },
-          reducer: (previousResult, action, variables: any) => {
+          reducer: (previousResult, action, variables) => {
             counter++;
             if (isMutationResultAction(action) && variables['id'] === 5) {
               const newResult = cloneDeep(previousResult) as any;

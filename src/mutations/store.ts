@@ -7,7 +7,7 @@ import {
 } from '../actions';
 
 import {
-  SelectionSet,
+  SelectionSetNode,
 } from 'graphql';
 
 export interface MutationStore {
@@ -24,7 +24,7 @@ export interface MutationStoreValue {
 export interface SelectionSetWithRoot {
   id: string;
   typeName: string;
-  selectionSet: SelectionSet;
+  selectionSet: SelectionSetNode;
 }
 
 export function mutations(

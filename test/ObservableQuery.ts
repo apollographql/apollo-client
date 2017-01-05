@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
 import {
-  GraphQLResult,
+  ExecutionResult,
 } from 'graphql';
 
 import {
@@ -274,7 +274,7 @@ describe('ObservableQuery', () => {
 
       let timesFired = 0;
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           timesFired += 1;
           return Promise.resolve({ data });
         },
@@ -327,7 +327,7 @@ describe('ObservableQuery', () => {
 
       let timesFired = 0;
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           timesFired += 1;
           return Promise.resolve({ data });
         },

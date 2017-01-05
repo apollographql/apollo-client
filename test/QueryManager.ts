@@ -26,8 +26,8 @@ import {
 } from 'chai';
 
 import {
-  Document,
-  GraphQLResult,
+  DocumentNode,
+  ExecutionResult,
 } from 'graphql';
 
 import ApolloClient, {
@@ -116,11 +116,11 @@ describe('QueryManager', () => {
     observer,
   }: {
     done: MochaDone,
-    query: Document,
+    query: DocumentNode,
     variables?: Object,
     queryOptions?: Object,
     error?: Error,
-    result?: GraphQLResult,
+    result?: ExecutionResult,
     delay?: number,
     observer: Observer<ApolloQueryResult>,
   }) => {
@@ -146,7 +146,7 @@ describe('QueryManager', () => {
     variables = {},
   }: {
     done: MochaDone,
-    query: Document,
+    query: DocumentNode,
     data: Object,
     variables?: Object,
   }) => {
@@ -170,7 +170,7 @@ describe('QueryManager', () => {
     variables = {},
     store,
   }: {
-    mutation: Document,
+    mutation: DocumentNode,
     data: Object,
     variables?: Object,
     store?: ApolloStore,
@@ -183,7 +183,7 @@ describe('QueryManager', () => {
       result: { data },
     });
     const queryManager = createQueryManager({ networkInterface, store });
-    return new Promise<{ result: GraphQLResult, queryManager: QueryManager }>((resolve, reject) => {
+    return new Promise<{ result: ExecutionResult, queryManager: QueryManager }>((resolve, reject) => {
       queryManager.mutate({ mutation, variables }).then((result) => {
         resolve({ result, queryManager });
       }).catch((error) => {
@@ -193,7 +193,7 @@ describe('QueryManager', () => {
   };
 
   const assertMutationRoundtrip = (opts: {
-    mutation: Document,
+    mutation: DocumentNode,
     data: Object,
     variables?: Object,
   }) => {
@@ -210,8 +210,8 @@ describe('QueryManager', () => {
     secondResult,
   }: {
     request: ParsedRequest,
-    firstResult: GraphQLResult,
-    secondResult: GraphQLResult,
+    firstResult: ExecutionResult,
+    secondResult: ExecutionResult,
   }) => {
     return mockQueryManager(
       {
@@ -1969,21 +1969,21 @@ describe('QueryManager', () => {
     assert.throws(() => {
       queryManager.query({
         // Bamboozle TypeScript into letting us do this
-        query: 'string' as any as Document,
+        query: 'string' as any as DocumentNode,
       });
     }, /wrap the query string in a "gql" tag/);
 
     assert.throws(() => {
       queryManager.mutate({
         // Bamboozle TypeScript into letting us do this
-        mutation: 'string' as any as Document,
+        mutation: 'string' as any as DocumentNode,
       });
     }, /wrap the query string in a "gql" tag/);
 
     assert.throws(() => {
       queryManager.watchQuery({
         // Bamboozle TypeScript into letting us do this
-        query: 'string' as any as Document,
+        query: 'string' as any as DocumentNode,
       });
     }, /wrap the query string in a "gql" tag/);
   });
@@ -2120,7 +2120,7 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           if (timesFired === 0) {
             timesFired += 1;
             queryManager.resetStore();
@@ -2160,7 +2160,7 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           timesFired += 1;
           return Promise.resolve({ data });
         },
@@ -2204,7 +2204,7 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           if (timesFired === 0) {
             timesFired += 1;
             setTimeout(queryManager.resetStore.bind(queryManager), 10);
@@ -2264,7 +2264,7 @@ describe('QueryManager', () => {
         }`;
       const queryManager = mockQueryManager();
       const mockObservableQuery: ObservableQuery = {
-        refetch(variables: any): Promise<GraphQLResult> {
+        refetch(variables: any): Promise<ExecutionResult> {
           done();
           return null;
         },
@@ -2293,7 +2293,7 @@ describe('QueryManager', () => {
       options.query = query;
       let refetchCount = 0;
       const mockObservableQuery: ObservableQuery = {
-        refetch(variables: any): Promise<GraphQLResult> {
+        refetch(variables: any): Promise<ExecutionResult> {
           refetchCount ++;
           done();
           return null;
@@ -2329,7 +2329,7 @@ describe('QueryManager', () => {
         },
       };
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           // reset the store as soon as we hear about the query
           queryManager.resetStore();
           return Promise.resolve({ data });
@@ -3162,14 +3162,14 @@ describe('QueryManager', () => {
       transformCount = 0;
 
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           return Promise.resolve(response);
         },
       };
 
       client = new ApolloClient({
         networkInterface,
-        resultTransformer(result: GraphQLResult) {
+        resultTransformer(result: ExecutionResult) {
           transformCount++;
           return {
             data: assign({}, result.data, {transformCount}),
@@ -3240,7 +3240,7 @@ describe('QueryManager', () => {
 
     beforeEach(() => {
       const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<GraphQLResult> {
+        query(request: Request): Promise<ExecutionResult> {
           return Promise.resolve(response);
         },
       };

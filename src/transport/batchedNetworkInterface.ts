@@ -1,5 +1,5 @@
 import {
-  GraphQLResult,
+  ExecutionResult,
 } from 'graphql';
 
 import 'whatwg-fetch';
@@ -42,13 +42,13 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
     // XXX possible leak: when do we stop polling the queue?
   };
 
-  public query(request: Request): Promise<GraphQLResult> {
+  public query(request: Request): Promise<ExecutionResult> {
     // we just pass it through to the batcher.
     return this.batcher.enqueueRequest(request);
   }
 
   // made public for testing only
-  public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
+  public batchQuery(requests: Request[]): Promise<ExecutionResult[]> {
     const options = { ...this._opts };
 
     // Apply the middlewares to each of the requests

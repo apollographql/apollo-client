@@ -9,8 +9,8 @@ import {
 } from '../src/queries/getFromAST';
 
 import {
-  FragmentDefinition,
-  OperationDefinition,
+  FragmentDefinitionNode,
+  OperationDefinitionNode,
 } from 'graphql';
 
 import { print } from 'graphql-tag/printer';
@@ -66,7 +66,7 @@ describe('AST utility functions', () => {
         firstName
         lastName
       }`;
-    const expectedResult: FragmentDefinition[] = [expectedDoc.definitions[0] as FragmentDefinition];
+    const expectedResult: FragmentDefinitionNode[] = [expectedDoc.definitions[0] as FragmentDefinitionNode];
     const actualResult = getFragmentDefinitions(singleFragmentDefinition);
     assert.equal(actualResult.length, expectedResult.length);
     assert.equal(print(actualResult[0]), print(expectedResult[0]));
@@ -95,9 +95,9 @@ describe('AST utility functions', () => {
       fragment moreAuthorDetails on Author {
         address
       }`;
-    const expectedResult: FragmentDefinition[] = [
-      expectedDoc.definitions[0] as FragmentDefinition,
-      expectedDoc.definitions[1] as FragmentDefinition,
+    const expectedResult: FragmentDefinitionNode[] = [
+      expectedDoc.definitions[0] as FragmentDefinitionNode,
+      expectedDoc.definitions[1] as FragmentDefinitionNode,
     ];
     const actualResult = getFragmentDefinitions(multipleFragmentDefinitions);
     assert.deepEqual(actualResult.map(print), expectedResult.map(print));
@@ -125,7 +125,7 @@ describe('AST utility functions', () => {
           ...moreAuthorDetails
         }
       }`;
-    const expectedResult: OperationDefinition = expectedDoc.definitions[0] as OperationDefinition;
+    const expectedResult: OperationDefinitionNode = expectedDoc.definitions[0] as OperationDefinitionNode;
     const actualResult = getQueryDefinition(queryWithFragments);
 
     assert.equal(print(actualResult), print(expectedResult));
@@ -165,7 +165,7 @@ describe('AST utility functions', () => {
           ...authorDetails
         }
       }`;
-    const expectedResult: OperationDefinition = expectedDoc.definitions[0] as OperationDefinition;
+    const expectedResult: OperationDefinitionNode = expectedDoc.definitions[0] as OperationDefinitionNode;
     const actualResult = getMutationDefinition(mutationWithFragments);
     assert.equal(print(actualResult), print(expectedResult));
   });

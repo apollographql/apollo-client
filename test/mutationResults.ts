@@ -800,7 +800,7 @@ describe('mutation results', () => {
             counter++;
             if (isMutationResultAction(action) && variables['id'] === 5) {
               const newResult = clonedeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data.createTodo);
+              newResult.todoList.todos.unshift((action.result.data as any).createTodo);
               return newResult;
             }
             return previousResult;

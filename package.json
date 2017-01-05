@@ -77,13 +77,15 @@
   },
   "optionalDependencies": {
     "@types/async": "^2.0.31",
-    "@types/chai": "^3.4.32",
     "@types/isomorphic-fetch": "0.0.30",
     "@types/lodash": "^4.14.34",
     "@types/node": "^6.0.38",
-    "@types/promises-a-plus": "0.0.26",
     "@types/redux": "^3.5.29",
-    "@types/sinon": "^1.16.29",
     "@types/graphql": "^0.8.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^3.4.32",
+    "@types/sinon": "^1.16.29",
+    "@types/promises-a-plus": "0.0.26"
   }
 }

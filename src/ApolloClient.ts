@@ -435,7 +435,7 @@ export default class ApolloClient {
     }
 
     // ensure existing store has apolloReducer
-    if (reduxRootSelector(store.getState()) === undefined) {
+    if (typeof reduxRootSelector(store.getState()) === 'undefined') {
       throw new Error(
           'Existing store does not use apolloReducer. Please make sure the store ' +
           'is properly configured and "reduxRootSelector" is correctly specified.',

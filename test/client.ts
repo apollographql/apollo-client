@@ -66,7 +66,7 @@ import {
   createMockedIResponse,
 } from './mocks/mockFetch';
 
-import chaiAsPromised from 'chai-as-promised';
+import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors/ApolloError';
 

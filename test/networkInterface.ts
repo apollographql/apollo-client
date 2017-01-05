@@ -1,8 +1,8 @@
 import * as chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import * as chaiAsPromised from 'chai-as-promised';
 
 import { assign, isEqual } from 'lodash';
-import fetchMock from 'fetch-mock';
+import * as fetchMock from 'fetch-mock';
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);

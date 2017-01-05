@@ -50,7 +50,7 @@ const networkInterface = createNetworkInterface('http://localhost:3000/graphql')
 
 const apolloClient = new ApolloClient({
     networkInterface: networkInterface,
-    addTypeName: true,
+    addTypename: true,
     dataIdFromObject: (result) => {
         if (result.id && result.__typename) {
             return result.__typename + result.id

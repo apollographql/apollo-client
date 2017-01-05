@@ -462,14 +462,17 @@ export default class ApolloClient {
 
       return (next: any) => (action: any) => {
         const returnValue = next(action);
-        this.queryManager.broadcastNewStore(store.getState());
 
-        if (this.devToolsHookCb) {
-          this.devToolsHookCb({
-            action,
-            state: this.queryManager.getApolloState(),
-            dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
-          });
+        if (/^APOLLO_/.test(action.type)) {
+          this.queryManager.broadcastNewStore(store.getState());
+
+          if (this.devToolsHookCb) {
+            this.devToolsHookCb({
+              action,
+              state: this.queryManager.getApolloState(),
+              dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
+            });
+          }
         }
 
         return returnValue;

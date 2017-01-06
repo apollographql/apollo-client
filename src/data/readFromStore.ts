@@ -271,19 +271,9 @@ function resultMapper (resultFields: any, idValue: IdValueWithPreviousResult) {
     // just return the previous result.
     //
     // While we do a shallow comparison of objects, we do a deep comparison of arrays.
-    const sameAsPreviousResult = Object.keys(resultFields).reduce((same, key) => {
-      if (!same) {
-        return false;
-      }
-
-      // Flatten out the field values before comparing them. Non-arrays will turn into singleton
-      // arrays and multi-dimensional arrays will be flattened out. Depth doesn’t matter in this
-      // case, we just need to check that all items are equal.
-      const next = flattenArray(resultFields[key]);
-      const previous = flattenArray(idValue.previousResult[key]);
-
-      return next.reduce((fieldSame, item, i) => fieldSame && item === previous[i], true);
-    }, true);
+    const sameAsPreviousResult = Object.keys(resultFields).reduce((same, key) => (
+      same && areNestedArrayItemsStrictlyEqual(resultFields[key], idValue.previousResult[key])
+    ), true);
 
     if (sameAsPreviousResult) {
       return idValue.previousResult;
@@ -359,11 +349,23 @@ that is directly manipulating the store; please file an issue.`);
 
 type NestedArray<T> = T | Array<T | Array<T | Array<T>>>;
 
-function flattenArray <T>(nestedArray: NestedArray<T>): Array<T> {
-  if (!Array.isArray(nestedArray)) {
-    return [nestedArray];
+/**
+ * Compare all the items to see if they are all referentially equal in two arrays no matter how
+ * deeply nested the arrays are.
+ *
+ * @private
+ */
+function areNestedArrayItemsStrictlyEqual (a: NestedArray<any>, b: NestedArray<any>): boolean {
+  // If `a` and `b` are referentially equal, return true.
+  if (a === b) {
+    return true;
   }
-  return nestedArray.reduce((flatArray: Array<T>, item: NestedArray<T>): Array<T> => (
-    [...flatArray, ...(Array.isArray(item) ? flattenArray(item) : [item])]
-  ), []) as Array<T>;
+  // If either `a` or `b` are not an array return false. `a` and `b` are known to not be equal
+  // here, we checked above.
+  if (!Array.isArray(a) || !Array.isArray(b)) {
+    return false;
+  }
+  // Otherwise let us compare all of the array items (which are potentially nested arrays!) to see
+  // if they are equal.
+  return a.reduce((same, item, i) => same && areNestedArrayItemsStrictlyEqual(item, b[i]), true);
 }

@@ -53,7 +53,7 @@ describe('updateQuery on a simple query', () => {
 
     return new Promise((resolve) => setTimeout(resolve))
       .then(() => obsHandle)
-      .then((watchedQuery: ObservableQuery) => {
+      .then((watchedQuery: ObservableQuery<any>) => {
         assert.equal(latestResult.data.entry.value, 1);
         watchedQuery.updateQuery((prevResult: any) => {
           const res = cloneDeep(prevResult);
@@ -143,7 +143,7 @@ describe('fetchMore on an observable query', () => {
       addTypename: true,
     });
 
-    const obsHandle = client.watchQuery({
+    const obsHandle = client.watchQuery<any>({
       query,
       variables,
     });

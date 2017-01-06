@@ -1,5 +1,3 @@
-import 'whatwg-fetch';
-
 // This is an implementation of a mocked window.fetch implementation similar in
 // structure to the MockedNetworkInterface.
 

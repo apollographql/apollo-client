@@ -154,6 +154,29 @@ describe('network interface', () => {
       }, /Passing the URI as the first argument to createNetworkInterface is deprecated/);
     });
 
+    it('will warn if there is no global fetch implementation', () => {
+      const origWarn = console.warn;
+      const origFetch = (global as any).fetch;
+
+      const warnCalls: Array<Array<any>> = [];
+
+      console.warn = (...args: Array<any>) => warnCalls.push(args);
+
+      delete (global as any).fetch;
+
+      assert.equal(warnCalls.length, 0);
+
+      createNetworkInterface({ uri: '/graphql' });
+
+      assert.equal(warnCalls.length, 1);
+      assert.equal(warnCalls[0].length, 1);
+      assert(/the fetch browser API could not be found/.test(warnCalls[0][0]));
+
+      // Put everything back the way it was.
+      console.warn = origWarn;
+      (global as any).fetch = origFetch;
+    });
+
     it('should create an instance with a given uri', () => {
       const networkInterface = createNetworkInterface({ uri: '/graphql' });
       assert.equal(networkInterface._uri, '/graphql');

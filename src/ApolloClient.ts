@@ -250,7 +250,7 @@ export default class ApolloClient {
    * a description of store reactivity.
    *
    */
-  public watchQuery(options: WatchQueryOptions): ObservableQuery {
+  public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
@@ -260,7 +260,7 @@ export default class ApolloClient {
       } as WatchQueryOptions;
     }
 
-    return this.queryManager.watchQuery(options);
+    return this.queryManager.watchQuery<T>(options);
   };
 
   /**
@@ -272,7 +272,7 @@ export default class ApolloClient {
    * how this query should be treated e.g. whether it is a polling query, whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query(options: WatchQueryOptions): Promise<ApolloQueryResult> {
+  public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
     // XXX what if I pass pollInterval? Will it just keep running?
@@ -285,7 +285,7 @@ export default class ApolloClient {
       } as WatchQueryOptions;
     }
 
-    return this.queryManager.query(options);
+    return this.queryManager.query<T>(options);
   };
 
   /**
@@ -316,10 +316,10 @@ export default class ApolloClient {
    * for this, you can simply refetch the queries that will be affected and achieve a consistent
    * store once these queries return.
    */
-  public mutate(options: MutationOptions): Promise<ApolloQueryResult> {
+  public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
-    return this.queryManager.mutate(options);
+    return this.queryManager.mutate<T>(options);
   };
 
   public subscribe(options: SubscriptionOptions): Observable<any> {

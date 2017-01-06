@@ -100,7 +100,7 @@ interface IdValueWithPreviousResult extends IdValue {
  * If nothing in the store changed since that previous result then values from the previous result
  * will be returned to preserve referential equality.
  */
-export function readQueryFromStore({ returnPartialData = false, ...options }: ReadQueryOptions): any {
+export function readQueryFromStore<QueryType>({ returnPartialData = false, ...options }: ReadQueryOptions): QueryType {
   return diffQueryAgainstStore({
     ...options,
     returnPartialData,

@@ -9,6 +9,8 @@ To get started with Apollo and React, install the `apollo-client` npm package, t
 npm install apollo-client react-apollo graphql-tag --save
 ```
 
+If you are in an environment that does not have a global [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch) implementation, make sure to install a polyfill like [`whatwg-fetch`](https://www.npmjs.com/package/whatwg-fetch).
+
 > Note: You don't have to do anything special to get Apollo Client to work in React Native, just install and import it as usual.
 
 <h2 id="initialization">Initialization</h2>

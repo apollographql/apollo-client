@@ -324,7 +324,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     const queryId = 'fake-id';
-    scheduler.addQueryOnInterval(queryId, queryOptions);
+    scheduler.addQueryOnInterval<any>(queryId, queryOptions);
     assert.equal(Object.keys(scheduler.intervalQueries).length, 1);
     assert.equal(Object.keys(scheduler.intervalQueries)[0], queryOptions.pollInterval.toString());
     const queries = (<any>scheduler.intervalQueries)[queryOptions.pollInterval.toString()];

@@ -11,8 +11,8 @@ export interface SubscriptionOptions {
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
-export type ApolloQueryResult = {
-  data: any;
+export type ApolloQueryResult<T> = {
+  data: T;
   loading: boolean;
   networkStatus: NetworkStatus;
 
@@ -30,11 +30,11 @@ export type ApolloQueryResult = {
 // will likely need to be paired with a custom resultComparator.  By default, Apollo performs a
 // deep equality comparsion on results, and skips those that are considered equal - reducing
 // re-renders.
-export type ResultTransformer = (resultData: ApolloQueryResult) => ApolloQueryResult;
+export type ResultTransformer = (resultData: ApolloQueryResult<any>) => ApolloQueryResult<any>;
 
 // Controls how Apollo compares two query results and considers their equality.  Two equal results
 // will not trigger re-renders.
-export type ResultComparator = (result1: ApolloQueryResult, result2: ApolloQueryResult) => boolean;
+export type ResultComparator = (result1: ApolloQueryResult<any>, result2: ApolloQueryResult<any>) => boolean;
 
 export enum FetchType {
   normal = 1,

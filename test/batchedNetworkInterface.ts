@@ -19,8 +19,6 @@ import { AfterwareInterface } from '../src/transport/afterware';
 
 import { ExecutionResult } from 'graphql';
 
-import 'whatwg-fetch';
-
 import gql from 'graphql-tag';
 
 describe('HTTPBatchedNetworkInterface', () => {

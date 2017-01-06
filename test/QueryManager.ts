@@ -204,12 +204,14 @@ describe('QueryManager', () => {
     request,
     firstResult,
     secondResult,
+    thirdResult,
   }: {
     request: ParsedRequest,
     firstResult: ExecutionResult,
     secondResult: ExecutionResult,
+    thirdResult?: ExecutionResult,
   }) => {
-    return mockQueryManager(
+    const args = [
       {
         request,
         result: firstResult,
@@ -218,7 +220,13 @@ describe('QueryManager', () => {
         request,
         result: secondResult,
       },
-    );
+    ];
+
+    if (thirdResult) {
+      args.push({ request, result: thirdResult });
+    }
+
+    return mockQueryManager(...args);
   };
 
   it('properly roundtrips through a Redux store', (done) => {
@@ -662,6 +670,84 @@ describe('QueryManager', () => {
       },
       (result) => assert.deepEqual(result.data, data2),
     );
+  });
+
+  it('will return referentially equivalent data if nothing changed in a refetch', done => {
+    const request = {
+      query: gql`
+        {
+          a
+          b { c }
+          d { e f { g } }
+        }
+      `,
+    };
+
+    const data1 = {
+      a: 1,
+      b: { c: 2 },
+      d: { e: 3, f: { g: 4 } },
+    };
+
+    const data2 = {
+      a: 1,
+      b: { c: 2 },
+      d: { e: 30, f: { g: 4 } },
+    };
+
+    const data3 = {
+      a: 1,
+      b: { c: 2 },
+      d: { e: 3, f: { g: 4 } },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+      thirdResult: { data: data3 },
+    });
+
+    const observable = queryManager.watchQuery<any>(request);
+
+    let count = 0;
+    let firstResultData: any;
+
+    observable.subscribe({
+      next: result => {
+        try {
+          switch (count++) {
+            case 0:
+              assert.deepEqual(result.data, data1);
+              firstResultData = result.data;
+              observable.refetch();
+              break;
+            case 1:
+              assert.deepEqual(result.data, data2);
+              assert.notStrictEqual(result.data, firstResultData);
+              assert.strictEqual(result.data.b, firstResultData.b);
+              assert.notStrictEqual(result.data.d, firstResultData.d);
+              assert.strictEqual(result.data.d.f, firstResultData.d.f);
+              observable.refetch();
+              break;
+            case 2:
+              assert.deepEqual(result.data, data3);
+              assert.notStrictEqual(result.data, firstResultData);
+              assert.strictEqual(result.data.b, firstResultData.b);
+              assert.notStrictEqual(result.data.d, firstResultData.d);
+              assert.strictEqual(result.data.d.f, firstResultData.d.f);
+              done();
+              break;
+            default:
+              throw new Error('Next run too many times.');
+          }
+        } catch (error) {
+          done(error);
+        }
+      },
+      error: error =>
+        done(error),
+    });
   });
 
   it('sets networkStatus to `refetch` when refetching', () => {

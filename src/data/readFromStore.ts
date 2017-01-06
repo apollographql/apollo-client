@@ -206,6 +206,10 @@ Perhaps you want to use the \`returnPartialData\` option?`);
   if (isJsonValue(fieldValue)) {
     // If the JSON blob is the same now as in the previous result, return the previous result to
     // maintain referential equality.
+    //
+    // `isEqual` will first perform a referential equality check (with `===`) in case the JSON
+    // value has not changed in the store, and then a deep equality check if that fails in case a
+    // new JSON object was returned by the API but that object may still be the same.
     if (idValue.previousResult && isEqual(idValue.previousResult[fieldName], fieldValue.json)) {
       return idValue.previousResult[fieldName];
     }

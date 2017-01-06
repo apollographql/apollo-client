@@ -169,7 +169,7 @@ const readStoreResolver: Resolver = (
   const objId = idValue.id;
   const obj = context.store[objId];
   const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
-  const fieldValue = (obj || {})[storeKeyName];
+  let fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
     if (context.customResolvers && obj && (obj.__typename || objId === 'ROOT_QUERY')) {
@@ -211,9 +211,9 @@ Perhaps you want to use the \`returnPartialData\` option?`);
   }
 
   // If we had a previous result, try adding that previous result value for this field to our field
-  // value.
+  // value. This will create a new value without mutating the old one.
   if (idValue.previousResult) {
-    addPreviousResultToIdValues(fieldValue, idValue.previousResult[fieldName]);
+    fieldValue = addPreviousResultToIdValues(fieldValue, idValue.previousResult[fieldName]);
   }
 
   return fieldValue;
@@ -281,16 +281,21 @@ that is directly manipulating the store; please file an issue.`);
  * For arrays we put all of the ids from the previous result array in a map and add them to id
  * values with the same id.
  *
+ * This function does not mutate. Instead it returns new instances of modified values.
+ *
  * @private
  */
-function addPreviousResultToIdValues (value: any, previousResult: any) {
+function addPreviousResultToIdValues (value: any, previousResult: any): any {
   // If the value is an `IdValue`, add the previous result to it whether or not that
   // `previousResult` is undefined.
   //
   // If the value is an array, recurse over each item trying to add the `previousResult` for that
   // item.
   if (isIdValue(value)) {
-    (value as IdValueWithPreviousResult).previousResult = previousResult;
+    return {
+      ...value,
+      previousResult,
+    };
   } else if (Array.isArray(value)) {
     const idToPreviousResult: { [id: string]: any } = {};
 
@@ -305,7 +310,7 @@ function addPreviousResultToIdValues (value: any, previousResult: any) {
     }
 
     // For every value we want to add the previous result.
-    value.forEach((item, i) => {
+    return value.map((item, i) => {
       // By default the previous result for this item will be in the same array position as this
       // item.
       let itemPreviousResult = previousResult && previousResult[i];
@@ -316,9 +321,11 @@ function addPreviousResultToIdValues (value: any, previousResult: any) {
         itemPreviousResult = idToPreviousResult[item.id] || itemPreviousResult;
       }
 
-      addPreviousResultToIdValues(item, itemPreviousResult);
+      return addPreviousResultToIdValues(item, itemPreviousResult);
     });
   }
+  // Return the value, nothing changed.
+  return value;
 }
 
 /**

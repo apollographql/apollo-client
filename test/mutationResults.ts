@@ -1116,6 +1116,32 @@ describe('mutation results', () => {
       });
     });
 
+    it('does not swallow errors', done => {
+      client = new ApolloClient({
+        networkInterface: mockNetworkInterface({
+          request: { query },
+          result,
+        }),
+      });
+
+      const observable = client.watchQuery({
+        query,
+        reducer: () => {
+          throw new Error('Don’t swallow me right up!');
+        },
+      });
+
+      observable.subscribe({
+        next: () => {
+          done(new Error('`next` should not be called.'));
+        },
+        error: error => {
+          assert(/swallow/.test(error.message));
+          done();
+        },
+      });
+    });
+
   });
 
 

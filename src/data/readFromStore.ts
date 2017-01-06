@@ -82,34 +82,28 @@ interface IdValueWithPreviousResult extends IdValue {
 /**
  * Resolves the result of a query solely from the store (i.e. never hits the server).
  *
- * @param store The {@link NormalizedCache} used by Apollo for the `data` portion of the store.
+ * @param {Store} store The {@link NormalizedCache} used by Apollo for the `data` portion of the
+ * store.
  *
- * @param query The query document to resolve from the data available in the store.
+ * @param {DocumentNode} query The query document to resolve from the data available in the store.
  *
- * @param variables A map from the name of a variable to its value. These variables can be
- * referenced by the query document.
+ * @param {Object} [variables] A map from the name of a variable to its value. These variables can
+ * be referenced by the query document.
  *
- * @param returnPartialData If set to true, the query will be resolved even if all of the data
- * needed to resolve the query is not found in the store. The data keys that are not found will not
- * be present in the returned object. If set to false, an error will be thrown if there are fields
- * that cannot be resolved from the store.
+ * @param {boolean} [returnPartialData] If set to true, the query will be resolved even if all of
+ * the data needed to resolve the query is not found in the store. The data keys that are not found
+ * will not be present in the returned object. If set to false, an error will be thrown if there
+ * are fields that cannot be resolved from the store.
+ *
+ * @param {any} previousResult The previous result returned by this function for the same query.
+ * If nothing in the store changed since that previous result then values from the previous result
+ * will be returned to preserve referential equality.
  */
-export function readQueryFromStore({
-  store,
-  query,
-  variables,
-  returnPartialData = false,
-  config,
-}: ReadQueryOptions): Object {
-  const { result } = diffQueryAgainstStore({
-    query,
-    store,
+export function readQueryFromStore({ returnPartialData = false, ...options }: ReadQueryOptions): any {
+  return diffQueryAgainstStore({
+    ...options,
     returnPartialData,
-    variables,
-    config,
-  });
-
-  return result;
+  }).result;
 }
 
 type ReadStoreContext = {

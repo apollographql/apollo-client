@@ -271,22 +271,19 @@ function resultMapper (resultFields: any, idValue: IdValueWithPreviousResult) {
     // just return the previous result.
     //
     // While we do a shallow comparison of objects, we do a deep comparison of arrays.
-    const sameAsPreviousResult = Object.keys(resultFields).reduce(
-      (same, key) => {
-        if (!same) {
-          return false;
-        }
+    const sameAsPreviousResult = Object.keys(resultFields).reduce((same, key) => {
+      if (!same) {
+        return false;
+      }
 
-        // Flatten out the field values before comparing them. Non-arrays will turn into singleton
-        // arrays and multi-dimensional arrays will be flattened out. Depth doesn’t matter in this
-        // case, we just need to check that all items are equal.
-        const next = flattenArray(resultFields[key]);
-        const previous = flattenArray(idValue.previousResult[key]);
+      // Flatten out the field values before comparing them. Non-arrays will turn into singleton
+      // arrays and multi-dimensional arrays will be flattened out. Depth doesn’t matter in this
+      // case, we just need to check that all items are equal.
+      const next = flattenArray(resultFields[key]);
+      const previous = flattenArray(idValue.previousResult[key]);
 
-        return next.reduce((fieldSame, item, i) => fieldSame && item === previous[i], true);
-      },
-      true,
-    );
+      return next.reduce((fieldSame, item, i) => fieldSame && item === previous[i], true);
+    }, true);
 
     if (sameAsPreviousResult) {
       return idValue.previousResult;

@@ -5,6 +5,7 @@ import {
 import graphqlAnywhere, {
   Resolver,
   FragmentMatcher,
+  ExecInfo,
 } from 'graphql-anywhere';
 
 import {
@@ -163,6 +164,7 @@ const readStoreResolver: Resolver = (
   idValue: IdValueWithPreviousResult,
   args: any,
   context: ReadStoreContext,
+  { resultKey }: ExecInfo,
 ) => {
   assertIdValue(idValue);
 
@@ -204,8 +206,8 @@ Perhaps you want to use the \`returnPartialData\` option?`);
     // `isEqual` will first perform a referential equality check (with `===`) in case the JSON
     // value has not changed in the store, and then a deep equality check if that fails in case a
     // new JSON object was returned by the API but that object may still be the same.
-    if (idValue.previousResult && isEqual(idValue.previousResult[fieldName], fieldValue.json)) {
-      return idValue.previousResult[fieldName];
+    if (idValue.previousResult && isEqual(idValue.previousResult[resultKey], fieldValue.json)) {
+      return idValue.previousResult[resultKey];
     }
     return fieldValue.json;
   }
@@ -213,7 +215,7 @@ Perhaps you want to use the \`returnPartialData\` option?`);
   // If we had a previous result, try adding that previous result value for this field to our field
   // value. This will create a new value without mutating the old one.
   if (idValue.previousResult) {
-    fieldValue = addPreviousResultToIdValues(fieldValue, idValue.previousResult[fieldName]);
+    fieldValue = addPreviousResultToIdValues(fieldValue, idValue.previousResult[resultKey]);
   }
 
   return fieldValue;

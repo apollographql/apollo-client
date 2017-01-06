@@ -368,9 +368,8 @@ export class QueryManager {
             };
 
             if (observer.next) {
-              const isDifferentResult = this.resultComparator ?
-                !this.resultComparator(lastResult, resultFromStore) :
-                !(
+              const isDifferentResult =
+                this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
                   lastResult &&
                   resultFromStore &&
                   lastResult.loading === resultFromStore.loading &&

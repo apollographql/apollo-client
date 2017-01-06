@@ -343,14 +343,21 @@ function addPreviousResultToIdValues (value: any, previousResult: any): any {
 function resultMapper (resultFields: any, idValue: IdValueWithPreviousResult) {
   // If we had a previous result, we may be able to return that and preserve referential equality
   if (idValue.previousResult) {
-    // Perform a shallow comparison of the result fields with the previous result. If all of
-    // the shallow fields are referentially equal to the fields of the previous result we can
-    // just return the previous result.
-    //
-    // While we do a shallow comparison of objects, we do a deep comparison of arrays.
-    const sameAsPreviousResult = Object.keys(resultFields).reduce((same, key) => (
-      same && areNestedArrayItemsStrictlyEqual(resultFields[key], idValue.previousResult[key])
-    ), true);
+    const currentResultKeys = Object.keys(resultFields);
+
+    const sameAsPreviousResult =
+      // Confirm that we have the same keys in both the current result and the previous result.
+      Object.keys(idValue.previousResult)
+        .reduce((sameKeys, key) => sameKeys && currentResultKeys.indexOf(key) > -1, true) &&
+
+      // Perform a shallow comparison of the result fields with the previous result. If all of
+      // the shallow fields are referentially equal to the fields of the previous result we can
+      // just return the previous result.
+      //
+      // While we do a shallow comparison of objects, but we do a deep comparison of arrays.
+      currentResultKeys.reduce((same, key) => (
+        same && areNestedArrayItemsStrictlyEqual(resultFields[key], idValue.previousResult[key])
+      ), true);
 
     if (sameAsPreviousResult) {
       return idValue.previousResult;

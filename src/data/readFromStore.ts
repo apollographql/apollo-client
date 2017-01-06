@@ -222,6 +222,61 @@ Perhaps you want to use the \`returnPartialData\` option?`);
 };
 
 /**
+ * Given a store and a query, return as much of the result as possible and
+ * identify if any data was missing from the store.
+ * @param  {DocumentNode} query A parsed GraphQL query document
+ * @param  {Store} store The Apollo Client store object
+ * @param  {boolean} [returnPartialData] Whether to throw an error if any fields are missing
+ * @param  {any} previousResult The previous result returned by this function for the same query
+ * @return {result: Object, isMissing: [boolean]}
+ */
+export function diffQueryAgainstStore({
+  store,
+  query,
+  variables,
+  returnPartialData = true,
+  previousResult,
+  config,
+}: ReadQueryOptions): DiffResult {
+  // Throw the right validation error by trying to find a query in the document
+  getQueryDefinition(query);
+
+  const context: ReadStoreContext = {
+    // Global settings
+    store,
+    returnPartialData,
+    customResolvers: config && config.customResolvers,
+
+    // Flag set during execution
+    hasMissingField: false,
+  };
+
+  const rootIdValue = {
+    type: 'id',
+    id: 'ROOT_QUERY',
+    previousResult,
+  };
+
+  const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
+    fragmentMatcher,
+    resultMapper,
+  });
+
+  return {
+    result,
+    isMissing: context.hasMissingField,
+  };
+}
+
+function assertIdValue(idValue: IdValue) {
+  if (! isIdValue(idValue)) {
+    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
+an object reference. This should never happen during normal use unless you have custom code \
+that is directly manipulating the store; please file an issue.`);
+  }
+}
+
+/**
  * Adds a previous result value to id values in a nested array. For a single id value and a single
  * previous result then the previous value is added directly.
  *
@@ -305,61 +360,6 @@ function resultMapper (resultFields: any, idValue: IdValueWithPreviousResult) {
   });
 
   return resultFields;
-}
-
-/**
- * Given a store and a query, return as much of the result as possible and
- * identify if any data was missing from the store.
- * @param  {DocumentNode} query A parsed GraphQL query document
- * @param  {Store} store The Apollo Client store object
- * @param  {boolean} [returnPartialData] Whether to throw an error if any fields are missing
- * @param  {any} previousResult The previous result returned by this function for the same query
- * @return {result: Object, isMissing: [boolean]}
- */
-export function diffQueryAgainstStore({
-  store,
-  query,
-  variables,
-  returnPartialData = true,
-  previousResult,
-  config,
-}: ReadQueryOptions): DiffResult {
-  // Throw the right validation error by trying to find a query in the document
-  getQueryDefinition(query);
-
-  const context: ReadStoreContext = {
-    // Global settings
-    store,
-    returnPartialData,
-    customResolvers: config && config.customResolvers,
-
-    // Flag set during execution
-    hasMissingField: false,
-  };
-
-  const rootIdValue = {
-    type: 'id',
-    id: 'ROOT_QUERY',
-    previousResult,
-  };
-
-  const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
-    fragmentMatcher,
-    resultMapper,
-  });
-
-  return {
-    result,
-    isMissing: context.hasMissingField,
-  };
-}
-
-function assertIdValue(idValue: IdValue) {
-  if (! isIdValue(idValue)) {
-    throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
-an object reference. This should never happen during normal use unless you have custom code \
-that is directly manipulating the store; please file an issue.`);
-  }
 }
 
 type NestedArray<T> = T | Array<T | Array<T | Array<T>>>;

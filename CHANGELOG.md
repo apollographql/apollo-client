@@ -15,6 +15,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Remove lodash as a production dependency [PR #1122](https://github.com/apollostack/apollo-client/pull/1122)
 - Minor fix to write to `ROOT_SUBSCRIPTION` ID in the store for subscription results. [PR #1122](https://github.com/apollostack/apollo-client/pull/1127)
 - Remove `whatwg-fetch` polyfill dependency and instead warn when a global `fetch` implementation is not found. [PR #1134](https://github.com/apollostack/apollo-client/pull/1134)
+- New results from `watchQuery` are referentially equal (so `a === b`) to previous results if nothing changed in the store for a better UI integration experience when determining what changed. [PR #1136](https://github.com/apollostack/apollo-client/pull/1136)
 
 ### 0.6.0
 - Switch to `@types/graphql` instead of `typed-graphql` for typings. [PR 1041](https://github.com/apollostack/apollo-client/pull/1041) [PR #934](https://github.com/apollostack/apollo-client/issues/934)

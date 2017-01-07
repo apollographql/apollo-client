@@ -29,5 +29,5 @@ cp README.md npm/
 cp LICENSE npm/
 cp .npmignore npm/
 
-echo 'deploying to npm...'
-cd npm && npm publish
+# echo 'deploying to npm...'
+# cd npm && npm publish

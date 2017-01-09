@@ -738,6 +738,8 @@ export class QueryManager {
       variables,
       document } = this.getQueryParts(observableQuery);
 
+    const lastResult = observableQuery.getLastResult();
+
     const queryOptions = observableQuery.options;
     const readOptions: ReadQueryOptions = {
       // In case of an optimistic change, apply reducer on top of the
@@ -748,6 +750,7 @@ export class QueryManager {
       variables,
       returnPartialData: false,
       config: this.reducerConfig,
+      previousResult: lastResult ? lastResult.data : undefined,
     };
 
     try {

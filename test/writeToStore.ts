@@ -1,7 +1,5 @@
 import { assert } from 'chai';
-import cloneDeep = require('lodash/cloneDeep');
-import assign = require('lodash/assign');
-import omit = require('lodash/omit');
+import { cloneDeep, assign, omit } from 'lodash';
 
 import {
   writeQueryToStore,
@@ -11,10 +9,6 @@ import {
 import {
   storeKeyNameFromField,
 } from '../src/data/storeUtils';
-
-import {
-  getIdField,
-} from '../src/data/extensions';
 
 import {
   NormalizedCache,
@@ -29,6 +23,8 @@ import {
 } from 'graphql';
 
 import gql from 'graphql-tag';
+
+const getIdField = ({id}: {id: string}) => id;
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {

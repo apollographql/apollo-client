@@ -27,7 +27,9 @@ import {
 import {
   optimistic,
   OptimisticStore,
+  getDataWithOptimisticResults,
 } from './optimistic-data/store';
+export { getDataWithOptimisticResults };
 
 import {
   ApolloAction,
@@ -35,7 +37,7 @@ import {
 
 import {
   IdGetter,
-} from './data/extensions';
+} from './core/types';
 
 import {
   MutationBehaviorReducerMap,
@@ -45,7 +47,7 @@ import {
   CustomResolverMap,
 } from './data/readFromStore';
 
-import assign = require('lodash/assign');
+import { assign } from './util/assign';
 
 export interface Store {
   data: NormalizedCache;
@@ -108,6 +110,14 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
         newState,
         config,
       );
+
+      if (state.data === newState.data &&
+      state.mutations === newState.mutations &&
+      state.queries === newState.queries &&
+      state.optimistic === newState.optimistic &&
+      state.reducerError === newState.reducerError) {
+        return state;
+      }
 
       return newState;
     } catch (reducerError) {
@@ -176,17 +186,8 @@ export function createApolloStore({
   );
 }
 
-
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   mutationBehaviorReducers?: MutationBehaviorReducerMap;
   customResolvers?: CustomResolverMap;
 };
-
-export function getDataWithOptimisticResults(store: Store): NormalizedCache {
-  if (store.optimistic.length === 0) {
-    return store.data;
-  }
-  const patches = store.optimistic.map(opt => opt.data);
-  return assign({}, store.data, ...patches) as NormalizedCache;
-}

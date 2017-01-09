@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import merge = require('lodash/merge');
+import { merge } from 'lodash';
 
 import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInterface';
 
@@ -18,8 +18,6 @@ import { MiddlewareInterface } from '../src/transport/middleware';
 import { AfterwareInterface } from '../src/transport/afterware';
 
 import { ExecutionResult } from 'graphql';
-
-import 'whatwg-fetch';
 
 import gql from 'graphql-tag';
 

@@ -13,9 +13,6 @@ import {
 
 } from 'graphql';
 
-import isUndefined = require('lodash/isUndefined');
-import isString = require('lodash/isString');
-
 import {
   createApolloStore,
   ApolloStore,
@@ -30,10 +27,14 @@ import {
 
 import {
   QueryManager,
+} from './core/QueryManager';
+
+import {
   ApolloQueryResult,
   ResultComparator,
   ResultTransformer,
-} from './core/QueryManager';
+  IdGetter,
+} from './core/types';
 
 import {
   ObservableQuery,
@@ -44,14 +45,10 @@ import {
 } from './util/Observable';
 
 import {
-  DeprecatedWatchQueryOptions,
-  DeprecatedSubscriptionOptions,
+  WatchQueryOptions,
+  SubscriptionOptions,
   MutationOptions,
 } from './core/watchQueryOptions';
-
-import {
-  IdGetter,
-} from './data/extensions';
 
 import {
   MutationBehaviorReducerMap,
@@ -60,12 +57,6 @@ import {
 import {
   storeKeyNameFromFieldNameAndArgs,
 } from './data/storeUtils';
-
-import { createFragment } from './fragments';
-
-import {
-  addFragmentsToDocument,
-} from './queries/getFromAST';
 
 import {
   version,
@@ -84,12 +75,6 @@ const DEFAULT_REDUX_ROOT_KEY = 'apollo';
 function defaultReduxRootSelector(state: any) {
   return state[DEFAULT_REDUX_ROOT_KEY];
 }
-
-// deprecation warning flags
-let haveWarnedQuery = false;
-let haveWarnedWatchQuery = false;
-let haveWarnedMutation = false;
-let haveWarnedSubscription = false;
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -192,7 +177,7 @@ export default class ApolloClient {
 
     if (!reduxRootSelector && reduxRootKey) {
       this.reduxRootSelector = (state: any) => state[reduxRootKey];
-    } else if (isString(reduxRootSelector)) {
+    } else if (typeof reduxRootSelector === 'string') {
       // for backwards compatibility, we set reduxRootKey if reduxRootSelector is a string
       this.reduxRootKey = reduxRootSelector as string;
       this.reduxRootSelector = (state: any) => state[reduxRootSelector as string];
@@ -207,6 +192,13 @@ export default class ApolloClient {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
+    if (resultTransformer) {
+      console.warn(
+        '"resultTransformer" is being considered for deprecation in an upcoming version. ' +
+        'If you are using it, please file an issue on apollostack/apollo-client ' +
+        'with a description of your use-case',
+      );
+    }
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
@@ -265,44 +257,17 @@ export default class ApolloClient {
    * a description of store reactivity.
    *
    */
-  public watchQuery(options: DeprecatedWatchQueryOptions): ObservableQuery {
+  public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
     if (!this.shouldForceFetch && options.forceFetch) {
       options = {
         ...options,
         forceFetch: false,
-      } as DeprecatedWatchQueryOptions;
+      } as WatchQueryOptions;
     }
 
-    if (options.fragments && !haveWarnedWatchQuery && process.env.NODE_ENV !== 'production') {
-      console.warn(
-            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
-            'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.',
-      );
-      /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
-        // When running tests, we want to print the warning every time
-        haveWarnedWatchQuery = true;
-      }
-    }
-
-    // Register each of the fragments present in the query document. The point
-    // is to prevent fragment name collisions with fragments that are in the query
-    // document itself.
-    createFragment(options.query, undefined, true);
-
-    // We add the fragments to the document to pass only the document around internally.
-    const fullDocument = addFragmentsToDocument(options.query, options.fragments);
-
-    const realOptions = {
-      ...options,
-      query: fullDocument,
-    };
-    delete realOptions.fragments;
-
-    return this.queryManager.watchQuery(realOptions);
+    return this.queryManager.watchQuery<T>(options);
   };
 
   /**
@@ -314,7 +279,7 @@ export default class ApolloClient {
    * how this query should be treated e.g. whether it is a polling query, whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
-  public query(options: DeprecatedWatchQueryOptions): Promise<ApolloQueryResult> {
+  public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
     // XXX what if I pass pollInterval? Will it just keep running?
@@ -324,37 +289,10 @@ export default class ApolloClient {
       options = {
         ...options,
         forceFetch: false,
-      } as DeprecatedWatchQueryOptions;
+      } as WatchQueryOptions;
     }
 
-    if (options.fragments && !haveWarnedQuery && process.env.NODE_ENV !== 'production') {
-      console.warn(
-            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
-            'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.',
-      );
-      /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
-        // When running tests, we want to print the warning every time
-        haveWarnedQuery = true;
-      }
-    }
-
-    // Register each of the fragments present in the query document. The point
-    // is to prevent fragment name collisions with fragments that are in the query
-    // document itself.
-    createFragment(options.query, undefined, true);
-
-    // We add the fragments to the document to pass only the document around internally.
-    const fullDocument = addFragmentsToDocument(options.query, options.fragments);
-
-    const realOptions = {
-      ...options,
-      query: fullDocument,
-    };
-    delete realOptions.fragments;
-
-    return this.queryManager.query(realOptions);
+    return this.queryManager.query<T>(options);
   };
 
   /**
@@ -369,9 +307,6 @@ export default class ApolloClient {
    *
    * @param options.variables An object that maps from the name of a variable as used in the mutation
    * GraphQL document to that variable's value.
-   *
-   * @param options.fragments A list of fragments as returned by {@link createFragment}. These fragments
-   * can be referenced from within the GraphQL mutation document.
    *
    * @param options.optimisticResponse An object that represents the result of this mutation that will be
    * optimistically stored before the server has actually returned a result. This is most often
@@ -388,58 +323,19 @@ export default class ApolloClient {
    * for this, you can simply refetch the queries that will be affected and achieve a consistent
    * store once these queries return.
    */
-  public mutate(options: MutationOptions): Promise<ApolloQueryResult> {
+  public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
-    if (options.fragments && !haveWarnedMutation && process.env.NODE_ENV !== 'production') {
-      console.warn(
-            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
-            'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.',
-      );
-      /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
-        // When running tests, we want to print the warning every time
-        haveWarnedMutation = true;
-      }
-    }
-
-    // We add the fragments to the document to pass only the document around internally.
-    const fullDocument = addFragmentsToDocument(options.mutation, options.fragments);
-
-    const realOptions = {
-      ...options,
-      mutation: fullDocument,
-    };
-    delete realOptions.fragments;
-
-    return this.queryManager.mutate(realOptions);
+    return this.queryManager.mutate<T>(options);
   };
 
-  public subscribe(options: DeprecatedSubscriptionOptions): Observable<any> {
+  public subscribe(options: SubscriptionOptions): Observable<any> {
     this.initStore();
-
-    if (options.fragments && !haveWarnedSubscription && process.env.NODE_ENV !== 'production') {
-      console.warn(
-            '"fragments" option is deprecated and will be removed in the upcoming versions, ' +
-            'please refer to the documentation for how to define fragments: ' +
-            'http://dev.apollodata.com/react/fragments.html.',
-      );
-      /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
-        // When running tests, we want to print the warning every time
-        haveWarnedSubscription = true;
-      }
-    }
-
-    // We add the fragments to the document to pass only the document around internally.
-    const fullDocument = addFragmentsToDocument(options.query, options.fragments);
 
     const realOptions = {
       ...options,
-      document: fullDocument,
+      document: options.query,
     };
-    delete realOptions.fragments;
     delete realOptions.query;
 
     return this.queryManager.startGraphQLSubscription(realOptions);
@@ -461,8 +357,13 @@ export default class ApolloClient {
       this.setStore(store);
 
       return (next: any) => (action: any) => {
+        const previousApolloState = this.queryManager.selectApolloState(store);
         const returnValue = next(action);
-        this.queryManager.broadcastNewStore(store.getState());
+        const newApolloState = this.queryManager.selectApolloState(store);
+
+        if (newApolloState !== previousApolloState) {
+          this.queryManager.broadcastNewStore(store.getState());
+        }
 
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
@@ -538,7 +439,7 @@ export default class ApolloClient {
     }
 
     // ensure existing store has apolloReducer
-    if (isUndefined(reduxRootSelector(store.getState()))) {
+    if (typeof reduxRootSelector(store.getState()) === 'undefined') {
       throw new Error(
           'Existing store does not use apolloReducer. Please make sure the store ' +
           'is properly configured and "reduxRootSelector" is correctly specified.',

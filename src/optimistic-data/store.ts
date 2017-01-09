@@ -14,11 +14,10 @@ import {
 } from '../data/storeUtils';
 
 import {
-  getDataWithOptimisticResults,
   Store,
 } from '../store';
 
-import pick = require('lodash/pick');
+  import { assign } from '../util/assign';
 
 // a stack of patches of new or changed documents
 export type OptimisticStore = {
@@ -27,6 +26,14 @@ export type OptimisticStore = {
 }[];
 
 const optimisticDefaultState: any[] = [];
+
+export function getDataWithOptimisticResults(store: Store): NormalizedCache {
+  if (store.optimistic.length === 0) {
+    return store.data;
+  }
+  const patches = store.optimistic.map(opt => opt.data);
+  return assign({}, store.data, ...patches) as NormalizedCache;
+}
 
 export function optimistic(
   previousState = optimisticDefaultState,
@@ -49,7 +56,7 @@ export function optimistic(
     const fakeStore = {
       ...store,
       optimistic: previousState,
-    } as Store;
+    };
     const optimisticData = getDataWithOptimisticResults(fakeStore);
     const fakeDataResultState = data(
       optimisticData,
@@ -61,9 +68,13 @@ export function optimistic(
 
     // TODO: apply extra reducers and resultBehaviors to optimistic store?
 
-    const changedKeys = Object.keys(fakeDataResultState).filter(
-      key => optimisticData[key] !== fakeDataResultState[key]);
-    const patch = pick(fakeDataResultState, changedKeys);
+    const patch: any = {};
+
+    Object.keys(fakeDataResultState).forEach(key => {
+      if (optimisticData[key] !== fakeDataResultState[key]) {
+        patch[key] = fakeDataResultState[key];
+      }
+    });
 
     const optimisticState = {
       data: patch,

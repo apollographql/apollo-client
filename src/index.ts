@@ -30,7 +30,7 @@ import {
 import {
   WatchQueryOptions,
   MutationOptions,
-  DeprecatedSubscriptionOptions,
+  SubscriptionOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -62,16 +62,10 @@ import {
 } from './errors/ApolloError';
 
 import ApolloClient from './ApolloClient';
-import {
-  createFragment,
-  clearFragmentDefinitions,
-  disableFragmentWarnings,
-  enableFragmentWarnings,
-} from './fragments';
 
 import {
   ApolloQueryResult,
-} from './core/QueryManager';
+} from './core/types';
 
 import {
   toIdValue,
@@ -90,12 +84,6 @@ export {
   createFragmentMap,
   NetworkStatus,
   ApolloError,
-
-  // fragment stuff
-  createFragment,
-  clearFragmentDefinitions,
-  disableFragmentWarnings,
-  enableFragmentWarnings,
 
   getQueryDefinition,
   getFragmentDefinitions,
@@ -116,7 +104,7 @@ export {
   MutationBehavior,
   MutationQueryReducersMap,
   Subscription,
-  DeprecatedSubscriptionOptions as SubscriptionOptions,
+  SubscriptionOptions,
   ApolloStore,
   ApolloClient
 };

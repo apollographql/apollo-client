@@ -8,8 +8,7 @@ import {
   ExecutionResult,
 } from 'graphql';
 
-import mapValues = require('lodash/mapValues');
-import cloneDeep = require('lodash/cloneDeep');
+import { cloneDeep } from '../util/cloneDeep';
 
 import { replaceQueryResults } from './replaceQueryResults';
 
@@ -183,8 +182,11 @@ function mutationResultDeleteReducer(state: NormalizedCache, {
   delete state[dataId];
 
   // Now we need to go through the whole store and remove all references
-  const newState = mapValues(state, (storeObj: StoreObject) => {
-    return removeRefsFromStoreObj(storeObj, dataId);
+  const newState: NormalizedCache = {};
+
+  Object.keys(state).forEach(key => {
+    const storeObj = state[key];
+    newState[key] = removeRefsFromStoreObj(storeObj, dataId);
   });
 
   return newState;
@@ -193,10 +195,15 @@ function mutationResultDeleteReducer(state: NormalizedCache, {
 function removeRefsFromStoreObj(storeObj: any, dataId: any) {
   let affected = false;
 
-  const cleanedObj = mapValues(storeObj, (value: any) => {
+  const cleanedObj: any = {};
+
+  Object.keys(storeObj).forEach(key => {
+    const value = storeObj[key];
+
     if (value && value.id === dataId) {
       affected = true;
-      return null;
+      cleanedObj[key] = null;
+      return;
     }
 
     if (Array.isArray(value)) {
@@ -204,12 +211,13 @@ function removeRefsFromStoreObj(storeObj: any, dataId: any) {
 
       if (filteredArray !== value) {
         affected = true;
-        return filteredArray;
+        cleanedObj[key] = filteredArray;
+        return;
       }
     }
 
-    // If not modified, return the original value
-    return value;
+    // If not modified, set the original value
+    cleanedObj[key] = value;
   });
 
   if (affected) {

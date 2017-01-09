@@ -5,16 +5,9 @@ import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 import { ObservableQuery } from '../src/core/ObservableQuery';
 
-import assign = require('lodash/assign');
-import clonedeep = require('lodash/cloneDeep');
+import { assign, cloneDeep } from 'lodash';
 
 import gql from 'graphql-tag';
-
-import { addFragmentsToDocument } from '../src/queries/getFromAST';
-
-import {
-  createFragment,
-} from '../src/index';
 
 describe('updateQuery on a simple query', () => {
   const query = gql`
@@ -60,10 +53,10 @@ describe('updateQuery on a simple query', () => {
 
     return new Promise((resolve) => setTimeout(resolve))
       .then(() => obsHandle)
-      .then((watchedQuery: ObservableQuery) => {
+      .then((watchedQuery: ObservableQuery<any>) => {
         assert.equal(latestResult.data.entry.value, 1);
         watchedQuery.updateQuery((prevResult: any) => {
-          const res = clonedeep(prevResult);
+          const res = cloneDeep(prevResult);
           res.entry.value = 2;
           return res;
         });
@@ -115,7 +108,7 @@ describe('fetchMore on an observable query', () => {
       },
     },
   };
-  const resultMore = clonedeep(result);
+  const resultMore = cloneDeep(result);
   const result2: any = {
     data: {
       __typename: 'Query',
@@ -150,7 +143,7 @@ describe('fetchMore on an observable query', () => {
       addTypename: true,
     });
 
-    const obsHandle = client.watchQuery({
+    const obsHandle = client.watchQuery<any>({
       query,
       variables,
     });
@@ -181,7 +174,7 @@ describe('fetchMore on an observable query', () => {
       return watchedQuery.fetchMore({
         variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
         updateQuery: (prev, options) => {
-          const state = clonedeep(prev) as any;
+          const state = cloneDeep(prev) as any;
           state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];
           return state;
         },
@@ -211,54 +204,7 @@ describe('fetchMore on an observable query', () => {
         query: query2,
         variables: variables2,
         updateQuery: (prev, options) => {
-          const state = clonedeep(prev) as any;
-          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.comments];
-          return state;
-        },
-      });
-    }).then(() => {
-      const comments = latestResult.data.entry.comments;
-      assert.lengthOf(comments, 20);
-      for (let i = 1; i <= 10; i++) {
-        assert.equal(comments[i - 1].text, `comment ${i}`);
-      }
-      for (let i = 11; i <= 20; i++) {
-        assert.equal(comments[i - 1].text, `new comment ${i}`);
-      }
-      unsetup();
-    });
-  });
-
-  it('fetching more with fragments', () => {
-    latestResult = null;
-      // identical to query2, but with a fragment
-      const query3 = gql`
-      query NewComments($start: Int!, $limit: Int!) {
-        comments(start: $start, limit: $limit) {
-          ...textFragment
-          __typename
-        }
-      }
-    `;
-    const fragment = createFragment(gql`
-      fragment textFragment on Comment {
-        text
-        __typename
-      }
-    `);
-    return setup({
-      request: {
-        query: addFragmentsToDocument(query3, fragment),
-        variables: variables2,
-      },
-      result: result2,
-    }).then((watchedQuery) => {
-      return watchedQuery.fetchMore({
-        query: query3,
-        variables: variables2,
-        fragments: fragment,
-        updateQuery: (prev, options) => {
-          const state = clonedeep(prev) as any;
+          const state = cloneDeep(prev) as any;
           state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.comments];
           return state;
         },

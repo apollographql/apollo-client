@@ -73,31 +73,9 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
   metadata?: any;
 }
 
-// This interface is deprecated because we no longer pass around fragments separately in the core.
-export interface DeprecatedWatchQueryOptions extends ModifiableWatchQueryOptions {
-  /**
-   * A GraphQL document that consists of a single query to be sent down to the
-   * server.
-   */
-  query: DocumentNode;
-
-  /**
-   * A list of fragments that are returned by {@link createFragment} which can be
-   * referenced from the query document.
-   */
-  fragments?: FragmentDefinitionNode[];
-
-  /**
-   * Arbitrary metadata stored in Redux with this query.  Designed for debugging,
-   * developer tools, etc.
-   */
-  metadata?: any;
-}
-
 export interface FetchMoreQueryOptions {
   query?: DocumentNode;
   variables?: { [key: string]: any };
-  fragments?: FragmentDefinitionNode[];
 }
 
 export type SubscribeToMoreOptions = {
@@ -110,17 +88,15 @@ export type SubscribeToMoreOptions = {
   onError?: (error: Error) => void;
 };
 
-export interface DeprecatedSubscriptionOptions {
+export interface SubscriptionOptions {
   query: DocumentNode;
   variables?: { [key: string]: any };
-  fragments?: FragmentDefinitionNode[];
 };
 
 export interface MutationOptions {
   mutation: DocumentNode;
   variables?: Object;
   resultBehaviors?: MutationBehavior[];
-  fragments?: FragmentDefinitionNode[];
   optimisticResponse?: Object;
   updateQueries?: MutationQueryReducersMap;
   refetchQueries?: string[];

@@ -4,9 +4,6 @@ import {
   FragmentDefinitionNode,
 } from 'graphql';
 
-import countBy = require('lodash/countBy');
-import identity = require('lodash/identity');
-import uniq = require('lodash/uniq');
 
 export function getMutationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
@@ -33,19 +30,26 @@ export function checkDocument(doc: DocumentNode) {
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
   }
 
-  const definitionTypes = doc.definitions.map((definition) => {
-    if (definition.kind !== 'OperationDefinition' && definition.kind !== 'FragmentDefinition') {
-      throw new Error(`Schema type definitions not allowed in queries. Found: "${definition.kind}"`);
+  let foundOperation = false;
+
+  doc.definitions.forEach((definition) => {
+    switch (definition.kind) {
+      // If this is a fragment that’s fine.
+      case 'FragmentDefinition':
+        break;
+      // We can only find one operation, so the first time nothing happens. The second time we
+      // encounter an operation definition we throw an error.
+      case 'OperationDefinition':
+        if (foundOperation) {
+          throw new Error('Queries must have exactly one operation definition.');
+        }
+        foundOperation = true;
+        break;
+      // If this is any other operation kind, throw an error.
+      default:
+        throw new Error(`Schema type definitions not allowed in queries. Found: "${definition.kind}"`);
     }
-
-    return definition.kind;
   });
-  const typeCounts = countBy(definitionTypes, identity);
-
-  // can't have more than one operation definition per query
-  if (typeCounts['OperationDefinition'] > 1) {
-    throw new Error('Queries must have exactly one operation definition.');
-  }
 }
 
 export function getOperationName(doc: DocumentNode): string {
@@ -143,18 +147,4 @@ export function createFragmentMap(fragments: FragmentDefinitionNode[] = []): Fra
   });
 
   return symTable;
-}
-
-// Utility function that takes a list of fragment definitions and adds them to a particular
-// document.
-export function addFragmentsToDocument(queryDoc: DocumentNode,
-  fragments: FragmentDefinitionNode[]): DocumentNode {
-  if (!fragments) {
-    return queryDoc;
-  }
-  checkDocument(queryDoc);
-  return ({
-    ...queryDoc,
-    definitions: uniq(queryDoc.definitions.concat(fragments)),
-  }) as DocumentNode;
 }

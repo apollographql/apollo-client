@@ -1,8 +1,3 @@
-import isString = require('lodash/isString');
-import assign = require('lodash/assign');
-import mapValues = require('lodash/mapValues');
-import 'whatwg-fetch';
-
 import {
   ExecutionResult,
   DocumentNode,
@@ -77,9 +72,10 @@ export interface ResponseAndOptions {
 }
 
 export function printRequest(request: Request): PrintedRequest {
-  return mapValues(request, (val: any, key: any) => {
-    return key === 'query' ? print(val) : val;
-  }) as any as PrintedRequest;
+  return {
+    ...request,
+    query: print(request.query),
+  };
 }
 
 // TODO: refactor
@@ -95,12 +91,12 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       throw new Error('A remote enpdoint is required for a network layer');
     }
 
-    if (!isString(uri)) {
+    if (typeof uri !== 'string') {
       throw new Error('Remote endpoint must be a string');
     }
 
     this._uri = uri;
-    this._opts = assign({}, opts);
+    this._opts = { ...opts };
     this._middlewares = [];
     this._afterwares = [];
   }
@@ -159,19 +155,21 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
     request,
     options,
   }: RequestAndOptions): Promise<IResponse> {
-    return fetch(this._uri, assign({}, this._opts, {
+    return fetch(this._uri, {
+      ...this._opts,
       body: JSON.stringify(printRequest(request)),
       method: 'POST',
-    }, options, {
-      headers: assign({}, {
+      ...options,
+      headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-      }, options.headers),
-    }));
+        ...(options.headers as { [headerName: string]: string }),
+      },
+    });
   };
 
   public query(request: Request): Promise<ExecutionResult> {
-    const options = assign({}, this._opts);
+    const options = { ...this._opts };
 
     return this.applyMiddlewares({
       request,
@@ -234,7 +232,7 @@ export function createNetworkInterface(
 
   // We want to change the API in the future so that you just pass all of the options as one
   // argument, so even though the internals work with two arguments we're warning here.
-  if (isString(uriOrInterfaceOpts)) {
+  if (typeof uriOrInterfaceOpts === 'string') {
     console.warn(`Passing the URI as the first argument to createNetworkInterface is deprecated \
 as of Apollo Client 0.5. Please pass it as the "uri" property of the network interface options.`);
     opts = secondArgOpts;
@@ -242,6 +240,16 @@ as of Apollo Client 0.5. Please pass it as the "uri" property of the network int
   } else {
     opts = (uriOrInterfaceOpts as NetworkInterfaceOptions).opts;
     uri = (uriOrInterfaceOpts as NetworkInterfaceOptions).uri;
+  }
+
+  // Warn if there is no global `fetch` implementation.
+  if (typeof fetch === 'undefined') {
+    console.warn([
+      '[apollo-client]: An implementation for the fetch browser API could not be found. Apollo',
+      'client requires fetch to execute GraphQL queries against your API server. Please include a',
+      'global fetch implementation such as [whatwg-fetch](http://npmjs.com/whatwg-fetch) so that',
+      'Apollo client can run in this environment.',
+    ].join(' '));
   }
 
   return new HTTPFetchNetworkInterface(uri, opts);

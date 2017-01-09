@@ -1,8 +1,7 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import assign = require('lodash/assign');
-import isequal = require('lodash/isEqual');
+import { assign, isEqual } from 'lodash';
 import * as fetchMock from 'fetch-mock';
 
 // make it easy to assert with promises
@@ -116,12 +115,12 @@ describe('network interface', () => {
       }
 
       if (query === print(simpleQueryWithVar)
-          && isequal(variables, { personNum: 1 })) {
+          && isEqual(variables, { personNum: 1 })) {
         return simpleResult;
       }
 
       if (query === print(complexQueryWithTwoVars)
-          && isequal(variables, { personNum: 1, filmNum: 1 })) {
+          && isEqual(variables, { personNum: 1, filmNum: 1 })) {
         return complexResult;
       }
 
@@ -153,6 +152,29 @@ describe('network interface', () => {
       withWarning(() => {
         createNetworkInterface('/graphql');
       }, /Passing the URI as the first argument to createNetworkInterface is deprecated/);
+    });
+
+    it('will warn if there is no global fetch implementation', () => {
+      const origWarn = console.warn;
+      const origFetch = (global as any).fetch;
+
+      const warnCalls: Array<Array<any>> = [];
+
+      console.warn = (...args: Array<any>) => warnCalls.push(args);
+
+      delete (global as any).fetch;
+
+      assert.equal(warnCalls.length, 0);
+
+      createNetworkInterface({ uri: '/graphql' });
+
+      assert.equal(warnCalls.length, 1);
+      assert.equal(warnCalls[0].length, 1);
+      assert(/the fetch browser API could not be found/.test(warnCalls[0][0]));
+
+      // Put everything back the way it was.
+      console.warn = origWarn;
+      (global as any).fetch = origFetch;
     });
 
     it('should create an instance with a given uri', () => {

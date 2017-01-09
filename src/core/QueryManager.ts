@@ -361,13 +361,27 @@ export class QueryManager {
                 variables: queryStoreValue.previousVariables || queryStoreValue.variables,
                 returnPartialData: options.returnPartialData || noFetch,
                 config: this.reducerConfig,
+                previousResult: lastResult && lastResult.data,
               }),
               loading: queryStoreValue.loading,
               networkStatus: queryStoreValue.networkStatus,
             };
 
             if (observer.next) {
-              if (this.isDifferentResult(lastResult, resultFromStore)) {
+              const isDifferentResult =
+                this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
+                  lastResult &&
+                  resultFromStore &&
+                  lastResult.loading === resultFromStore.loading &&
+                  lastResult.networkStatus === resultFromStore.networkStatus &&
+
+                  // We can do a strict equality check here because we include a `previousResult`
+                  // with `readQueryFromStore`. So if the results are the same they will be
+                  // referentially equal.
+                  lastResult.data === resultFromStore.data
+                );
+
+              if (isDifferentResult) {
                 lastResult = resultFromStore;
                 try {
                   observer.next(this.transformResult(resultFromStore));
@@ -724,6 +738,8 @@ export class QueryManager {
       variables,
       document } = this.getQueryParts(observableQuery);
 
+    const lastResult = observableQuery.getLastResult();
+
     const queryOptions = observableQuery.options;
     const readOptions: ReadQueryOptions = {
       // In case of an optimistic change, apply reducer on top of the
@@ -734,6 +750,7 @@ export class QueryManager {
       variables,
       returnPartialData: false,
       config: this.reducerConfig,
+      previousResult: lastResult ? lastResult.data : undefined,
     };
 
     try {
@@ -1005,12 +1022,6 @@ export class QueryManager {
         this.observableQueries[queryId].observableQuery.refetch();
       });
     }
-  }
-
-  // check to see if two results are the same, given our resultComparator
-  private isDifferentResult<T>(lastResult: ApolloQueryResult<T>, newResult: ApolloQueryResult<T>): boolean {
-    const comparator = this.resultComparator || isEqual;
-    return !comparator(lastResult, newResult);
   }
 
   private broadcastQueries() {

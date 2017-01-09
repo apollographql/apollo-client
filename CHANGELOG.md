@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-- ...
+- Fix `resultTransformer` when used with `ObservableQuery#currentResult` (and `react-apollo`).
 
 ### v0.7.0
 - Deprecate "resultTransformer" [PR #1095](https://github.com/apollostack/apollo-client/pull/1095)

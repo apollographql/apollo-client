@@ -2,7 +2,6 @@ import gql from 'graphql-tag';
 
 import {
   ApolloClient,
-  createNetworkInterface,
 } from '../src/index';
 
 import mockNetworkInterface from '../test/mocks/mockNetworkInterface';
@@ -39,11 +38,6 @@ bsuite
   .add('construct instance', () => {
     new ApolloClient({});
   })
-  .add('create network interface', () => {
-    createNetworkInterface({
-      uri: '/graphql',
-    });
-  })
   .add('fetch a query result from mocked server', {
     defer: true,
     setup: () => {
@@ -69,7 +63,7 @@ bsuite
         addTypename: false,
       });
 
-      // insert the result into the cache 
+      // insert the result into the cache
       globalClient.query({ query: simpleQuery }).then((result) => {
         deferred.resolve();
       });
@@ -77,13 +71,10 @@ bsuite
     fn: (deferred: any) => {
       globalClient.query({
         query: simpleQuery,
-        forceFetch: false,
+        noFetch: true,
       }).then((result) => {
         deferred.resolve();
-      }).catch((err) => {
-        console.log('Threw error: ');
-        console.log(err);
-      });
+      })
     },
   })
   .on('cycle', function(event: any) {

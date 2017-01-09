@@ -3,10 +3,11 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- ApolloClient class now takes two generics, the first for Query and second for Mutation
 
 - ...
 
+### v0.7.0
+- ApolloClient class now takes typescript generics for query and mutation [PR #914](https://github.com/apollostack/apollo-client/pull/914)
 - Support AMD [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
 - Support ES6 Modules and tree-shaking (`module`, `jsnext:main`) [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
 - Replace `@types/redux` with official typescript definitions [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)

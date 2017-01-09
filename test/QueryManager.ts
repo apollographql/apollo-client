@@ -1199,6 +1199,21 @@ describe('QueryManager', () => {
     });
   });
 
+  it('deepFreezes results in development mode', () => {
+    const query = gql`{ stuff }`;
+    const data = { stuff: 'wonderful' };
+    const queryManager = mockQueryManager({
+      request: { query },
+      result: { data },
+    });
+
+    return queryManager.query({ query })
+    .then(result => {
+      assert.deepEqual(result.data, data);
+      assert.throws( () => (result.data as any).stuff = 'awful' );
+    });
+  });
+
   it('should error if we pass noFetch on a polling query', (done) => {
     assert.throw(() => {
       assertWithObserver({

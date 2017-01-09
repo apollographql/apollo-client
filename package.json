@@ -45,6 +45,8 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/deep-freeze": "0.0.29",
+    "deep-freeze": "0.0.1",
     "graphql-anywhere": "^2.0.0",
     "graphql-tag": "^1.1.1",
     "redux": "^3.4.0",

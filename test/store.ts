@@ -246,6 +246,16 @@ describe('createApolloStore', () => {
         {
           data: {},
           mutationId: '1',
+          action: {
+            type: 'APOLLO_MUTATION_RESULT',
+            result: {data: {data: {incrementer: {counter: 1}}}},
+            document: mutation,
+            operationName: 'Increment',
+            variables: {},
+            mutationId: '1',
+            resultBehaviors: undefined as undefined,
+            extraReducers: undefined as undefined,
+          },
         },
       ],
       reducerError: (null as Error | null),

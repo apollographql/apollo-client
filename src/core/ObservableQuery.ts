@@ -148,6 +148,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     return { data, loading, networkStatus };
   }
 
+  // Returns the last result that observer.next was called with. This is not the same as
+  // currentResult! If you're not sure which you need, then you probably need currentResult.
+  public getLastResult(): ApolloQueryResult<T> {
+    return this.lastResult;
+  }
+
   public refetch(variables?: any): Promise<ApolloQueryResult<T>> {
     this.variables = {
       ...this.variables,

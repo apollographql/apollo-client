@@ -389,15 +389,12 @@ function areNestedArrayItemsStrictlyEqual (a: NestedArray<any>, b: NestedArray<a
   if (a === b) {
     return true;
   }
-  // If either `a` or `b` are not an array return false. `a` and `b` are known to not be equal
-  // here, we checked above.
-  if (!Array.isArray(a) || !Array.isArray(b)) {
+  // If either `a` or `b` are not an array or not of the same length return false. `a` and `b` are
+  // known to not be equal here, we checked above.
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
     return false;
   }
   // Otherwise let us compare all of the array items (which are potentially nested arrays!) to see
   // if they are equal.
-  return (
-    a.length === b.length &&
-    a.reduce((same, item, i) => same && areNestedArrayItemsStrictlyEqual(item, b[i]), true)
-  );
+  return a.reduce((same, item, i) => same && areNestedArrayItemsStrictlyEqual(item, b[i]), true);
 }

@@ -396,5 +396,8 @@ function areNestedArrayItemsStrictlyEqual (a: NestedArray<any>, b: NestedArray<a
   }
   // Otherwise let us compare all of the array items (which are potentially nested arrays!) to see
   // if they are equal.
-  return a.reduce((same, item, i) => same && areNestedArrayItemsStrictlyEqual(item, b[i]), true);
+  return (
+    a.length === b.length &&
+    a.reduce((same, item, i) => same && areNestedArrayItemsStrictlyEqual(item, b[i]), true)
+  );
 }

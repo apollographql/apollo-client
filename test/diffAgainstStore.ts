@@ -503,6 +503,37 @@ describe('diffing queries against the store', () => {
       assert.strictEqual(result, previousResult);
     });
 
+    it('will not add zombie items when previousResult starts with the same items', () => {
+      const query = gql`
+        query {
+          a { b }
+        }
+      `;
+
+      const queryResult = {
+        a: [{ b: 1.1 }, { b: 1.2 }],
+      };
+
+      const store = writeQueryToStore({
+        query,
+        result: queryResult,
+      });
+
+      const previousResult = {
+        a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
+      };
+
+      const { result } = diffQueryAgainstStore({
+        store,
+        query,
+        previousResult,
+      });
+
+      assert.deepEqual(result, queryResult);
+      assert.strictEqual(result.a[0], previousResult.a[0]);
+      assert.strictEqual(result.a[1], previousResult.a[1]);
+    });
+
     it('will return the previous result if there are no changes in nested child arrays', () => {
       const query = gql`
         query {

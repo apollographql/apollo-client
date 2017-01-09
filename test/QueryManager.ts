@@ -750,6 +750,45 @@ describe('QueryManager', () => {
     });
   });
 
+  it('will return referentially equivalent data in getCurrentResult if nothing changed', done => {
+    const request = {
+      query: gql`
+        {
+          a
+          b { c }
+          d { e f { g } }
+        }
+      `,
+    };
+
+    const data1 = {
+      a: 1,
+      b: { c: 2 },
+      d: { e: 3, f: { g: 4 } },
+    };
+
+    const queryManager = mockQueryManager({
+      request,
+      result: { data: data1 },
+    });
+
+    const observable = queryManager.watchQuery<any>(request);
+
+    observable.subscribe({
+      next: result => {
+        try {
+          assert.deepEqual(result.data, data1);
+          assert.strictEqual(result.data, observable.currentResult().data);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+      error: error =>
+        done(error),
+    });
+  });
+
   it('sets networkStatus to `refetch` when refetching', () => {
     const request = {
       query: gql`

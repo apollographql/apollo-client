@@ -422,13 +422,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     const observer: Observer<ApolloQueryResult<T>> = {
       next: (result: ApolloQueryResult<T>) => {
+        this.lastResult = result;
         this.observers.forEach((obs) => {
           if (obs.next) {
             obs.next(result);
           }
         });
-
-        this.lastResult = result;
       },
       error: (error: ApolloError) => {
         this.observers.forEach((obs) => {

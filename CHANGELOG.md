@@ -7,7 +7,10 @@ Expect active development and potentially significant breaking changes in the `0
 - ...
 
 ### v0.7.0
-- ApolloClient class now takes typescript generics for query and mutation [PR #914](https://github.com/apollostack/apollo-client/pull/914)
+- Deprecate "resultTransformer" [PR #1095](https://github.com/apollostack/apollo-client/pull/1095)
+- Deep freeze results in development and test mode [PR #1095](https://github.com/apollostack/apollo-client/pull/1095)
+- Allow using typescript generics for query and mutation [PR #914](https://github.com/apollostack/apollo-client/pull/914)
+- Allow using typescript generics for query and mutation [PR #914](https://github.com/apollostack/apollo-client/pull/914)
 - Support AMD [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
 - Support ES6 Modules and tree-shaking (`module`, `jsnext:main`) [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
 - Replace `@types/redux` with official typescript definitions [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)

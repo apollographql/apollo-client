@@ -6,7 +6,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 - ...
 
-### v0.7.0
+### 0.7.1
+- Add whatwg-fetch polyfill (most likely only until version 1.0) [PR #1155](https://github.com/apollostack/apollo-client/pull/1155)
+
+### 0.7.0
 - Deprecate "resultTransformer" [PR #1095](https://github.com/apollostack/apollo-client/pull/1095)
 - Deep freeze results in development and test mode [PR #1095](https://github.com/apollostack/apollo-client/pull/1095)
 - Allow using typescript generics for query and mutation [PR #914](https://github.com/apollostack/apollo-client/pull/914)

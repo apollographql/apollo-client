@@ -14,6 +14,7 @@
     "posttest": "npm run lint",
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=27",
     "compile": "tsc",
+    "compile:benchmark": "tsc -p tsconfig.test.json",
     "compile:test": "tsc -p tsconfig.test.json",
     "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/apollo.umd.js -o=./dist/index.js && npm run minify:browser",
     "minify:browser": "uglifyjs --compress --mangle --screw-ie8 -o=./dist/index.min.js -- ./dist/index.js",
@@ -46,14 +47,15 @@
   "license": "MIT",
   "dependencies": {
     "graphql-anywhere": "^2.1.0",
+    "benchmark": "^2.1.3",
     "graphql-tag": "^1.1.1",
     "redux": "^3.4.0",
     "symbol-observable": "^1.0.2",
     "whatwg-fetch": "^2.0.0"
   },
   "devDependencies": {
-    "@types/chai": "^3.4.32",
     "@types/benchmark": "^1.0.30",
+    "@types/chai": "^3.4.32",
     "@types/node": "^6.0.38",
     "@types/promises-a-plus": "0.0.26",
     "@types/sinon": "^1.16.29",

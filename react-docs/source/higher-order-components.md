@@ -67,7 +67,7 @@ The config object can include one or more of the following keys:
 - `options`: Pass options about the query or mutation, documented in the [queries](/react/queries.html) and [mutations](/react/mutations.html) guides
 - `props`: Modify the props before they are passed into the child component
 - `withRef`: Add a method to access the child component to the container, [read more below](#with-ref)
-- `shouldResubscribe`: A function which gets called with current props and next props when props change returns true if the change requires the component to resubscribe.
+- `shouldResubscribe`: A function which gets called with current props and next props when props change. The function should return true if the change requires the component to resubscribe.
 
 The `graphql` function returns another function, which takes any React component and returns a new React component class wrapped with the specified query. This is similar to how `connect` works in Redux.
 

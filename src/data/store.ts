@@ -16,6 +16,10 @@ import {
 } from '../queries/store';
 
 import {
+  getOperationName,
+} from '../queries/getFromAST';
+
+import {
   MutationStore,
 } from '../mutations/store';
 
@@ -37,6 +41,13 @@ import {
   replaceQueryResults,
 } from './replaceQueryResults';
 
+import {
+  readQueryFromStore,
+} from './readFromStore';
+
+import {
+  tryFunctionOrLogError,
+} from '../util/errorHandling';
 
 export function data(
   previousState: NormalizedCache = {},
@@ -153,6 +164,45 @@ export function data(
           } else {
             throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
           }
+        });
+      }
+
+      // If this action wants us to update certain queries. Let’s do it!
+      if (constAction.updateQueries) {
+        Object.keys(constAction.updateQueries).forEach(queryId => {
+          const query = queries[queryId];
+          if (!query) {
+            // XXX should throw an error?
+            return;
+          }
+
+          // Read the current query result from the store.
+          const currentQueryResult = readQueryFromStore({
+            store: previousState,
+            query: query.document,
+            variables: query.variables,
+            returnPartialData: true,
+            config,
+          });
+
+          const reducer = constAction.updateQueries[queryId];
+
+          // Run our reducer using the current query result and the mutation result.
+          const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, {
+            mutationResult: constAction.result,
+            queryName: getOperationName(query.document),
+            queryVariables: query.variables,
+          }));
+
+          // Write the modified result back into the store.
+          newState = writeResultToStore({
+            result: nextQueryResult,
+            dataId: 'ROOT_QUERY',
+            document: query.document,
+            variables: query.variables,
+            store: newState,
+            dataIdFromObject: config.dataIdFromObject,
+          });
         });
       }
 

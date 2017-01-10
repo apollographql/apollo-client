@@ -60,6 +60,7 @@ export function optimistic(
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
       extraReducers: action.extraReducers,
+      updateQueries: action.updateQueries,
     };
 
     const fakeStore = {

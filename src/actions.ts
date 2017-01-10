@@ -5,6 +5,7 @@ import {
 
 import {
   MutationBehavior,
+  MutationQueryReducer,
 } from './data/mutationResults';
 
 import {
@@ -86,6 +87,7 @@ export interface MutationInitAction {
   optimisticResponse: Object;
   resultBehaviors?: MutationBehavior[];
   extraReducers?: ApolloReducer[];
+  updateQueries?: { [queryId: string]: MutationQueryReducer };
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
@@ -102,6 +104,7 @@ export interface MutationResultAction {
   mutationId: string;
   resultBehaviors?: MutationBehavior[];
   extraReducers?: ApolloReducer[];
+  updateQueries?: { [queryId: string]: MutationQueryReducer };
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

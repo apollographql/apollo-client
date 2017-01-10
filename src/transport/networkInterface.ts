@@ -243,16 +243,5 @@ as of Apollo Client 0.5. Please pass it as the "uri" property of the network int
     opts = (uriOrInterfaceOpts as NetworkInterfaceOptions).opts;
     uri = (uriOrInterfaceOpts as NetworkInterfaceOptions).uri;
   }
-
-  // Warn if there is no global `fetch` implementation.
-  if (typeof fetch === 'undefined') {
-    console.warn([
-      '[apollo-client]: An implementation for the fetch browser API could not be found. Apollo',
-      'client requires fetch to execute GraphQL queries against your API server. Please include a',
-      'global fetch implementation such as [whatwg-fetch](http://npmjs.com/whatwg-fetch) so that',
-      'Apollo client can run in this environment.',
-    ].join(' '));
-  }
-
   return new HTTPFetchNetworkInterface(uri, opts);
 }

@@ -44,12 +44,13 @@ These IDs allow Apollo Client to reactively tell all queries that fetched a part
 So to do `dataIdFromObject` most concisely, your client initialization might look like this:
 
 ```
-import ApolloClient, {createNetworkInterface, addTypename} from 'apollo-client'
+import ApolloClient, {createNetworkInterface} from 'apollo-client'
 
 const networkInterface = createNetworkInterface('http://localhost:3000/graphql') // TBD: Need to provide the right path for production
 
 const apolloClient = new ApolloClient({
     networkInterface: networkInterface,
+    addTypename: true,
     dataIdFromObject: (result) => {
         if (result.id && result.__typename) {
             return result.__typename + result.id

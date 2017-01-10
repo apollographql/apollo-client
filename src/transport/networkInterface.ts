@@ -1,3 +1,5 @@
+import 'whatwg-fetch';
+
 import {
   ExecutionResult,
   DocumentNode,

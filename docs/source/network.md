@@ -259,7 +259,7 @@ const apolloClient = new ApolloClient({
   networkInterface: batchingNetworkInterface,
 });
 
-// These two queries happen in quick suggestion, possibly in totally different
+// These two queries happen in quick succession, possibly in totally different
 // places within your UI.
 apolloClient.query({ query: firstQuery });
 apolloClient.query({ query: secondQuery });

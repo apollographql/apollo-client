@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 - ...
+- Add whatwg-fetch polyfill (most likely only until version 1.0) [PR #1155](https://github.com/apollostack/apollo-client/pull/1155)
 
 ### v0.7.0
 - Deprecate "resultTransformer" [PR #1095](https://github.com/apollostack/apollo-client/pull/1095)

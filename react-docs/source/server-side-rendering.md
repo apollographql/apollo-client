@@ -135,9 +135,7 @@ const client = new ApolloClient(....);
 getDataFromTree(app).then(() => {
   // We are ready to render for real
   const content = ReactDOM.renderToString(app);
-  const initialState = {[client.reduxRootKey]: {
-    data: client.store.getState()[client.reduxRootKey].data
-  }};
+  const initialState = {[client.reduxRootKey]: client.getInitialState()  };
 
   const html = <Html content={content} state={initialState} />;
 
@@ -190,9 +188,7 @@ const client = new ApolloClient(....);
 
 // during request
 renderToStringWithData(app).then((content) => {
-  const initialState = {[client.reduxRootKey]: {
-    data: client.store.getState()[client.reduxRootKey].data
-  }};
+  const initialState = {[client.reduxRootKey]: client.getInitialState() };
   const html = <Html content={content} state={initialState} />;
 
   res.status(200);

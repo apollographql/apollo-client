@@ -236,6 +236,7 @@ This represents a result that comes back from the GraphQL server.
 
 <h2 id="query-batching">Query batching</h2>
 
+
 Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. This query-level batching is supported by all GraphQL endpoints, including those that do not implement transport-level batching, by merging together queries into one top-level query with multiple fields.
 
 To use query-level batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object (the same as `createNetworkInterface`) with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server.
@@ -259,7 +260,7 @@ const apolloClient = new ApolloClient({
   networkInterface: batchingNetworkInterface,
 });
 
-// These two queries happen in quick suggestion, possibly in totally different
+// These two queries happen in quick succession, possibly in totally different
 // places within your UI.
 apolloClient.query({ query: firstQuery });
 apolloClient.query({ query: secondQuery });

@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - ApolloClient class now takes two generics, the first for Query and second for Mutation
+- Fix bug where there could be store inconsistencies for two dependant optimistic updates [PR #1144](https://github.com/apollostack/apollo-client/pull/1144)
 
 - ...
 

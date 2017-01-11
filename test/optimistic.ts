@@ -883,6 +883,108 @@ describe('optimistic mutation results', () => {
         assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
       });
     });
+
+    it('will handle dependant updates', done => {
+      networkInterface = mockNetworkInterface({
+        request: { query },
+        result,
+      }, {
+        request: { query: mutation },
+        result: mutationResult,
+        delay: 10,
+      }, {
+        request: { query: mutation },
+        result: mutationResult2,
+        delay: 20,
+      });
+
+      const customOptimisticResponse1 = {
+        __typename: 'Mutation',
+        createTodo: {
+          __typename: 'Todo',
+          id: 'optimistic-99',
+          text: 'Optimistically generated',
+          completed: true,
+        },
+      };
+
+      const customOptimisticResponse2 = {
+        __typename: 'Mutation',
+        createTodo: {
+          __typename: 'Todo',
+          id: 'optimistic-66',
+          text: 'Optimistically generated 2',
+          completed: true,
+        },
+      };
+
+      const updateQueries = {
+        todoList: (prev, options) => {
+          const mResult = options.mutationResult as any;
+
+          const state = cloneDeep(prev) as any;
+          state.todoList.todos.unshift(mResult.data.createTodo);
+          return state;
+        },
+      } as MutationQueryReducersMap;
+
+      client = new ApolloClient({
+        networkInterface,
+        dataIdFromObject: (obj: any) => {
+          if (obj.id && obj.__typename) {
+            return obj.__typename + obj.id;
+          }
+          return null;
+        },
+      });
+
+      const defaultTodos = result.data.todoList.todos;
+      let count = 0;
+
+      client.watchQuery({ query }).subscribe({
+        next: (value: any) => {
+          const todos = value.data.todoList.todos;
+          switch (count++) {
+            case 0:
+              assert.deepEqual(defaultTodos, todos);
+              twoMutations();
+              break;
+            case 1:
+              assert.deepEqual([customOptimisticResponse1.createTodo, ...defaultTodos], todos);
+              break;
+            case 2:
+              assert.deepEqual([customOptimisticResponse2.createTodo, customOptimisticResponse1.createTodo, ...defaultTodos], todos);
+              break;
+            case 3:
+              assert.deepEqual([customOptimisticResponse2.createTodo, mutationResult.data.createTodo, ...defaultTodos], todos);
+              break;
+            case 4:
+              assert.deepEqual([mutationResult2.data.createTodo, mutationResult.data.createTodo, ...defaultTodos], todos);
+              done();
+              break;
+            default:
+              done(new Error('Next should not have been called again.'));
+          }
+        },
+        error: error => done(error),
+      });
+
+      function twoMutations () {
+        client.mutate({
+          mutation,
+          optimisticResponse: customOptimisticResponse1,
+          updateQueries,
+        })
+          .catch(error => done(error));
+
+        client.mutate({
+          mutation,
+          optimisticResponse: customOptimisticResponse2,
+          updateQueries,
+        })
+          .catch(error => done(error));
+      }
+    });
   });
 
   describe('optimistic updates with result reducer', () => {
@@ -1009,6 +1111,130 @@ describe('optimistic mutation results', () => {
         // Since we used `prepend` it should be at the front
         assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
       });
+    });
+
+    it('will handle dependant updates', done => {
+      const customMutationResult1 = {
+        data: {
+          __typename: 'Mutation',
+          createTodo: {
+            id: '99',
+            __typename: 'Todo',
+            text: 'This one was created with a mutation.',
+            completed: true,
+          },
+        },
+      };
+
+      const customMutationResult2 = {
+        data: {
+          __typename: 'Mutation',
+          createTodo: {
+            id: '66',
+            __typename: 'Todo',
+            text: 'Second mutation.',
+            completed: true,
+          },
+        },
+      };
+
+      const customOptimisticResponse1 = {
+        __typename: 'Mutation',
+        createTodo: {
+          __typename: 'Todo',
+          id: 'optimistic-99',
+          text: 'Optimistically generated',
+          completed: true,
+        },
+      };
+
+      const customOptimisticResponse2 = {
+        __typename: 'Mutation',
+        createTodo: {
+          __typename: 'Todo',
+          id: 'optimistic-66',
+          text: 'Optimistically generated 2',
+          completed: true,
+        },
+      };
+
+      networkInterface = mockNetworkInterface({
+        request: { query },
+        result,
+      }, {
+        request: { query: mutation },
+        result: customMutationResult1,
+        delay: 10,
+      }, {
+        request: { query: mutation },
+        result: customMutationResult2,
+        delay: 20,
+      });
+
+      client = new ApolloClient({
+        networkInterface,
+        dataIdFromObject: (obj: any) => {
+          if (obj.id && obj.__typename) {
+            return obj.__typename + obj.id;
+          }
+          return null;
+        },
+      });
+
+      const defaultTodos = result.data.todoList.todos;
+      let count = 0;
+
+      client.watchQuery({
+        query,
+        reducer: (previousResult, action) => {
+          if (isMutationResultAction(action)) {
+            const newResult = cloneDeep(previousResult) as any;
+            newResult.todoList.todos.unshift(action.result.data['createTodo']);
+            return newResult;
+          }
+          return previousResult;
+        },
+      }).subscribe({
+        next: (value: any) => {
+          const todos = value.data.todoList.todos;
+          switch (count++) {
+            case 0:
+              assert.deepEqual(defaultTodos, todos);
+              twoMutations();
+              break;
+            case 1:
+              assert.deepEqual([customOptimisticResponse1.createTodo, ...defaultTodos], todos);
+              break;
+            case 2:
+              assert.deepEqual([customOptimisticResponse2.createTodo, customOptimisticResponse1.createTodo, ...defaultTodos], todos);
+              break;
+            case 3:
+              assert.deepEqual([customOptimisticResponse2.createTodo, customMutationResult1.data.createTodo, ...defaultTodos], todos);
+              break;
+            case 4:
+              assert.deepEqual([customMutationResult2.data.createTodo, customMutationResult1.data.createTodo, ...defaultTodos], todos);
+              done();
+              break;
+            default:
+              done(new Error('Next should not have been called again.'));
+          }
+        },
+        error: error => done(error),
+      });
+
+      function twoMutations () {
+        client.mutate({
+          mutation,
+          optimisticResponse: customOptimisticResponse1,
+        })
+          .catch(error => done(error));
+
+        client.mutate({
+          mutation,
+          optimisticResponse: customOptimisticResponse2,
+        })
+          .catch(error => done(error));
+      }
     });
   });
 });

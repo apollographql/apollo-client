@@ -12,6 +12,10 @@ import {
   Deferred, 
 } from 'benchmark';
 
+import {
+  times,
+} from 'lodash';
+
 const Benchmark = require('benchmark');
 const bsuite = new Benchmark.Suite();
 
@@ -39,8 +43,8 @@ const simpleReqResp = {
 // interact with benchmark.js.
 //
 // Specifically, it provides `group` and `benchmark`, examples of which
-// can be seen below.The functions allow you to manage scope more easily
-// and handle async code more easily than benchmark.js typically allows.
+// can be seen below.The functions allow you to manage scope and async
+// code more easily than benchmark.js typically allows.
 // 
 // `group` is meant to provide a way to execute code that sets up the scope variables for your
 // benchmark. It is only run once before the benchmark, not on every call of the code to
@@ -59,7 +63,11 @@ const group = (groupFn: GroupFunction) => {
       console.log('Adding benchmark: %s', description);
       bsuite.add(description, {
         defer: true,
+        setup: () => {
+          console.log('Setting up.');
+        },
         fn: (deferred: any) => {
+          console.log('Calling fn.');
           const done = () => {
             deferred.resolve();
           };
@@ -127,7 +135,9 @@ group((end) => {
 });
 
 group((end) => {
-
+  // TOOD need to figure out a way to run some code before
+  // every call of this benchmark so that the client instance
+  // and observable can be set up outside of the timed region.
   benchmark('write data and receive update from the cache', (done) => {
     const client = getClientInstance();
     const observable = client.watchQuery({
@@ -147,6 +157,37 @@ group((end) => {
     client.query({ query: simpleQuery });
   });
   
+  end();
+});
+
+group((end) => {
+  // This benchmark is supposed to check whether the time
+  // taken to deliver updates is linear in subscribers or not.
+  // (Should be linear).
+  benchmark('write data and deliver update to 10 subscribers', (done) => {
+    const promises: Promise<void>[] = [];
+    const client = getClientInstance();
+
+    times(10, () => {
+      promises.push(new Promise<void>((resolve, reject) => {
+        client.watchQuery({
+          query: simpleQuery,
+          noFetch: true,
+        }).subscribe({
+          next(res: ApolloQueryResult<Object>) {
+            if (Object.keys(res.data).length > 0) {
+              resolve();
+            }
+          }
+        });
+      }));
+    });
+
+    client.query({ query: simpleQuery });
+    Promise.all(promises).then(() => {
+      done();
+    });
+  });
   end();
 });
 

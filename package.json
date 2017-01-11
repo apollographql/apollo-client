@@ -56,6 +56,9 @@
   "devDependencies": {
     "@types/benchmark": "^1.0.30",
     "@types/chai": "^3.4.32",
+    "@types/chai-as-promised": "0.0.28",
+    "@types/lodash": "4.14.42",
+    "@types/mocha": "^2.2.31",
     "@types/node": "^6.0.38",
     "@types/promises-a-plus": "0.0.26",
     "@types/sinon": "^1.16.29",

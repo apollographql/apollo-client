@@ -1215,6 +1215,77 @@ describe('mutation results', () => {
       });
     });
 
+    it('does not fail if optional query variables are not supplied', () => {
+      let subscriptionHandle: Subscription;
+      const mutationWithVars = gql`
+          mutation createTodo($requiredVar: String!, $optionalVar: String) {
+              createTodo(requiredVar: $requiredVar, optionalVar:$optionalVar) {
+                  id
+                  text
+                  completed
+                  __typename
+              }
+              __typename
+          }
+      `;
+
+      // the test will pass if optionalVar is uncommented
+      const variables = {
+        requiredVar: 'x',
+        // optionalVar: 'y',
+      };
+      return setup({
+        request: {
+          query: mutationWithVars,
+          variables,
+        },
+        result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise((resolve, reject) => {
+          const handle = client.watchQuery({
+            query,
+            variables,
+          });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
+            },
+          });
+        });
+      })
+      .then(() => {
+        return client.mutate({
+          mutation: mutationWithVars,
+          variables,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              assert.equal(mResult.data.createTodo.id, '99');
+              assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+              const state = cloneDeep(prev) as any;
+              state.todoList.todos.unshift(mResult.data.createTodo);
+              return state;
+            },
+          },
+        });
+      })
+      .then(() => {
+        return client.query({query});
+      })
+      .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+
     it('does not fail if the query did not complete correctly', () => {
       const obsHandle = setupObsHandle({
         request: { query: mutation },

@@ -339,11 +339,8 @@ export class QueryManager {
             networkError: queryStoreValue.networkError,
           });
           if (observer.error) {
-            try {
-              observer.error(apolloError);
-            } catch (e) {
-              console.error(`Error in observer.error \n${e.stack}`);
-            }
+            // defer to avoid potential errors propagating back to Apollo
+            (setImmediate || setTimeout)(() => observer.error(apolloError));
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
             if (process.env.NODE_ENV !== 'production') {
@@ -385,11 +382,10 @@ export class QueryManager {
 
               if (isDifferentResult) {
                 lastResult = resultFromStore;
-                try {
+                // defer to avoid potential errors propagating back to Apollo
+                (setImmediate || setTimeout)(() => {
                   observer.next(maybeDeepFreeze(this.transformResult(resultFromStore)));
-                } catch (e) {
-                  console.error(`Error in observer.next \n${e.stack}`);
-                }
+                });
               }
             }
           } catch (error) {

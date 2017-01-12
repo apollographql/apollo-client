@@ -2,6 +2,8 @@ import {
   ExecutionResult,
 } from 'graphql';
 
+import 'whatwg-fetch';
+
 import {
   HTTPFetchNetworkInterface,
   HTTPNetworkInterface,

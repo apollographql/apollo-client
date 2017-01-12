@@ -49,6 +49,8 @@ import {
   createStoreReducer,
 } from '../data/resultReducers';
 
+import maybeDeepFreeze from '../util/maybeDeepFreeze';
+
 import {
   ExecutionResult,
   DocumentNode,
@@ -382,7 +384,7 @@ export class QueryManager {
               if (isDifferentResult) {
                 lastResult = resultFromStore;
                 try {
-                  observer.next(this.transformResult(resultFromStore));
+                  observer.next(maybeDeepFreeze(this.transformResult(resultFromStore)));
                 } catch (e) {
                   console.error(`Error in observer.next \n${e.stack}`);
                 }
@@ -754,7 +756,7 @@ export class QueryManager {
     try {
       // first try reading the full result from the store
       const data = readQueryFromStore(readOptions);
-      return { data, partial: false };
+      return maybeDeepFreeze({ data, partial: false });
     } catch (e) {
       // next, try reading partial results, if we want them
       if (queryOptions.returnPartialData || queryOptions.noFetch) {
@@ -767,7 +769,7 @@ export class QueryManager {
         }
       }
 
-      return { data: {}, partial: true };
+      return maybeDeepFreeze({ data: {}, partial: true });
     }
   }
 

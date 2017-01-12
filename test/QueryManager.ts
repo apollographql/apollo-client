@@ -58,7 +58,7 @@ import {
 
 import { NetworkStatus } from '../src/queries/store';
 
-import wrap from './util/wrap';
+import wrap, { withWarning } from './util/wrap';
 
 import observableToPromise, {
   observableToPromiseAndSubscription,
@@ -1196,6 +1196,21 @@ describe('QueryManager', () => {
         assert.equal(result.data['luke'].name, 'Luke Skywalker');
         assert.notProperty(result.data, 'vader');
       });
+    });
+  });
+
+  it('deepFreezes results in development mode', () => {
+    const query = gql`{ stuff }`;
+    const data = { stuff: 'wonderful' };
+    const queryManager = mockQueryManager({
+      request: { query },
+      result: { data },
+    });
+
+    return queryManager.query({ query })
+    .then(result => {
+      assert.deepEqual(result.data, data);
+      assert.throws( () => (result.data as any).stuff = 'awful' );
     });
   });
 
@@ -3284,25 +3299,27 @@ describe('QueryManager', () => {
     let transformCount: number;
 
     beforeEach(() => {
-      transformCount = 0;
+      withWarning( () => {
+       transformCount = 0;
 
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          return Promise.resolve(response);
-        },
-      };
+        const networkInterface: NetworkInterface = {
+          query(request: Request): Promise<ExecutionResult> {
+            return Promise.resolve(response);
+          },
+        };
 
-      client = new ApolloClient({
-        networkInterface,
-        resultTransformer(result: ExecutionResult) {
-          transformCount++;
-          return {
-            data: assign({}, result.data, {transformCount}),
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-          };
-        },
-      });
+        client = new ApolloClient({
+          networkInterface,
+          resultTransformer(result: ExecutionResult) {
+            transformCount++;
+            return {
+              data: assign({}, result.data, {transformCount}),
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+            };
+          },
+        });
+      }, /resultTransformer/);
     });
 
     it('transforms query() results', () => {
@@ -3364,25 +3381,27 @@ describe('QueryManager', () => {
     let response: any;
 
     beforeEach(() => {
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          return Promise.resolve(response);
-        },
-      };
+      withWarning( () => {
+        const networkInterface: NetworkInterface = {
+          query(request: Request): Promise<ExecutionResult> {
+            return Promise.resolve(response);
+          },
+        };
 
-      client = new ApolloClient({
-        networkInterface,
-        resultTransformer(result: ApolloQueryResult<any>) {
-          result.data.__proto__ = Model.prototype;
-          return result;
-        },
-        resultComparator(result1: ApolloQueryResult<any>, result2: ApolloQueryResult<any>) {
-          // A real example would, say, deep compare the two while ignoring prototypes.
-          const foo1 = result1 && result1.data && result1.data.foo;
-          const foo2 = result2 && result2.data && result2.data.foo;
-          return foo1 === foo2;
-        },
-      });
+        client = new ApolloClient({
+          networkInterface,
+          resultTransformer(result: ApolloQueryResult<any>) {
+            result.data.__proto__ = Model.prototype;
+            return result;
+          },
+          resultComparator(result1: ApolloQueryResult<any>, result2: ApolloQueryResult<any>) {
+            // A real example would, say, deep compare the two while ignoring prototypes.
+            const foo1 = result1 && result1.data && result1.data.foo;
+            const foo2 = result2 && result2.data && result2.data.foo;
+            return foo1 === foo2;
+          },
+        });
+      }, /resultTransformer/);
     });
 
     it('does not transform identical watchQuery() results, according to the comparator', () => {

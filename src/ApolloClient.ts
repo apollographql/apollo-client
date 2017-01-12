@@ -192,6 +192,13 @@ export default class ApolloClient {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
+    if (resultTransformer) {
+      console.warn(
+        '"resultTransformer" is being considered for deprecation in an upcoming version. ' +
+        'If you are using it, please file an issue on apollostack/apollo-client ' +
+        'with a description of your use-case',
+      );
+    }
     this.resultTransformer = resultTransformer;
     this.resultComparator = resultComparator;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);

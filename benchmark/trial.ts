@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 import {
   ApolloClient,
   ApolloQueryResult,
-  ObservableQuery
+  ObservableQuery,
 } from '../src/index';
 
 import mockNetworkInterface from '../test/mocks/mockNetworkInterface';
@@ -14,6 +14,8 @@ import {
 
 import {
   times,
+  cloneDeep,
+  merge,
 } from 'lodash';
 
 const Benchmark = require('benchmark');
@@ -21,7 +23,7 @@ const Benchmark = require('benchmark');
 // before it has to enter a setup loop again. This could probably be done through
 // the Benchmark.count value but that doesn't seem to be exposed correctly
 // to the setup function so we have to do this.
-const MAX_ITERATIONS = 100;
+const MAX_ITERATIONS = 10000;
 const bsuite = new Benchmark.Suite();
 
 const simpleQuery = gql`
@@ -55,11 +57,13 @@ const simpleReqResp = {
 // benchmark. It is only run once before the benchmark, not on every call of the code to
 // be benchmarked.
 type DoneFunction = () => void;
-type CycleFunction = (doneFn: DoneFunction) => void;
+type SetupScope = any;
+type CycleFunction = (doneFn: DoneFunction, setupScope?: SetupScope) => void;
 type BenchmarkFunction = (description: string, cycleFn: CycleFunction) => void;
 type GroupFunction = (done: DoneFunction) => void;
 type SetupCycleFunction = () => void;
 type SetupFunction = (setupFn: SetupCycleFunction) => void;
+
 let benchmark: BenchmarkFunction = null;
 let setup: SetupFunction = null;
 
@@ -90,22 +94,24 @@ const group = (groupFn: GroupFunction) => {
   // almost as if it is run before every of the `CycleFunction`. Check in the benchmarks
   // themselves for an example of this.
   let setupFn: SetupCycleFunction = null;
-  const scopes: Object[] = [];
-  let cycleCount = 0;
   scope.setup = (setupFnArg: SetupCycleFunction) => {
     setupFn = setupFnArg;
   };
-
-  const runSetup = () => {
-    times(MAX_ITERATIONS, () => {
-      setupFn.apply(this);
-      scopes.push(this);
-    });
-    cycleCount = 0;
-  };
   
-  scope.benchmark = (description: string, benchmarkFn: (done: () => void) => void) => {
+  scope.benchmark = (description: string, benchmarkFn: CycleFunction) => {
     console.log('Adding benchmark: %s', description);
+    const scopes: Object[] = [];
+    let cycleCount = 0;  
+    const runSetup = () => {
+      const originalThis = this;
+      times(MAX_ITERATIONS, () => {
+        setupFn.apply(this);
+        scopes.push(cloneDeep(this));
+      });
+      
+      cycleCount = 0;
+    };
+    
     bsuite.add(description, {
       defer: true,
       setup: (deferred: any) => {
@@ -121,7 +127,9 @@ const group = (groupFn: GroupFunction) => {
           cycleCount++;
           deferred.resolve();
         };
-        benchmarkFn.call(scopes[cycleCount], done);
+        
+        const passingScope = merge({}, this, scopes[cycleCount]) as SetupScope;
+        benchmarkFn(done, passingScope);
       },
     });
   };
@@ -152,13 +160,7 @@ const getClientInstance = () => {
 };
 
 group((end) => {
-  setup(() => {
-    this.client = 18;
-    i++;
-  });
-  
   benchmark('constructing an instance', (done) => {
-    console.log('this.ival: ', this.ival);
     new ApolloClient({});
     done();
   });
@@ -166,8 +168,12 @@ group((end) => {
 });
 
 group((end) => {
-  const client = getClientInstance();
-  benchmark('fetching a query result from mocked server', (done) => {
+  setup(() => {
+    this.client = getClientInstance();
+  });
+  
+  benchmark('fetching a query result from mocked server', (done, setupScope) => {
+    const client = setupScope.client as ApolloClient;
     client.query({ query: simpleQuery }).then((result) => {
       done();
     });

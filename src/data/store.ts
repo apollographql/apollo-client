@@ -172,7 +172,6 @@ export function data(
         Object.keys(constAction.updateQueries).forEach(queryId => {
           const query = queries[queryId];
           if (!query) {
-            // XXX should throw an error?
             return;
           }
 

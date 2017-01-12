@@ -101,6 +101,7 @@ const group = (groupFn: GroupFunction) => {
       setupFn.apply(this);
       scopes.push(this);
     });
+    cycleCount = 0;
   };
   
   scope.benchmark = (description: string, benchmarkFn: (done: () => void) => void) => {
@@ -117,10 +118,10 @@ const group = (groupFn: GroupFunction) => {
       },
       fn: (deferred: any) => {
         const done = () => {
+          cycleCount++;
           deferred.resolve();
         };
-        
-        benchmarkFn(done);
+        benchmarkFn.call(scopes[cycleCount], done);
       },
     });
   };
@@ -153,9 +154,11 @@ const getClientInstance = () => {
 group((end) => {
   setup(() => {
     this.client = 18;
+    i++;
   });
   
   benchmark('constructing an instance', (done) => {
+    console.log('this.ival: ', this.ival);
     new ApolloClient({});
     done();
   });

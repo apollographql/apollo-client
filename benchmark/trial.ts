@@ -17,6 +17,11 @@ import {
 } from 'lodash';
 
 const Benchmark = require('benchmark');
+// The maximum number of iterations that a benchmark can cycle for
+// before it has to enter a setup loop again. This could probably be done through
+// the Benchmark.count value but that doesn't seem to be exposed correctly
+// to the setup function so we have to do this.
+const MAX_ITERATIONS = 100;
 const bsuite = new Benchmark.Suite();
 
 const simpleQuery = gql`
@@ -53,29 +58,71 @@ type DoneFunction = () => void;
 type CycleFunction = (doneFn: DoneFunction) => void;
 type BenchmarkFunction = (description: string, cycleFn: CycleFunction) => void;
 type GroupFunction = (done: DoneFunction) => void;
+type SetupCycleFunction = () => void;
+type SetupFunction = (setupFn: SetupCycleFunction) => void;
 let benchmark: BenchmarkFunction = null;
+let setup: SetupFunction = null;
 
 const groupPromises: Promise<void>[] = [];
 const group = (groupFn: GroupFunction) => {
   const oldBenchmark = benchmark;
-  const scope = {
-    benchmark: (description: string, benchmarkFn: (done: () => void) => void) => {
-      console.log('Adding benchmark: %s', description);
-      bsuite.add(description, {
-        defer: true,
-        setup: () => {
-          console.log('Setting up.');
-        },
-        fn: (deferred: any) => {
-          console.log('Calling fn.');
-          const done = () => {
+  const oldSetup = setup;
+  const scope: {
+    setup?: SetupFunction,
+    benchmark?: BenchmarkFunction,
+  } = {};
+  
+  // This is a very important part of the tooling around benchmark.js.
+  //
+  // benchmark.js does not allow you run a particular function before
+  // every cycle of the benchmark (i.e. you cannot run a particular function
+  // before the timed portion of a CycleFunction begins). This makes it
+  // difficult to set up initial state. This function solves this problem.
+  //
+  // Inside each `GroupFunction`, the user can create a `setup` block,
+  // passing an instance of `SetupCycleFunction` as an argument. benchmark.js
+  // will call the `setup` function below once before running the CycleFunction
+  // `count` times. This setup function will then call the SetupCycleFunction it is
+  // passed `count` times and record array of scopes that exist within SetupCycleFunction.
+  // This array will be available to the `GroupCycleFunction`.
+  //
+  // This makes it possible to write code in the `SetupCycleFunction`
+  // almost as if it is run before every of the `CycleFunction`. Check in the benchmarks
+  // themselves for an example of this.
+  let setupFn: SetupCycleFunction = null;
+  const scopes: Object[] = [];
+  let cycleCount = 0;
+  scope.setup = (setupFnArg: SetupCycleFunction) => {
+    setupFn = setupFnArg;
+  };
+
+  const runSetup = () => {
+    times(MAX_ITERATIONS, () => {
+      setupFn.apply(this);
+      scopes.push(this);
+    });
+  };
+  
+  scope.benchmark = (description: string, benchmarkFn: (done: () => void) => void) => {
+    console.log('Adding benchmark: %s', description);
+    bsuite.add(description, {
+      defer: true,
+      setup: (deferred: any) => {
+        if (setupFn !== null) {
+          runSetup();
+          if (deferred) {
             deferred.resolve();
-          };
-          
-          benchmarkFn(done);
-        },
-      });
-    },
+          }
+        }
+      },
+      fn: (deferred: any) => {
+        const done = () => {
+          deferred.resolve();
+        };
+        
+        benchmarkFn(done);
+      },
+    });
   };
 
   groupPromises.push(new Promise<void>((resolve, reject) => {
@@ -84,8 +131,12 @@ const group = (groupFn: GroupFunction) => {
     };
     
     benchmark = scope.benchmark;
+    setup = scope.setup;
+    
     groupFn(groupDone);
+    
     benchmark = oldBenchmark;
+    setup = oldSetup;
   }));
 };
 
@@ -100,6 +151,10 @@ const getClientInstance = () => {
 };
 
 group((end) => {
+  setup(() => {
+    this.client = 18;
+  });
+  
   benchmark('constructing an instance', (done) => {
     new ApolloClient({});
     done();
@@ -194,7 +249,10 @@ group((end) => {
 Promise.all(groupPromises).then(() => {
   console.log('Running benchmarks.');
   bsuite
-    .on('cycle', function(event: any) {
+    .on('error', (error: any) => {
+      console.log('Error: ', error);
+    })
+    .on('cycle', (event: any) => {
       console.log('Mean time in ms: ', event.target.stats.mean * 1000);
       console.log(String(event.target));
     })

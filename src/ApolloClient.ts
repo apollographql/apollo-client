@@ -51,10 +51,6 @@ import {
 } from './core/watchQueryOptions';
 
 import {
-  MutationBehaviorReducerMap,
-} from './data/mutationResults';
-
-import {
   storeKeyNameFromFieldNameAndArgs,
 } from './data/storeUtils';
 
@@ -141,7 +137,6 @@ export default class ApolloClient {
     resultComparator,
     ssrMode = false,
     ssrForceFetchDelay = 0,
-    mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
     addTypename = true,
     resultTransformer,
     customResolvers,
@@ -157,7 +152,6 @@ export default class ApolloClient {
     resultComparator?: ResultComparator,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
-    mutationBehaviorReducers?: MutationBehaviorReducerMap,
     addTypename?: boolean,
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
@@ -212,7 +206,6 @@ export default class ApolloClient {
 
     this.reducerConfig = {
       dataIdFromObject,
-      mutationBehaviorReducers,
       customResolvers,
     };
 

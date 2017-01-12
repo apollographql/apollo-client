@@ -75,7 +75,6 @@ import {
 } from '../data/readFromStore';
 
 import {
-  MutationBehavior,
   MutationQueryReducersMap,
   MutationQueryReducer,
 } from '../data/mutationResults';
@@ -214,14 +213,12 @@ export class QueryManager {
   public mutate<T>({
     mutation,
     variables,
-    resultBehaviors = [],
     optimisticResponse,
     updateQueries: updateQueriesByName,
     refetchQueries = [],
   }: {
     mutation: DocumentNode,
     variables?: Object,
-    resultBehaviors?: MutationBehavior[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[],
@@ -256,7 +253,6 @@ export class QueryManager {
       operationName: getOperationName(mutation),
       mutationId,
       optimisticResponse,
-      resultBehaviors,
       extraReducers: this.getExtraReducers(),
       updateQueries,
     });
@@ -277,7 +273,6 @@ export class QueryManager {
             document: mutation,
             operationName: getOperationName(mutation),
             variables,
-            resultBehaviors,
             extraReducers: this.getExtraReducers(),
             updateQueries,
           });

@@ -33,11 +33,6 @@ import {
 } from './storeUtils';
 
 import {
-  defaultMutationBehaviorReducers,
-  MutationBehaviorReducerArgs,
-} from './mutationResults';
-
-import {
   replaceQueryResults,
 } from './replaceQueryResults';
 
@@ -145,27 +140,6 @@ export function data(
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
       });
-
-      // TODO REFACTOR: remove result behaviors
-      if (constAction.resultBehaviors) {
-        constAction.resultBehaviors.forEach((behavior) => {
-          const args: MutationBehaviorReducerArgs = {
-            behavior,
-            result: constAction.result,
-            variables: queryStoreValue.variables,
-            document: constAction.document,
-            config,
-          };
-
-          if (defaultMutationBehaviorReducers[behavior.type]) {
-            newState = defaultMutationBehaviorReducers[behavior.type](newState, args);
-          } else if (config.mutationBehaviorReducers[behavior.type]) {
-            newState = config.mutationBehaviorReducers[behavior.type](newState, args);
-          } else {
-            throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
-          }
-        });
-      }
 
       // If this action wants us to update certain queries. Let’s do it!
       if (constAction.updateQueries) {

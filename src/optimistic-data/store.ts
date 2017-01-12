@@ -131,8 +131,6 @@ function getOptimisticDataPatch (
     config,
   );
 
-  // TODO: apply extra reducers and resultBehaviors to optimistic store?
-
   const patch: any = {};
 
   Object.keys(optimisticData).forEach(key => {

@@ -70,7 +70,7 @@ Note the use of the [`name` option on the `graphql()` call](higher-order-compone
 
 <h3 id="calling-mutations">Calling mutations</h3>
 
-Most mutations will require arguments in the form of query variables, and you may wish to also provide other options to [ApolloClient#mutate](/core/apollo-client-api.html#mutate).
+Most mutations will require arguments in the form of query variables, and you may wish to also provide other options to [ApolloClient#mutate](/core/apollo-client-api.html#ApolloClient.mutate).
 
 You can directly pass options to the default `mutate` prop when you call it in the wrapped component:
 

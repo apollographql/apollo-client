@@ -884,7 +884,7 @@ describe('optimistic mutation results', () => {
       });
     });
 
-    it('will handle dependant updates', done => {
+    it('will handle dependent updates', done => {
       networkInterface = mockNetworkInterface({
         request: { query },
         result,
@@ -1113,7 +1113,7 @@ describe('optimistic mutation results', () => {
       });
     });
 
-    it('will handle dependant updates', done => {
+    it('will handle dependent updates', done => {
       const customMutationResult1 = {
         data: {
           __typename: 'Mutation',

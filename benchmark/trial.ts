@@ -63,17 +63,23 @@ type BenchmarkFunction = (description: string, cycleFn: CycleFunction) => void;
 type GroupFunction = (done: DoneFunction) => void;
 type SetupCycleFunction = () => void;
 type SetupFunction = (setupFn: SetupCycleFunction) => void;
+type AfterCallbackFunction = (event: any) => void;
+type AfterFunction = (event: any) => void;
 
 let benchmark: BenchmarkFunction = null;
 let setup: SetupFunction = null;
+let after: AfterFunction = null;
 
 const groupPromises: Promise<void>[] = [];
 const group = (groupFn: GroupFunction) => {
   const oldBenchmark = benchmark;
   const oldSetup = setup;
+  const oldAfter = after;
+  
   const scope: {
     setup?: SetupFunction,
     benchmark?: BenchmarkFunction,
+    after?: AfterFunction,
   } = {};
   
   // This is a very important part of the tooling around benchmark.js.
@@ -90,12 +96,20 @@ const group = (groupFn: GroupFunction) => {
   // passed `count` times and record array of scopes that exist within SetupCycleFunction.
   // This array will be available to the `GroupCycleFunction`.
   //
+  // Note that you should not use this if your pre-benchmark setup consumes a "large"
+  // chunk of memory (for some defn. of large). This leads to a segfault in V8.
+  //
   // This makes it possible to write code in the `SetupCycleFunction`
   // almost as if it is run before every of the `CycleFunction`. Check in the benchmarks
   // themselves for an example of this.
   let setupFn: SetupCycleFunction = null;
   scope.setup = (setupFnArg: SetupCycleFunction) => {
     setupFn = setupFnArg;
+  };
+
+  let afterFn: AfterCallbackFunction = null;
+  scope.after = (afterFnArg: AfterCallbackFunction) => {
+    afterFn = afterFnArg;
   };
   
   scope.benchmark = (description: string, benchmarkFn: CycleFunction) => {
@@ -131,6 +145,12 @@ const group = (groupFn: GroupFunction) => {
         const passingScope = merge({}, this, scopes[cycleCount]) as SetupScope;
         benchmarkFn(done, passingScope);
       },
+      
+      onComplete: (event: any) => {
+        if (afterFn) {
+          afterFn(event);
+        }
+      },
     });
   };
 
@@ -141,11 +161,13 @@ const group = (groupFn: GroupFunction) => {
     
     benchmark = scope.benchmark;
     setup = scope.setup;
+    after = scope.after;
     
     groupFn(groupDone);
     
     benchmark = oldBenchmark;
     setup = oldSetup;
+    after = oldAfter;
   }));
 };
 
@@ -173,6 +195,12 @@ group((end) => {
     client.query({ query: simpleQuery }).then((result) => {
       done();
     });
+  });
+
+  after((event: any) => {
+    console.log('Completed the benchmark for fetching a query result from the mocked server.');
+    console.log('Event info: ');
+    console.log(event);
   });
   end();
 });
@@ -225,8 +253,8 @@ group((end) => {
   // This benchmark is supposed to check whether the time
   // taken to deliver updates is linear in subscribers or not.
   // (Should be linear).
-  for(let countR = 1; countR < 10; countR++) {
-    const count = countR * 25 + 100;
+  for(let countR = 1; countR < 100; countR++) {
+    const count = countR * 5;
     benchmark(`write data and deliver update to ${count} subscribers`, (done) => {
       const promises: Promise<void>[] = [];
       const client = getClientInstance();

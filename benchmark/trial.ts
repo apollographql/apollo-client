@@ -168,12 +168,8 @@ group((end) => {
 });
 
 group((end) => {
-  setup(() => {
-    this.client = getClientInstance();
-  });
-  
   benchmark('fetching a query result from mocked server', (done, setupScope) => {
-    const client = setupScope.client as ApolloClient;
+    const client = getClientInstance();
     client.query({ query: simpleQuery }).then((result) => {
       done();
     });
@@ -181,6 +177,7 @@ group((end) => {
   end();
 });
 
+/*
 group((end) => {
   const client = getClientInstance();
   const myBenchmark = benchmark;
@@ -196,13 +193,13 @@ group((end) => {
     });
     end();
   });
-});
+}); */
 
 group((end) => {
   // TOOD need to figure out a way to run some code before
   // every call of this benchmark so that the client instance
   // and observable can be set up outside of the timed region.
-  benchmark('write data and receive update from the cache', (done) => {
+  benchmark('write data and receive update from the cache', (done, setupScope) => {
     const client = getClientInstance();
     const observable = client.watchQuery({
       query: simpleQuery,
@@ -228,30 +225,33 @@ group((end) => {
   // This benchmark is supposed to check whether the time
   // taken to deliver updates is linear in subscribers or not.
   // (Should be linear).
-  benchmark('write data and deliver update to 10 subscribers', (done) => {
-    const promises: Promise<void>[] = [];
-    const client = getClientInstance();
-
-    times(10, () => {
-      promises.push(new Promise<void>((resolve, reject) => {
-        client.watchQuery({
-          query: simpleQuery,
-          noFetch: true,
-        }).subscribe({
-          next(res: ApolloQueryResult<Object>) {
-            if (Object.keys(res.data).length > 0) {
-              resolve();
+  for(let countR = 1; countR < 10; countR++) {
+    const count = countR * 25 + 100;
+    benchmark(`write data and deliver update to ${count} subscribers`, (done) => {
+      const promises: Promise<void>[] = [];
+      const client = getClientInstance();
+      
+      times(count, () => {
+        promises.push(new Promise<void>((resolve, reject) => {
+          client.watchQuery({
+            query: simpleQuery,
+            noFetch: true,
+          }).subscribe({
+            next(res: ApolloQueryResult<Object>) {
+              if (Object.keys(res.data).length > 0) {
+                resolve();
+              }
             }
-          }
-        });
-      }));
-    });
+          });
+        }));
+      });
 
-    client.query({ query: simpleQuery });
-    Promise.all(promises).then(() => {
-      done();
+      client.query({ query: simpleQuery });
+      Promise.all(promises).then(() => {
+        done();
+      });
     });
-  });
+  }
   end();
 });
 

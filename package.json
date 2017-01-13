@@ -8,7 +8,7 @@
   "typings": "./lib/src/index.d.ts",
   "scripts": {
     "dev": "./scripts/dev.sh",
-    "deploy": "rm -rf ./lib && ./scripts/deploy.sh",
+    "deploy": "./scripts/deploy.sh",
     "pretest": "npm run compile:test",
     "test": "npm run testonly --",
     "posttest": "npm run lint",

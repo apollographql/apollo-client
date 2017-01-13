@@ -66,8 +66,6 @@ export function optimistic(
       config,
     );
 
-    // TODO: apply extra reducers and resultBehaviors to optimistic store?
-
     const patch: any = {};
 
     Object.keys(fakeDataResultState).forEach(key => {

@@ -1067,6 +1067,78 @@ describe('mutation results', () => {
       });
     });
 
+    it('merges results from multiple reducers instead of stacking them', () => {
+      let counter = 0;
+      let counter2 = 0;
+      let observableQuery: any;
+      let observableQuery2: any;
+
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      }, {
+        request: { query: query2 },
+        result: result2,
+      }, {
+        request: { query: query2 },
+        result: result2,
+      })
+      .then(() => {
+        observableQuery = client.watchQuery({
+          query: query2,
+          reducer: (previousResult, action) => {
+            counter++;
+            if (isMutationResultAction(action)) {
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.newTodos.unshift(action.result.data['createTodo']);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null,
+        });
+        observableQuery2 = client.watchQuery({
+          query: query2,
+          forceFetch: true,
+          reducer: (previousResult, action) => {
+            counter2++;
+            if (isMutationResultAction(action)) {
+              const newResult = cloneDeep(previousResult) as any;
+              newResult.newTodos.unshift(action.result.data['createTodo']);
+              return newResult;
+            }
+            return previousResult;
+          },
+        }).subscribe({
+          next: () => null,
+        });
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+        });
+      })
+      .then(() => {
+        return client.query({ query: query2 });
+      })
+      .then((newResult: any) => {
+        observableQuery.unsubscribe();
+
+        // The reducer should have been called twice. once for the mutation, once for the query
+        assert.equal(counter, 2);
+        // The reducer should have been called once (for the mutation)
+        assert.equal(counter2, 1);
+
+        console.log(newResult);
+        // There should be only one more todo item (merging) than before, not 2 (stacking)
+        assert.equal(newResult.data.newTodos.length, 2);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.newTodos[0].text, 'This one was created with a mutation.');
+      })
+    });
+
     it('does not fail if the query is still loading', () => {
       function setupReducerObsHandle(...mockedResponses: any[]) {
         networkInterface = mockNetworkInterface({

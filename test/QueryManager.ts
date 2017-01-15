@@ -3344,6 +3344,18 @@ describe('QueryManager', () => {
       );
     });
 
+    it('transforms watchQuery() currentResult()', () => {
+      response = {data: {foo: 123}};
+      const observable = client.watchQuery({query: gql`{ foo }`});
+
+      return observableToPromise({ observable },
+        () => {
+          const result = observable.currentResult();
+          assert.isNumber((result.data as any).transformCount);
+        },
+      );
+    });
+
     it('does not transform identical watchQuery() results', () => {
       response = {data: {foo: 123}};
       const observable = client.watchQuery({query: gql`{ foo }`});

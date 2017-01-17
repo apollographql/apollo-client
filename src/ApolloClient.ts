@@ -132,22 +132,7 @@ export default class ApolloClient {
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
-  constructor({
-    networkInterface,
-    reduxRootKey,
-    reduxRootSelector,
-    initialState,
-    dataIdFromObject,
-    resultComparator,
-    ssrMode = false,
-    ssrForceFetchDelay = 0,
-    mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
-    addTypename = true,
-    resultTransformer,
-    customResolvers,
-    connectToDevTools,
-    queryDeduplication = false,
-  }: {
+  constructor(options: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
     reduxRootSelector?: string | ApolloStateSelector,
@@ -163,6 +148,22 @@ export default class ApolloClient {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
   } = {}) {
+    let {
+      networkInterface,
+      reduxRootKey,
+      reduxRootSelector,
+      initialState,
+      dataIdFromObject,
+      resultComparator,
+      ssrMode = false,
+      ssrForceFetchDelay = 0,
+      mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
+      addTypename = true,
+      resultTransformer,
+      customResolvers,
+      connectToDevTools,
+      queryDeduplication = false,
+    } = options;
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
     }

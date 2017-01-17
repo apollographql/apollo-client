@@ -6,6 +6,8 @@ Expect active development and potentially significant breaking changes in the `0
 - ...
 - Allow optional mutation arguments. [PR #1174](https://github.com/apollostack/apollo-client/pull/1174)
 - Fix typings error with `strictNullChecks` [PR #1188](https://github.com/apollostack/apollo-client/pull/1188)
+- Add IResponse to NetworkErrors
+(https://github.com/apollostack/apollo-client/issues/1199)
 
 ### 0.7.3
 - *Fixed breaking change:* readQueryFromStore was incomptibale with Typescript 2.0 compiler. [PR #1171](https://github.com/apollostack/apollo-client/pull/1171)

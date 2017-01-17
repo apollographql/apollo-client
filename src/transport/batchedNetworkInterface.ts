@@ -16,6 +16,8 @@ import {
   QueryBatcher,
 } from './batching';
 
+import HttpNetworkError from '../errors/HttpNetworkError';
+
 import { assign } from '../util/assign';
 
 // An implementation of the network interface that operates over HTTP and batches
@@ -64,12 +66,19 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
         return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
           .then(result => {
+            const httpResponse = result as IResponse;
+
+            if (!httpResponse.ok) {
+              throw new HttpNetworkError({
+                request: requestsAndOptions,
+                response: httpResponse,
+              });
+            }
+
             // XXX can we be stricter with the type here?
             return result.json() as any;
           })
           .then(responses => {
-
-
             if (typeof responses.map !== 'function') {
               throw new Error('BatchingNetworkInterface: server response is not an array');
             }

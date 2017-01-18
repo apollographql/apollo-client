@@ -34,6 +34,7 @@ const simpleQuery = gql`
       lastName
     }
 }`;
+
 const simpleResult = {
   data: {
     author: {
@@ -78,9 +79,6 @@ group((end) => {
 });
 
 group((end) => {
-  // TOOD need to figure out a way to run some code before
-  // every call of this benchmark so that the client instance
-  // and observable can be set up outside of the timed region.
   benchmark('write data and receive update from the cache', (done, setupScope) => {
     const client = getClientInstance();
     const observable = client.watchQuery({

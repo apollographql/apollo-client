@@ -10,7 +10,7 @@ import {
 // easier to use for our benchmarking needs.
 
 // Specifically, it provides `group` and `benchmark`, examples of which
-// can be seen below.The functions allow you to manage scope and async
+// can be seen within the benchmarks.The functions allow you to manage scope and async
 // code more easily than benchmark.js typically allows.
 //
 // `group` is meant to provide a way to execute code that sets up the scope variables for your
@@ -55,13 +55,37 @@ export function log(logString: string, ...args: any[]) {
   console.log(logString, ...args);
 }
 
-export const groupPromises: Promise<void>[] = [];
-export const group = (groupFn: GroupFunction) => {
-  const oldBenchmark = benchmark;
-  const oldSetup = setup;
-  const oldAfterEach = afterEach;
-  const oldAfterAll = afterAll;
+interface Scope {
+  benchmark?: BenchmarkFunction,
+  setup?: SetupFunction,
+  afterEach?: AfterEachFunction,
+  afterAll?: AfterAllFunction,
+};
 
+// Internal function that returns the current exposed functions
+// benchmark, setup, etc.
+function currentScope() {
+  return {
+    benchmark,
+    setup,
+    afterEach,
+    afterAll,
+  };
+}
+
+// Internal function that lets us set benchmark, setup, afterEach, etc.
+// in a reasonable fashion.
+function setScope(scope: Scope) {
+  benchmark = scope.benchmark;
+  setup = scope.setup;
+  afterEach = scope.afterEach;
+  afterAll = scope.afterAll;
+}
+
+export const groupPromises: Promise<void>[] = [];
+
+export const group = (groupFn: GroupFunction) => {
+  const oldScope = currentScope();
   const scope: {
     setup?: SetupFunction,
     benchmark?: BenchmarkFunction,
@@ -164,17 +188,10 @@ export const group = (groupFn: GroupFunction) => {
       resolve();
     };
 
-    benchmark = scope.benchmark;
-    setup = scope.setup;
-    afterEach = scope.afterEach;
-    afterAll = scope.afterAll;
-
+    setScope(scope);
     groupFn(groupDone);
-
-    benchmark = oldBenchmark;
-    setup = oldSetup;
-    afterEach = oldAfterEach;
-    afterAll = oldAfterAll;
+    setScope(oldScope);
+    
   }));
 };
 

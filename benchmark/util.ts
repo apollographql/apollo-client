@@ -56,10 +56,10 @@ export function log(logString: string, ...args: any[]) {
 }
 
 interface Scope {
-  benchmark?: BenchmarkFunction,
-  setup?: SetupFunction,
-  afterEach?: AfterEachFunction,
-  afterAll?: AfterAllFunction,
+  benchmark?: BenchmarkFunction;
+  setup?: SetupFunction;
+  afterEach?: AfterEachFunction;
+  afterAll?: AfterAllFunction;
 };
 
 // Internal function that returns the current exposed functions
@@ -191,7 +191,7 @@ export const group = (groupFn: GroupFunction) => {
     setScope(scope);
     groupFn(groupDone);
     setScope(oldScope);
-    
+
   }));
 };
 
@@ -209,8 +209,3 @@ export function runBenchmarks() {
       .run({'async': false});
   });
 }
-
-
-
-
-

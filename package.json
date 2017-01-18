@@ -11,6 +11,7 @@
     "deploy": "./scripts/deploy.sh",
     "pretest": "npm run compile:test",
     "test": "npm run testonly --",
+    "benchmark": "npm run compile:benchmark && node --stack-size=20000 lib/benchmark/index.js",
     "posttest": "npm run lint",
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=27",
     "compile": "tsc",

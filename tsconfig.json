@@ -22,6 +22,6 @@
     "fetch-mock.typings.d.ts",
     "src/index.ts",
     "test/tests.ts",
-    "benchmark/trial.ts"
+    "benchmark/index.ts"
    ]
 }

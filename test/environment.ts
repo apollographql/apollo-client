@@ -28,18 +28,9 @@ describe('environment', () => {
         });
     });
 
-    it(`should return false if there's no value`, () => {
-      process.env.NODE_ENV = undefined;
-      assert.isFalse(isEnv('production'));
-    });
-
-    it(`should return false if there's no process`, () => {
-      const keepProcess = process;
-
-      process = undefined;
-      assert.isFalse(isEnv('production'));
-
-      process = keepProcess;
+    it(`should treat no proces.env.NODE_ENV as it'd be in development`, () => {
+      delete process.env.NODE_ENV;
+      assert.isTrue(isEnv('development'));
     });
   });
 
@@ -51,7 +42,7 @@ describe('environment', () => {
 
     it('should return false if not in production', () => {
       process.env.NODE_ENV = 'test';
-      assert.isFalse(isProduction());
+      assert.isTrue(!isProduction());
     });
   });
 
@@ -63,7 +54,7 @@ describe('environment', () => {
 
     it('should return true if not in test', () => {
       process.env.NODE_ENV = 'development';
-      assert.isFalse(isTest());
+      assert.isTrue(!isTest());
     });
   });
 
@@ -73,9 +64,14 @@ describe('environment', () => {
       assert.isTrue(isDevelopment());
     });
 
-    it('should return true if not in development', () => {
+    it('should return true if not in development and environment is defined', () => {
       process.env.NODE_ENV = 'test';
-      assert.isFalse(isDevelopment());
+      assert.isTrue(!isDevelopment());
+    });
+
+    it('should make development as the default environment', () => {
+      delete process.env.NODE_ENV;
+      assert.isTrue(isDevelopment());
     });
   });
 });

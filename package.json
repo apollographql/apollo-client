@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.7.0",
+  "version": "0.7.3",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/src/index.js",
@@ -8,7 +8,7 @@
   "typings": "./lib/src/index.d.ts",
   "scripts": {
     "dev": "./scripts/dev.sh",
-    "deploy": "rm -rf ./lib && ./scripts/deploy.sh",
+    "deploy": "./scripts/deploy.sh",
     "pretest": "npm run compile:test",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
@@ -48,7 +48,8 @@
     "graphql-anywhere": "^2.0.0",
     "graphql-tag": "^1.1.1",
     "redux": "^3.4.0",
-    "symbol-observable": "^1.0.2"
+    "symbol-observable": "^1.0.2",
+    "whatwg-fetch": "^2.0.0"
   },
   "devDependencies": {
     "@types/chai": "^3.4.32",
@@ -76,12 +77,12 @@
     "pretty-bytes": "^4.0.0",
     "remap-istanbul": "0.8.0",
     "request": "^2.75.0",
-    "rollup": "^0.40.0",
+    "rollup": "^0.41.3",
     "rxjs": "^5.0.0-beta.11",
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "tslint": "4.3.1",
-    "typescript": "2.1.4",
+    "typescript": "2.1.5",
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",
     "webpack-bundle-analyzer": "^2.1.1"

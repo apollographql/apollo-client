@@ -27,7 +27,13 @@ import {
   ApolloReducerConfig,
 } from '../store';
 
-import { isEqual } from '../util/isEqual';
+import {
+  isEqual,
+} from '../util/isEqual';
+
+import {
+  isTest,
+} from '../util/environment';
 
 /**
  * The key which the cache id for a given value is stored in the result object. This key is private
@@ -141,7 +147,7 @@ true option set in Apollo Client. Please turn on that option so that we can accu
 match fragments.`);
 
       /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
+      if (!isTest()) {
         // When running tests, we want to print the warning every time
         haveWarned = true;
       }

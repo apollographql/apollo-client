@@ -53,6 +53,10 @@ import {
   createStoreReducer,
 } from '../data/resultReducers';
 
+import {
+  isProduction,
+} from '../util/environment';
+
 import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
 import {
@@ -350,7 +354,7 @@ export class QueryManager {
             }
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
-            if (process.env.NODE_ENV !== 'production') {
+            if (!isProduction()) {
               /* tslint:disable-next-line */
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +

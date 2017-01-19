@@ -3,13 +3,15 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- ...
 - Allow optional mutation arguments. [PR #1174](https://github.com/apollostack/apollo-client/pull/1174)
+- Fix typings error with `strictNullChecks` [PR #1188](https://github.com/apollostack/apollo-client/pull/1188)
 
 ### 0.7.3
 - *Fixed breaking change:* readQueryFromStore was incomptibale with Typescript 2.0 compiler. [PR #1171](https://github.com/apollostack/apollo-client/pull/1171)
 
 ### 0.7.2
-Re-release of 0.7.1 with proper internal directory structure 
+Re-release of 0.7.1 with proper internal directory structure
 
 ### 0.7.1
 - *Undo breaking change:* Add whatwg-fetch polyfill (most likely only until version 1.0) [PR #1155](https://github.com/apollostack/apollo-client/pull/1155)

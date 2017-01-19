@@ -1,3 +1,7 @@
+import {
+  isDevelopment,
+  isTest,
+} from './environment';
 
 // taken straight from https://github.com/substack/deep-freeze to avoid import hassles with rollup
 function deepFreeze (o: any) {
@@ -16,7 +20,7 @@ function deepFreeze (o: any) {
 };
 
 export default function maybeDeepFreeze(obj: any) {
-  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+  if (isDevelopment() || isTest()) {
     return deepFreeze(obj);
   }
   return obj;

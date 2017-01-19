@@ -1,6 +1,11 @@
 /**
  * Performs a deep equality check on two JavaScript values.
  */
+const toString = Object.prototype.toString;
+const isDate = function(obj: any): boolean {
+  return toString.call(obj) === '[object Date]';
+};
+
 export function isEqual (a: any, b: any): boolean {
   // If the two values are strictly equal, we are good.
   if (a === b) {
@@ -27,6 +32,11 @@ export function isEqual (a: any, b: any): boolean {
         return false;
       }
     }
+
+    if (isDate(a) && isDate(b)) {
+      return +a === +b;
+    }
+
     // If we made it this far the objects are equal!
     return true;
   }

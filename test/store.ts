@@ -151,7 +151,6 @@ describe('createApolloStore', () => {
           'forceFetch': false,
           'graphQLErrors': null as any,
           'lastRequestId': 1,
-          'loading': true,
           'networkStatus': 1,
           'networkError': null as any,
           'previousVariables': undefined as any,

@@ -1,8 +1,6 @@
 import { DocumentNode } from 'graphql';
-import {
-  QueryStoreValue,
-  NetworkStatus,
-} from '../queries/store';
+import { QueryStoreValue } from '../queries/store';
+import { NetworkStatus } from '../queries/networkStatus';
 
 export interface SubscriptionOptions {
   document: DocumentNode;

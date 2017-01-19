@@ -56,7 +56,7 @@ import {
   Observer,
 } from '../src/util/Observable';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 import wrap, { withWarning } from './util/wrap';
 

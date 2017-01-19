@@ -31,7 +31,7 @@ import {
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests

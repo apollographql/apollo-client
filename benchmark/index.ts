@@ -19,13 +19,18 @@ import {
   ObservableQuery,
 } from '../src/index';
 
-import mockNetworkInterface from '../test/mocks/mockNetworkInterface';
+import mockNetworkInterface, {
+  MockedResponse,
+} from '../test/mocks/mockNetworkInterface';
 
 import {
   Deferred,
 } from 'benchmark';
 
-import { times } from 'lodash';
+import {
+  times,
+  cloneDeep,
+} from 'lodash';
 
 const simpleQuery = gql`
   query {
@@ -58,6 +63,7 @@ const getClientInstance = () => {
     addTypename: false,
   });
 };
+/* 
 
 group((end) => {
   benchmark('constructing an instance', (done) => {
@@ -151,5 +157,106 @@ group((end) => {
   });
   end();
 });
+*/
 
+times(25, (countR: number) => {
+  const count = (countR + 1) * 10;
+  const query = gql`
+    query($id: String) {
+      author(id: $id) {
+        name
+        id
+        __typename
+      }
+    }`;
+  const originalVariables = {id: 1};
+  const originalResult = {
+    data: {
+      author: {
+        name: 'John Smith',
+        id: 1,
+        __typename: 'Author',
+      },
+    },
+  };
+
+  group((end) => {
+    // construct a set of mocked responses that each
+    // returns an author with a different id (but the
+    // same name) so we can populate the cache.
+    const mockedResponses: MockedResponse[]  = [];
+    times(count, (index) => {
+      const result = cloneDeep(originalResult);
+      result.data.author.id = index;
+
+      const variables = cloneDeep(originalVariables);
+      variables.id = index;
+      
+      mockedResponses.push({
+        request: { query, variables },
+        result,
+      });
+    });
+    
+    const client = new ApolloClient({
+      networkInterface: mockNetworkInterface(...mockedResponses),
+      addTypename: false,
+      dataIdFromObject: (object: any) => {
+        if (object.__typename && object.id) {
+          return object.__typename + '__' + object.id;
+        }
+        return null;
+      },
+    });
+
+    // insert a bunch of stuff into the cache
+    const promises = times(count, (index) => {
+      return client.query({
+        query,
+        variables: { id: index }
+      }).then((result) => {
+        return Promise.resolve({});
+      }).catch((err) => {
+        console.log('Error: ');
+        console.log(err);
+      });
+    });
+    
+    const myBenchmark = benchmark;
+    Promise.all(promises).then(() => {
+      myBenchmark(`read single item from cache with ${count} items in cache`, (done) => {
+        const randomIndex = Math.floor(Math.random() * count);
+        client.query({
+          query,
+          variables: { id: randomIndex },
+        }).then((result) => {
+          done();
+        });
+      });
+
+      times(4, (readCountIndex) => {
+        const readCount = (readCountIndex + 1) * 10;
+        myBenchmark(`read ${readCount} items with ${count} items in cache`, (done) => {
+          const promises = times(readCount, () => {
+            const randomIndex = Math.floor(Math.random() * count);
+            return client.query({
+              query,
+              variables: { id: randomIndex },
+            });
+          });
+
+          Promise.all(promises).then(() => {
+            done();
+          });
+        });
+      });
+      
+      end();
+    }).catch((err) => {
+      console.log(err);
+      console.log('fuck');
+    });
+
+  });
+});
 runBenchmarks();

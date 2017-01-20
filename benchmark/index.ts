@@ -159,6 +159,7 @@ group((end) => {
 });
 */
 
+/*
 times(25, (countR: number) => {
   const count = (countR + 1) * 10;
   const query = gql`
@@ -223,8 +224,12 @@ times(25, (countR: number) => {
     });
     
     const myBenchmark = benchmark;
+    const myAfterEach = afterEach;
     Promise.all(promises).then(() => {
-      myBenchmark(`read single item from cache with ${count} items in cache`, (done) => {
+      myBenchmark({
+        name: `read single item from cache with ${count} items in cache`,
+        count,
+      }, (done) => {
         const randomIndex = Math.floor(Math.random() * count);
         client.query({
           query,
@@ -234,29 +239,79 @@ times(25, (countR: number) => {
         });
       });
 
-      times(4, (readCountIndex) => {
-        const readCount = (readCountIndex + 1) * 10;
-        myBenchmark(`read ${readCount} items with ${count} items in cache`, (done) => {
-          const promises = times(readCount, () => {
-            const randomIndex = Math.floor(Math.random() * count);
-            return client.query({
-              query,
-              variables: { id: randomIndex },
-            });
-          });
+      end();
+    });
+  });
+}); */
 
-          Promise.all(promises).then(() => {
-            done();
-          });
+// Measure the amount of time it takes to read a bunch of
+// objects from the cache.
+
+times(50, (index) => {
+  group((end) => {
+    const query = gql`
+      query($id: String) {
+        house(id: $id) {
+          reservations {
+            name
+            id
+          }
+        }
+      }`;
+    const houseId = "12";
+    const reservations: {
+      name: string,
+      id: string,
+    }[] = [];
+    const reservationCount = (index + 1) * 15;
+    times(reservationCount, (index) => {
+      reservations.push({
+        name: 'Fake Reservation',
+        id: index.toString(),
+      });
+    });
+    
+    const variables = {id: houseId };
+    const result = {
+      data: {
+        house: {
+          reservations,
+        },
+      },
+    }
+    
+    const client = new ApolloClient({
+      networkInterface: mockNetworkInterface({
+        request: { query, variables },
+        result,
+      }),
+      addTypename: false,
+      dataIdFromObject: (object: any) => {
+        if (object.__typename && object.id) {
+          return object.__typename + '__' + object.id;
+        }
+        return null;
+      },
+    });
+
+    const myBenchmark = benchmark;
+    client.query({
+      query,
+      variables,
+    }).then(() => {
+      myBenchmark(`read result with ${reservationCount} items associated with the result`, (done) => {
+        client.query({
+          query,
+          variables,
+          noFetch: true,
+        }).then((result) => {
+          done();
         });
       });
       
       end();
-    }).catch((err) => {
-      console.log(err);
-      console.log('fuck');
     });
-
   });
 });
+
 runBenchmarks();

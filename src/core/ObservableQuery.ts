@@ -282,6 +282,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     };
   }
 
+  // Note: if the query is not active (there are no subscribers), the promise
+  // will return null immediately.
   public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult<T>> {
     const oldOptions = this.options;
     this.options = {
@@ -296,12 +298,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     }
 
     // If forceFetch went from false to true or noFetch went from true to false
-    if ((!oldOptions.forceFetch && opts.forceFetch) || (oldOptions.noFetch && !opts.noFetch)) {
-      return this.queryManager.fetchQuery(this.queryId, this.options)
-        .then(result => this.queryManager.transformResult(result));
-    }
+    const tryFetch: boolean = (!oldOptions.forceFetch && opts.forceFetch)
+      || (oldOptions.noFetch && !opts.noFetch);
 
-    return this.setVariables(this.options.variables);
+    return this.setVariables(this.options.variables, tryFetch);
   }
 
   /**
@@ -311,19 +311,41 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
    * Note: if the variables have not changed, the promise will return the old
    * results immediately, and the `next` callback will *not* fire.
    *
+   * Note: if the query is not active (there are no subscribers), the promise
+   * will return null immediately.
+   *
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
+   *
+   * @param tryFetch: Try and fetch new results even if the variables haven't
+   * changed (we may still just hit the store, but if there's nothing in there
+   * this will refetch)
    */
-  public setVariables(variables: any): Promise<ApolloQueryResult<T>> {
+  public setVariables(variables: any, tryFetch: boolean = false): Promise<ApolloQueryResult<T>> {
     const newVariables = {
       ...this.variables,
       ...variables,
     };
 
-    if (isEqual(newVariables, this.variables)) {
+    const nullPromise = new Promise((resolve) => resolve(null));
+
+    if (isEqual(newVariables, this.variables) && !tryFetch) {
+      // If we have no observers, then we don't actually want to make a network
+      // request. As soon as someone observes the query, the request will kick
+      // off. For now, we just store any changes. (See #1077)
+      if (this.observers.length === 0) {
+        return nullPromise;
+      }
+
       return this.result();
     } else {
       this.variables = newVariables;
+
+      // See comment above
+      if (this.observers.length === 0) {
+        return nullPromise;
+      }
+
       // Use the same options as before, but with new variables
       return this.queryManager.fetchQuery(this.queryId, {
         ...this.options,

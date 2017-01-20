@@ -378,6 +378,14 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('does not perform a query when unsubscribed if variables change', () => {
+      // Note: no responses, will throw if a query is made
+      const queryManager = mockQueryManager();
+      const observable = queryManager.watchQuery({ query, variables });
+
+      return observable.setVariables(differentVariables);
+    });
+
     it('sets networkStatus to `setVariables` when fetching', (done) => {
       const mockedResponses = [{
         request: { query, variables },

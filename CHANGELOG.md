@@ -4,12 +4,14 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Fix bug where there could be store inconsistencies for two dependent optimistic updates [PR #1144](https://github.com/apollostack/apollo-client/pull/1144)
+- Fix typings error with `strictNullChecks` [PR #1188](https://github.com/apollostack/apollo-client/pull/1188)
+- ...
 
 ### 0.7.3
 - *Fixed breaking change:* readQueryFromStore was incomptibale with Typescript 2.0 compiler. [PR #1171](https://github.com/apollostack/apollo-client/pull/1171)
 
 ### 0.7.2
-Re-release of 0.7.1 with proper internal directory structure 
+Re-release of 0.7.1 with proper internal directory structure
 
 ### 0.7.1
 - *Undo breaking change:* Add whatwg-fetch polyfill (most likely only until version 1.0) [PR #1155](https://github.com/apollostack/apollo-client/pull/1155)

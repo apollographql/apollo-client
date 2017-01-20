@@ -16,7 +16,6 @@ import {
 } from 'graphql';
 
 function isStringValue(value: ValueNode): value is StringValueNode {
-
   return value.kind === 'StringValue';
 }
 
@@ -58,10 +57,7 @@ function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNo
     value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
     argObj[name.value] = nestedArgObj;
   } else if (isVariable(value)) {
-    if (! variables || !(value.name.value in variables)) {
-      throw new Error(`The inline argument "${value.name.value}" is expected as a variable but was not provided.`);
-    }
-    const variableValue = (variables as any)[value.name.value];
+    const variableValue = (variables || {} as any)[value.name.value];
     argObj[name.value] = variableValue;
   } else if (isListValue(value)) {
     argObj[name.value] = value.values.map((listValue) => {

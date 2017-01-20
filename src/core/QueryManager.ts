@@ -288,6 +288,13 @@ export class QueryManager {
             extraReducers: this.getExtraReducers(),
           });
 
+          // If there was an error in our reducers, reject this promise!
+          const { reducerError } = this.getApolloState();
+          if (reducerError) {
+            reject(reducerError);
+            return;
+          }
+
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
           delete this.queryDocuments[mutationId];
           resolve(this.transformResult(<ApolloQueryResult<T>>result));

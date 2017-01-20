@@ -435,9 +435,10 @@ describe('QueryManager', () => {
           done(new Error('Should not fire next for an error'));
         },
         error(error) {
-          assert.isNull(error);
+          assert.deepEqual((error as any).graphQLErrors, [null]);
+          assert.equal(error.message, 'GraphQL error: Error message not found.');
           done();
-        }
+        },
       },
     });
   });

@@ -91,10 +91,10 @@ export default class ApolloClient {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public resultTransformer: ResultTransformer;
-  public resultComparator: ResultComparator;
+  public resultTransformer: ResultTransformer | undefined;
+  public resultComparator: ResultComparator | undefined;
   public shouldForceFetch: boolean;
-  public dataId: IdGetter;
+  public dataId: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
@@ -148,7 +148,7 @@ export default class ApolloClient {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
   } = {}) {
-    let {
+    const {
       networkInterface,
       reduxRootKey,
       reduxRootSelector,
@@ -227,11 +227,7 @@ export default class ApolloClient {
       !isProduction() &&
       typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__);
 
-    if (typeof connectToDevTools === 'undefined') {
-      connectToDevTools = defaultConnectToDevTools;
-    }
-
-    if (connectToDevTools) {
+    if (typeof connectToDevTools === 'undefined' ? defaultConnectToDevTools : connectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
     }
 

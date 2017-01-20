@@ -83,7 +83,7 @@ export interface MutationInitAction {
   variables: Object;
   operationName: string;
   mutationId: string;
-  optimisticResponse: Object;
+  optimisticResponse: Object | undefined;
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
 }

@@ -90,11 +90,11 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
 
   constructor(uri: string, opts: RequestInit = {}) {
     if (!uri) {
-      throw new Error('A remote endpoint is required for a network layer');
+      throw new Error('A remote endpoint (uri) is required for a network layer, see http://dev.apollodata.com/core/network.html#createNetworkInterface');
     }
 
     if (typeof uri !== 'string') {
-      throw new Error('Remote endpoint must be a string');
+      throw new Error('uri must be a string');
     }
 
     this._uri = uri;

@@ -42,7 +42,6 @@ import './scheduler';
 import './mutationResults';
 import './optimistic';
 import './fetchMore';
-import './scopeQuery';
 import './errors';
 import './mockNetworkInterface';
 import './graphqlSubscriptions';

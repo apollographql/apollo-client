@@ -90,7 +90,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
 
   constructor(uri: string, opts: RequestInit = {}) {
     if (!uri) {
-      throw new Error('A remote enpdoint is required for a network layer');
+      throw new Error('A remote endpoint is required for a network layer');
     }
 
     if (typeof uri !== 'string') {

@@ -30,14 +30,48 @@ const client = new ApolloClient(meteorClientConfig());
 
 ### Server
 
-Define your schema and resolvers, and then set up the Apollo server with [`createApolloServer`](#createApolloServer):
+Create the following files:
+
+```bash
+/imports/api/schema.js         # a JavaScript file with the schema
+/imports/api/resolvers.js      # a JavaScript file with the Apollo resolvers
+```
+
+Define a simple [`schema`](http://dev.apollodata.com/tools/graphql-tools/generate-schema.html) under schema.js.
+
+```js
+
+export const typeDefs = `
+type Query {
+  say: String
+}
+
+schema {
+  query: Query
+}
+`;
+```
+
+Define your first [`resolver`](http://dev.apollodata.com/tools/graphql-tools/resolvers.html) under resolvers.js.
+
+```js
+export const resolvers = {
+  Query: {
+    say(root, args, context) {
+      return 'hello world';
+    }
+  }
+}
+```
+
+Set up the Apollo server with [`createApolloServer`](#createApolloServer):
 
 ```js
 import { createApolloServer } from 'meteor/apollo';
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 
-import typeDefs from '/imports/api/schema';
-import resolvers from '/imports/api/resolvers';
+import { typeDefs } from '/imports/api/schema';
+import { resolvers } from '/imports/api/resolvers';
 
 const schema = makeExecutableSchema({
   typeDefs,
@@ -49,7 +83,15 @@ createApolloServer({
 });
 ```
 
-The [GraphiQL](https://github.com/graphql/graphiql) url by default is [http://localhost:3000/graphiql](http://localhost:3000/graphiql)
+The [GraphiQL](https://github.com/graphql/graphiql) url by default is [http://localhost:3000/graphiql](http://localhost:3000/graphiql). You can now test your first query:
+
+```js
+{
+  say
+}
+```
+
+
 
 Inside your resolvers, if the user is logged in, their id will be `context.userId` and their user doc will be `context.user`:
 

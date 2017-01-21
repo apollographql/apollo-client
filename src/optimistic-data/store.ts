@@ -14,7 +14,16 @@ import {
 } from '../data/storeUtils';
 
 import {
+  QueryStore,
+} from '../queries/store';
+
+import {
+  MutationStore,
+} from '../mutations/store';
+
+import {
   Store,
+  ApolloReducerConfig,
 } from '../store';
 
   import { assign } from '../util/assign';
@@ -51,6 +60,7 @@ export function optimistic(
       mutationId: action.mutationId,
       resultBehaviors: action.resultBehaviors,
       extraReducers: action.extraReducers,
+      updateQueries: action.updateQueries,
     };
 
     const fakeStore = {
@@ -58,7 +68,8 @@ export function optimistic(
       optimistic: previousState,
     };
     const optimisticData = getDataWithOptimisticResults(fakeStore);
-    const fakeDataResultState = data(
+
+    const patch = getOptimisticDataPatch(
       optimisticData,
       fakeMutationResultAction,
       store.queries,
@@ -66,15 +77,8 @@ export function optimistic(
       config,
     );
 
-    const patch: any = {};
-
-    Object.keys(fakeDataResultState).forEach(key => {
-      if (optimisticData[key] !== fakeDataResultState[key]) {
-        patch[key] = fakeDataResultState[key];
-      }
-    });
-
     const optimisticState = {
+      action: fakeMutationResultAction,
       data: patch,
       mutationId: action.mutationId,
     };
@@ -84,12 +88,56 @@ export function optimistic(
     return newState;
   } else if ((isMutationErrorAction(action) || isMutationResultAction(action))
                && previousState.some(change => change.mutationId === action.mutationId)) {
-    // throw away optimistic changes of that particular mutation
-    const newState = previousState.filter(
-      (change) => change.mutationId !== action.mutationId);
+    // Create a shallow copy of the data in the store.
+    const optimisticData = assign({}, store.data);
+
+    const newState = previousState
+      // Throw away optimistic changes of that particular mutation
+      .filter(change => change.mutationId !== action.mutationId)
+      // Re-run all of our optimistic data actions on top of one another.
+      .map(change => {
+        const patch = getOptimisticDataPatch(
+          optimisticData,
+          change.action,
+          store.queries,
+          store.mutations,
+          config,
+        );
+        assign(optimisticData, patch);
+        return {
+          ...change,
+          data: patch,
+        };
+      });
 
     return newState;
   }
 
   return previousState;
+}
+
+function getOptimisticDataPatch (
+  previousData: NormalizedCache,
+  optimisticAction: MutationResultAction,
+  queries: QueryStore,
+  mutations: MutationStore,
+  config: ApolloReducerConfig,
+): any {
+  const optimisticData = data(
+    previousData,
+    optimisticAction,
+    queries,
+    mutations,
+    config,
+  );
+
+  const patch: any = {};
+
+  Object.keys(optimisticData).forEach(key => {
+    if (optimisticData[key] !== previousData[key]) {
+      patch[key] = optimisticData[key];
+    }
+  });
+
+  return patch;
 }

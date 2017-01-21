@@ -135,6 +135,8 @@ describe('createApolloStore', () => {
   });
 
   it('can reset itself and keep the observable query ids', () => {
+    const queryDocument = gql` query { abc }`;
+
     const initialState = {
       apollo: {
         data: {
@@ -156,6 +158,7 @@ describe('createApolloStore', () => {
           'networkError': null as any,
           'previousVariables': undefined as any,
           'queryString': '',
+          'document': queryDocument,
           'returnPartialData': false,
           'variables': {},
           'metadata': null,
@@ -175,7 +178,7 @@ describe('createApolloStore', () => {
       type: 'APOLLO_QUERY_INIT',
       queryId: 'test.0',
       queryString: '',
-      document: gql` query { abc }`,
+      document: queryDocument,
       variables: {},
       forceFetch: false,
       returnPartialData: false,
@@ -246,6 +249,17 @@ describe('createApolloStore', () => {
         {
           data: {},
           mutationId: '1',
+          action: {
+            type: 'APOLLO_MUTATION_RESULT',
+            result: {data: {data: {incrementer: {counter: 1}}}},
+            document: mutation,
+            operationName: 'Increment',
+            variables: {},
+            mutationId: '1',
+            resultBehaviors: undefined as undefined,
+            extraReducers: undefined as undefined,
+            updateQueries: undefined as undefined,
+          },
         },
       ],
       reducerError: (null as Error | null),

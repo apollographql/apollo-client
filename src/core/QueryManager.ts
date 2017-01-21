@@ -49,6 +49,10 @@ import {
   createStoreReducer,
 } from '../data/resultReducers';
 
+import {
+  isProduction,
+} from '../util/environment';
+
 import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
 import {
@@ -284,6 +288,13 @@ export class QueryManager {
             extraReducers: this.getExtraReducers(),
           });
 
+          // If there was an error in our reducers, reject this promise!
+          const { reducerError } = this.getApolloState();
+          if (reducerError) {
+            reject(reducerError);
+            return;
+          }
+
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
           delete this.queryDocuments[mutationId];
           resolve(this.transformResult(<ApolloQueryResult<T>>result));
@@ -346,7 +357,7 @@ export class QueryManager {
             }
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
-            if (process.env.NODE_ENV !== 'production') {
+            if (!isProduction()) {
               /* tslint:disable-next-line */
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +

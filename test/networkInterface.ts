@@ -145,7 +145,7 @@ describe('network interface', () => {
     it('should throw without an endpoint', () => {
       assert.throws(() => {
         createNetworkInterface({});
-      }, /A remote endpoint is required for a network layer/);
+      }, /A remote endpoint (uri) is required for a network layer, see http:\/\/dev.apollodata.com\/core\/network.html#createNetworkInterface/);
     });
 
     it('should warn when the endpoint is passed as the first argument', () => {

@@ -5,6 +5,8 @@ import 'whatwg-fetch';
 
 export interface MockedIResponse {
   ok: boolean;
+  status: number;
+  statusText?: string;
   json(): Promise<JSON>;
 }
 
@@ -15,40 +17,14 @@ export interface MockedFetchResponse {
   delay?: number;
 }
 
-export function createFakeIResponse(
-  url: string,
-  status: number,
-  statusText?: string,
-  body?: string,
-): IResponse {
+export function createMockedIResponse(result: Object, options?: any): MockedIResponse {
+  const status = options && options.status || 200;
+  const statusText = options && options.statusText || undefined;
+
   return {
-    url,
+    ok: status === 200,
     status,
     statusText,
-    ok: status === 200,
-    type: 'FakeResponse',
-    size: 0,
-    timeout: 0,
-    redirect: (_) => this,
-    error: () => this,
-    clone: () => this,
-    bodyUsed: !!body,
-    arrayBuffer: () => new Promise(resolve => resolve(new ArrayBuffer(0))),
-    blob: () => new Promise(resolve => resolve(new Blob())),
-    formData: () => new Promise(resolve => resolve(new FormData())),
-    json: () => new Promise(resolve => resolve({})),
-    text: () => new Promise(resolve => resolve('')),
-    headers: {
-      get: name => '',
-      getAll: name => [],
-      has: name => false,
-    },
-  };
-}
-
-export function createMockedIResponse(result: Object): MockedIResponse {
-  return {
-    ok: true,
     json() {
       return Promise.resolve(result);
     },

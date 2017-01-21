@@ -70,7 +70,6 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
 
             if (!httpResponse.ok) {
               throw new HttpNetworkError({
-                message: `Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`,
                 request: requestsAndOptions,
                 response: httpResponse,
               });

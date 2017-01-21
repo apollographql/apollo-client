@@ -1,18 +1,24 @@
+export interface Response {
+  status: number;
+  statusText?: string;
+}
+
 export default class HttpNetworkError extends Error {
-  public readonly response: IResponse;
+  public readonly response: Response;
   public readonly request: any;
   public readonly message: string;
 
   constructor({
     response,
     request = {},
-    message = 'A network error has ocurred',
+    message,
   }: {
-    response: IResponse,
+    response: Response,
     request?: any,
     message?: string,
   }) {
-    super(message);
+    const defaultMessage = `Network request failed with status ${response.status} - "${response.statusText}"`;
+    super(message || defaultMessage);
 
     this.response = response;
     this.request = request;

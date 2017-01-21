@@ -7,7 +7,6 @@ import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInte
 import {
   createMockFetch,
   createMockedIResponse,
-  createFakeIResponse,
 } from './mocks/mockFetch';
 
 import {
@@ -161,7 +160,7 @@ describe('HTTPBatchedNetworkInterface', () => {
     });
 
     it('should throw an HttpNetworkError when a non-200 response is received', (done) => {
-      const fakeForbiddenResponse = createFakeIResponse('http://fake.url/graphql', 403, 'Forbidden');
+      const fakeForbiddenResponse = createMockedIResponse([], { status: 401, statusText: 'Unauthorized'});
       const fetchFunc = () => Promise.resolve(fakeForbiddenResponse);
 
       assertRoundtrip({
@@ -174,7 +173,7 @@ describe('HTTPBatchedNetworkInterface', () => {
         done(new Error('An HttpNetworkError should have been thrown'));
       }).catch(err => {
         assert.strictEqual(err.response, fakeForbiddenResponse, 'Incorrect response provided');
-        assert.equal(err.message, 'Network request failed with status 403 - "Forbidden"');
+        assert.equal(err.message, 'Network request failed with status 401 - "Unauthorized"', 'Incorrect message generated');
         done();
       });
     });

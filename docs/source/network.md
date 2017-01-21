@@ -268,7 +268,7 @@ apolloClient.query({ query: secondQuery });
 ```
 
 <h3 id="BatchingExplained">How query batching works</h3>
-Query batching is a transport-level mechanism that works only with servers that support it (for example Apollo's [graphql-server](https://github.com/apollostack/graphql-server). Requests to servers that don't support transport batching will fail. If transport batching is turned on, multiple requests are batched together in an array:
+Query batching is a transport-level mechanism that works only with servers that support it (for example, Apollo's [graphql-server](https://github.com/apollostack/graphql-server)). Requests to servers that don't support transport batching will fail. If transport batching is turned on, multiple requests are batched together in an array:
 
 ```
 [{

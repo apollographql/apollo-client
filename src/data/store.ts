@@ -1,5 +1,3 @@
-import { parse } from 'graphql-tag/parser';
-
 import {
   ApolloAction,
   isQueryResultAction,
@@ -177,13 +175,10 @@ export function data(
             return;
           }
 
-          // TODO: We should find a solution where we don’t have to parse the query string whenever we want to run an update query...
-          const queryDocument = parse(query.queryString);
-
           // Read the current query result from the store.
           const currentQueryResult = readQueryFromStore({
             store: previousState,
-            query: queryDocument,
+            query: query.document,
             variables: query.variables,
             returnPartialData: true,
             config,
@@ -194,7 +189,7 @@ export function data(
           // Run our reducer using the current query result and the mutation result.
           const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, {
             mutationResult: constAction.result,
-            queryName: getOperationName(queryDocument),
+            queryName: getOperationName(query.document),
             queryVariables: query.variables,
           }));
 
@@ -203,7 +198,7 @@ export function data(
             newState = writeResultToStore({
               result: nextQueryResult,
               dataId: 'ROOT_QUERY',
-              document: queryDocument,
+              document: query.document,
               variables: query.variables,
               store: newState,
               dataIdFromObject: config.dataIdFromObject,

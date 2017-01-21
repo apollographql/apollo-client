@@ -142,10 +142,16 @@ describe('network interface', () => {
       }, /must pass an options argument/);
     });
 
-    it('should throw without an endpoint', () => {
+    it('should throw without an endpoint (uri)', () => {
       assert.throws(() => {
         createNetworkInterface({});
       }, /A remote endpoint (uri) is required for a network layer, see http:\/\/dev.apollodata.com\/core\/network.html#createNetworkInterface/);
+    });
+    
+    it('should throw with a non-string endpoint (uri)', () => {
+      assert.throws(() => {
+        createNetworkInterface({ uri: 8000 });
+      }, /uri must be a string/);
     });
 
     it('should warn when the endpoint is passed as the first argument', () => {

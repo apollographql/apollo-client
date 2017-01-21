@@ -161,7 +161,7 @@ describe('HTTPBatchedNetworkInterface', () => {
     });
 
     it('should throw an HttpNetworkError when a non-200 response is received', (done) => {
-      const fakeForbiddenResponse = createFakeIResponse('http://fake.url/graphql', 403);
+      const fakeForbiddenResponse = createFakeIResponse('http://fake.url/graphql', 403, 'Forbidden');
       const fetchFunc = () => Promise.resolve(fakeForbiddenResponse);
 
       assertRoundtrip({
@@ -173,7 +173,8 @@ describe('HTTPBatchedNetworkInterface', () => {
       }).then(() => {
         done(new Error('An HttpNetworkError should have been thrown'));
       }).catch(err => {
-        assert.deepEqual(err.response, fakeForbiddenResponse, 'Incorrect response provided');
+        assert.strictEqual(err.response, fakeForbiddenResponse, 'Incorrect response provided');
+        assert.equal(err.message, 'Network request failed with status 403 - "Forbidden"');
         done();
       });
     });

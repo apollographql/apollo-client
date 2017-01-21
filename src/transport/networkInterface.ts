@@ -188,6 +188,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
 
         if (!httpResponse.ok) {
           throw new HttpNetworkError({
+            message: `Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`,
             request,
             response: httpResponse,
           });

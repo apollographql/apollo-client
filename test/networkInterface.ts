@@ -463,12 +463,13 @@ describe('network interface', () => {
       return assert.isRejected(nowhere.query(doomedToFail));
     });
 
-    it('should throw an HttpNetworkError when not authorized', () => {
+    it('should throw an HttpNetworkError when forbidden', () => {
       const unauthorizedInterface = createNetworkInterface({ uri: unauthorizedUrl });
 
       return unauthorizedInterface.query(doomedToFail).catch(err => {
         assert.isOk(err.response);
         assert.equal(err.response.status, 403);
+        assert.equal(err.message, 'Network request failed with status 403 - "Forbidden"');
       });
     });
 
@@ -478,6 +479,7 @@ describe('network interface', () => {
       return unauthorizedInterface.query(doomedToFail).catch(err => {
         assert.isOk(err.response);
         assert.equal(err.response.status, 503);
+        assert.equal(err.message, 'Network request failed with status 503 - "Service Unavailable"');
       });
     });
   });

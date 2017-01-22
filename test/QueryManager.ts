@@ -414,6 +414,35 @@ describe('QueryManager', () => {
     });
   });
 
+  // Easy to get into this state if you write an incorrect `formatError`
+  // function with graphql-tools
+  it('error array with nulls (handle non-spec-compliant server) #1185', (done) => {
+    assertWithObserver({
+      done,
+      query: gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }`,
+      result: {
+        errors: [null],
+      },
+      observer: {
+        next() {
+          done(new Error('Should not fire next for an error'));
+        },
+        error(error) {
+          assert.isNull(error);
+          done();
+        }
+      },
+    });
+  });
+
+
   it('handles network errors', (done) => {
     assertWithObserver({
       done,

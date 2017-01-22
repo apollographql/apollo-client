@@ -3,14 +3,17 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Calculate `loading` from `networkStatus`. [PR #1202](https://github.com/apollostack/apollo-client/pull/1202)
-- expose partial in ObservableQuery#currentResult [PR #1097](https://github.com/apollostack/apollo-client/pull/1097)
-- *Breaking:* Remove undocumented `resultBehaviors` feature. [PR #1173](https://github.com/apollostack/apollo-client/pull/1173)
-- Fix bug where there could be store inconsistencies for two dependent optimistic updates [PR #1144](https://github.com/apollostack/apollo-client/pull/1144)
+
+- ...
+
+### 0.8.0
 - Allow optional mutation arguments. [PR #1174](https://github.com/apollostack/apollo-client/pull/1174)
+- Fix bug where there could be store inconsistencies for two dependent optimistic updates [PR #1144](https://github.com/apollostack/apollo-client/pull/1144)
+- expose partial in ObservableQuery#currentResult [PR #1097](https://github.com/apollostack/apollo-client/pull/1097)
+- Calculate `loading` from `networkStatus`. [PR #1202](https://github.com/apollostack/apollo-client/pull/1202)
 - Fix typings error with `strictNullChecks` [PR #1188](https://github.com/apollostack/apollo-client/pull/1188)
 - Gracefully handle `null` GraphQL errors. [PR #1208](https://github.com/apollostack/apollo-client/pull/1208)
-- Allow optional mutation arguments. [PR #1174](https://github.com/apollostack/apollo-client/pull/1174)
+- *Breaking:* Remove undocumented `resultBehaviors` feature. [PR #1173](https://github.com/apollostack/apollo-client/pull/1173)
 
 ### 0.7.3
 - *Fixed breaking change:* readQueryFromStore was incomptibale with Typescript 2.0 compiler. [PR #1171](https://github.com/apollostack/apollo-client/pull/1171)

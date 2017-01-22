@@ -224,11 +224,7 @@ describe('createApolloStore', () => {
       mutationId: '1',
       optimisticResponse: {data: {incrementer: {counter: 1}}},
     });
-    const throwingBehavior: any = [
-      {
-        type: 'UnknownBehavior',
-      },
-    ];
+
     store.dispatch({
       type: 'APOLLO_MUTATION_RESULT',
       result: {data: {incrementer: {counter: 1}}},
@@ -236,10 +232,10 @@ describe('createApolloStore', () => {
       operationName: 'Increment',
       variables,
       mutationId: '1',
-      resultBehaviors: throwingBehavior,
+      extraReducers: [() => { throw new Error('test!!!'); }],
     });
 
-    assert(/UnknownBehavior/.test(store.getState().apollo.reducerError));
+    assert(/test!!!/.test(store.getState().apollo.reducerError));
 
     const resetState = {
       queries: {},
@@ -256,7 +252,6 @@ describe('createApolloStore', () => {
             operationName: 'Increment',
             variables: {},
             mutationId: '1',
-            resultBehaviors: undefined as undefined,
             extraReducers: undefined as undefined,
             updateQueries: undefined as undefined,
           },

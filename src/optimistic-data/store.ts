@@ -58,7 +58,6 @@ export function optimistic(
       operationName: action.operationName,
       variables: action.variables,
       mutationId: action.mutationId,
-      resultBehaviors: action.resultBehaviors,
       extraReducers: action.extraReducers,
       updateQueries: action.updateQueries,
     };

@@ -4,6 +4,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Calculate `loading` from `networkStatus`. [PR #1202](https://github.com/apollostack/apollo-client/pull/1202)
+- expose partial in ObservableQuery#currentResult [PR #1097](https://github.com/apollostack/apollo-client/pull/1097)
+- *Breaking:* Remove undocumented `resultBehaviors` feature. [PR #1173](https://github.com/apollostack/apollo-client/pull/1173)
+- Fix bug where there could be store inconsistencies for two dependent optimistic updates [PR #1144](https://github.com/apollostack/apollo-client/pull/1144)
+- Allow optional mutation arguments. [PR #1174](https://github.com/apollostack/apollo-client/pull/1174)
 - Fix typings error with `strictNullChecks` [PR #1188](https://github.com/apollostack/apollo-client/pull/1188)
 - Allow optional mutation arguments. [PR #1174](https://github.com/apollostack/apollo-client/pull/1174)
 

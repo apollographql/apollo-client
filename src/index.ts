@@ -42,7 +42,6 @@ import {
 } from './data/writeToStore';
 
 import {
-  MutationBehavior,
   MutationQueryReducersMap,
 } from './data/mutationResults';
 
@@ -101,7 +100,6 @@ export {
   WatchQueryOptions,
   MutationOptions,
   ObservableQuery,
-  MutationBehavior,
   MutationQueryReducersMap,
   Subscription,
   SubscriptionOptions,

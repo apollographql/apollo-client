@@ -14,6 +14,7 @@ import {
 } from '../data/storeUtils';
 
 import {
+  DocumentNode,
   SelectionSetNode,
   GraphQLError,
 } from 'graphql';
@@ -28,6 +29,7 @@ export interface QueryStore {
 
 export type QueryStoreValue = {
   queryString: string;
+  document: DocumentNode;
   variables: Object;
   previousVariables: Object;
   networkStatus: NetworkStatus;
@@ -95,6 +97,7 @@ export function queries(
     // before the initial fetch is done, you'll get an error.
     newState[action.queryId] = {
       queryString: action.queryString,
+      document: action.document,
       variables: action.variables,
       previousVariables,
       networkError: null,

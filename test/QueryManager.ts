@@ -415,7 +415,7 @@ describe('QueryManager', () => {
   });
 
   // Easy to get into this state if you write an incorrect `formatError`
-  // function with graphql-tools
+  // function with graphql-server or express-graphql
   it('error array with nulls (handle non-spec-compliant server) #1185', (done) => {
     assertWithObserver({
       done,

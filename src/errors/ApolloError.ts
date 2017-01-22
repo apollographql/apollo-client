@@ -16,7 +16,8 @@ import { GraphQLError } from 'graphql';
     // If we have GraphQL errors present, add that to the error message.
     if (Array.isArray(err.graphQLErrors) && err.graphQLErrors.length !== 0) {
       err.graphQLErrors.forEach((graphQLError: GraphQLError) => {
-        message += 'GraphQL error: ' + graphQLError.message + '\n';
+        const errorMessage = graphQLError ? graphQLError.message : 'Error message not found.';
+        message += `GraphQL error: ${errorMessage}\n`;
       });
     }
 

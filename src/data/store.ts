@@ -16,6 +16,10 @@ import {
 } from '../queries/store';
 
 import {
+  getOperationName,
+} from '../queries/getFromAST';
+
+import {
   MutationStore,
 } from '../mutations/store';
 
@@ -29,14 +33,16 @@ import {
 } from './storeUtils';
 
 import {
-  defaultMutationBehaviorReducers,
-  MutationBehaviorReducerArgs,
-} from './mutationResults';
-
-import {
   replaceQueryResults,
 } from './replaceQueryResults';
 
+import {
+  readQueryFromStore,
+} from './readFromStore';
+
+import {
+  tryFunctionOrLogError,
+} from '../util/errorHandling';
 
 export function data(
   previousState: NormalizedCache = {},
@@ -135,23 +141,42 @@ export function data(
         dataIdFromObject: config.dataIdFromObject,
       });
 
-      // TODO REFACTOR: remove result behaviors
-      if (constAction.resultBehaviors) {
-        constAction.resultBehaviors.forEach((behavior) => {
-          const args: MutationBehaviorReducerArgs = {
-            behavior,
-            result: constAction.result,
-            variables: queryStoreValue.variables,
-            document: constAction.document,
-            config,
-          };
+      // If this action wants us to update certain queries. Let’s do it!
+      if (constAction.updateQueries) {
+        Object.keys(constAction.updateQueries).forEach(queryId => {
+          const query = queries[queryId];
+          if (!query) {
+            return;
+          }
 
-          if (defaultMutationBehaviorReducers[behavior.type]) {
-            newState = defaultMutationBehaviorReducers[behavior.type](newState, args);
-          } else if (config.mutationBehaviorReducers[behavior.type]) {
-            newState = config.mutationBehaviorReducers[behavior.type](newState, args);
-          } else {
-            throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
+          // Read the current query result from the store.
+          const currentQueryResult = readQueryFromStore({
+            store: previousState,
+            query: query.document,
+            variables: query.variables,
+            returnPartialData: true,
+            config,
+          });
+
+          const reducer = constAction.updateQueries[queryId];
+
+          // Run our reducer using the current query result and the mutation result.
+          const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, {
+            mutationResult: constAction.result,
+            queryName: getOperationName(query.document),
+            queryVariables: query.variables,
+          }));
+
+          // Write the modified result back into the store if we got a new result.
+          if (nextQueryResult) {
+            newState = writeResultToStore({
+              result: nextQueryResult,
+              dataId: 'ROOT_QUERY',
+              document: query.document,
+              variables: query.variables,
+              store: newState,
+              dataIdFromObject: config.dataIdFromObject,
+            });
           }
         });
       }

@@ -4,7 +4,6 @@ import {
 } from 'graphql';
 
 import {
-  MutationBehavior,
   MutationQueryReducer,
 } from './data/mutationResults';
 
@@ -85,7 +84,6 @@ export interface MutationInitAction {
   operationName: string;
   mutationId: string;
   optimisticResponse: Object;
-  resultBehaviors?: MutationBehavior[];
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
 }
@@ -102,7 +100,6 @@ export interface MutationResultAction {
   operationName: string;
   variables: Object;
   mutationId: string;
-  resultBehaviors?: MutationBehavior[];
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
 }

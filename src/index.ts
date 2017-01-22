@@ -54,7 +54,7 @@ import {
 
 import {
   NetworkStatus,
-} from './queries/store';
+} from './queries/networkStatus';
 
 import {
   ApolloError,

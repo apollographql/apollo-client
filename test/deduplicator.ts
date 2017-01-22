@@ -6,8 +6,7 @@ import { Request, NetworkInterface } from '../src/transport/networkInterface';
 import { Deduplicator } from '../src/transport/Deduplicator';
 import { getOperationName } from '../src/queries/getFromAST';
 import { DocumentNode } from 'graphql';
-
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 describe('query deduplication', () => {
   it(`does not affect different queries`, () => {

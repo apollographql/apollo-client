@@ -31,7 +31,7 @@ import {
   print,
 } from 'graphql-tag/printer';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 import {
   createStore,
@@ -473,7 +473,6 @@ describe('client', () => {
           queryString: print(query),
           document: query,
           variables: {},
-          loading: false,
           networkStatus: NetworkStatus.ready,
           networkError: null,
           graphQLErrors: null,

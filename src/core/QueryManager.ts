@@ -21,8 +21,12 @@ import {
 
 import {
   QueryStoreValue,
-  NetworkStatus,
 } from '../queries/store';
+
+import {
+  NetworkStatus,
+  isNetworkRequestInFlight,
+} from '../queries/networkStatus';
 
 import {
   ApolloStore,
@@ -329,7 +333,7 @@ export class QueryManager {
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
-      if (!queryStoreValue.loading ||
+      if (!isNetworkRequestInFlight(queryStoreValue.networkStatus) ||
           ( networkStatusChanged && options.notifyOnNetworkStatusChange ) ||
           shouldNotifyIfLoading) {
         // XXX Currently, returning errors and data is exclusive because we
@@ -360,7 +364,7 @@ export class QueryManager {
           }
         } else {
           try {
-            const resultFromStore = {
+            const resultFromStore: ApolloQueryResult<T> = {
               data: readQueryFromStore<T>({
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
@@ -369,7 +373,7 @@ export class QueryManager {
                 config: this.reducerConfig,
                 previousResult: lastResult && lastResult.data,
               }),
-              loading: queryStoreValue.loading,
+              loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
               networkStatus: queryStoreValue.networkStatus,
             };
 
@@ -378,7 +382,6 @@ export class QueryManager {
                 this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
                   lastResult &&
                   resultFromStore &&
-                  lastResult.loading === resultFromStore.loading &&
                   lastResult.networkStatus === resultFromStore.networkStatus &&
 
                   // We can do a strict equality check here because we include a `previousResult`

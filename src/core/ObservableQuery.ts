@@ -28,7 +28,10 @@ import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { isEqual } from '../util/isEqual';
 
-import { NetworkStatus } from '../queries/store';
+import {
+  NetworkStatus,
+  isNetworkRequestInFlight,
+ } from '../queries/networkStatus';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
@@ -131,7 +134,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       return { data: {}, loading: false, networkStatus: queryStoreValue.networkStatus, error };
     }
 
-    const queryLoading = !queryStoreValue || queryStoreValue.loading;
+    const queryLoading = !queryStoreValue || queryStoreValue.networkStatus === NetworkStatus.loading;
 
     // We need to be careful about the loading state we show to the user, to try
     // and be vaguely in line with what the user would have seen from .subscribe()
@@ -152,7 +155,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       networkStatus = loading ? NetworkStatus.loading : NetworkStatus.ready;
     }
 
-    return { data, loading, networkStatus, partial };
+    return {
+      data,
+      loading: isNetworkRequestInFlight(networkStatus),
+      networkStatus,
+      partial,
+    };
   }
 
   // Returns the last result that observer.next was called with. This is not the same as

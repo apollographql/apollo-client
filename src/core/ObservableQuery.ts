@@ -35,6 +35,7 @@ export type ApolloCurrentResult<T> = {
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
+  partial?: boolean;
 };
 
 export interface FetchMoreOptions {
@@ -112,6 +113,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     });
   }
 
+  /**
+   * Return the result of the query from the local cache as well as some fetching status
+   * `loading` and `networkStatus` allow to know if a request is in flight
+   * `partial` lets you know if the result from the local cache is complete or partial
+   * @return {result: Object, loading: boolean, networkStatus: number, partial: boolean}
+   */
   public currentResult(): ApolloCurrentResult<T> {
     const { data, partial } = this.queryManager.getCurrentQueryResult(this, true);
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
@@ -145,7 +152,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       networkStatus = loading ? NetworkStatus.loading : NetworkStatus.ready;
     }
 
-    return { data, loading, networkStatus };
+    return { data, loading, networkStatus, partial };
   }
 
   // Returns the last result that observer.next was called with. This is not the same as

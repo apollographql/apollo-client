@@ -167,15 +167,17 @@ export function data(
             queryVariables: query.variables,
           }));
 
-          // Write the modified result back into the store.
-          newState = writeResultToStore({
-            result: nextQueryResult,
-            dataId: 'ROOT_QUERY',
-            document: query.document,
-            variables: query.variables,
-            store: newState,
-            dataIdFromObject: config.dataIdFromObject,
-          });
+          // Write the modified result back into the store if we got a new result.
+          if (nextQueryResult) {
+            newState = writeResultToStore({
+              result: nextQueryResult,
+              dataId: 'ROOT_QUERY',
+              document: query.document,
+              variables: query.variables,
+              store: newState,
+              dataIdFromObject: config.dataIdFromObject,
+            });
+          }
         });
       }
 

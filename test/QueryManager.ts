@@ -56,7 +56,7 @@ import {
   Observer,
 } from '../src/util/Observable';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 import wrap, { withWarning } from './util/wrap';
 
@@ -3117,6 +3117,114 @@ describe('QueryManager', () => {
           },
         },
       });
+    });
+
+    it('will update on `resetStore`', done => {
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data1 = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const data2 = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith 2',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query: testQuery },
+          result: { data: data1 },
+        },
+        {
+          request: { query: testQuery },
+          result: { data: data2 },
+        },
+      );
+      let count = 0;
+
+      queryManager.watchQuery({ query: testQuery }).subscribe({
+        next: result => {
+          switch (count++) {
+            case 0:
+              assert.isFalse(result.loading);
+              assert.deepEqual(result.data, data1);
+              setTimeout(() => {
+                queryManager.resetStore();
+              }, 0);
+              break;
+            case 1:
+              assert.isFalse(result.loading);
+              assert.deepEqual(result.data, data2);
+              done();
+              break;
+            default:
+              done(new Error('`next` was called to many times.'));
+          }
+        },
+        error: error => done(error),
+      });
+    });
+
+    it('will be true when partial data may be returned', done => {
+      const query1 = gql`{
+        a { x1 y1 z1 }
+      }`;
+      const query2 = gql`{
+        a { x1 y1 z1 }
+        b { x2 y2 z2 }
+      }`;
+      const data1 = {
+        a: { x1: 1, y1: 2, z1: 3 },
+      };
+      const data2 = {
+        a: { x1: 1, y1: 2, z1: 3 },
+        b: { x2: 3, y2: 2, z2: 1 },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+          delay: 5,
+        },
+      );
+
+      queryManager.query({ query: query1 }).then(result1 => {
+        assert.isFalse(result1.loading);
+        assert.deepEqual(result1.data, data1);
+
+        let count = 0;
+        queryManager.watchQuery({ query: query2, returnPartialData: true }).subscribe({
+          next: result2 => {
+            switch (count++) {
+              case 0:
+                assert.isTrue(result2.loading);
+                assert.deepEqual(result2.data, data1);
+                break;
+              case 1:
+                assert.isFalse(result2.loading);
+                assert.deepEqual(result2.data, data2);
+                done();
+                break;
+              default:
+                done(new Error('`next` was called to many times.'));
+            }
+          },
+          error: error => done(error),
+        });
+      }).catch(done);
     });
   });
 

@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 import { assert } from 'chai';
 import ApolloClient, { toIdValue } from '../src';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 describe('custom resolvers', () => {
   it(`works for cache redirection`, () => {

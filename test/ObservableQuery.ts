@@ -31,7 +31,7 @@ import {
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests
@@ -572,6 +572,7 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: 7,
+          partial: false,
         });
         done();
       });
@@ -580,12 +581,14 @@ describe('ObservableQuery', () => {
         loading: true,
         data: {},
         networkStatus: 1,
+        partial: true,
       });
       setTimeout(wrap(done, () => {
         assert.deepEqual(observable.currentResult(), {
           loading: true,
           data: {},
           networkStatus: 1,
+          partial: true,
         });
       }), 0);
     });
@@ -611,6 +614,7 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: false,
             networkStatus: 7,
+            partial: false,
           });
         });
     });
@@ -657,11 +661,13 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: true,
             networkStatus: 1,
+            partial: true,
           });
 
           // we can use this to trigger the query
           subscribeAndCount(done, observable, (handleCount, subResult) => {
-            assert.deepEqual(subResult, observable.currentResult());
+            const { data, loading, networkStatus } = observable.currentResult();
+            assert.deepEqual(subResult, { data, loading, networkStatus });
 
             if (handleCount === 1) {
               assert.deepEqual(subResult, {
@@ -701,10 +707,12 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: true,
             networkStatus: 1,
+            partial: false,
           });
 
           subscribeAndCount(done, observable, (handleCount, subResult) => {
-            assert.deepEqual(subResult, observable.currentResult());
+            const { data, loading, networkStatus } = observable.currentResult();
+            assert.deepEqual(subResult, { data, loading, networkStatus });
 
             if (handleCount === 1) {
               assert.deepEqual(subResult, {
@@ -756,7 +764,9 @@ describe('ObservableQuery', () => {
         });
 
         subscribeAndCount(done, observable, (count, result) => {
-          assert.deepEqual(result, observable.currentResult());
+          const { data, loading, networkStatus } = observable.currentResult();
+          assert.deepEqual(result, { data, loading, networkStatus });
+
           if (count === 1) {
             assert.deepEqual(result, {
               data: dataOne,

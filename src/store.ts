@@ -40,10 +40,6 @@ import {
 } from './core/types';
 
 import {
-  MutationBehaviorReducerMap,
-} from './data/mutationResults';
-
-import {
   CustomResolverMap,
 } from './data/readFromStore';
 
@@ -188,6 +184,5 @@ export function createApolloStore({
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
-  mutationBehaviorReducers?: MutationBehaviorReducerMap;
   customResolvers?: CustomResolverMap;
 };

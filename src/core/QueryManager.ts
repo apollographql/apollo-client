@@ -21,8 +21,12 @@ import {
 
 import {
   QueryStoreValue,
-  NetworkStatus,
 } from '../queries/store';
+
+import {
+  NetworkStatus,
+  isNetworkRequestInFlight,
+} from '../queries/networkStatus';
 
 import {
   ApolloStore,
@@ -79,8 +83,8 @@ import {
 } from '../data/readFromStore';
 
 import {
-  MutationBehavior,
   MutationQueryReducersMap,
+  MutationQueryReducer,
 } from '../data/mutationResults';
 
 import {
@@ -217,14 +221,12 @@ export class QueryManager {
   public mutate<T>({
     mutation,
     variables,
-    resultBehaviors = [],
     optimisticResponse,
-    updateQueries,
+    updateQueries: updateQueriesByName,
     refetchQueries = [],
   }: {
     mutation: DocumentNode,
     variables?: Object,
-    resultBehaviors?: MutationBehavior[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[],
@@ -243,15 +245,13 @@ export class QueryManager {
       operationName: getOperationName(mutation),
     } as Request;
 
-    // Right now the way `updateQueries` feature is implemented relies on using
-    // `resultBehaviors`, another feature that accomplishes the same goal but
-    // provides more verbose syntax.
-    // In the future we want to re-factor this part of code to avoid using
-    // `resultBehaviors` so we can remove `resultBehaviors` entirely.
-    const updateQueriesResultBehaviors = !optimisticResponse ? [] :
-      this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true);
-
     this.queryDocuments[mutationId] = mutation;
+
+    // Create a map of update queries by id to the query instead of by name.
+    const updateQueries: { [queryId: string]: MutationQueryReducer } = {};
+    Object.keys(updateQueriesByName || {}).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
+      updateQueries[queryId] = updateQueriesByName[queryName];
+    }));
 
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
@@ -261,8 +261,8 @@ export class QueryManager {
       operationName: getOperationName(mutation),
       mutationId,
       optimisticResponse,
-      resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
       extraReducers: this.getExtraReducers(),
+      updateQueries,
     });
 
     return new Promise((resolve, reject) => {
@@ -281,11 +281,8 @@ export class QueryManager {
             document: mutation,
             operationName: getOperationName(mutation),
             variables,
-            resultBehaviors: [
-                ...resultBehaviors,
-                ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
-            ],
             extraReducers: this.getExtraReducers(),
+            updateQueries,
           });
 
           // If there was an error in our reducers, reject this promise!
@@ -336,7 +333,7 @@ export class QueryManager {
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
-      if (!queryStoreValue.loading ||
+      if (!isNetworkRequestInFlight(queryStoreValue.networkStatus) ||
           ( networkStatusChanged && options.notifyOnNetworkStatusChange ) ||
           shouldNotifyIfLoading) {
         // XXX Currently, returning errors and data is exclusive because we
@@ -367,7 +364,7 @@ export class QueryManager {
           }
         } else {
           try {
-            const resultFromStore = {
+            const resultFromStore: ApolloQueryResult<T> = {
               data: readQueryFromStore<T>({
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
@@ -376,7 +373,7 @@ export class QueryManager {
                 config: this.reducerConfig,
                 previousResult: lastResult && lastResult.data,
               }),
-              loading: queryStoreValue.loading,
+              loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
               networkStatus: queryStoreValue.networkStatus,
             };
 
@@ -385,7 +382,6 @@ export class QueryManager {
                 this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
                   lastResult &&
                   resultFromStore &&
-                  lastResult.loading === resultFromStore.loading &&
                   lastResult.networkStatus === resultFromStore.networkStatus &&
 
                   // We can do a strict equality check here because we include a `previousResult`
@@ -836,52 +832,6 @@ export class QueryManager {
       variables: queryOptions.variables,
       document: transformedDoc,
     };
-  }
-
-  private collectResultBehaviorsFromUpdateQueries(
-    updateQueries: MutationQueryReducersMap,
-    mutationResult: Object,
-    isOptimistic = false,
-  ): MutationBehavior[] {
-    if (!updateQueries) {
-      return [];
-    }
-    const resultBehaviors: any[] = [];
-
-    Object.keys(updateQueries).forEach((queryName) => {
-      const reducer = updateQueries[queryName];
-      const queryIds = this.queryIdsByName[queryName];
-      if (!queryIds) {
-        // XXX should throw an error?
-        return;
-      }
-
-      queryIds.forEach((queryId) => {
-        const {
-          previousResult,
-          variables,
-          document,
-        } = this.getQueryWithPreviousResult(queryId, isOptimistic);
-
-        const newResult = tryFunctionOrLogError(() => reducer(
-          previousResult, {
-            mutationResult,
-            queryName,
-            queryVariables: variables,
-          }));
-
-        if (newResult) {
-          resultBehaviors.push({
-            type: 'QUERY_RESULT',
-            newResult,
-            variables,
-            document,
-          });
-        }
-      });
-    });
-
-    return resultBehaviors;
   }
 
   // Takes a set of WatchQueryOptions and transforms the query document

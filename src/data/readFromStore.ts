@@ -256,7 +256,7 @@ export function diffQueryAgainstStore({
     // Global settings
     store,
     returnPartialData,
-    customResolvers: config && config.customResolvers,
+    customResolvers: (config && config.customResolvers) || {},
 
     // Flag set during execution
     hasMissingField: false,

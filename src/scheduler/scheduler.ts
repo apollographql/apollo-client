@@ -73,7 +73,7 @@ export class QueryScheduler {
 
   public startPollingQuery<T>(
     options: WatchQueryOptions,
-    queryId?: string,
+    queryId: string,
     listener?: QueryListener,
   ): string {
     if (!options.pollInterval) {
@@ -134,6 +134,10 @@ export class QueryScheduler {
   // and query options must have been added to this.registeredQueries before this function is called.
   public addQueryOnInterval<T>(queryId: string, queryOptions: WatchQueryOptions) {
     const interval = queryOptions.pollInterval;
+
+    if (!interval) {
+      throw new Error(`A poll interval is required to start polling query with id '${queryId}'.`);
+    }
 
     // If there are other queries on this interval, this query will just fire with those
     // and we don't need to create a new timer.

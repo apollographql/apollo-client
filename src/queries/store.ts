@@ -31,9 +31,9 @@ export type QueryStoreValue = {
   queryString: string;
   document: DocumentNode;
   variables: Object;
-  previousVariables: Object;
+  previousVariables: Object | null;
   networkStatus: NetworkStatus;
-  networkError: Error;
+  networkError: Error | null;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
   returnPartialData: boolean;
@@ -65,7 +65,7 @@ export function queries(
 
     let isSetVariables = false;
 
-    let previousVariables: Object;
+    let previousVariables: Object | null = null;
     if (
       action.storePreviousVariables &&
       previousQuery &&
@@ -101,7 +101,7 @@ export function queries(
       variables: action.variables,
       previousVariables,
       networkError: null,
-      graphQLErrors: null,
+      graphQLErrors: [],
       networkStatus: newNetworkStatus,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
@@ -126,7 +126,7 @@ export function queries(
     newState[action.queryId] = {
       ...previousState[action.queryId],
       networkError: null,
-      graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
+      graphQLErrors: resultHasGraphQLErrors ? action.result.errors : [],
       previousVariables: null,
       networkStatus: NetworkStatus.ready,
     };
@@ -166,7 +166,7 @@ export function queries(
       // and do not need to hit the server. Not sure when we'd fire this action if the result is not complete, so that bears explanation.
       // We should write that down somewhere.
       networkStatus: action.complete ? NetworkStatus.ready : NetworkStatus.loading,
-    } as QueryStoreValue;
+    };
 
     return newState;
   } else if (isQueryStopAction(action)) {

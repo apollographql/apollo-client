@@ -49,7 +49,7 @@ export interface FetchMoreOptions {
 }
 
 export interface UpdateQueryOptions {
-  variables: Object;
+  variables?: Object;
 }
 
 export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
@@ -126,7 +126,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     const { data, partial } = this.queryManager.getCurrentQueryResult(this, true);
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
 
-    if (queryStoreValue && (queryStoreValue.graphQLErrors || queryStoreValue.networkError)) {
+    if (queryStoreValue && (
+      (queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0) ||
+      queryStoreValue.networkError
+    )) {
       const error = new ApolloError({
         graphQLErrors: queryStoreValue.graphQLErrors,
         networkError: queryStoreValue.networkError,
@@ -307,7 +310,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     // If forceFetch went from false to true or noFetch went from true to false
     const tryFetch: boolean = (!oldOptions.forceFetch && opts.forceFetch)
-      || (oldOptions.noFetch && !opts.noFetch);
+      || (oldOptions.noFetch && !opts.noFetch) || false;
 
     return this.setVariables(this.options.variables, tryFetch);
   }
@@ -335,7 +338,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       ...variables,
     };
 
-    const nullPromise = new Promise((resolve) => resolve(null));
+    const nullPromise = new Promise((resolve) => resolve());
 
     if (isEqual(newVariables, this.variables) && !tryFetch) {
       // If we have no observers, then we don't actually want to make a network

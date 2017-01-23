@@ -12,7 +12,8 @@
     "removeComments": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "strictNullChecks": true
   },
   "files": [
     "node_modules/typescript/lib/lib.es2015.d.ts",

@@ -150,5 +150,5 @@ export function createBatchingNetworkInterface(options: BatchingNetworkInterface
   if (! options) {
     throw new Error('You must pass an options argument to createNetworkInterface.');
   }
-  return new HTTPBatchedNetworkInterface(options.uri, options.batchInterval, options.opts);
+  return new HTTPBatchedNetworkInterface(options.uri, options.batchInterval, options.opts || {});
 }

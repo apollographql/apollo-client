@@ -40,4 +40,4 @@ export enum FetchType {
   poll = 3,
 }
 
-export type IdGetter = (value: Object) => string;
+export type IdGetter = (value: Object) => string | null | undefined;

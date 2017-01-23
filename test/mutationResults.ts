@@ -328,7 +328,7 @@ describe('mutation results', () => {
             counter++;
             if (isMutationResultAction(action)) {
               const newResult = cloneDeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data['createTodo']);
+              newResult.todoList.todos.unshift(action.result.data!['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -384,7 +384,7 @@ describe('mutation results', () => {
             counter++;
             if (isMutationResultAction(action) && variables['id'] === 5) {
               const newResult = cloneDeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data['createTodo']);
+              newResult.todoList.todos.unshift(action.result.data!['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -439,7 +439,7 @@ describe('mutation results', () => {
             if (isMutationResultAction(action) && action.operationName === 'createTodo') {
               counter++;
               const newResult = cloneDeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data['createTodo']);
+              newResult.todoList.todos.unshift(action.result.data!['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -456,7 +456,7 @@ describe('mutation results', () => {
             if (isMutationResultAction(action) && action.operationName === 'wrongName') {
               counter++; // shouldn't be called, so counter shouldn't increase.
               const newResult = cloneDeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data['createTodo']);
+              newResult.todoList.todos.unshift(action.result.data!['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -504,7 +504,7 @@ describe('mutation results', () => {
             counter++;
             if (isQueryResultAction(action)) {
               const newResult = cloneDeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data['newTodos'][0]);
+              newResult.todoList.todos.unshift(action.result.data!['newTodos'][0]);
               return newResult;
             }
             return previousResult;
@@ -588,7 +588,7 @@ describe('mutation results', () => {
             counter++;
             if (isMutationResultAction(action)) {
               const newResult = cloneDeep(previousResult) as any;
-              newResult.todoList.todos.unshift(action.result.data['createTodo']);
+              newResult.todoList.todos.unshift(action.result.data!['createTodo']);
               return newResult;
             }
             return previousResult;
@@ -601,9 +601,9 @@ describe('mutation results', () => {
           forceFetch: true, // need force-fetch to get the filteredTodos,
           reducer: (previousResult, action) => {
             counter2++;
-            if (isMutationResultAction(action) && action.result.data['createTodo'].completed) {
+            if (isMutationResultAction(action) && action.result.data!['createTodo'].completed) {
               const newResult = cloneDeep(previousResult) as any;
-              newResult.todoList.filteredTodos.unshift(action.result.data['createTodo']);
+              newResult.todoList.filteredTodos.unshift(action.result.data!['createTodo']);
               return newResult;
             }
             return previousResult;

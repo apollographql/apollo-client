@@ -108,7 +108,7 @@ describe('network interface', () => {
     // We won't be too careful about counting calls or closely checking
     // parameters, but just do the basic stuff to ensure the request looks right
     fetchMock.post(swapiUrl, (url, opts) => {
-      const { query, variables } = JSON.parse((opts as RequestInit).body.toString());
+      const { query, variables } = JSON.parse((opts as RequestInit).body!.toString());
 
       if (query === print(simpleQueryWithNoVars)) {
         return simpleResult;
@@ -138,7 +138,7 @@ describe('network interface', () => {
   describe('creating a network interface', () => {
     it('should throw without an argument', () => {
       assert.throws(() => {
-        createNetworkInterface(null);
+        createNetworkInterface(undefined as any);
       }, /must pass an options argument/);
     });
 

@@ -256,8 +256,8 @@ describe('ObservableQuery', () => {
     });
 
     it('does a network request if noFetch becomes true then store is reset then noFetch becomes false', (done) => {
-      let queryManager: QueryManager = null;
-      let observable: ObservableQuery<any> = null;
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
           author {
@@ -309,8 +309,8 @@ describe('ObservableQuery', () => {
     });
 
     it('does a network request if noFetch becomes false', (done) => {
-      let queryManager: QueryManager = null;
-      let observable: ObservableQuery<any> = null;
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
           author {
@@ -637,7 +637,7 @@ describe('ObservableQuery', () => {
           const currentResult = observable.currentResult();
 
           assert.equal(currentResult.loading, false);
-          assert.deepEqual(currentResult.error.graphQLErrors, [error]);
+          assert.deepEqual(currentResult.error!.graphQLErrors, [error]);
         });
     });
 

@@ -33,6 +33,7 @@ import {
   Store,
   getDataWithOptimisticResults,
   ApolloReducerConfig,
+  ApolloReducer,
 } from '../store';
 
 import {
@@ -121,8 +122,8 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
-  private resultTransformer: ResultTransformer;
-  private resultComparator: ResultComparator;
+  private resultTransformer: ResultTransformer | undefined;
+  private resultComparator: ResultComparator | undefined;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
 
@@ -249,15 +250,17 @@ export class QueryManager {
 
     // Create a map of update queries by id to the query instead of by name.
     const updateQueries: { [queryId: string]: MutationQueryReducer } = {};
-    Object.keys(updateQueriesByName || {}).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
-      updateQueries[queryId] = updateQueriesByName[queryName];
-    }));
+    if (updateQueriesByName) {
+      Object.keys(updateQueriesByName).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
+        updateQueries[queryId] = updateQueriesByName[queryName];
+      }));
+    }
 
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
       mutation,
-      variables,
+      variables: variables || {},
       operationName: getOperationName(mutation),
       mutationId,
       optimisticResponse,
@@ -280,7 +283,7 @@ export class QueryManager {
             mutationId,
             document: mutation,
             operationName: getOperationName(mutation),
-            variables,
+            variables: variables || {},
             extraReducers: this.getExtraReducers(),
             updateQueries,
           });
@@ -341,7 +344,10 @@ export class QueryManager {
 
         // If we have either a GraphQL error or a network error, we create
         // an error and tell the observer about it.
-        if (queryStoreValue.graphQLErrors || queryStoreValue.networkError) {
+        if (
+          (queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0) ||
+          queryStoreValue.networkError
+        ) {
           const apolloError = new ApolloError({
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,
@@ -358,7 +364,7 @@ export class QueryManager {
               /* tslint:disable-next-line */
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +
-                'for the query ' + options.query.loc.source,
+                'for the query ' + queryStoreValue.queryString,
               );
             }
           }
@@ -492,7 +498,7 @@ export class QueryManager {
       });
 
       // If we're in here, only fetch if we have missing fields
-      needToFetch = isMissing;
+      needToFetch = isMissing || false;
 
       storeResult = result;
     }
@@ -694,7 +700,9 @@ export class QueryManager {
         const handler = (error: Error, result: any) => {
           if (error) {
             observers.forEach((obs) => {
-              obs.error(error);
+              if (obs.error) {
+                obs.error(error);
+              }
             });
           } else {
             this.store.dispatch({
@@ -702,13 +710,15 @@ export class QueryManager {
               document: transformedDoc,
               operationName: getOperationName(transformedDoc),
               result: { data: result },
-              variables,
+              variables: variables || {},
               subscriptionId: subId,
               extraReducers: this.getExtraReducers(),
             });
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach((obs) => {
-              obs.next(result);
+              if (obs.next) {
+                obs.next(result);
+              }
             });
           }
         };
@@ -851,18 +861,18 @@ export class QueryManager {
     };
   }
 
-  private getExtraReducers() {
+  private getExtraReducers(): ApolloReducer[] {
     return  Object.keys(this.observableQueries).map( obsQueryId => {
       const queryOptions = this.observableQueries[obsQueryId].observableQuery.options;
       if (queryOptions.reducer) {
         return createStoreReducer(
           queryOptions.reducer,
           queryOptions.query,
-          queryOptions.variables,
+          queryOptions.variables || {},
           this.reducerConfig,
           );
       }
-      return null;
+      return null as never;
     }).filter( reducer => reducer !== null );
   }
 

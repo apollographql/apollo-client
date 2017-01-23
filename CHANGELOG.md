@@ -11,7 +11,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Fix bug where there could be store inconsistencies for two dependent optimistic updates [PR #1144](https://github.com/apollostack/apollo-client/pull/1144)
 - expose partial in ObservableQuery#currentResult [PR #1097](https://github.com/apollostack/apollo-client/pull/1097)
 - Calculate `loading` from `networkStatus`. [PR #1202](https://github.com/apollostack/apollo-client/pull/1202)
-- Fix typings error with `strictNullChecks` [PR #1188](https://github.com/apollostack/apollo-client/pull/1188)
+- Fix typings error with `strictNullChecks` and enable TypeScript strict null checking in source code. [PR #1188](https://github.com/apollostack/apollo-client/pull/1188) and [PR #1221](https://github.com/apollostack/apollo-client/pull/1221)
 - Gracefully handle `null` GraphQL errors. [PR #1208](https://github.com/apollostack/apollo-client/pull/1208)
 - *Breaking:* Remove undocumented `resultBehaviors` feature. [PR #1173](https://github.com/apollostack/apollo-client/pull/1173)
 

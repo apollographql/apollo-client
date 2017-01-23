@@ -878,7 +878,7 @@ describe('writing to the store', () => {
             generated: false,
           },
         },
-        [dataIdFromObject(data.author)]: {
+        [dataIdFromObject(data.author)!]: {
           firstName: data.author.firstName,
           id: data.author.id,
           __typename: data.author.__typename,
@@ -917,7 +917,7 @@ describe('writing to the store', () => {
             generated: false,
           },
         },
-        [dataIdFromObject(data.author)]: {
+        [dataIdFromObject(data.author)!]: {
           __typename: data.author.__typename,
           id: data.author.id,
           info: {

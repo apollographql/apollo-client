@@ -37,7 +37,7 @@ describe('QueryScheduler', () => {
       query,
     };
     assert.throws(() => {
-      scheduler.startPollingQuery(queryOptions);
+      scheduler.startPollingQuery(queryOptions, null as never);
     });
   });
 

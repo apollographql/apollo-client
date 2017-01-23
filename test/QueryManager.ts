@@ -128,7 +128,7 @@ describe('QueryManager', () => {
     });
     const finalOptions = assign({ query, variables }, queryOptions) as WatchQueryOptions;
     return queryManager.watchQuery<any>(finalOptions).subscribe({
-      next: wrap(done, observer.next),
+      next: wrap(done, observer.next!),
       error: observer.error,
     });
   };
@@ -463,7 +463,7 @@ describe('QueryManager', () => {
         error: (error) => {
           const apolloError = error as ApolloError;
           assert(apolloError.networkError);
-          assert.include(apolloError.networkError.message, 'Network error');
+          assert.include(apolloError.networkError!.message, 'Network error');
           done();
         },
       },
@@ -555,7 +555,7 @@ describe('QueryManager', () => {
       result: expResult,
     });
 
-    const observable = Rx.Observable.from(handle);
+    const observable = Rx.Observable.from(handle as any);
 
 
     observable
@@ -2272,7 +2272,7 @@ describe('QueryManager', () => {
     });
 
     it('should only refetch once when we store reset', () => {
-      let queryManager: QueryManager = null;
+      let queryManager: QueryManager;
       const query = gql`
         query {
           author {
@@ -2311,8 +2311,8 @@ describe('QueryManager', () => {
     });
 
     it('should not refetch toredown queries', (done) => {
-      let queryManager: QueryManager = null;
-      let observable: ObservableQuery<any> = null;
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
       const query = gql`
         query {
           author {
@@ -2356,7 +2356,7 @@ describe('QueryManager', () => {
     });
 
     it('should not error on queries that are already in the store', () => {
-      let queryManager: QueryManager = null;
+      let queryManager: QueryManager;
       const query = gql`
         query {
           author {
@@ -2436,7 +2436,7 @@ describe('QueryManager', () => {
       const mockObservableQuery: ObservableQuery<any> = {
         refetch(variables: any): Promise<ExecutionResult> {
           done();
-          return null;
+          return null as never;
         },
         options: {
           query: query,
@@ -2466,7 +2466,7 @@ describe('QueryManager', () => {
         refetch(variables: any): Promise<ExecutionResult> {
           refetchCount ++;
           done();
-          return null;
+          return null as never;
         },
         options,
         queryManager: queryManager,
@@ -2483,7 +2483,7 @@ describe('QueryManager', () => {
     });
 
     it('should throw an error on an inflight query() if the store is reset', (done) => {
-      let queryManager: QueryManager = null;
+      let queryManager: QueryManager;
       const query = gql`
         query {
           author {
@@ -2534,9 +2534,9 @@ describe('QueryManager', () => {
 
       assert(apolloError.message);
       assert.equal(apolloError.networkError, networkError);
-      assert(!apolloError.graphQLErrors);
+      assert.deepEqual(apolloError.graphQLErrors, []);
       done();
-    });
+    }).catch(done);
   });
 
   it('should error when we attempt to give an id beginning with $', (done) => {
@@ -2864,7 +2864,7 @@ describe('QueryManager', () => {
           errorCallbacks: [
             // This isn't the best error message, but at least people will know they are missing
             // data in the store.
-            (error: ApolloError) => assert.include(error.networkError.message, 'find field'),
+            (error: ApolloError) => assert.include(error.networkError!.message, 'find field'),
           ],
           wait: 60,
         },

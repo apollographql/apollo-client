@@ -106,7 +106,6 @@ describe('diffing queries against the store', () => {
       diffQueryAgainstStore({
         store,
         query: unionQuery,
-        variables: null,
       });
     }, /No fragment/);
   });
@@ -148,7 +147,6 @@ describe('diffing queries against the store', () => {
     const { isMissing } = diffQueryAgainstStore({
       store,
       query: unionQuery,
-      variables: null,
       returnPartialData: false,
     });
 
@@ -193,7 +191,6 @@ describe('diffing queries against the store', () => {
     const { isMissing } = diffQueryAgainstStore({
       store,
       query: unionQuery,
-      variables: null,
       returnPartialData: false,
     });
 
@@ -239,7 +236,6 @@ describe('diffing queries against the store', () => {
       diffQueryAgainstStore({
         store,
         query: unionQuery,
-        variables: null,
         returnPartialData: false,
       });
     });
@@ -305,7 +301,6 @@ describe('diffing queries against the store', () => {
     const simpleDiff = diffQueryAgainstStore({
       store,
       query: simpleQuery,
-      variables: null,
     });
 
     assert.deepEqual(simpleDiff.result, {
@@ -317,7 +312,6 @@ describe('diffing queries against the store', () => {
     const inlineDiff = diffQueryAgainstStore({
       store,
       query: inlineFragmentQuery,
-      variables: null,
     });
 
     assert.deepEqual(inlineDiff.result, {
@@ -329,7 +323,6 @@ describe('diffing queries against the store', () => {
     const namedDiff = diffQueryAgainstStore({
       store,
       query: namedFragmentQuery,
-      variables: null,
     });
 
     assert.deepEqual(namedDiff.result, {
@@ -342,7 +335,6 @@ describe('diffing queries against the store', () => {
       diffQueryAgainstStore({
         store,
         query: simpleQuery,
-        variables: null,
         returnPartialData: false,
       });
     });

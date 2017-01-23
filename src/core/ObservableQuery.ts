@@ -126,7 +126,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     const { data, partial } = this.queryManager.getCurrentQueryResult(this, true);
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
 
-    if (queryStoreValue && (queryStoreValue.graphQLErrors || queryStoreValue.networkError)) {
+    if (queryStoreValue && (
+      (queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0) ||
+      queryStoreValue.networkError
+    )) {
       const error = new ApolloError({
         graphQLErrors: queryStoreValue.graphQLErrors,
         networkError: queryStoreValue.networkError,

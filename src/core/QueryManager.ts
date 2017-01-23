@@ -342,7 +342,10 @@ export class QueryManager {
 
         // If we have either a GraphQL error or a network error, we create
         // an error and tell the observer about it.
-        if (queryStoreValue.graphQLErrors || queryStoreValue.networkError) {
+        if (
+          (queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0) ||
+          queryStoreValue.networkError
+        ) {
           const apolloError = new ApolloError({
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,

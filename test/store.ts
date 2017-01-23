@@ -151,11 +151,11 @@ describe('createApolloStore', () => {
       queries: {
         'test.0': {
           'forceFetch': false,
-          'graphQLErrors': null as any,
+          'graphQLErrors': [],
           'lastRequestId': 1,
           'networkStatus': 1,
-          'networkError': null as any,
-          'previousVariables': undefined as any,
+          'networkError': null,
+          'previousVariables': null,
           'queryString': '',
           'document': queryDocument,
           'returnPartialData': false,

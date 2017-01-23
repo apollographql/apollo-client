@@ -15,7 +15,6 @@ import { cloneDeep } from '../util/cloneDeep';
 
 const TYPENAME_FIELD: FieldNode = {
   kind: 'Field',
-  alias: null,
   name: {
     kind: 'Name',
     value: '__typename',
@@ -26,7 +25,7 @@ function addTypenameToSelectionSet(
   selectionSet: SelectionSetNode,
   isRoot = false,
 ) {
-  if (selectionSet && selectionSet.selections) {
+  if (selectionSet.selections) {
     if (! isRoot) {
       const alreadyHasThisField = selectionSet.selections.some((selection) => {
         return selection.kind === 'Field' && (selection as FieldNode).name.value === '__typename';
@@ -39,7 +38,9 @@ function addTypenameToSelectionSet(
 
     selectionSet.selections.forEach((selection) => {
       if (selection.kind === 'Field' || selection.kind === 'InlineFragment') {
-        addTypenameToSelectionSet((selection as FieldNode | InlineFragmentNode).selectionSet);
+        if (selection.selectionSet) {
+          addTypenameToSelectionSet(selection.selectionSet);
+        }
       }
     });
   }

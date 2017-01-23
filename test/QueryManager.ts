@@ -428,7 +428,7 @@ describe('QueryManager', () => {
         }
       }`,
       result: {
-        errors: [null],
+        errors: [null as any],
       },
       observer: {
         next() {

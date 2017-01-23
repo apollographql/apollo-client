@@ -126,7 +126,7 @@ export function queries(
     newState[action.queryId] = {
       ...previousState[action.queryId],
       networkError: null,
-      graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
+      graphQLErrors: resultHasGraphQLErrors ? action.result.errors : [],
       previousVariables: null,
       networkStatus: NetworkStatus.ready,
     };

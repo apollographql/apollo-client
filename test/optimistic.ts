@@ -899,7 +899,7 @@ describe('optimistic mutation results', () => {
         reducer: (previousResult, action) => {
           if (isMutationResultAction(action)) {
             const newResult = cloneDeep(previousResult) as any;
-            newResult.todoList.todos.unshift(action.result.data['createTodo']);
+            newResult.todoList.todos.unshift(action.result.data!['createTodo']);
             return newResult;
           }
           return previousResult;

@@ -250,9 +250,11 @@ export class QueryManager {
 
     // Create a map of update queries by id to the query instead of by name.
     const updateQueries: { [queryId: string]: MutationQueryReducer } = {};
-    Object.keys(updateQueriesByName || {}).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
-      updateQueries[queryId] = updateQueriesByName[queryName];
-    }));
+    if (updateQueriesByName) {
+      Object.keys(updateQueriesByName).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
+        updateQueries[queryId] = updateQueriesByName[queryName];
+      }));
+    }
 
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',

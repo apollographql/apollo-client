@@ -142,8 +142,9 @@ export function data(
       });
 
       // If this action wants us to update certain queries. Let’s do it!
-      if (constAction.updateQueries) {
-        Object.keys(constAction.updateQueries).forEach(queryId => {
+      const { updateQueries } = constAction;
+      if (updateQueries) {
+        Object.keys(updateQueries).forEach(queryId => {
           const query = queries[queryId];
           if (!query) {
             return;
@@ -158,7 +159,7 @@ export function data(
             config,
           });
 
-          const reducer = constAction.updateQueries[queryId];
+          const reducer = updateQueries[queryId];
 
           // Run our reducer using the current query result and the mutation result.
           const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, {

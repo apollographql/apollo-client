@@ -28,13 +28,17 @@ import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { isEqual } from '../util/isEqual';
 
-import { NetworkStatus } from '../queries/store';
+import {
+  NetworkStatus,
+  isNetworkRequestInFlight,
+ } from '../queries/networkStatus';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
+  partial?: boolean;
 };
 
 export interface FetchMoreOptions {
@@ -45,7 +49,7 @@ export interface FetchMoreOptions {
 }
 
 export interface UpdateQueryOptions {
-  variables: Object;
+  variables?: Object;
 }
 
 export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
@@ -112,11 +116,20 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     });
   }
 
+  /**
+   * Return the result of the query from the local cache as well as some fetching status
+   * `loading` and `networkStatus` allow to know if a request is in flight
+   * `partial` lets you know if the result from the local cache is complete or partial
+   * @return {result: Object, loading: boolean, networkStatus: number, partial: boolean}
+   */
   public currentResult(): ApolloCurrentResult<T> {
     const { data, partial } = this.queryManager.getCurrentQueryResult(this, true);
     const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
 
-    if (queryStoreValue && (queryStoreValue.graphQLErrors || queryStoreValue.networkError)) {
+    if (queryStoreValue && (
+      (queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0) ||
+      queryStoreValue.networkError
+    )) {
       const error = new ApolloError({
         graphQLErrors: queryStoreValue.graphQLErrors,
         networkError: queryStoreValue.networkError,
@@ -124,7 +137,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       return { data: {}, loading: false, networkStatus: queryStoreValue.networkStatus, error };
     }
 
-    const queryLoading = !queryStoreValue || queryStoreValue.loading;
+    const queryLoading = !queryStoreValue || queryStoreValue.networkStatus === NetworkStatus.loading;
 
     // We need to be careful about the loading state we show to the user, to try
     // and be vaguely in line with what the user would have seen from .subscribe()
@@ -145,7 +158,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       networkStatus = loading ? NetworkStatus.loading : NetworkStatus.ready;
     }
 
-    return { data, loading, networkStatus };
+    return {
+      data,
+      loading: isNetworkRequestInFlight(networkStatus),
+      networkStatus,
+      partial,
+    };
   }
 
   // Returns the last result that observer.next was called with. This is not the same as
@@ -275,6 +293,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     };
   }
 
+  // Note: if the query is not active (there are no subscribers), the promise
+  // will return null immediately.
   public setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult<T>> {
     const oldOptions = this.options;
     this.options = {
@@ -289,12 +309,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     }
 
     // If forceFetch went from false to true or noFetch went from true to false
-    if ((!oldOptions.forceFetch && opts.forceFetch) || (oldOptions.noFetch && !opts.noFetch)) {
-      return this.queryManager.fetchQuery(this.queryId, this.options)
-        .then(result => this.queryManager.transformResult(result));
-    }
+    const tryFetch: boolean = (!oldOptions.forceFetch && opts.forceFetch)
+      || (oldOptions.noFetch && !opts.noFetch) || false;
 
-    return this.setVariables(this.options.variables);
+    return this.setVariables(this.options.variables, tryFetch);
   }
 
   /**
@@ -304,19 +322,41 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
    * Note: if the variables have not changed, the promise will return the old
    * results immediately, and the `next` callback will *not* fire.
    *
+   * Note: if the query is not active (there are no subscribers), the promise
+   * will return null immediately.
+   *
    * @param variables: The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
+   *
+   * @param tryFetch: Try and fetch new results even if the variables haven't
+   * changed (we may still just hit the store, but if there's nothing in there
+   * this will refetch)
    */
-  public setVariables(variables: any): Promise<ApolloQueryResult<T>> {
+  public setVariables(variables: any, tryFetch: boolean = false): Promise<ApolloQueryResult<T>> {
     const newVariables = {
       ...this.variables,
       ...variables,
     };
 
-    if (isEqual(newVariables, this.variables)) {
+    const nullPromise = new Promise((resolve) => resolve());
+
+    if (isEqual(newVariables, this.variables) && !tryFetch) {
+      // If we have no observers, then we don't actually want to make a network
+      // request. As soon as someone observes the query, the request will kick
+      // off. For now, we just store any changes. (See #1077)
+      if (this.observers.length === 0) {
+        return nullPromise;
+      }
+
       return this.result();
     } else {
       this.variables = newVariables;
+
+      // See comment above
+      if (this.observers.length === 0) {
+        return nullPromise;
+      }
+
       // Use the same options as before, but with new variables
       return this.queryManager.fetchQuery(this.queryId, {
         ...this.options,

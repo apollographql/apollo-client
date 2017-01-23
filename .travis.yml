@@ -16,3 +16,6 @@ script:
 
 # Allow Travis tests to run in containers.
 sudo: false
+
+notifications:
+  email: false

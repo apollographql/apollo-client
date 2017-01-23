@@ -16,7 +16,8 @@ import { GraphQLError } from 'graphql';
     // If we have GraphQL errors present, add that to the error message.
     if (Array.isArray(err.graphQLErrors) && err.graphQLErrors.length !== 0) {
       err.graphQLErrors.forEach((graphQLError: GraphQLError) => {
-        message += 'GraphQL error: ' + graphQLError.message + '\n';
+        const errorMessage = graphQLError ? graphQLError.message : 'Error message not found.';
+        message += `GraphQL error: ${errorMessage}\n`;
       });
     }
 
@@ -32,7 +33,7 @@ import { GraphQLError } from 'graphql';
 export class ApolloError extends Error {
   public message: string;
   public graphQLErrors: GraphQLError[];
-  public networkError: Error;
+  public networkError: Error | null;
 
   // An object that can be used to provide some additional information
   // about an error, e.g. specifying the type of error this is. Used
@@ -49,13 +50,13 @@ export class ApolloError extends Error {
     extraInfo,
   }: {
     graphQLErrors?: GraphQLError[],
-    networkError?: Error,
+    networkError?: Error | null,
     errorMessage?: string,
     extraInfo?: any,
   }) {
     super(errorMessage);
-    this.graphQLErrors = graphQLErrors;
-    this.networkError = networkError;
+    this.graphQLErrors = graphQLErrors || [];
+    this.networkError = networkError || null;
 
     // set up the stack trace
     this.stack = new Error().stack;

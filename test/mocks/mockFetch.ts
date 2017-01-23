@@ -52,7 +52,7 @@ export class MockFetch {
       throw new Error(`No more mocked fetch responses for the params ${url} and ${opts}`);
     }
 
-    const { result, delay } = responses.shift();
+    const { result, delay } = responses.shift()!;
 
     if (!result) {
       throw new Error(`Mocked fetch response should contain a result.`);

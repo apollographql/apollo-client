@@ -5,7 +5,6 @@ import {
 
 import {
   OperationResultReducer,
-  MutationBehavior,
   MutationQueryReducersMap,
 } from '../data/mutationResults';
 
@@ -96,7 +95,6 @@ export interface SubscriptionOptions {
 export interface MutationOptions {
   mutation: DocumentNode;
   variables?: Object;
-  resultBehaviors?: MutationBehavior[];
   optimisticResponse?: Object;
   updateQueries?: MutationQueryReducersMap;
   refetchQueries?: string[];

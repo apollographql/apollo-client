@@ -88,9 +88,9 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
   public _middlewares: MiddlewareInterface[];
   public _afterwares: AfterwareInterface[];
 
-  constructor(uri: string, opts: RequestInit = {}) {
+  constructor(uri: string | undefined, opts: RequestInit = {}) {
     if (!uri) {
-      throw new Error('A remote enpdoint is required for a network layer');
+      throw new Error('A remote endpoint is required for a network layer');
     }
 
     if (typeof uri !== 'string') {
@@ -112,7 +112,9 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();
-            f.applyMiddleware.apply(scope, [{ request, options }, next]);
+            if (f) {
+              f.applyMiddleware.apply(scope, [{ request, options }, next]);
+            }
           } else {
             resolve({
               request,
@@ -229,8 +231,8 @@ export function createNetworkInterface(
     throw new Error('You must pass an options argument to createNetworkInterface.');
   }
 
-  let uri: string;
-  let opts: RequestInit;
+  let uri: string | undefined;
+  let opts: RequestInit | undefined;
 
   // We want to change the API in the future so that you just pass all of the options as one
   // argument, so even though the internals work with two arguments we're warning here.
@@ -238,10 +240,10 @@ export function createNetworkInterface(
     console.warn(`Passing the URI as the first argument to createNetworkInterface is deprecated \
 as of Apollo Client 0.5. Please pass it as the "uri" property of the network interface options.`);
     opts = secondArgOpts;
-    uri = uriOrInterfaceOpts as string;
+    uri = uriOrInterfaceOpts;
   } else {
-    opts = (uriOrInterfaceOpts as NetworkInterfaceOptions).opts;
-    uri = (uriOrInterfaceOpts as NetworkInterfaceOptions).uri;
+    opts = uriOrInterfaceOpts.opts;
+    uri = uriOrInterfaceOpts.uri;
   }
   return new HTTPFetchNetworkInterface(uri, opts);
 }

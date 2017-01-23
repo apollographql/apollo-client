@@ -42,7 +42,6 @@ import {
 } from './data/writeToStore';
 
 import {
-  MutationBehavior,
   MutationQueryReducersMap,
 } from './data/mutationResults';
 
@@ -55,7 +54,7 @@ import {
 
 import {
   NetworkStatus,
-} from './queries/store';
+} from './queries/networkStatus';
 
 import {
   ApolloError,
@@ -101,7 +100,6 @@ export {
   WatchQueryOptions,
   MutationOptions,
   ObservableQuery,
-  MutationBehavior,
   MutationQueryReducersMap,
   Subscription,
   SubscriptionOptions,

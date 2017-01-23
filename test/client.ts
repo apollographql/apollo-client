@@ -31,7 +31,7 @@ import {
   print,
 } from 'graphql-tag/printer';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 import {
   createStore,
@@ -471,11 +471,11 @@ describe('client', () => {
       queries: {
         '1': {
           queryString: print(query),
+          document: query,
           variables: {},
-          loading: false,
           networkStatus: NetworkStatus.ready,
           networkError: null,
-          graphQLErrors: null,
+          graphQLErrors: [],
           forceFetch: false,
           returnPartialData: false,
           lastRequestId: 2,
@@ -1329,7 +1329,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       done(new Error('Returned a result when it should not have.'));
     }).catch((error: ApolloError) => {
       assert(error.networkError);
-      assert.equal(error.networkError.message, networkError.message);
+      assert.equal(error.networkError!.message, networkError.message);
       done();
     });
   });

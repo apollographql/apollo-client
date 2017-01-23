@@ -14,33 +14,26 @@ import {
 } from '../data/storeUtils';
 
 import {
+  DocumentNode,
   SelectionSetNode,
   GraphQLError,
 } from 'graphql';
 
 import { isEqual } from '../util/isEqual';
 
+import { NetworkStatus } from './networkStatus';
+
 export interface QueryStore {
   [queryId: string]: QueryStoreValue;
 }
 
-export enum NetworkStatus {
-  loading = 1,
-  setVariables = 2,
-  fetchMore = 3,
-  refetch = 4,
-  poll = 6,
-  ready = 7,
-  error = 8,
-}
-
 export type QueryStoreValue = {
   queryString: string;
+  document: DocumentNode;
   variables: Object;
-  previousVariables: Object;
-  loading: boolean;
+  previousVariables: Object | null;
   networkStatus: NetworkStatus;
-  networkError: Error;
+  networkError: Error | null;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
   returnPartialData: boolean;
@@ -72,7 +65,7 @@ export function queries(
 
     let isSetVariables = false;
 
-    let previousVariables: Object;
+    let previousVariables: Object | null = null;
     if (
       action.storePreviousVariables &&
       previousQuery &&
@@ -104,11 +97,11 @@ export function queries(
     // before the initial fetch is done, you'll get an error.
     newState[action.queryId] = {
       queryString: action.queryString,
+      document: action.document,
       variables: action.variables,
       previousVariables,
-      loading: true,
       networkError: null,
-      graphQLErrors: null,
+      graphQLErrors: [],
       networkStatus: newNetworkStatus,
       forceFetch: action.forceFetch,
       returnPartialData: action.returnPartialData,
@@ -132,12 +125,11 @@ export function queries(
 
     newState[action.queryId] = {
       ...previousState[action.queryId],
-      loading: false,
       networkError: null,
-      graphQLErrors: resultHasGraphQLErrors ? action.result.errors : null,
+      graphQLErrors: resultHasGraphQLErrors ? action.result.errors : [],
       previousVariables: null,
       networkStatus: NetworkStatus.ready,
-    } as QueryStoreValue;
+    };
 
     return newState;
   } else if (isQueryErrorAction(action)) {
@@ -154,10 +146,9 @@ export function queries(
 
     newState[action.queryId] = {
       ...previousState[action.queryId],
-      loading: false,
       networkError: action.error,
       networkStatus: NetworkStatus.error,
-    } as QueryStoreValue;
+    };
 
     return newState;
   } else if (isQueryResultClientAction(action)) {
@@ -169,14 +160,13 @@ export function queries(
 
     newState[action.queryId] = {
       ...previousState[action.queryId],
-      loading: !action.complete,
       networkError: null,
       previousVariables: null,
       // XXX I'm not sure what exactly action.complete really means. I assume it means we have the complete result
       // and do not need to hit the server. Not sure when we'd fire this action if the result is not complete, so that bears explanation.
       // We should write that down somewhere.
       networkStatus: action.complete ? NetworkStatus.ready : NetworkStatus.loading,
-    } as QueryStoreValue;
+    };
 
     return newState;
   } else if (isQueryStopAction(action)) {
@@ -205,7 +195,6 @@ function resetQueryState(state: QueryStore, action: StoreResetAction): QueryStor
     // XXX set loading to true so listeners don't trigger unless they want results with partial data
     res[key] = {
       ...state[key],
-      loading: true,
       networkStatus: NetworkStatus.loading,
     };
 

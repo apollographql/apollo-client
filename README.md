@@ -10,12 +10,12 @@ Apollo Client can be used in any JavaScript frontend where you want to use data 
 2. **Simple to get started with**, you can start loading data right away and learn about advanced features later.
 3. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
 4. **Built for interactive apps**, so your users can make changes and see them reflected in the UI immediately.
-4. **Small and flexible**, so you don't get stuff you don't need. The core is under 40kb compressed.
+4. **Small and flexible**, so you don't get stuff you don't need. The core is under 25kb compressed.
 5. **Community driven**, Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
 
 Get started on the [home page](http://dev.apollodata.com/), which has great examples for a variety of frameworks.
 
-## Installing
+## Installation
 
 ```txt
 npm install apollo-client
@@ -23,18 +23,21 @@ npm install apollo-client
 
 To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3.
 
-### Learn how to use Apollo Client with your favorite framework
+**NEW:** Install the [Apollo Client Developer tools for Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) for a great GraphQL developer experience!
+
+## Learn how to use Apollo Client with your favorite framework
 
 - [React](http://dev.apollodata.com/react/)
 - [Angular 2](http://dev.apollodata.com/angular2/)
 - [Vue](https://github.com/Akryum/vue-apollo)
+- [Ember](https://github.com/bgentry/ember-apollo-client)
 - [Polymer](https://github.com/aruntk/polymer-apollo)
 - [Meteor](http://dev.apollodata.com/core/meteor.html)
 - [Vanilla JS](http://dev.apollodata.com/core/)
 
 ---
 
-### Contributing
+## Contributing
 
 [![Build status](https://travis-ci.org/apollostack/apollo-client.svg?branch=master)](https://travis-ci.org/apollostack/apollo-client)
 [![Build status](https://ci.appveyor.com/api/projects/status/ajdf70delshw2ire/branch/master?svg=true)](https://ci.appveyor.com/project/stubailo/apollo-client/branch/master)

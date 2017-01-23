@@ -54,7 +54,7 @@ export class QueryBatcher {
 
   // Consumes the queue. Called on a polling interval.
   // Returns a list of promises (one for each query).
-  public consumeQueue(): Promise<ExecutionResult>[] | undefined {
+  public consumeQueue(): (Promise<ExecutionResult> | undefined)[] | undefined {
     if (this.queuedRequests.length < 1) {
       return undefined;
     }
@@ -67,7 +67,7 @@ export class QueryBatcher {
       };
     });
 
-    const promises: Promise<ExecutionResult>[] = [];
+    const promises: (Promise<ExecutionResult> | undefined)[] = [];
     const resolvers: any[] = [];
     const rejecters: any[] = [];
     this.queuedRequests.forEach((fetchRequest, index) => {

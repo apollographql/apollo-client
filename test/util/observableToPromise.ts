@@ -33,7 +33,7 @@ export function observableToPromiseAndSubscription({
   ...cbs: ResultCallback[],
 ): { promise: Promise<any[]>, subscription: Subscription } {
 
-  let subscription: Subscription;
+  let subscription: Subscription = null as never;
   const promise = new Promise((resolve, reject) => {
     let errorIndex = 0;
     let cbIndex = 0;

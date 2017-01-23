@@ -61,7 +61,7 @@ export function writeQueryToStore({
   query,
   store = {} as NormalizedCache,
   variables,
-  dataIdFromObject = null,
+  dataIdFromObject,
   fragmentMap = {} as FragmentMap,
 }: {
   result: Object,
@@ -99,7 +99,7 @@ export function writeResultToStore({
   document,
   store = {} as NormalizedCache,
   variables,
-  dataIdFromObject = null,
+  dataIdFromObject,
 }: {
   dataId: string,
   result: any,
@@ -172,7 +172,7 @@ export function writeSelectionSetToStore({
         fragment = selection;
       } else {
         // Named fragment
-        fragment = fragmentMap[selection.name.value];
+        fragment = (fragmentMap || {})[selection.name.value];
 
         if (!fragment) {
           throw new Error(`No fragment named ${selection.name.value}.`);
@@ -236,7 +236,7 @@ function writeFieldToStore({
   // specifies if we need to merge existing keys in the store
   let shouldMerge = false;
   // If we merge, this will be the generatedKey
-  let generatedKey: string;
+  let generatedKey: string = '';
 
   // If this is a scalar value...
   if (!field.selectionSet || value === null) {

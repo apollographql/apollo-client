@@ -8,7 +8,7 @@ import {
 export function getMutationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let mutationDef: OperationDefinitionNode = null;
+  let mutationDef: OperationDefinitionNode | null = null;
   doc.definitions.forEach((definition) => {
     if (definition.kind === 'OperationDefinition'
         && (definition as OperationDefinitionNode).operation === 'mutation') {
@@ -55,9 +55,8 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
 export function getOperationName(doc: DocumentNode): string {
   let res: string = '';
   doc.definitions.forEach((definition) => {
-    if (definition.kind === 'OperationDefinition'
-        && (definition as OperationDefinitionNode).name) {
-      res = (definition as OperationDefinitionNode).name.value;
+    if (definition.kind === 'OperationDefinition' && definition.name) {
+      res = definition.name.value;
     }
   });
   return res;
@@ -79,7 +78,7 @@ export function getFragmentDefinitions(doc: DocumentNode): FragmentDefinitionNod
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let queryDef: OperationDefinitionNode = null;
+  let queryDef: OperationDefinitionNode | null = null;
   doc.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition'
        && (definition as OperationDefinitionNode).operation === 'query') {
@@ -98,7 +97,7 @@ export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
 export function getOperationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let opDef: OperationDefinitionNode = null;
+  let opDef: OperationDefinitionNode | null = null;
   doc.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition') {
       opDef = definition as OperationDefinitionNode;

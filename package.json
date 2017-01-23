@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/src/index.js",
@@ -8,7 +8,7 @@
   "typings": "./lib/src/index.d.ts",
   "scripts": {
     "dev": "./scripts/dev.sh",
-    "deploy": "rm -rf ./lib && ./scripts/deploy.sh",
+    "deploy": "./scripts/deploy.sh",
     "pretest": "npm run compile:test",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
@@ -77,7 +77,7 @@
     "pretty-bytes": "^4.0.0",
     "remap-istanbul": "0.8.0",
     "request": "^2.75.0",
-    "rollup": "^0.40.0",
+    "rollup": "^0.41.3",
     "rxjs": "^5.0.0-beta.11",
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",

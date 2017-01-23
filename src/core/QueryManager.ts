@@ -21,14 +21,19 @@ import {
 
 import {
   QueryStoreValue,
-  NetworkStatus,
 } from '../queries/store';
+
+import {
+  NetworkStatus,
+  isNetworkRequestInFlight,
+} from '../queries/networkStatus';
 
 import {
   ApolloStore,
   Store,
   getDataWithOptimisticResults,
   ApolloReducerConfig,
+  ApolloReducer,
 } from '../store';
 
 import {
@@ -48,6 +53,10 @@ import {
 import {
   createStoreReducer,
 } from '../data/resultReducers';
+
+import {
+  isProduction,
+} from '../util/environment';
 
 import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
@@ -75,8 +84,8 @@ import {
 } from '../data/readFromStore';
 
 import {
-  MutationBehavior,
   MutationQueryReducersMap,
+  MutationQueryReducer,
 } from '../data/mutationResults';
 
 import {
@@ -113,8 +122,8 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
-  private resultTransformer: ResultTransformer;
-  private resultComparator: ResultComparator;
+  private resultTransformer: ResultTransformer | undefined;
+  private resultComparator: ResultComparator | undefined;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
 
@@ -213,14 +222,12 @@ export class QueryManager {
   public mutate<T>({
     mutation,
     variables,
-    resultBehaviors = [],
     optimisticResponse,
-    updateQueries,
+    updateQueries: updateQueriesByName,
     refetchQueries = [],
   }: {
     mutation: DocumentNode,
     variables?: Object,
-    resultBehaviors?: MutationBehavior[],
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[],
@@ -239,26 +246,26 @@ export class QueryManager {
       operationName: getOperationName(mutation),
     } as Request;
 
-    // Right now the way `updateQueries` feature is implemented relies on using
-    // `resultBehaviors`, another feature that accomplishes the same goal but
-    // provides more verbose syntax.
-    // In the future we want to re-factor this part of code to avoid using
-    // `resultBehaviors` so we can remove `resultBehaviors` entirely.
-    const updateQueriesResultBehaviors = !optimisticResponse ? [] :
-      this.collectResultBehaviorsFromUpdateQueries(updateQueries, { data: optimisticResponse }, true);
-
     this.queryDocuments[mutationId] = mutation;
+
+    // Create a map of update queries by id to the query instead of by name.
+    const updateQueries: { [queryId: string]: MutationQueryReducer } = {};
+    if (updateQueriesByName) {
+      Object.keys(updateQueriesByName).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
+        updateQueries[queryId] = updateQueriesByName[queryName];
+      }));
+    }
 
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
       mutationString,
       mutation,
-      variables,
+      variables: variables || {},
       operationName: getOperationName(mutation),
       mutationId,
       optimisticResponse,
-      resultBehaviors: [...resultBehaviors, ...updateQueriesResultBehaviors],
       extraReducers: this.getExtraReducers(),
+      updateQueries,
     });
 
     return new Promise((resolve, reject) => {
@@ -276,13 +283,17 @@ export class QueryManager {
             mutationId,
             document: mutation,
             operationName: getOperationName(mutation),
-            variables,
-            resultBehaviors: [
-                ...resultBehaviors,
-                ...this.collectResultBehaviorsFromUpdateQueries(updateQueries, result),
-            ],
+            variables: variables || {},
             extraReducers: this.getExtraReducers(),
+            updateQueries,
           });
+
+          // If there was an error in our reducers, reject this promise!
+          const { reducerError } = this.getApolloState();
+          if (reducerError) {
+            reject(reducerError);
+            return;
+          }
 
           refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
           delete this.queryDocuments[mutationId];
@@ -325,7 +336,7 @@ export class QueryManager {
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
-      if (!queryStoreValue.loading ||
+      if (!isNetworkRequestInFlight(queryStoreValue.networkStatus) ||
           ( networkStatusChanged && options.notifyOnNetworkStatusChange ) ||
           shouldNotifyIfLoading) {
         // XXX Currently, returning errors and data is exclusive because we
@@ -333,7 +344,10 @@ export class QueryManager {
 
         // If we have either a GraphQL error or a network error, we create
         // an error and tell the observer about it.
-        if (queryStoreValue.graphQLErrors || queryStoreValue.networkError) {
+        if (
+          (queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0) ||
+          queryStoreValue.networkError
+        ) {
           const apolloError = new ApolloError({
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,
@@ -346,17 +360,17 @@ export class QueryManager {
             }
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
-            if (process.env.NODE_ENV !== 'production') {
+            if (!isProduction()) {
               /* tslint:disable-next-line */
               console.info(
                 'An unhandled error was thrown because no error handler is registered ' +
-                'for the query ' + options.query.loc.source,
+                'for the query ' + queryStoreValue.queryString,
               );
             }
           }
         } else {
           try {
-            const resultFromStore = {
+            const resultFromStore: ApolloQueryResult<T> = {
               data: readQueryFromStore<T>({
                 store: this.getDataWithOptimisticResults(),
                 query: this.queryDocuments[queryId],
@@ -365,7 +379,7 @@ export class QueryManager {
                 config: this.reducerConfig,
                 previousResult: lastResult && lastResult.data,
               }),
-              loading: queryStoreValue.loading,
+              loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
               networkStatus: queryStoreValue.networkStatus,
             };
 
@@ -374,7 +388,6 @@ export class QueryManager {
                 this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
                   lastResult &&
                   resultFromStore &&
-                  lastResult.loading === resultFromStore.loading &&
                   lastResult.networkStatus === resultFromStore.networkStatus &&
 
                   // We can do a strict equality check here because we include a `previousResult`
@@ -485,7 +498,7 @@ export class QueryManager {
       });
 
       // If we're in here, only fetch if we have missing fields
-      needToFetch = isMissing;
+      needToFetch = isMissing || false;
 
       storeResult = result;
     }
@@ -687,7 +700,9 @@ export class QueryManager {
         const handler = (error: Error, result: any) => {
           if (error) {
             observers.forEach((obs) => {
-              obs.error(error);
+              if (obs.error) {
+                obs.error(error);
+              }
             });
           } else {
             this.store.dispatch({
@@ -695,13 +710,15 @@ export class QueryManager {
               document: transformedDoc,
               operationName: getOperationName(transformedDoc),
               result: { data: result },
-              variables,
+              variables: variables || {},
               subscriptionId: subId,
               extraReducers: this.getExtraReducers(),
             });
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach((obs) => {
-              obs.next(result);
+              if (obs.next) {
+                obs.next(result);
+              }
             });
           }
         };
@@ -827,52 +844,6 @@ export class QueryManager {
     };
   }
 
-  private collectResultBehaviorsFromUpdateQueries(
-    updateQueries: MutationQueryReducersMap,
-    mutationResult: Object,
-    isOptimistic = false,
-  ): MutationBehavior[] {
-    if (!updateQueries) {
-      return [];
-    }
-    const resultBehaviors: any[] = [];
-
-    Object.keys(updateQueries).forEach((queryName) => {
-      const reducer = updateQueries[queryName];
-      const queryIds = this.queryIdsByName[queryName];
-      if (!queryIds) {
-        // XXX should throw an error?
-        return;
-      }
-
-      queryIds.forEach((queryId) => {
-        const {
-          previousResult,
-          variables,
-          document,
-        } = this.getQueryWithPreviousResult(queryId, isOptimistic);
-
-        const newResult = tryFunctionOrLogError(() => reducer(
-          previousResult, {
-            mutationResult,
-            queryName,
-            queryVariables: variables,
-          }));
-
-        if (newResult) {
-          resultBehaviors.push({
-            type: 'QUERY_RESULT',
-            newResult,
-            variables,
-            document,
-          });
-        }
-      });
-    });
-
-    return resultBehaviors;
-  }
-
   // Takes a set of WatchQueryOptions and transforms the query document
   // accordingly. Specifically, it applies the queryTransformer (if there is one defined)
   private transformQueryDocument(options: WatchQueryOptions): {
@@ -890,18 +861,18 @@ export class QueryManager {
     };
   }
 
-  private getExtraReducers() {
+  private getExtraReducers(): ApolloReducer[] {
     return  Object.keys(this.observableQueries).map( obsQueryId => {
       const queryOptions = this.observableQueries[obsQueryId].observableQuery.options;
       if (queryOptions.reducer) {
         return createStoreReducer(
           queryOptions.reducer,
           queryOptions.query,
-          queryOptions.variables,
+          queryOptions.variables || {},
           this.reducerConfig,
           );
       }
-      return null;
+      return null as never;
     }).filter( reducer => reducer !== null );
   }
 

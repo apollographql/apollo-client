@@ -16,8 +16,6 @@ import {
   QueryBatcher,
 } from './batching';
 
-import HttpNetworkError from '../errors/HttpNetworkError';
-
 import { assign } from '../util/assign';
 
 // An implementation of the network interface that operates over HTTP and batches
@@ -69,10 +67,11 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
             const httpResponse = result as IResponse;
 
             if (!httpResponse.ok) {
-              throw new HttpNetworkError({
-                request: requestsAndOptions,
-                response: httpResponse,
-              });
+              const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
+              (httpError as any).response = httpResponse;
+              (httpError as any).request = requestsAndOptions;
+
+              throw httpError;
             }
 
             // XXX can we be stricter with the type here?

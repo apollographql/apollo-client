@@ -159,7 +159,7 @@ describe('HTTPBatchedNetworkInterface', () => {
       });
     });
 
-    it('should throw an HttpNetworkError when a non-200 response is received', (done) => {
+    it('should throw an error with the response when a non-200 response is received', (done) => {
       const fakeForbiddenResponse = createMockedIResponse([], { status: 401, statusText: 'Unauthorized'});
       const fetchFunc = () => Promise.resolve(fakeForbiddenResponse);
 
@@ -170,7 +170,7 @@ describe('HTTPBatchedNetworkInterface', () => {
         }],
         fetchFunc,
       }).then(() => {
-        done(new Error('An HttpNetworkError should have been thrown'));
+        done(new Error('An error should have been thrown'));
       }).catch(err => {
         assert.strictEqual(err.response, fakeForbiddenResponse, 'Incorrect response provided');
         assert.equal(err.message, 'Network request failed with status 401 - "Unauthorized"', 'Incorrect message generated');

@@ -463,7 +463,7 @@ describe('network interface', () => {
       return assert.isRejected(nowhere.query(doomedToFail));
     });
 
-    it('should throw an HttpNetworkError when forbidden', () => {
+    it('should throw an error with the response when request is forbidden', () => {
       const unauthorizedInterface = createNetworkInterface({ uri: unauthorizedUrl });
 
       return unauthorizedInterface.query(doomedToFail).catch(err => {
@@ -473,7 +473,7 @@ describe('network interface', () => {
       });
     });
 
-    it('should throw an HttpNetworkError when service is unavailable', () => {
+    it('should throw an error with the response when service is unavailable', () => {
       const unauthorizedInterface = createNetworkInterface({ uri: serviceUnavailableUrl });
 
       return unauthorizedInterface.query(doomedToFail).catch(err => {

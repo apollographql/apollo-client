@@ -1,6 +1,5 @@
 import { assert } from 'chai';
 import { ApolloError } from '../src/errors/ApolloError';
-import HttpNetworkError from '../src/errors/HttpNetworkError';
 
 import { createMockedIResponse } from './mocks/mockFetch';
 
@@ -80,33 +79,5 @@ describe('ApolloError', () => {
       networkError,
     });
     assert(apolloError.stack, 'Does not contain a stack trace.');
-  });
-});
-
-describe('HttpNetworkError', () => {
-  it('should provide the given response back to the user', () => {
-    const response = createMockedIResponse({}, { status: 401, statusText: 'Unauthorized' });
-
-    const err = new HttpNetworkError({ response });
-
-    assert.deepEqual(err.response, response);
-  });
-
-  it('should provide default values for the request and message', () => {
-    const response = createMockedIResponse({}, { status: 403, statusText: 'Forbidden' });
-    const err = new HttpNetworkError({ response });
-
-    assert.isOk(err.message);
-    assert.isObject(err.request);
-  });
-
-  it('should accept a request and message if provided', () => {
-    const response = createMockedIResponse({}, { status: 403, statusText: 'Forbidden' });
-    const request = { name: 'Sample Request' };
-    const message = 'a test message';
-    const err = new HttpNetworkError({ response, request, message });
-
-    assert.equal(err.message, message);
-    assert.deepEqual(err.request, request);
   });
 });

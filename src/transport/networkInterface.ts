@@ -10,8 +10,6 @@ import { print } from 'graphql-tag/printer';
 import { MiddlewareInterface } from './middleware';
 import { AfterwareInterface } from './afterware';
 
-import HttpNetworkError from '../errors/HttpNetworkError';
-
 /**
  * This is an interface that describes an GraphQL document to be sent
  * to the server.
@@ -189,10 +187,11 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         const httpResponse = response as IResponse;
 
         if (!httpResponse.ok) {
-          throw new HttpNetworkError({
-            request,
-            response: httpResponse,
-          });
+          const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
+          (httpError as any).response = httpResponse;
+          (httpError as any).request = request;
+
+          throw httpError;
         }
 
         return httpResponse.json();

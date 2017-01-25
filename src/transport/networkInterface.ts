@@ -183,7 +183,18 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         response: response as IResponse,
         options,
       }))
-      .then(({ response }) => (response as IResponse).json())
+      .then(({ response }) => {
+        const httpResponse = response as IResponse;
+
+        if (!httpResponse.ok) {
+          const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
+          (httpError as any).response = httpResponse;
+
+          throw httpError;
+        }
+
+        return httpResponse.json();
+      })
       .then((payload: ExecutionResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(

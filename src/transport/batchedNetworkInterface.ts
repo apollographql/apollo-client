@@ -64,12 +64,19 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
         return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
           .then(result => {
+            const httpResponse = result as IResponse;
+
+            if (!httpResponse.ok) {
+              const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
+              (httpError as any).response = httpResponse;
+
+              throw httpError;
+            }
+
             // XXX can we be stricter with the type here?
             return result.json() as any;
           })
           .then(responses => {
-
-
             if (typeof responses.map !== 'function') {
               throw new Error('BatchingNetworkInterface: server response is not an array');
             }

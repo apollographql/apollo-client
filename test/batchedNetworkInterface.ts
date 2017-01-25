@@ -159,6 +159,25 @@ describe('HTTPBatchedNetworkInterface', () => {
       });
     });
 
+    it('should throw an error with the response when a non-200 response is received', (done) => {
+      const fakeForbiddenResponse = createMockedIResponse([], { status: 401, statusText: 'Unauthorized'});
+      const fetchFunc = () => Promise.resolve(fakeForbiddenResponse);
+
+      assertRoundtrip({
+        requestResultPairs: [{
+          request: { query: authorQuery },
+          result: authorResult,
+        }],
+        fetchFunc,
+      }).then(() => {
+        done(new Error('An error should have been thrown'));
+      }).catch(err => {
+        assert.strictEqual(err.response, fakeForbiddenResponse, 'Incorrect response provided');
+        assert.equal(err.message, 'Network request failed with status 401 - "Unauthorized"', 'Incorrect message generated');
+        done();
+      });
+    });
+
     it('should return errors thrown by middleware', (done) => {
       const err = new Error('Error of some kind thrown by middleware.');
       const errorMiddleware: MiddlewareInterface = {

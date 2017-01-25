@@ -189,7 +189,6 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         if (!httpResponse.ok) {
           const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
           (httpError as any).response = httpResponse;
-          (httpError as any).request = request;
 
           throw httpError;
         }

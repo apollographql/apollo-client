@@ -69,7 +69,6 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
             if (!httpResponse.ok) {
               const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
               (httpError as any).response = httpResponse;
-              (httpError as any).request = requestsAndOptions;
 
               throw httpError;
             }

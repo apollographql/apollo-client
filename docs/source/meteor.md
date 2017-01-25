@@ -117,14 +117,18 @@ export const resolvers = {
 
 `networkInterfaceConfig` may contain any of the following fields:
 - `path`: path of the GraphQL server. Default: `'/graphql'`.
-- `options`: `FetchOptions` passed to [`createNetworkInterface`](http://dev.apollodata.com/core/apollo-client-api.html#createNetworkInterface). Default: `{}`.
+- `opts`: [`FetchOptions`](https://github.github.io/fetch#options) passed to the [`NetworkInterface`](http://dev.apollodata.com/core/network.html#createNetworkInterface). Default: `{}`.
 - `useMeteorAccounts`: Whether to send the current user's login token to the GraphQL server with each request. Default: `true`.
+- `cookieLoginToken`: if `useMeteorAccounts` is `true`, pass a potential login token stored in the cookies by a third-party package, such as [`meteorhacks:fast-render`](https://github.com/kadirahq/fast-render), to allow access to `context.userId` & `context.user` in the resolvers functions run during server-side rendering. 
+- `batchingInterface`: use a [`BatchedNetworkInterface`](http://dev.apollodata.com/core/network.html#query-batching) instead of [`NetworkInterface`](http://dev.apollodata.com/core/network.html#network-interfaces). Default: `true`.
+- `batchInterval`: if the `batchingInterface` field is `true`, this field defines the batch interval to determine how long the network interface batches up queries before sending them to the server. Default: `10`.
 
 Returns an [`options` object](http://dev.apollodata.com/core/apollo-client-api.html#apollo-client) for `ApolloClient`:
 
 ```
 {
-  networkInterface
+  ssrMode: Meteor.isServer, // true if you use it server-side, false client-side
+  networkInterface,
   dataIdFromObject: object.__typename + object._id
 }
 ```
@@ -148,8 +152,21 @@ It will use the same port as your Meteor server. Don't put a route or static ass
 
 ## Accounts
 
-You may still use the authentication based on DDP (Meteor's default data layer) and apollo will send the current user's login token to the GraphQL server with each request. But if you want to use only GraphQL in your app you can use [nicolaslopezj:apollo-accounts](https://github.com/nicolaslopezj/meteor-apollo-accounts). This package uses the Meteor Accounts methods in GraphQL, it's compatible with the accounts you have saved in your database and you may use apollo-accounts and Meteor's DDP accounts at the same time.
+You may still use the authentication based on DDP (Meteor's default data layer) and apollo will send the current user's login token to the GraphQL server with each request. 
 
+If you want to use only GraphQL in your app you can use [nicolaslopezj:apollo-accounts](https://github.com/nicolaslopezj/meteor-apollo-accounts). This package uses the Meteor Accounts methods in GraphQL, it's compatible with the accounts you have saved in your database and you may use apollo-accounts and Meteor's DDP accounts at the same time.
+
+If you are relying on the current user in your queries, you'll want to [clear the store when the current user state changes](http://dev.apollodata.com/react/auth.html#login-logout). To do so, use `client.resetStore()` in the `Meteor.logout` callback:
+
+```
+// The `client` variable refers to your `ApolloClient` instance.
+// It would be imported in your template,
+// or passed via props thanks to `withApollo` in React for example.
+
+Meteor.logout(function() {
+  return client.resetStore(); // make all active queries re-run when the log-out process completed
+});
+```
 
 ## SSR
 There are two additional configurations that you need to keep in mind when using [React Server Side Rendering](http://dev.apollodata.com/react/server-side-rendering.html) with Meteor.
@@ -162,6 +179,7 @@ Here is a full working example:
 ```js
 import { Meteor } from 'meteor/meteor';
 import { WebApp } from 'meteor/webapp';
+import { meteorClientConfig } from 'meteor/apollo';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
@@ -188,17 +206,14 @@ app.use((req, res, next) => {
       console.error('ROUTER ERROR:', error); // eslint-disable-line no-console
       res.status(500);
     } else if (renderProps) {
-      const client = new ApolloClient({
-        ssrMode: true,
-        // networkInterface: createLocalInterface(graphql, schema),
-        networkInterface: createNetworkInterface({
-          uri: Meteor.absoluteUrl('/graphql'),
-          opts: {
-            credentials: 'same-origin',
-            headers: req.headers,
-          },
-        }),
+      const networkInterfaceConfig = meteorClientConfig({
+        opts: {
+          credentials: 'same-origin',
+          headers: req.headers,
+        },
       });
+      
+      const client = new ApolloClient(networkInterfaceConfig);
 
       const store = createStore(
         combineReducers({

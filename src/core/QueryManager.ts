@@ -15,6 +15,7 @@ import {
   ResultComparator,
   QueryListener,
   ApolloQueryResult,
+  PureQueryOptions,
   FetchType,
   SubscriptionOptions,
 } from './types';
@@ -230,7 +231,7 @@ export class QueryManager {
     variables?: Object,
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
-    refetchQueries?: string[],
+    refetchQueries?: string[] | PureQueryOptions[],
   }): Promise<ApolloQueryResult<T>> {
     const mutationId = this.generateQueryId();
 
@@ -295,7 +296,19 @@ export class QueryManager {
             return;
           }
 
-          refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
+          if (typeof refetchQueries[0] === 'string') {
+            (refetchQueries as string[]).forEach((name) => { this.refetchQueryByName(name); });
+          } else {
+            (refetchQueries as PureQueryOptions[]).forEach( pureQuery => {
+              this.query({
+                query: pureQuery.query,
+                variables: pureQuery.variables,
+                forceFetch: true,
+              });
+            });
+          }
+
+
           delete this.queryDocuments[mutationId];
           resolve(this.transformResult(<ApolloQueryResult<T>>result));
         })

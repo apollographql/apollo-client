@@ -3423,6 +3423,63 @@ describe('QueryManager', () => {
       .then(() => assert.equal(timesWarned, 0));
     });
 
+    it('also works with a query document and variables', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }`;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({ query });
+      return observableToPromise({ observable },
+        (result) => {
+          assert.deepEqual(result.data, data);
+          queryManager.mutate({ mutation, refetchQueries: [{ query }] });
+        },
+        (result) => assert.deepEqual(result.data, secondReqData),
+      );
+    });
+
     afterEach((done) => {
       // restore standard method
       console.warn = oldWarn;

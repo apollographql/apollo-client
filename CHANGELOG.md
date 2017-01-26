@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Allow refetching with query documents after mutation. [PR #1234](https://github.com/apollostack/apollo-client/pull/1234)
 - Enable TypeScript strict null checking in source code. [PR #1221](https://github.com/apollostack/apollo-client/pull/1221)
 - ...
 

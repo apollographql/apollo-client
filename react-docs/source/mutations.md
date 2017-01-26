@@ -132,7 +132,7 @@ const NewEntryWithData = graphql(submitRepository, {
 })(NewEntry);
 ```
 
-Note that, in general, you don't need to use the results from the mutation callback directly. Instead you should usually rely on Apollo's id-based cache updating to take care of it for you. If that doesn't cover your needs, you can pass an [`updateQueries`](cache-updates.html#updateQueries) callback to update any relevant queries with your mutation results. That way, you can keep your UI components as stateless and declarative as possible.
+Note that, in general, you don't need to use the results from the mutation callback directly. Instead you should usually rely on Apollo's id-based cache updating to take care of it for you. If that doesn't cover your needs, you can pass an [`updateQueries`](cache-updates.html#updateQueries) callback to update any relevant queries with your mutation results.That way, you can keep your UI components as stateless and declarative as possible.
 
 <h2 id="optimistic-ui">Optimistic UI</h2>
 
@@ -194,3 +194,11 @@ When people talk about GraphQL, they often focus on the data fetching side of th
 In GraphQL, mutations can return any type, and that type can be queried just like a regular GraphQL query. So the question is - what type should a particular mutation return?
 
 In most cases, the data available from a mutation result should be the server developer's best guess of the data a client would need to understand what happened on the server. For example, a mutation that creates a new comment on a blog post might return the comment itself. A mutation that reorders an array might need to return the whole array.
+
+<h2 id="update-after-mutation">Updating the cache after a mutation</h2>
+
+Most of the time it is not necessary to tell Apollo which parts of the cache to update. It can automatically figure out which objects have changed if you use [dataIdFromObject](cache-updates.html#dataIdFromObject). However, there are cases like inserting or deleting items from a list, which cannot be done that way. In those cases, you have a few options:
+
+1. use [`refetchQueries`](cache-updates.html#refetchQueries) to completely refetch parts of your cache after the mutation has completed. 
+2. use [`updateQueries`](cache-updates.html#updateQueries) to speficy how the mutation result affects results of previous queries in the cache.
+

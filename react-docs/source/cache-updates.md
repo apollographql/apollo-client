@@ -296,6 +296,48 @@ In our `updateQueries` function for the `Comment` query, we're doing something r
 Once the mutation fires and the result arrives from the server (or, a result is provided through optimistic UI), our `updateQueries` function for the `Comment` query will be called and the `Comment` query will be updated accordingly. These changes in the result will be mapped to React props and our UI will update as well with the new information!
 
 
+<h2 id="refetchQueries">Using `refetchQueries`</h2>
+
+`refetchQueries` offers an even simpler way of updating the cache than `updateQueries`. With `refetchQueries` you can specify one or more queries that you want to run after a mutation completed in order to refetch the parts of the store that may have been affected by the mutation:
+
+```javascript
+mutate({
+  //... insert comment mutation
+  refetchQueries: [{
+    query: gql`query updateCache {
+      entry(repoFullName: $repoName) {
+        id
+        comments {
+          postedBy {
+            login
+            html_url
+          }
+          createdAt
+          content
+        }
+      }
+    }`,
+    variables: { repoFullName: 'apollostack/apollo-client' },
+  }],
+})
+```
+
+A very common way of using `refetchQueries` is to import queries defined for other components to make sure that those components will be updated:
+
+```javascript
+import RepoCommentsQuery from '../queries/RepoCommentsQuery';
+
+mutate({
+  //... insert comment mutation
+  refetchQueries: [{
+    query: RepoCommentsQuery,
+    variables: { repoFullName: 'apollostack/apollo-client' },
+  }],
+})
+```
+
+
+
 <h2 id="resultReducers">Using `reducer`</h2>
 
 While `updateQueries` can only be used to update other queries based on the result of a mutation, the `reducer` option is a way that lets you update the query result based on any action, including results of other queries. It acts just like a Redux reducer on the non-normalized query result:
@@ -340,9 +382,12 @@ const CommentsPageWithData = graphql(CommentsPageQuery, {
 As you can see, the `reducer` option can be used to achieve the same goal as `updateQueries`, but it is more flexible and works with any type of action, not just mutations. For example, the query result can be updated based on another query's result, or even a simple redux action.
 
 
-**When should you use reducer vs. updateQueries?**
 
-While `reducer` is more flexible, updates based on mutations can usually be done equally well with `udpateQueries`.
+**When should you use reducer vs. updateQueries vs. refetchQueries?**
+
+`refetchQueries` should be used whenever the mutation result alone is not enough to infer all the changes to the cache. `refetchQueries` is also a very good option if an extra roundtrip and possible overfetching are not of concern for your application, which is often true during prototyping. Compared with `updateQueries` and `reducer`, `refetchQueries` is the easiest to write and maintain.
+
+`reducer` and `updateQueries` both provide similar functionality. While `reducer` is more flexible, updates based on mutations can usually be done equally well with `updateQueries`.
 
 The main difference between the two is where the update behavior is declared. With `reducer`, the update behavior is co-located with the query itself. That means the query needs to know what actions should lead to an updated result. With `updateQueries` it is the mutation's responsibility to update all the queries that may need to know about the results of this mutation.
 

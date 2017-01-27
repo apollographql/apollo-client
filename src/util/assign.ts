@@ -13,6 +13,10 @@ export function assign (
   target: { [key: string]: any },
   ...sources: Array<{ [key: string]: any }>,
 ): { [key: string]: any } {
+  // Use `Object.assign` if it exists in the environment.
+  if (typeof Object.assign === 'function') {
+    return Object.assign(target, ...sources);
+  }
   sources.forEach(source => Object.keys(source).forEach(key => {
     target[key] = source[key];
   }));

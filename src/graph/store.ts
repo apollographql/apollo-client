@@ -102,7 +102,6 @@ export class GraphStore {
     previousData?: GraphQLObjectData,
     skipUncommitWrites?: boolean,
   }): {
-    partial: boolean,
     stale: boolean,
     data: GraphQLObjectData,
   }
@@ -134,7 +133,6 @@ export class GraphStore {
     initialData?: GraphQLObjectData,
     skipUncommitWrites?: boolean,
   }): Observable<{
-    partial: boolean,
     stale: boolean,
     data: GraphQLObjectData,
   }>

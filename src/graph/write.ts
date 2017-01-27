@@ -8,6 +8,9 @@ import { ID_KEY, getFieldKey } from './common';
  * Writes GraphQL tree data to a true graph format. Returns a new data object
  * which represents what was written to the store.
  *
+ * Starts writing the tree to the provided id. If no id was provided then no
+ * data will be written until we can find an id using `getDataID`.
+ *
  * Nodes in the data graph cannot be correctly identified without a `getDataID`
  * function. By default a new node will be created for every object, but the id
  * will be the path to that data in the tree. `getDataID` should properly
@@ -56,143 +59,126 @@ export function writeToGraph ({
   }
 
   selectionSet.selections.forEach(selection => {
-    switch (selection.kind) {
-      case 'Field':
-        const field = selection;
-        const fieldSelectionSet = field.selectionSet;
-        const fieldName = field.alias ? field.alias.value : field.name.value;
-        const fieldData = data[fieldName];
-        const fieldKey = getFieldKey(field, variables);
+    // For fields we want to directly write the data into our store.
+    if (selection.kind === 'Field') {
+      const field = selection;
+      const fieldSelectionSet = field.selectionSet;
+      const fieldName = field.alias ? field.alias.value : field.name.value;
+      const fieldKey = getFieldKey(field, variables);
+      const fieldData = data[fieldName];
 
-        // tslint:disable one-line
-        // If we have no data for this field then throw an error. This error
-        // may be caught if we are currently writing data for a fragment.
-        if (typeof fieldData === 'undefined') {
-          const error = new Error(`No data found for field '${fieldName}'.`);
-          (error as any)._partialWrite = true;
-          throw error;
+      // If we have no data for this field then throw an error. This error
+      // may be caught if we are currently writing data for a fragment.
+      if (typeof fieldData === 'undefined') {
+        const error = new Error(`No data found for field '${fieldName}'.`);
+        (error as any)._partialWrite = true;
+        throw error;
+      }
+      // If there is no selection set for this field then it is a scalar!
+      else if (!fieldSelectionSet) {
+        nextData[fieldName] = fieldData;
+        if (node) {
+          node.scalars[fieldKey] = fieldData;
         }
-        // If there is no selection set for this field then it is a scalar!
-        else if (!fieldSelectionSet) {
-          nextData[fieldName] = fieldData;
-          if (node) {
-            node.scalars[fieldKey] = fieldData;
-          }
+      }
+      // If the data is null and this is not a scalar then we need to set our
+      // reference to null.
+      else if (fieldData === null) {
+        nextData[fieldName] = null;
+        if (node) {
+          node.references[fieldKey] = null;
         }
-        // If the data is null and this is not a scalar then we need to set our
-        // reference to null.
-        else if (fieldData === null) {
-          nextData[fieldName] = null;
-          if (node) {
-            node.references[fieldKey] = null;
-          }
+      }
+      // If by this point the field data is not an object (like we expect)
+      // then throw an error.
+      else if (typeof fieldData !== 'object') {
+        throw new Error(`Expected composite data for field '${fieldName}' to be null or an object. Not '${typeof fieldData}'`);
+      }
+      // If the field data is an array then we need to defer to our
+      // `writeArrayToStore` function.
+      else if (Array.isArray(fieldData)) {
+        const {
+          reference: fieldReference,
+          data: nextFieldData,
+        } = writeArrayToStore({
+          graph,
+          id: id && `${id}.${fieldKey}`,
+          data: fieldData,
+          selectionSet: fieldSelectionSet,
+          fragments,
+          variables,
+          getDataID,
+        });
+        nextData[fieldName] = nextFieldData;
+        if (node) {
+          node.references[fieldKey] = fieldReference;
         }
-        // If by this point the field data is not an object (like we expect)
-        // then throw an error.
-        else if (typeof fieldData !== 'object') {
-          throw new Error(`Expected composite data for field '${fieldName}' to be null or an object. Not '${typeof fieldData}'`);
-        }
-        // If the field data is an array then we need to defer to our
-        // `writeArrayToStore` function.
-        else if (Array.isArray(fieldData)) {
-          const {
-            reference: fieldReference,
-            data: nextFieldData,
-          } = writeArrayToStore({
-            graph,
-            id: id && `${id}.${fieldKey}`,
-            data: fieldData,
-            selectionSet: fieldSelectionSet,
-            fragments,
-            variables,
-            getDataID,
-          });
-          nextData[fieldName] = nextFieldData;
-          if (node) {
-            node.references[fieldKey] = fieldReference;
-          }
-        }
-        // Otherwise do the write thing.
-        else {
-          const fieldDataID = getDataID(fieldData);
-          const fieldID = typeof fieldDataID === 'string' ? `(${fieldDataID})` : id && maybeAddTypeName(`${id}.${fieldKey}`, fieldData);
+      }
+      // Otherwise do the write thing.
+      else {
+        const fieldDataID = getDataID(fieldData);
+        const fieldID = typeof fieldDataID === 'string' ? `(${fieldDataID})` : id && maybeAddTypeName(`${id}.${fieldKey}`, fieldData);
 
-          // Add the field id to our store item’s references.
-          if (node) {
-            node.references[fieldKey] = fieldID;
-          }
-
-          // Write the data in this field to the store.
-          const { data: nextFieldData } = writeToGraph({
-            graph,
-            id: fieldID,
-            data: fieldData,
-            selectionSet: fieldSelectionSet,
-            fragments,
-            variables,
-            getDataID,
-          });
-
-          nextData[fieldName] = nextFieldData;
+        // Add the field id to our store item’s references.
+        if (node) {
+          node.references[fieldKey] = fieldID;
         }
-        // tslint:enable one-line
-        break;
-      // For fragment spreads, find the fragment in our dictionary and then
-      // try writing its selection set to the store. If the write fails because
-      // some fields were missing, then we don’t write any data for this
-      // fragment to the store.
-      case 'FragmentSpread':
+
+        // Write the data in this field to the store.
+        const { data: nextFieldData } = writeToGraph({
+          graph,
+          id: fieldID,
+          data: fieldData,
+          selectionSet: fieldSelectionSet,
+          fragments,
+          variables,
+          getDataID,
+        });
+
+        nextData[fieldName] = nextFieldData;
+      }
+    }
+    // For fragments we want to try writing the fragment, and if a partial write
+    // is thrown then we want to silently discard the fragment.
+    else if (selection.kind === 'FragmentSpread' || selection.kind === 'InlineFragment') {
+      let fragmentSelectionSet: SelectionSetNode;
+
+      // Get the fragment from our fragment map if this is a fragment spread.
+      // Otherwise use the selection set in the selection itself.
+      if (selection.kind === 'FragmentSpread') {
         const fragmentName = selection.name.value;
         const fragment = fragments[fragmentName];
         if (typeof fragment === 'undefined') {
           throw new Error(`Could not find fragment named '${fragmentName}'.`);
         }
-        try {
-          const { data: fragmentData } = writeToGraph({
-            graph,
-            id,
-            data,
-            selectionSet: fragment.selectionSet,
-            fragments,
-            variables,
-            getDataID,
-          });
-          assign(nextData, fragmentData);
-        } catch (error) {
-          // If the error is not a partial write error then make sure it is
-          // correctly propogated. Otherwise we can ignore the error and this
-          // fragment data will not be written to the store.
-          if (!error._partialWrite) {
-            throw error;
-          }
+        fragmentSelectionSet = fragment.selectionSet;
+      }
+      else {
+        fragmentSelectionSet = selection.selectionSet;
+      }
+
+      try {
+        const { data: fragmentData } = writeToGraph({
+          graph,
+          id,
+          data,
+          selectionSet: fragmentSelectionSet,
+          fragments,
+          variables,
+          getDataID,
+        });
+        assign(nextData, fragmentData);
+      } catch (error) {
+        // If the error is not a partial write error then make sure it is
+        // correctly propogated. Otherwise we can ignore the error and this
+        // fragment data will not be written to the store.
+        if (!error._partialWrite) {
+          throw error;
         }
-        break;
-      // For inline fragment spreads try writing its selection set to the store.
-      // If the write fails because some fields were missing, then we don’t
-      // write any data for this fragment to the store.
-      case 'InlineFragment':
-        try {
-          const { data: fragmentData } = writeToGraph({
-            graph,
-            id,
-            data,
-            selectionSet: selection.selectionSet,
-            fragments,
-            variables,
-            getDataID,
-          });
-          assign(nextData, fragmentData);
-        } catch (error) {
-          // If the error is not a partial write error then make sure it is
-          // correctly propogated. Otherwise we can ignore the error and this
-          // fragment data will not be written to the store.
-          if (!error._partialWrite) {
-            throw error;
-          }
-        }
-        break;
-      default:
-        throw new Error(`Unrecognized selection '${(selection as any).kind}'`);
+      }
+    }
+    else {
+      throw new Error(`Unrecognized selection '${(selection as any).kind}'`);
     }
   });
 
@@ -230,7 +216,6 @@ function writeArrayToStore ({
   const nextData: GraphQLArrayData = [];
 
   data.forEach((itemData, i) => {
-    // tslint:disable one-line
     // If the item data is an array then we want to recurse.
     if (Array.isArray(itemData)) {
       const {
@@ -276,7 +261,6 @@ function writeArrayToStore ({
       });
       nextData.push(nextItemData);
     }
-    // tslint:enable one-line
   });
 
   return { reference, data: nextData };

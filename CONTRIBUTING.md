@@ -1,6 +1,13 @@
 # Apollo Contributor Guide
 
-Excited about Apollo and want to make it better? We’re excited too. Read below to learn about different ways to contribute to the project.
+Excited about Apollo and want to make it better? We’re excited too. Read below to learn about different ways to contribute to the project:
+
+* [Reporting bugs](#reporting-bugs)
+* [Suggesting features](#suggesting-features)
+* [Responding to issues](#responding-to-issues)
+* [Documentation fixes](#documentation-fixes)
+* [Small bug fixes](#small-bug-fixes)
+* [Big pull requests](#big-prs)
 
 ## Issues
 

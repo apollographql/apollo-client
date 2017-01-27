@@ -4,6 +4,15 @@ import { GraphQLData, GraphQLObjectData, GraphQLArrayData } from '../graphql/typ
 import { GraphData, GraphDataNode, GraphReference, GetDataIDFn } from './types';
 import { ID_KEY, getFieldKey } from './common';
 
+/**
+ * Writes GraphQL tree data to a true graph format. Returns a new data object
+ * which represents what was written to the store.
+ *
+ * Nodes in the data graph cannot be correctly identified without a `getDataID`
+ * function. By default a new node will be created for every object, but the id
+ * will be the path to that data in the tree. `getDataID` should properly
+ * identify nodes wherever they are in the tree.
+ */
 export function writeToGraph ({
   graph,
   id,

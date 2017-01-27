@@ -4,15 +4,23 @@ import { GraphQLData, GraphQLObjectData, GraphQLArrayData } from '../graphql/typ
 import { GraphData, GraphDataNode, GraphReference, GetDataIDFn } from './types';
 import { ID_KEY, getFieldKey } from './common';
 
-export function writeToStore (
-  getDataID: GetDataIDFn,
+export function writeToGraph ({
+  graph,
+  id,
+  data,
+  selectionSet,
+  fragments = {},
+  variables = {},
+  getDataID = () => null,
+}: {
   graph: GraphData,
-  selectionSet: SelectionSetNode,
-  fragments: { [fragmentName: string]: FragmentDefinitionNode },
-  variables: { [variableName: string]: GraphQLData },
   id: string | null,
   data: GraphQLObjectData,
-): {
+  selectionSet: SelectionSetNode,
+  fragments?: { [fragmentName: string]: FragmentDefinitionNode },
+  variables?: { [variableName: string]: GraphQLData },
+  getDataID?: GetDataIDFn,
+}): {
   data: GraphQLObjectData,
 } {
   let node: GraphDataNode | undefined;
@@ -81,15 +89,15 @@ export function writeToStore (
           const {
             reference: fieldReference,
             data: nextFieldData,
-          } = writeArrayToStore(
-            getDataID,
+          } = writeArrayToStore({
             graph,
-            selectionSet,
+            id: id && `${id}.${fieldKey}`,
+            data: fieldData,
+            selectionSet: fieldSelectionSet,
             fragments,
             variables,
-            id && `${id}.${fieldKey}`,
-            fieldData,
-          );
+            getDataID,
+          });
           nextData[fieldName] = nextFieldData;
           if (node) {
             node.references[fieldKey] = fieldReference;
@@ -98,13 +106,7 @@ export function writeToStore (
         // Otherwise do the write thing.
         else {
           const fieldDataID = getDataID(fieldData);
-          let fieldID = typeof fieldDataID === 'string' ? `(${fieldDataID})` : id && `${id}.${fieldKey}`;
-
-          // If we have a type name add it to the end of our id.
-          const typeName = fieldData['__typename'];
-          if (fieldID && typeName != null) {
-            fieldID += `:${typeName}`;
-          }
+          const fieldID = typeof fieldDataID === 'string' ? `(${fieldDataID})` : id && maybeAddTypeName(`${id}.${fieldKey}`, fieldData);
 
           // Add the field id to our store item’s references.
           if (node) {
@@ -112,15 +114,15 @@ export function writeToStore (
           }
 
           // Write the data in this field to the store.
-          const { data: nextFieldData } = writeToStore(
-            getDataID,
+          const { data: nextFieldData } = writeToGraph({
             graph,
-            fieldSelectionSet,
+            id: fieldID,
+            data: fieldData,
+            selectionSet: fieldSelectionSet,
             fragments,
             variables,
-            fieldID,
-            fieldData,
-          );
+            getDataID,
+          });
 
           nextData[fieldName] = nextFieldData;
         }
@@ -137,15 +139,15 @@ export function writeToStore (
           throw new Error(`Could not find fragment named '${fragmentName}'.`);
         }
         try {
-          const { data: fragmentData } = writeToStore(
-            getDataID,
+          const { data: fragmentData } = writeToGraph({
             graph,
-            fragment.selectionSet,
-            fragments,
-            variables,
             id,
             data,
-          );
+            selectionSet: fragment.selectionSet,
+            fragments,
+            variables,
+            getDataID,
+          });
           assign(nextData, fragmentData);
         } catch (error) {
           // If the error is not a partial write error then make sure it is
@@ -161,15 +163,15 @@ export function writeToStore (
       // write any data for this fragment to the store.
       case 'InlineFragment':
         try {
-          const { data: fragmentData } = writeToStore(
-            getDataID,
+          const { data: fragmentData } = writeToGraph({
             graph,
-            fragment.selectionSet,
-            fragments,
-            variables,
             id,
             data,
-          );
+            selectionSet: selection.selectionSet,
+            fragments,
+            variables,
+            getDataID,
+          });
           assign(nextData, fragmentData);
         } catch (error) {
           // If the error is not a partial write error then make sure it is
@@ -195,15 +197,23 @@ export function writeToStore (
  *
  * @private
  */
-function writeArrayToStore (
-  getDataID: GetDataIDFn,
+function writeArrayToStore ({
+  graph,
+  id,
+  data,
+  selectionSet,
+  fragments,
+  variables,
+  getDataID,
+}: {
   graph: GraphData,
+  id: string | null,
+  data: GraphQLArrayData,
   selectionSet: SelectionSetNode,
   fragments: { [fragmentName: string]: FragmentDefinitionNode },
   variables: { [variableName: string]: GraphQLData },
-  id: string | null,
-  data: GraphQLArrayData,
-): {
+  getDataID: GetDataIDFn,
+}): {
   reference: GraphReference,
   data: GraphQLArrayData,
 } {
@@ -217,15 +227,15 @@ function writeArrayToStore (
       const {
         reference: itemReference,
         data: nextItemData,
-      } = writeArrayToStore(
-        getDataID,
+      } = writeArrayToStore({
         graph,
+        id: id && `${id}[${i}]`,
+        data: itemData,
         selectionSet,
         fragments,
         variables,
-        id && `${id}[${i}]`,
-        itemData,
-      );
+        getDataID,
+      });
       reference.push(itemReference);
       nextData.push(nextItemData);
     }
@@ -243,28 +253,30 @@ function writeArrayToStore (
     // Otherwise do the write thing.
     else {
       const itemDataID = getDataID(itemData);
-      let itemID = typeof itemDataID !== 'string' ? `(${itemDataID})` : id && `${id}[${i}]`;
-
-      // If we have a type name add it to the end of our id.
-      const typeName = itemData['__typename'];
-      if (itemID && typeName != null) {
-        itemID += `:${typeName}`;
-      }
+      const itemID = typeof itemDataID === 'string' ? `(${itemDataID})` : id && maybeAddTypeName(`${id}[${i}]`, itemData);
 
       reference.push(itemID);
-      const { data: nextItemData } = writeToStore(
-        getDataID,
+      const { data: nextItemData } = writeToGraph({
         graph,
+        id: itemID,
+        data: itemData,
         selectionSet,
         fragments,
         variables,
-        itemID,
-        itemData,
-      );
+        getDataID,
+      });
       nextData.push(nextItemData);
     }
     // tslint:enable one-line
   });
 
   return { reference, data: nextData };
+}
+
+/**
+ * Adds a type name to the `id` if the `data` object has a `__typename`
+ * property.
+ */
+function maybeAddTypeName (id: string, data: GraphQLObjectData): string {
+  return typeof data['__typename'] === 'string' ? `${id}:${data['__typename']}` : id;
 }

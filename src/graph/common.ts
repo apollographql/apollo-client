@@ -22,7 +22,7 @@ export function getFieldKey (
   let key = field.name.value;
 
   // If the field has arguments then add them to the key.
-  if (field.arguments) {
+  if (field.arguments && field.arguments.length > 0) {
     key += `({${field.arguments.map(arg => `"${arg.name.value}":${valueIntoJSON(arg.value, variables)}`).join(',')}})`;
   }
 

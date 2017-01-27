@@ -52,4 +52,5 @@ import './customResolvers';
 import './isEqual';
 import './cloneDeep';
 import './assign';
-import './environment'
+import './environment';
+import './graph_write';

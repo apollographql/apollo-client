@@ -66,6 +66,7 @@
     "concurrently": "^3.1.0",
     "es6-promise": "^4.0.4",
     "fetch-mock": "^5.5.0",
+    "graphql": "^0.9.1",
     "grunt": "1.0.1",
     "grunt-tslint": "4.0.0",
     "gzip-size": "^3.0.0",

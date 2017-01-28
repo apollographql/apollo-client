@@ -15,6 +15,10 @@ import { ID_KEY, getFieldKey } from './common';
  * function. By default a new node will be created for every object, but the id
  * will be the path to that data in the tree. `getDataID` should properly
  * identify nodes wherever they are in the tree.
+ *
+ * When a node is found using `getDataID` the value returned by `getDataID` will
+ * be wrapped in parentheses (`(` and `)`) as to avoid conflicts with other root
+ * keys. It also prevents accidently reading data from a private id.
  */
 export function writeToGraph ({
   graph,

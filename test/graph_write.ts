@@ -1034,22 +1034,30 @@ describe('writeToGraph', () => {
   });
 
   it('will throw an error if there are missing values', () => {
-    assert.throws(() => {
+    try {
       writeToGraph({
         graph: {},
         id: 'root',
         data: { a: 1, b: 2 },
         selectionSet: parseSelectionSet(`{ a b c }`),
       });
-    });
-    assert.throws(() => {
+      throw new Error('This should have failed.');
+    } catch (error) {
+      assert.equal(error._partialWrite, true);
+      assert.equal(error.message, 'No data found for field \'c\'.');
+    }
+    try {
       writeToGraph({
         graph: {},
         id: 'root',
         data: { a: 1, b: 2, c: { d: 3, e: 4 } },
         selectionSet: parseSelectionSet(`{ a b c { d e f } }`),
       });
-    });
+      throw new Error('This should have failed.');
+    } catch (error) {
+      assert.equal(error._partialWrite, true);
+      assert.equal(error.message, 'No data found for field \'f\'.');
+    }
   });
 
   it('will not throw an error if there are missing values in a fragment', () => {

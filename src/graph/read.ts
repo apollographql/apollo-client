@@ -5,6 +5,21 @@ import { GraphQLData, GraphQLObjectData } from '../graphql/types';
 import { GraphData, GraphReference } from './types';
 import { ID_KEY, getFieldKey } from './common';
 
+/**
+ * Reads a tree of GraphQL data from a graph representation starting at the
+ * provided `id`.
+ *
+ * If a `previousData` object is provided then referential equality will be
+ * attempted to be preserved when reading from the graph if the objects turn out
+ * to be equal.
+ *
+ * If a `previousData` object is provided then also stale data will tried to be
+ * read when a partial read error is thrown. So instead of returning partial
+ * data from the function we will look at the id of the previous data and try to
+ * read from that id. In order to use this functionality make sure that the
+ * `previousData` object was created by either `writeToGraph` or
+ * `readFromGraph`.
+ */
 export function readFromGraph ({
   graph,
   id,
@@ -14,7 +29,7 @@ export function readFromGraph ({
   previousData = {},
 }: {
   graph: GraphData,
-  id: string | null,
+  id: string,
   selectionSet: SelectionSetNode,
   fragments?: { [fragmentName: string]: FragmentDefinitionNode },
   variables?: { [variableName: string]: GraphQLData },
@@ -41,7 +56,7 @@ export function readFromGraph ({
   // If there is no node in the graph for this id then we need to throw a
   // partial read error.
   if (node == null) {
-    const error = new Error(`No store item for id: '${id}'.`);
+    const error = new Error(`No store item for id '${id}'.`);
     (error as any)._partialRead = true;
     throw error;
   }
@@ -215,7 +230,7 @@ export function readFromGraph ({
 
   return {
     stale,
-    data: sameAsPrevious ? previousData : data,
+    data: previousData && sameAsPrevious ? previousData : data,
   };
 }
 
@@ -246,7 +261,10 @@ function readReferenceFromGraph ({
 } {
   // If the reference is simply null then we may simply return null.
   if (reference === null) {
-    return null;
+    return {
+      stale: false,
+      data: null,
+    };
   }
   // For an array reference we should read each sub reference seperately.
   //
@@ -275,24 +293,17 @@ function readReferenceFromGraph ({
     let stale = false;
 
     const data = reference.map((referenceItem, i) => {
-      let id: string | null = null;
-
-      // If the reference item is a string and not an array or null then set it
-      // as our local `id` variable.
-      if (typeof referenceItem === 'string') {
-        id = referenceItem;
-      }
-
       let previousItemData: GraphQLData | undefined;
 
       // Try to get the previous data item from the map we built if we have an
       // actual string id.
-      if (id !== null) {
-        previousItemData = idToPreviousItemData[id];
+      if (typeof referenceItem === 'string') {
+        previousItemData = idToPreviousItemData[referenceItem];
       }
+
       // If the previous data is an array then simply try to get the item at the
       // current index.
-      else if (Array.isArray(previousData)) {
+      if (typeof previousItemData === 'undefined' && Array.isArray(previousData)) {
         previousItemData = previousData[i];
       }
 
@@ -308,9 +319,9 @@ function readReferenceFromGraph ({
         previousData: previousItemData,
       });
 
-      // If the item and the previous item are not the same then these arrays
-      // are not the same.
-      if (sameAsPrevious && itemData !== previousItemData) {
+      // If the item and the previous item in the same position are not the same
+      // then these arrays are not the same.
+      if (sameAsPrevious && Array.isArray(previousData) && itemData !== previousData[i]) {
         sameAsPrevious = false;
       }
 
@@ -324,15 +335,15 @@ function readReferenceFromGraph ({
 
     return {
       stale,
-      data: sameAsPrevious ? previousData : data,
+      data: previousData && sameAsPrevious ? previousData : data,
     };
   }
   // If the reference is not null or an array then it is a string and we should
   // read directly from the graph.
   else {
     // Type-guard for non-object data.
-    if (typeof previousData !== 'object' || Array.isArray(previousData)) {
-      throw new Error(`The previous data for this reference must be an object. Not a(n) ${typeof previousData}`);
+    if ((typeof previousData !== 'undefined' && typeof previousData !== 'object') || Array.isArray(previousData)) {
+      throw new Error(`The previous data for this reference must be an object. Not '${typeof previousData}'.`);
     }
     return readFromGraph({
       graph,

@@ -735,12 +735,85 @@ describe('readFromGraph', () => {
     const result = readFromGraph({
       graph,
       id: 'foo',
+      selectionSet: parseSelectionSet(`{ a b c ... { d e ... { f g } } }`),
+      previousData: scalars2,
+    });
+    assert.deepEqual(result, { stale: false, data: { ...scalars1, extraField: 'yes' } });
+    assert.notStrictEqual(result.data, scalars1);
+    assert.strictEqual(result.data, scalars2);
+  });
+
+  it('will return the previous data if scalars are the same even if there is an extra field for fragments', () => {
+    const scalars1 = {
+      a: true,
+      b: null,
+      c: 2,
+      d: 'Hello, world!',
+      e: [1, 2, 3, 4],
+      f: { a: 1, b: 2, c: 3 },
+      g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
+    };
+    const scalars2 = {
+      a: true,
+      b: null,
+      c: 2,
+      d: 'Hello, world!',
+      e: [1, 2, 3, 4],
+      f: { a: 1, b: 2, c: 3 },
+      g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
+      extraField: 'yes',
+    };
+    const graph: GraphData = {
+      foo: {
+        scalars: scalars1,
+        references: {},
+      },
+    };
+    const result = readFromGraph({
+      graph,
+      id: 'foo',
       selectionSet: parseSelectionSet(`{ a b c d e f g }`),
       previousData: scalars2,
     });
     assert.deepEqual(result, { stale: false, data: { ...scalars1, extraField: 'yes' } });
     assert.notStrictEqual(result.data, scalars1);
     assert.strictEqual(result.data, scalars2);
+  });
+
+  it('will not return the previous data if the `ID_KEY` changed', () => {
+    const scalars = {
+      a: true,
+      b: null,
+      c: 2,
+      d: 'Hello, world!',
+      e: [1, 2, 3, 4],
+      f: { a: 1, b: 2, c: 3 },
+      g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
+    };
+    const previousData = {
+      [ID_KEY]: 'bar',
+      a: true,
+      b: null,
+      c: 2,
+      d: 'Hello, world!',
+      e: [1, 2, 3, 4],
+      f: { a: 1, b: 2, c: 3 },
+      g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
+    };
+    const graph: GraphData = {
+      foo: {
+        scalars,
+        references: {},
+      },
+    };
+    const result1 = readFromGraph({
+      graph,
+      id: 'foo',
+      selectionSet: parseSelectionSet(`{ a b c d e f g }`),
+      previousData,
+    });
+    assert.deepEqual(result1, { stale: false, data: scalars });
+    assert.notStrictEqual(result1.data, previousData);
   });
 
   it('will return referentially equal nested object data', () => {
@@ -1309,6 +1382,33 @@ describe('readFromGraph', () => {
     }), {
       stale: true,
       data: { foo: { a: 3, b: { c: 4 } } },
+    });
+  });
+
+  it('will prefer stale data over partial data with fragments', () => {
+    assert.deepEqual(readFromGraph({
+      graph: {
+        root: {
+          scalars: {},
+          references: { foo: 'ref1' },
+        },
+        ref1: {
+          scalars: { a: 1, b: 2 },
+          references: {},
+        },
+        ref2: {
+          scalars: { a: 3, b: 4, c: 5 },
+          references: {},
+        },
+      },
+      id: 'root',
+      selectionSet: parseSelectionSet('{ ... { foo { a b c } } }'),
+      previousData: {
+        foo: { [ID_KEY]: 'ref2', a: 6, b: 7, c: 8 },
+      },
+    }), {
+      stale: true,
+      data: { foo: { a: 3, b: 4, c: 5 } },
     });
   });
 

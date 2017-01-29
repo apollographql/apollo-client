@@ -66,7 +66,7 @@ function parseFragmentDefinitionMap (source: string): { [fragmentName: string]: 
   return fragments;
 }
 
-describe.only('ReduxGraphStore', () => {
+describe('ReduxGraphStore', () => {
   describe('write then read', () => {
     function assertWriteThenRead ({
       selectionSet,

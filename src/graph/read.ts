@@ -2,8 +2,34 @@ import { SelectionSetNode, FragmentDefinitionNode } from 'graphql';
 import { isEqual } from '../util/isEqual';
 import { assign } from '../util/assign';
 import { GraphQLData, GraphQLObjectData } from '../graphql/types';
-import { GraphData, GraphReference } from './types';
-import { ID_KEY, getFieldKey } from './common';
+import { ID_KEY, GraphReference, getFieldKey } from './common';
+
+/**
+ * This is an internal interface that a user should *never* have access to. This
+ * interface abstracts away how data is actually read and instead provides some
+ * low level primitives for our higher level `readFromGraph` function.
+ */
+export interface GraphReadPrimitives {
+  /**
+   * Gets some more read primitives for a single node in the graph.
+   */
+  getNode (id: string): GraphNodeReadPrimitives | undefined;
+}
+
+/**
+ * Read primitives on a graph node.
+ */
+export interface GraphNodeReadPrimitives {
+  /**
+   * Reads a scalar at a given key from the node.
+   */
+  getScalar (key: string): GraphQLData | undefined;
+
+  /**
+   * Reads a reference at a given key from the node.
+   */
+  getReference (key: string): GraphReference | undefined;
+}
 
 /**
  * Reads a tree of GraphQL data from a graph representation starting at the
@@ -28,7 +54,7 @@ export function readFromGraph ({
   variables = {},
   previousData = {},
 }: {
-  graph: GraphData,
+  graph: GraphReadPrimitives,
   id: string,
   selectionSet: SelectionSetNode,
   fragments?: { [fragmentName: string]: FragmentDefinitionNode },
@@ -38,7 +64,7 @@ export function readFromGraph ({
   stale: boolean,
   data: GraphQLObjectData,
 } {
-  const node = graph[id];
+  const node = graph.getNode(id);
   const data: GraphQLObjectData = {};
 
   // In this variable we will keep track of whether or not the data we read is
@@ -55,7 +81,7 @@ export function readFromGraph ({
 
   // If there is no node in the graph for this id then we need to throw a
   // partial read error.
-  if (node == null) {
+  if (typeof node === 'undefined') {
     const error = new Error(`No store item for id '${id}'.`);
     (error as any)._partialRead = true;
     throw error;
@@ -77,7 +103,7 @@ export function readFromGraph ({
       // If there is no selection set, then this field is a scalar and we
       // should read from the node’s scalars.
       if (!fieldSelectionSet) {
-        const fieldData = node.scalars[fieldKey];
+        const fieldData = node.getScalar(fieldKey);
 
         // If there is no value in the node for this field then we need to
         // throw a partial read error.
@@ -101,7 +127,7 @@ export function readFromGraph ({
       // Otherwise this is a composite value and we should try reading it from
       // the store using a reference.
       else {
-        const fieldReference = node.references[fieldKey];
+        const fieldReference = node.getReference(fieldKey);
         const previousFieldData = previousData && previousData[fieldName];
 
         // If no reference could be found for this field key then we need to
@@ -249,7 +275,7 @@ function readReferenceFromGraph ({
   variables,
   previousData,
 }: {
-  graph: GraphData,
+  graph: GraphReadPrimitives,
   reference: GraphReference,
   selectionSet: SelectionSetNode,
   fragments: { [fragmentName: string]: FragmentDefinitionNode },

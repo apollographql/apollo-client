@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { parse, SelectionSetNode, FragmentDefinitionNode } from 'graphql/language';
-import { GraphData } from '../src/graph/types';
+import { createMockGraphPrimitives } from './mocks/mockGraphPrimitives';
 import { ID_KEY } from '../src/graph/common';
 import { readFromGraph } from '../src/graph/read';
 
@@ -35,7 +35,7 @@ describe('readFromGraph', () => {
     const foo: any = Symbol();
     const bar: any = Symbol();
     const buz: any = Symbol();
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       a: {
         scalars: { foo, buz },
         references: {},
@@ -44,7 +44,7 @@ describe('readFromGraph', () => {
         scalars: { bar },
         references: {},
       },
-    };
+    });
     assert.deepEqual(readFromGraph({
       graph,
       id: 'a',
@@ -67,7 +67,7 @@ describe('readFromGraph', () => {
     const foo: any = Symbol();
     const bar: any = Symbol();
     const buz: any = Symbol();
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       a: {
         scalars: { foo, buz },
         references: {},
@@ -76,7 +76,7 @@ describe('readFromGraph', () => {
         scalars: { bar },
         references: {},
       },
-    };
+    });
     assert.deepEqual(readFromGraph({
       graph,
       id: 'a',
@@ -99,7 +99,7 @@ describe('readFromGraph', () => {
     const foo: any = Symbol();
     const bar: any = Symbol();
     const buz: any = Symbol();
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       a: {
         scalars: {
           'foo({"a":1,"b":2,"c":3})': foo,
@@ -113,7 +113,7 @@ describe('readFromGraph', () => {
         },
         references: {},
       },
-    };
+    });
     assert.deepEqual(readFromGraph({
       graph,
       id: 'a',
@@ -150,12 +150,12 @@ describe('readFromGraph', () => {
       f: { a: 1, b: 2, c: 3 },
       g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
     };
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       foo: {
         scalars,
         references: {},
       },
-    };
+    });
     const result = readFromGraph({
       graph,
       id: 'foo',
@@ -169,7 +169,7 @@ describe('readFromGraph', () => {
   });
 
   it('will read nested object scalars', () => {
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {},
         references: {
@@ -177,7 +177,7 @@ describe('readFromGraph', () => {
           bar: 'ref7',
         },
       },
-      'ref1': {
+      ref1: {
         scalars: { a: 1 },
         references: {
           b: 'ref2',
@@ -185,7 +185,7 @@ describe('readFromGraph', () => {
           baz: 'ref5',
         },
       },
-      'ref2': {
+      ref2: {
         scalars: {
           c: 2,
           j: 7,
@@ -193,33 +193,33 @@ describe('readFromGraph', () => {
         },
         references: {},
       },
-      'ref3': {
+      ref3: {
         scalars: { c: -2 },
         references: {
           d: 'ref4',
         },
       },
-      'ref4': {
+      ref4: {
         scalars: { e: -3 },
         references: {},
       },
-      'ref5': {
+      ref5: {
         scalars: { g: 5 },
         references: { h: 'ref6' },
       },
-      'ref6': {
+      ref6: {
         scalars: { i: 6 },
         references: {},
       },
-      'ref7': {
+      ref7: {
         scalars: { 'd({"var":true})': 3 },
         references: { e: 'ref8' },
       },
-      'ref8': {
+      ref8: {
         scalars: { f: 4 },
         references: {},
       },
-    };
+    });
     assert.deepEqual(readFromGraph({
       graph,
       id: 'root',
@@ -271,7 +271,7 @@ describe('readFromGraph', () => {
   });
 
   it('will read a null value from a null reference', () => {
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       foo: {
         scalars: {},
         references: {
@@ -280,7 +280,7 @@ describe('readFromGraph', () => {
           'buz({"a":1,"b":2,"c":3})': null,
         },
       },
-    };
+    });
     assert.deepEqual(readFromGraph({
       graph,
       id: 'foo',
@@ -302,12 +302,12 @@ describe('readFromGraph', () => {
   it('will throw a partial read error if there are missing values', () => {
     try {
       readFromGraph({
-        graph: {
+        graph: createMockGraphPrimitives({
           root: {
             scalars: { a: 1, b: 2 },
             references: {},
           },
-        },
+        }),
         id: 'root',
         selectionSet: parseSelectionSet(`{ a b c }`),
       });
@@ -318,7 +318,7 @@ describe('readFromGraph', () => {
     }
     try {
       readFromGraph({
-        graph: {
+        graph: createMockGraphPrimitives({
           root: {
             scalars: { a: 1, b: 2 },
             references: { c: 'root.c' },
@@ -327,7 +327,7 @@ describe('readFromGraph', () => {
             scalars: { d: 3, e: 4 },
             references: {},
           },
-        },
+        }),
         id: 'root',
         selectionSet: parseSelectionSet(`{ a b c { d e f } }`),
       });
@@ -338,12 +338,12 @@ describe('readFromGraph', () => {
     }
     try {
       readFromGraph({
-        graph: {
+        graph: createMockGraphPrimitives({
           root: {
             scalars: { a: 1 },
             references: {},
           },
-        },
+        }),
         id: 'root',
         selectionSet: parseSelectionSet(`{ a { b } }`),
       });
@@ -354,7 +354,7 @@ describe('readFromGraph', () => {
     }
     try {
       readFromGraph({
-        graph: {
+        graph: createMockGraphPrimitives({
           root: {
             scalars: {},
             references: { a: 'root.a' },
@@ -363,7 +363,7 @@ describe('readFromGraph', () => {
             scalars: { b: 1 },
             references: {},
           },
-        },
+        }),
         id: 'root',
         selectionSet: parseSelectionSet(`{ a { b { c } } }`),
       });
@@ -375,7 +375,7 @@ describe('readFromGraph', () => {
   });
 
   it('will not throw an error if there are missing values in a fragment', () => {
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: { a: 1, b: 2 },
         references: { c: 'root.c' },
@@ -384,7 +384,7 @@ describe('readFromGraph', () => {
         scalars: { d: 3, e: 4 },
         references: {},
       },
-    };
+    });
     readFromGraph({
       graph,
       id: 'root',
@@ -420,7 +420,7 @@ describe('readFromGraph', () => {
   });
 
   it('will read fields in fragments', () => {
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {
           a: 1, b: 2, c: 3,
@@ -448,7 +448,7 @@ describe('readFromGraph', () => {
         scalars: { s: 19.2, t: 20.2, u: 21.2 },
         references: {},
       },
-    };
+    });
     assert.deepEqual(readFromGraph({
       graph,
       id: 'root',
@@ -497,12 +497,12 @@ describe('readFromGraph', () => {
   });
 
   it('will error when referencing a fragment that does not exist', () => {
-    const graph = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {},
         references: {},
       },
-    };
+    });
     assert.throws(() => {
       readFromGraph({
         graph,
@@ -521,12 +521,12 @@ describe('readFromGraph', () => {
   });
 
   it('will error when referencing a variable that does not exist', () => {
-    const graph = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {},
         references: {},
       },
-    };
+    });
     assert.throws(() => {
       readFromGraph({
         graph,
@@ -546,7 +546,7 @@ describe('readFromGraph', () => {
 
   it('will read nested array references', () => {
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: {
@@ -575,43 +575,43 @@ describe('readFromGraph', () => {
             ],
           },
         },
-        'ref1': {
+        ref1: {
           scalars: { a: 1.1, b: 2.1, c: 3.1 },
           references: {},
         },
-        'ref2': {
+        ref2: {
           scalars: { a: 1.2, b: 2.2, c: 3.2 },
           references: {},
         },
-        'ref3': {
+        ref3: {
           scalars: { a: 1.3, b: 2.3, c: 3.3 },
           references: {},
         },
-        'ref4': {
+        ref4: {
           scalars: { d: 4.1, e: 5.1, f: 6.1 },
           references: {},
         },
-        'ref5': {
+        ref5: {
           scalars: { d: 4.2, e: 5.2, f: 6.2 },
           references: {},
         },
-        'ref6': {
+        ref6: {
           scalars: { d: 4.3, e: 5.3, f: 6.3 },
           references: {},
         },
-        'ref7': {
+        ref7: {
           scalars: { d: 4.4, e: 5.4, f: 6.4 },
           references: {},
         },
-        'ref8': {
+        ref8: {
           scalars: { d: 4.5, e: 5.5, f: 6.5 },
           references: {},
         },
-        'ref9': {
+        ref9: {
           scalars: { d: 4.6, e: 5.6, f: 6.6 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet(`{
         foo { a b c }
@@ -650,7 +650,7 @@ describe('readFromGraph', () => {
   it('will throw a partial read error when a node is missing', () => {
     try {
       readFromGraph({
-        graph: {},
+        graph: createMockGraphPrimitives(),
         id: 'foo',
         selectionSet: parseSelectionSet(`{ a b c }`),
       });
@@ -680,12 +680,12 @@ describe('readFromGraph', () => {
       f: { a: 1, b: 2, c: 3 },
       g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
     };
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       foo: {
         scalars: scalars1,
         references: {},
       },
-    };
+    });
     const result1 = readFromGraph({
       graph,
       id: 'foo',
@@ -726,12 +726,12 @@ describe('readFromGraph', () => {
       g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
       extraField: 'yes',
     };
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       foo: {
         scalars: scalars1,
         references: {},
       },
-    };
+    });
     const result = readFromGraph({
       graph,
       id: 'foo',
@@ -763,12 +763,12 @@ describe('readFromGraph', () => {
       g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
       extraField: 'yes',
     };
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       foo: {
         scalars: scalars1,
         references: {},
       },
-    };
+    });
     const result = readFromGraph({
       graph,
       id: 'foo',
@@ -800,12 +800,12 @@ describe('readFromGraph', () => {
       f: { a: 1, b: 2, c: 3 },
       g: [[1, [2, 3]], [[{ a: 1, b: 2, c: { d: 3, e: 4 } }]]],
     };
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       foo: {
         scalars,
         references: {},
       },
-    };
+    });
     const result1 = readFromGraph({
       graph,
       id: 'foo',
@@ -821,7 +821,7 @@ describe('readFromGraph', () => {
       a: { b: 1, c: 2 },
       d: { e: -3, f: { g: 4, h: 5 } },
     };
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {},
         references: { a: 'ref1', d: 'ref2' },
@@ -838,7 +838,7 @@ describe('readFromGraph', () => {
         scalars: { g: 4, h: 5 },
         references: {},
       },
-    };
+    });
     const result = readFromGraph({
       graph,
       id: 'root',
@@ -859,7 +859,7 @@ describe('readFromGraph', () => {
   });
 
   it('will preserve referential equality with arrays', () => {
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {},
         references: {
@@ -924,7 +924,7 @@ describe('readFromGraph', () => {
         scalars: { d: 4.6, e: 5.6, f: 6.6 },
         references: {},
       },
-    };
+    });
     const previousData: any = {
       foo: [
         { a: 1.1, b: 2.1, c: 3.1 },
@@ -991,7 +991,7 @@ describe('readFromGraph', () => {
   });
 
   it('will preserve referential equality with out of order nested array items with `ID_KEY`s', () => {
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {},
         references: {
@@ -1056,7 +1056,7 @@ describe('readFromGraph', () => {
         scalars: { d: 4.6, e: 5.6, f: 6.6 },
         references: {},
       },
-    };
+    });
     const previousData: any = {
       foo: [
         { a: 1.2, b: 2.2, c: 3.2, [ID_KEY]: 'ref2' },
@@ -1136,7 +1136,7 @@ describe('readFromGraph', () => {
   });
 
   it('will add `ID_KEY`s to results', () => {
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {},
         references: {
@@ -1186,7 +1186,7 @@ describe('readFromGraph', () => {
         scalars: { f: 4 },
         references: {},
       },
-    };
+    });
     const data: any = readFromGraph({
       graph,
       id: 'root',
@@ -1224,7 +1224,7 @@ describe('readFromGraph', () => {
   });
 
   it('will add `ID_KEY`s to result arrays', () => {
-    const graph: GraphData = {
+    const graph = createMockGraphPrimitives({
       root: {
         scalars: {},
         references: {
@@ -1289,7 +1289,7 @@ describe('readFromGraph', () => {
         scalars: { d: 4.6, e: 5.6, f: 6.6 },
         references: {},
       },
-    };
+    });
     const data: any = readFromGraph({
       graph,
       id: 'root',
@@ -1312,7 +1312,7 @@ describe('readFromGraph', () => {
 
   it('will prefer stale data over partial data', () => {
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: 'ref1' },
@@ -1325,7 +1325,7 @@ describe('readFromGraph', () => {
           scalars: { a: 3, b: 4, c: 5 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ foo { a b c } }'),
       previousData: {
@@ -1336,7 +1336,7 @@ describe('readFromGraph', () => {
       data: { foo: { a: 3, b: 4, c: 5 } },
     });
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: 'ref1' },
@@ -1345,7 +1345,7 @@ describe('readFromGraph', () => {
           scalars: { a: 3, b: 4, c: 5 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ foo { a b c } }'),
       previousData: {
@@ -1356,7 +1356,7 @@ describe('readFromGraph', () => {
       data: { foo: { a: 3, b: 4, c: 5 } },
     });
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: 'ref1' },
@@ -1373,7 +1373,7 @@ describe('readFromGraph', () => {
           scalars: { c: 4 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ foo { a b { c } } }'),
       previousData: {
@@ -1387,7 +1387,7 @@ describe('readFromGraph', () => {
 
   it('will prefer stale data over partial data with fragments', () => {
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: 'ref1' },
@@ -1400,7 +1400,7 @@ describe('readFromGraph', () => {
           scalars: { a: 3, b: 4, c: 5 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ ... { foo { a b c } } }'),
       previousData: {
@@ -1414,7 +1414,7 @@ describe('readFromGraph', () => {
 
   it('will prefer stale data over partial data even when it is null', () => {
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: 'ref1' },
@@ -1423,7 +1423,7 @@ describe('readFromGraph', () => {
           scalars: { a: 1, b: 2 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ foo { a b c } }'),
       previousData: { foo: null },
@@ -1435,7 +1435,7 @@ describe('readFromGraph', () => {
 
   it('will prefer stale data over partial data for whole arrays', () => {
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: ['ref1', 'ref2'] },
@@ -1460,7 +1460,7 @@ describe('readFromGraph', () => {
           scalars: { a: 11, b: 12, c: 13 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ foo { a b c } }'),
       previousData: {
@@ -1484,7 +1484,7 @@ describe('readFromGraph', () => {
 
   it('will prefer stale data over partial data for whole arrays even when null', () => {
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: ['ref1', 'ref2'] },
@@ -1497,7 +1497,7 @@ describe('readFromGraph', () => {
           scalars: { a: 3, b: 4 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ foo { a b c } }'),
       previousData: {
@@ -1513,7 +1513,7 @@ describe('readFromGraph', () => {
 
   it('will prefer stale data over partial data for single items in an array', () => {
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: ['ref1', 'ref2'] },
@@ -1530,7 +1530,7 @@ describe('readFromGraph', () => {
           scalars: { a: 6, b: 7, c: 8 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ foo { a b c } }'),
       previousData: {
@@ -1552,7 +1552,7 @@ describe('readFromGraph', () => {
 
   it('will prefer stale data over partial data for single items in array even when the item is null', () => {
     assert.deepEqual(readFromGraph({
-      graph: {
+      graph: createMockGraphPrimitives({
         root: {
           scalars: {},
           references: { foo: ['ref1', 'ref2'] },
@@ -1565,7 +1565,7 @@ describe('readFromGraph', () => {
           scalars: { a: 3, b: 4, c: 5 },
           references: {},
         },
-      },
+      }),
       id: 'root',
       selectionSet: parseSelectionSet('{ foo { a b c } }'),
       previousData: {

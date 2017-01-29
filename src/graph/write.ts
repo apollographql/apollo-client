@@ -1,8 +1,41 @@
 import { SelectionSetNode, FragmentDefinitionNode } from 'graphql';
 import { assign } from '../util/assign';
 import { GraphQLData, GraphQLObjectData, GraphQLArrayData } from '../graphql/types';
-import { GraphData, GraphDataNode, GraphReference, GetDataIDFn } from './types';
-import { ID_KEY, getFieldKey } from './common';
+import { ID_KEY, GraphReference, getFieldKey } from './common';
+
+/**
+ * The type for the `dataIdFromObject` function.
+ */
+export interface GetDataIDFn {
+  (data: GraphQLObjectData): string | null | undefined;
+}
+
+/**
+ * This is an internal interface that a user should *never* have access to. This
+ * interface abstracts away how data is actually written and instead provides
+ * some low level primitives for our higher level `writeToGraph` function.
+ */
+export interface GraphWritePrimitives {
+  /**
+   * Gets a node or creates a new one.
+   */
+  getOrCreateNode (id: string): GraphNodeWritePrimitives;
+}
+
+/**
+ * Write primitives on a graph node.
+ */
+export interface GraphNodeWritePrimitives {
+  /**
+   * Sets a scalar value for a given key on this node.
+   */
+  setScalar (key: string, data: GraphQLData): void;
+
+  /**
+   * Sets the reference for a given key on this node.
+   */
+  setReference (key: string, reference: GraphReference): void;
+}
 
 /**
  * Writes GraphQL tree data to a true graph format. Returns a new data object
@@ -29,7 +62,7 @@ export function writeToGraph ({
   variables = {},
   getDataID = () => null,
 }: {
-  graph: GraphData,
+  graph: GraphWritePrimitives,
   id: string | null,
   data: GraphQLObjectData,
   selectionSet: SelectionSetNode,
@@ -39,27 +72,13 @@ export function writeToGraph ({
 }): {
   data: GraphQLObjectData,
 } {
-  let node: GraphDataNode | undefined;
+  const node = id !== null ? graph.getOrCreateNode(id) : null;
   const nextData: GraphQLObjectData = {};
 
   // Define the store id property on our data object. This property is
   // non-enumerable so that users can not see it without trying real hard.
   if (typeof id === 'string') {
     Object.defineProperty(nextData, ID_KEY, { value: id });
-  }
-
-  // If the id is not null then we need to get the node for our `id`. If a node
-  // with the given id already exists in the graph then we use that. Otherwise
-  // we create a new node and add it to the graph.
-  if (id !== null) {
-    if (graph[id]) {
-      node = graph[id];
-    } else {
-      node = graph[id] = {
-        scalars: {},
-        references: {},
-      };
-    }
   }
 
   selectionSet.selections.forEach(selection => {
@@ -81,16 +100,16 @@ export function writeToGraph ({
       // If there is no selection set for this field then it is a scalar!
       else if (!fieldSelectionSet) {
         nextData[fieldName] = fieldData;
-        if (node) {
-          node.scalars[fieldKey] = fieldData;
+        if (node !== null) {
+          node.setScalar(fieldKey, fieldData);
         }
       }
       // If the data is null and this is not a scalar then we need to set our
       // reference to null.
       else if (fieldData === null) {
         nextData[fieldName] = null;
-        if (node) {
-          node.references[fieldKey] = null;
+        if (node !== null) {
+          node.setReference(fieldKey, null);
         }
       }
       // If by this point the field data is not an object (like we expect)
@@ -114,8 +133,8 @@ export function writeToGraph ({
           getDataID,
         });
         nextData[fieldName] = nextFieldData;
-        if (node) {
-          node.references[fieldKey] = fieldReference;
+        if (node !== null) {
+          node.setReference(fieldKey, fieldReference);
         }
       }
       // Otherwise do the write thing.
@@ -124,8 +143,8 @@ export function writeToGraph ({
         const fieldID = typeof fieldDataID === 'string' ? `(${fieldDataID})` : id && maybeAddTypeName(`${id}.${fieldKey}`, fieldData);
 
         // Add the field id to our store item’s references.
-        if (node) {
-          node.references[fieldKey] = fieldID;
+        if (node !== null) {
+          node.setReference(fieldKey, fieldID);
         }
 
         // Write the data in this field to the store.
@@ -205,7 +224,7 @@ function writeArrayToStore ({
   variables,
   getDataID,
 }: {
-  graph: GraphData,
+  graph: GraphWritePrimitives,
   id: string | null,
   data: GraphQLArrayData,
   selectionSet: SelectionSetNode,

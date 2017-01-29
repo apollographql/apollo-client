@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { parse, SelectionSetNode, FragmentDefinitionNode } from 'graphql/language';
-import { GraphData } from '../src/graph/types';
+import { createMockGraphPrimitives } from './mocks/mockGraphPrimitives';
 import { ID_KEY } from '../src/graph/common';
 import { writeToGraph } from '../src/graph/write';
 
@@ -35,7 +35,7 @@ function parseFragmentDefinitionMap (source: string): { [fragmentName: string]: 
 
 describe('writeToGraph', () => {
   it('will perform basic scalar writes', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     const foo: any = Symbol();
     const bar: any = Symbol();
     const buz: any = Symbol();
@@ -45,7 +45,7 @@ describe('writeToGraph', () => {
       data: { foo },
       selectionSet: parseSelectionSet(`{ foo }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: { foo },
         references: {},
@@ -57,7 +57,7 @@ describe('writeToGraph', () => {
       data: { bar },
       selectionSet: parseSelectionSet(`{ bar }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: { foo },
         references: {},
@@ -67,15 +67,13 @@ describe('writeToGraph', () => {
         references: {},
       },
     });
-    const graphNodeA = graph['a'];
-    const graphNodeB = graph['b'];
     writeToGraph({
       graph,
       id: 'a',
       data: { buz },
       selectionSet: parseSelectionSet(`{ buz }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: { foo, buz },
         references: {},
@@ -85,12 +83,10 @@ describe('writeToGraph', () => {
         references: {},
       },
     });
-    assert.strictEqual(graph['a'], graphNodeA);
-    assert.strictEqual(graph['b'], graphNodeB);
   });
 
   it('will perform basic scalar writes with aliases', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     const foo: any = Symbol();
     const bar: any = Symbol();
     const buz: any = Symbol();
@@ -100,7 +96,7 @@ describe('writeToGraph', () => {
       data: { x: foo },
       selectionSet: parseSelectionSet(`{ x: foo }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: { foo },
         references: {},
@@ -112,7 +108,7 @@ describe('writeToGraph', () => {
       data: { y: bar },
       selectionSet: parseSelectionSet(`{ y: bar }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: { foo },
         references: {},
@@ -122,15 +118,13 @@ describe('writeToGraph', () => {
         references: {},
       },
     });
-    const graphNodeA = graph['a'];
-    const graphNodeB = graph['b'];
     writeToGraph({
       graph,
       id: 'a',
       data: { z: buz },
       selectionSet: parseSelectionSet(`{ z: buz }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: { foo, buz },
         references: {},
@@ -140,12 +134,10 @@ describe('writeToGraph', () => {
         references: {},
       },
     });
-    assert.strictEqual(graph['a'], graphNodeA);
-    assert.strictEqual(graph['b'], graphNodeB);
   });
 
   it('will perform basic scalar writes with arguments', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     const foo: any = Symbol();
     const bar: any = Symbol();
     const buz: any = Symbol();
@@ -155,7 +147,7 @@ describe('writeToGraph', () => {
       data: { foo },
       selectionSet: parseSelectionSet(`{ foo(a: 1, b: 2, c: 3) }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: { 'foo({"a":1,"b":2,"c":3})': foo },
         references: {},
@@ -168,7 +160,7 @@ describe('writeToGraph', () => {
       selectionSet: parseSelectionSet(`{ bar(var: $var) }`),
       variables: { var: { x: 'a', y: 'b', z: 'c' } },
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: { 'foo({"a":1,"b":2,"c":3})': foo },
         references: {},
@@ -178,15 +170,13 @@ describe('writeToGraph', () => {
         references: {},
       },
     });
-    const graphNodeA = graph['a'];
-    const graphNodeB = graph['b'];
     writeToGraph({
       graph,
       id: 'a',
       data: { alias: buz },
       selectionSet: parseSelectionSet(`{ alias: buz(array: [1, 2, 3], enum: YES, null: null, string: "yolo") }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       a: {
         scalars: {
           'foo({"a":1,"b":2,"c":3})': foo,
@@ -199,12 +189,10 @@ describe('writeToGraph', () => {
         references: {},
       },
     });
-    assert.strictEqual(graph['a'], graphNodeA);
-    assert.strictEqual(graph['b'], graphNodeB);
   });
 
   it('will write nothing with a null id', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     const foo: any = Symbol();
     const bar: any = Symbol();
     const buz: any = Symbol();
@@ -214,39 +202,35 @@ describe('writeToGraph', () => {
       data: { foo },
       selectionSet: parseSelectionSet(`{ foo }`),
     });
-    assert.deepEqual(graph, {});
+    assert.deepEqual(graph.data, {});
     writeToGraph({
       graph,
       id: 'b',
       data: { bar },
       selectionSet: parseSelectionSet(`{ bar }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       b: {
         scalars: { bar },
         references: {},
       },
     });
-    const graphNodeA = graph['a'];
-    const graphNodeB = graph['b'];
     writeToGraph({
       graph,
       id: null,
       data: { buz },
       selectionSet: parseSelectionSet(`{ buz }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       b: {
         scalars: { bar },
         references: {},
       },
     });
-    assert.strictEqual(graph['a'], graphNodeA);
-    assert.strictEqual(graph['b'], graphNodeB);
   });
 
   it('will write complex scalars', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     const scalars = {
       a: true,
       b: null,
@@ -262,24 +246,23 @@ describe('writeToGraph', () => {
       data: scalars,
       selectionSet: parseSelectionSet(`{ a b c d e f g }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       foo: {
         scalars,
         references: {},
       },
     });
-    assert.notStrictEqual(graph['foo'].scalars, scalars);
   });
 
   it('will write nested object scalars', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: 'root',
       data: { foo: { a: 1, b1: { c: 2 }, b2: { c: -2, d: { e: -3 } } } },
       selectionSet: parseSelectionSet(`{ foo { a b1: b { c } b2: b(arg: YES) { c d { e } } } }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: { foo: 'root.foo' },
@@ -313,7 +296,7 @@ describe('writeToGraph', () => {
       selectionSet: parseSelectionSet(`{ bar { d(var: $var) e { alias: f } } }`),
       variables: { var: true },
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -357,7 +340,7 @@ describe('writeToGraph', () => {
       data: { foo: { baz: { g: 5, h: { i: 6 } }, alias: { j: 7, k: 8 } } },
       selectionSet: parseSelectionSet(`{ foo { baz { g h { i } } alias: b { j k } } }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -411,7 +394,7 @@ describe('writeToGraph', () => {
   });
 
   it('will add typenames to the path of nested objects if available', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: 'root',
@@ -431,7 +414,7 @@ describe('writeToGraph', () => {
         }
       }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: { foo: 'root.foo:Type1' },
@@ -474,7 +457,7 @@ describe('writeToGraph', () => {
       selectionSet: parseSelectionSet(`{ bar { d(var: $var) e { alias: f } } }`),
       variables: { var: true },
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -532,7 +515,7 @@ describe('writeToGraph', () => {
       },
       selectionSet: parseSelectionSet(`{ foo { baz { g h { i } } alias: b { j k } } }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -592,7 +575,7 @@ describe('writeToGraph', () => {
   });
 
   it('will set a reference to null if the value is null', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: 'foo',
@@ -607,7 +590,7 @@ describe('writeToGraph', () => {
         buz2: buz(a: 1, b: 2, c: 3) { a b c { d } }
       }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       foo: {
         scalars: {},
         references: {
@@ -620,7 +603,7 @@ describe('writeToGraph', () => {
   });
 
   it('will use a data id for the node id if available', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: 'root',
@@ -634,7 +617,7 @@ describe('writeToGraph', () => {
       }`),
       getDataID,
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -694,7 +677,7 @@ describe('writeToGraph', () => {
       }`),
       getDataID,
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -727,7 +710,7 @@ describe('writeToGraph', () => {
   });
 
   it('will use a data id for the node id but not a typename', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: 'root',
@@ -741,7 +724,7 @@ describe('writeToGraph', () => {
       }`),
       getDataID,
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -806,7 +789,7 @@ describe('writeToGraph', () => {
       }`),
       getDataID,
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -839,7 +822,7 @@ describe('writeToGraph', () => {
   });
 
   it('will only write data with a node id if null was provided for the root id', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: null,
@@ -853,7 +836,7 @@ describe('writeToGraph', () => {
       }`),
       getDataID,
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       '(1)': {
         scalars: { a: 1, b: 2, c: 3 },
         references: {},
@@ -906,7 +889,7 @@ describe('writeToGraph', () => {
       }`),
       getDataID,
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       '(1)': {
         scalars: { a: 1, b: 4, c: 5, d: 6 },
         references: { e: '(1).e' },
@@ -923,7 +906,7 @@ describe('writeToGraph', () => {
   });
 
   it('will return the object written to the store with ID_KEYs', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     const { data: data1 } = writeToGraph({
       graph,
       id: 'root',
@@ -1036,7 +1019,7 @@ describe('writeToGraph', () => {
   it('will throw an error if there are missing values', () => {
     try {
       writeToGraph({
-        graph: {},
+        graph: createMockGraphPrimitives(),
         id: 'root',
         data: { a: 1, b: 2 },
         selectionSet: parseSelectionSet(`{ a b c }`),
@@ -1048,7 +1031,7 @@ describe('writeToGraph', () => {
     }
     try {
       writeToGraph({
-        graph: {},
+        graph: createMockGraphPrimitives(),
         id: 'root',
         data: { a: 1, b: 2, c: { d: 3, e: 4 } },
         selectionSet: parseSelectionSet(`{ a b c { d e f } }`),
@@ -1062,38 +1045,38 @@ describe('writeToGraph', () => {
 
   it('will not throw an error if there are missing values in a fragment', () => {
     writeToGraph({
-      graph: {},
+      graph: createMockGraphPrimitives(),
       id: 'root',
       data: { a: 1, b: 2 },
       selectionSet: parseSelectionSet(`{ a b ... { c d { e } } }`),
     });
     writeToGraph({
-      graph: {},
+      graph: createMockGraphPrimitives(),
       id: 'root',
       data: { a: 1, b: 2 },
       selectionSet: parseSelectionSet(`{ a b ... on Foo { c d { e } } }`),
     });
     writeToGraph({
-      graph: {},
+      graph: createMockGraphPrimitives(),
       id: 'root',
       data: { a: 1, b: 2 },
       selectionSet: parseSelectionSet(`{ a b ...foo }`),
       fragments: parseFragmentDefinitionMap(`fragment foo on Foo { c d { e } }`),
     });
     writeToGraph({
-      graph: {},
+      graph: createMockGraphPrimitives(),
       id: 'root',
       data: { a: 1, b: 2, c: { d: 3, e: 4 } },
       selectionSet: parseSelectionSet(`{ a b c { d e ... { f g { h } } } }`),
     });
     writeToGraph({
-      graph: {},
+      graph: createMockGraphPrimitives(),
       id: 'root',
       data: { a: 1, b: 2, c: { d: 3, e: 4 } },
       selectionSet: parseSelectionSet(`{ a b c { d e ... on Bar { f g { h } } } }`),
     });
     writeToGraph({
-      graph: {},
+      graph: createMockGraphPrimitives(),
       id: 'root',
       data: { a: 1, b: 2, c: { d: 3, e: 4 } },
       selectionSet: parseSelectionSet(`{ a b c { d e ...bar } }`),
@@ -1102,7 +1085,7 @@ describe('writeToGraph', () => {
   });
 
   it('will write fields in fragments to the store', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     const data = {
       a: 1, b: 2, c: 3,
       d: 4, e: 5, f: 6,
@@ -1147,7 +1130,7 @@ describe('writeToGraph', () => {
         }
       `),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {
           a: 1, b: 2, c: 3,
@@ -1181,7 +1164,7 @@ describe('writeToGraph', () => {
   it('will error when referencing a fragment that does not exist', () => {
     assert.throws(() => {
       writeToGraph({
-        graph: {},
+        graph: createMockGraphPrimitives(),
         id: 'root',
         data: {},
         selectionSet: parseSelectionSet(`{ ...doesNotExist }`),
@@ -1189,7 +1172,7 @@ describe('writeToGraph', () => {
     });
     assert.throws(() => {
       writeToGraph({
-        graph: {},
+        graph: createMockGraphPrimitives(),
         id: 'root',
         data: {},
         selectionSet: parseSelectionSet(`{ ...doesNotExist }`),
@@ -1201,7 +1184,7 @@ describe('writeToGraph', () => {
   it('will error when referencing a variable that does not exist', () => {
     assert.throws(() => {
       writeToGraph({
-        graph: {},
+        graph: createMockGraphPrimitives(),
         id: 'root',
         data: {},
         selectionSet: parseSelectionSet(`{ field(variable: $doesNotExist) }`),
@@ -1209,7 +1192,7 @@ describe('writeToGraph', () => {
     });
     assert.throws(() => {
       writeToGraph({
-        graph: {},
+        graph: createMockGraphPrimitives(),
         id: 'root',
         data: {},
         selectionSet: parseSelectionSet(`{ field(variable: $doesNotExist) }`),
@@ -1219,7 +1202,7 @@ describe('writeToGraph', () => {
   });
 
   it('will write nested array references', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: 'root',
@@ -1253,7 +1236,7 @@ describe('writeToGraph', () => {
         bar { d e f }
       }`),
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -1322,7 +1305,7 @@ describe('writeToGraph', () => {
   });
 
   it('will write nested array references where some items have ids', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: 'root',
@@ -1357,7 +1340,7 @@ describe('writeToGraph', () => {
       }`),
       getDataID,
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {
@@ -1426,7 +1409,7 @@ describe('writeToGraph', () => {
   });
 
   it('will write nested array references where some items have type names', () => {
-    const graph: GraphData = {};
+    const graph = createMockGraphPrimitives();
     writeToGraph({
       graph,
       id: 'root',
@@ -1461,7 +1444,7 @@ describe('writeToGraph', () => {
       }`),
       getDataID,
     });
-    assert.deepEqual(graph, {
+    assert.deepEqual(graph.data, {
       root: {
         scalars: {},
         references: {

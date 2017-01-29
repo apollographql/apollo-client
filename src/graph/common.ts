@@ -1,3 +1,8 @@
+/**
+ * Common constants, types, and utility functions between the graph read and
+ * write implementations.
+ */
+
 import { FieldNode, ValueNode } from 'graphql';
 import { GraphQLData } from '../graphql/types';
 
@@ -11,6 +16,16 @@ import { GraphQLData } from '../graphql/types';
  * @private
  */
 export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
+
+/**
+ * A reference to zero, one, or many nodes in the data graph.
+ */
+export type GraphReference = string | null | GraphReferenceArray;
+
+/**
+ * An array of `GraphReference`s. Used recursively.
+ */
+export interface GraphReferenceArray extends Array<GraphReference> {}
 
 /**
  * Gets the key for a given field.

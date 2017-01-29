@@ -6,6 +6,8 @@ import { GraphReference } from './common';
 import { writeToGraph, GetDataIDFn } from './write';
 import { readFromGraph, GraphNodeReadPrimitives } from './read';
 
+const DEFAULT_ID = 'ROOT_QUERY';
+
 // Used to get a new transaction id for uncommit writes.
 let nextTransactionID = 0;
 
@@ -17,9 +19,22 @@ let nextTransactionID = 0;
  * requests entirely!
  *
  * Currently the `GraphStore` must integrate with a Redux store as long as
- * Apollo Client provides first class core support for Redux.
+ * Apollo Client provides first class core support for Redux. It also has a
+ * circular dependency with Redux so instantiation may be a little tricky. See
+ * tests for an example of proper instantiation.
  */
 export class ReduxGraphStore {
+  /**
+   * The empty state with which to initial a Redux store. If no state argument
+   * is provided to the `reduxReduce` function then this state will be used as
+   * the previous state.
+   */
+  public static initialState: ReduxState = {
+    graphData: {},
+    transactionIDs: [],
+    transactionByID: {},
+  };
+
   private readonly _getDataID: GetDataIDFn;
   private readonly _reduxDispatch: (action: ApolloAction) => void;
   private readonly _reduxGetState: () => ReduxState;
@@ -52,13 +67,13 @@ export class ReduxGraphStore {
    * `GraphStore#writeWithoutCommit` method.
    */
   public write ({
+    id: rootID = DEFAULT_ID,
     selectionSet,
     fragments,
     variables,
-    id: rootID,
     data: rootData,
   }: {
-    id: string | null,
+    id?: string | null,
     data: GraphQLObjectData,
     selectionSet: SelectionSetNode,
     fragments?: { [fragmentName: string]: FragmentDefinitionNode },
@@ -109,13 +124,13 @@ export class ReduxGraphStore {
    * rolled back if a mutation fails.
    */
   public writeWithoutCommit ({
-    id: rootID,
+    id: rootID = DEFAULT_ID,
     selectionSet,
     fragments,
     variables,
     data: rootData,
   }: {
-    id: string | null,
+    id?: string | null,
     data: GraphQLObjectData,
     selectionSet: SelectionSetNode,
     fragments?: { [fragmentName: string]: FragmentDefinitionNode },
@@ -177,14 +192,14 @@ export class ReduxGraphStore {
    * Uncommit data will be returned unless `skipUncommitWrites` is defined.
    */
   public read ({
-    id: rootID,
+    id: rootID = DEFAULT_ID,
     selectionSet,
     fragments,
     variables,
     previousData,
     skipUncommitWrites,
   }: {
-    id: string,
+    id?: string,
     selectionSet: SelectionSetNode,
     fragments?: { [fragmentName: string]: FragmentDefinitionNode },
     variables?: { [variableName: string]: GraphQLData },
@@ -202,23 +217,16 @@ export class ReduxGraphStore {
     // data.
     const graphs: Array<ReduxGraphData> = [
       state.graphData,
-      ...(skipUncommitWrites ? [] : state.transactionIDs.map(id => state.transactionGraphData[id])),
+      ...(skipUncommitWrites ? [] : state.transactionIDs.map(id => state.transactionByID[id]!.graphData)),
     ];
 
     const graphPrimitives = {
-      getNode: (id: string): GraphNodeReadPrimitives | undefined => {
+      getNode: (id: string): GraphNodeReadPrimitives => {
         // Get all of the nodes corresponding to the provided id filtering out
         // any nodes which don’t exist.
-        const nodes: Array<ReduxGraphNodeData> =
-          graphs.map(graph => graph[id]).filter(node => typeof node !== 'undefined');
-
-        // If no nodes could be found then we need to return undefined.
-        if (nodes.length === 0) {
-          return;
-        }
-
+        const nodes = graphs.map(graph => graph[id]).filter(node => typeof node !== 'undefined') as Array<ReduxGraphNodeData>;
         return {
-          getScalar: key => {
+          getScalar: (key: string): GraphQLData | undefined => {
             // Return the first scalar that is not undefined while iterating
             // backwards.
             for (let i = nodes.length - 1; i >= 0; i--) {
@@ -227,8 +235,9 @@ export class ReduxGraphStore {
                 return scalar;
               }
             }
+            return;
           },
-          getReference: key => {
+          getReference: (key: string): GraphReference | undefined => {
             // Return the first reference that is not undefined while iterating
             // backwards.
             for (let i = nodes.length - 1; i >= 0; i--) {
@@ -237,6 +246,8 @@ export class ReduxGraphStore {
                 return reference;
               }
             }
+
+            return;
           },
         };
       },
@@ -272,14 +283,14 @@ export class ReduxGraphStore {
    * will be returned.
    */
   public watch ({
-    id,
+    id = DEFAULT_ID,
     selectionSet,
     fragments,
     variables,
     initialData,
     skipUncommitWrites,
   }: {
-    id: string,
+    id?: string,
     selectionSet: SelectionSetNode,
     fragments?: { [fragmentName: string]: FragmentDefinitionNode },
     variables?: { [variableName: string]: GraphQLData },
@@ -330,19 +341,20 @@ export class ReduxGraphStore {
         // error will become an unhandled error allowing the user to deal with
         // it.
         if (nextResult.data !== previousResult.data || nextResult.stale !== previousResult.stale) {
-          observers.forEach(observer => observer.next && setTimeout(() => observer.next(nextResult), 0));
+          observers.forEach(observer => setTimeout(() => observer.next && observer.next(nextResult), 0));
           previousResult = nextResult;
         }
       } catch (error) {
         // If we caught an error then we must emit an error for all of our
         // observers.
-        observers.forEach(observer => observer.error && setTimeout(() => observer.error(error), 0));
+        observers.forEach(observer => setTimeout(() => observer.error && observer.error(error), 0));
       }
     };
 
     return new Observable(observer => {
-      // Instantly start the observable with the previous result.
-      observer.next(previousResult);
+      // Instantly start the observable with the previous result on the next
+      // tick.
+      setTimeout(() => observer.next && observer.next(previousResult), 0);
 
       // Add the observer to our array of observers.
       observers.push(observer);
@@ -376,7 +388,7 @@ export class ReduxGraphStore {
   /**
    * The redux reducer for this graph store.
    */
-  public reduxReduce (previousState: ReduxState, action: ApolloAction) {
+  public reduxReduce (previousState: ReduxState = ReduxGraphStore.initialState, action: ApolloAction) {
     if (action.type === 'APOLLO_GRAPH_DATA') {
       // If there were no patches then we can just return the data.
       if (action.patches.length === 0) {
@@ -398,22 +410,27 @@ export class ReduxGraphStore {
       // no graph data exists for the transaction yet then we will need to
       // create some graph data.
       else {
-        previousGraph = state.transactionGraphData[action.transactionID];
+        const transaction = state.transactionByID[action.transactionID];
 
-        // If there is no graph for this transaction then we need to create a
-        // new transaction.
-        if (typeof previousGraph === 'undefined') {
+        // If there is no transaction then we need to create a new transaction.
+        // Otherwise use the graph data from the transaction.
+        if (typeof transaction === 'undefined') {
           state.transactionIDs = [...previousState.transactionIDs, action.transactionID];
           previousGraph = {};
+        } else {
+          previousGraph = transaction.graphData;
         }
 
         // Clone the previous graph.
         graph = { ...previousGraph };
 
         // Set our new graph in the transaction graph data state.
-        state.transactionGraphData = {
-          ...state.transactionGraphData,
-          [action.transactionID]: graph,
+        state.transactionByID = {
+          ...state.transactionByID,
+          [action.transactionID]: {
+            ...transaction,
+            graphData: graph,
+          },
         };
       }
 
@@ -427,11 +444,13 @@ export class ReduxGraphStore {
         // If there was no node in the graph then we create a node!
         if (!node) {
           node = { scalars: {}, references: {} };
+          graph[id] = node;
         }
         // If the node is exactly the same as the previous node then we need to
         // clone the node before we mutate it.
         else if (previousNode && node === previousNode) {
           node = { ...previousNode };
+          graph[id] = node;
         }
 
         switch (patch.value.type) {
@@ -457,7 +476,8 @@ export class ReduxGraphStore {
       });
 
       // Now that we have updated our state call all of our listeners on the
-      // next tick.
+      // next tick because if we try to call `this._reduxGetState` on this tick
+      // it will not return the correct data.
       setTimeout(() => this._callListeners(), 0);
 
       return state;
@@ -467,16 +487,16 @@ export class ReduxGraphStore {
       const state = { ...previousState };
 
       // Remove the transaction id from the list of transaction ids.
-      state.transactionIDs = state.transactionIDs.filter(transactionID => transactionID === action.transactionID);
+      state.transactionIDs = state.transactionIDs.filter(transactionID => transactionID !== action.transactionID);
 
       // Remove the transaction id graph data from the transaction graph
       // data map.
-      const { [action.transactionID]: _transactionGraphData, ...nextTransactionGraphData } = state.transactionGraphData;
-      const transactionGraphData: ReduxGraphData = _transactionGraphData;
-      state.transactionGraphData = nextTransactionGraphData;
+      const { [action.transactionID]: _, ...nextTransactionByID } = state.transactionByID;
+      state.transactionByID = nextTransactionByID;
 
       // Now that we have updated our state call all of our listeners on the
-      // next tick.
+      // next tick because if we try to call `this._reduxGetState` on this tick
+      // it will not return the correct data.
       setTimeout(() => this._callListeners(), 0);
 
       return state;
@@ -505,17 +525,17 @@ export class ReduxGraphStore {
  * - `transactionGraphData` is a map of transaction ids to graph data objects.
  *   Transaction data is kept seperate so that it may be easily rolled back.
  */
-type ReduxState = {
+export type ReduxState = {
   graphData: ReduxGraphData,
   transactionIDs: Array<string>,
-  transactionGraphData: { [transactionID: string]: ReduxGraphData },
+  transactionByID: { [transactionID: string]: { graphData: ReduxGraphData } | undefined },
 };
 
 /**
  * The actual graph data object is a map of node ids to graph data nodes. The
  * nodes contain all of the actual data.
  */
-type ReduxGraphData = {
+export type ReduxGraphData = {
   [nodeID: string]: ReduxGraphNodeData | undefined,
 };
 
@@ -524,7 +544,7 @@ type ReduxGraphData = {
  * multi-dimensional references (or edges). Names were picked to resemble
  * GraphQL, but traditional graph nomenclature can easily apply as well.
  */
-type ReduxGraphNodeData = {
+export type ReduxGraphNodeData = {
   scalars: { [scalarName: string]: GraphQLData | undefined },
   references: { [referenceName: string]: GraphReference | undefined },
 };

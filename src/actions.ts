@@ -11,6 +11,14 @@ import {
   ApolloReducer,
 } from './store';
 
+import {
+  GraphQLData,
+} from './graphql/types';
+
+import {
+  GraphReference,
+} from './graph/common';
+
 export type QueryResultAction = {
   type: 'APOLLO_QUERY_RESULT';
   result: ExecutionResult;
@@ -152,6 +160,21 @@ export function isSubscriptionResultAction(action: ApolloAction): action is Subs
   return action.type === 'APOLLO_SUBSCRIPTION_RESULT';
 }
 
+export interface GraphDataAction {
+  type: 'APOLLO_GRAPH_DATA';
+  transactionID?: string;
+  patches: Array<{
+    id: string,
+    key: string,
+    value: { type: 'SCALAR', data: GraphQLData } | { type: 'REFERENCE', reference: GraphReference },
+  }>;
+}
+
+export interface GraphDataRollbackAction {
+  type: 'APOLLO_GRAPH_DATA_ROLLBACK';
+  transactionID: string;
+}
+
 export type ApolloAction =
   QueryResultAction |
   QueryErrorAction |
@@ -163,4 +186,6 @@ export type ApolloAction =
   MutationErrorAction |
   UpdateQueryResultAction |
   StoreResetAction |
-  SubscriptionResultAction;
+  SubscriptionResultAction |
+  GraphDataAction |
+  GraphDataRollbackAction;

@@ -1,7 +1,13 @@
 import { SelectionSetNode, FragmentDefinitionNode } from 'graphql';
-import { Observable } from '../util/Observable';
+import { ApolloAction, GraphDataAction } from '../actions';
+import { Observable, Observer } from '../util/Observable';
 import { GraphQLData, GraphQLObjectData } from '../graphql/types';
-import { GetDataIDFn } from './types';
+import { GraphReference } from './common';
+import { writeToGraph, GetDataIDFn } from './write';
+import { readFromGraph, GraphNodeReadPrimitives } from './read';
+
+// Used to get a new transaction id for uncommit writes.
+let nextTransactionID = 0;
 
 /**
  * A `GraphStore` instance will allow you to save your GraphQL data in a
@@ -13,15 +19,25 @@ import { GetDataIDFn } from './types';
  * Currently the `GraphStore` must integrate with a Redux store as long as
  * Apollo Client provides first class core support for Redux.
  */
-export class GraphStore {
-  private _getDataId: GetDataIDFn;
+export class ReduxGraphStore {
+  private readonly _getDataID: GetDataIDFn;
+  private readonly _reduxDispatch: (action: ApolloAction) => void;
+  private readonly _reduxGetState: () => ReduxState;
+  private readonly _listeners: Array<() => void>;
 
   constructor ({
-    getDataId,
+    reduxDispatch,
+    reduxGetState,
+    getDataID = () => null,
   }: {
-    getDataId?: GetDataIDFn,
+    reduxDispatch: (action: ApolloAction) => void,
+    reduxGetState: () => ReduxState,
+    getDataID?: GetDataIDFn,
   }) {
-    this._getDataId = getDataId || (() => null);
+    this._reduxDispatch = reduxDispatch;
+    this._reduxGetState = reduxGetState;
+    this._getDataID = getDataID;
+    this._listeners = [];
   }
 
   /**
@@ -39,16 +55,49 @@ export class GraphStore {
     selectionSet,
     fragments,
     variables,
-    id,
-    data,
+    id: rootID,
+    data: rootData,
   }: {
-    selectionSet: SelectionSetNode,
-    fragments: { [fragmentName: string]: FragmentDefinitionNode },
-    variables: { [variableName: string]: GraphQLData },
     id: string | null,
     data: GraphQLObjectData,
+    selectionSet: SelectionSetNode,
+    fragments?: { [fragmentName: string]: FragmentDefinitionNode },
+    variables?: { [variableName: string]: GraphQLData },
   }): {
     data: GraphQLObjectData,
+  } {
+    // Set up our action. We will be pushing to the `patches` property when we
+    // write.
+    const action: GraphDataAction = {
+      type: 'APOLLO_GRAPH_DATA',
+      patches: [],
+    };
+
+    // Write our data to the graph and add the patches to be applied later in
+    // our Redux reducer.
+    const result = writeToGraph({
+      graph: {
+        getOrCreateNode: id => ({
+          setScalar: (key, data) => action.patches.push({ id, key, value: { type: 'SCALAR', data } }),
+          setReference: (key, reference) => action.patches.push({ id, key, value: { type: 'REFERENCE', reference } }),
+        }),
+      },
+      // The root id is wrapped in parentheses to prevent accidental collisions
+      // with generated keys.
+      id: `(${rootID})`,
+      data: rootData,
+      selectionSet,
+      fragments,
+      variables,
+      getDataID: this._getDataID,
+    });
+
+    // Dispatch the Redux action which will write to our store.
+    this._reduxDispatch(action);
+
+    return {
+      data: result.data,
+    };
   }
 
   /**
@@ -60,21 +109,60 @@ export class GraphStore {
    * rolled back if a mutation fails.
    */
   public writeWithoutCommit ({
+    id: rootID,
     selectionSet,
     fragments,
     variables,
-    id,
-    data,
+    data: rootData,
   }: {
-    selectionSet: SelectionSetNode,
-    fragments: { [fragmentName: string]: FragmentDefinitionNode },
-    variables: { [variableName: string]: GraphQLData },
     id: string | null,
     data: GraphQLObjectData,
+    selectionSet: SelectionSetNode,
+    fragments?: { [fragmentName: string]: FragmentDefinitionNode },
+    variables?: { [variableName: string]: GraphQLData },
   }): {
     data: GraphQLObjectData,
     commit: () => void,
     rollback: () => void,
+  } {
+    // Get the next transaction id.
+    const transactionID = String(nextTransactionID++);
+
+    // Set up our action. We will be pushing to the `patches` property when we
+    // write.
+    const action: GraphDataAction = {
+      type: 'APOLLO_GRAPH_DATA',
+      transactionID,
+      patches: [],
+    };
+
+    // Write our data to the graph and add the patches to be applied later in
+    // our Redux reducer.
+    const result = writeToGraph({
+      graph: {
+        getOrCreateNode: id => ({
+          setScalar: (key, data) => action.patches.push({ id, key, value: { type: 'SCALAR', data } }),
+          setReference: (key, reference) => action.patches.push({ id, key, value: { type: 'REFERENCE', reference } }),
+        }),
+      },
+      // The root id is wrapped in parentheses to prevent accidental collisions
+      // with generated keys.
+      id: `(${rootID})`,
+      data: rootData,
+      selectionSet,
+      fragments,
+      variables,
+      getDataID: this._getDataID,
+    });
+
+    // Dispatch the Redux action which will write to our store.
+    this._reduxDispatch(action);
+
+    return {
+      data: result.data,
+      commit: () => { throw new Error('Unimplemented'); },
+      rollback: () => this._reduxDispatch({ type: 'APOLLO_GRAPH_DATA_ROLLBACK', transactionID }),
+    };
   }
 
   /**
@@ -89,21 +177,86 @@ export class GraphStore {
    * Uncommit data will be returned unless `skipUncommitWrites` is defined.
    */
   public read ({
+    id: rootID,
     selectionSet,
     fragments,
-    id,
+    variables,
     previousData,
     skipUncommitWrites,
   }: {
-    selectionSet: SelectionSetNode,
-    fragments: { [fragmentName: string]: FragmentDefinitionNode },
-    variables: { [variableName: string]: GraphQLData },
     id: string,
+    selectionSet: SelectionSetNode,
+    fragments?: { [fragmentName: string]: FragmentDefinitionNode },
+    variables?: { [variableName: string]: GraphQLData },
     previousData?: GraphQLObjectData,
     skipUncommitWrites?: boolean,
   }): {
     stale: boolean,
     data: GraphQLObjectData,
+  } {
+    const state = this._reduxGetState();
+
+    // An array of all the graph data we will try to read from.
+    //
+    // We use this approach so that we can read from uncommit (or optimistic)
+    // data.
+    const graphs: Array<ReduxGraphData> = [
+      state.graphData,
+      ...(skipUncommitWrites ? [] : state.transactionIDs.map(id => state.transactionGraphData[id])),
+    ];
+
+    const graphPrimitives = {
+      getNode: (id: string): GraphNodeReadPrimitives | undefined => {
+        // Get all of the nodes corresponding to the provided id filtering out
+        // any nodes which don’t exist.
+        const nodes: Array<ReduxGraphNodeData> =
+          graphs.map(graph => graph[id]).filter(node => typeof node !== 'undefined');
+
+        // If no nodes could be found then we need to return undefined.
+        if (nodes.length === 0) {
+          return;
+        }
+
+        return {
+          getScalar: key => {
+            // Return the first scalar that is not undefined while iterating
+            // backwards.
+            for (let i = nodes.length - 1; i >= 0; i--) {
+              const scalar = nodes[i].scalars[key];
+              if (typeof scalar !== 'undefined') {
+                return scalar;
+              }
+            }
+          },
+          getReference: key => {
+            // Return the first reference that is not undefined while iterating
+            // backwards.
+            for (let i = nodes.length - 1; i >= 0; i--) {
+              const reference = nodes[i].references[key];
+              if (typeof reference !== 'undefined') {
+                return reference;
+              }
+            }
+          },
+        };
+      },
+    };
+
+    const { stale, data } = readFromGraph({
+      graph: graphPrimitives,
+      // The root id is wrapped in parentheses to prevent accidental collisions
+      // with generated keys.
+      id: `(${rootID})`,
+      selectionSet,
+      fragments,
+      variables,
+      previousData,
+    });
+
+    return {
+      stale,
+      data,
+    };
   }
 
   /**
@@ -119,21 +272,259 @@ export class GraphStore {
    * will be returned.
    */
   public watch ({
+    id,
     selectionSet,
     fragments,
     variables,
-    id,
     initialData,
     skipUncommitWrites,
   }: {
-    selectionSet: SelectionSetNode,
-    fragments: { [fragmentName: string]: FragmentDefinitionNode },
-    variables: { [variableName: string]: GraphQLData },
     id: string,
+    selectionSet: SelectionSetNode,
+    fragments?: { [fragmentName: string]: FragmentDefinitionNode },
+    variables?: { [variableName: string]: GraphQLData },
     initialData?: GraphQLObjectData,
     skipUncommitWrites?: boolean,
   }): Observable<{
     stale: boolean,
     data: GraphQLObjectData,
-  }>
+  }> {
+    // We keep track of the previous result across *all* subscriptions so that
+    // when we get a new subscription we can instantly push them the most recent
+    // data.
+    //
+    // The initial result will use the `initialData` if provided, otherwise we
+    // will do an initial read from the store.
+    //
+    // It is possible that a partial read error may be synchronously thrown
+    // here.
+    let previousResult = initialData ? { stale: false, data: initialData } : this.read({
+      id,
+      selectionSet,
+      fragments,
+      variables,
+      skipUncommitWrites,
+    });
+
+    // An array of observers that will be called whenever we get some new data.
+    const observers: Array<Observer<{ stale: boolean, data: GraphQLObjectData }>> = [];
+
+    // Will get called whenever a write happens to our data.
+    const listener = () => {
+      try {
+        // Since we got a new update, read from the graph to see if anything
+        // changed.
+        const nextResult = this.read({
+          id,
+          selectionSet,
+          fragments,
+          variables,
+          previousData: previousResult.data,
+          skipUncommitWrites,
+        });
+
+        // If something changed call all of our observers on the next tick and
+        // update the `previousResult` variable.
+        //
+        // We call on the next tick so that if any errors are thrown then the
+        // error will become an unhandled error allowing the user to deal with
+        // it.
+        if (nextResult.data !== previousResult.data || nextResult.stale !== previousResult.stale) {
+          observers.forEach(observer => observer.next && setTimeout(() => observer.next(nextResult), 0));
+          previousResult = nextResult;
+        }
+      } catch (error) {
+        // If we caught an error then we must emit an error for all of our
+        // observers.
+        observers.forEach(observer => observer.error && setTimeout(() => observer.error(error), 0));
+      }
+    };
+
+    return new Observable(observer => {
+      // Instantly start the observable with the previous result.
+      observer.next(previousResult);
+
+      // Add the observer to our array of observers.
+      observers.push(observer);
+
+      // If our listener is not currently in the array of listeners then we need
+      // to add it to the array.
+      if (this._listeners.indexOf(listener) === -1) {
+        this._listeners.push(listener);
+      }
+
+      return () => {
+        // Remove the observer from our array of observers.
+        const observerIndex = observers.indexOf(observer);
+        if (observerIndex > -1) {
+          observers.splice(observerIndex, 1);
+        }
+
+        // If there are no more observers in the observers then we want to
+        // remove our listener. The listener will get added back if another
+        // observable subscribes.
+        if (observers.length === 0) {
+          const listenerIndex = this._listeners.indexOf(listener);
+          if (listenerIndex > -1) {
+            this._listeners.splice(listenerIndex, 1);
+          }
+        }
+      };
+    });
+  }
+
+  /**
+   * The redux reducer for this graph store.
+   */
+  public reduxReduce (previousState: ReduxState, action: ApolloAction) {
+    if (action.type === 'APOLLO_GRAPH_DATA') {
+      // If there were no patches then we can just return the data.
+      if (action.patches.length === 0) {
+        return previousState;
+      }
+
+      const state = { ...previousState };
+      let previousGraph: ReduxGraphData;
+      let graph: ReduxGraphData;
+
+      // If this is not a transaction we should skip the commit phase and apply
+      // the patches to the main graph data.
+      if (typeof action.transactionID === 'undefined') {
+        previousGraph = state.graphData;
+        graph = { ...previousGraph };
+        state.graphData = graph;
+      }
+      // Otherwise we want to write to a particular transaction’s graph data. If
+      // no graph data exists for the transaction yet then we will need to
+      // create some graph data.
+      else {
+        previousGraph = state.transactionGraphData[action.transactionID];
+
+        // If there is no graph for this transaction then we need to create a
+        // new transaction.
+        if (typeof previousGraph === 'undefined') {
+          state.transactionIDs = [...previousState.transactionIDs, action.transactionID];
+          previousGraph = {};
+        }
+
+        // Clone the previous graph.
+        graph = { ...previousGraph };
+
+        // Set our new graph in the transaction graph data state.
+        state.transactionGraphData = {
+          ...state.transactionGraphData,
+          [action.transactionID]: graph,
+        };
+      }
+
+      // Apply every patch. We should only clone the nodes that we have to
+      // clone, and we should only do that once.
+      action.patches.forEach(patch => {
+        const { id, key } = patch;
+
+        const previousNode = previousGraph[id];
+        let node = graph[id];
+        // If there was no node in the graph then we create a node!
+        if (!node) {
+          node = { scalars: {}, references: {} };
+        }
+        // If the node is exactly the same as the previous node then we need to
+        // clone the node before we mutate it.
+        else if (previousNode && node === previousNode) {
+          node = { ...previousNode };
+        }
+
+        switch (patch.value.type) {
+          case 'SCALAR':
+            // If the current scalars object is the same as the previous scalars
+            // object then we need to clone it before mutating it.
+            if (previousNode && node.scalars === previousNode.scalars) {
+              node.scalars = { ...previousNode.scalars };
+            }
+            node.scalars[key] = patch.value.data;
+            break;
+          case 'REFERENCE':
+            // If the current references object is the same as the previous
+            // references object then we need to clone it before mutating it.
+            if (previousNode && node.references === previousNode.references) {
+              node.references = { ...previousNode.references };
+            }
+            node.references[key] = patch.value.reference;
+            break;
+          default:
+            throw new Error(`Unrecognized patch type '${(patch as any).type}'.`);
+        }
+      });
+
+      // Now that we have updated our state call all of our listeners on the
+      // next tick.
+      setTimeout(() => this._callListeners(), 0);
+
+      return state;
+    }
+
+    if (action.type === 'APOLLO_GRAPH_DATA_ROLLBACK') {
+      const state = { ...previousState };
+
+      // Remove the transaction id from the list of transaction ids.
+      state.transactionIDs = state.transactionIDs.filter(transactionID => transactionID === action.transactionID);
+
+      // Remove the transaction id graph data from the transaction graph
+      // data map.
+      const { [action.transactionID]: _transactionGraphData, ...nextTransactionGraphData } = state.transactionGraphData;
+      const transactionGraphData: ReduxGraphData = _transactionGraphData;
+      state.transactionGraphData = nextTransactionGraphData;
+
+      // Now that we have updated our state call all of our listeners on the
+      // next tick.
+      setTimeout(() => this._callListeners(), 0);
+
+      return state;
+    }
+
+    return previousState;
+  }
+
+  /**
+   * Calls all of the listeners which have been registered. Most of the time
+   * these listeners have been registered with `watch`.
+   */
+  private _callListeners () {
+    this._listeners.forEach(listener => listener());
+  }
 }
+
+/**
+ * The state in Redux that the `ReduxGraphStore` interacts with. It contains a
+ * canonical graph data object, but also it contains a list of graph data
+ * objects that represent transactions which may be rolled back at any time.
+ *
+ * - `graphData` represents the canonical graph data state.
+ * - `transactionIDs` is an ordered list of ids for transactions in the
+ *   `transactionGraphData` map.
+ * - `transactionGraphData` is a map of transaction ids to graph data objects.
+ *   Transaction data is kept seperate so that it may be easily rolled back.
+ */
+type ReduxState = {
+  graphData: ReduxGraphData,
+  transactionIDs: Array<string>,
+  transactionGraphData: { [transactionID: string]: ReduxGraphData },
+};
+
+/**
+ * The actual graph data object is a map of node ids to graph data nodes. The
+ * nodes contain all of the actual data.
+ */
+type ReduxGraphData = {
+  [nodeID: string]: ReduxGraphNodeData | undefined,
+};
+
+/**
+ * A graph node can contain some scalars (or attributes) and some
+ * multi-dimensional references (or edges). Names were picked to resemble
+ * GraphQL, but traditional graph nomenclature can easily apply as well.
+ */
+type ReduxGraphNodeData = {
+  scalars: { [scalarName: string]: GraphQLData | undefined },
+  references: { [referenceName: string]: GraphReference | undefined },
+};

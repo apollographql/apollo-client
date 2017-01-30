@@ -263,7 +263,7 @@ times(50, (index) => {
       name: string,
       id: string,
     }[] = [];
-    const reservationCount = (index + 1) * 15;
+    const reservationCount = (index + 1);
     times(reservationCount, (index) => {
       reservations.push({
         name: 'Fake Reservation',
@@ -278,7 +278,7 @@ times(50, (index) => {
           reservations,
         },
       },
-    }
+    };
     
     const client = new ApolloClient({
       networkInterface: mockNetworkInterface({

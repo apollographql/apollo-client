@@ -1,7 +1,11 @@
 <!--
   Thanks for filing an issue on Apollo Client!
 
-  Please look at the following checklist to ensure that your issue is actionable.
+  Please make sure that you include the following information to ensure that your issue is actionable.
+
+  If you don't follow the template, your issue may not receive any attention, or it may be closed.
+
+  If you're filing a feature request, you do not need to follow the outline below, but please include "feature idea" in the title and include a specific example in which that feature would be useful.
 -->
 
 **Intended outcome:**

@@ -91,7 +91,7 @@ const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
             },
           },
           updateQueries: {
-            Comment: (previousResult, { mutationResult }) => {
+            comment: (previousResult, { mutationResult }) => {
               const newComment = mutationResult.data.submitComment;
               return update(previousResult, {
                 entry: {

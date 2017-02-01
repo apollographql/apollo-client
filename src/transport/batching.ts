@@ -25,7 +25,7 @@ export class QueryBatcher {
   public queuedRequests: QueryFetchRequest[] = [];
 
   private pollInterval: Number;
-  private pollTimer: NodeJS.Timer | any; //oddity in Typescript
+  private pollTimer: any; // intended for NodeJS.Timer | any
 
   //This function is called to the queries in the queue to the server.
   private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;

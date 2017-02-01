@@ -40,7 +40,7 @@ export class QueryScheduler {
   public queryManager: QueryManager;
 
   // Map going from polling interval widths to polling timers.
-  private pollingTimers: { [interval: number]: NodeJS.Timer | any }; // oddity in Typescript
+  private pollingTimers: { [interval: number]: any }; // intended for NodeJS.Timer | any
 
   constructor({
     queryManager,

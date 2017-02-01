@@ -3,7 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Removed explicit node typings so as to not impose node typings on projects that depend on apollo-client. [PR #1248](https://github.com/apollostack/apollo-client/pull/1248)
+- Removed dependency on Node.js typings. [PR #1248](https://github.com/apollostack/apollo-client/pull/1248)
 - ...
 
 ### 0.8.1

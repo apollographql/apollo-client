@@ -115,7 +115,7 @@ import { WatchQueryOptions } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 
 export class QueryManager {
-  public pollingTimers: {[queryId: string]: any}; // intended for NodeJS.Timer | any
+  public pollingTimers: {[queryId: string]: any};
   public scheduler: QueryScheduler;
   public store: ApolloStore;
 

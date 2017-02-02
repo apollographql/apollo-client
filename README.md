@@ -1,5 +1,7 @@
 # Apollo client
 
+[![Join the chat at https://gitter.im/apollostack/apollo-client](https://badges.gitter.im/apollostack/apollo-client.svg)](https://gitter.im/apollostack/apollo-client?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 

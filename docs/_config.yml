@@ -19,7 +19,6 @@ sidebar_categories:
     - apollo-client-api
   'Technical Documentation':
     - network
-    - fragments
     - devtools
     - how-it-works
   Integrations:

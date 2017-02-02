@@ -1,37 +1,11 @@
 import { assert } from 'chai';
-import { parse, SelectionSetNode, FragmentDefinitionNode } from 'graphql/language';
+import { parseSelectionSet, parseFragmentDefinitionMap } from './util/graphqlAST';
 import { createMockGraphPrimitives } from './mocks/mockGraphPrimitives';
 import { ID_KEY } from '../src/graph/common';
 import { writeToGraph } from '../src/graph/write';
 
 const TEST_ID_KEY = Symbol('testIdKey');
 const getDataID = (object: any) => object[TEST_ID_KEY];
-
-function parseSelectionSet (source: string): SelectionSetNode {
-  const document = parse(source);
-  if (document.definitions.length !== 1) {
-    throw new Error('There should only be one definition.');
-  }
-  const definition = document.definitions[0];
-  if (definition.kind !== 'OperationDefinition' || definition.operation !== 'query' || definition.name) {
-    throw new Error('The single definition must be a nameless query operation definition.');
-  }
-  return definition.selectionSet;
-}
-
-function parseFragmentDefinitionMap (source: string): { [fragmentName: string]: FragmentDefinitionNode } {
-  const document = parse(source);
-  const fragments: { [fragmentName: string]: FragmentDefinitionNode } = {};
-
-  document.definitions.forEach(definition => {
-    if (definition.kind !== 'FragmentDefinition') {
-      throw new Error('Only fragment definitions are allowed.');
-    }
-    fragments[definition.name.value] = definition;
-  });
-
-  return fragments;
-}
 
 describe('writeToGraph', () => {
   it('will perform basic scalar writes', () => {
@@ -1508,6 +1482,104 @@ describe('writeToGraph', () => {
       'root.bar[2][1]:Type5': {
         scalars: { d: 4.6, e: 5.6, f: 6.6 },
         references: {},
+      },
+    });
+  });
+
+  it('will write data from merged selections', () => {
+    const graph = createMockGraphPrimitives();
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
+        array {
+          a
+          b
+          object { d }
+          object { e }
+        }
+        array {
+          c
+          object { f }
+        }
+      }`),
+      data: {
+        array: [
+          { a: 1.1, b: 2.1, c: 3.1, object: { d: 4.1, e: 5.1, f: 6.1 } },
+          { a: 1.2, b: 2.2, c: 3.2, object: { d: 4.2, e: 5.2, f: 6.2 } },
+          { a: 1.3, b: 2.3, c: 3.3, object: { d: 4.3, e: 5.3, f: 6.3 } },
+        ],
+      },
+    });
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {},
+        references: {
+          array: [
+            'root.array[0]',
+            'root.array[1]',
+            'root.array[2]',
+          ],
+        },
+      },
+      'root.array[0]': {
+        scalars: { a: 1.1, b: 2.1, c: 3.1 },
+        references: { object: 'root.array[0].object' },
+      },
+      'root.array[0].object': {
+        scalars: { d: 4.1, e: 5.1, f: 6.1 },
+        references: {},
+      },
+      'root.array[1]': {
+        scalars: { a: 1.2, b: 2.2, c: 3.2 },
+        references: { object: 'root.array[1].object' },
+      },
+      'root.array[1].object': {
+        scalars: { d: 4.2, e: 5.2, f: 6.2 },
+        references: {},
+      },
+      'root.array[2]': {
+        scalars: { a: 1.3, b: 2.3, c: 3.3 },
+        references: { object: 'root.array[2].object' },
+      },
+      'root.array[2].object': {
+        scalars: { d: 4.3, e: 5.3, f: 6.3 },
+        references: {},
+      },
+    });
+  });
+
+  it('will write data from merged selections and return the written data', () => {
+    const graph = createMockGraphPrimitives();
+    assert.deepEqual(writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
+        array {
+          a
+          b
+          object { d }
+          object { e }
+        }
+        array {
+          c
+          object { f }
+        }
+      }`),
+      data: {
+        array: [
+          { a: 1.1, b: 2.1, c: 3.1, object: { d: 4.1, e: 5.1, f: 6.1 } },
+          { a: 1.2, b: 2.2, c: 3.2, object: { d: 4.2, e: 5.2, f: 6.2 } },
+          { a: 1.3, b: 2.3, c: 3.3, object: { d: 4.3, e: 5.3, f: 6.3 } },
+        ],
+      },
+    }), {
+      data: {
+        array: [
+          { a: 1.1, b: 2.1, c: 3.1, object: { d: 4.1, e: 5.1, f: 6.1 } },
+          { a: 1.2, b: 2.2, c: 3.2, object: { d: 4.2, e: 5.2, f: 6.2 } },
+          { a: 1.3, b: 2.3, c: 3.3, object: { d: 4.3, e: 5.3, f: 6.3 } },
+        ],
       },
     });
   });

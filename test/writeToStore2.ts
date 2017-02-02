@@ -1,823 +1,928 @@
 import { assert } from 'chai';
-import { cloneDeep, assign, omit } from 'lodash';
+import { parseSelectionSet } from './util/graphqlAST';
+import { createMockGraphPrimitives } from './mocks/mockGraphPrimitives';
+import { writeToGraph } from '../src/graph/write';
 
-import {
-  writeQueryToStore,
-  writeSelectionSetToStore,
-} from '../src/data/writeToStore';
-
-import {
-  storeKeyNameFromField,
-} from '../src/data/storeUtils';
-
-import {
-  NormalizedCache,
-} from '../src/data/storeUtils';
-
-import {
-  SelectionNode,
-  FieldNode,
-  DefinitionNode,
-  OperationDefinitionNode,
-  ASTNode,
-} from 'graphql';
-
-import gql from 'graphql-tag';
-
-const getIdField = ({id}: {id: string}) => id;
-
-describe('writing to the store', () => {
+describe('writing to the store 2', () => {
   it('properly normalizes a trivial item', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField
-      }
-    `;
+    const graph = createMockGraphPrimitives();
 
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-    };
-
-    assert.deepEqual(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': result,
-    });
-  });
-
-  it('properly normalizes an aliased field', () => {
-    const query = gql`
-      {
-        id,
-        aliasedField: stringField,
-        numberField,
-        nullField
-      }
-    `;
-
-    const result: any = {
-      id: 'abcd',
-      aliasedField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-    };
-
-    const normalized = writeQueryToStore({
-      result,
-      query,
-    });
-
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          stringField,
+          numberField,
+          nullField
+        }
+      `),
+      data: {
         id: 'abcd',
         stringField: 'This is a string!',
         numberField: 5,
         nullField: null,
+      },
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {},
+      },
+    });
+  });
+
+  it('properly normalizes an aliased field', () => {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          aliasedField: stringField,
+          numberField,
+          nullField
+        }
+      `),
+      data: {
+        id: 'abcd',
+        aliasedField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+      },
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {},
       },
     });
   });
 
   it('properly normalizes a aliased fields with arguments', () => {
-    const query = gql`
-      {
-        id,
-        aliasedField1: stringField(arg: 1),
-        aliasedField2: stringField(arg: 2),
-        numberField,
-        nullField
-      }
-    `;
+    const graph = createMockGraphPrimitives();
 
-    const result: any = {
-      id: 'abcd',
-      aliasedField1: 'The arg was 1!',
-      aliasedField2: 'The arg was 2!',
-      numberField: 5,
-      nullField: null,
-    };
-
-    const normalized = writeQueryToStore({
-      result,
-      query,
-    });
-
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          aliasedField1: stringField(arg: 1),
+          aliasedField2: stringField(arg: 2),
+          numberField,
+          nullField
+        }
+      `),
+      data: {
         id: 'abcd',
-        'stringField({"arg":1})': 'The arg was 1!',
-        'stringField({"arg":2})': 'The arg was 2!',
+        aliasedField1: 'The arg was 1!',
+        aliasedField2: 'The arg was 2!',
         numberField: 5,
         nullField: null,
+      },
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          'stringField({"arg":1})': 'The arg was 1!',
+          'stringField({"arg":2})': 'The arg was 2!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {},
       },
     });
   });
 
   it('properly normalizes a query with variables', () => {
-    const query = gql`
-      {
-        id,
-        stringField(arg: $stringArg),
-        numberField(intArg: $intArg, floatArg: $floatArg),
-        nullField
-      }
-    `;
+    const graph = createMockGraphPrimitives();
 
-    const variables = {
-      intArg: 5,
-      floatArg: 3.14,
-      stringArg: 'This is a string!',
-    };
-
-    const result: any = {
-      id: 'abcd',
-      stringField: 'Heyo',
-      numberField: 5,
-      nullField: null,
-    };
-
-    const normalized = writeQueryToStore({
-      result,
-      query,
-      variables,
+    writeToGraph({
+      graph,
+      id: 'root',
+      variables: {
+        intArg: 5,
+        floatArg: 3.14,
+        stringArg: 'This is a string!',
+      },
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          stringField(arg: $stringArg),
+          numberField(intArg: $intArg, floatArg: $floatArg),
+          nullField
+        }
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'Heyo',
+        numberField: 5,
+        nullField: null,
+      },
     });
 
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
-        id: 'abcd',
-        nullField: null,
-        'numberField({"intArg":5,"floatArg":3.14})': 5,
-        'stringField({"arg":"This is a string!"})': 'Heyo',
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          nullField: null,
+          'numberField({"intArg":5,"floatArg":3.14})': 5,
+          'stringField({"arg":"This is a string!"})': 'Heyo',
+        },
+        references: {},
       },
     });
   });
 
   it('properly normalizes a nested object with an ID', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        nestedObj {
-          id,
-          stringField,
-          numberField,
-          nullField
-        }
-      }
-    `;
+    const graph = createMockGraphPrimitives();
 
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      nestedObj: {
-        id: 'abcde',
-        stringField: 'This is a string too!',
-        numberField: 6,
-        nullField: null,
-      },
-    };
-
-    assert.deepEqual(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      dataIdFromObject: getIdField,
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: {
-          type: 'id',
-          id: result.nestedObj.id,
-          generated: false,
-        },
-      }),
-      [result.nestedObj.id]: result.nestedObj,
-    });
-  });
-
-  it('properly normalizes a nested object without an ID', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        nestedObj {
-          stringField,
-          numberField,
-          nullField
-        }
-      }
-    `;
-
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      nestedObj: {
-        stringField: 'This is a string too!',
-        numberField: 6,
-        nullField: null,
-      },
-    };
-
-    assert.deepEqual(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: {
-          type: 'id',
-          id: `$ROOT_QUERY.nestedObj`,
-          generated: true,
-        },
-      }),
-      [`$ROOT_QUERY.nestedObj`]: result.nestedObj,
-    });
-  });
-
-  it('properly normalizes a nested object with arguments but without an ID', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        nestedObj(arg: "val") {
-          stringField,
-          numberField,
-          nullField
-        }
-      }
-    `;
-
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      nestedObj: {
-        stringField: 'This is a string too!',
-        numberField: 6,
-        nullField: null,
-      },
-    };
-
-    assert.deepEqual(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
-        'nestedObj({"arg":"val"})': {
-          type: 'id',
-          id: `$ROOT_QUERY.nestedObj({"arg":"val"})`,
-          generated: true,
-        },
-      }),
-      [`$ROOT_QUERY.nestedObj({"arg":"val"})`]: result.nestedObj,
-    });
-  });
-
-  it('properly normalizes a nested array with IDs', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        nestedArray {
-          id,
-          stringField,
-          numberField,
-          nullField
-        }
-      }
-    `;
-
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      nestedArray: [
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
         {
+          id,
+          stringField,
+          numberField,
+          nullField,
+          nestedObj {
+            id,
+            stringField,
+            numberField,
+            nullField
+          }
+        }
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        nestedObj: {
           id: 'abcde',
           stringField: 'This is a string too!',
           numberField: 6,
           nullField: null,
         },
+      },
+      getDataID: ({ id }: { id: string }) => id,
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {
+          nestedObj: '(abcde)',
+        },
+      },
+      '(abcde)': {
+        scalars: {
+          id: 'abcde',
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+        references: {},
+      },
+    });
+  });
+
+  it('properly normalizes a nested object without an ID', () => {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
         {
+          id,
+          stringField,
+          numberField,
+          nullField,
+          nestedObj {
+            stringField,
+            numberField,
+            nullField
+          }
+        }
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        nestedObj: {
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+      },
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {
+          nestedObj: 'root.nestedObj',
+        },
+      },
+      'root.nestedObj': {
+        scalars: {
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+        references: {},
+      },
+    });
+  });
+
+  it('properly normalizes a nested object with arguments but without an ID', () => {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          stringField,
+          numberField,
+          nullField,
+          nestedObj(arg: "val") {
+            stringField,
+            numberField,
+            nullField
+          }
+        }
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        nestedObj: {
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+      },
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {
+          'nestedObj({"arg":"val"})': 'root.nestedObj({"arg":"val"})',
+        },
+      },
+      'root.nestedObj({"arg":"val"})': {
+        scalars: {
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+        references: {},
+      },
+    });
+  });
+
+  it('properly normalizes a nested array with IDs', () => {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          stringField,
+          numberField,
+          nullField,
+          nestedArray {
+            id,
+            stringField,
+            numberField,
+            nullField
+          }
+        }
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        nestedArray: [
+          {
+            id: 'abcde',
+            stringField: 'This is a string too!',
+            numberField: 6,
+            nullField: null,
+          },
+          {
+            id: 'abcdef',
+            stringField: 'This is a string also!',
+            numberField: 7,
+            nullField: null,
+          },
+        ],
+      },
+      getDataID: ({ id }: { id: string }) => id,
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {
+          nestedArray: [
+            '(abcde)',
+            '(abcdef)',
+          ],
+        },
+      },
+      '(abcde)': {
+        scalars: {
+          id: 'abcde',
+          stringField: 'This is a string too!',
+          numberField: 6,
+          nullField: null,
+        },
+        references: {},
+      },
+      '(abcdef)': {
+        scalars: {
           id: 'abcdef',
           stringField: 'This is a string also!',
           numberField: 7,
           nullField: null,
         },
-      ],
-    };
-
-    assert.deepEqual(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      dataIdFromObject: getIdField,
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: result.nestedArray.map((obj: any) => ({
-          type: 'id',
-          id: obj.id,
-          generated: false,
-        })),
-      }),
-      [result.nestedArray[0].id]: result.nestedArray[0],
-      [result.nestedArray[1].id]: result.nestedArray[1],
+        references: {},
+      },
     });
   });
 
   it('properly normalizes a nested array with IDs and a null', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        nestedArray {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
           id,
           stringField,
           numberField,
-          nullField
+          nullField,
+          nestedArray {
+            id,
+            stringField,
+            numberField,
+            nullField
+          }
         }
-      }
-    `;
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        nestedArray: [
+          {
+            id: 'abcde',
+            stringField: 'This is a string too!',
+            numberField: 6,
+            nullField: null,
+          },
+          null,
+        ],
+      },
+      getDataID: ({ id }: { id: string }) => id,
+    });
 
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      nestedArray: [
-        {
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {
+          nestedArray: ['(abcde)', null],
+        },
+      },
+      '(abcde)': {
+        scalars: {
           id: 'abcde',
           stringField: 'This is a string too!',
           numberField: 6,
           nullField: null,
         },
-        null,
-      ],
-    };
-
-    assert.deepEqual(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      dataIdFromObject: getIdField,
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          { type: 'id', id: result.nestedArray[0].id, generated: false },
-          null,
-        ],
-      }),
-      [result.nestedArray[0].id]: result.nestedArray[0],
+        references: {},
+      },
     });
   });
 
   it('properly normalizes a nested array without IDs', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        nestedArray {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
           stringField,
           numberField,
-          nullField
+          nullField,
+          nestedArray {
+            stringField,
+            numberField,
+            nullField
+          }
         }
-      }
-    `;
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        nestedArray: [
+          {
+            stringField: 'This is a string too!',
+            numberField: 6,
+            nullField: null,
+          },
+          {
+            stringField: 'This is a string also!',
+            numberField: 7,
+            nullField: null,
+          },
+        ],
+      },
+    });
 
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      nestedArray: [
-        {
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {
+          nestedArray: [
+            'root.nestedArray[0]',
+            'root.nestedArray[1]',
+          ],
+        },
+      },
+      'root.nestedArray[0]': {
+        scalars: {
           stringField: 'This is a string too!',
           numberField: 6,
           nullField: null,
         },
-        {
+        references: {},
+      },
+      'root.nestedArray[1]': {
+        scalars: {
           stringField: 'This is a string also!',
           numberField: 7,
           nullField: null,
         },
-      ],
-    };
-
-    const normalized = writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    });
-
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.0` },
-          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.1` },
-        ],
-      }),
-      [`ROOT_QUERY.nestedArray.0`]: result.nestedArray[0],
-      [`ROOT_QUERY.nestedArray.1`]: result.nestedArray[1],
+        references: {},
+      },
     });
   });
 
   it('properly normalizes a nested array without IDs and a null item', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        nestedArray {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
           stringField,
           numberField,
-          nullField
+          nullField,
+          nestedArray {
+            stringField,
+            numberField,
+            nullField
+          }
         }
-      }
-    `;
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        nestedArray: [
+          null,
+          {
+            stringField: 'This is a string also!',
+            numberField: 7,
+            nullField: null,
+          },
+        ],
+      },
+    });
 
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      nestedArray: [
-        null,
-        {
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {
+          nestedArray: [
+            null,
+            'root.nestedArray[1]',
+          ],
+        },
+      },
+      'root.nestedArray[1]': {
+        scalars: {
           stringField: 'This is a string also!',
           numberField: 7,
           nullField: null,
         },
-      ],
-    };
-
-    const normalized = writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    });
-
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          null,
-          { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.1` },
-        ],
-      }),
-      [`ROOT_QUERY.nestedArray.1`]: result.nestedArray[1],
+        references: {},
+      },
     });
   });
 
   it('properly normalizes an array of non-objects', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        simpleArray
-      }
-    `;
+    const graph = createMockGraphPrimitives();
 
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      simpleArray: ['one', 'two', 'three'],
-    };
-
-    const normalized = writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      dataIdFromObject: getIdField,
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          stringField,
+          numberField,
+          nullField,
+          simpleArray
+        }
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        simpleArray: ['one', 'two', 'three'],
+      },
     });
 
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          'json': [
-            result.simpleArray[0],
-            result.simpleArray[1],
-            result.simpleArray[2],
-          ],
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+          simpleArray: ['one', 'two', 'three'],
         },
-      }),
+        references: {},
+      },
     });
   });
 
   it('properly normalizes an array of non-objects with null', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        simpleArray
-      }
-    `;
+    const graph = createMockGraphPrimitives();
 
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      simpleArray: [null, 'two', 'three'],
-    };
-
-    const normalized = writeQueryToStore({
-      query,
-      result: cloneDeep(result),
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          stringField,
+          numberField,
+          nullField,
+          simpleArray
+        }
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
+        simpleArray: [null, 'two', 'three'],
+      },
     });
 
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), {
-        simpleArray: {
-          type: 'json',
-          json: [
-            result.simpleArray[0],
-            result.simpleArray[1],
-            result.simpleArray[2],
-          ],
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+          simpleArray: [null, 'two', 'three'],
         },
-      }),
+        references: {},
+      },
     });
   });
 
   it('merges nodes', () => {
-    const query = gql`
-      {
-        id,
-        numberField,
-        nullField
-      }
-    `;
+    const graph = createMockGraphPrimitives();
 
-    const result: any = {
-      id: 'abcd',
-      numberField: 5,
-      nullField: null,
-    };
-
-    const store = writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      dataIdFromObject: getIdField,
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          numberField,
+          nullField
+        }
+      `),
+      data: {
+        id: 'abcd',
+        numberField: 5,
+        nullField: null,
+      },
     });
 
-    const query2 = gql`
-      {
-        id,
-        stringField,
-        nullField
-      }
-    `;
-
-    const result2: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      nullField: null,
-    };
-
-    const store2 = writeQueryToStore({
-      store,
-      query: query2,
-      result: result2,
-      dataIdFromObject: getIdField,
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          id,
+          stringField,
+          nullField
+        }
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        nullField: null,
+      },
     });
 
-    assert.deepEqual(store2, {
-      'ROOT_QUERY': assign({}, result, result2),
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          numberField: 5,
+          stringField: 'This is a string!',
+          nullField: null,
+        },
+        references: {},
+      },
     });
   });
 
   it('properly normalizes a nested object that returns null', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField,
-        nestedObj {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
           id,
           stringField,
           numberField,
-          nullField
+          nullField,
+          nestedObj {
+            id,
+            stringField,
+            numberField,
+            nullField
+          }
         }
-      }
-    `;
-
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-      nestedObj: null,
-    };
-
-    assert.deepEqual(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
+      `),
+      data: {
+        id: 'abcd',
+        stringField: 'This is a string!',
+        numberField: 5,
+        nullField: null,
         nestedObj: null,
-      }),
+      },
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+          numberField: 5,
+          nullField: null,
+        },
+        references: {
+          nestedObj: null,
+        },
+      },
     });
   });
 
   it('properly normalizes an object with an ID when no extension is passed', () => {
-    const query = gql`
-      {
-        people_one(id: "5") {
-          id
-          stringField
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          people_one(id: "5") {
+            id
+            stringField
+          }
         }
-      }
-    `;
-
-    const result: any = {
-      people_one: {
-        id: 'abcd',
-        stringField: 'This is a string!',
-      },
-    };
-
-    assert.deepEqual(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': {
-        'people_one({"id":"5"})': {
-          type: 'id',
-          id: '$ROOT_QUERY.people_one({"id":"5"})',
-          generated: true,
+      `),
+      data: {
+        people_one: {
+          id: 'abcd',
+          stringField: 'This is a string!',
         },
       },
-      '$ROOT_QUERY.people_one({"id":"5"})': {
-        'id': 'abcd',
-        'stringField': 'This is a string!',
+    });
+
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {},
+        references: {
+          'people_one({"id":"5"})': 'root.people_one({"id":"5"})',
+        },
+      },
+      'root.people_one({"id":"5"})': {
+        scalars: {
+          id: 'abcd',
+          stringField: 'This is a string!',
+        },
+        references: {},
       },
     });
   });
 
   it('consistently serialize different types of input when passed inlined or as variable', () => {
-    const testData = [
-      {
-        mutation: gql`mutation mut($in: Int!) { mut(inline: 5, variable: $in) { id } }`,
-        variables: { in: 5 },
-        expected: 'mut({"inline":5,"variable":5})',
-      },
-      {
-        mutation: gql`mutation mut($in: Float!) { mut(inline: 5.5, variable: $in) { id } }`,
-        variables: { in: 5.5 },
-        expected: 'mut({"inline":5.5,"variable":5.5})',
-      },
-      {
-        mutation: gql`mutation mut($in: String!) { mut(inline: "abc", variable: $in) { id } }`,
-        variables: { in: 'abc' },
-        expected: 'mut({"inline":"abc","variable":"abc"})',
-      },
-      {
-        mutation: gql`mutation mut($in: Array!) { mut(inline: [1, 2], variable: $in) { id } }`,
-        variables: { in: [1, 2] },
-        expected: 'mut({"inline":[1,2],"variable":[1,2]})',
-      },
-      {
-        mutation: gql`mutation mut($in: Object!) { mut(inline: {a: 1}, variable: $in) { id } }`,
-        variables: { in: { a: 1 } },
-        expected: 'mut({"inline":{"a":1},"variable":{"a":1}})',
-      },
-      {
-        mutation: gql`mutation mut($in: Boolean!) { mut(inline: true, variable: $in) { id } }`,
-        variables: { in: true },
-        expected: 'mut({"inline":true,"variable":true})',
-      },
-    ];
+    const graph = createMockGraphPrimitives();
 
-    function isOperationDefinition(definition: DefinitionNode): definition is OperationDefinitionNode {
-      return definition.kind === 'OperationDefinition';
-    }
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
+        mut1: mut(inline: 5, variable: $in1) { id }
+        mut2: mut(inline: 5.5, variable: $in2) { id }
+        mut3: mut(inline: "abc", variable: $in3) { id }
+        mut4: mut(inline: [1, 2], variable: $in4) { id }
+        mut5: mut(inline: { a: 1 }, variable: $in5) { id }
+        mut6: mut(inline: true, variable: $in6) { id }
+      }`),
+      variables: {
+        in1: 5,
+        in2: 5.5,
+        in3: 'abc',
+        in4: [1, 2],
+        in5: { a: 1 },
+        in6: true,
+      },
+      data: {
+        mut1: null,
+        mut2: null,
+        mut3: null,
+        mut4: null,
+        mut5: null,
+        mut6: null,
+      },
+    });
 
-    function isField(selection: SelectionNode): selection is FieldNode {
-      return selection.kind === 'Field';
-    }
-
-    testData.forEach((data) => {
-      data.mutation.definitions.forEach((definition: OperationDefinitionNode) => {
-        if (isOperationDefinition(definition)) {
-          definition.selectionSet.selections.forEach((selection) => {
-            if (isField(selection)) {
-              assert.equal(storeKeyNameFromField(selection, data.variables), data.expected);
-            }
-          });
-        }
-      });
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {},
+        references: {
+          'mut({"inline":5,"variable":5})': null,
+          'mut({"inline":5.5,"variable":5.5})': null,
+          'mut({"inline":"abc","variable":"abc"})': null,
+          'mut({"inline":[1,2],"variable":[1,2]})': null,
+          'mut({"inline":{"a":1},"variable":{"a":1}})': null,
+          'mut({"inline":true,"variable":true})': null,
+        },
+      },
     });
   });
 
-  it('properly normalizes a mutation with object or array parameters and variables', () => {
-    const mutation = gql`
-      mutation some_mutation(
-          $nil: ID,
-          $in: Object
-        ) {
-        some_mutation(
-          input: {
-            id: "5",
-            arr: [1,{a:"b"}],
-            obj: {a:"b"},
-            num: 5.5,
-            nil: $nil,
-            bo: true
-          },
-        ) {
-          id,
-        }
-        some_mutation_with_variables(
-          input: $in,
-        ) {
-          id,
-        }
-      }
-    `;
+  it('properly normalizes an operation with object or array parameters and variables', () => {
+    const graph = createMockGraphPrimitives();
 
-    const result: any = {
-      some_mutation: {
-        id: 'id',
-      },
-      some_mutation_with_variables: {
-        id: 'id',
-      },
-    };
-
-    const variables: any = {
-      nil: null,
-      in: {
-        id: '5',
-        arr: [1, { a: 'b' }],
-        obj: { a: 'b' },
-        num: 5.5,
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`
+        {
+          some_mutation(
+            input: {
+              id: "5",
+              arr: [1,{a:"b"}],
+              obj: {a:"b"},
+              num: 5.5,
+              nil: $nil,
+              bo: true
+            },
+          ) {
+            id,
+          }
+          some_mutation_with_variables(
+            input: $in,
+          ) {
+            id,
+          }
+        }
+      `),
+      variables: {
         nil: null,
-        bo: true,
+        in: {
+          id: '5',
+          arr: [1, { a: 'b' }],
+          obj: { a: 'b' },
+          num: 5.5,
+          nil: null,
+          bo: true,
+        },
       },
-    };
+      data: {
+        some_mutation: {
+          id: 'id',
+        },
+        some_mutation_with_variables: {
+          id: 'id',
+        },
+      },
+    });
 
-    function isOperationDefinition(value: ASTNode): value is OperationDefinitionNode {
-      return value.kind === 'OperationDefinition';
-    }
-
-    mutation.definitions.map((def: OperationDefinitionNode) => {
-      if (isOperationDefinition(def)) {
-        assert.deepEqual(writeSelectionSetToStore({
-          dataId: '5',
-          selectionSet: def.selectionSet,
-          result: cloneDeep(result),
-          context: {
-            store: {},
-            variables,
-            dataIdFromObject: () => '5',
-          },
-        }), {
-          '5': {
-            'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
-              type: 'id',
-              id: '5',
-              generated: false,
-            },
-            'some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
-              type: 'id',
-              id: '5',
-              generated: false,
-            },
-            'id': 'id',
-          },
-        });
-      } else {
-        throw 'No operation definition found';
-      }
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {},
+        references: {
+          'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})':
+            'root.some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})',
+          'some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})':
+            'root.some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})',
+        },
+      },
+      'root.some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
+        scalars: { id: 'id' },
+        references: {},
+      },
+      'root.some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
+        scalars: { id: 'id' },
+        references: {},
+      },
     });
   });
 
   describe('type escaping', () => {
-    const dataIdFromObject = (object: any) => {
+    const getDataID = (object: any) => {
       if (object.__typename && object.id) {
         return object.__typename + '__' + object.id;
       }
@@ -825,240 +930,142 @@ describe('writing to the store', () => {
     };
 
     it('should correctly escape generated ids', () => {
-      const query = gql`
-        query {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
           author {
             firstName
             lastName
           }
-        }`;
-      const data = {
-        author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      };
-      const expStore = {
-        ROOT_QUERY: {
+        }`),
+        data: {
           author: {
-            type: 'id',
-            id: '$ROOT_QUERY.author',
-            generated: true,
+            firstName: 'John',
+            lastName: 'Smith',
           },
         },
-        '$ROOT_QUERY.author': data.author,
-      };
-      assert.deepEqual(writeQueryToStore({
-        result: data,
-        query,
-      }), expStore);
+      });
+
+      assert.deepEqual(graph.data, {
+        root: {
+          scalars: {},
+          references: {
+            author: 'root.author',
+          },
+        },
+        'root.author': {
+          scalars: {
+            firstName: 'John',
+            lastName: 'Smith',
+          },
+          references: {},
+        },
+      });
     });
 
     it('should correctly escape real ids', () => {
-      const query = gql`
-        query {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
           author {
             firstName
             id
             __typename
           }
-        }`;
-      const data = {
-        author: {
-          firstName: 'John',
-          id: '129',
-          __typename: 'Author',
-        },
-      };
-      const expStore = {
-        ROOT_QUERY: {
+        }`),
+        data: {
           author: {
-            type: 'id',
-            id: dataIdFromObject(data.author),
-            generated: false,
+            firstName: 'John',
+            id: '129',
+            __typename: 'Author',
           },
         },
-        [dataIdFromObject(data.author)!]: {
-          firstName: data.author.firstName,
-          id: data.author.id,
-          __typename: data.author.__typename,
+        getDataID,
+      });
+
+      assert.deepEqual(graph.data, {
+        root: {
+          scalars: {},
+          references: {
+            author: '(Author__129)',
+          },
         },
-      };
-      assert.deepEqual(writeQueryToStore({
-        result: data,
-        query,
-        dataIdFromObject,
-      }), expStore);
+        '(Author__129)': {
+          scalars: {
+            firstName: 'John',
+            id: '129',
+            __typename: 'Author',
+          },
+          references: {},
+        },
+      });
     });
 
     it('should correctly escape json blobs', () => {
-      const query = gql`
-        query {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
           author {
             info
             id
             __typename
           }
-        }`;
-      const data = {
-        author: {
-          info: {
-            name: 'John',
-          },
-          id: '129',
-          __typename: 'Author',
-        },
-      };
-      const expStore = {
-        ROOT_QUERY: {
+        }`),
+        data: {
           author: {
-            type: 'id',
-            id: dataIdFromObject(data.author),
-            generated: false,
+            info: {
+              name: 'John',
+            },
+            id: '129',
+            __typename: 'Author',
           },
         },
-        [dataIdFromObject(data.author)!]: {
-          __typename: data.author.__typename,
-          id: data.author.id,
-          info: {
-            type: 'json',
-            json: data.author.info,
+        getDataID,
+      });
+
+      assert.deepEqual(graph.data, {
+        root: {
+          scalars: {},
+          references: {
+            author: '(Author__129)',
           },
         },
-      };
-      assert.deepEqual(writeQueryToStore({
-        result: data,
-        query,
-        dataIdFromObject,
-      }), expStore);
-    });
-  });
-
-  it('should merge objects when overwriting a generated id with a real id', () => {
-    const dataWithoutId = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-
-    const dataWithId = {
-      author: {
-        firstName: 'John',
-        id: '129',
-        __typename: 'Author',
-      },
-    };
-    const dataIdFromObject = (object: any) => {
-      if (object.__typename && object.id) {
-        return object.__typename + '__' + object.id;
-      }
-      return undefined;
-    };
-    const queryWithoutId = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-    const queryWithId = gql`
-      query {
-        author {
-          firstName
-          id
-          __typename
-        }
-      }`;
-    const expStoreWithoutId = {
-      '$ROOT_QUERY.author': {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-      ROOT_QUERY: {
-        'author': {
-          type: 'id',
-          id: '$ROOT_QUERY.author',
-          generated: true,
+        '(Author__129)': {
+          scalars: {
+            info: {
+              name: 'John',
+            },
+            id: '129',
+            __typename: 'Author',
+          },
+          references: {},
         },
-      },
-    };
-    const expStoreWithId = {
-      'Author__129': {
-        firstName: 'John',
-        lastName: 'Smith',
-        id: '129',
-        __typename: 'Author',
-      },
-      ROOT_QUERY: {
-        author: {
-          type: 'id',
-          id: 'Author__129',
-          generated: false,
-        },
-      },
-    };
-    const storeWithoutId = writeQueryToStore({
-      result: dataWithoutId,
-      query: queryWithoutId,
-      dataIdFromObject,
+      });
     });
-    assert.deepEqual(storeWithoutId, expStoreWithoutId);
-    const storeWithId = writeQueryToStore({
-      result: dataWithId,
-      query: queryWithId,
-      store: storeWithoutId,
-      dataIdFromObject,
-    });
-    assert.deepEqual(storeWithId, expStoreWithId);
   });
 
   it('does not swallow errors other than field errors', () => {
-    const query = gql`
-      query {
-        ...notARealFragment
-        fortuneCookie
-      }`;
-    const result: any = {
-      fortuneCookie: 'Star Wars unit tests are boring',
-    };
     assert.throws(() => {
-      writeQueryToStore({
-        result,
-        query,
+      writeToGraph({
+        graph: createMockGraphPrimitives(),
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          ...notARealFragment
+          fortuneCookie
+        }`),
+        data: {
+          fortuneCookie: 'Star Wars unit tests are boring',
+        },
       });
-    }, /No fragment/);
-  });
-
-  it('does not change object references if the value is the same', () => {
-    const query = gql`
-      {
-        id,
-        stringField,
-        numberField,
-        nullField
-      }
-    `;
-
-    const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
-      numberField: 5,
-      nullField: null,
-    };
-    const store = writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    });
-
-    const newStore = writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      store: assign({}, store) as NormalizedCache,
-    });
-
-    Object.keys(store).forEach((field) => {
-      assert.equal(store[field], newStore[field], 'references are the same');
-    });
+    }, 'Could not find fragment named \'notARealFragment\'.');
   });
 });

@@ -1,617 +1,249 @@
 import { assert } from 'chai';
+import { parseSelectionSet, parseFragmentDefinitionMap } from './util/graphqlAST';
+import { createMockGraphPrimitives } from './mocks/mockGraphPrimitives';
+import { ID_KEY } from '../src/graph/common';
+import { writeToGraph } from '../src/graph/write';
+import { readFromGraph } from '../src/graph/read';
 
-import {
-  diffQueryAgainstStore,
-  ID_KEY,
-} from '../src/data/readFromStore';
-
-import { writeQueryToStore } from '../src/data/writeToStore';
-
-import gql from 'graphql-tag';
-
-describe('diffing queries against the store', () => {
+describe('diffing queries against the store 2', () => {
   it('returns nothing when the store is enough', () => {
-    const query = gql`
-      {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         people_one(id: "1") {
           name
         }
-      }
-    `;
-
-    const result = {
-      people_one: {
-        name: 'Luke Skywalker',
+      }`),
+      data: {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
       },
-    };
-
-    const store = writeQueryToStore({
-      result,
-      query,
     });
 
-    assert.notOk(diffQueryAgainstStore({
-      store,
-      query,
-    }).isMissing);
+    assert.deepEqual(readFromGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
+        people_one(id: "1") {
+          name
+        }
+      }`),
+    }), {
+      stale: false,
+      data: {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      },
+    });
   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
-    const firstQuery = gql`
-      {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         people_one(id: "1") {
           __typename,
           id,
           name
         }
-      }
-    `;
-
-    const result = {
-      people_one: {
-        __typename: 'Person',
-        id: '1',
-        name: 'Luke Skywalker',
+      }`),
+      data: {
+        people_one: {
+          __typename: 'Person',
+          id: '1',
+          name: 'Luke Skywalker',
+        },
       },
-    };
-
-    const getIdField = ({id}: {id: string}) => id;
-
-    const store = writeQueryToStore({
-      result,
-      query: firstQuery,
-      dataIdFromObject: getIdField,
+      getDataID: ({ id }: { id: string }) => id,
     });
 
-    const secondQuery = gql`
-      {
+    assert.deepEqual(graph.data, {
+      root: {
+        scalars: {},
+        references: {
+          'people_one({"id":"1"})': '(1)',
+        },
+      },
+      '(1)': {
+        scalars: {
+          __typename: 'Person',
+          id: '1',
+          name: 'Luke Skywalker',
+        },
+        references: {},
+      },
+    });
+
+    assert.deepEqual(readFromGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         people_one(id: "1") {
           __typename,
           id,
           name
         }
-      }
-    `;
-
-    const { isMissing } = diffQueryAgainstStore({
-      store,
-      query: secondQuery,
+      }`),
+    }), {
+      stale: false,
+      data: {
+        people_one: {
+          __typename: 'Person',
+          id: '1',
+          name: 'Luke Skywalker',
+        },
+      },
     });
-
-    assert.notOk(isMissing);
-    assert.deepEqual(store['1'], result.people_one);
   });
 
   it('does not swallow errors other than field errors', () => {
-    const firstQuery = gql`
-      query {
+    const graph = createMockGraphPrimitives();
+
+    const store = writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         person {
           powers
         }
-      }`;
-    const firstResult = {
-      person: {
-        powers: 'the force',
+      }`),
+      data: {
+        person: {
+          powers: 'the force',
+        },
       },
-    };
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
     });
-    const unionQuery = gql`
-      query {
-        ...notARealFragment
-      }`;
+
     assert.throws(() => {
-      diffQueryAgainstStore({
-        store,
-        query: unionQuery,
+      readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          ...notARealFragment
+        }`),
       });
-    }, /No fragment/);
+    }, 'Could not find fragment named \'notARealFragment\'.');
   });
 
   it('does not error on a correct query with union typed fragments', () => {
-    const firstQuery = gql`
-      query {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         person {
           __typename
           firstName
           lastName
         }
-      }`;
-    const firstResult = {
-      person: {
-        __typename: 'Author',
-        firstName: 'John',
-        lastName: 'Smith',
+      }`),
+      data: {
+        person: {
+          __typename: 'Author',
+          firstName: 'John',
+          lastName: 'Smith',
+        },
       },
-    };
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
     });
-    const unionQuery = gql`
-      query {
+
+    assert.deepEqual(readFromGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         person {
           __typename
           ... on Author {
             firstName
             lastName
           }
-
           ... on Jedi {
             powers
           }
         }
-      }`;
-    const { isMissing } = diffQueryAgainstStore({
-      store,
-      query: unionQuery,
-      returnPartialData: false,
+      }`),
+    }), {
+      stale: false,
+      data: {
+        person: {
+          __typename: 'Author',
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      },
     });
-
-    assert.isTrue(isMissing);
   });
 
   it('does not error on a query with fields missing from all but one named fragment', () => {
-    const firstQuery = gql`
-      query {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         person {
           __typename
           firstName
           lastName
         }
-      }`;
-    const firstResult = {
-      person: {
-        __typename: 'Author',
-        firstName: 'John',
-        lastName: 'Smith',
+      }`),
+      data: {
+        person: {
+          __typename: 'Author',
+          firstName: 'John',
+          lastName: 'Smith',
+        },
       },
-    };
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
     });
-    const unionQuery = gql`
-      query {
+
+    assert.deepEqual(readFromGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         person {
           __typename
           ...authorInfo
           ...jediInfo
         }
-      }
-      fragment authorInfo on Author {
-        firstName
-      }
-      fragment jediInfo on Jedi {
-        powers
-      }`;
-
-    const { isMissing } = diffQueryAgainstStore({
-      store,
-      query: unionQuery,
-      returnPartialData: false,
-    });
-
-    assert.isTrue(isMissing);
-  });
-
-  it('throws an error on a query with fields missing from matching named fragments', () => {
-    const firstQuery = gql`
-      query {
-        person {
-          __typename
+      }`),
+      fragments: parseFragmentDefinitionMap(`
+        fragment authorInfo on Author {
           firstName
-          lastName
         }
-      }`;
-    const firstResult = {
-      person: {
-        __typename: 'Author',
-        firstName: 'John',
-        lastName: 'Smith',
+        fragment jediInfo on Jedi {
+          powers
+        }
+      `),
+    }), {
+      stale: false,
+      data: {
+        person: {
+          __typename: 'Author',
+          firstName: 'John',
+        },
       },
-    };
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
-    });
-    const unionQuery = gql`
-      query {
-        person {
-          __typename
-          ...authorInfo
-          ...jediInfo
-        }
-      }
-      fragment authorInfo on Author {
-        firstName
-        address
-      }
-      fragment jediInfo on Jedi {
-        jedi
-      }`;
-    assert.throw(() => {
-      diffQueryAgainstStore({
-        store,
-        query: unionQuery,
-        returnPartialData: false,
-      });
-    });
-  });
-
-  it('returns available fields if throwOnMissingField is false', () => {
-    const firstQuery = gql`
-      {
-        people_one(id: "1") {
-          __typename
-          id
-          name
-        }
-      }
-    `;
-
-    const firstResult = {
-      people_one: {
-        __typename: 'Person',
-        id: 'lukeId',
-        name: 'Luke Skywalker',
-      },
-    };
-
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
-    });
-
-    // Variants on a simple query with a missing field.
-
-    const simpleQuery = gql`
-      {
-        people_one(id: "1") {
-          name
-          age
-        }
-      }
-    `;
-
-    const inlineFragmentQuery = gql`
-      {
-        people_one(id: "1") {
-          ... on Person {
-            name
-            age
-          }
-        }
-      }
-    `;
-
-    const namedFragmentQuery = gql`
-      query {
-        people_one(id: "1") {
-          ...personInfo
-        }
-      }
-      fragment personInfo on Person {
-        name
-        age
-      }`;
-
-    const simpleDiff = diffQueryAgainstStore({
-      store,
-      query: simpleQuery,
-    });
-
-    assert.deepEqual(simpleDiff.result, {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    });
-
-    const inlineDiff = diffQueryAgainstStore({
-      store,
-      query: inlineFragmentQuery,
-    });
-
-    assert.deepEqual(inlineDiff.result, {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    });
-
-    const namedDiff = diffQueryAgainstStore({
-      store,
-      query: namedFragmentQuery,
-    });
-
-    assert.deepEqual(namedDiff.result, {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    });
-
-    assert.throws(function() {
-      diffQueryAgainstStore({
-        store,
-        query: simpleQuery,
-        returnPartialData: false,
-      });
     });
   });
 
   it('will add a private id property', () => {
-    const query = gql`
-      query {
+    const graph = createMockGraphPrimitives();
+
+    writeToGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
         a { id b }
         c { d e { id f } g { h } }
-      }
-    `;
-
-    const queryResult = {
-      a: [
-        { id: 'a:1', b: 1.1 },
-        { id: 'a:2', b: 1.2 },
-        { id: 'a:3', b: 1.3 },
-      ],
-      c: {
-        d: 2,
-        e: [
-          { id: 'e:1', f: 3.1 },
-          { id: 'e:2', f: 3.2 },
-          { id: 'e:3', f: 3.3 },
-          { id: 'e:4', f: 3.4 },
-          { id: 'e:5', f: 3.5 },
-        ],
-        g: { h: 4 },
-      },
-    };
-
-    const store = writeQueryToStore({
-      query,
-      result: queryResult,
-      dataIdFromObject: ({ id }: { id: string }) => id,
-    });
-
-    const { result } = diffQueryAgainstStore({
-      store,
-      query,
-    });
-
-    assert.deepEqual(result, queryResult);
-    assert.equal(result[ID_KEY], 'ROOT_QUERY');
-    assert.equal(result.a[0][ID_KEY], 'a:1');
-    assert.equal(result.a[1][ID_KEY], 'a:2');
-    assert.equal(result.a[2][ID_KEY], 'a:3');
-    assert.equal(result.c[ID_KEY], '$ROOT_QUERY.c');
-    assert.equal(result.c.e[0][ID_KEY], 'e:1');
-    assert.equal(result.c.e[1][ID_KEY], 'e:2');
-    assert.equal(result.c.e[2][ID_KEY], 'e:3');
-    assert.equal(result.c.e[3][ID_KEY], 'e:4');
-    assert.equal(result.c.e[4][ID_KEY], 'e:5');
-    assert.equal(result.c.g[ID_KEY], '$ROOT_QUERY.c.g');
-  });
-
-  describe('referential equality preservation', () => {
-    it('will return the previous result if there are no changes', () => {
-      const query = gql`
-        query {
-          a { b }
-          c { d e { f } }
-        }
-      `;
-
-      const queryResult = {
-        a: { b: 1 },
-        c: { d: 2, e: { f: 3 } },
-      };
-
-      const store = writeQueryToStore({
-        query,
-        result: queryResult,
-      });
-
-      const previousResult = {
-        a: { b: 1 },
-        c: { d: 2, e: { f: 3 } },
-      };
-
-      const { result } = diffQueryAgainstStore({
-        store,
-        query,
-        previousResult,
-      });
-
-      assert.deepEqual(result, queryResult);
-      assert.strictEqual(result, previousResult);
-    });
-
-    it('will return parts of the previous result that changed', () => {
-      const query = gql`
-        query {
-          a { b }
-          c { d e { f } }
-        }
-      `;
-
-      const queryResult = {
-        a: { b: 1 },
-        c: { d: 2, e: { f: 3 } },
-      };
-
-      const store = writeQueryToStore({
-        query,
-        result: queryResult,
-      });
-
-      const previousResult = {
-        a: { b: 1 },
-        c: { d: 20, e: { f: 3 } },
-      };
-
-      const { result } = diffQueryAgainstStore({
-        store,
-        query,
-        previousResult,
-      });
-
-      assert.deepEqual(result, queryResult);
-      assert.notStrictEqual(result, previousResult);
-      assert.strictEqual(result.a, previousResult.a);
-      assert.notStrictEqual(result.c, previousResult.c);
-      assert.strictEqual(result.c.e, previousResult.c.e);
-    });
-
-    it('will return the previous result if there are no changes in child arrays', () => {
-      const query = gql`
-        query {
-          a { b }
-          c { d e { f } }
-        }
-      `;
-
-      const queryResult = {
-        a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
-        c: { d: 2, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
-      };
-
-      const store = writeQueryToStore({
-        query,
-        result: queryResult,
-      });
-
-      const previousResult = {
-        a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
-        c: { d: 2, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
-      };
-
-      const { result } = diffQueryAgainstStore({
-        store,
-        query,
-        previousResult,
-      });
-
-      assert.deepEqual(result, queryResult);
-      assert.strictEqual(result, previousResult);
-    });
-
-    it('will not add zombie items when previousResult starts with the same items', () => {
-      const query = gql`
-        query {
-          a { b }
-        }
-      `;
-
-      const queryResult = {
-        a: [{ b: 1.1 }, { b: 1.2 }],
-      };
-
-      const store = writeQueryToStore({
-        query,
-        result: queryResult,
-      });
-
-      const previousResult = {
-        a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
-      };
-
-      const { result } = diffQueryAgainstStore({
-        store,
-        query,
-        previousResult,
-      });
-
-      assert.deepEqual(result, queryResult);
-      assert.strictEqual(result.a[0], previousResult.a[0]);
-      assert.strictEqual(result.a[1], previousResult.a[1]);
-    });
-
-    it('will return the previous result if there are no changes in nested child arrays', () => {
-      const query = gql`
-        query {
-          a { b }
-          c { d e { f } }
-        }
-      `;
-
-      const queryResult = {
-        a: [[[[[{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }]]]]],
-        c: { d: 2, e: [[{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }], [{ f: 3.4 }, { f: 3.5 }]] },
-      };
-
-      const store = writeQueryToStore({
-        query,
-        result: queryResult,
-      });
-
-      const previousResult = {
-        a: [[[[[{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }]]]]],
-        c: { d: 2, e: [[{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }], [{ f: 3.4 }, { f: 3.5 }]] },
-      };
-
-      const { result } = diffQueryAgainstStore({
-        store,
-        query,
-        previousResult,
-      });
-
-      assert.deepEqual(result, queryResult);
-      assert.strictEqual(result, previousResult);
-    });
-
-    it('will return parts of the previous result if there are changes in child arrays', () => {
-      const query = gql`
-        query {
-          a { b }
-          c { d e { f } }
-        }
-      `;
-
-      const queryResult = {
-        a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
-        c: { d: 2, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
-      };
-
-      const store = writeQueryToStore({
-        query,
-        result: queryResult,
-      });
-
-      const previousResult = {
-        a: [{ b: 1.1 }, { b: -1.2 }, { b: 1.3 }],
-        c: { d: 20, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
-      };
-
-      const { result } = diffQueryAgainstStore({
-        store,
-        query,
-        previousResult,
-      });
-
-      assert.deepEqual(result, queryResult);
-      assert.notStrictEqual(result, previousResult);
-      assert.notStrictEqual(result.a, previousResult.a);
-      assert.strictEqual(result.a[0], previousResult.a[0]);
-      assert.notStrictEqual(result.a[1], previousResult.a[1]);
-      assert.strictEqual(result.a[2], previousResult.a[2]);
-      assert.notStrictEqual(result.c, previousResult.c);
-      assert.notStrictEqual(result.c.e, previousResult.c.e);
-      assert.strictEqual(result.c.e[0], previousResult.c.e[0]);
-      assert.strictEqual(result.c.e[1], previousResult.c.e[1]);
-      assert.strictEqual(result.c.e[2], previousResult.c.e[2]);
-      assert.strictEqual(result.c.e[3], previousResult.c.e[3]);
-      assert.strictEqual(result.c.e[4], previousResult.c.e[4]);
-    });
-
-    it('will return the same items in a different order with `dataIdFromObject`', () => {
-      const query = gql`
-        query {
-          a { id b }
-          c { d e { id f } g { h } }
-        }
-      `;
-
-      const queryResult = {
+      }`),
+      data: {
         a: [
           { id: 'a:1', b: 1.1 },
           { id: 'a:2', b: 1.2 },
@@ -628,89 +260,455 @@ describe('diffing queries against the store', () => {
           ],
           g: { h: 4 },
         },
-      };
+      },
+      getDataID: ({ id }: { id: string }) => id,
+    });
 
-      const store = writeQueryToStore({
-        query,
-        result: queryResult,
-        dataIdFromObject: ({ id }: { id: string }) => id,
-      });
+    const result = readFromGraph({
+      graph,
+      id: 'root',
+      selectionSet: parseSelectionSet(`{
+        a { id b }
+        c { d e { id f } g { h } }
+      }`),
+    });
 
-      const previousResult = {
+    assert.deepEqual(result, {
+      stale: false,
+      data: {
         a: [
-          { id: 'a:3', b: 1.3, [ID_KEY]: 'a:3' },
-          { id: 'a:2', b: 1.2, [ID_KEY]: 'a:2' },
-          { id: 'a:1', b: 1.1, [ID_KEY]: 'a:1' },
+          { id: 'a:1', b: 1.1 },
+          { id: 'a:2', b: 1.2 },
+          { id: 'a:3', b: 1.3 },
         ],
         c: {
           d: 2,
           e: [
-            { id: 'e:4', f: 3.4, [ID_KEY]: 'e:4' },
-            { id: 'e:2', f: 3.2, [ID_KEY]: 'e:2' },
-            { id: 'e:5', f: 3.5, [ID_KEY]: 'e:5' },
-            { id: 'e:3', f: 3.3, [ID_KEY]: 'e:3' },
-            { id: 'e:1', f: 3.1, [ID_KEY]: 'e:1' },
+            { id: 'e:1', f: 3.1 },
+            { id: 'e:2', f: 3.2 },
+            { id: 'e:3', f: 3.3 },
+            { id: 'e:4', f: 3.4 },
+            { id: 'e:5', f: 3.5 },
+          ],
+          g: { h: 4 },
+        },
+      },
+    });
+
+    const data: any = result.data;
+    assert.equal(data[ID_KEY], 'root');
+    assert.equal(data.a[0][ID_KEY], '(a:1)');
+    assert.equal(data.a[1][ID_KEY], '(a:2)');
+    assert.equal(data.a[2][ID_KEY], '(a:3)');
+    assert.equal(data.c[ID_KEY], 'root.c');
+    assert.equal(data.c.e[0][ID_KEY], '(e:1)');
+    assert.equal(data.c.e[1][ID_KEY], '(e:2)');
+    assert.equal(data.c.e[2][ID_KEY], '(e:3)');
+    assert.equal(data.c.e[3][ID_KEY], '(e:4)');
+    assert.equal(data.c.e[4][ID_KEY], '(e:5)');
+    assert.equal(data.c.g[ID_KEY], 'root.c.g');
+  });
+
+  describe('referential equality preservation', () => {
+    it('will return the previous result if there are no changes', () => {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        data: {
+          a: { b: 1 },
+          c: { d: 2, e: { f: 3 } },
+        },
+      });
+
+      const previousData = {
+        a: { b: 1 },
+        c: { d: 2, e: { f: 3 } },
+      };
+
+      const result = readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        previousData,
+      });
+
+      assert.deepEqual(result, {
+        stale: false,
+        data: {
+          a: { b: 1 },
+          c: { d: 2, e: { f: 3 } },
+        },
+      });
+
+      assert.strictEqual(result.data, previousData);
+    });
+
+    it('will return parts of the previous result that changed', () => {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        data: {
+          a: { b: 1 },
+          c: { d: 2, e: { f: 3 } },
+        },
+      });
+
+      const previousData = {
+        a: { b: 1 },
+        c: { d: 20, e: { f: 3 } },
+      };
+
+      const result = readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        previousData,
+      });
+
+      assert.deepEqual(result, {
+        stale: false,
+        data: {
+          a: { b: 1 },
+          c: { d: 2, e: { f: 3 } },
+        },
+      });
+
+      const data: any = result.data;
+      assert.notStrictEqual(data, previousData);
+      assert.strictEqual(data.a, previousData.a);
+      assert.notStrictEqual(data.c, previousData.c);
+      assert.strictEqual(data.c.e, previousData.c.e);
+    });
+
+    it('will return the previous result if there are no changes in child arrays', () => {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        data: {
+          a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
+          c: { d: 2, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
+        },
+      });
+
+      const previousData = {
+        a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
+        c: { d: 2, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
+      };
+
+      const result = readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        previousData,
+      });
+
+      assert.deepEqual(result, {
+        stale: false,
+        data: {
+          a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
+          c: { d: 2, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
+        },
+      });
+
+      assert.strictEqual(result.data, previousData);
+    });
+
+    it('will not add zombie items when previousResult starts with the same items', () => {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{ a { b } }`),
+        data: { a: [{ b: 1.1 }, { b: 1.2 }] },
+      });
+
+      const previousData = {
+        a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
+      };
+
+      const result = readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{ a { b } }`),
+        previousData,
+      });
+
+      assert.deepEqual(result, {
+        stale: false,
+        data: { a: [{ b: 1.1 }, { b: 1.2 }] },
+      });
+
+      const data: any = result.data;
+      assert.strictEqual(data.a[0], previousData.a[0]);
+      assert.strictEqual(data.a[1], previousData.a[1]);
+    });
+
+    it('will return the previous result if there are no changes in nested child arrays', () => {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        data: {
+          a: [[[[[{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }]]]]],
+          c: { d: 2, e: [[{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }], [{ f: 3.4 }, { f: 3.5 }]] },
+        },
+      });
+
+      const previousData = {
+        a: [[[[[{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }]]]]],
+        c: { d: 2, e: [[{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }], [{ f: 3.4 }, { f: 3.5 }]] },
+      };
+
+      const result = readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        previousData,
+      });
+
+      assert.deepEqual(result, {
+        stale: false,
+        data: {
+          a: [[[[[{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }]]]]],
+          c: { d: 2, e: [[{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }], [{ f: 3.4 }, { f: 3.5 }]] },
+        },
+      });
+
+      assert.strictEqual(result.data, previousData);
+    });
+
+    it('will return parts of the previous result if there are changes in child arrays', () => {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        data: {
+          a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
+          c: { d: 2, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
+        },
+      });
+
+      const previousData = {
+        a: [{ b: 1.1 }, { b: -1.2 }, { b: 1.3 }],
+        c: { d: 20, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
+      };
+
+      const result = readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b }
+          c { d e { f } }
+        }`),
+        previousData,
+      });
+
+      assert.deepEqual(result, {
+        stale: false,
+        data: {
+          a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
+          c: { d: 2, e: [{ f: 3.1 }, { f: 3.2 }, { f: 3.3 }, { f: 3.4 }, { f: 3.5 }] },
+        },
+      });
+
+      const data: any = result.data;
+      assert.notStrictEqual(data, previousData);
+      assert.notStrictEqual(data.a, previousData.a);
+      assert.strictEqual(data.a[0], previousData.a[0]);
+      assert.notStrictEqual(data.a[1], previousData.a[1]);
+      assert.strictEqual(data.a[2], previousData.a[2]);
+      assert.notStrictEqual(data.c, previousData.c);
+      assert.strictEqual(data.c.e, previousData.c.e);
+      assert.strictEqual(data.c.e[0], previousData.c.e[0]);
+      assert.strictEqual(data.c.e[1], previousData.c.e[1]);
+      assert.strictEqual(data.c.e[2], previousData.c.e[2]);
+      assert.strictEqual(data.c.e[3], previousData.c.e[3]);
+      assert.strictEqual(data.c.e[4], previousData.c.e[4]);
+    });
+
+    it('will return the same items in a different order', () => {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { id b }
+          c { d e { id f } g { h } }
+        }`),
+        data: {
+          a: [
+            { id: 'a:1', b: 1.1 },
+            { id: 'a:2', b: 1.2 },
+            { id: 'a:3', b: 1.3 },
+          ],
+          c: {
+            d: 2,
+            e: [
+              { id: 'e:1', f: 3.1 },
+              { id: 'e:2', f: 3.2 },
+              { id: 'e:3', f: 3.3 },
+              { id: 'e:4', f: 3.4 },
+              { id: 'e:5', f: 3.5 },
+            ],
+            g: { h: 4 },
+          },
+        },
+        getDataID: ({ id }: { id: string }) => id,
+      });
+
+      const previousData = {
+        a: [
+          { id: 'a:3', b: 1.3, [ID_KEY]: '(a:3)' },
+          { id: 'a:2', b: 1.2, [ID_KEY]: '(a:2)' },
+          { id: 'a:1', b: 1.1, [ID_KEY]: '(a:1)' },
+        ],
+        c: {
+          d: 2,
+          e: [
+            { id: 'e:4', f: 3.4, [ID_KEY]: '(e:4)' },
+            { id: 'e:2', f: 3.2, [ID_KEY]: '(e:2)' },
+            { id: 'e:5', f: 3.5, [ID_KEY]: '(e:5)' },
+            { id: 'e:3', f: 3.3, [ID_KEY]: '(e:3)' },
+            { id: 'e:1', f: 3.1, [ID_KEY]: '(e:1)' },
           ],
           g: { h: 4 },
         },
       };
 
-      const { result } = diffQueryAgainstStore({
-        store,
-        query,
-        previousResult,
+      const result = readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { id b }
+          c { d e { id f } g { h } }
+        }`),
+        previousData,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.notStrictEqual(result, previousResult);
-      assert.notStrictEqual(result.a, previousResult.a);
-      assert.strictEqual(result.a[0], previousResult.a[2]);
-      assert.strictEqual(result.a[1], previousResult.a[1]);
-      assert.strictEqual(result.a[2], previousResult.a[0]);
-      assert.notStrictEqual(result.c, previousResult.c);
-      assert.notStrictEqual(result.c.e, previousResult.c.e);
-      assert.strictEqual(result.c.e[0], previousResult.c.e[4]);
-      assert.strictEqual(result.c.e[1], previousResult.c.e[1]);
-      assert.strictEqual(result.c.e[2], previousResult.c.e[3]);
-      assert.strictEqual(result.c.e[3], previousResult.c.e[0]);
-      assert.strictEqual(result.c.e[4], previousResult.c.e[2]);
-      assert.strictEqual(result.c.g, previousResult.c.g);
+      assert.deepEqual(result, {
+        stale: false,
+        data: {
+          a: [
+            { id: 'a:1', b: 1.1 },
+            { id: 'a:2', b: 1.2 },
+            { id: 'a:3', b: 1.3 },
+          ],
+          c: {
+            d: 2,
+            e: [
+              { id: 'e:1', f: 3.1 },
+              { id: 'e:2', f: 3.2 },
+              { id: 'e:3', f: 3.3 },
+              { id: 'e:4', f: 3.4 },
+              { id: 'e:5', f: 3.5 },
+            ],
+            g: { h: 4 },
+          },
+        },
+      });
+
+      const data: any = result.data;
+      assert.notStrictEqual(data, previousData);
+      assert.notStrictEqual(data.a, previousData.a);
+      assert.strictEqual(data.a[0], previousData.a[2]);
+      assert.strictEqual(data.a[1], previousData.a[1]);
+      assert.strictEqual(data.a[2], previousData.a[0]);
+      assert.notStrictEqual(data.c, previousData.c);
+      assert.notStrictEqual(data.c.e, previousData.c.e);
+      assert.strictEqual(data.c.e[0], previousData.c.e[4]);
+      assert.strictEqual(data.c.e[1], previousData.c.e[1]);
+      assert.strictEqual(data.c.e[2], previousData.c.e[3]);
+      assert.strictEqual(data.c.e[3], previousData.c.e[0]);
+      assert.strictEqual(data.c.e[4], previousData.c.e[2]);
+      assert.strictEqual(data.c.g, previousData.c.g);
     });
 
     it('will return the same JSON scalar field object', () => {
-      const query = gql`
-        {
+      const graph = createMockGraphPrimitives();
+
+      writeToGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
           a { b c }
           d { e f }
-        }
-      `;
-
-      const queryResult = {
-        a: { b: 1, c: { x: 2, y: 3, z: 4 } },
-        d: { e: 5, f: { x: 6, y: 7, z: 8 } },
-      };
-
-      const store = writeQueryToStore({
-        query,
-        result: queryResult,
+        }`),
+        data: {
+          a: { b: 1, c: { x: 2, y: 3, z: 4 } },
+          d: { e: 5, f: { x: 6, y: 7, z: 8 } },
+        },
       });
 
-      const previousResult = {
+      const previousData = {
         a: { b: 1, c: { x: 2, y: 3, z: 4 } },
         d: { e: 50, f: { x: 6, y: 7, z: 8 } },
       };
 
-      const { result } = diffQueryAgainstStore({
-        store,
-        query,
-        previousResult,
+      const result = readFromGraph({
+        graph,
+        id: 'root',
+        selectionSet: parseSelectionSet(`{
+          a { b c }
+          d { e f }
+        }`),
+        previousData,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.notStrictEqual(result, previousResult);
-      assert.strictEqual(result.a, previousResult.a);
-      assert.notStrictEqual(result.d, previousResult.d);
-      assert.strictEqual(result.d.f, previousResult.d.f);
+      assert.deepEqual(result, {
+        stale: false,
+        data: {
+          a: { b: 1, c: { x: 2, y: 3, z: 4 } },
+          d: { e: 5, f: { x: 6, y: 7, z: 8 } },
+        },
+      });
+
+      const data: any = result.data;
+      assert.notStrictEqual(data, previousData);
+      assert.strictEqual(data.a, previousData.a);
+      assert.notStrictEqual(data.d, previousData.d);
+      assert.strictEqual(data.d.f, previousData.d.f);
     });
   });
 });

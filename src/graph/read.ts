@@ -1,7 +1,6 @@
 import { SelectionSetNode, FragmentDefinitionNode } from 'graphql';
 import { isEqual } from '../util/isEqual';
-import { assign } from '../util/assign';
-import { GraphQLData, GraphQLObjectData } from '../graphql/types';
+import { GraphQLData, GraphQLObjectData, isObjectData } from '../graphql/data';
 import { ID_KEY, GraphReference, getFieldKey } from './common';
 
 /**
@@ -52,7 +51,8 @@ export function readFromGraph ({
   selectionSet,
   fragments = {},
   variables = {},
-  previousData = {},
+  previousData,
+  _currentData: data = createInitialData(id),
 }: {
   graph: GraphReadPrimitives,
   id: string,
@@ -60,12 +60,33 @@ export function readFromGraph ({
   fragments?: { [fragmentName: string]: FragmentDefinitionNode },
   variables?: { [variableName: string]: GraphQLData },
   previousData?: GraphQLObjectData | null,
+
+  // This is an object that is used as an implementation detail only! Because
+  // identical GraphQL composite fields (arrays and objects) merge together, we
+  // need to make sure we don’t replace these composite fields and instead merge
+  // into the last composite field.
+  //
+  // This value represents the data object that should be merged into. This
+  // object will be mutated and then returned. If all of the selection set
+  // fields have equivalent values in the `previousData` option, then that will
+  // be returned instead.
+  //
+  // Again, this is an implementation detail and should not be used by API
+  // consumers!
+  _currentData?: GraphQLObjectData,
 }): {
   stale: boolean,
   data: GraphQLObjectData,
 } {
   const node = graph.getNode(id);
-  const data: GraphQLObjectData = {};
+
+  // If there is no node in the graph for this id then we need to throw a
+  // partial read error.
+  if (typeof node === 'undefined') {
+    const error = new Error(`No store item for id '${id}'.`);
+    (error as any)._partialRead = true;
+    throw error;
+  }
 
   // In this variable we will keep track of whether or not the data we read is
   // the same as the previous data. We start with `true` if `previousData`
@@ -79,18 +100,6 @@ export function readFromGraph ({
   // reading that is stale.
   let stale = false;
 
-  // If there is no node in the graph for this id then we need to throw a
-  // partial read error.
-  if (typeof node === 'undefined') {
-    const error = new Error(`No store item for id '${id}'.`);
-    (error as any)._partialRead = true;
-    throw error;
-  }
-
-  // Define the store id property on our data object. This property is
-  // non-enumerable so that users can not see it without trying real hard.
-  Object.defineProperty(data, ID_KEY, { value: id });
-
   selectionSet.selections.forEach(selection => {
     // For fields we need to read the field from the store and add it to our
     // data object.
@@ -103,7 +112,8 @@ export function readFromGraph ({
       // If there is no selection set, then this field is a scalar and we
       // should read from the node’s scalars.
       if (!fieldSelectionSet) {
-        const fieldData = node.getScalar(fieldKey);
+        let fieldData = node.getScalar(fieldKey);
+        const previousFieldData = isObjectData(previousData) ? previousData[fieldName] : undefined;
 
         // If there is no value in the node for this field then we need to
         // throw a partial read error.
@@ -113,14 +123,17 @@ export function readFromGraph ({
           throw error;
         }
 
+        // If the field data and the previous field data are deeply equal then
+        // use the previous field data to maintain referential equality.
+        if (typeof previousFieldData !== 'undefined' && isEqual(fieldData, previousFieldData)) {
+          fieldData = previousFieldData;
+        }
+
         data[fieldName] = fieldData;
 
         // If so far we know that this is the same object, and we have some
         // previous data then compare this scalar with the previous scalar.
-        //
-        // `isEqual` is not that expensive here as we try to avoid running the
-        // check whenever possible.
-        if (sameAsPrevious && previousData && !isEqual(fieldData, previousData[fieldName])) {
+        if (sameAsPrevious && typeof previousFieldData !== 'undefined' && fieldData !== previousFieldData) {
           sameAsPrevious = false;
         }
       }
@@ -149,6 +162,7 @@ export function readFromGraph ({
             fragments,
             variables,
             previousData: previousFieldData,
+            _currentData: data[fieldName],
           });
 
           // If the field and the previous field are not the same then the
@@ -178,6 +192,7 @@ export function readFromGraph ({
             fragments,
             variables,
             previousData: previousFieldData,
+            _currentData: data[fieldName],
           });
 
           // If the field and the previous field are not the same then the
@@ -225,6 +240,7 @@ export function readFromGraph ({
           fragments,
           variables,
           previousData,
+          _currentData: data,
         });
 
         // If the previous data and the fragment data are not referentially
@@ -239,8 +255,6 @@ export function readFromGraph ({
         if (fragmentStale) {
           stale = true;
         }
-
-        assign(data, fragmentData);
       } catch (error) {
         // Re-throw an errors that are not partial read errors. We can safely
         // ignore partial read errors.
@@ -274,6 +288,7 @@ function readReferenceFromGraph ({
   fragments,
   variables,
   previousData,
+  _currentData,
 }: {
   graph: GraphReadPrimitives,
   reference: GraphReference,
@@ -281,6 +296,7 @@ function readReferenceFromGraph ({
   fragments: { [fragmentName: string]: FragmentDefinitionNode },
   variables: { [variableName: string]: GraphQLData },
   previousData: GraphQLData | undefined,
+  _currentData: GraphQLData | undefined,
 }): {
   stale: boolean,
   data: GraphQLData,
@@ -297,7 +313,7 @@ function readReferenceFromGraph ({
   // NOTE: We currently build a map of ids to previous data items by iterating
   // through all of the previous data items. This could be more efficient.
   else if (Array.isArray(reference)) {
-    const idToPreviousItemData: { [id: string]: GraphQLData } = {};
+    const idToPreviousItemData: { [id: string]: GraphQLObjectData } = {};
 
     // Build a map out of the previous data array of ids to the previous data
     // value. We will use this in iteration later on.
@@ -307,7 +323,7 @@ function readReferenceFromGraph ({
     // we build this map to track which ids match related items.
     if (Array.isArray(previousData)) {
       previousData.forEach(item => {
-        if (item !== null && typeof item === 'object' && !Array.isArray(item) && typeof item[ID_KEY] === 'string') {
+        if (isObjectData(item) && typeof item[ID_KEY] === 'string') {
           idToPreviousItemData[item[ID_KEY] as string] = item;
         }
       });
@@ -343,6 +359,7 @@ function readReferenceFromGraph ({
         fragments,
         variables,
         previousData: previousItemData,
+        _currentData: Array.isArray(_currentData) ? _currentData[i] : undefined,
       });
 
       // If the item and the previous item in the same position are not the same
@@ -368,7 +385,7 @@ function readReferenceFromGraph ({
   // read directly from the graph.
   else {
     // Type-guard for non-object data.
-    if ((typeof previousData !== 'undefined' && typeof previousData !== 'object') || Array.isArray(previousData)) {
+    if (typeof previousData !== 'undefined' && previousData !== null && !isObjectData(previousData)) {
       throw new Error(`The previous data for this reference must be an object. Not '${typeof previousData}'.`);
     }
     return readFromGraph({
@@ -378,8 +395,27 @@ function readReferenceFromGraph ({
       fragments,
       variables,
       previousData,
+      _currentData: isObjectData(_currentData) ? _currentData : undefined,
     });
   }
+}
+
+/**
+ * Creates the initial data object that will be read into. This object is
+ * created with a store id so that the store id may be set as the `ID_KEY` on
+ * the object.
+ *
+ * @private
+ */
+function createInitialData (id: string): GraphQLObjectData {
+  return Object.create(Object.prototype, {
+    [ID_KEY]: {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: id,
+    },
+  });
 }
 
 /**

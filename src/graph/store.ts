@@ -1,7 +1,7 @@
 import { SelectionSetNode, FragmentDefinitionNode } from 'graphql';
 import { ApolloAction, GraphDataAction } from '../actions';
 import { Observable, Observer } from '../util/Observable';
-import { GraphQLData, GraphQLObjectData } from '../graphql/types';
+import { GraphQLData, GraphQLObjectData } from '../graphql/data';
 import { GraphReference } from './common';
 import { writeToGraph, GetDataIDFn } from './write';
 import { readFromGraph, GraphNodeReadPrimitives } from './read';

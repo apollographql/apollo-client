@@ -1,4 +1,4 @@
-import { GraphQLData } from '../../src/graphql/types';
+import { GraphQLData } from '../../src/graphql/data';
 import { GraphReference } from '../../src/graph/common';
 import { GraphWritePrimitives, GraphNodeWritePrimitives } from '../../src/graph/write';
 import { GraphReadPrimitives, GraphNodeReadPrimitives } from '../../src/graph/read';

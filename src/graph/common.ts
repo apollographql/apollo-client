@@ -4,7 +4,7 @@
  */
 
 import { FieldNode, ValueNode } from 'graphql';
-import { GraphQLData } from '../graphql/types';
+import { GraphQLData, GraphQLObjectData } from '../graphql/data';
 
 /**
  * A key that we add to data written and read from the store to represent what

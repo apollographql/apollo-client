@@ -13,7 +13,7 @@ import {
 
 import {
   GraphQLData,
-} from './graphql/types';
+} from './graphql/data';
 
 import {
   GraphReference,

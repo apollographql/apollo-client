@@ -1,6 +1,5 @@
 import { SelectionSetNode, FragmentDefinitionNode } from 'graphql';
-import { assign } from '../util/assign';
-import { GraphQLData, GraphQLObjectData, GraphQLArrayData } from '../graphql/types';
+import { GraphQLData, GraphQLObjectData, GraphQLArrayData, isObjectData } from '../graphql/data';
 import { ID_KEY, GraphReference, getFieldKey } from './common';
 
 /**
@@ -61,6 +60,7 @@ export function writeToGraph ({
   fragments = {},
   variables = {},
   getDataID = () => null,
+  _currentData: nextData = createInitialData(id),
 }: {
   graph: GraphWritePrimitives,
   id: string | null,
@@ -69,17 +69,15 @@ export function writeToGraph ({
   fragments?: { [fragmentName: string]: FragmentDefinitionNode },
   variables?: { [variableName: string]: GraphQLData },
   getDataID?: GetDataIDFn,
+
+  // A private implementation detail similar to the `_currentData` option in
+  // `readFromGraph`. To understand better what this option is for then read the
+  // documentation there.
+  _currentData?: GraphQLObjectData,
 }): {
   data: GraphQLObjectData,
 } {
   const node = id !== null ? graph.getOrCreateNode(id) : null;
-  const nextData: GraphQLObjectData = {};
-
-  // Define the store id property on our data object. This property is
-  // non-enumerable so that users can not see it without trying real hard.
-  if (typeof id === 'string') {
-    Object.defineProperty(nextData, ID_KEY, { value: id });
-  }
 
   selectionSet.selections.forEach(selection => {
     // For fields we want to directly write the data into our store.
@@ -120,10 +118,11 @@ export function writeToGraph ({
       // If the field data is an array then we need to defer to our
       // `writeArrayToStore` function.
       else if (Array.isArray(fieldData)) {
+        const currentFieldData = nextData[fieldName];
         const {
           reference: fieldReference,
           data: nextFieldData,
-        } = writeArrayToStore({
+        } = writeArrayToGraph({
           graph,
           id: id && `${id}.${fieldKey}`,
           data: fieldData,
@@ -131,6 +130,7 @@ export function writeToGraph ({
           fragments,
           variables,
           getDataID,
+          _currentData: Array.isArray(currentFieldData) ? currentFieldData : undefined,
         });
         nextData[fieldName] = nextFieldData;
         if (node !== null) {
@@ -148,6 +148,7 @@ export function writeToGraph ({
         }
 
         // Write the data in this field to the store.
+        const currentFieldData = nextData[fieldName];
         const { data: nextFieldData } = writeToGraph({
           graph,
           id: fieldID,
@@ -156,6 +157,7 @@ export function writeToGraph ({
           fragments,
           variables,
           getDataID,
+          _currentData: isObjectData(currentFieldData) ? currentFieldData : undefined,
         });
 
         nextData[fieldName] = nextFieldData;
@@ -189,8 +191,8 @@ export function writeToGraph ({
           fragments,
           variables,
           getDataID,
+          _currentData: nextData,
         });
-        assign(nextData, fragmentData);
       } catch (error) {
         // If the error is not a partial write error then make sure it is
         // correctly propogated. Otherwise we can ignore the error and this
@@ -215,7 +217,7 @@ export function writeToGraph ({
  *
  * @private
  */
-function writeArrayToStore ({
+function writeArrayToGraph ({
   graph,
   id,
   data,
@@ -223,6 +225,7 @@ function writeArrayToStore ({
   fragments,
   variables,
   getDataID,
+  _currentData,
 }: {
   graph: GraphWritePrimitives,
   id: string | null,
@@ -231,6 +234,7 @@ function writeArrayToStore ({
   fragments: { [fragmentName: string]: FragmentDefinitionNode },
   variables: { [variableName: string]: GraphQLData },
   getDataID: GetDataIDFn,
+  _currentData: GraphQLArrayData | undefined,
 }): {
   reference: GraphReference,
   data: GraphQLArrayData,
@@ -239,12 +243,13 @@ function writeArrayToStore ({
   const nextData: GraphQLArrayData = [];
 
   data.forEach((itemData, i) => {
+    const currentItemData = Array.isArray(_currentData) && _currentData[i];
     // If the item data is an array then we want to recurse.
     if (Array.isArray(itemData)) {
       const {
         reference: itemReference,
         data: nextItemData,
-      } = writeArrayToStore({
+      } = writeArrayToGraph({
         graph,
         id: id && `${id}[${i}]`,
         data: itemData,
@@ -252,6 +257,7 @@ function writeArrayToStore ({
         fragments,
         variables,
         getDataID,
+        _currentData: Array.isArray(currentItemData) ? currentItemData : undefined,
       });
       reference.push(itemReference);
       nextData.push(nextItemData);
@@ -281,12 +287,31 @@ function writeArrayToStore ({
         fragments,
         variables,
         getDataID,
+        _currentData: isObjectData(currentItemData) ? currentItemData : undefined,
       });
       nextData.push(nextItemData);
     }
   });
 
   return { reference, data: nextData };
+}
+
+/**
+ * Creates the initial data object that will be read into after writing. This
+ * object is created with a store id so that the store id may be set as the
+ * `ID_KEY` on the object.
+ *
+ * @private
+ */
+function createInitialData (id: string | null): GraphQLObjectData {
+  return id === null ? {} : Object.create(Object.prototype, {
+    [ID_KEY]: {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: id,
+    },
+  });
 }
 
 /**

@@ -56,6 +56,4 @@ import './environment';
 import './writeToGraph';
 import './readFromGraph';
 import './GraphStore';
-import './writeToStore2';
-import './readFromStore2';
-import './diffAgainstStore2';
+import './writeThenReadFromGraph';

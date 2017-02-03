@@ -5,7 +5,7 @@ import { ID_KEY } from '../src/graph/common';
 import { writeToGraph } from '../src/graph/write';
 import { readFromGraph } from '../src/graph/read';
 
-describe('diffing queries against the store 2', () => {
+describe('writeToGraph then readFromGraph', () => {
   it('returns nothing when the store is enough', () => {
     const graph = createMockGraphPrimitives();
 

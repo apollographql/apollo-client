@@ -5,7 +5,7 @@ import { parseSelectionSet, parseFragmentDefinitionMap } from './util/graphqlAST
 import { testObservable } from './util/testObservable';
 import { deepFreeze } from '../src/util/maybeDeepFreeze';
 import { ApolloAction } from '../src/actions';
-import { GraphQLData, GraphQLObjectData } from '../src/graphql/data';
+import { GraphQLData, GraphQLObjectData } from '../src/graphql';
 import { ReduxGraphStore, ReduxState } from '../src/graph/store';
 
 const TEST_ID_KEY = Symbol('testIdKey');

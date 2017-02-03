@@ -1,6 +1,6 @@
 import { SelectionSetNode, FragmentDefinitionNode } from 'graphql';
 import { isEqual } from '../util/isEqual';
-import { GraphQLData, GraphQLObjectData, isObjectData } from '../graphql/data';
+import { GraphQLData, GraphQLObjectData, isObjectData } from '../graphql';
 import { ID_KEY, GraphReference, getFieldKey } from './common';
 
 /**

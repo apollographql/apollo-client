@@ -276,6 +276,7 @@ export class QueryManager {
             reject(new ApolloError({
               graphQLErrors: result.errors,
             }));
+            return;
           }
 
           this.store.dispatch({

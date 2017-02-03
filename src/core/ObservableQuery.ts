@@ -338,14 +338,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       ...variables,
     };
 
-    const nullPromise = new Promise((resolve) => resolve());
-
     if (isEqual(newVariables, this.variables) && !tryFetch) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
       if (this.observers.length === 0) {
-        return nullPromise;
+        return new Promise((resolve) => resolve());
       }
 
       return this.result();
@@ -354,7 +352,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
       // See comment above
       if (this.observers.length === 0) {
-        return nullPromise;
+        return new Promise((resolve) => resolve());
       }
 
       // Use the same options as before, but with new variables

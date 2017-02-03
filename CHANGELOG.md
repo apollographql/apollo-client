@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Removed dependency on Node.js typings. [PR #1248](https://github.com/apollostack/apollo-client/pull/1248)
+- Remove orphaned promise that was causing a Bluebird error. [PR #1256](https://github.com/apollographql/apollo-client/pull/1256)
 - ...
 
 ### 0.8.1

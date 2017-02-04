@@ -3,10 +3,13 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- ...
+
+
+### 0.8.2
 - Removed dependency on Node.js typings. [PR #1248](https://github.com/apollostack/apollo-client/pull/1248)
 - Remove orphaned promise that was causing a Bluebird error. [PR #1256](https://github.com/apollographql/apollo-client/pull/1256)
 - End code flow on promise rejection in `mutate` implementation. [PR #1259](https://github.com/apollographql/apollo-client/pull/1259)
-- ...
 
 ### 0.8.1
 - Allow refetching with query documents after mutation. [PR #1234](https://github.com/apollostack/apollo-client/pull/1234)

@@ -5,7 +5,7 @@
 
 Apollo Client can be used in any JavaScript frontend where you want to use data from a GraphQL server. It's:
 
-1. **Incrementally adoptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
+1. **Incrementally adaptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
 2. **Universally compatible**, so that Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
 2. **Simple to get started with**, you can start loading data right away and learn about advanced features later.
 3. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
@@ -13,7 +13,7 @@ Apollo Client can be used in any JavaScript frontend where you want to use data 
 4. **Small and flexible**, so you don't get stuff you don't need. The core is under 25kb compressed.
 5. **Community driven**, Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
 
-Get started on the [home page](http://dev.apollodata.com/), which has great examples for a variety of frameworks.
+Get started on the [home page](http://dev.apollodata.com/), which has great examples of a variety of frameworks.
 
 ## Installation
 

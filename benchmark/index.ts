@@ -149,7 +149,7 @@ group((end) => {
       meanTimes[iterCount.toString()] = event.target.stats.mean * 1000;
     });
   });
-  
+
   end();
 });
 
@@ -185,13 +185,13 @@ times(25, (countR: number) => {
 
       const variables = cloneDeep(originalVariables);
       variables.id = index;
-      
+
       mockedResponses.push({
         request: { query, variables },
         result,
       });
     });
-    
+
     const client = new ApolloClient({
       networkInterface: mockNetworkInterface(...mockedResponses),
       addTypename: false,
@@ -207,15 +207,12 @@ times(25, (countR: number) => {
     const promises = times(count, (index) => {
       return client.query({
         query,
-        variables: { id: index }
+        variables: { id: index },
       }).then((result) => {
         return Promise.resolve({});
-      }).catch((err) => {
-        console.log('Error: ');
-        console.log(err);
       });
     });
-    
+
     const myBenchmark = benchmark;
     const myAfterEach = afterEach;
     Promise.all(promises).then(() => {
@@ -250,19 +247,19 @@ times(50, (index) => {
           }
         }
       }`;
-    const houseId = "12";
+    const houseId = '12';
     const reservations: {
       name: string,
       id: string,
     }[] = [];
     const reservationCount = (index + 1);
-    times(reservationCount, (index) => {
+    times(reservationCount, (reservationIndex) => {
       reservations.push({
         name: 'Fake Reservation',
-        id: index.toString(),
+        id: reservationIndex.toString(),
       });
     });
-    
+
     const variables = {id: houseId };
     const result = {
       data: {
@@ -271,7 +268,7 @@ times(50, (index) => {
         },
       },
     };
-    
+
     const client = new ApolloClient({
       networkInterface: mockNetworkInterface({
         request: { query, variables },
@@ -296,11 +293,11 @@ times(50, (index) => {
           query,
           variables,
           noFetch: true,
-        }).then((result) => {
+        }).then(() => {
           done();
         });
       });
-      
+
       end();
     });
   });

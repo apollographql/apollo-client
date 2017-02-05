@@ -16,7 +16,7 @@ import {
 // `group` is meant to provide a way to execute code that sets up the scope variables for your
 // benchmark. It is only run once before the benchmark, not on every call of the code to
 // be benchmarked. The `benchmark` function is similar to the `it` function within mocha;
-// it allows you to define a particular block of code to be benchmarked. 
+// it allows you to define a particular block of code to be benchmarked.
 
 const bsuite = new Benchmark.Suite();
 export type DoneFunction = () => void;

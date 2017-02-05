@@ -18,37 +18,27 @@ import {
 // be benchmarked. The `benchmark` function is similar to the `it` function within mocha;
 // it allows you to define a particular block of code to be benchmarked. 
 
-
-// The maximum number of iterations that a benchmark can cycle for
-// before it has to enter a setup loop again. This could probably be done through
-// the Benchmark.count value but that doesn't seem to be exposed correctly
-// to the setup function so we have to do this.
-const MAX_ITERATIONS = 10000;
 const bsuite = new Benchmark.Suite();
-
-
 export type DoneFunction = () => void;
-export type SetupScope = any;
 
 export interface DescriptionObject {
   name: string;
   [other: string]: any;
 };
+
+export type Nullable<T> = T | undefined;
 export type Description = DescriptionObject | string;
-export type CycleFunction = (doneFn: DoneFunction, setupScope?: SetupScope) => void;
+export type CycleFunction = (doneFn: DoneFunction) => void;
 export type BenchmarkFunction = (description: Description, cycleFn: CycleFunction) => void;
 export type GroupFunction = (done: DoneFunction) => void;
-export type SetupCycleFunction = () => void;
-export type SetupFunction = (setupFn: SetupCycleFunction) => void;
 export type AfterEachCallbackFunction = (descr: Description, event: any) => void;
 export type AfterEachFunction = (afterEachFnArg: AfterEachCallbackFunction) => void;
 export type AfterAllCallbackFunction = () => void;
 export type AfterAllFunction = (afterAllFn: AfterAllCallbackFunction) => void;
 
-export let benchmark: BenchmarkFunction = null;
-export let setup: SetupFunction = null;
-export let afterEach: AfterEachFunction = null;
-export let afterAll: AfterAllFunction = null;
+export let benchmark: BenchmarkFunction;
+export let afterEach: AfterEachFunction;
+export let afterAll: AfterAllFunction;
 
 // Used to log stuff within benchmarks without pissing off tslint.
 export function log(logString: string, ...args: any[]) {
@@ -58,7 +48,6 @@ export function log(logString: string, ...args: any[]) {
 
 interface Scope {
   benchmark?: BenchmarkFunction;
-  setup?: SetupFunction;
   afterEach?: AfterEachFunction;
   afterAll?: AfterAllFunction;
 };
@@ -68,7 +57,6 @@ interface Scope {
 function currentScope() {
   return {
     benchmark,
-    setup,
     afterEach,
     afterAll,
   };
@@ -77,10 +65,9 @@ function currentScope() {
 // Internal function that lets us set benchmark, setup, afterEach, etc.
 // in a reasonable fashion.
 function setScope(scope: Scope) {
-  benchmark = scope.benchmark;
-  setup = scope.setup;
-  afterEach = scope.afterEach;
-  afterAll = scope.afterAll;
+  benchmark = scope.benchmark as BenchmarkFunction;
+  afterEach = scope.afterEach as AfterEachFunction;
+  afterAll = scope.afterAll as AfterAllFunction;
 }
 
 export const groupPromises: Promise<void>[] = [];
@@ -88,43 +75,17 @@ export const groupPromises: Promise<void>[] = [];
 export const group = (groupFn: GroupFunction) => {
   const oldScope = currentScope();
   const scope: {
-    setup?: SetupFunction,
     benchmark?: BenchmarkFunction,
     afterEach?: AfterEachFunction,
     afterAll?: AfterAllFunction,
   } = {};
 
-  // This is a very important part of the tooling around benchmark.js.
-  //
-  // benchmark.js does not allow you run a particular function before
-  // every cycle of the benchmark (i.e. you cannot run a particular function
-  // before the timed portion of a CycleFunction begins). This makes it
-  // difficult to set up initial state. This function solves this problem.
-  //
-  // Inside each `GroupFunction`, the user can create a `setup` block,
-  // passing an instance of `SetupCycleFunction` as an argument. benchmark.js
-  // will call the `setup` function below once before running the CycleFunction
-  // `count` times. This setup function will then call the SetupCycleFunction it is
-  // passed `count` times and record array of scopes that exist within SetupCycleFunction.
-  // This array will be available to the `GroupCycleFunction`.
-  //
-  // Note that you should not use this if your pre-benchmark setup consumes a "large"
-  // chunk of memory (for some defn. of large). This leads to a segfault in V8.
-  //
-  // This makes it possible to write code in the `SetupCycleFunction`
-  // almost as if it is run before every of the `CycleFunction`. Check in the benchmarks
-  // themselves for an example of this.
-  let setupFn: SetupCycleFunction = null;
-  scope.setup = (setupFnArg: SetupCycleFunction) => {
-    setupFn = setupFnArg;
-  };
-
-  let afterEachFn: AfterEachCallbackFunction = null;
+  let afterEachFn: Nullable<AfterEachCallbackFunction> = undefined;
   scope.afterEach = (afterEachFnArg: AfterAllCallbackFunction) => {
     afterEachFn = afterEachFnArg;
   };
 
-  let afterAllFn: AfterAllCallbackFunction = null;
+  let afterAllFn: Nullable<AfterAllCallbackFunction> = undefined;
   scope.afterAll = (afterAllFnArg: AfterAllCallbackFunction) => {
     afterAllFn = afterAllFnArg;
   };
@@ -137,35 +98,16 @@ export const group = (groupFn: GroupFunction) => {
 
     const scopes: Object[] = [];
     let cycleCount = 0;
-    const runSetup = () => {
-      const originalThis = this;
-      times(MAX_ITERATIONS, () => {
-        setupFn.apply(this);
-        scopes.push(cloneDeep(this));
-      });
-
-      cycleCount = 0;
-    };
-
     benchmarkPromises.push(new Promise<void>((resolve, reject) => {
       bsuite.add(name, {
         defer: true,
-        setup: (deferred: any) => {
-          if (setupFn !== null) {
-            runSetup();
-            if (deferred) {
-              deferred.resolve();
-            }
-          }
-        },
         fn: (deferred: any) => {
           const done = () => {
             cycleCount++;
             deferred.resolve();
           };
 
-          const passingScope = merge({}, this, scopes[cycleCount]) as SetupScope;
-          benchmarkFn(done, passingScope);
+          benchmarkFn(done);
         },
 
         onComplete: (event: any) => {
@@ -192,7 +134,6 @@ export const group = (groupFn: GroupFunction) => {
     setScope(scope);
     groupFn(groupDone);
     setScope(oldScope);
-
   }));
 };
 

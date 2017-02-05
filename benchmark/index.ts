@@ -63,7 +63,7 @@ const getClientInstance = () => {
     addTypename: false,
   });
 };
-/* 
+
 
 group((end) => {
   benchmark('constructing an instance', (done) => {
@@ -74,7 +74,7 @@ group((end) => {
 });
 
 group((end) => {
-  benchmark('fetching a query result from mocked server', (done, setupScope) => {
+  benchmark('fetching a query result from mocked server', (done) => {
     const client = getClientInstance();
     client.query({ query: simpleQuery }).then((result) => {
       done();
@@ -85,7 +85,7 @@ group((end) => {
 });
 
 group((end) => {
-  benchmark('write data and receive update from the cache', (done, setupScope) => {
+  benchmark('write data and receive update from the cache', (done) => {
     const client = getClientInstance();
     const observable = client.watchQuery({
       query: simpleQuery,
@@ -109,8 +109,9 @@ group((end) => {
 
 group((end) => {
   // This benchmark is supposed to check whether the time
-  // taken to deliver updates is linear in subscribers or not.
-  // (Should be linear).
+  // taken to deliver updates is linear in the number of subscribers or not.
+  // (Should be linear). When plotting the results from this benchmark,
+  // the `meanTimes` structure can be used.
   const meanTimes: { [subscriberCount: string]: number } = {};
 
   times(50, (countR) => {
@@ -148,18 +149,10 @@ group((end) => {
       meanTimes[iterCount.toString()] = event.target.stats.mean * 1000;
     });
   });
-
-  afterAll(() => {
-    log('Mean times: ');
-    Object.keys(meanTimes).forEach((key) => {
-      log('%s, %d', key, meanTimes[key]);
-    });
-  });
+  
   end();
 });
-*/
 
-/*
 times(25, (countR: number) => {
   const count = (countR + 1) * 10;
   const query = gql`
@@ -242,11 +235,10 @@ times(25, (countR: number) => {
       end();
     });
   });
-}); */
+});
 
 // Measure the amount of time it takes to read a bunch of
 // objects from the cache.
-
 times(50, (index) => {
   group((end) => {
     const query = gql`

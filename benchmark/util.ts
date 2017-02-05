@@ -15,7 +15,8 @@ import {
 //
 // `group` is meant to provide a way to execute code that sets up the scope variables for your
 // benchmark. It is only run once before the benchmark, not on every call of the code to
-// be benchmarked.
+// be benchmarked. The `benchmark` function is similar to the `it` function within mocha;
+// it allows you to define a particular block of code to be benchmarked. 
 
 
 // The maximum number of iterations that a benchmark can cycle for

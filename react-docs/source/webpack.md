@@ -47,3 +47,28 @@ export default graphql(currentUserQuery)(Profile)
 
 [Jest](https://facebook.github.io/jest/) can't use the Webpack loaders. To make the same transformation work in Jest, use [jest-transform-graphql](https://github.com/remind101/jest-transform-graphql).
 
+### Fragments
+
+You can use and include fragments in .graphql files and have webpack include those dependencies for you, similar to how you would use fragments and queries with the gql tag in plain JS.
+
+
+```graphql
+#import "./UserInfoFragment.graphql"
+
+query CurrentUserForLayout {
+  currentUser {
+    ...UserInfo
+  }
+}
+```
+
+See how we import the UserInfo fragment from another .graphql file (same way you'd import modules in JS).
+
+And here's an example of defining the fragment in another .graphql file.
+
+```graphql
+fragment UserInfo on User {
+  login
+  avatar_url
+}
+```

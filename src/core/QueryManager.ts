@@ -502,7 +502,7 @@ export class QueryManager {
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
-    if (!forceFetch) {
+    if (fetchType !== FetchType.refetch && !forceFetch) {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,

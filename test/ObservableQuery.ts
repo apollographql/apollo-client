@@ -817,7 +817,7 @@ describe('ObservableQuery', () => {
             }
 
             return previous;
-          }
+          },
         });
 
         // Check that the variables fed into the reducer are correct.

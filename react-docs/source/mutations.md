@@ -200,5 +200,5 @@ In most cases, the data available from a mutation result should be the server de
 Most of the time it is not necessary to tell Apollo which parts of the cache to update. It can automatically figure out which objects have changed if you use [dataIdFromObject](cache-updates.html#dataIdFromObject). However, there are cases like inserting or deleting items from a list, which cannot be done that way. In those cases, you have a few options:
 
 1. use [`refetchQueries`](cache-updates.html#refetchQueries) to completely refetch parts of your cache after the mutation has completed. 
-2. use [`updateQueries`](cache-updates.html#updateQueries) to speficy how the mutation result affects results of previous queries in the cache.
+2. use [`updateQueries`](cache-updates.html#updateQueries) to specify how the mutation result affects results of previous queries in the cache.
 

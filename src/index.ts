@@ -24,6 +24,10 @@ import {
 } from './core/ObservableQuery';
 
 import {
+  QueryManager,
+} from './core/QueryManager';
+
+import {
   Subscription,
 } from './util/Observable';
 
@@ -100,6 +104,7 @@ export {
   WatchQueryOptions,
   MutationOptions,
   ObservableQuery,
+  QueryManager,
   MutationQueryReducersMap,
   Subscription,
   SubscriptionOptions,

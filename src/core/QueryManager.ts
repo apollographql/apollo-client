@@ -877,14 +877,16 @@ export class QueryManager {
 
   private getExtraReducers(): ApolloReducer[] {
     return  Object.keys(this.observableQueries).map( obsQueryId => {
-      const queryOptions = this.observableQueries[obsQueryId].observableQuery.options;
+      const query = this.observableQueries[obsQueryId].observableQuery;
+      const queryOptions = query.options;
+
       if (queryOptions.reducer) {
         return createStoreReducer(
           queryOptions.reducer,
           queryOptions.query,
-          queryOptions.variables || {},
+          query.variables || {},
           this.reducerConfig,
-          );
+        );
       }
       return null as never;
     }).filter( reducer => reducer !== null );

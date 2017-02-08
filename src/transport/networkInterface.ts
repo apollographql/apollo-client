@@ -136,7 +136,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
   }: ResponseAndOptions): Promise<ResponseAndOptions> {
     return new Promise((resolve, reject) => {
       // Declare responseObject so that afterware can mutate it.
-      const responseObject = { response, options }
+      const responseObject = { response, options };
       const queue = (funcs: any[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {

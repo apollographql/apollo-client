@@ -67,6 +67,73 @@ describe('updateQuery on a simple query', () => {
   });
 });
 
+describe('updateQuery on a query with required and optional variables', () => {
+  const query = gql`
+    query thing($requiredVar: String!, $optionalVar: String) {
+      entry(requiredVar: $requiredVar, optionalVar: $optionalVar) {
+        value
+        __typename
+      }
+      __typename
+    }
+  `;
+  // the test will pass if optionalVar is uncommented
+  const variables = {
+    requiredVar: 'x',
+    // optionalVar: 'y',
+  };
+  const result = {
+    data: {
+      __typename: 'Query',
+      entry: {
+        __typename: 'Entry',
+        value: 1,
+      },
+    },
+  };
+
+  it('triggers new result from updateQuery', () => {
+    let latestResult: any = null;
+    const networkInterface = mockNetworkInterface({
+      request: {
+        query,
+        variables,
+      },
+      result,
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+    });
+
+    const obsHandle = client.watchQuery({
+      query,
+      variables,
+    });
+    const sub = obsHandle.subscribe({
+      next(queryResult) {
+        // do nothing
+        latestResult = queryResult;
+      },
+    });
+
+    return new Promise((resolve) => setTimeout(resolve))
+        .then(() => obsHandle)
+        .then((watchedQuery: ObservableQuery<any>) => {
+          assert.equal(latestResult.data.entry.value, 1);
+          watchedQuery.updateQuery((prevResult: any) => {
+            const res = cloneDeep(prevResult);
+            res.entry.value = 2;
+            return res;
+          });
+
+          assert.equal(latestResult.data.entry.value, 2);
+        })
+        .then(() => sub.unsubscribe());
+  });
+});
+
 describe('fetchMore on an observable query', () => {
   const query = gql`
     query Comment($repoName: String!, $start: Int!, $limit: Int!) {

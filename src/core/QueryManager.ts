@@ -15,6 +15,7 @@ import {
   ResultComparator,
   QueryListener,
   ApolloQueryResult,
+  PureQueryOptions,
   FetchType,
   SubscriptionOptions,
 } from './types';
@@ -114,7 +115,7 @@ import { WatchQueryOptions } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 
 export class QueryManager {
-  public pollingTimers: {[queryId: string]: NodeJS.Timer | any}; //oddity in Typescript
+  public pollingTimers: {[queryId: string]: any};
   public scheduler: QueryScheduler;
   public store: ApolloStore;
 
@@ -230,7 +231,7 @@ export class QueryManager {
     variables?: Object,
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
-    refetchQueries?: string[],
+    refetchQueries?: string[] | PureQueryOptions[],
   }): Promise<ApolloQueryResult<T>> {
     const mutationId = this.generateQueryId();
 
@@ -275,6 +276,7 @@ export class QueryManager {
             reject(new ApolloError({
               graphQLErrors: result.errors,
             }));
+            return;
           }
 
           this.store.dispatch({
@@ -295,7 +297,19 @@ export class QueryManager {
             return;
           }
 
-          refetchQueries.forEach((name) => { this.refetchQueryByName(name); });
+          if (typeof refetchQueries[0] === 'string') {
+            (refetchQueries as string[]).forEach((name) => { this.refetchQueryByName(name); });
+          } else {
+            (refetchQueries as PureQueryOptions[]).forEach( pureQuery => {
+              this.query({
+                query: pureQuery.query,
+                variables: pureQuery.variables,
+                forceFetch: true,
+              });
+            });
+          }
+
+
           delete this.queryDocuments[mutationId];
           resolve(this.transformResult(<ApolloQueryResult<T>>result));
         })
@@ -863,14 +877,16 @@ export class QueryManager {
 
   private getExtraReducers(): ApolloReducer[] {
     return  Object.keys(this.observableQueries).map( obsQueryId => {
-      const queryOptions = this.observableQueries[obsQueryId].observableQuery.options;
+      const query = this.observableQueries[obsQueryId].observableQuery;
+      const queryOptions = query.options;
+
       if (queryOptions.reducer) {
         return createStoreReducer(
           queryOptions.reducer,
           queryOptions.query,
-          queryOptions.variables || {},
+          query.variables || {},
           this.reducerConfig,
-          );
+        );
       }
       return null as never;
     }).filter( reducer => reducer !== null );

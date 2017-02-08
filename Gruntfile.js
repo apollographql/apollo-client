@@ -11,7 +11,8 @@ module.exports = function (grunt) {
         src: [
           'src/**/*.ts',
           'test/**/*.ts',
-          '!test/fixtures/**/*.ts'
+          '!test/fixtures/**/*.ts',
+          'benchmark/**/*.ts',
         ]
       }
     }

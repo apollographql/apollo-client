@@ -4,7 +4,7 @@ If we are building a client-side GraphQL client and cache, we should have some g
 
 ## Principles
 
-The Apollo Client should be...
+The Apollo Client should be:
 
 1. Functional - this library should bring benefits to an application's developers and end users to achieve performance, usability, and simplicity. It should have more features than [Lokka](https://github.com/kadirahq/lokka) but less than [Relay](https://github.com/facebook/relay).
 1. Transparent - a developer should be able to keep everything the Apollo Client is doing in their mind at once. They don't necessarily need to understand every part of the implementation, but nothing it's doing should be a surprise. This principle should take precedence over fine-grained performance optimizations.

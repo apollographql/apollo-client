@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/src/index.js",
@@ -11,9 +11,11 @@
     "deploy": "./scripts/deploy.sh",
     "pretest": "npm run compile:test",
     "test": "npm run testonly --",
+    "benchmark": "npm run compile:benchmark && node --stack-size=20000 lib/benchmark/index.js",
     "posttest": "npm run lint",
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=27",
     "compile": "tsc",
+    "compile:benchmark": "tsc -p tsconfig.test.json",
     "compile:test": "tsc -p tsconfig.test.json",
     "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/apollo.umd.js -o=./dist/index.js && npm run minify:browser",
     "minify:browser": "uglifyjs --compress --mangle --screw-ie8 -o=./dist/index.min.js -- ./dist/index.js",
@@ -52,6 +54,7 @@
     "whatwg-fetch": "^2.0.0"
   },
   "devDependencies": {
+    "@types/benchmark": "^1.0.30",
     "@types/chai": "^3.4.32",
     "@types/chai-as-promised": "0.0.28",
     "@types/lodash": "4.14.42",
@@ -60,6 +63,7 @@
     "@types/promises-a-plus": "0.0.26",
     "@types/sinon": "^1.16.29",
     "browserify": "^14.0.0",
+    "benchmark": "^2.1.3",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "colors": "^1.1.2",

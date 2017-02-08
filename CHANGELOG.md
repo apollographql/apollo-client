@@ -3,6 +3,10 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
+
+### 0.8.3
+- Fix bug that caused query reducers to always be called with initial variables. [PR #1270](https://github.com/apollostack/apollo-client/pull/1270).
 - Added benchmarks and benchmarking utilities built on top of [benchmark.js](https://benchmarkjs.com). [PR #1159](https://github.com/apollostack/apollo-client/pull/1159).
 
 ### 0.8.2

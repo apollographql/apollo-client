@@ -56,6 +56,7 @@ export type ReadQueryOptions = {
   variables?: Object,
   returnPartialData?: boolean,
   previousResult?: any,
+  rootId?: string,
   config?: ApolloReducerConfig,
 };
 
@@ -247,6 +248,7 @@ export function diffQueryAgainstStore({
   variables,
   returnPartialData = true,
   previousResult,
+  rootId = 'ROOT_QUERY',
   config,
 }: ReadQueryOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
@@ -264,7 +266,7 @@ export function diffQueryAgainstStore({
 
   const rootIdValue = {
     type: 'id',
-    id: 'ROOT_QUERY',
+    id: rootId,
     previousResult,
   };
 

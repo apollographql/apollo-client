@@ -11,6 +11,7 @@ import {
   SelectionSetNode,
   /* tslint:enable */
 
+  DocumentNode,
 } from 'graphql';
 
 import {
@@ -57,6 +58,14 @@ import {
 import {
   storeKeyNameFromFieldNameAndArgs,
 } from './data/storeUtils';
+
+import {
+  readQueryFromStore,
+} from './data/readFromStore';
+
+import {
+  getQueryDefinition,
+} from './queries/getFromAST';
 
 import {
   version,
@@ -334,6 +343,47 @@ export default class ApolloClient {
     delete realOptions.query;
 
     return this.queryManager.startGraphQLSubscription(realOptions);
+  }
+
+  /**
+   * Tries to read some data from the store without making a network request.
+   *
+   * By default we start reading from the root query, but if an `id` is
+   * provided then we will start reading from that location.
+   */
+  public read <QueryType>({
+    selection,
+    variables,
+    id,
+    returnPartialData,
+  }: {
+    selection: DocumentNode,
+    variables?: Object,
+    id?: string,
+    returnPartialData?: boolean,
+  }): QueryType {
+    this.initStore();
+
+    // Throw the right validation error by trying to find a query in the document.
+    // We also run some extra validation below on the operation.
+    const operation = getQueryDefinition(selection);
+
+    // Make sure that the query is in the format `{ ... }` vs. `query Name { ... }`.
+    // We don’t want our users to think they are running an actual query.
+    // Especially if they provide an `id`.
+    if (operation.operation !== 'query' || operation.name || (operation.variableDefinitions || []).length !== 0) {
+      throw new Error('Can only use a nameless query with no variable definitions to read from the store.');
+    }
+
+    const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
+
+    return readQueryFromStore<QueryType>({
+      store: reduxRootSelector(this.store.getState()).data,
+      query: selection,
+      variables,
+      rootId: id,
+      returnPartialData,
+    });
   }
 
   /**

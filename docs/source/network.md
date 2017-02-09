@@ -223,9 +223,9 @@ This is the interface that an object should implement so that it can be used by 
 
 Represents a request passed to the network interface. Has the following properties:
 
-- `query: string` The query to send to the server.
+- `query: Object` AST of the query to send to the server. You can get stringify this value by using `print` function from `graphql-tag/printer` package.
 - `variables: Object` The variables to send with the query.
-- `debugName: string` An optional parameter that will be included in error messages about this query.
+- `operationName: string` An optional parameter that will be included in error messages about this query.
 
 <h3 id="GraphQLResult"><i>interface</i> GraphQLResult</h3>
 
@@ -268,8 +268,8 @@ apolloClient.query({ query: secondQuery });
 // You don't have to do anything special - Apollo will send the two queries as one request.
 ```
 
-<h3 id="BatchingExplained">How transport-level query batching works</h3>
-Transport-level query batching is a transport-level mechanism that works only with servers that support it (for example Apollo's [graphql-server](https://github.com/apollostack/graphql-server)). Requests to servers that don't support transport-level batching will fail. If transport-level batching is turned on, multiple requests are batched together in an array:
+<h3 id="BatchingExplained">How query batching works</h3>
+Query batching is a transport-level mechanism that works only with servers that support it (for example, Apollo's [graphql-server](https://github.com/apollostack/graphql-server)). Requests to servers that don't support transport batching will fail. If transport batching is turned on, multiple requests are batched together in an array:
 
 ```
 [{

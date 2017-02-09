@@ -4,4 +4,7 @@ order: 160
 description: Specifics about using Apollo in your Ember application.
 ---
 
-An [Ember](http://emberjs.com/) integration is maintained by Jeff Levy. See the Github [repository](https://github.com/jlevycpa/ember-apollo) for more details.
+There are two [Ember](http://emberjs.com/) integrations available:
+
+* [ember-apollo-client](https://github.com/bgentry/ember-apollo-client) is maintained by Blake Gentry.
+* [ember-apollo](https://github.com/jlevycpa/ember-apollo) is maintained by Jeff Levy.

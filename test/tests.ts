@@ -53,3 +53,4 @@ import './isEqual';
 import './cloneDeep';
 import './assign';
 import './environment';
+import './ApolloClient';

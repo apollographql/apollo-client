@@ -750,6 +750,17 @@ describe('reading from the store', () => {
       `,
     });
 
+    assert.deepEqual(queryResult1, {
+      stringField: 'This is a string too!',
+      numberField: 6,
+      nullField: null,
+      deepNestedObj: {
+        stringField: 'This is a deep string',
+        numberField: 7,
+        nullField: null,
+      },
+    });
+
     const queryResult2 = readQueryFromStore({
       store,
       rootId: 'abcdef',
@@ -760,17 +771,6 @@ describe('reading from the store', () => {
           nullField
         }
       `,
-    });
-
-    assert.deepEqual(queryResult1, {
-      stringField: 'This is a string too!',
-      numberField: 6,
-      nullField: null,
-      deepNestedObj: {
-        stringField: 'This is a deep string',
-        numberField: 7,
-        nullField: null,
-      },
     });
 
     assert.deepEqual(queryResult2, {

@@ -5,6 +5,9 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Add imperitive `read` method to client for arbitrary data access from the store. [PR #1280](https://github.com/apollographql/apollo-client/pull/1280)
 
+### 0.8.4
+- Fix afterware to support retrying requests [PR #1274](https://github.com/apollostack/apollo-client/pull/1274).
+
 ### 0.8.3
 - Fix bug that caused query reducers to always be called with initial variables. [PR #1270](https://github.com/apollostack/apollo-client/pull/1270).
 - Added benchmarks and benchmarking utilities built on top of [benchmark.js](https://benchmarkjs.com). [PR #1159](https://github.com/apollostack/apollo-client/pull/1159).

@@ -3,7 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Add imperitive `read` method to client for arbitrary data access from the store. [PR #1280](https://github.com/apollographql/apollo-client/pull/1280)
+- Add imperative `read` method to client for arbitrary data access from the store. [PR #1280](https://github.com/apollographql/apollo-client/pull/1280)
 
 ### 0.8.4
 - Fix afterware to support retrying requests [PR #1274](https://github.com/apollostack/apollo-client/pull/1274).

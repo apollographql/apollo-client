@@ -12,6 +12,7 @@ import {
   /* tslint:enable */
 
   DocumentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import {
@@ -62,10 +63,6 @@ import {
 import {
   readQueryFromStore,
 } from './data/readFromStore';
-
-import {
-  getQueryDefinition,
-} from './queries/getFromAST';
 
 import {
   version,
@@ -347,41 +344,92 @@ export default class ApolloClient {
 
   /**
    * Tries to read some data from the store without making a network request.
-   *
-   * By default we start reading from the root query, but if an `id` is
-   * provided then we will start reading from that location.
+   * This method will start at the root query. To start at a a specific id in
+   * the store then use `readFragment`.
    */
-  public read <QueryType>({
-    selection,
+  public readQuery <QueryType>({
+    query,
     variables,
-    id,
     returnPartialData,
   }: {
-    selection: DocumentNode,
+    query: DocumentNode,
     variables?: Object,
-    id?: string,
     returnPartialData?: boolean,
   }): QueryType {
     this.initStore();
-
-    // Throw the right validation error by trying to find a query in the document.
-    // We also run some extra validation below on the operation.
-    const operation = getQueryDefinition(selection);
-
-    // Make sure that the query is in the format `{ ... }` vs. `query Name { ... }`.
-    // We don’t want our users to think they are running an actual query.
-    // Especially if they provide an `id`.
-    if (operation.operation !== 'query' || operation.name || (operation.variableDefinitions || []).length !== 0) {
-      throw new Error('Can only use a nameless query with no variable definitions to read from the store.');
-    }
 
     const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
 
     return readQueryFromStore<QueryType>({
       store: reduxRootSelector(this.store.getState()).data,
-      query: selection,
+      query,
       variables,
+      returnPartialData,
+    });
+  }
+
+  /**
+   * Tries to read some data from the store without making a network request.
+   * This method will read a GraphQL fragment from any arbitrary id in the
+   * store. Unlike `readQuery` which will only read from the root query.
+   */
+  public readFragment <FragmentType>({
+    id,
+    fragment,
+    fragmentName,
+    returnPartialData,
+  }: {
+    id: string,
+    fragment: DocumentNode,
+    fragmentName?: string,
+    returnPartialData?: boolean,
+  }): FragmentType {
+    this.initStore();
+
+    const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
+    let actualFragmentName = fragmentName;
+
+    // If the user did not give us a fragment name then let us try to get a
+    // name from a single fragment in the definition.
+    if (typeof actualFragmentName === 'undefined') {
+      const fragments = fragment.definitions.filter(({ kind }) => kind === 'FragmentDefinition') as Array<FragmentDefinitionNode>;
+      if (fragments.length !== 1) {
+        throw new Error(`Found ${fragments.length} fragments when exactly 1 was expected because \`fragmentName\` was not provided.`);
+      }
+      actualFragmentName = fragments[0].name.value;
+    }
+
+    // Generate a query document with an operation that simply spreads the
+    // fragment inside of it. This is necessary to be compatible with our
+    // current store implementation, but we want users to write fragments to
+    // support GraphQL tooling everywhere.
+    const query: DocumentNode = {
+      ...fragment,
+      definitions: [
+        {
+          kind: 'OperationDefinition',
+          operation: 'query',
+          selectionSet: {
+            kind: 'SelectionSet',
+            selections: [
+              {
+                kind: 'FragmentSpread',
+                name: {
+                  kind: 'Name',
+                  value: actualFragmentName,
+                },
+              },
+            ],
+          },
+        },
+        ...fragment.definitions,
+      ],
+    };
+
+    return readQueryFromStore<FragmentType>({
       rootId: id,
+      store: reduxRootSelector(this.store.getState()).data,
+      query,
       returnPartialData,
     });
   }

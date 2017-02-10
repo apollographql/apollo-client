@@ -18,6 +18,18 @@ import {
 
 import { assign } from '../util/assign';
 
+export type BatchRequest = Array<Request>;
+
+export interface BatchRequestAndOptions {
+  request: BatchRequest;
+  options: RequestInit;
+}
+
+export interface BatchResponseAndOptions {
+  response: IResponse;
+  options: RequestInit;
+}
+
 // An implementation of the network interface that operates over HTTP and batches
 // together requests over the HTTP transport. Note that this implementation will only work correctly
 // for GraphQL server implementations that support batching. If such a server is not available, you
@@ -48,21 +60,21 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
   }
 
   // made public for testing only
-  public batchQuery(requests: Request[]): Promise<ExecutionResult[]> {
+  public batchQuery(requests: BatchRequest): Promise<ExecutionResult[]> {
     const options = { ...this._opts };
 
-    // Apply the middlewares to each of the requests
-    const middlewarePromises: Promise<RequestAndOptions>[] = [];
-    requests.forEach((request) => {
-      middlewarePromises.push(this.applyMiddlewares({
+    // Satisfy applyMiddlewares types.
+    const request: Request = requests;
+
+    const middlewarePromise: Promise<BatchRequestAndOptions> =
+      this.applyMiddlewares({
         request,
         options,
-      }));
-    });
+      });
 
     return new Promise((resolve, reject) => {
-      Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
-        return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
+      middlewarePromise.then((batchRequestAndOptions: BatchRequestAndOptions) => {
+        return this.batchedFetchFromRemoteEndpoint(batchRequestAndOptions)
           .then(result => {
             const httpResponse = result as IResponse;
 
@@ -86,19 +98,12 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
               options: RequestInit;
             };
 
-            const afterwaresPromises: ResponseAndOptions[] = responses.map((response: IResponse, index: number) => {
-              return this.applyAfterwares({
-                response,
-                options: requestsAndOptions[index].options,
-              });
-            });
-
-            Promise.all(afterwaresPromises).then((responsesAndOptions: ResponseAndOptions[]) => {
-              const results: Array<IResponse> = [];
-              responsesAndOptions.forEach((result) => {
-                results.push(result.response);
-              });
-              resolve(results);
+            this.applyAfterwares({
+              response: responses,
+              options: batchRequestAndOptions.options,
+            }).then((responseAndOptions: ResponseAndOptions) => {
+              // In a batch response, the response is actually an Array of responses, refine it.
+              resolve(responseAndOptions.response);
             }).catch((error: Error) => {
               reject(error);
             });
@@ -110,19 +115,18 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
   }
 
   private batchedFetchFromRemoteEndpoint(
-    requestsAndOptions: RequestAndOptions[],
+    batchRequestAndOptions: BatchRequestAndOptions,
   ): Promise<IResponse> {
     const options: RequestInit = {};
 
     // Combine all of the options given by the middleware into one object.
-    requestsAndOptions.forEach((requestAndOptions) => {
-      assign(options, requestAndOptions.options);
-    });
+    assign(options, batchRequestAndOptions.options);
 
     // Serialize the requests to strings of JSON
-    const printedRequests = requestsAndOptions.map(({ request }) => {
-      return printRequest(request);
-    });
+    const printedRequests = batchRequestAndOptions
+      .request.map((request) => {
+        return printRequest(request);
+      });
 
     return fetch(this._uri, {
       ...this._opts,

@@ -161,15 +161,15 @@ describe('HTTPBatchedNetworkInterface', () => {
           middlewareCallCounter();
 
           next();
-        }
-      }]
+        },
+      }],
     })
     .then(() => {
       assert.equal(middlewareCallCounter.callCount, 1);
     });
   });
 
-  it('should correctly execute afterware once per batch request', () =>{
+  it('should correctly execute afterware once per batch request', () => {
     const afterwareCallCounter = sinon.stub();
 
     return assertRoundtrip({
@@ -188,8 +188,8 @@ describe('HTTPBatchedNetworkInterface', () => {
           afterwareCallCounter();
 
           next();
-        }
-      }]
+        },
+      }],
     })
     .then(() => {
       assert.equal(afterwareCallCounter.callCount, 1);

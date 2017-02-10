@@ -2,6 +2,8 @@ import { assert } from 'chai';
 
 import { merge } from 'lodash';
 
+import * as sinon from 'sinon';
+
 import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInterface';
 
 import {
@@ -137,6 +139,60 @@ describe('HTTPBatchedNetworkInterface', () => {
           result: personResult,
         },
       ],
+    });
+  });
+
+  it('should correctly execute middleware once per batch request', () => {
+    const middlewareCallCounter = sinon.stub();
+
+    return assertRoundtrip({
+      requestResultPairs: [
+        {
+          request: { query: authorQuery },
+          result: authorResult,
+        },
+        {
+          request: { query: personQuery },
+          result: personResult,
+        },
+      ],
+      middlewares: [{
+        applyMiddleware(req, next) {
+          middlewareCallCounter();
+
+          next();
+        }
+      }]
+    })
+    .then(() => {
+      assert.equal(middlewareCallCounter.callCount, 1);
+    });
+  });
+
+  it('should correctly execute afterware once per batch request', () =>{
+    const afterwareCallCounter = sinon.stub();
+
+    return assertRoundtrip({
+      requestResultPairs: [
+        {
+          request: { query: authorQuery },
+          result: authorResult,
+        },
+        {
+          request: { query: personQuery },
+          result: personResult,
+        },
+      ],
+      afterwares: [{
+        applyAfterware({ response }, next) {
+          afterwareCallCounter();
+
+          next();
+        }
+      }]
+    })
+    .then(() => {
+      assert.equal(afterwareCallCounter.callCount, 1);
     });
   });
 

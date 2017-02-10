@@ -694,7 +694,7 @@ describe('reading from the store', () => {
   });
 
   it('will read from an arbitrary root id', () => {
-    const result: any = {
+    const data: any = {
       id: 'abcd',
       stringField: 'This is a string!',
       numberField: 5,
@@ -715,7 +715,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj', 'deepNestedObj')), {
+      'ROOT_QUERY': assign({}, assign({}, omit(data, 'nestedObj', 'deepNestedObj')), {
         __typename: 'Query',
         nestedObj: {
           type: 'id',
@@ -723,14 +723,14 @@ describe('reading from the store', () => {
           generated: false,
         },
       }) as StoreObject,
-      abcde: assign({}, result.nestedObj, {
+      abcde: assign({}, data.nestedObj, {
         deepNestedObj: {
           type: 'id',
           id: 'abcdef',
           generated: false,
         },
       }) as StoreObject,
-      abcdef: result.deepNestedObj as StoreObject,
+      abcdef: data.deepNestedObj as StoreObject,
     } as NormalizedCache;
 
     const queryResult1 = readQueryFromStore({

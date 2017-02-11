@@ -25,11 +25,6 @@ export interface BatchRequestAndOptions {
   options: RequestInit;
 }
 
-export interface BatchResponseAndOptions {
-  response: IResponse;
-  options: RequestInit;
-}
-
 // An implementation of the network interface that operates over HTTP and batches
 // together requests over the HTTP transport. Note that this implementation will only work correctly
 // for GraphQL server implementations that support batching. If such a server is not available, you

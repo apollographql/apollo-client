@@ -63,7 +63,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
   public batchQuery(requests: BatchRequest): Promise<ExecutionResult[]> {
     const options = { ...this._opts };
 
-    // Satisfy applyMiddlewares types.
+    // Refine the BatchRequest as a request to satisfy applyMiddlewares signature.
     const request: Request = requests;
 
     const middlewarePromise: Promise<BatchRequestAndOptions> =
@@ -122,11 +122,13 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
     // Combine all of the options given by the middleware into one object.
     assign(options, batchRequestAndOptions.options);
 
+    // Refine this back to a BatchRequest (Request[])
+    const requests: BatchRequest = batchRequestAndOptions.request;
+
     // Serialize the requests to strings of JSON
-    const printedRequests = batchRequestAndOptions
-      .request.map((request) => {
-        return printRequest(request);
-      });
+    const printedRequests = requests.map((request) => {
+      return printRequest(request);
+    });
 
     return fetch(this._uri, {
       ...this._opts,

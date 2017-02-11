@@ -415,8 +415,9 @@ export default class ApolloClient {
   };
 
   public resetStore() {
-    if (this.queryManager)
+    if (this.queryManager) {
       this.queryManager.resetStore();
+    }
   };
 
   public getInitialState(): { data: Object } {

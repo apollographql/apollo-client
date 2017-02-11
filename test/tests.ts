@@ -24,32 +24,32 @@ console.warn = console.error = (...messages: string[]) => {
 };
 
 process.on('unhandledRejection', () => {});
-//
-// import './writeToStore';
-// import './readFromStore';
-// import './roundtrip';
-// import './diffAgainstStore';
-// import './networkInterface';
-// import './deduplicator';
-// import './QueryManager';
-// import './client';
-// import './store';
-// import './queryTransform';
-// import './getFromAST';
-// import './directives';
-// import './batching';
-// import './scheduler';
-// import './mutationResults';
-// import './optimistic';
-// import './fetchMore';
-// import './errors';
-// import './mockNetworkInterface';
-// import './graphqlSubscriptions';
+
+import './writeToStore';
+import './readFromStore';
+import './roundtrip';
+import './diffAgainstStore';
+import './networkInterface';
+import './deduplicator';
+import './QueryManager';
+import './client';
+import './store';
+import './queryTransform';
+import './getFromAST';
+import './directives';
+import './batching';
+import './scheduler';
+import './mutationResults';
+import './optimistic';
+import './fetchMore';
+import './errors';
+import './mockNetworkInterface';
+import './graphqlSubscriptions';
 import './batchedNetworkInterface';
-// import './ObservableQuery';
-// import './subscribeToMore';
-// import './customResolvers';
-// import './isEqual';
-// import './cloneDeep';
-// import './assign';
-// import './environment'
+import './ObservableQuery';
+import './subscribeToMore';
+import './customResolvers';
+import './isEqual';
+import './cloneDeep';
+import './assign';
+import './environment'

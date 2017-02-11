@@ -4,6 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### 0.8.5
+- Fix crash if resetStore() or getInitialState() called prior to query/mutation.  [PR #1286](https://github.com/apollostack/apollo-client/pull/1286).
+
 ### 0.8.4
 - Fix afterware to support retrying requests [PR #1274](https://github.com/apollostack/apollo-client/pull/1274).
 

@@ -32,7 +32,7 @@ const store = createStore(
   compose(
       applyMiddleware(client.middleware()),
       // If you are using the devToolsExtension, you can add it here also
-      window.devToolsExtension ? window.devToolsExtension() : f => f,
+      window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
   )
 );
 

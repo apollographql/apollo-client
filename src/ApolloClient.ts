@@ -377,11 +377,13 @@ export default class ApolloClient {
     id,
     fragment,
     fragmentName,
+    variables,
     returnPartialData,
   }: {
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
+    variables?: Object,
     returnPartialData?: boolean,
   }): FragmentType {
     this.initStore();
@@ -430,6 +432,7 @@ export default class ApolloClient {
       rootId: id,
       store: reduxRootSelector(this.store.getState()).data,
       query,
+      variables,
       returnPartialData,
     });
   }

@@ -260,5 +260,35 @@ describe('ApolloClient', () => {
         client.readFragment({ id: 'x', fragment: gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }` });
       }, 'Found 3 fragments when exactly 1 was expected because `fragmentName` was not provided.');
     });
+
+    it('will read some data from state with variables', () => {
+      const client = new ApolloClient({
+        initialState: {
+          apollo: {
+            data: {
+              'foo': {
+                __typename: 'Type1',
+                'field({"literal":true,"value":42})': 1,
+                'field({"literal":false,"value":42})': 2,
+              },
+            },
+          },
+        },
+      });
+
+      assert.deepEqual(client.readFragment({
+        id: 'foo',
+        fragment: gql`
+          fragment foo on Foo {
+            a: field(literal: true, value: 42)
+            b: field(literal: $literal, value: $value)
+          }
+        `,
+        variables: {
+          literal: false,
+          value: 42,
+        },
+      }), { a: 1, b: 2 });
+    });
   });
 });

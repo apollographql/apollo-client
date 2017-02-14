@@ -12,18 +12,29 @@ import {
   printRequest,
 } from './networkInterface';
 
+import { BatchMiddlewareInterface } from './middleware';
+
+import {
+  isBatchAfterwares,
+  AfterwareInterface,
+  BatchAfterwareInterface,
+} from './afterware';
+
 import {
   QueryBatcher,
 } from './batching';
 
 import { assign } from '../util/assign';
 
-export type BatchRequest = Array<Request>;
-
 export interface BatchRequestAndOptions {
-  request: BatchRequest;
+  requests: Request[];
   options: RequestInit;
 }
+
+export interface BatchResponseAndOptions {
+  responses: IResponse[];
+  options: RequestInit;
+};
 
 // An implementation of the network interface that operates over HTTP and batches
 // together requests over the HTTP transport. Note that this implementation will only work correctly
@@ -31,6 +42,8 @@ export interface BatchRequestAndOptions {
 // should see `addQueryMerging` instead.
 export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
 
+  public _batchMiddlewares: BatchMiddlewareInterface[];
+  public _batchAfterwares: BatchAfterwareInterface[];
   private pollInterval: number;
   private batcher: QueryBatcher;
 
@@ -55,15 +68,12 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
   }
 
   // made public for testing only
-  public batchQuery(requests: BatchRequest): Promise<ExecutionResult[]> {
+  public batchQuery(requests: Request[]): Promise<ExecutionResult[]> {
     const options = { ...this._opts };
-
-    // Refine the BatchRequest as a request to satisfy applyMiddlewares signature.
-    const request: Request = requests;
 
     const middlewarePromise: Promise<BatchRequestAndOptions> =
       this.applyMiddlewares({
-        request,
+        requests,
         options,
       });
 
@@ -94,11 +104,11 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
             };
 
             this.applyAfterwares({
-              response: responses,
+              responses,
               options: batchRequestAndOptions.options,
-            }).then((responseAndOptions: ResponseAndOptions) => {
+            }).then((responseAndOptions: BatchResponseAndOptions) => {
               // In a batch response, the response is actually an Array of responses, refine it.
-              resolve(responseAndOptions.response);
+              resolve(responseAndOptions.responses);
             }).catch((error: Error) => {
               reject(error);
             });
@@ -117,11 +127,8 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
     // Combine all of the options given by the middleware into one object.
     assign(options, batchRequestAndOptions.options);
 
-    // Refine this back to a BatchRequest (Request[])
-    const requests: BatchRequest = batchRequestAndOptions.request;
-
     // Serialize the requests to strings of JSON
-    const printedRequests = requests.map((request) => {
+    const printedRequests = batchRequestAndOptions.requests.map((request) => {
       return printRequest(request);
     });
 

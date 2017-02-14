@@ -16,8 +16,8 @@ import {
   printRequest,
 } from '../src/transport/networkInterface';
 
-import { MiddlewareInterface } from '../src/transport/middleware';
-import { AfterwareInterface } from '../src/transport/afterware';
+import { BatchMiddlewareInterface } from '../src/transport/middleware';
+import { BatchAfterwareInterface } from '../src/transport/afterware';
 
 import { ExecutionResult } from 'graphql';
 
@@ -40,8 +40,8 @@ describe('HTTPBatchedNetworkInterface', () => {
       result: ExecutionResult,
     }[];
     fetchFunc?: any;
-    middlewares?: MiddlewareInterface[];
-    afterwares?: AfterwareInterface[];
+    middlewares?: BatchMiddlewareInterface[];
+    afterwares?: BatchAfterwareInterface[];
     opts?: RequestInit,
   }) => {
     const url = 'http://fake.com/graphql';
@@ -157,7 +157,7 @@ describe('HTTPBatchedNetworkInterface', () => {
         },
       ],
       middlewares: [{
-        applyMiddleware(req, next) {
+        applyBatchMiddleware(req, next) {
           middlewareCallCounter();
 
           next();
@@ -184,7 +184,7 @@ describe('HTTPBatchedNetworkInterface', () => {
         },
       ],
       afterwares: [{
-        applyAfterware({ response }, next) {
+        applyBatchAfterware({ responses }, next) {
           afterwareCallCounter();
 
           next();
@@ -236,8 +236,8 @@ describe('HTTPBatchedNetworkInterface', () => {
 
     it('should return errors thrown by middleware', (done) => {
       const err = new Error('Error of some kind thrown by middleware.');
-      const errorMiddleware: MiddlewareInterface = {
-        applyMiddleware() {
+      const errorMiddleware: BatchMiddlewareInterface = {
+        applyBatchMiddleware() {
           throw err;
         },
       };
@@ -257,8 +257,8 @@ describe('HTTPBatchedNetworkInterface', () => {
 
     it('should return errors thrown by afterware', (done) => {
       const err = new Error('Error of some kind thrown by afterware.');
-      const errorAfterware: AfterwareInterface = {
-        applyAfterware() {
+      const errorAfterware: BatchAfterwareInterface = {
+        applyBatchAfterware() {
           throw err;
         },
       };
@@ -278,8 +278,8 @@ describe('HTTPBatchedNetworkInterface', () => {
   });
 
   it('middleware should be able to modify requests/options', () => {
-    const changeMiddleware: MiddlewareInterface = {
-      applyMiddleware({ options }, next) {
+    const changeMiddleware: BatchMiddlewareInterface = {
+      applyBatchMiddleware({ options }, next) {
         (options as any).headers['Content-Length'] = '18';
         next();
       },

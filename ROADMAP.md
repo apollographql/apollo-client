@@ -21,23 +21,19 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 
 ## Features planned for 1.0
 
-### Error handling:
-- [ ] Useful error messages and stack traces for every error thrown by Apollo Client
-
 ### Client-side data store integration
 - [ ] Convenience methods for interacting directly with the store (ie. read from and write to any place in the store)
 
 ### UI integration ergonomics
 - [x] 'Immutable' results
 - [x] Deep-freezing of results in development mode
-- [ ] `fetchMore` network status (maybe)
+- [ ] `fetchMore` network status
 
 ### Performance
 - [x] Query deduplication
 
 ### GraphQL features
-- [ ] support for custom scalars (maybe)
-- [ ] detect cache collisions and provide warning / fix
+- [ ] detect cache collisions and return stale data instead
 
 
 ## Refactors planned for 1.0

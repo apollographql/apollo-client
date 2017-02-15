@@ -42,8 +42,6 @@ export interface BatchResponseAndOptions {
 // should see `addQueryMerging` instead.
 export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
 
-  public _batchMiddlewares: BatchMiddlewareInterface[];
-  public _batchAfterwares: BatchAfterwareInterface[];
   private pollInterval: number;
   private batcher: QueryBatcher;
 

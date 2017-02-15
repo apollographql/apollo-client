@@ -12,13 +12,13 @@ import {
   printRequest,
 } from './networkInterface';
 
-import { BatchMiddlewareInterface } from './middleware';
-
 import {
-  isBatchAfterwares,
-  AfterwareInterface,
   BatchAfterwareInterface,
 } from './afterware';
+
+import {
+  BatchMiddlewareInterface,
+} from './middleware';
 
 import {
   QueryBatcher,
@@ -72,7 +72,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
     const options = { ...this._opts };
 
     const middlewarePromise: Promise<BatchRequestAndOptions> =
-      this.applyMiddlewares({
+      this.applyBatchMiddlewares({
         requests,
         options,
       });
@@ -103,7 +103,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
               options: RequestInit;
             };
 
-            this.applyAfterwares({
+            this.applyBatchAfterwares({
               responses,
               options: batchRequestAndOptions.options,
             }).then((responseAndOptions: BatchResponseAndOptions) => {
@@ -116,6 +116,51 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       }).catch((error) => {
         reject(error);
       });
+    });
+  }
+
+  public applyBatchMiddlewares({requests, options}: BatchRequestAndOptions): Promise<BatchRequestAndOptions> {
+    return new Promise((resolve, reject) => {
+      const queue = (funcs: BatchMiddlewareInterface[], scope: any) => {
+        const next = () => {
+          if (funcs.length > 0) {
+            const f = funcs.shift();
+            if (f) {
+              f.applyBatchMiddleware.apply(scope, [{ requests, options }, next]);
+            }
+          } else {
+            resolve({
+              requests,
+              options,
+            });
+          }
+        };
+        next();
+      };
+
+      queue([...this._batchMiddlewares], this);
+    });
+  }
+
+  public applyBatchAfterwares({responses, options}: BatchResponseAndOptions): Promise<BatchResponseAndOptions> {
+    return new Promise((resolve, reject) => {
+      const responseObject = {responses, options};
+      const queue = (funcs: BatchAfterwareInterface[], scope: any) => {
+        const next = () => {
+          if (funcs.length > 0) {
+            const f = funcs.shift();
+            if (f) {
+              f.applyBatchAfterware.apply(scope, [responseObject, next]);
+            }
+          } else {
+            resolve(responseObject);
+          }
+        };
+        next();
+      };
+
+      // iterate through afterwares using next callback
+      queue([...this._batchAfterwares], this);
     });
   }
 

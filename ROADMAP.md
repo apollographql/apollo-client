@@ -21,40 +21,28 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 
 ## Features planned for 1.0
 
-### Error handling:
-- [ ] More nuanced ways of dealing with GraphQL errors, eg. the ability to deliver partial results with errors
-- [ ] Useful error messages and stack traces for every error thrown by Apollo Client
-- [ ] Sanity checks (and useful error messages) for all input arguments to Apollo Client
-
 ### Client-side data store integration
-- [ ] Computed fields + custom resolvers to seamlessly integrate server and client-only data
-- [ ] Result reducers that can work with any action dispatched to the store
-- [ ] Convenience methods for interacting directly with the store (eg. get object by id)
+- [ ] Convenience methods for interacting directly with the store (ie. read from and write to any place in the store)
 
 ### UI integration ergonomics
-- [ ] Immutable results
-- [ ] Deep-freezing of results in development mode
+- [x] 'Immutable' results
+- [x] Deep-freezing of results in development mode
 - [ ] `fetchMore` network status
 
 ### Performance
 - [x] Query deduplication
 
 ### GraphQL features
-* support for custom scalars
-* fragment matching for unions + interface types
-* detect cache collisions and provide warning / fix
+- [ ] detect cache collisions and return stale data instead
 
 
 ## Refactors planned for 1.0
 - [x] Simplify how polling queries work
 - [x] Remove fragment handling from Apollo Client (and put it in graphql-tag)
-- [ ] Streamline network interface and API for middlewares and afterwares
-- [ ] Simplify core and push view-layer integration logic to the edge
+- [ ] Streamline network interface and API for middlewares and afterwares (in progress)
 - [x] Remove stopped queries from the store without breaking storeReset (#902)
-- [ ] Remove custom build step to move files around before publishing to npm
 - [x] Find low-hanging fruit to reduce bundle size (#684)
 
 
 ## Version 0.6
 - [x] Completely remove fragment logic (it's in graphql-tag now)
-- [ ] Refactoring of error handling

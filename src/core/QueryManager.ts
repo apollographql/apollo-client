@@ -482,7 +482,16 @@ export class QueryManager {
     return resPromise;
   }
 
-  public fetchQuery<T>(queryId: string, options: WatchQueryOptions, fetchType?: FetchType): Promise<ApolloQueryResult<T>> {
+  public fetchQuery<T>(
+    queryId: string,
+    options: WatchQueryOptions,
+    fetchType?: FetchType,
+
+    // This allows us to track if this is a query spawned by a `fetchMore`
+    // call for another query. We need this data to compute the `fetchMore`
+    // network status for the query this is fetching for.
+    fetchMoreForQueryId?: string,
+  ): Promise<ApolloQueryResult<T>> {
     const {
       variables = {},
       forceFetch = false,
@@ -536,6 +545,7 @@ export class QueryManager {
       storePreviousVariables: shouldFetch,
       isPoll: fetchType === FetchType.poll,
       isRefetch: fetchType === FetchType.refetch,
+      fetchMoreForQueryId,
       metadata,
     });
 
@@ -559,6 +569,7 @@ export class QueryManager {
         queryId,
         document: queryDoc,
         options,
+        fetchMoreForQueryId,
       });
     }
 
@@ -900,11 +911,13 @@ export class QueryManager {
     queryId,
     document,
     options,
+    fetchMoreForQueryId,
   }: {
     requestId: number,
     queryId: string,
     document: DocumentNode,
     options: WatchQueryOptions,
+    fetchMoreForQueryId?: string,
   }): Promise<ExecutionResult> {
     const {
       variables,
@@ -933,6 +946,7 @@ export class QueryManager {
             result,
             queryId,
             requestId,
+            fetchMoreForQueryId,
             extraReducers,
           });
 
@@ -985,6 +999,7 @@ export class QueryManager {
               error,
               queryId,
               requestId,
+              fetchMoreForQueryId,
             });
 
             this.removeFetchQueryPromise(requestId);

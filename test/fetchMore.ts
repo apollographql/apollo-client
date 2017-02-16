@@ -4,6 +4,7 @@ const { assert } = chai;
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import ApolloClient from '../src';
 import { ObservableQuery } from '../src/core/ObservableQuery';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 import { assign, cloneDeep } from 'lodash';
 
@@ -286,6 +287,120 @@ describe('fetchMore on an observable query', () => {
         assert.equal(comments[i - 1].text, `new comment ${i}`);
       }
       unsetup();
+    });
+  });
+
+  it('will set the network status to `fetchMore`', done => {
+    networkInterface = mockNetworkInterface(
+      { request: { query, variables }, result, delay: 5 },
+      { request: { query, variables: variablesMore }, result: resultMore, delay: 5 },
+    );
+
+    client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+    });
+
+    const observable = client.watchQuery({
+      query,
+      variables,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let count = 0;
+    observable.subscribe({
+      next: ({ data, networkStatus }) => {
+        switch (count++) {
+          case 0:
+            assert.equal(networkStatus, NetworkStatus.ready);
+            assert.equal((data as any).entry.comments.length, 10);
+            observable.fetchMore({
+              variables: { start: 10 },
+              updateQuery: (prev, options) => {
+                const state = cloneDeep(prev) as any;
+                state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];
+                return state;
+              },
+            });
+            break;
+          case 1:
+            assert.equal(networkStatus, NetworkStatus.fetchMore);
+            assert.equal((data as any).entry.comments.length, 10);
+            break;
+          case 2:
+            assert.equal(networkStatus, NetworkStatus.ready);
+            assert.equal((data as any).entry.comments.length, 10);
+            break;
+          case 3:
+            assert.equal(networkStatus, NetworkStatus.ready);
+            assert.equal((data as any).entry.comments.length, 20);
+            done();
+            break;
+          default:
+            done(new Error('`next` called to many times'));
+        }
+      },
+      error: error => done(error),
+      complete: () => done(new Error('Should not have completed')),
+    });
+  });
+
+  it('will get an error from `fetchMore` if thrown', done => {
+    networkInterface = mockNetworkInterface(
+      { request: { query, variables }, result, delay: 5 },
+      { request: { query, variables: variablesMore }, error: new Error('Uh, oh!'), delay: 5 },
+    );
+
+    client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+    });
+
+    const observable = client.watchQuery({
+      query,
+      variables,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let count = 0;
+    observable.subscribe({
+      next: ({ data, networkStatus }) => {
+        switch (count++) {
+          case 0:
+            assert.equal(networkStatus, NetworkStatus.ready);
+            assert.equal((data as any).entry.comments.length, 10);
+            observable.fetchMore({
+              variables: { start: 10 },
+              updateQuery: (prev, options) => {
+                const state = cloneDeep(prev) as any;
+                state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];
+                return state;
+              },
+            });
+            break;
+          case 1:
+            assert.equal(networkStatus, NetworkStatus.fetchMore);
+            assert.equal((data as any).entry.comments.length, 10);
+            break;
+          default:
+            done(new Error('`next` called when it wasn’t supposed to be.'));
+        }
+      },
+      error: error => {
+        try {
+          switch (count++) {
+            case 2:
+              assert.equal(error.message, 'Network error: Uh, oh!');
+              done();
+              break;
+            default:
+              done(new Error('`error` called when it wasn’t supposed to be.'));
+          }
+        } catch (error) {
+          done(error);
+        }
+      },
+      complete: () => done(new Error('`complete` called when it wasn’t supposed to be.')),
     });
   });
 });

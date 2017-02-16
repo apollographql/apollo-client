@@ -1,7 +1,4 @@
-# Apollo client
-
-[![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client)
-[![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
+# [Apollo client](http://dev.apollodata.com/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
 Apollo Client can be used in any JavaScript frontend where you want to use data from a GraphQL server. It's:
 

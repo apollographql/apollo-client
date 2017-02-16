@@ -5,6 +5,9 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Add imperative `read` method to client for arbitrary data access from the store. [PR #1280](https://github.com/apollographql/apollo-client/pull/1280)
 
+### 0.8.6
+- Fix bug that caused `refetch` to not refetch in some cases [PR #1264](https://github.com/apollographql/apollo-client/pull/1264)
+
 ### 0.8.5
 - Fix crash if resetStore() or getInitialState() called prior to query/mutation.  [PR #1286](https://github.com/apollostack/apollo-client/pull/1286).
 

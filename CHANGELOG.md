@@ -3,7 +3,13 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- ...
 
+### 0.8.5
+- Fix crash if resetStore() or getInitialState() called prior to query/mutation.  [PR #1286](https://github.com/apollostack/apollo-client/pull/1286).
+
+### 0.8.4
+- Fix afterware to support retrying requests [PR #1274](https://github.com/apollostack/apollo-client/pull/1274).
 
 ### 0.8.3
 - Fix bug that caused query reducers to always be called with initial variables. [PR #1270](https://github.com/apollostack/apollo-client/pull/1270).

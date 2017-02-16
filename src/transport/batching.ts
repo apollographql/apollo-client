@@ -59,13 +59,9 @@ export class QueryBatcher {
       return undefined;
     }
 
-    const requests: Request[] = this.queuedRequests.map((queuedRequest) => {
-      return {
-        query: queuedRequest.request.query,
-        variables: queuedRequest.request.variables,
-        operationName: queuedRequest.request.operationName,
-      };
-    });
+    const requests: Request[] = this.queuedRequests.map(
+      (queuedRequest) => queuedRequest.request,
+    );
 
     const promises: (Promise<ExecutionResult> | undefined)[] = [];
     const resolvers: any[] = [];

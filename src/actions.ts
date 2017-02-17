@@ -138,7 +138,7 @@ export function isStoreResetAction(action: ApolloAction): action is StoreResetAc
   return action.type === 'APOLLO_STORE_RESET';
 }
 
-export type SubscriptionResultAction = {
+export interface SubscriptionResultAction {
   type: 'APOLLO_SUBSCRIPTION_RESULT';
   result: ExecutionResult;
   subscriptionId: number;
@@ -146,10 +146,22 @@ export type SubscriptionResultAction = {
   document: DocumentNode;
   operationName: string;
   extraReducers?: ApolloReducer[];
-};
+}
 
 export function isSubscriptionResultAction(action: ApolloAction): action is SubscriptionResultAction {
   return action.type === 'APOLLO_SUBSCRIPTION_RESULT';
+}
+
+export interface WriteAction {
+  type: 'APOLLO_WRITE';
+  rootId: string;
+  result: any;
+  document: DocumentNode;
+  variables: Object;
+}
+
+export function isWriteAction(action: ApolloAction): action is WriteAction {
+  return action.type === 'APOLLO_WRITE';
 }
 
 export type ApolloAction =
@@ -163,4 +175,5 @@ export type ApolloAction =
   MutationErrorAction |
   UpdateQueryResultAction |
   StoreResetAction |
-  SubscriptionResultAction;
+  SubscriptionResultAction |
+  WriteAction;

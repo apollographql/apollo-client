@@ -147,3 +147,66 @@ export function createFragmentMap(fragments: FragmentDefinitionNode[] = []): Fra
 
   return symTable;
 }
+
+/**
+ * Returns a query document which adds a single query operation that only
+ * spreads the target fragment inside of it.
+ *
+ * So for example a document of:
+ *
+ * ```graphql
+ * fragment foo on Foo { a b c }
+ * ```
+ *
+ * Turns into:
+ *
+ * ```graphql
+ * { ...foo }
+ *
+ * fragment foo on Foo { a b c }
+ * ```
+ *
+ * The target fragment will either be the only fragment in the document, or a
+ * fragment specified by the provided `fragmentName`. If there is more then one
+ * fragment, but a `fragmentName` was not defined then an error will be thrown.
+ */
+export function getFragmentQuery(document: DocumentNode, fragmentName?: string): DocumentNode {
+  let actualFragmentName = fragmentName;
+
+  // If the user did not give us a fragment name then let us try to get a
+  // name from a single fragment in the definition.
+  if (typeof actualFragmentName === 'undefined') {
+    const fragments = document.definitions.filter(({ kind }) => kind === 'FragmentDefinition') as Array<FragmentDefinitionNode>;
+    if (fragments.length !== 1) {
+      throw new Error(`Found ${fragments.length} fragments. \`fragmentName\` must be provided when there are more then 1 fragments.`);
+    }
+    actualFragmentName = fragments[0].name.value;
+  }
+
+  // Generate a query document with an operation that simply spreads the
+  // fragment inside of it.
+  const query: DocumentNode = {
+    ...document,
+    definitions: [
+      {
+        kind: 'OperationDefinition',
+        operation: 'query',
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'FragmentSpread',
+              name: {
+                kind: 'Name',
+                value: actualFragmentName,
+              },
+            },
+          ],
+        },
+      },
+      ...document.definitions,
+    ],
+  };
+
+  return query;
+}

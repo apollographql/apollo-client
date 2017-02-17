@@ -65,6 +65,10 @@ import {
 } from './data/readFromStore';
 
 import {
+  getFragmentQuery,
+} from './queries/getFromAST';
+
+import {
   version,
 } from './version';
 
@@ -344,96 +348,97 @@ export default class ApolloClient {
 
   /**
    * Tries to read some data from the store without making a network request.
-   * This method will start at the root query. To start at a a specific id in
-   * the store then use `readFragment`.
+   * This method will start at the root query. To start at a specific id
+   * returned by `dataIdFromObject` use `readFragment`.
    */
-  public readQuery<QueryType>({
-    query,
-    variables,
-    returnPartialData,
-  }: {
+  public readQuery<QueryType>(
     query: DocumentNode,
     variables?: Object,
-    returnPartialData?: boolean,
-  }): QueryType {
+  ): QueryType {
     this.initStore();
-
     const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
-
     return readQueryFromStore<QueryType>({
+      rootId: 'ROOT_QUERY',
       store: reduxRootSelector(this.store.getState()).data,
       query,
       variables,
-      returnPartialData,
+      returnPartialData: false,
     });
   }
 
   /**
    * Tries to read some data from the store without making a network request.
-   * This method will read a GraphQL fragment from any arbitrary id in the
-   * store. Unlike `readQuery` which will only read from the root query.
+   * This method will read a GraphQL fragment from any arbitrary id that is
+   * currently cached. Unlike `readQuery` which will only read from the root
+   * query.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are writing. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
    */
-  public readFragment<FragmentType>({
-    id,
-    fragment,
-    fragmentName,
-    variables,
-    returnPartialData,
-  }: {
+  public readFragment<FragmentType>(
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-    returnPartialData?: boolean,
-  }): FragmentType {
+  ): FragmentType {
     this.initStore();
-
     const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
-    let actualFragmentName = fragmentName;
-
-    // If the user did not give us a fragment name then let us try to get a
-    // name from a single fragment in the definition.
-    if (typeof actualFragmentName === 'undefined') {
-      const fragments = fragment.definitions.filter(({ kind }) => kind === 'FragmentDefinition') as Array<FragmentDefinitionNode>;
-      if (fragments.length !== 1) {
-        throw new Error(`Found ${fragments.length} fragments when exactly 1 was expected because \`fragmentName\` was not provided.`);
-      }
-      actualFragmentName = fragments[0].name.value;
-    }
-
-    // Generate a query document with an operation that simply spreads the
-    // fragment inside of it. This is necessary to be compatible with our
-    // current store implementation, but we want users to write fragments to
-    // support GraphQL tooling everywhere.
-    const query: DocumentNode = {
-      ...fragment,
-      definitions: [
-        {
-          kind: 'OperationDefinition',
-          operation: 'query',
-          selectionSet: {
-            kind: 'SelectionSet',
-            selections: [
-              {
-                kind: 'FragmentSpread',
-                name: {
-                  kind: 'Name',
-                  value: actualFragmentName,
-                },
-              },
-            ],
-          },
-        },
-        ...fragment.definitions,
-      ],
-    };
-
     return readQueryFromStore<FragmentType>({
       rootId: id,
       store: reduxRootSelector(this.store.getState()).data,
-      query,
+      query: getFragmentQuery(fragment, fragmentName),
       variables,
-      returnPartialData,
+      returnPartialData: false,
+    });
+  }
+
+  /**
+   * Writes some data to the store without that data being the result of a
+   * network request. This method will start at the root query. To start at a a
+   * specific id returned by `dataIdFromObject` then use `writeFragment`.
+   */
+  public writeQuery(
+    data: any,
+    query: DocumentNode,
+    variables?: Object,
+  ) {
+    this.initStore();
+    this.store.dispatch({
+      type: 'APOLLO_WRITE',
+      rootId: 'ROOT_QUERY',
+      result: data,
+      document: query,
+      variables: variables || {},
+    });
+  }
+
+  /**
+   * Writes some data to the store without that data being the result of a
+   * network request. This method will write to a GraphQL fragment from any
+   * arbitrary id that is currently cached. Unlike `writeQuery` which will only
+   * write from the root query.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are writing. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
+   */
+  public writeFragment(
+    data: any,
+    id: string,
+    fragment: DocumentNode,
+    fragmentName?: string,
+    variables?: Object,
+  ) {
+    this.initStore();
+    this.store.dispatch({
+      type: 'APOLLO_WRITE',
+      rootId: id,
+      result: data,
+      document: getFragmentQuery(fragment, fragmentName),
+      variables: variables || {},
     });
   }
 

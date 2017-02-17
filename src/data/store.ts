@@ -5,6 +5,7 @@ import {
   isUpdateQueryResultAction,
   isStoreResetAction,
   isSubscriptionResultAction,
+  isWriteAction,
 } from '../actions';
 
 import {
@@ -198,6 +199,20 @@ export function data(
     // If we are resetting the store, we no longer need any of the data that is currently in
     // the store so we can just throw it all away.
     return {};
+  } else if (isWriteAction(action)) {
+    const clonedState = { ...previousState } as NormalizedCache;
+
+    // Simply write our result to the store for this action.
+    const newState = writeResultToStore({
+      result: action.result,
+      dataId: action.rootId,
+      document: action.document,
+      variables: action.variables,
+      store: clonedState,
+      dataIdFromObject: config.dataIdFromObject,
+    });
+
+    return newState;
   }
 
   return previousState;

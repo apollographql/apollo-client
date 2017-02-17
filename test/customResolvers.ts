@@ -49,7 +49,6 @@ describe('custom resolvers', () => {
       assert.deepEqual(itemResult, {
         loading: false,
         networkStatus: NetworkStatus.ready,
-        stale: false,
         data: {
           person: {
             __typename: 'Person',

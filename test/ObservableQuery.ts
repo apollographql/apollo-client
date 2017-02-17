@@ -605,7 +605,6 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: false,
             networkStatus: 7,
-            stale: false,
           });
           const observable = queryManager.watchQuery({
             query,
@@ -668,21 +667,19 @@ describe('ObservableQuery', () => {
           // we can use this to trigger the query
           subscribeAndCount(done, observable, (handleCount, subResult) => {
             const { data, loading, networkStatus } = observable.currentResult();
-            assert.deepEqual(subResult, { data, loading, networkStatus, stale: false });
+            assert.deepEqual(subResult, { data, loading, networkStatus });
 
             if (handleCount === 1) {
               assert.deepEqual(subResult, {
                 data: dataOne,
                 loading: true,
                 networkStatus: 1,
-                stale: false,
               });
             } else if (handleCount === 2) {
               assert.deepEqual(subResult, {
                 data: superDataOne,
                 loading: false,
                 networkStatus: 7,
-                stale: false,
               });
               done();
             }
@@ -715,14 +712,13 @@ describe('ObservableQuery', () => {
 
           subscribeAndCount(done, observable, (handleCount, subResult) => {
             const { data, loading, networkStatus } = observable.currentResult();
-            assert.deepEqual(subResult, { data, loading, networkStatus, stale: false });
+            assert.deepEqual(subResult, { data, loading, networkStatus });
 
             if (handleCount === 1) {
               assert.deepEqual(subResult, {
                 data: dataTwo,
                 loading: false,
                 networkStatus: 7,
-                stale: false,
               });
               done();
             }
@@ -769,14 +765,13 @@ describe('ObservableQuery', () => {
 
         subscribeAndCount(done, observable, (count, result) => {
           const { data, loading, networkStatus } = observable.currentResult();
-          assert.deepEqual(result, { data, loading, networkStatus, stale: false });
+          assert.deepEqual(result, { data, loading, networkStatus });
 
           if (count === 1) {
             assert.deepEqual(result, {
               data: dataOne,
               loading: false,
               networkStatus: 7,
-              stale: false,
             });
             queryManager.mutate({ mutation, optimisticResponse, updateQueries });
           } else if (count === 2) {

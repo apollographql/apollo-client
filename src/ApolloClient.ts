@@ -347,7 +347,7 @@ export default class ApolloClient {
    * This method will start at the root query. To start at a a specific id in
    * the store then use `readFragment`.
    */
-  public readQuery <QueryType>({
+  public readQuery<QueryType>({
     query,
     variables,
     returnPartialData,
@@ -373,7 +373,7 @@ export default class ApolloClient {
    * This method will read a GraphQL fragment from any arbitrary id in the
    * store. Unlike `readQuery` which will only read from the root query.
    */
-  public readFragment <FragmentType>({
+  public readFragment<FragmentType>({
     id,
     fragment,
     fragmentName,

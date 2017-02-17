@@ -6,6 +6,9 @@ Expect active development and potentially significant breaking changes in the `0
 - Prefer stale data over partial data in cases where a user would previously get an error. [PR #1306](https://github.com/apollographql/apollo-client/pull/1306)
 - ...
 
+### 0.8.7
+- Ensure batching network interface passes through extra parameters in order to support persisted queries [PR #1302](https://github.com/apollographql/apollo-client/pull/1302/files)
+
 ### 0.8.6
 - Fix bug that caused `refetch` to not refetch in some cases [PR #1264](https://github.com/apollographql/apollo-client/pull/1264)
 

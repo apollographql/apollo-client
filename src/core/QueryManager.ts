@@ -384,18 +384,35 @@ export class QueryManager {
           }
         } else {
           try {
-            const resultFromStore: ApolloQueryResult<T> = {
-              data: readQueryFromStore<T>({
-                store: this.getDataWithOptimisticResults(),
-                query: this.queryDocuments[queryId],
-                variables: queryStoreValue.previousVariables || queryStoreValue.variables,
-                returnPartialData: options.returnPartialData || noFetch,
-                config: this.reducerConfig,
-                previousResult: lastResult && lastResult.data,
-              }),
-              loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
-              networkStatus: queryStoreValue.networkStatus,
-            };
+            const { result: data, isMissing } = diffQueryAgainstStore({
+              store: this.getDataWithOptimisticResults(),
+              query: this.queryDocuments[queryId],
+              variables: queryStoreValue.previousVariables || queryStoreValue.variables,
+              returnPartialData: true,
+              config: this.reducerConfig,
+              previousResult: lastResult && lastResult.data,
+            });
+
+            let resultFromStore: ApolloQueryResult<T>;
+
+            // If there is some data missing and the user has told us that they
+            // do not tolerate partial data then we want to return the previous
+            // result and mark it as stale.
+            if (isMissing && !(options.returnPartialData || noFetch)) {
+              resultFromStore = {
+                data: lastResult.data,
+                loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
+                networkStatus: queryStoreValue.networkStatus,
+                stale: true,
+              };
+            } else {
+              resultFromStore = {
+                data,
+                loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
+                networkStatus: queryStoreValue.networkStatus,
+                stale: false,
+              };
+            }
 
             if (observer.next) {
               const isDifferentResult =
@@ -403,6 +420,7 @@ export class QueryManager {
                   lastResult &&
                   resultFromStore &&
                   lastResult.networkStatus === resultFromStore.networkStatus &&
+                  lastResult.stale === resultFromStore.stale &&
 
                   // We can do a strict equality check here because we include a `previousResult`
                   // with `readQueryFromStore`. So if the results are the same they will be
@@ -972,7 +990,7 @@ export class QueryManager {
 
           // return a chainable promise
           this.removeFetchQueryPromise(requestId);
-          resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready });
+          resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready, stale: false });
           return null;
         }).catch((error: Error) => {
           // This is for the benefit of `refetch` promises, which currently don't get their errors

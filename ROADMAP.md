@@ -22,7 +22,7 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 ## Features planned for 1.0
 
 ### Client-side data store integration
-- [ ] Convenience methods for interacting directly with the store (ie. read from and write to any place in the store)
+- [x] Convenience methods for interacting directly with the store (ie. read from and write to any place in the store)
 
 ### UI integration ergonomics
 - [x] 'Immutable' results

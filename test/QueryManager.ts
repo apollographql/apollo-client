@@ -562,7 +562,7 @@ describe('QueryManager', () => {
       .map(result => (assign({ fromRx: true }, result)))
       .subscribe({
       next: wrap(done, (newResult) => {
-        const expectedResult = assign({ fromRx: true, loading: false, networkStatus: 7 }, expResult);
+        const expectedResult = assign({ fromRx: true, loading: false, networkStatus: 7, stale: false }, expResult);
         assert.deepEqual(newResult, expectedResult);
         done();
       }),
@@ -2794,7 +2794,7 @@ describe('QueryManager', () => {
     );
   });
 
-  it('should error when we orphan a real-id node in the store with a real-id node', () => {
+  it('should return stale data when we orphan a real-id node in the store with a real-id node', () => {
     const query1 = gql`
       query {
         author {
@@ -2859,26 +2859,156 @@ describe('QueryManager', () => {
 
     // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
-      observableToPromise({
+      observableToPromise(
+        {
           observable: observable1,
-          errorCallbacks: [
-            // This isn't the best error message, but at least people will know they are missing
-            // data in the store.
-            (error: ApolloError) => assert.include(error.networkError!.message, 'find field'),
-          ],
           wait: 60,
         },
-        (result) => assert.deepEqual(result.data, data1),
+        (result) => {
+          assert.deepEqual(result, {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: true,
+          });
+        },
       ),
-      observableToPromise({
+      observableToPromise(
+        {
           observable: observable2,
           wait: 60,
         },
-        (result) => assert.deepEqual(result.data, data2),
+        (result) => {
+          assert.deepEqual(result, {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
       ),
     ]);
   });
 
+  it('should return partial data when configured when we orphan a real-id node in the store with a real-id node', () => {
+    const query1 = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+          age
+          id
+          __typename
+        }
+      }
+    `;
+    const query2 = gql`
+      query {
+        author {
+          name {
+            firstName
+          }
+          id
+          __typename
+        }
+      }`;
+    const data1 = {
+      author: {
+        name: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        age: 18,
+        id: '187',
+        __typename: 'Author',
+      },
+    };
+    const data2 = {
+      author: {
+        name: {
+          firstName: 'John',
+        },
+        id: '197',
+        __typename: 'Author',
+      },
+    };
+    const reducerConfig = { dataIdFromObject };
+    const store = createApolloStore({ config: reducerConfig, reportCrashes: false });
+    const queryManager = createQueryManager({
+      networkInterface: mockNetworkInterface(
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+        },
+      ),
+      store,
+    });
+
+    const observable1 = queryManager.watchQuery<any>({ query: query1, returnPartialData: true });
+    const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise(
+        {
+          observable: observable1,
+          wait: 60,
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: {},
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            stale: false,
+          });
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+      ),
+      observableToPromise(
+        {
+          observable: observable2,
+          wait: 60,
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+      ),
+    ]);
+  });
 
   it('should error if we replace a real id node in the store with a generated id node', () => {
     const queryWithId = gql`
@@ -3511,6 +3641,7 @@ describe('QueryManager', () => {
               data: assign({}, result.data, {transformCount}),
               loading: false,
               networkStatus: NetworkStatus.ready,
+              stale: false,
             };
           },
         });

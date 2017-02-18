@@ -110,6 +110,7 @@ export default class ApolloClient {
   public queryDeduplication: boolean;
 
   private devToolsHookCb: Function;
+  private optimisticWriteId: number;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -242,6 +243,8 @@ export default class ApolloClient {
     }
 
     this.version = version;
+
+    this.optimisticWriteId = 1;
   }
 
   /**
@@ -440,6 +443,85 @@ export default class ApolloClient {
       document: getFragmentQuery(fragment, fragmentName),
       variables: variables || {},
     });
+  }
+
+  /**
+   * Writes some data to the store without that data being the result of a
+   * network request. This method will start at the root query. To start at a a
+   * specific id returned by `dataIdFromObject` then use
+   * `writeFragmentOptimistically`.
+   *
+   * Unlike `writeQuery`, the data written with this method will be stored in
+   * the optimistic portion of the cache and so will not be persisted. This
+   * optimistic write may also be rolled back with the `rollback` function that
+   * was returned.
+   */
+  public writeQueryOptimistically(
+    data: any,
+    query: DocumentNode,
+    variables?: Object,
+  ): {
+    rollback: () => void,
+  } {
+    const optimisticWriteId = (this.optimisticWriteId++).toString();
+    this.initStore();
+    this.store.dispatch({
+      type: 'APOLLO_WRITE_OPTIMISTIC',
+      optimisticWriteId,
+      rootId: 'ROOT_QUERY',
+      result: data,
+      document: query,
+      variables: variables || {},
+    });
+    return {
+      rollback: () => this.store.dispatch({
+        type: 'APOLLO_WRITE_OPTIMISTIC_ROLLBACK',
+        optimisticWriteId,
+      }),
+    };
+  }
+
+  /**
+   * Writes some data to the store without that data being the result of a
+   * network request. This method will write to a GraphQL fragment from any
+   * arbitrary id that is currently cached. Unlike `writeQueryOptimistically`
+   * which will only write from the root query.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are writing. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
+   *
+   * Unlike `writeFragment`, the data written with this method will be stored in
+   * the optimistic portion of the cache and so will not be persisted. This
+   * optimistic write may also be rolled back with the `rollback` function that
+   * was returned.
+   */
+  public writeFragmentOptimistically(
+    data: any,
+    id: string,
+    fragment: DocumentNode,
+    fragmentName?: string,
+    variables?: Object,
+  ): {
+    rollback: () => void,
+  } {
+    const optimisticWriteId = (this.optimisticWriteId++).toString();
+    this.initStore();
+    this.store.dispatch({
+      type: 'APOLLO_WRITE_OPTIMISTIC',
+      optimisticWriteId,
+      rootId: id,
+      result: data,
+      document: getFragmentQuery(fragment, fragmentName),
+      variables: variables || {},
+    });
+    return {
+      rollback: () => this.store.dispatch({
+        type: 'APOLLO_WRITE_OPTIMISTIC_ROLLBACK',
+        optimisticWriteId,
+      }),
+    };
   }
 
   /**

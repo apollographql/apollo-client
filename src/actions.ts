@@ -164,6 +164,28 @@ export function isWriteAction(action: ApolloAction): action is WriteAction {
   return action.type === 'APOLLO_WRITE';
 }
 
+export interface WriteActionOptimistic {
+  type: 'APOLLO_WRITE_OPTIMISTIC';
+  optimisticWriteId: string;
+  rootId: string;
+  result: any;
+  document: DocumentNode;
+  variables: Object;
+}
+
+export function isWriteOptimisticAction(action: ApolloAction): action is WriteActionOptimistic {
+  return action.type === 'APOLLO_WRITE_OPTIMISTIC';
+}
+
+export interface WriteActionOptimisticRollback {
+  type: 'APOLLO_WRITE_OPTIMISTIC_ROLLBACK';
+  optimisticWriteId: string;
+}
+
+export function isWriteOptimisticRollbackAction(action: ApolloAction): action is WriteActionOptimisticRollback {
+  return action.type === 'APOLLO_WRITE_OPTIMISTIC_ROLLBACK';
+}
+
 export type ApolloAction =
   QueryResultAction |
   QueryErrorAction |
@@ -176,4 +198,6 @@ export type ApolloAction =
   UpdateQueryResultAction |
   StoreResetAction |
   SubscriptionResultAction |
-  WriteAction;
+  WriteAction |
+  WriteActionOptimistic |
+  WriteActionOptimisticRollback;

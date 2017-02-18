@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 import { Store } from '../src/store';
 import ApolloClient from '../src/ApolloClient';
 
-describe.only('ApolloClient', () => {
+describe('ApolloClient', () => {
   describe('readQuery', () => {
     it('will read some data from state', () => {
       const client = new ApolloClient({
@@ -572,6 +572,505 @@ describe.only('ApolloClient', () => {
           'field({"literal":false,"value":42})': 2,
         },
       });
+    });
+  });
+
+  describe('writeQueryOptimistically', () => {
+    function getOptimisticData (client: ApolloClient) {
+      return client.store.getState().apollo.optimistic.map((optimistic: any) => optimistic.data);
+    }
+
+    it('will write some data to the state that can be rolled back', () => {
+      const client = new ApolloClient();
+
+      const optimistic1 = client.writeQueryOptimistically({ a: 1 }, gql`{ a }`);
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            a: 1,
+          },
+        },
+      ]);
+
+      const optimistic2 = client.writeQueryOptimistically({ b: 2, c: 3 }, gql`{ b c }`);
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            a: 1,
+          },
+        },
+        {
+          'ROOT_QUERY': {
+            a: 1,
+            b: 2,
+            c: 3,
+          },
+        },
+      ]);
+
+      optimistic1.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            b: 2,
+            c: 3,
+          },
+        },
+      ]);
+
+      const optimistic3 = client.writeQueryOptimistically({ a: 4, b: 5, c: 6 }, gql`{ a b c }`);
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            b: 2,
+            c: 3,
+          },
+        },
+        {
+          'ROOT_QUERY': {
+            a: 4,
+            b: 5,
+            c: 6,
+          },
+        },
+      ]);
+
+      optimistic3.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            b: 2,
+            c: 3,
+          },
+        },
+      ]);
+
+      optimistic2.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), []);
+    });
+
+    it('will write some deeply nested data to state and roll it back', () => {
+      const client = new ApolloClient();
+
+      const optimistic1 = client.writeQueryOptimistically(
+        { a: 1, d: { e: 4 } },
+        gql`{ a d { e } }`,
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            a: 1,
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            e: 4,
+          },
+        },
+      ]);
+
+      const optimistic2 = client.writeQueryOptimistically(
+        { d: { h: { i: 7 } } },
+        gql`{ d { h { i } } }`,
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            a: 1,
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            e: 4,
+          },
+        },
+        {
+          'ROOT_QUERY': {
+            a: 1,
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            e: 4,
+            h: {
+              type: 'id',
+              id: '$ROOT_QUERY.d.h',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d.h': {
+            i: 7,
+          },
+        },
+      ]);
+
+      optimistic1.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            h: {
+              type: 'id',
+              id: '$ROOT_QUERY.d.h',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d.h': {
+            i: 7,
+          },
+        },
+      ]);
+
+      const optimistic3 = client.writeQueryOptimistically(
+        { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
+        gql`{ a b c d { e f g h { i j k } } }`,
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            h: {
+              type: 'id',
+              id: '$ROOT_QUERY.d.h',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d.h': {
+            i: 7,
+          },
+        },
+        {
+          'ROOT_QUERY': {
+            a: 1,
+            b: 2,
+            c: 3,
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: '$ROOT_QUERY.d.h',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d.h': {
+            i: 7,
+            j: 8,
+            k: 9,
+          },
+        },
+      ]);
+
+      optimistic3.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'ROOT_QUERY': {
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            h: {
+              type: 'id',
+              id: '$ROOT_QUERY.d.h',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d.h': {
+            i: 7,
+          },
+        },
+      ]);
+
+      optimistic2.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), []);
+    });
+  });
+
+  describe('writeFragmentOptimistically', () => {
+    function getOptimisticData (client: ApolloClient) {
+      return client.store.getState().apollo.optimistic.map((optimistic: any) => optimistic.data);
+    }
+
+    it('will write some deeply nested data into state at any id and roll it back', () => {
+      const client = new ApolloClient({
+        dataIdFromObject: (o: any) => o.id,
+      });
+
+      const optimistic1 = client.writeFragmentOptimistically(
+        { e: 4, h: { id: 'bar', i: 7 } },
+        'foo',
+        gql`fragment fragmentFoo on Foo { e h { i } }`,
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'foo': {
+            e: 4,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          'bar': {
+            i: 7,
+          },
+        },
+      ]);
+
+      const optimistic2 = client.writeFragmentOptimistically(
+        { f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
+        'foo',
+        gql`fragment fragmentFoo on Foo { f g h { j k } }`,
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'foo': {
+            e: 4,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          'bar': {
+            i: 7,
+          },
+        },
+        {
+          'foo': {
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          'bar': {
+            i: 7,
+            j: 8,
+            k: 9,
+          },
+        },
+      ]);
+
+      optimistic1.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'foo': {
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          'bar': {
+            j: 8,
+            k: 9,
+          },
+        },
+      ]);
+
+      const optimistic3 = client.writeFragmentOptimistically(
+        { i: 10 },
+        'bar',
+        gql`fragment fragmentBar on Bar { i }`,
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'foo': {
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          'bar': {
+            j: 8,
+            k: 9,
+          },
+        },
+        {
+          'bar': {
+            i: 10,
+            j: 8,
+            k: 9,
+          },
+        },
+      ]);
+
+      const optimistic4 = client.writeFragmentOptimistically(
+        { j: 11, k: 12 },
+        'bar',
+        gql`fragment fragmentBar on Bar { j k }`,
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'foo': {
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          'bar': {
+            j: 8,
+            k: 9,
+          },
+        },
+        {
+          'bar': {
+            j: 8,
+            k: 9,
+            i: 10,
+          },
+        },
+        {
+          'bar': {
+            i: 10,
+            j: 11,
+            k: 12,
+          },
+        },
+      ]);
+
+      optimistic3.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'foo': {
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          'bar': {
+            j: 8,
+            k: 9,
+          },
+        },
+        {
+          'bar': {
+            j: 11,
+            k: 12,
+          },
+        },
+      ]);
+
+      optimistic2.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), [
+        {
+          'bar': {
+            j: 11,
+            k: 12,
+          },
+        },
+      ]);
+
+      optimistic4.rollback();
+
+      assert.deepEqual(client.store.getState().apollo.data, {});
+      assert.deepEqual(getOptimisticData(client), []);
+    });
+
+    it('will throw an error when there is no fragment', () => {
+      const client = new ApolloClient();
+
+      assert.throws(() => {
+        client.writeFragmentOptimistically({}, 'x', gql`query { a b c }`);
+      }, 'Found 0 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      assert.throws(() => {
+        client.writeFragmentOptimistically({}, 'x', gql`schema { query: Query }`);
+      }, 'Found 0 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+    });
+
+    it('will throw an error when there is more than one fragment but no fragment name', () => {
+      const client = new ApolloClient();
+
+      assert.throws(() => {
+        client.writeFragmentOptimistically({}, 'x', gql`fragment a on A { a } fragment b on B { b }`);
+      }, 'Found 2 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      assert.throws(() => {
+        client.writeFragmentOptimistically({}, 'x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
+      }, 'Found 3 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
     });
   });
 });

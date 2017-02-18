@@ -1,8 +1,11 @@
 import {
   MutationResultAction,
+  WriteAction,
   isMutationInitAction,
   isMutationResultAction,
   isMutationErrorAction,
+  isWriteOptimisticAction,
+  isWriteOptimisticRollbackAction,
 } from '../actions';
 
 import {
@@ -28,11 +31,14 @@ import {
 
   import { assign } from '../util/assign';
 
-// a stack of patches of new or changed documents
-export type OptimisticStore = {
-  mutationId: string,
+export type OptimisticStoreItem = {
+  mutationId?: string,
+  optimisticWriteId?: string,
   data: NormalizedCache,
-}[];
+};
+
+// a stack of patches of new or changed documents
+export type OptimisticStore = OptimisticStoreItem[];
 
 const optimisticDefaultState: any[] = [];
 
@@ -62,11 +68,10 @@ export function optimistic(
       updateQueries: action.updateQueries,
     };
 
-    const fakeStore = {
+    const optimisticData = getDataWithOptimisticResults({
       ...store,
       optimistic: previousState,
-    };
-    const optimisticData = getDataWithOptimisticResults(fakeStore);
+    });
 
     const patch = getOptimisticDataPatch(
       optimisticData,
@@ -87,29 +92,50 @@ export function optimistic(
     return newState;
   } else if ((isMutationErrorAction(action) || isMutationResultAction(action))
                && previousState.some(change => change.mutationId === action.mutationId)) {
-    // Create a shallow copy of the data in the store.
-    const optimisticData = assign({}, store.data);
+    return rollbackOptimisticData(
+      change => change.mutationId === action.mutationId,
+      previousState,
+      store,
+      config,
+    );
+  } else if (isWriteOptimisticAction(action)) {
+    const fakeWriteAction: WriteAction = {
+      type: 'APOLLO_WRITE',
+      rootId: action.rootId,
+      result: action.result,
+      document: action.document,
+      variables: action.variables,
+    };
 
-    const newState = previousState
-      // Throw away optimistic changes of that particular mutation
-      .filter(change => change.mutationId !== action.mutationId)
-      // Re-run all of our optimistic data actions on top of one another.
-      .map(change => {
-        const patch = getOptimisticDataPatch(
-          optimisticData,
-          change.action,
-          store.queries,
-          store.mutations,
-          config,
-        );
-        assign(optimisticData, patch);
-        return {
-          ...change,
-          data: patch,
-        };
-      });
+    const optimisticData = getDataWithOptimisticResults({
+      ...store,
+      optimistic: previousState,
+    });
+
+    const patch = getOptimisticDataPatch(
+      optimisticData,
+      fakeWriteAction,
+      store.queries,
+      store.mutations,
+      config,
+    );
+
+    const optimisticState = {
+      action: fakeWriteAction,
+      data: patch,
+      optimisticWriteId: action.optimisticWriteId,
+    };
+
+    const newState = [...previousState, optimisticState];
 
     return newState;
+  } else if (isWriteOptimisticRollbackAction(action)) {
+    return rollbackOptimisticData(
+      change => change.optimisticWriteId === action.optimisticWriteId,
+      previousState,
+      store,
+      config,
+    );
   }
 
   return previousState;
@@ -117,7 +143,7 @@ export function optimistic(
 
 function getOptimisticDataPatch (
   previousData: NormalizedCache,
-  optimisticAction: MutationResultAction,
+  optimisticAction: MutationResultAction | WriteAction,
   queries: QueryStore,
   mutations: MutationStore,
   config: ApolloReducerConfig,
@@ -139,4 +165,43 @@ function getOptimisticDataPatch (
   });
 
   return patch;
+}
+
+/**
+ * Rolls back some optimistic data items depending on the provided filter
+ * function. In rolling back these items we also re-apply the other optimistic
+ * data patches to make sure our optimistic data is up to date.
+ *
+ * The filter function should return true for all items that we want to
+ * rollback.
+ */
+function rollbackOptimisticData (
+  filterFn: (item: OptimisticStoreItem) => boolean,
+  previousState = optimisticDefaultState,
+  store: any,
+  config: any,
+): OptimisticStore {
+  // Create a shallow copy of the data in the store.
+  const optimisticData = assign({}, store.data);
+
+  const newState = previousState
+    // Throw away optimistic changes of that particular mutation
+    .filter(item => !filterFn(item))
+    // Re-run all of our optimistic data actions on top of one another.
+    .map(change => {
+      const patch = getOptimisticDataPatch(
+        optimisticData,
+        change.action,
+        store.queries,
+        store.mutations,
+        config,
+      );
+      assign(optimisticData, patch);
+      return {
+        ...change,
+        data: patch,
+      };
+    });
+
+  return newState;
 }

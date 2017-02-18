@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Prefer stale data over partial data in cases where a user would previously get an error. [PR #1306](https://github.com/apollographql/apollo-client/pull/1306)
+- Add imperative read and write methods to provide the user the power to interact directly with the GraphQL data cache. [PR #1310](https://github.com/apollographql/apollo-client/pull/1310)
 - ...
 
 ### 0.8.6

@@ -5,7 +5,7 @@ import {
 import 'whatwg-fetch';
 
 import {
-  HTTPFetchNetworkInterface,
+  BaseNetworkInterface,
   HTTPNetworkInterface,
   RequestAndOptions,
   Request,
@@ -40,8 +40,10 @@ export interface BatchResponseAndOptions {
 // together requests over the HTTP transport. Note that this implementation will only work correctly
 // for GraphQL server implementations that support batching. If such a server is not available, you
 // should see `addQueryMerging` instead.
-export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
+export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
 
+  public _middlewares: BatchMiddlewareInterface[];
+  public _afterwares: BatchAfterwareInterface[];
   private pollInterval: number;
   private batcher: QueryBatcher;
 
@@ -136,7 +138,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
         next();
       };
 
-      queue([...this._batchMiddlewares], this);
+      queue([...this._middlewares], this);
     });
   }
 
@@ -158,8 +160,32 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       };
 
       // iterate through afterwares using next callback
-      queue([...this._batchAfterwares], this);
+      queue([...this._afterwares], this);
     });
+  }
+
+  public use(middlewares: BatchMiddlewareInterface[]): HTTPNetworkInterface {
+    middlewares.map((middleware) => {
+      if (typeof middleware.applyBatchMiddleware === 'function') {
+        this._middlewares.push(middleware);
+      } else {
+        throw new Error('Batch middleware must implement the applyBatchMiddleware function');
+      }
+    });
+
+    return this;
+  }
+
+  public useAfter(afterwares: BatchAfterwareInterface[]): HTTPNetworkInterface {
+    afterwares.map(afterware => {
+      if (typeof afterware.applyBatchAfterware === 'function') {
+        this._afterwares.push(afterware);
+      } else {
+        throw new Error('Batch afterware must implement the applyBatchAfterware function');
+      }
+    });
+
+    return this;
   }
 
   private batchedFetchFromRemoteEndpoint(

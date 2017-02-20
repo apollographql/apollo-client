@@ -10,12 +10,11 @@ import { print } from 'graphql-tag/printer';
 import {
   MiddlewareInterface,
   BatchMiddlewareInterface,
-  isBatchMiddlewares,
 } from './middleware';
+
 import {
   AfterwareInterface,
   BatchAfterwareInterface,
-  isBatchAfterwares,
 } from './afterware';
 
 /**
@@ -65,14 +64,10 @@ export interface SubscriptionNetworkInterface extends NetworkInterface {
 export interface HTTPNetworkInterface extends NetworkInterface {
   _uri: string;
   _opts: RequestInit;
-  _middlewares: MiddlewareInterface[];
-  _afterwares: AfterwareInterface[];
-  _batchMiddlewares: BatchMiddlewareInterface[];
-  _batchAfterwares: BatchAfterwareInterface[];
-  use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface;
-  useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface;
-  use(batchMiddlewares: BatchMiddlewareInterface[]): HTTPNetworkInterface;
-  useAfter(batchAfterwares: BatchAfterwareInterface[]): HTTPNetworkInterface;
+  _middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[];
+  _afterwares: AfterwareInterface[] | BatchAfterwareInterface[];
+  use(middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[]): HTTPNetworkInterface;
+  useAfter(afterwares: AfterwareInterface[] | BatchAfterwareInterface[]): HTTPNetworkInterface;
 }
 
 export interface RequestAndOptions {
@@ -92,13 +87,13 @@ export function printRequest(request: Request): PrintedRequest {
   };
 }
 
-export class HTTPFetchNetworkInterface implements NetworkInterface {
+// Provide extension point for regular network interface and batched
+// network interface. Should not be used directly.
+export class BaseNetworkInterface implements NetworkInterface {
+  public _middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[];
+  public _afterwares: AfterwareInterface[] | BatchAfterwareInterface[];
   public _uri: string;
   public _opts: RequestInit;
-  public _middlewares: MiddlewareInterface[];
-  public _afterwares: AfterwareInterface[];
-  public _batchMiddlewares: BatchMiddlewareInterface[];
-  public _batchAfterwares: BatchAfterwareInterface[];
 
   constructor(uri: string | undefined, opts: RequestInit = {}) {
     if (!uri) {
@@ -111,11 +106,21 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
 
     this._uri = uri;
     this._opts = { ...opts };
+
     this._middlewares = [];
     this._afterwares = [];
-    this._batchMiddlewares = [];
-    this._batchAfterwares = [];
   }
+
+  public query(request: Request): Promise<ExecutionResult> {
+    return new Promise((resolve, reject) => {
+      reject(new Error('BaseNetworkInterface should not be used directly'));
+    });
+  }
+}
+
+export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
+  public _middlewares: MiddlewareInterface[];
+  public _afterwares: AfterwareInterface[];
 
   public applyMiddlewares(requestAndOptions: RequestAndOptions): Promise<RequestAndOptions> {
     return new Promise((resolve, reject) => {
@@ -215,49 +220,26 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       });
   };
 
-  public use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface
-  public use(batchMiddlewares: BatchMiddlewareInterface[]): HTTPNetworkInterface
-  public use(middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[]): HTTPNetworkInterface {
-    if (!isBatchMiddlewares(middlewares)) {
-      middlewares.map((middleware) => {
-        if (typeof middleware.applyMiddleware === 'function') {
-          this._middlewares.push(middleware);
-        } else {
-          throw new Error('Middleware must implement the applyMiddleware function');
-        }
-      });
-    } else {
-      middlewares.map((middleware) => {
-        if (typeof middleware.applyBatchMiddleware === 'function') {
-          this._batchMiddlewares.push(middleware);
-        } else {
-          throw new Error('Middleware must implement the applyBatchMiddleware function');
-        }
-      });
-    }
+  public use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface {
+    middlewares.map((middleware) => {
+      if (typeof middleware.applyMiddleware === 'function') {
+        this._middlewares.push(middleware);
+      } else {
+        throw new Error('Middleware must implement the applyMiddleware function');
+      }
+    });
+
     return this;
   }
 
-  public useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface
-  public useAfter(afterwares: BatchAfterwareInterface[]): HTTPNetworkInterface
-  public useAfter(afterwares: AfterwareInterface[] | BatchAfterwareInterface[]): HTTPNetworkInterface {
-    if (!isBatchAfterwares(afterwares)) {
-      afterwares.map(afterware => {
-        if (typeof afterware.applyAfterware === 'function') {
-          this._afterwares.push(afterware);
-        } else {
-          throw new Error('Afterware must implement the applyAfterware function');
-        }
-      });
-    } else {
-      afterwares.map(afterware => {
-        if (typeof afterware.applyBatchAfterware === 'function') {
-          this._batchAfterwares.push(afterware);
-        } else {
-          throw new Error('Afterware must implement the applyBatchAfterware function');
-        }
-      });
-    }
+  public useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface {
+    afterwares.map(afterware => {
+      if (typeof afterware.applyAfterware === 'function') {
+        this._afterwares.push(afterware);
+      } else {
+        throw new Error('Afterware must implement the applyAfterware function');
+      }
+    });
 
     return this;
   }

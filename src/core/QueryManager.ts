@@ -321,9 +321,12 @@ export class QueryManager {
           });
 
           delete this.queryDocuments[mutationId];
-          reject(new ApolloError({
-            networkError: err,
-          }));
+          err.response.json().then((result) => {
+            reject(new ApolloError({
+              graphQLErrors: result.errors || [],
+              networkError: err,
+            }));
+          });
         });
     });
   }

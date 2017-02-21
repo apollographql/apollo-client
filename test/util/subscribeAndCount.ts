@@ -13,13 +13,8 @@ export default function(done: MochaDone, observable: ObservableQuery<any>,
         handleCount++;
         cb(handleCount, result);
       } catch (e) {
-        // Wrap in a `setImmediate` so that we will unsubscribe on the next
-        // tick so that we can make sure that the `subscription` has a chance
-        // to be defined.
-        setImmediate(() => {
-          subscription.unsubscribe();
-          done(e);
-        });
+        subscription.unsubscribe();
+        done(e);
       }
     },
     error: done,

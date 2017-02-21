@@ -8,6 +8,10 @@ import {
   MutationQueryReducersMap,
 } from '../data/mutationResults';
 
+import {
+  PureQueryOptions,
+} from './types';
+
 /**
  * We can change these options to an ObservableQuery
  */
@@ -92,15 +96,10 @@ export interface SubscriptionOptions {
   variables?: { [key: string]: any };
 };
 
-export interface RefetchQueryOptions {
-  query: DocumentNode;
-  variables?: { [key: string]: any };
-};
-
 export interface MutationOptions {
   mutation: DocumentNode;
   variables?: Object;
   optimisticResponse?: Object;
   updateQueries?: MutationQueryReducersMap;
-  refetchQueries?: string[] | RefetchQueryOptions[];
+  refetchQueries?: string[] | PureQueryOptions[];
 }

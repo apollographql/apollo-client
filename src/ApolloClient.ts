@@ -350,9 +350,14 @@ export default class ApolloClient {
   }
 
   /**
-   * Tries to read some data from the store without making a network request.
-   * This method will start at the root query. To start at a specific id
-   * returned by `dataIdFromObject` use `readFragment`.
+   * Tries to read some data from the store in the shape of the provided
+   * GraphQL query without making a network request. This method will start at
+   * the root query. To start at a specific id returned by `dataIdFromObject`
+   * use `readFragment`.
+   *
+   * @param query The GraphQL query shape to be used.
+   *
+   * @param variables Any variables that the GraphQL query may depend on.
    */
   public readQuery<QueryType>(
     query: DocumentNode,
@@ -370,15 +375,30 @@ export default class ApolloClient {
   }
 
   /**
-   * Tries to read some data from the store without making a network request.
-   * This method will read a GraphQL fragment from any arbitrary id that is
-   * currently cached. Unlike `readQuery` which will only read from the root
-   * query.
+   * Tries to read some data from the store in the shape of the provided
+   * GraphQL fragment without making a network request. This method will read a
+   * GraphQL fragment from any arbitrary id that is currently cached, unlike
+   * `readQuery` which will only read from the root query.
    *
    * You must pass in a GraphQL document with a single fragment or a document
    * with multiple fragments that represent what you are reading. If you pass
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
+   *
+   * @param id The root id to be used. This id should take the same form as the
+   * value returned by your `dataIdFromObject` function. If a value with your
+   * id does not exist in the store, `null` will be returned.
+   *
+   * @param fragment A GraphQL document with one or more fragments the shape of
+   * which will be used. If you provide more then one fragments then you must
+   * also specify the next argument, `fragmentName`, to select a single
+   * fragment to use when reading.
+   *
+   * @param fragmentName The name of the fragment in your GraphQL document to
+   * be used. Pass `undefined` if there is only one fragment and you want to
+   * use that.
+   *
+   * @param variables Any variables that your GraphQL fragments depend on.
    */
   public readFragment<FragmentType>(
     id: string,
@@ -408,9 +428,15 @@ export default class ApolloClient {
   }
 
   /**
-   * Writes some data to the store without that data being the result of a
-   * network request. This method will start at the root query. To start at a a
+   * Writes some data in the shape of the provided GraphQL query directly to
+   * the store. This method will start at the root query. To start at a a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
+   *
+   * @param data The data you will be writing to the store.
+   *
+   * @param query The GraphQL query shape to be used.
+   *
+   * @param variables Any variables that the GraphQL query may depend on.
    */
   public writeQuery(
     data: any,
@@ -428,15 +454,31 @@ export default class ApolloClient {
   }
 
   /**
-   * Writes some data to the store without that data being the result of a
-   * network request. This method will write to a GraphQL fragment from any
-   * arbitrary id that is currently cached. Unlike `writeQuery` which will only
-   * write from the root query.
+   * Writes some data in the shape of the provided GraphQL fragment directly to
+   * the store. This method will write to a GraphQL fragment from any arbitrary
+   * id that is currently cached, unlike `writeQuery` which will only write
+   * from the root query.
    *
    * You must pass in a GraphQL document with a single fragment or a document
    * with multiple fragments that represent what you are writing. If you pass
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
+   *
+   * @param data The data you will be writing to the store.
+   *
+   * @param id The root id to be used. This id should take the same form as the
+   * value returned by your `dataIdFromObject` function.
+   *
+   * @param fragment A GraphQL document with one or more fragments the shape of
+   * which will be used. If you provide more then one fragments then you must
+   * also specify the next argument, `fragmentName`, to select a single
+   * fragment to use when reading.
+   *
+   * @param fragmentName The name of the fragment in your GraphQL document to
+   * be used. Pass `undefined` if there is only one fragment and you want to
+   * use that.
+   *
+   * @param variables Any variables that your GraphQL fragments depend on.
    */
   public writeFragment(
     data: any,
@@ -456,8 +498,8 @@ export default class ApolloClient {
   }
 
   /**
-   * Writes some data to the store without that data being the result of a
-   * network request. This method will start at the root query. To start at a a
+   * Writes some data in the shape of the provided GraphQL query directly to
+   * the store. This method will start at the root query. To start at a
    * specific id returned by `dataIdFromObject` then use
    * `writeFragmentOptimistically`.
    *
@@ -465,6 +507,12 @@ export default class ApolloClient {
    * the optimistic portion of the cache and so will not be persisted. This
    * optimistic write may also be rolled back with the `rollback` function that
    * was returned.
+   *
+   * @param data The data you will be writing to the store.
+   *
+   * @param query The GraphQL query shape to be used.
+   *
+   * @param variables Any variables that the GraphQL query may depend on.
    */
   public writeQueryOptimistically(
     data: any,
@@ -492,9 +540,9 @@ export default class ApolloClient {
   }
 
   /**
-   * Writes some data to the store without that data being the result of a
-   * network request. This method will write to a GraphQL fragment from any
-   * arbitrary id that is currently cached. Unlike `writeQueryOptimistically`
+   * Writes some data in the shape of the provided GraphQL fragment directly to
+   * the store. This method will write to a GraphQL fragment from any
+   * arbitrary id that is currently cached, unlike `writeQueryOptimistically`
    * which will only write from the root query.
    *
    * You must pass in a GraphQL document with a single fragment or a document
@@ -506,6 +554,22 @@ export default class ApolloClient {
    * the optimistic portion of the cache and so will not be persisted. This
    * optimistic write may also be rolled back with the `rollback` function that
    * was returned.
+   *
+   * @param data The data you will be writing to the store.
+   *
+   * @param id The root id to be used. This id should take the same form as the
+   * value returned by your `dataIdFromObject` function.
+   *
+   * @param fragment A GraphQL document with one or more fragments the shape of
+   * which will be used. If you provide more then one fragments then you must
+   * also specify the next argument, `fragmentName`, to select a single
+   * fragment to use when reading.
+   *
+   * @param fragmentName The name of the fragment in your GraphQL document to
+   * be used. Pass `undefined` if there is only one fragment and you want to
+   * use that.
+   *
+   * @param variables Any variables that your GraphQL fragments depend on.
    */
   public writeFragmentOptimistically(
     data: any,

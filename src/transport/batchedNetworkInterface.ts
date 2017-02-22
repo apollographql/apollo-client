@@ -2,7 +2,7 @@ import {
   ExecutionResult,
 } from 'graphql';
 
-import 'whatwg-fetch';
+import './fetchPolyfill';
 
 import {
   HTTPFetchNetworkInterface,

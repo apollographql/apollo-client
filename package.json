@@ -51,7 +51,7 @@
     "graphql-tag": "^1.1.1",
     "redux": "^3.4.0",
     "symbol-observable": "^1.0.2",
-    "whatwg-fetch": "^2.0.0"
+    "unfetch": "^1.0.1"
   },
   "devDependencies": {
     "@types/benchmark": "^1.0.30",
@@ -89,7 +89,8 @@
     "typescript": "2.1.5",
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",
-    "webpack-bundle-analyzer": "^2.1.1"
+    "webpack-bundle-analyzer": "^2.1.1",
+    "whatwg-fetch": "^2.0.0"
   },
   "optionalDependencies": {
     "@types/async": "^2.0.31",

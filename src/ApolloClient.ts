@@ -385,13 +385,23 @@ export default class ApolloClient {
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): FragmentType {
+  ): FragmentType | null {
     this.initStore();
+
+    const query = getFragmentQuery(fragment, fragmentName);
     const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
+    const store = reduxRootSelector(this.store.getState()).data;
+
+    // If we could not find an item in the store with the provided id then we
+    // just return `null`.
+    if (typeof store[id] === 'undefined') {
+      return null;
+    }
+
     return readQueryFromStore<FragmentType>({
       rootId: id,
-      store: reduxRootSelector(this.store.getState()).data,
-      query: getFragmentQuery(fragment, fragmentName),
+      store,
+      query,
       variables,
       returnPartialData: false,
     });

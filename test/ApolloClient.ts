@@ -226,6 +226,32 @@ describe('ApolloClient', () => {
         },
       ), { a: 1, b: 2 });
     });
+
+    it('will return null when an id that can’t be found is provided', () => {
+      const client1 = new ApolloClient();
+      const client2 = new ApolloClient({
+        initialState: {
+          apollo: {
+            data: {
+              'bar': { __typename: 'Type1', a: 1, b: 2, c: 3 },
+            },
+          },
+        },
+      });
+      const client3 = new ApolloClient({
+        initialState: {
+          apollo: {
+            data: {
+              'foo': { __typename: 'Type1', a: 1, b: 2, c: 3 },
+            },
+          },
+        },
+      });
+
+      assert.equal(client1.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), null);
+      assert.equal(client2.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), null);
+      assert.deepEqual(client3.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), { a: 1, b: 2, c: 3 });
+    });
   });
 
   describe('writeQuery', () => {

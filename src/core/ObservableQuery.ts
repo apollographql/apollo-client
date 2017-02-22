@@ -228,7 +228,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           query: combinedOptions.query,
           forceFetch: true,
         } as WatchQueryOptions;
-        return this.queryManager.fetchQuery(qid, combinedOptions);
+        return this.queryManager.fetchQuery(qid, combinedOptions, FetchType.normal, this.queryId);
       })
       .then((fetchMoreResult) => {
         const reducer = fetchMoreOptions.updateQuery;

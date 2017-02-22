@@ -17,7 +17,7 @@ export enum NetworkStatus {
 
   /**
    * Indicates that `fetchMore` was called on this query and that the query created is currently in
-   * flight. As of commit `389d87a` this network status is not in use.
+   * flight.
    */
   fetchMore = 3,
 

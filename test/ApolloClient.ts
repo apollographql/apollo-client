@@ -107,10 +107,10 @@ describe('ApolloClient', () => {
 
       assert.throws(() => {
         client.readFragment('x', gql`query { a b c }`);
-      }, 'Found 0 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      }, 'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.');
       assert.throws(() => {
         client.readFragment('x', gql`schema { query: Query }`);
-      }, 'Found 0 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      }, 'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
     it('will throw an error when there is more than one fragment but no fragment name', () => {
@@ -118,10 +118,10 @@ describe('ApolloClient', () => {
 
       assert.throws(() => {
         client.readFragment('x', gql`fragment a on A { a } fragment b on B { b }`);
-      }, 'Found 2 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      }, 'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
       assert.throws(() => {
         client.readFragment('x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
-      }, 'Found 3 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      }, 'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
     it('will read some deeply nested data from the store at any id', () => {
@@ -255,28 +255,6 @@ describe('ApolloClient', () => {
   });
 
   describe('writeQuery', () => {
-    it('will throw an error when there is no fragment', () => {
-      const client = new ApolloClient();
-
-      assert.throws(() => {
-        client.writeFragment({}, 'x', gql`query { a b c }`);
-      }, 'Found 0 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
-      assert.throws(() => {
-        client.writeFragment({}, 'x', gql`schema { query: Query }`);
-      }, 'Found 0 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
-    });
-
-    it('will throw an error when there is more than one fragment but no fragment name', () => {
-      const client = new ApolloClient();
-
-      assert.throws(() => {
-        client.writeFragment({}, 'x', gql`fragment a on A { a } fragment b on B { b }`);
-      }, 'Found 2 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
-      assert.throws(() => {
-        client.writeFragment({}, 'x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
-      }, 'Found 3 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
-    });
-
     it('will write some data to the store', () => {
       const client = new ApolloClient();
 
@@ -422,6 +400,28 @@ describe('ApolloClient', () => {
   });
 
   describe('writeFragment', () => {
+    it('will throw an error when there is no fragment', () => {
+      const client = new ApolloClient();
+
+      assert.throws(() => {
+        client.writeFragment({}, 'x', gql`query { a b c }`);
+      }, 'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.');
+      assert.throws(() => {
+        client.writeFragment({}, 'x', gql`schema { query: Query }`);
+      }, 'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
+    });
+
+    it('will throw an error when there is more than one fragment but no fragment name', () => {
+      const client = new ApolloClient();
+
+      assert.throws(() => {
+        client.writeFragment({}, 'x', gql`fragment a on A { a } fragment b on B { b }`);
+      }, 'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
+      assert.throws(() => {
+        client.writeFragment({}, 'x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
+      }, 'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
+    });
+
     it('will write some deeply nested data into the store at any id', () => {
       const client = new ApolloClient({
         dataIdFromObject: (o: any) => o.id,
@@ -877,10 +877,10 @@ describe('ApolloClient', () => {
 
       assert.throws(() => {
         client.writeFragmentOptimistically({}, 'x', gql`query { a b c }`);
-      }, 'Found 0 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      }, 'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.');
       assert.throws(() => {
         client.writeFragmentOptimistically({}, 'x', gql`schema { query: Query }`);
-      }, 'Found 0 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      }, 'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
     it('will throw an error when there is more than one fragment but no fragment name', () => {
@@ -888,10 +888,10 @@ describe('ApolloClient', () => {
 
       assert.throws(() => {
         client.writeFragmentOptimistically({}, 'x', gql`fragment a on A { a } fragment b on B { b }`);
-      }, 'Found 2 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      }, 'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
       assert.throws(() => {
         client.writeFragmentOptimistically({}, 'x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
-      }, 'Found 3 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
+      }, 'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
     it('will write some deeply nested data into the store at any id and roll it back', () => {

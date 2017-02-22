@@ -65,7 +65,7 @@ import {
 } from './data/readFromStore';
 
 import {
-  getFragmentQuery,
+  getFragmentQueryDocument,
 } from './queries/getFromAST';
 
 import {
@@ -408,7 +408,7 @@ export default class ApolloClient {
   ): FragmentType | null {
     this.initStore();
 
-    const query = getFragmentQuery(fragment, fragmentName);
+    const query = getFragmentQueryDocument(fragment, fragmentName);
     const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
     const store = reduxRootSelector(this.store.getState()).data;
 
@@ -492,7 +492,7 @@ export default class ApolloClient {
       type: 'APOLLO_WRITE',
       rootId: id,
       result: data,
-      document: getFragmentQuery(fragment, fragmentName),
+      document: getFragmentQueryDocument(fragment, fragmentName),
       variables: variables || {},
     });
   }
@@ -587,7 +587,7 @@ export default class ApolloClient {
       optimisticWriteId,
       rootId: id,
       result: data,
-      document: getFragmentQuery(fragment, fragmentName),
+      document: getFragmentQueryDocument(fragment, fragmentName),
       variables: variables || {},
     });
     return {

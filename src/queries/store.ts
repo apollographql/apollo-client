@@ -109,6 +109,26 @@ export function queries(
       metadata: action.metadata,
     };
 
+    // If the action had a `moreForQueryId` property then we need to set the
+    // network status on that query as well to `fetchMore`.
+    //
+    // We have a complement to this if statement in the query result and query
+    // error action branch, but importantly *not* in the client result branch.
+    // This is because the implementation of `fetchMore` *always* sets
+    // `forceFetch` to `true` so we would never have a client result.
+    if (typeof action.fetchMoreForQueryId === 'string') {
+      newState[action.fetchMoreForQueryId] = {
+        // We assume that that both a query with id `action.moreForQueryId`
+        // already exists and that it is not `action.queryId`. This is a safe
+        // assumption given how we set `moreForQueryId`.
+        ...previousState[action.fetchMoreForQueryId],
+        // We set the network status to `fetchMore` here overwriting any
+        // network status that currently exists. This is how network statuses
+        // are set normally, so it makes sense to set it this way here as well.
+        networkStatus: NetworkStatus.fetchMore,
+      };
+    }
+
     return newState;
   } else if (isQueryResultAction(action)) {
     if (!previousState[action.queryId]) {
@@ -131,6 +151,16 @@ export function queries(
       networkStatus: NetworkStatus.ready,
     };
 
+    // If we have a `fetchMoreForQueryId` then we need to update the network
+    // status for that query. See the branch for query initialization for more
+    // explanation about this process.
+    if (typeof action.fetchMoreForQueryId === 'string') {
+      newState[action.fetchMoreForQueryId] = {
+        ...previousState[action.fetchMoreForQueryId],
+        networkStatus: NetworkStatus.ready,
+      };
+    }
+
     return newState;
   } else if (isQueryErrorAction(action)) {
     if (!previousState[action.queryId]) {
@@ -149,6 +179,17 @@ export function queries(
       networkError: action.error,
       networkStatus: NetworkStatus.error,
     };
+
+    // If we have a `fetchMoreForQueryId` then we need to update the network
+    // status for that query. See the branch for query initialization for more
+    // explanation about this process.
+    if (typeof action.fetchMoreForQueryId === 'string') {
+      newState[action.fetchMoreForQueryId] = {
+        ...previousState[action.fetchMoreForQueryId],
+        networkError: action.error,
+        networkStatus: NetworkStatus.error,
+      };
+    }
 
     return newState;
   } else if (isQueryResultClientAction(action)) {

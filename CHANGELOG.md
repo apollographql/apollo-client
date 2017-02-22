@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Prefer stale data over partial data in cases where a user would previously get an error. [PR #1306](https://github.com/apollographql/apollo-client/pull/1306)
+- Add `fetchMore` network status to enable loading information for `fetchMore` queries. [PR #1305](https://github.com/apollographql/apollo-client/pull/1305)
 - ...
 
 ### 0.8.7

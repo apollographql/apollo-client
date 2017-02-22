@@ -211,7 +211,7 @@ export class CommentsPage extends Component {
 }
 ```
 
-<h2 id="subscribe-to-data">Authentication over WebSocket</h2>
+<h2 id="authentication">Authentication over WebSocket</h2>
 
 `SubscriptionClient` constructor also accepts `connectionParams` field, which is a custom object you can pass to your server, and validate the connection is server side before creating your subscriptions.
 

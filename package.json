@@ -6,6 +6,7 @@
   "module": "./lib/src/index.js",
   "jsnext:main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
+  "browser": "analyze/dist/bundle.js",
   "scripts": {
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
@@ -23,7 +24,7 @@
     "watch:test": "tsc -p tsconfig.test.json -w",
     "bundle": "rollup -c",
     "postcompile": "npm run bundle",
-    "prepublish": "npm run compile",
+    "prepublish": "npm run compile && npm run analyze",
     "lint": "grunt tslint",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",

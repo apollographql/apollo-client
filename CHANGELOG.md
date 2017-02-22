@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Prefer stale data over partial data in cases where a user would previously get an error. [PR #1306](https://github.com/apollographql/apollo-client/pull/1306)
-- ...
+- Adding package.json browser attribute pointing towards browser bundle… [PR #1318](https://github.com/apollographql/apollo-client/pull/1318)
 
 ### 0.8.7
 - Ensure batching network interface passes through extra parameters in order to support persisted queries [PR #1302](https://github.com/apollographql/apollo-client/pull/1302/files)

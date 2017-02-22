@@ -176,10 +176,22 @@ export function getFragmentQuery(document: DocumentNode, fragmentName?: string):
   // If the user did not give us a fragment name then let us try to get a
   // name from a single fragment in the definition.
   if (typeof actualFragmentName === 'undefined') {
-    const fragments = document.definitions.filter(({ kind }) => kind === 'FragmentDefinition') as Array<FragmentDefinitionNode>;
+    const fragments = document.definitions.filter(definition => {
+      // Throw an error if we encounter an operation definition because we will
+      // define our own operation definition later on.
+      if (definition.kind === 'OperationDefinition') {
+        throw new Error(
+          `Found a ${definition.operation} operation${definition.name ? ` named '${definition.name.value}'` : ''}. ` +
+          'No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        );
+      }
+      return definition.kind === 'FragmentDefinition';
+    }) as Array<FragmentDefinitionNode>;
+
     if (fragments.length !== 1) {
       throw new Error(`Found ${fragments.length} fragments. \`fragmentName\` must be provided when there are more then 1 fragments.`);
     }
+
     actualFragmentName = fragments[0].name.value;
   }
 

@@ -376,7 +376,7 @@ export default class ApolloClient {
    * query.
    *
    * You must pass in a GraphQL document with a single fragment or a document
-   * with multiple fragments that represent what you are writing. If you pass
+   * with multiple fragments that represent what you are reading. If you pass
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */

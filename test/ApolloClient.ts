@@ -5,7 +5,7 @@ import ApolloClient from '../src/ApolloClient';
 
 describe('ApolloClient', () => {
   describe('readQuery', () => {
-    it('will read some data from state', () => {
+    it('will read some data from the store', () => {
       const client = new ApolloClient({
         initialState: {
           apollo: {
@@ -25,7 +25,7 @@ describe('ApolloClient', () => {
       assert.deepEqual(client.readQuery(gql`{ a b c }`), { a: 1, b: 2, c: 3 });
     });
 
-    it('will read some deeply nested data from state', () => {
+    it('will read some deeply nested data from the store', () => {
       const client = new ApolloClient({
         initialState: {
           apollo: {
@@ -74,7 +74,7 @@ describe('ApolloClient', () => {
       );
     });
 
-    it('will read some data from state with variables', () => {
+    it('will read some data from the store with variables', () => {
       const client = new ApolloClient({
         initialState: {
           apollo: {
@@ -102,7 +102,7 @@ describe('ApolloClient', () => {
   });
 
   describe('readFragment', () => {
-    it('will read some deeply nested data from state at any id', () => {
+    it('will read some deeply nested data from the store at any id', () => {
       const client = new ApolloClient({
         initialState: {
           apollo: {
@@ -196,7 +196,7 @@ describe('ApolloClient', () => {
       }, 'Found 3 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
     });
 
-    it('will read some data from state with variables', () => {
+    it('will read some data from the store with variables', () => {
       const client = new ApolloClient({
         initialState: {
           apollo: {
@@ -255,7 +255,7 @@ describe('ApolloClient', () => {
   });
 
   describe('writeQuery', () => {
-    it('will write some data to the state', () => {
+    it('will write some data to the store', () => {
       const client = new ApolloClient();
 
       client.writeQuery({ a: 1 }, gql`{ a }`);
@@ -287,7 +287,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('will write some deeply nested data to state', () => {
+    it('will write some deeply nested data to the store', () => {
       const client = new ApolloClient();
 
       client.writeQuery(
@@ -370,7 +370,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('will write some data to state with variables', () => {
+    it('will write some data to the store with variables', () => {
       const client = new ApolloClient();
 
       client.writeQuery(
@@ -400,7 +400,7 @@ describe('ApolloClient', () => {
   });
 
   describe('writeFragment', () => {
-    it('will write some deeply nested data into state at any id', () => {
+    it('will write some deeply nested data into the store at any id', () => {
       const client = new ApolloClient({
         dataIdFromObject: (o: any) => o.id,
       });
@@ -570,7 +570,7 @@ describe('ApolloClient', () => {
       }, 'Found 3 fragments. `fragmentName` must be provided when there are more then 1 fragments.');
     });
 
-    it('will write some data to state with variables', () => {
+    it('will write some data to the store with variables', () => {
       const client = new ApolloClient();
 
       client.writeFragment(
@@ -606,7 +606,7 @@ describe('ApolloClient', () => {
       return client.store.getState().apollo.optimistic.map((optimistic: any) => optimistic.data);
     }
 
-    it('will write some data to the state that can be rolled back', () => {
+    it('will write some data to the store that can be rolled back', () => {
       const client = new ApolloClient();
 
       const optimistic1 = client.writeQueryOptimistically({ a: 1 }, gql`{ a }`);
@@ -687,7 +687,7 @@ describe('ApolloClient', () => {
       assert.deepEqual(getOptimisticData(client), []);
     });
 
-    it('will write some deeply nested data to state and roll it back', () => {
+    it('will write some deeply nested data to the store and roll it back', () => {
       const client = new ApolloClient();
 
       const optimistic1 = client.writeQueryOptimistically(
@@ -872,7 +872,7 @@ describe('ApolloClient', () => {
       return client.store.getState().apollo.optimistic.map((optimistic: any) => optimistic.data);
     }
 
-    it('will write some deeply nested data into state at any id and roll it back', () => {
+    it('will write some deeply nested data into the store at any id and roll it back', () => {
       const client = new ApolloClient({
         dataIdFromObject: (o: any) => o.id,
       });

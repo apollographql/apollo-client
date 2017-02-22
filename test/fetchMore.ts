@@ -337,7 +337,7 @@ describe('fetchMore on an observable query', () => {
             done();
             break;
           default:
-            done(new Error('`next` called to many times'));
+            done(new Error('`next` called too many times'));
         }
       },
       error: error => done(error),

@@ -98,7 +98,7 @@ const apolloClient = new ApolloClient({
 });
 ```
 
-> To use subscriptions, you also need to adjust your GraphQL server and extend it with `graphql-subscriptions`, you can read more about it [here](/tools/subscriptions#subscriptions-server).
+> To use subscriptions, you also need to adjust your GraphQL server and extend it with `graphql-subscriptions`, you can read more about it [here](/tools/graphql-server/subscriptions.html#setup).
 
 <h2 id="subscribe-to-data">Subscribe to data</h2>
 
@@ -215,7 +215,7 @@ export class CommentsPage extends Component {
 
 `SubscriptionClient` constructor also accepts `connectionParams` field, which is a custom object you can pass to your server, and validate the connection is server side before creating your subscriptions.
 
-You can use `connectionParams` for any use you need, not only authentication, and check it's validity in server side with [SubscriptionsServer](/tools/subscriptions#subscriptions-server).
+You can use `connectionParams` for any use you need, not only authentication, and check it's validity in server side with [SubscriptionsServer](/tools/graphql-server/subscriptions.html#authentication).
 
 ```js
 import {SubscriptionClient} from 'subscriptions-transport-ws';

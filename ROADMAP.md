@@ -22,7 +22,7 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 ## Features planned for 1.0
 
 ### Client-side data store integration
-- [x] Convenience methods for interacting directly with the store (ie. read from and write to any place in the store)
+- [ ] Convenience methods for interacting directly with the store (ie. read from and write to any place in the store)
 
 ### UI integration ergonomics
 - [x] 'Immutable' results
@@ -33,7 +33,7 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 - [x] Query deduplication
 
 ### GraphQL features
-- [ ] detect cache collisions and return stale data instead
+- [x] detect cache collisions and return stale data instead
 
 
 ## Refactors planned for 1.0

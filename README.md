@@ -30,6 +30,7 @@ To use this client in a web browser or mobile app, you'll need a build system ca
 - [Ember](https://github.com/bgentry/ember-apollo-client)
 - [Polymer](https://github.com/aruntk/polymer-apollo)
 - [Meteor](http://dev.apollodata.com/core/meteor.html)
+- [Blaze](http://github.com/Swydo/blaze-apollo)
 - [Vanilla JS](http://dev.apollodata.com/core/)
 
 ---

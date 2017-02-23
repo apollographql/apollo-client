@@ -5,6 +5,10 @@ import {
   DocumentNode,
 } from 'graphql';
 
+import {
+  WebsocketNetworkInterface,
+} from './websocketNetworkInterface';
+
 import { print } from 'graphql-tag/bundledPrinter';
 
 import {
@@ -17,7 +21,6 @@ import {
   BatchAfterwareInterface,
 } from './afterware';
 
-import { Observable } from 'rxjs';
 /**
  * This is an interface that describes an GraphQL document to be sent
  * to the server.
@@ -58,7 +61,7 @@ export interface BatchedNetworkInterface extends NetworkInterface {
 
 export interface ReactiveNetworkInterface {
   [others: string]: any;
-  query(request: Request): Observable<GraphQLResult>;
+  query(request: Request): Observable<ExecutionResult>;
 }
 
 // XXX why does this have to extend network interface? does it even have a 'query' function?
@@ -251,11 +254,6 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
   }
 }
 
-// This import has to be placed here due to a bug in TypeScript:
-// https://github.com/Microsoft/TypeScript/issues/21
-import {
-  WebsocketNetworkInterface,
-} from './websocketNetworkInterface';
 export interface NetworkInterfaceOptions {
   uri?: string;
   opts?: RequestInit;

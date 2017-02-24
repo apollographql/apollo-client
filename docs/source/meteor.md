@@ -280,3 +280,27 @@ createApolloServer(req => ({
   },
 });
 ```
+
+## Blaze
+
+If you are looking to integrate Apollo with [Blaze](http://blazejs.org/), you can use the [swydo:blaze-apollo](https://github.com/Swydo/blaze-apollo) package:
+
+```js
+import { setup } from 'meteor/swydo:blaze-apollo';
+
+const client = new ApolloClient(meteorClientConfig());
+
+setup({ client });
+```
+
+This gives you reactive GraphQL queries in your templates!
+
+```js
+Template.hello.helpers({
+  hello() {
+    return Template.instance().gqlQuery({
+      query: HELLO_QUERY
+    }).get();
+  }
+});
+```

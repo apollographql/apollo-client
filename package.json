@@ -93,7 +93,7 @@
   },
   "optionalDependencies": {
     "@types/async": "^2.0.31",
-    "@types/isomorphic-fetch": "0.0.30",
+    "@types/isomorphic-fetch": "0.0.33",
     "@types/graphql": "^0.8.0"
   }
 }

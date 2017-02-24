@@ -23,6 +23,8 @@ import gql from 'graphql-tag';
 
 import 'whatwg-fetch';
 
+declare var fetch: any;
+
 describe('HTTPBatchedNetworkInterface', () => {
   // Helper method that tests a roundtrip given a particular set of requests to the
   // batched network interface and the

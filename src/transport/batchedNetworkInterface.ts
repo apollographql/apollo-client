@@ -64,7 +64,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
       Promise.all(middlewarePromises).then((requestsAndOptions: RequestAndOptions[]) => {
         return this.batchedFetchFromRemoteEndpoint(requestsAndOptions)
           .then(result => {
-            const httpResponse = result as IResponse;
+            const httpResponse = result as Response;
 
             if (!httpResponse.ok) {
               const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
@@ -82,11 +82,11 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
             }
 
             type ResponseAndOptions = {
-              response: IResponse;
+              response: Response;
               options: RequestInit;
             };
 
-            const afterwaresPromises: ResponseAndOptions[] = responses.map((response: IResponse, index: number) => {
+            const afterwaresPromises: ResponseAndOptions[] = responses.map((response: Response, index: number) => {
               return this.applyAfterwares({
                 response,
                 options: requestsAndOptions[index].options,
@@ -94,7 +94,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
             });
 
             Promise.all(afterwaresPromises).then((responsesAndOptions: ResponseAndOptions[]) => {
-              const results: Array<IResponse> = [];
+              const results: Array<Response> = [];
               responsesAndOptions.forEach((result) => {
                 results.push(result.response);
               });
@@ -111,7 +111,7 @@ export class HTTPBatchedNetworkInterface extends HTTPFetchNetworkInterface {
 
   private batchedFetchFromRemoteEndpoint(
     requestsAndOptions: RequestAndOptions[],
-  ): Promise<IResponse> {
+  ): Promise<Response> {
     const options: RequestInit = {};
 
     // Combine all of the options given by the middleware into one object.

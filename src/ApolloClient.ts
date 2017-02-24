@@ -61,12 +61,14 @@ import {
 } from './data/storeUtils';
 
 import {
-  readQueryFromStore,
-} from './data/readFromStore';
-
-import {
   getFragmentQueryDocument,
 } from './queries/getFromAST';
+
+import {
+  DataProxy,
+  ReduxDataProxy,
+  TransactionDataProxy,
+} from './data/proxy';
 
 import {
   version,
@@ -111,6 +113,7 @@ export default class ApolloClient {
 
   private devToolsHookCb: Function;
   private optimisticWriteId: number;
+  private proxy: DataProxy | undefined;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -363,15 +366,7 @@ export default class ApolloClient {
     query: DocumentNode,
     variables?: Object,
   ): QueryType {
-    this.initStore();
-    const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
-    return readQueryFromStore<QueryType>({
-      rootId: 'ROOT_QUERY',
-      store: reduxRootSelector(this.store.getState()).data,
-      query,
-      variables,
-      returnPartialData: false,
-    });
+    return this.initProxy().readQuery<QueryType>(query, variables);
   }
 
   /**
@@ -406,25 +401,7 @@ export default class ApolloClient {
     fragmentName?: string,
     variables?: Object,
   ): FragmentType | null {
-    this.initStore();
-
-    const query = getFragmentQueryDocument(fragment, fragmentName);
-    const reduxRootSelector = this.reduxRootSelector || defaultReduxRootSelector;
-    const store = reduxRootSelector(this.store.getState()).data;
-
-    // If we could not find an item in the store with the provided id then we
-    // just return `null`.
-    if (typeof store[id] === 'undefined') {
-      return null;
-    }
-
-    return readQueryFromStore<FragmentType>({
-      rootId: id,
-      store,
-      query,
-      variables,
-      returnPartialData: false,
-    });
+    return this.initProxy().readFragment<FragmentType>(id, fragment, fragmentName, variables);
   }
 
   /**
@@ -442,15 +419,8 @@ export default class ApolloClient {
     data: any,
     query: DocumentNode,
     variables?: Object,
-  ) {
-    this.initStore();
-    this.store.dispatch({
-      type: 'APOLLO_WRITE',
-      rootId: 'ROOT_QUERY',
-      result: data,
-      document: query,
-      variables: variables || {},
-    });
+  ): void {
+    return this.initProxy().writeQuery(data, query, variables);
   }
 
   /**
@@ -486,15 +456,8 @@ export default class ApolloClient {
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ) {
-    this.initStore();
-    this.store.dispatch({
-      type: 'APOLLO_WRITE',
-      rootId: id,
-      result: data,
-      document: getFragmentQueryDocument(fragment, fragmentName),
-      variables: variables || {},
-    });
+  ): void {
+    return this.initProxy().writeFragment(data, id, fragment, fragmentName, variables);
   }
 
   /**
@@ -526,10 +489,12 @@ export default class ApolloClient {
     this.store.dispatch({
       type: 'APOLLO_WRITE_OPTIMISTIC',
       optimisticWriteId,
-      rootId: 'ROOT_QUERY',
-      result: data,
-      document: query,
-      variables: variables || {},
+      writes: [{
+        rootId: 'ROOT_QUERY',
+        result: data,
+        document: query,
+        variables: variables || {},
+      }],
     });
     return {
       rollback: () => this.store.dispatch({
@@ -585,10 +550,48 @@ export default class ApolloClient {
     this.store.dispatch({
       type: 'APOLLO_WRITE_OPTIMISTIC',
       optimisticWriteId,
-      rootId: id,
-      result: data,
-      document: getFragmentQueryDocument(fragment, fragmentName),
-      variables: variables || {},
+      writes: [{
+        rootId: id,
+        result: data,
+        document: getFragmentQueryDocument(fragment, fragmentName),
+        variables: variables || {},
+      }],
+    });
+    return {
+      rollback: () => this.store.dispatch({
+        type: 'APOLLO_WRITE_OPTIMISTIC_ROLLBACK',
+        optimisticWriteId,
+      }),
+    };
+  }
+
+  public writeTransaction(
+    transactionFn: (proxy: DataProxy) => void,
+  ): void {
+    this.initStore();
+    const transactionProxy = new TransactionDataProxy(this.initProxy());
+    transactionFn(transactionProxy);
+    const writes = transactionProxy.finish();
+    this.store.dispatch({
+      type: 'APOLLO_WRITE',
+      writes,
+    });
+  }
+
+  public writeTransactionOptimistically(
+    transactionFn: (proxy: DataProxy) => void,
+  ): {
+    rollback: () => void,
+  } {
+    const optimisticWriteId = (this.optimisticWriteId++).toString();
+    this.initStore();
+    const transactionProxy = new TransactionDataProxy(this.initProxy());
+    transactionFn(transactionProxy);
+    const writes = transactionProxy.finish();
+    this.store.dispatch({
+      type: 'APOLLO_WRITE_OPTIMISTIC',
+      optimisticWriteId,
+      writes,
     });
     return {
       rollback: () => this.store.dispatch({
@@ -719,4 +722,20 @@ export default class ApolloClient {
       queryDeduplication: this.queryDeduplication,
     });
   };
+
+  /**
+   * Initializes a data proxy for this client instance if one does not already
+   * exist and returns either a previously initialized proxy instance or the
+   * newly initialized instance.
+   */
+  private initProxy(): DataProxy {
+    if (!this.proxy) {
+      this.initStore();
+      this.proxy = new ReduxDataProxy(
+        this.store,
+        this.reduxRootSelector || defaultReduxRootSelector,
+      );
+    }
+    return this.proxy;
+  }
 }

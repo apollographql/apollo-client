@@ -200,19 +200,19 @@ export function data(
     // the store so we can just throw it all away.
     return {};
   } else if (isWriteAction(action)) {
-    const clonedState = { ...previousState } as NormalizedCache;
-
-    // Simply write our result to the store for this action.
-    const newState = writeResultToStore({
-      result: action.result,
-      dataId: action.rootId,
-      document: action.document,
-      variables: action.variables,
-      store: clonedState,
-      dataIdFromObject: config.dataIdFromObject,
-    });
-
-    return newState;
+    // Simply write our result to the store for this action for all of the
+    // writes that were specified.
+    return action.writes.reduce(
+      (currentState, write) => writeResultToStore({
+        result: write.result,
+        dataId: write.rootId,
+        document: write.document,
+        variables: write.variables,
+        store: currentState,
+        dataIdFromObject: config.dataIdFromObject,
+      }),
+      { ...previousState } as NormalizedCache,
+    );
   }
 
   return previousState;

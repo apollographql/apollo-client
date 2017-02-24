@@ -152,12 +152,16 @@ export function isSubscriptionResultAction(action: ApolloAction): action is Subs
   return action.type === 'APOLLO_SUBSCRIPTION_RESULT';
 }
 
-export interface WriteAction {
-  type: 'APOLLO_WRITE';
+export interface DataWrite {
   rootId: string;
   result: any;
   document: DocumentNode;
   variables: Object;
+}
+
+export interface WriteAction {
+  type: 'APOLLO_WRITE';
+  writes: Array<DataWrite>;
 }
 
 export function isWriteAction(action: ApolloAction): action is WriteAction {
@@ -167,10 +171,7 @@ export function isWriteAction(action: ApolloAction): action is WriteAction {
 export interface WriteActionOptimistic {
   type: 'APOLLO_WRITE_OPTIMISTIC';
   optimisticWriteId: string;
-  rootId: string;
-  result: any;
-  document: DocumentNode;
-  variables: Object;
+  writes: Array<DataWrite>;
 }
 
 export function isWriteOptimisticAction(action: ApolloAction): action is WriteActionOptimistic {

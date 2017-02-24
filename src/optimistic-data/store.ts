@@ -101,10 +101,7 @@ export function optimistic(
   } else if (isWriteOptimisticAction(action)) {
     const fakeWriteAction: WriteAction = {
       type: 'APOLLO_WRITE',
-      rootId: action.rootId,
-      result: action.result,
-      document: action.document,
-      variables: action.variables,
+      writes: action.writes,
     };
 
     const optimisticData = getDataWithOptimisticResults({

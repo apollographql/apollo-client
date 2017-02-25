@@ -86,7 +86,7 @@
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "tslint": "4.4.2",
-    "typescript": "2.1.5",
+    "typescript": "2.2.1",
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",
     "webpack-bundle-analyzer": "^2.1.1"

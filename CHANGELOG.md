@@ -3,7 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- ...
+- Clear pollInterval in `ObservableQuery#stopPolling` so that resubscriptions don't start polling again [PR #1328](https://github.com/apollographql/apollo-client/pull/1328)
 
 ### 0.9.0
 - Prefer stale data over partial data in cases where a user would previously get an error. [PR #1306](https://github.com/apollographql/apollo-client/pull/1306)

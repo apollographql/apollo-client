@@ -849,4 +849,53 @@ describe('ObservableQuery', () => {
       });
     });
   });
+
+  describe('stopPolling', () => {
+    let timer: any;
+    let defer: Function = setImmediate;
+    beforeEach(() => timer = sinon.useFakeTimers());
+    afterEach(() => timer.restore());
+
+    it('does not restart polling after stopping and resubscribing', (done) => {
+      const observable = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+
+      observable.startPolling(100);
+      observable.stopPolling();
+
+      let startedPolling = false;
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          // first call to subscribe is the immediate result when
+          // subscribing. later calls to this callback indicate that
+          // we will be polling.
+
+          timer.tick(101);
+
+          // Wait a bit to see if the subscription's `next` was called
+          // again, indicating that we are polling for data.
+          defer(() => {
+            if (!startedPolling) {
+              // if we're not polling for data, it means this test
+              // is ok
+              done();
+            }
+          });
+        } else if (handleCount === 2) {
+          // oops! we are polling for data, this should not happen.
+          startedPolling = true;
+          done(new Error('should not start polling, already stopped'));
+        }
+      });
+
+      // trigger the first subscription callback
+      timer.tick(0);
+    });
+  });
 });

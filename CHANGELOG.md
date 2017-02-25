@@ -3,10 +3,12 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- ...
+
+### 0.9.0
 - Prefer stale data over partial data in cases where a user would previously get an error. [PR #1306](https://github.com/apollographql/apollo-client/pull/1306)
 - Update TypeScript `MutationOptions` definition with the new object type available in `refetchQueries`. [PR #1315](https://github.com/apollographql/apollo-client/pull/1315)
 - Add `fetchMore` network status to enable loading information for `fetchMore` queries. [PR #1305](https://github.com/apollographql/apollo-client/pull/1305)
-- ...
 
 ### 0.8.7
 - Ensure batching network interface passes through extra parameters in order to support persisted queries [PR #1302](https://github.com/apollographql/apollo-client/pull/1302/files)

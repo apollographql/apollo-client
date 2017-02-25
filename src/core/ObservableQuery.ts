@@ -389,6 +389,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   public stopPolling() {
     if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
+      this.options.pollInterval = undefined;
       this.isCurrentlyPolling = false;
     }
   }

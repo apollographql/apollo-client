@@ -27,13 +27,13 @@ As stated before, the list below is not exhaustive. **Apollo Client is a communi
 ### UI integration ergonomics
 - [x] 'Immutable' results
 - [x] Deep-freezing of results in development mode
-- [ ] `fetchMore` network status
+- [x] `fetchMore` network status
 
 ### Performance
 - [x] Query deduplication
 
 ### GraphQL features
-- [ ] detect cache collisions and return stale data instead
+- [x] detect cache collisions and return stale data instead
 
 
 ## Refactors planned for 1.0

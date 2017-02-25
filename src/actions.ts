@@ -18,6 +18,7 @@ export type QueryResultAction = {
   document: DocumentNode;
   operationName: string;
   requestId: number;
+  fetchMoreForQueryId?: string;
   extraReducers?: ApolloReducer[];
 };
 
@@ -30,6 +31,7 @@ export interface QueryErrorAction {
   error: Error;
   queryId: string;
   requestId: number;
+  fetchMoreForQueryId?: string;
 }
 
 export function isQueryErrorAction(action: ApolloAction): action is QueryErrorAction {
@@ -48,6 +50,7 @@ export interface QueryInitAction {
   storePreviousVariables: boolean;
   isRefetch: boolean;
   isPoll: boolean;
+  fetchMoreForQueryId?: string;
   metadata: any;
 }
 

@@ -4,9 +4,7 @@ order: 152
 description: Specifics about using Apollo in your Meteor application.
 ---
 
-The Apollo client and server tools are published on Npm, which makes them available to all JavaScript applications, including those written with [Meteor](https://www.meteor.com/) 1.3 and above. When using Meteor with Apollo, you can use those npm packages directly, or you can use the [`apollo` Atmosphere package](https://github.com/apollostack/meteor-integration/), which simplifies things for you.
-
-This package, `apollo`, is essentially preparing the Apollo client & server tools for you to use them in the easiest way possible.
+The Apollo client and server tools are published on npm, which makes them available to all JavaScript applications, including those written with [Meteor](https://www.meteor.com/) 1.3 and above. When using Meteor with Apollo, you can use those npm packages directly, or you can use the [`apollo` Atmosphere package](https://github.com/apollostack/meteor-integration/), which simplifies things for you.
 
 To install `apollo`, run these commands:
 
@@ -21,7 +19,7 @@ meteor npm install --save apollo-client isomorphic-fetch graphql-server-express 
 
 You can see this package in action in the [Apollo Meteor starter kit](https://github.com/apollostack/meteor-starter-kit). 
 
-If you want to understand how this simple integration is working internally, you are invited to [take the code tour](https://www.codetours.xyz/tour/xavcz/meteor-apollo-codetour).
+If you'd like to understand how this simple package works internally, you are invited to [take the code tour](https://www.codetours.xyz/tour/xavcz/meteor-apollo-codetour).
 
 ### Client
 
@@ -113,7 +111,7 @@ export const resolvers = {
 
 ### Deployment
 
-It is _strongly_ recommended to explictly specify the `ROOT_URL` environment variable of your deployment. The pre-configuration of Apollo Client & GraphQL server provided by this package depends on a configured `ROOT_URL`. Read more about that in the [Meteor guide](https://guide.meteor.com/deployment.html#custom-deployment).
+It is _strongly_ recommended to explictly specify the `ROOT_URL` environment variable of your deployment. The configuration of the Apollo client and GraphQL server provided by this package depends on a configured `ROOT_URL`. Read more about that in the [Meteor Guide](https://guide.meteor.com/deployment.html#custom-deployment).
 
 ## API
 
@@ -134,11 +132,7 @@ The default configuration of the client is:
 
 `createMeteorNetworkInterface(customNetworkInterface = {})`
 
-The `customNetworkInterface` is an optional object that can have any [`NetworkInterface` options](http://dev.apollodata.com/core/network.html).
-
-Defining a `customNetworkInterface` object extends or replaces fields of the default configuration provided by the package.
-
-The default configuration of the network interface is: 
+`customNetworkInterface` is an optional object that replaces fields of the default configuration:
 - `uri`: `Meteor.absoluteUrl('graphql')`, points to the default GraphQL server endpoint, such as http://locahost:3000/graphql or https://www.my-app.com/graphql.
 - `opts`: `{}`, additional [`FetchOptions`](https://github.github.io/fetch#options) passed to the [`NetworkInterface`](http://dev.apollodata.com/core/network.html#createNetworkInterface).
 - `useMeteorAccounts`: `true`, enable the Meteor User Accounts middleware to identify the user with every request thanks to her login token.
@@ -147,45 +141,41 @@ The default configuration of the network interface is:
 
 Additionally, if the `useMeteorAccounts` is set to `true`, you can add to your `customNetworkInterface` a `loginToken` field while doing [server-side rendering](http://dev.apollodata.com/core/meteor.html#SSR) to handle the current user.
 
-If you want a custom network interface, you can use `createMeteorNetworkInterface` like:
+`createMeteorNetworkInterface` example:
 
 ```js
 import ApolloClient from 'apollo-client'
 import { createMeteorNetworkInterface, meteorClientConfig } from 'meteor/apollo';
 
-const networkInterfaceConfig = createMeteorNetworkInterface({
+const networkInterface = createMeteorNetworkInterface({
   // use a classic network interface instead of a batched network interface
   batchingInterface: false, 
 });
 
-const client = new ApolloClient(meteorClientConfig(networkInterfaceConfig));
+const client = new ApolloClient(meteorClientConfig({ networkInterface }));
 ```
 
 ### createApolloServer
 
 `createApolloServer(customOptions = {}, customConfig = {})`
 
-The `createApolloServer` is used to create and pre-configure an Express server, then enhanced with options on the `graphQlExpress` middleware.
+`createApolloServer` is used to create and configure an Express GraphQL server.
 
-The `customOptions` is an object that can have any [GraphQL Server `options`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlOptions), used to enhance the GraphQL server run thanks to [`graphQlExpress`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlExpress).
+`customOptions` is an object that can have any [GraphQL Server `options`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlOptions), used to enhance the GraphQL server run thanks to [`graphqlExpress`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlExpress).
 
-Defining a `customOptions` object extends or replaces fields of the default configuration provided by the package.
-
-The default options of `graphQlExpress` are: 
+Defining a `customOptions` object extends or replaces fields of the default configuration provided by the package:
 - `context`: `{}`, ensure that a context object is defined for the resolvers.
 - `formatError`: a function used to format errors before returning them to clients.
 - `debug`: `Meteor.isDevelopment`, additional debug logging if execution errors occur in dev mode.
 
-It is on `customOptions` that you pass a `schema` field created thanks to `makeExecutableSchema` ([see usage](http://dev.apollodata.com/core/meteor.html#Server)).
+It is on `customOptions` object that you pass a `schema` field created by `makeExecutableSchema` ([see usage](http://dev.apollodata.com/core/meteor.html#Server)).
 
-The `customConfig` is an optional object that can be used to replace the configuration of how the Express server itself runs.
-
-These are the fields that you can modify to configure the Express server: 
-- `path`: [path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. This is the endpoint where the queries & mutations are sent. Default to `/graphql`.
-- `configServer`: a function that is given to the express server for further configuration. You can for instance enable CORS there with `expressServer => expressServer.use(cors())`
+`customConfig` is an optional object that can be used to replace the configuration of how the Express server itself runs: 
+- `path`: [path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. This is the endpoint where the queries & mutations are sent. Default: `/graphql`.
+- `configServer`: a function that is given to the express server for further configuration. You can for instance enable CORS with `createApolloServer({}, {configServer: expressServer => expressServer.use(cors())})`
 - `graphiql`: whether to enable [GraphiQL](https://github.com/graphql/graphiql). Default: `true` in development and `false` in production.
 - `graphiqlPath`: path for GraphiQL. Default: `/graphiql` (note the _i_).
-- `graphiqlOptions`: [GraphiQL options](http://dev.apollodata.com/tools/apollo-server/graphiql.html#graphiqlOptions) Default: handle the current user connected in the app.
+- `graphiqlOptions`: [GraphiQL options](http://dev.apollodata.com/tools/apollo-server/graphiql.html#graphiqlOptions) Default: attempts to use `Meteor.loginToken` from localStorage to log you in.
 
 It will use the same port as your Meteor server. Don't put a route or static asset at the same path as the GraphQL route or the GraphiQL route if in use (again, defaults are `/graphql` and `/graphiql` respectively).
 
@@ -247,7 +237,7 @@ app.use((req, res, next) => {
     } else if (renderProps) {
       
       // use createMeteorNetworkInterface to get a preconfigured network interface
-      const networkInterfaceConfig = createMeteorNetworkInterface({
+      const networkInterface = createMeteorNetworkInterface({
         opts: {
           credentials: 'same-origin',
           headers: req.headers,
@@ -258,7 +248,7 @@ app.use((req, res, next) => {
       });
       
       // use meteorClientConfig to get a preconfigured Apollo Client options object
-      const client = new ApolloClient(meteorClientConfig(networkInterfaceConfig));
+      const client = new ApolloClient(meteorClientConfig({ networkInterface }));
 
       const store = createStore(
         combineReducers({

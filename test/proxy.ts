@@ -619,20 +619,9 @@ describe('ReduxDataProxy', () => {
 });
 
 describe('TransactionDataProxy', () => {
-  function createReadDataProxy(): DataProxyRead {
-    return {
-      readQuery() {
-        throw new Error('Should not have valled `readQuery`.');
-      },
-      readFragment() {
-        throw new Error('Should not have called `readFragment`.');
-      },
-    };
-  }
-
   describe('readQuery', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy(createReadDataProxy());
+      const proxy: any = new TransactionDataProxy({});
       proxy.finish();
 
       assert.throws(() => {
@@ -640,28 +629,87 @@ describe('TransactionDataProxy', () => {
       }, 'Cannot call transaction methods after the transaction has finished.');
     });
 
-    it('will forward a request to the provided proxy', () => {
-      const query: any = Symbol('query');
-      const variables: any = Symbol('variables');
-      const data: any = Symbol('data');
+    it('will read some data from the store', () => {
+      const proxy = new TransactionDataProxy({
+        'ROOT_QUERY': {
+          a: 1,
+          b: 2,
+          c: 3,
+        },
+      });
 
-      const readProxy = createReadDataProxy();
+      assert.deepEqual(proxy.readQuery(gql`{ a }`), { a: 1 });
+      assert.deepEqual(proxy.readQuery(gql`{ b c }`), { b: 2, c: 3 });
+      assert.deepEqual(proxy.readQuery(gql`{ a b c }`), { a: 1, b: 2, c: 3 });
+    });
 
-      readProxy.readQuery = (...args: Array<any>): any => {
-        assert.equal(args[0], query);
-        assert.equal(args[1], variables);
-        return data;
-      };
+    it('will read some deeply nested data from the store', () => {
+      const proxy = new TransactionDataProxy({
+        'ROOT_QUERY': {
+          a: 1,
+          b: 2,
+          c: 3,
+          d: {
+            type: 'id',
+            id: 'foo',
+            generated: false,
+          },
+        },
+        'foo': {
+          e: 4,
+          f: 5,
+          g: 6,
+          h: {
+            type: 'id',
+            id: 'bar',
+            generated: false,
+          },
+        },
+        'bar': {
+          i: 7,
+          j: 8,
+          k: 9,
+        },
+      });
 
-      const proxy = new TransactionDataProxy(readProxy);
+      assert.deepEqual(
+        proxy.readQuery(gql`{ a d { e } }`),
+        { a: 1, d: { e: 4 } },
+      );
+      assert.deepEqual(
+        proxy.readQuery(gql`{ a d { e h { i } } }`),
+        { a: 1, d: { e: 4, h: { i: 7 } } },
+      );
+      assert.deepEqual(
+        proxy.readQuery(gql`{ a b c d { e f g h { i j k } } }`),
+        { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
+      );
+    });
 
-      assert.equal(proxy.readQuery(query, variables), data);
+    it('will read some data from the store with variables', () => {
+      const proxy = new TransactionDataProxy({
+        'ROOT_QUERY': {
+          'field({"literal":true,"value":42})': 1,
+          'field({"literal":false,"value":42})': 2,
+        },
+      });
+
+      assert.deepEqual(proxy.readQuery(
+        gql`query ($literal: Boolean, $value: Int) {
+          a: field(literal: true, value: 42)
+          b: field(literal: $literal, value: $value)
+        }`,
+        {
+          literal: false,
+          value: 42,
+        },
+      ), { a: 1, b: 2 });
     });
   });
 
   describe('readFragment', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy(createReadDataProxy());
+      const proxy: any = new TransactionDataProxy({});
       proxy.finish();
 
       assert.throws(() => {
@@ -669,32 +717,137 @@ describe('TransactionDataProxy', () => {
       }, 'Cannot call transaction methods after the transaction has finished.');
     });
 
-    it('will forward a request to the provided proxy', () => {
-      const id: any = Symbol('id');
-      const fragment: any = Symbol('fragment');
-      const fragmentName: any = Symbol('fragmentName');
-      const variables: any = Symbol('variables');
-      const data: any = Symbol('data');
+    it('will throw an error when there is no fragment', () => {
+      const proxy = new TransactionDataProxy({});
 
-      const readProxy = createReadDataProxy();
+      assert.throws(() => {
+        proxy.readFragment('x', gql`query { a b c }`);
+      }, 'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.');
+      assert.throws(() => {
+        proxy.readFragment('x', gql`schema { query: Query }`);
+      }, 'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
+    });
 
-      readProxy.readFragment = (...args: Array<any>): any => {
-        assert.equal(args[0], id);
-        assert.equal(args[1], fragment);
-        assert.equal(args[2], fragmentName);
-        assert.equal(args[3], variables);
-        return data;
-      };
+    it('will throw an error when there is more than one fragment but no fragment name', () => {
+      const proxy = new TransactionDataProxy({});
 
-      const proxy = new TransactionDataProxy(readProxy);
+      assert.throws(() => {
+        proxy.readFragment('x', gql`fragment a on A { a } fragment b on B { b }`);
+      }, 'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
+      assert.throws(() => {
+        proxy.readFragment('x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
+      }, 'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
+    });
 
-      assert.equal(proxy.readFragment(id, fragment, fragmentName, variables), data);
+    it('will read some deeply nested data from the store at any id', () => {
+      const proxy = new TransactionDataProxy({
+        'ROOT_QUERY': {
+          __typename: 'Type1',
+          a: 1,
+          b: 2,
+          c: 3,
+          d: {
+            type: 'id',
+            id: 'foo',
+            generated: false,
+          },
+        },
+        'foo': {
+          __typename: 'Type2',
+          e: 4,
+          f: 5,
+          g: 6,
+          h: {
+            type: 'id',
+            id: 'bar',
+            generated: false,
+          },
+        },
+        'bar': {
+          __typename: 'Type3',
+          i: 7,
+          j: 8,
+          k: 9,
+        },
+      });
+
+      assert.deepEqual(
+        proxy.readFragment('foo', gql`fragment fragmentFoo on Foo { e h { i } }`),
+        { e: 4, h: { i: 7 } },
+      );
+      assert.deepEqual(
+        proxy.readFragment('foo', gql`fragment fragmentFoo on Foo { e f g h { i j k } }`),
+        { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+      );
+      assert.deepEqual(
+        proxy.readFragment('bar', gql`fragment fragmentBar on Bar { i }`),
+        { i: 7 },
+      );
+      assert.deepEqual(
+        proxy.readFragment('bar', gql`fragment fragmentBar on Bar { i j k }`),
+        { i: 7, j: 8, k: 9 },
+      );
+      assert.deepEqual(
+        proxy.readFragment(
+          'foo',
+          gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
+          'fragmentFoo',
+        ),
+        { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+      );
+      assert.deepEqual(
+        proxy.readFragment(
+          'bar',
+          gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
+          'fragmentBar',
+        ),
+        { i: 7, j: 8, k: 9 },
+      );
+    });
+
+    it('will read some data from the store with variables', () => {
+      const proxy = new TransactionDataProxy({
+        'foo': {
+          __typename: 'Type1',
+          'field({"literal":true,"value":42})': 1,
+          'field({"literal":false,"value":42})': 2,
+        },
+      });
+
+      assert.deepEqual(proxy.readFragment(
+        'foo',
+        gql`
+          fragment foo on Foo {
+            a: field(literal: true, value: 42)
+            b: field(literal: $literal, value: $value)
+          }
+        `,
+        undefined,
+        {
+          literal: false,
+          value: 42,
+        },
+      ), { a: 1, b: 2 });
+    });
+
+    it('will return null when an id that can’t be found is provided', () => {
+      const client1 = new TransactionDataProxy({});
+      const client2 = new TransactionDataProxy({
+        'bar': { __typename: 'Type1', a: 1, b: 2, c: 3 },
+      });
+      const client3 = new TransactionDataProxy({
+        'foo': { __typename: 'Type1', a: 1, b: 2, c: 3 },
+      });
+
+      assert.equal(client1.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), null);
+      assert.equal(client2.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), null);
+      assert.deepEqual(client3.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), { a: 1, b: 2, c: 3 });
     });
   });
 
   describe('writeQuery', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy(createReadDataProxy());
+      const proxy: any = new TransactionDataProxy({});
       proxy.finish();
 
       assert.throws(() => {
@@ -703,7 +856,7 @@ describe('TransactionDataProxy', () => {
     });
 
     it('will create writes that get returned when finished', () => {
-      const proxy = new TransactionDataProxy(createReadDataProxy());
+      const proxy = new TransactionDataProxy({});
 
       proxy.writeQuery(
         { a: 1, b: 2, c: 3 },
@@ -737,7 +890,7 @@ describe('TransactionDataProxy', () => {
 
   describe('writeFragment', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy(createReadDataProxy());
+      const proxy: any = new TransactionDataProxy({});
       proxy.finish();
 
       assert.throws(() => {
@@ -746,7 +899,7 @@ describe('TransactionDataProxy', () => {
     });
 
     it('will create writes that get returned when finished', () => {
-      const proxy = new TransactionDataProxy(createReadDataProxy());
+      const proxy = new TransactionDataProxy({});
 
       proxy.writeFragment(
         { a: 1, b: 2, c: 3 },

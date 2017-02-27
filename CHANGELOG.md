@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Clear pollInterval in `ObservableQuery#stopPolling` so that resubscriptions don't start polling again [PR #1328](https://github.com/apollographql/apollo-client/pull/1328)
-- Update @types/isomorphic-fetch dependency to fix typescript errors for Typescript 2.2 users. [PR #1325][https://github.com/apollographql/apollo-client/pull/1325]
+- Update dependencies (Typescript 2.2.1, node typings, etc.) [PR #1332][https://github.com/apollographql/apollo-client/pull/1332]
 - ...
 
 ### 0.9.0

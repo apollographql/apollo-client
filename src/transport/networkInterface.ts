@@ -69,7 +69,7 @@ export interface RequestAndOptions {
 }
 
 export interface ResponseAndOptions {
-  response: IResponse;
+  response: Response;
   options: RequestInit;
 }
 
@@ -157,7 +157,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
   public fetchFromRemoteEndpoint({
     request,
     options,
-  }: RequestAndOptions): Promise<IResponse> {
+  }: RequestAndOptions): Promise<Response> {
     return fetch(this._uri, {
       ...this._opts,
       body: JSON.stringify(printRequest(request)),
@@ -179,11 +179,11 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       options,
     }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
       .then(response => this.applyAfterwares({
-        response: response as IResponse,
+        response: response as Response,
         options,
       }))
       .then(({ response }) => {
-        const httpResponse = response as IResponse;
+        const httpResponse = response as Response;
 
         if (!httpResponse.ok) {
           const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);

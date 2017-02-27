@@ -4,6 +4,8 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Clear pollInterval in `ObservableQuery#stopPolling` so that resubscriptions don't start polling again [PR #1328](https://github.com/apollographql/apollo-client/pull/1328)
+- Update dependencies (Typescript 2.2.1, node typings, etc.) [PR #1332][https://github.com/apollographql/apollo-client/pull/1332]
+- ...
 
 ### 0.9.0
 - Prefer stale data over partial data in cases where a user would previously get an error. [PR #1306](https://github.com/apollographql/apollo-client/pull/1306)

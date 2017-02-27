@@ -565,42 +565,6 @@ export default class ApolloClient {
     };
   }
 
-  public writeTransaction(
-    transactionFn: (proxy: DataProxy) => void,
-  ): void {
-    this.initStore();
-    const transactionProxy = new TransactionDataProxy(this.initProxy());
-    transactionFn(transactionProxy);
-    const writes = transactionProxy.finish();
-    this.store.dispatch({
-      type: 'APOLLO_WRITE',
-      writes,
-    });
-  }
-
-  public writeTransactionOptimistically(
-    transactionFn: (proxy: DataProxy) => void,
-  ): {
-    rollback: () => void,
-  } {
-    const optimisticWriteId = (this.optimisticWriteId++).toString();
-    this.initStore();
-    const transactionProxy = new TransactionDataProxy(this.initProxy());
-    transactionFn(transactionProxy);
-    const writes = transactionProxy.finish();
-    this.store.dispatch({
-      type: 'APOLLO_WRITE_OPTIMISTIC',
-      optimisticWriteId,
-      writes,
-    });
-    return {
-      rollback: () => this.store.dispatch({
-        type: 'APOLLO_WRITE_OPTIMISTIC_ROLLBACK',
-        optimisticWriteId,
-      }),
-    };
-  }
-
   /**
    * Returns a reducer function configured according to the `reducerConfig` instance variable.
    */

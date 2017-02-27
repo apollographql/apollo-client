@@ -12,6 +12,10 @@ import {
   DataProxy,
 } from '../data/proxy';
 
+import {
+  PureQueryOptions,
+} from './types';
+
 /**
  * We can change these options to an ObservableQuery
  */
@@ -101,6 +105,6 @@ export interface MutationOptions {
   variables?: Object;
   optimisticResponse?: Object;
   updateQueries?: MutationQueryReducersMap;
-  refetchQueries?: string[];
+  refetchQueries?: string[] | PureQueryOptions[];
   update?: (proxy: DataProxy, mutationResult: Object) => void;
 }

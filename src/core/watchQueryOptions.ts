@@ -8,6 +8,10 @@ import {
   MutationQueryReducersMap,
 } from '../data/mutationResults';
 
+import {
+  DataProxy,
+} from '../data/proxy';
+
 /**
  * We can change these options to an ObservableQuery
  */
@@ -98,4 +102,5 @@ export interface MutationOptions {
   optimisticResponse?: Object;
   updateQueries?: MutationQueryReducersMap;
   refetchQueries?: string[];
+  update?: (proxy: DataProxy, mutationResult: Object) => void;
 }

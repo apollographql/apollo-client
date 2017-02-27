@@ -1,7 +1,9 @@
 import { DocumentNode } from 'graphql';
 import { ApolloStore, Store } from '../store';
 import { DataWrite } from '../actions';
+import { NormalizedCache } from '../data/storeUtils';
 import { getFragmentQueryDocument } from '../queries/getFromAST';
+import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
 
 /**
@@ -10,13 +12,7 @@ import { readQueryFromStore } from './readFromStore';
  * whilst in the background this data is being converted into the normalized
  * store format.
  */
-export interface DataProxy extends DataProxyRead, DataProxyWrite {}
-
-/**
- * A subset of the methods on `DataProxy` which just involve the methods for
- * reading some data. These methods will not change any data.
- */
-export interface DataProxyRead {
+export interface DataProxy {
   /**
    * Reads a GraphQL query from the root query id.
    */
@@ -36,16 +32,7 @@ export interface DataProxyRead {
     fragmentName?: string,
     variables?: Object,
   ): FragmentType | null;
-}
 
-/**
- * A subset of the methods on `DataProxy` which just involve the methods for
- * writing some data. These methods *will* change the underlying data
- * representation. How and when that change happens is up to the implementor,
- * but the expectation is that calling these methods will eventually change
- * some data.
- */
-export interface DataProxyWrite {
   /**
    * Writes a GraphQL query to the root query id.
    */
@@ -105,7 +92,7 @@ export class ReduxDataProxy implements DataProxy {
   ): QueryType {
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
-      store: this.reduxRootSelector(this.store.getState()).data,
+      store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())),
       query,
       variables,
       returnPartialData: false,
@@ -122,7 +109,7 @@ export class ReduxDataProxy implements DataProxy {
     variables?: Object,
   ): FragmentType | null {
     const query = getFragmentQueryDocument(fragment, fragmentName);
-    const { data } = this.reduxRootSelector(this.store.getState());
+    const data = getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState()));
 
     // If we could not find an item in the store with the provided id then we
     // just return `null`.
@@ -181,18 +168,18 @@ export class ReduxDataProxy implements DataProxy {
 }
 
 /**
- * A data proxy to be used within a transaction. It uses another data proxy for
- * reads and pushes all writes to an actions array which can be retrieved when
- * the transaction finishes. As soon as a transaction is constructed it has
- * started. Once a transaction has finished none of its methods are usable.
+ * A data proxy to be used within a transaction. It saves all writes to be
+ * returned when the transaction finishes. As soon as a transaction is
+ * constructed it has started. Once a transaction has finished none of its
+ * methods are usable.
+ *
+ * The transaction will read from a single normalized cache instance.
  */
 export class TransactionDataProxy implements DataProxy {
   /**
-   * The proxy to use for reading. The reason a transaction data proxy is not
-   * just a write proxy is that we want to throw errors if a transaction has
-   * finished and a user is trying to read.
+   * The normalized cache that this transaction reads from.
    */
-  private proxy: DataProxyRead;
+  private data: NormalizedCache;
 
   /**
    * An array of actions that we build up during the life of the transaction.
@@ -205,8 +192,8 @@ export class TransactionDataProxy implements DataProxy {
    */
   private isFinished: boolean;
 
-  constructor(proxy: DataProxyRead) {
-    this.proxy = proxy;
+  constructor(data: NormalizedCache) {
+    this.data = data;
     this.writes = [];
     this.isFinished = false;
   }
@@ -225,20 +212,28 @@ export class TransactionDataProxy implements DataProxy {
   }
 
   /**
-   * Reads some data from the store from the root query id. Cannot be called
-   * after the transaction finishes.
+   * Reads a query from the normalized cache.
+   *
+   * Throws an error if the transaction has finished.
    */
   public readQuery<QueryType>(
     query: DocumentNode,
     variables?: Object,
   ): QueryType {
     this.assertNotFinished();
-    return this.proxy.readQuery<QueryType>(query, variables);
+    return readQueryFromStore<QueryType>({
+      rootId: 'ROOT_QUERY',
+      store: this.data,
+      query,
+      variables,
+      returnPartialData: false,
+    });
   }
 
   /**
-   * Reads a fragment from the store at an arbitrary id. Cannot be called after
-   * the transaction finishes.
+   * Reads a fragment from the normalized cache.
+   *
+   * Throws an error if the transaction has finished.
    */
   public readFragment<FragmentType>(
     id: string,
@@ -247,7 +242,22 @@ export class TransactionDataProxy implements DataProxy {
     variables?: Object,
   ): FragmentType | null {
     this.assertNotFinished();
-    return this.proxy.readFragment<FragmentType>(id, fragment, fragmentName, variables);
+    const { data } = this;
+    const query = getFragmentQueryDocument(fragment, fragmentName);
+
+    // If we could not find an item in the store with the provided id then we
+    // just return `null`.
+    if (typeof data[id] === 'undefined') {
+      return null;
+    }
+
+    return readQueryFromStore<FragmentType>({
+      rootId: id,
+      store: data,
+      query,
+      variables,
+      returnPartialData: false,
+    });
   }
 
   /**

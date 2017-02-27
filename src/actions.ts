@@ -8,6 +8,10 @@ import {
 } from './data/mutationResults';
 
 import {
+  DataProxy,
+} from './data/proxy';
+
+import {
   ApolloReducer,
 } from './store';
 
@@ -86,6 +90,7 @@ export interface MutationInitAction {
   optimisticResponse: Object | undefined;
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
+  update?: (proxy: DataProxy, mutationResult: Object) => void;
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
@@ -102,6 +107,7 @@ export interface MutationResultAction {
   mutationId: string;
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
+  update?: (proxy: DataProxy, mutationResult: Object) => void;
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

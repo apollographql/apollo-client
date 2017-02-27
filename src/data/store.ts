@@ -13,6 +13,10 @@ import {
 } from './writeToStore';
 
 import {
+  TransactionDataProxy,
+} from '../data/proxy';
+
+import {
   QueryStore,
 } from '../queries/store';
 
@@ -181,6 +185,23 @@ export function data(
             });
           }
         });
+      }
+
+      // If the mutation has some writes associated with it then we need to
+      // apply those writes to the store by running this reducer again with a
+      // write action.
+      if (constAction.update) {
+        const update = constAction.update;
+        const proxy = new TransactionDataProxy(newState);
+        tryFunctionOrLogError(() => update(proxy, constAction.result));
+        const writes = proxy.finish();
+        newState = data(
+          newState,
+          { type: 'APOLLO_WRITE', writes },
+          queries,
+          mutations,
+          config,
+        );
       }
 
       // XXX each reducer gets the state from the previous reducer.

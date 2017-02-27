@@ -66,6 +66,7 @@ export function optimistic(
       mutationId: action.mutationId,
       extraReducers: action.extraReducers,
       updateQueries: action.updateQueries,
+      update: action.update,
     };
 
     const optimisticData = getDataWithOptimisticResults({

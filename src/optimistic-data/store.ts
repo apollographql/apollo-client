@@ -4,8 +4,6 @@ import {
   isMutationInitAction,
   isMutationResultAction,
   isMutationErrorAction,
-  isWriteOptimisticAction,
-  isWriteOptimisticRollbackAction,
 } from '../actions';
 
 import {
@@ -32,8 +30,7 @@ import {
   import { assign } from '../util/assign';
 
 export type OptimisticStoreItem = {
-  mutationId?: string,
-  optimisticWriteId?: string,
+  mutationId: string,
   data: NormalizedCache,
 };
 
@@ -95,41 +92,6 @@ export function optimistic(
                && previousState.some(change => change.mutationId === action.mutationId)) {
     return rollbackOptimisticData(
       change => change.mutationId === action.mutationId,
-      previousState,
-      store,
-      config,
-    );
-  } else if (isWriteOptimisticAction(action)) {
-    const fakeWriteAction: WriteAction = {
-      type: 'APOLLO_WRITE',
-      writes: action.writes,
-    };
-
-    const optimisticData = getDataWithOptimisticResults({
-      ...store,
-      optimistic: previousState,
-    });
-
-    const patch = getOptimisticDataPatch(
-      optimisticData,
-      fakeWriteAction,
-      store.queries,
-      store.mutations,
-      config,
-    );
-
-    const optimisticState = {
-      action: fakeWriteAction,
-      data: patch,
-      optimisticWriteId: action.optimisticWriteId,
-    };
-
-    const newState = [...previousState, optimisticState];
-
-    return newState;
-  } else if (isWriteOptimisticRollbackAction(action)) {
-    return rollbackOptimisticData(
-      change => change.optimisticWriteId === action.optimisticWriteId,
       previousState,
       store,
       config,

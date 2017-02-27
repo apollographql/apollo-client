@@ -112,7 +112,6 @@ export default class ApolloClient {
   public queryDeduplication: boolean;
 
   private devToolsHookCb: Function;
-  private optimisticWriteId: number;
   private proxy: DataProxy | undefined;
 
   /**
@@ -246,8 +245,6 @@ export default class ApolloClient {
     }
 
     this.version = version;
-
-    this.optimisticWriteId = 1;
   }
 
   /**
@@ -458,111 +455,6 @@ export default class ApolloClient {
     variables?: Object,
   ): void {
     return this.initProxy().writeFragment(data, id, fragment, fragmentName, variables);
-  }
-
-  /**
-   * Writes some data in the shape of the provided GraphQL query directly to
-   * the store. This method will start at the root query. To start at a
-   * specific id returned by `dataIdFromObject` then use
-   * `writeFragmentOptimistically`.
-   *
-   * Unlike `writeQuery`, the data written with this method will be stored in
-   * the optimistic portion of the cache and so will not be persisted. This
-   * optimistic write may also be rolled back with the `rollback` function that
-   * was returned.
-   *
-   * @param data The data you will be writing to the store.
-   *
-   * @param query The GraphQL query shape to be used.
-   *
-   * @param variables Any variables that the GraphQL query may depend on.
-   */
-  public writeQueryOptimistically(
-    data: any,
-    query: DocumentNode,
-    variables?: Object,
-  ): {
-    rollback: () => void,
-  } {
-    const optimisticWriteId = (this.optimisticWriteId++).toString();
-    this.initStore();
-    this.store.dispatch({
-      type: 'APOLLO_WRITE_OPTIMISTIC',
-      optimisticWriteId,
-      writes: [{
-        rootId: 'ROOT_QUERY',
-        result: data,
-        document: query,
-        variables: variables || {},
-      }],
-    });
-    return {
-      rollback: () => this.store.dispatch({
-        type: 'APOLLO_WRITE_OPTIMISTIC_ROLLBACK',
-        optimisticWriteId,
-      }),
-    };
-  }
-
-  /**
-   * Writes some data in the shape of the provided GraphQL fragment directly to
-   * the store. This method will write to a GraphQL fragment from any
-   * arbitrary id that is currently cached, unlike `writeQueryOptimistically`
-   * which will only write from the root query.
-   *
-   * You must pass in a GraphQL document with a single fragment or a document
-   * with multiple fragments that represent what you are writing. If you pass
-   * in a document with multiple fragments then you must also specify a
-   * `fragmentName`.
-   *
-   * Unlike `writeFragment`, the data written with this method will be stored in
-   * the optimistic portion of the cache and so will not be persisted. This
-   * optimistic write may also be rolled back with the `rollback` function that
-   * was returned.
-   *
-   * @param data The data you will be writing to the store.
-   *
-   * @param id The root id to be used. This id should take the same form as the
-   * value returned by your `dataIdFromObject` function.
-   *
-   * @param fragment A GraphQL document with one or more fragments the shape of
-   * which will be used. If you provide more then one fragments then you must
-   * also specify the next argument, `fragmentName`, to select a single
-   * fragment to use when reading.
-   *
-   * @param fragmentName The name of the fragment in your GraphQL document to
-   * be used. Pass `undefined` if there is only one fragment and you want to
-   * use that.
-   *
-   * @param variables Any variables that your GraphQL fragments depend on.
-   */
-  public writeFragmentOptimistically(
-    data: any,
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  ): {
-    rollback: () => void,
-  } {
-    const optimisticWriteId = (this.optimisticWriteId++).toString();
-    this.initStore();
-    this.store.dispatch({
-      type: 'APOLLO_WRITE_OPTIMISTIC',
-      optimisticWriteId,
-      writes: [{
-        rootId: id,
-        result: data,
-        document: getFragmentQueryDocument(fragment, fragmentName),
-        variables: variables || {},
-      }],
-    });
-    return {
-      rollback: () => this.store.dispatch({
-        type: 'APOLLO_WRITE_OPTIMISTIC_ROLLBACK',
-        optimisticWriteId,
-      }),
-    };
   }
 
   /**

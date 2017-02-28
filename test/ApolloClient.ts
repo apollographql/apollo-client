@@ -598,4 +598,135 @@ describe('ApolloClient', () => {
       });
     });
   });
+
+  describe('write then read', () => {
+    it('will write data locally which will then be read back', () => {
+      const client = new ApolloClient({
+        initialState: {
+          apollo: {
+            data: {
+              'foo': {
+                __typename: 'Type1',
+                a: 1,
+                b: 2,
+                c: 3,
+                bar: {
+                  type: 'id',
+                  id: '$foo.bar',
+                  generated: true,
+                },
+              },
+              '$foo.bar': {
+                __typename: 'Type2',
+                d: 4,
+                e: 5,
+                f: 6,
+              },
+            },
+          },
+        },
+      });
+
+      assert.deepEqual(
+        client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
+        { a: 1, b: 2, c: 3, bar: { d: 4, e: 5, f: 6 } },
+      );
+
+      client.writeFragment({
+        id: 'foo',
+        fragment: gql`fragment x on Foo { a }`,
+        data: { a: 7 },
+      });
+
+      assert.deepEqual(
+        client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
+        { a: 7, b: 2, c: 3, bar: { d: 4, e: 5, f: 6 } },
+      );
+
+      client.writeFragment({
+        id: 'foo',
+        fragment: gql`fragment x on Foo { bar { d } }`,
+        data: { bar: { d: 8 } },
+      });
+
+      assert.deepEqual(
+        client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
+        { a: 7, b: 2, c: 3, bar: { d: 8, e: 5, f: 6 } },
+      );
+
+      client.writeFragment({
+        id: '$foo.bar',
+        fragment: gql`fragment y on Bar { e }`,
+        data: { __typename: 'Type2', e: 9 },
+      });
+
+      assert.deepEqual(
+        client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
+        { a: 7, b: 2, c: 3, bar: { d: 8, e: 9, f: 6 } },
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {
+        'foo': {
+          __typename: 'Type1',
+          a: 7,
+          b: 2,
+          c: 3,
+          bar: {
+            type: 'id',
+            id: '$foo.bar',
+            generated: true,
+          },
+        },
+        '$foo.bar': {
+          __typename: 'Type2',
+          d: 8,
+          e: 9,
+          f: 6,
+        },
+      });
+    });
+
+    it('will write data to a specific id', () => {
+      const client = new ApolloClient({
+        initialState: { apollo: { data: {} } },
+        dataIdFromObject: (o: any) => o.id,
+      });
+
+      client.writeQuery({
+        query: gql`{ a b foo { c d bar { id e f } } }`,
+        data: { a: 1, b: 2, foo: { c: 3, d: 4, bar: { id: 'foobar', e: 5, f: 6 } } },
+      });
+
+      assert.deepEqual(
+        client.readQuery({ query: gql`{ a b foo { c d bar { id e f } } }` }),
+        { a: 1, b: 2, foo: { c: 3, d: 4, bar: { id: 'foobar', e: 5, f: 6 } } },
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {
+        'ROOT_QUERY': {
+          a: 1,
+          b: 2,
+          foo: {
+            type: 'id',
+            id: '$ROOT_QUERY.foo',
+            generated: true,
+          },
+        },
+        '$ROOT_QUERY.foo': {
+          c: 3,
+          d: 4,
+          bar: {
+            type: 'id',
+            id: 'foobar',
+            generated: false,
+          },
+        },
+        'foobar': {
+          id: 'foobar',
+          e: 5,
+          f: 6,
+        },
+      });
+    });
+  });
 });

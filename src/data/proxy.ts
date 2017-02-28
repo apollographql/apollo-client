@@ -1,10 +1,12 @@
 import { DocumentNode } from 'graphql';
 import { ApolloStore, Store } from '../store';
 import { DataWrite } from '../actions';
+import { IdGetter } from '../core/types';
 import { NormalizedCache } from '../data/storeUtils';
 import { getFragmentQueryDocument } from '../queries/getFromAST';
 import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
+import { writeResultToStore } from './writeToStore';
 
 /**
  * A proxy to the normalized data living in our store. This interface allows a
@@ -191,13 +193,21 @@ export class ReduxDataProxy implements DataProxy {
  * constructed it has started. Once a transaction has finished none of its
  * methods are usable.
  *
- * The transaction will read from a single normalized cache instance.
+ * The transaction will read from a single local normalized cache instance and
+ * it will write to that cache instance as well.
  */
 export class TransactionDataProxy implements DataProxy {
   /**
-   * The normalized cache that this transaction reads from.
+   * The normalized cache that this transaction reads from. This object will be
+   * a shallow clone of the `data` object passed into the constructor.
    */
   private data: NormalizedCache;
+
+  /**
+   * Gets a data id from an object. This is used when writing to our local
+   * cache clone.
+   */
+  private dataIdFromObject: IdGetter;
 
   /**
    * An array of actions that we build up during the life of the transaction.
@@ -210,8 +220,9 @@ export class TransactionDataProxy implements DataProxy {
    */
   private isFinished: boolean;
 
-  constructor(data: NormalizedCache) {
-    this.data = data;
+  constructor(data: NormalizedCache, dataIdFromObject: IdGetter = () => null) {
+    this.data = { ...data };
+    this.dataIdFromObject = dataIdFromObject;
     this.writes = [];
     this.isFinished = false;
   }
@@ -301,7 +312,7 @@ export class TransactionDataProxy implements DataProxy {
     variables?: Object,
   }): void {
     this.assertNotFinished();
-    this.writes.push({
+    this.applyWrite({
       rootId: 'ROOT_QUERY',
       result: data,
       document: query,
@@ -328,7 +339,7 @@ export class TransactionDataProxy implements DataProxy {
     variables?: Object,
   }): void {
     this.assertNotFinished();
-    this.writes.push({
+    this.applyWrite({
       rootId: id,
       result: data,
       document: getFragmentQueryDocument(fragment, fragmentName),
@@ -344,5 +355,21 @@ export class TransactionDataProxy implements DataProxy {
     if (this.isFinished) {
       throw new Error('Cannot call transaction methods after the transaction has finished.');
     }
+  }
+
+  /**
+   * Takes a write and applies it to our local cache, and adds it to a writes
+   * array which will be returned later on when the transaction finishes.
+   */
+  private applyWrite(write: DataWrite) {
+    writeResultToStore({
+      result: write.result,
+      dataId: write.rootId,
+      document: write.document,
+      variables: write.variables,
+      store: this.data,
+      dataIdFromObject: this.dataIdFromObject,
+    });
+    this.writes.push(write);
   }
 }

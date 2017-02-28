@@ -192,7 +192,10 @@ export function data(
       // write action.
       if (constAction.update) {
         const update = constAction.update;
-        const proxy = new TransactionDataProxy(newState);
+        const proxy = new TransactionDataProxy(
+          newState,
+          config.dataIdFromObject,
+        );
         tryFunctionOrLogError(() => update(proxy, constAction.result));
         const writes = proxy.finish();
         newState = data(

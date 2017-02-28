@@ -261,8 +261,8 @@ export class TransactionDataProxy implements DataProxy {
   }
 
   /**
-   * Creates an action to be consumed after `finish` is called that writes
-   * some query data to the store at the root query id. Cannot be called after
+   * Creates a write to be consumed after `finish` is called that instructs
+   * a write to the store at the root query id. Cannot be called after
    * the transaction finishes.
    */
   public writeQuery(
@@ -280,9 +280,9 @@ export class TransactionDataProxy implements DataProxy {
   }
 
   /**
-   * Creates an action to be consumed after `finish` is called that writes some
-   * fragment data to the store at an arbitrary id. Cannot be called after the
-   * transaction finishes.
+   * Creates a write to be consumed after `finish` is called that instructs a
+   * write to the store form some fragment data at an arbitrary id. Cannot be
+   * called after the transaction finishes.
    */
   public writeFragment(
     data: any,

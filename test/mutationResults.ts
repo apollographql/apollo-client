@@ -1245,16 +1245,15 @@ describe('mutation results', () => {
             assert.equal(mResult.data.createTodo.id, '99');
             assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
 
-            const data: any = proxy.readFragment(
-              'TodoList5',
-              gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-            );
+            const id = 'TodoList5';
+            const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
 
-            proxy.writeFragment(
-              { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-              'TodoList5',
-              gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-            );
+            const data: any = proxy.readFragment({ id, fragment });
+
+            proxy.writeFragment({
+              data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+              id, fragment,
+            });
           },
         });
       })
@@ -1320,16 +1319,15 @@ describe('mutation results', () => {
             assert.equal(mResult.data.createTodo.id, '99');
             assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
 
-            const data: any = proxy.readFragment(
-              'TodoList5',
-              gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-            );
+            const id = 'TodoList5';
+            const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
 
-            proxy.writeFragment(
-              { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-              'TodoList5',
-              gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-            );
+            const data: any = proxy.readFragment({ id, fragment });
+
+            proxy.writeFragment({
+              data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+              id, fragment,
+            });
           },
         });
       })
@@ -1364,16 +1362,15 @@ describe('mutation results', () => {
               assert.equal(mResult.data.createTodo.id, '99');
               assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
 
-              const data: any = proxy.readFragment(
-                'TodoList5',
-                gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-              );
+              const id = 'TodoList5';
+              const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
 
-              proxy.writeFragment(
-                { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-                'TodoList5',
-                gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-              );
+              const data: any = proxy.readFragment({ id, fragment });
+
+              proxy.writeFragment({
+                data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+                id, fragment,
+              });
             },
           })
           .then(
@@ -1384,16 +1381,15 @@ describe('mutation results', () => {
                 assert.equal(mResult.data.createTodo.id, '99');
                 assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
 
-                const data: any = proxy.readFragment(
-                  'TodoList5',
-                  gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-                );
+                const id = 'TodoList5';
+                const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
 
-                proxy.writeFragment(
-                  { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-                  'TodoList5',
-                  gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-                );
+                const data: any = proxy.readFragment({ id, fragment });
+
+                proxy.writeFragment({
+                  data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+                  id, fragment,
+                });
               },
             }),
           )

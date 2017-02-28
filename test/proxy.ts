@@ -36,9 +36,9 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readQuery(gql`{ a }`), { a: 1 });
-      assert.deepEqual(proxy.readQuery(gql`{ b c }`), { b: 2, c: 3 });
-      assert.deepEqual(proxy.readQuery(gql`{ a b c }`), { a: 1, b: 2, c: 3 });
+      assert.deepEqual(proxy.readQuery({ query: gql`{ a }` }), { a: 1 });
+      assert.deepEqual(proxy.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
+      assert.deepEqual(proxy.readQuery({ query: gql`{ a b c }` }), { a: 1, b: 2, c: 3 });
     });
 
     it('will read some deeply nested data from the store', () => {
@@ -77,15 +77,15 @@ describe('ReduxDataProxy', () => {
       });
 
       assert.deepEqual(
-        proxy.readQuery(gql`{ a d { e } }`),
+        proxy.readQuery({ query: gql`{ a d { e } }` }),
         { a: 1, d: { e: 4 } },
       );
       assert.deepEqual(
-        proxy.readQuery(gql`{ a d { e h { i } } }`),
+        proxy.readQuery({ query: gql`{ a d { e h { i } } }` }),
         { a: 1, d: { e: 4, h: { i: 7 } } },
       );
       assert.deepEqual(
-        proxy.readQuery(gql`{ a b c d { e f g h { i j k } } }`),
+        proxy.readQuery({ query: gql`{ a b c d { e f g h { i j k } } }` }),
         { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
       );
     });
@@ -104,16 +104,16 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readQuery(
-        gql`query ($literal: Boolean, $value: Int) {
+      assert.deepEqual(proxy.readQuery({
+        query: gql`query ($literal: Boolean, $value: Int) {
           a: field(literal: true, value: 42)
           b: field(literal: $literal, value: $value)
         }`,
-        {
+        variables: {
           literal: false,
           value: 42,
         },
-      ), { a: 1, b: 2 });
+      }), { a: 1, b: 2 });
     });
   });
 
@@ -122,10 +122,10 @@ describe('ReduxDataProxy', () => {
       const proxy = createDataProxy();
 
       assert.throws(() => {
-        proxy.readFragment('x', gql`query { a b c }`);
+        proxy.readFragment({ id: 'x', fragment: gql`query { a b c }` });
       }, 'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.');
       assert.throws(() => {
-        proxy.readFragment('x', gql`schema { query: Query }`);
+        proxy.readFragment({ id: 'x', fragment: gql`schema { query: Query }` });
       }, 'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
@@ -133,10 +133,10 @@ describe('ReduxDataProxy', () => {
       const proxy = createDataProxy();
 
       assert.throws(() => {
-        proxy.readFragment('x', gql`fragment a on A { a } fragment b on B { b }`);
+        proxy.readFragment({ id: 'x', fragment: gql`fragment a on A { a } fragment b on B { b }` });
       }, 'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
       assert.throws(() => {
-        proxy.readFragment('x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
+        proxy.readFragment({ id: 'x', fragment: gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }` });
       }, 'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
@@ -179,35 +179,35 @@ describe('ReduxDataProxy', () => {
       });
 
       assert.deepEqual(
-        proxy.readFragment('foo', gql`fragment fragmentFoo on Foo { e h { i } }`),
+        proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e h { i } }` }),
         { e: 4, h: { i: 7 } },
       );
       assert.deepEqual(
-        proxy.readFragment('foo', gql`fragment fragmentFoo on Foo { e f g h { i j k } }`),
+        proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } }` }),
         { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
       );
       assert.deepEqual(
-        proxy.readFragment('bar', gql`fragment fragmentBar on Bar { i }`),
+        proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i }` }),
         { i: 7 },
       );
       assert.deepEqual(
-        proxy.readFragment('bar', gql`fragment fragmentBar on Bar { i j k }`),
+        proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i j k }` }),
         { i: 7, j: 8, k: 9 },
       );
       assert.deepEqual(
-        proxy.readFragment(
-          'foo',
-          gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
-          'fragmentFoo',
-        ),
+        proxy.readFragment({
+          id: 'foo',
+          fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
+          fragmentName: 'fragmentFoo',
+        }),
         { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
       );
       assert.deepEqual(
-        proxy.readFragment(
-          'bar',
-          gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
-          'fragmentBar',
-        ),
+        proxy.readFragment({
+          id: 'bar',
+          fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
+          fragmentName: 'fragmentBar',
+        }),
         { i: 7, j: 8, k: 9 },
       );
     });
@@ -227,20 +227,19 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readFragment(
-        'foo',
-        gql`
+      assert.deepEqual(proxy.readFragment({
+        id: 'foo',
+        fragment: gql`
           fragment foo on Foo {
             a: field(literal: true, value: 42)
             b: field(literal: $literal, value: $value)
           }
         `,
-        undefined,
-        {
+        variables: {
           literal: false,
           value: 42,
         },
-      ), { a: 1, b: 2 });
+      }), { a: 1, b: 2 });
     });
 
     it('will return null when an id that can’t be found is provided', () => {
@@ -264,9 +263,9 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.equal(client1.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), null);
-      assert.equal(client2.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), null);
-      assert.deepEqual(client3.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), { a: 1, b: 2, c: 3 });
+      assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
+      assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
+      assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), { a: 1, b: 2, c: 3 });
     });
   });
 
@@ -274,7 +273,7 @@ describe('ReduxDataProxy', () => {
     it('will write some data to the store', () => {
       const proxy = createDataProxy();
 
-      proxy.writeQuery({ a: 1 }, gql`{ a }`);
+      proxy.writeQuery({ data: { a: 1 }, query: gql`{ a }` });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'ROOT_QUERY': {
@@ -282,7 +281,7 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeQuery({ b: 2, c: 3 }, gql`{ b c }`);
+      proxy.writeQuery({ data: { b: 2, c: 3 }, query: gql`{ b c }` });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'ROOT_QUERY': {
@@ -292,7 +291,7 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeQuery({ a: 4, b: 5, c: 6 }, gql`{ a b c }`);
+      proxy.writeQuery({ data: { a: 4, b: 5, c: 6 }, query: gql`{ a b c }` });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'ROOT_QUERY': {
@@ -306,10 +305,10 @@ describe('ReduxDataProxy', () => {
     it('will write some deeply nested data to the store', () => {
       const proxy = createDataProxy();
 
-      proxy.writeQuery(
-        { a: 1, d: { e: 4 } },
-        gql`{ a d { e } }`,
-      );
+      proxy.writeQuery({
+        data: { a: 1, d: { e: 4 } },
+        query: gql`{ a d { e } }`,
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'ROOT_QUERY': {
@@ -325,10 +324,10 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeQuery(
-        { a: 1, d: { h: { i: 7 } } },
-        gql`{ a d { h { i } } }`,
-      );
+      proxy.writeQuery({
+        data: { a: 1, d: { h: { i: 7 } } },
+        query: gql`{ a d { h { i } } }`,
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'ROOT_QUERY': {
@@ -352,10 +351,10 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeQuery(
-        { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
-        gql`{ a b c d { e f g h { i j k } } }`,
-      );
+      proxy.writeQuery({
+        data: { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
+        query: gql`{ a b c d { e f g h { i j k } } }`,
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'ROOT_QUERY': {
@@ -389,22 +388,22 @@ describe('ReduxDataProxy', () => {
     it('will write some data to the store with variables', () => {
       const proxy = createDataProxy();
 
-      proxy.writeQuery(
-        {
+      proxy.writeQuery({
+        data: {
           a: 1,
           b: 2,
         },
-        gql`
+        query: gql`
           query ($literal: Boolean, $value: Int) {
             a: field(literal: true, value: 42)
             b: field(literal: $literal, value: $value)
           }
         `,
-        {
+        variables: {
           literal: false,
           value: 42,
         },
-      );
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'ROOT_QUERY': {
@@ -420,10 +419,10 @@ describe('ReduxDataProxy', () => {
       const proxy = createDataProxy();
 
       assert.throws(() => {
-        proxy.writeFragment({}, 'x', gql`query { a b c }`);
+        proxy.writeFragment({ data: {}, id: 'x', fragment: gql`query { a b c }` });
       }, 'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.');
       assert.throws(() => {
-        proxy.writeFragment({}, 'x', gql`schema { query: Query }`);
+        proxy.writeFragment({ data: {}, id: 'x', fragment: gql`schema { query: Query }` });
       }, 'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
@@ -431,10 +430,10 @@ describe('ReduxDataProxy', () => {
       const proxy = createDataProxy();
 
       assert.throws(() => {
-        proxy.writeFragment({}, 'x', gql`fragment a on A { a } fragment b on B { b }`);
+        proxy.writeFragment({ data: {}, id: 'x', fragment: gql`fragment a on A { a } fragment b on B { b }` });
       }, 'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
       assert.throws(() => {
-        proxy.writeFragment({}, 'x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
+        proxy.writeFragment({ data: {}, id: 'x', fragment: gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }` });
       }, 'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
@@ -443,11 +442,11 @@ describe('ReduxDataProxy', () => {
         dataIdFromObject: (o: any) => o.id,
       });
 
-      proxy.writeFragment(
-        { e: 4, h: { id: 'bar', i: 7 } },
-        'foo',
-        gql`fragment fragmentFoo on Foo { e h { i } }`,
-      );
+      proxy.writeFragment({
+        data: { e: 4, h: { id: 'bar', i: 7 } },
+        id: 'foo',
+        fragment: gql`fragment fragmentFoo on Foo { e h { i } }`,
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'foo': {
@@ -463,11 +462,11 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeFragment(
-        { f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
-        'foo',
-        gql`fragment fragmentFoo on Foo { f g h { j k } }`,
-      );
+      proxy.writeFragment({
+        data: { f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
+        id: 'foo',
+        fragment: gql`fragment fragmentFoo on Foo { f g h { j k } }`,
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'foo': {
@@ -487,11 +486,11 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeFragment(
-        { i: 10 },
-        'bar',
-        gql`fragment fragmentBar on Bar { i }`,
-      );
+      proxy.writeFragment({
+        data: { i: 10 },
+        id: 'bar',
+        fragment: gql`fragment fragmentBar on Bar { i }`,
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'foo': {
@@ -511,11 +510,11 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeFragment(
-        { j: 11, k: 12 },
-        'bar',
-        gql`fragment fragmentBar on Bar { j k }`,
-      );
+      proxy.writeFragment({
+        data: { j: 11, k: 12 },
+        id: 'bar',
+        fragment: gql`fragment fragmentBar on Bar { j k }`,
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'foo': {
@@ -535,12 +534,12 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeFragment(
-        { e: 4, f: 5, g: 6, h: { id: 'bar', i: 7, j: 8, k: 9 } },
-        'foo',
-        gql`fragment fooFragment on Foo { e f g h { i j k } } fragment barFragment on Bar { i j k }`,
-        'fooFragment',
-      );
+      proxy.writeFragment({
+        data: { e: 4, f: 5, g: 6, h: { id: 'bar', i: 7, j: 8, k: 9 } },
+        id: 'foo',
+        fragment: gql`fragment fooFragment on Foo { e f g h { i j k } } fragment barFragment on Bar { i j k }`,
+        fragmentName: 'fooFragment',
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'foo': {
@@ -560,12 +559,12 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      proxy.writeFragment(
-        { i: 10, j: 11, k: 12 },
-        'bar',
-        gql`fragment fooFragment on Foo { e f g h { i j k } } fragment barFragment on Bar { i j k }`,
-        'barFragment',
-      );
+      proxy.writeFragment({
+        data: { i: 10, j: 11, k: 12 },
+        id: 'bar',
+        fragment: gql`fragment fooFragment on Foo { e f g h { i j k } } fragment barFragment on Bar { i j k }`,
+        fragmentName: 'barFragment',
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'foo': {
@@ -589,24 +588,23 @@ describe('ReduxDataProxy', () => {
     it('will write some data to the store with variables', () => {
       const proxy = createDataProxy();
 
-      proxy.writeFragment(
-        {
+      proxy.writeFragment({
+        data: {
           a: 1,
           b: 2,
         },
-        'foo',
-        gql`
+        id: 'foo',
+        fragment: gql`
           fragment foo on Foo {
             a: field(literal: true, value: 42)
             b: field(literal: $literal, value: $value)
           }
         `,
-        undefined,
-        {
+        variables: {
           literal: false,
           value: 42,
         },
-      );
+      });
 
       assert.deepEqual((proxy as any).store.getState().apollo.data, {
         'foo': {
@@ -625,7 +623,7 @@ describe('TransactionDataProxy', () => {
       proxy.finish();
 
       assert.throws(() => {
-        proxy.readQuery();
+        proxy.readQuery({});
       }, 'Cannot call transaction methods after the transaction has finished.');
     });
 
@@ -638,9 +636,9 @@ describe('TransactionDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readQuery(gql`{ a }`), { a: 1 });
-      assert.deepEqual(proxy.readQuery(gql`{ b c }`), { b: 2, c: 3 });
-      assert.deepEqual(proxy.readQuery(gql`{ a b c }`), { a: 1, b: 2, c: 3 });
+      assert.deepEqual(proxy.readQuery({ query: gql`{ a }` }), { a: 1 });
+      assert.deepEqual(proxy.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
+      assert.deepEqual(proxy.readQuery({ query: gql`{ a b c }` }), { a: 1, b: 2, c: 3 });
     });
 
     it('will read some deeply nested data from the store', () => {
@@ -673,15 +671,15 @@ describe('TransactionDataProxy', () => {
       });
 
       assert.deepEqual(
-        proxy.readQuery(gql`{ a d { e } }`),
+        proxy.readQuery({ query: gql`{ a d { e } }` }),
         { a: 1, d: { e: 4 } },
       );
       assert.deepEqual(
-        proxy.readQuery(gql`{ a d { e h { i } } }`),
+        proxy.readQuery({ query: gql`{ a d { e h { i } } }` }),
         { a: 1, d: { e: 4, h: { i: 7 } } },
       );
       assert.deepEqual(
-        proxy.readQuery(gql`{ a b c d { e f g h { i j k } } }`),
+        proxy.readQuery({ query: gql`{ a b c d { e f g h { i j k } } }` }),
         { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
       );
     });
@@ -694,16 +692,16 @@ describe('TransactionDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readQuery(
-        gql`query ($literal: Boolean, $value: Int) {
+      assert.deepEqual(proxy.readQuery({
+        query: gql`query ($literal: Boolean, $value: Int) {
           a: field(literal: true, value: 42)
           b: field(literal: $literal, value: $value)
         }`,
-        {
+        variables: {
           literal: false,
           value: 42,
         },
-      ), { a: 1, b: 2 });
+      }), { a: 1, b: 2 });
     });
   });
 
@@ -713,7 +711,7 @@ describe('TransactionDataProxy', () => {
       proxy.finish();
 
       assert.throws(() => {
-        proxy.readFragment();
+        proxy.readFragment({});
       }, 'Cannot call transaction methods after the transaction has finished.');
     });
 
@@ -721,10 +719,10 @@ describe('TransactionDataProxy', () => {
       const proxy = new TransactionDataProxy({});
 
       assert.throws(() => {
-        proxy.readFragment('x', gql`query { a b c }`);
+        proxy.readFragment({ id: 'x', fragment: gql`query { a b c }` });
       }, 'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.');
       assert.throws(() => {
-        proxy.readFragment('x', gql`schema { query: Query }`);
+        proxy.readFragment({ id: 'x', fragment: gql`schema { query: Query }` });
       }, 'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
@@ -732,10 +730,10 @@ describe('TransactionDataProxy', () => {
       const proxy = new TransactionDataProxy({});
 
       assert.throws(() => {
-        proxy.readFragment('x', gql`fragment a on A { a } fragment b on B { b }`);
+        proxy.readFragment({ id: 'x', fragment: gql`fragment a on A { a } fragment b on B { b }` });
       }, 'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
       assert.throws(() => {
-        proxy.readFragment('x', gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }`);
+        proxy.readFragment({ id: 'x', fragment: gql`fragment a on A { a } fragment b on B { b } fragment c on C { c }` });
       }, 'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
     });
 
@@ -772,35 +770,35 @@ describe('TransactionDataProxy', () => {
       });
 
       assert.deepEqual(
-        proxy.readFragment('foo', gql`fragment fragmentFoo on Foo { e h { i } }`),
+        proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e h { i } }` }),
         { e: 4, h: { i: 7 } },
       );
       assert.deepEqual(
-        proxy.readFragment('foo', gql`fragment fragmentFoo on Foo { e f g h { i j k } }`),
+        proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } }` }),
         { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
       );
       assert.deepEqual(
-        proxy.readFragment('bar', gql`fragment fragmentBar on Bar { i }`),
+        proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i }` }),
         { i: 7 },
       );
       assert.deepEqual(
-        proxy.readFragment('bar', gql`fragment fragmentBar on Bar { i j k }`),
+        proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i j k }` }),
         { i: 7, j: 8, k: 9 },
       );
       assert.deepEqual(
-        proxy.readFragment(
-          'foo',
-          gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
-          'fragmentFoo',
-        ),
+        proxy.readFragment({
+          id: 'foo',
+          fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
+          fragmentName: 'fragmentFoo',
+        }),
         { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
       );
       assert.deepEqual(
-        proxy.readFragment(
-          'bar',
-          gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
-          'fragmentBar',
-        ),
+        proxy.readFragment({
+          id: 'bar',
+          fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
+          fragmentName: 'fragmentBar',
+        }),
         { i: 7, j: 8, k: 9 },
       );
     });
@@ -814,20 +812,19 @@ describe('TransactionDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readFragment(
-        'foo',
-        gql`
+      assert.deepEqual(proxy.readFragment({
+        id: 'foo',
+        fragment: gql`
           fragment foo on Foo {
             a: field(literal: true, value: 42)
             b: field(literal: $literal, value: $value)
           }
         `,
-        undefined,
-        {
+        variables: {
           literal: false,
           value: 42,
         },
-      ), { a: 1, b: 2 });
+      }), { a: 1, b: 2 });
     });
 
     it('will return null when an id that can’t be found is provided', () => {
@@ -839,9 +836,9 @@ describe('TransactionDataProxy', () => {
         'foo': { __typename: 'Type1', a: 1, b: 2, c: 3 },
       });
 
-      assert.equal(client1.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), null);
-      assert.equal(client2.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), null);
-      assert.deepEqual(client3.readFragment('foo', gql`fragment fooFragment on Foo { a b c }`), { a: 1, b: 2, c: 3 });
+      assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
+      assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
+      assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), { a: 1, b: 2, c: 3 });
     });
   });
 
@@ -851,23 +848,23 @@ describe('TransactionDataProxy', () => {
       proxy.finish();
 
       assert.throws(() => {
-        proxy.writeQuery();
+        proxy.writeQuery({});
       }, 'Cannot call transaction methods after the transaction has finished.');
     });
 
     it('will create writes that get returned when finished', () => {
       const proxy = new TransactionDataProxy({});
 
-      proxy.writeQuery(
-        { a: 1, b: 2, c: 3 },
-        gql`{ a b c }`,
-      );
+      proxy.writeQuery({
+        data: { a: 1, b: 2, c: 3 },
+        query: gql`{ a b c }`,
+      });
 
-      proxy.writeQuery(
-        { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } },
-        gql`{ foo(id: $id) { d e bar { f g } } }`,
-        { id: 7 },
-      );
+      proxy.writeQuery({
+        data: { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } },
+        query: gql`{ foo(id: $id) { d e bar { f g } } }`,
+        variables: { id: 7 },
+      });
 
       const writes = proxy.finish();
 
@@ -894,29 +891,29 @@ describe('TransactionDataProxy', () => {
       proxy.finish();
 
       assert.throws(() => {
-        proxy.writeFragment();
+        proxy.writeFragment({});
       }, 'Cannot call transaction methods after the transaction has finished.');
     });
 
     it('will create writes that get returned when finished', () => {
       const proxy = new TransactionDataProxy({});
 
-      proxy.writeFragment(
-        { a: 1, b: 2, c: 3 },
-        'foo',
-        gql`fragment fragment1 on Foo { a b c }`,
-      );
+      proxy.writeFragment({
+        data: { a: 1, b: 2, c: 3 },
+        id: 'foo',
+        fragment: gql`fragment fragment1 on Foo { a b c }`,
+      });
 
-      proxy.writeFragment(
-        { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } },
-        'bar',
-        gql`
+      proxy.writeFragment({
+        data: { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } },
+        id: 'bar',
+        fragment: gql`
           fragment fragment1 on Foo { a b c }
           fragment fragment2 on Bar { foo(id: $id) { d e bar { f g } } }
         `,
-        'fragment2',
-        { id: 7 },
-      );
+        fragmentName: 'fragment2',
+        variables: { id: 7 },
+      });
 
       const writes = proxy.finish();
 

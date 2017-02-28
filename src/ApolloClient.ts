@@ -359,11 +359,11 @@ export default class ApolloClient {
    *
    * @param variables Any variables that the GraphQL query may depend on.
    */
-  public readQuery<QueryType>(
+  public readQuery<QueryType>(config: {
     query: DocumentNode,
     variables?: Object,
-  ): QueryType {
-    return this.initProxy().readQuery<QueryType>(query, variables);
+  }): QueryType {
+    return this.initProxy().readQuery<QueryType>(config);
   }
 
   /**
@@ -392,13 +392,13 @@ export default class ApolloClient {
    *
    * @param variables Any variables that your GraphQL fragments depend on.
    */
-  public readFragment<FragmentType>(
+  public readFragment<FragmentType>(config: {
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): FragmentType | null {
-    return this.initProxy().readFragment<FragmentType>(id, fragment, fragmentName, variables);
+  }): FragmentType | null {
+    return this.initProxy().readFragment<FragmentType>(config);
   }
 
   /**
@@ -412,12 +412,12 @@ export default class ApolloClient {
    *
    * @param variables Any variables that the GraphQL query may depend on.
    */
-  public writeQuery(
+  public writeQuery(config: {
     data: any,
     query: DocumentNode,
     variables?: Object,
-  ): void {
-    return this.initProxy().writeQuery(data, query, variables);
+  }): void {
+    return this.initProxy().writeQuery(config);
   }
 
   /**
@@ -447,14 +447,14 @@ export default class ApolloClient {
    *
    * @param variables Any variables that your GraphQL fragments depend on.
    */
-  public writeFragment(
+  public writeFragment(config: {
     data: any,
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): void {
-    return this.initProxy().writeFragment(data, id, fragment, fragmentName, variables);
+  }): void {
+    return this.initProxy().writeFragment(config);
   }
 
   /**

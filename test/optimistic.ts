@@ -354,16 +354,16 @@ describe('optimistic mutation results', () => {
 
     describe('with `update`', () => {
       const update = (proxy: any, mResult: any) => {
-        const data: any = proxy.readFragment(
-          'TodoList5',
-          gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-        );
+        const data: any = proxy.readFragment({
+          id: 'TodoList5',
+          fragment: gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
+        });
 
-        proxy.writeFragment(
-          { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-          'TodoList5',
-          gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-        );
+        proxy.writeFragment({
+          data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+          id: 'TodoList5',
+          fragment: gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
+        });
       };
 
       it('handles a single error for a single mutation', () => {
@@ -944,16 +944,15 @@ describe('optimistic mutation results', () => {
           update: (proxy, mResult: any) => {
             assert.equal(mResult.data.createTodo.id, '99');
 
-            const data: any = proxy.readFragment(
-              'TodoList5',
-              gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-            );
+            const id = 'TodoList5';
+            const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
 
-            proxy.writeFragment(
-              { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-              'TodoList5',
-              gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-            );
+            const data: any = proxy.readFragment({ id, fragment });
+
+            proxy.writeFragment({
+              data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+              id, fragment,
+            });
           },
         });
 
@@ -997,16 +996,16 @@ describe('optimistic mutation results', () => {
       })
       .then(() => {
         const update = (proxy: any, mResult: any) => {
-          const data: any = proxy.readFragment(
-            'TodoList5',
-            gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-          );
+          const data: any = proxy.readFragment({
+            id: 'TodoList5',
+            fragment: gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
+          });
 
-          proxy.writeFragment(
-            { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-            'TodoList5',
-            gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-          );
+          proxy.writeFragment({
+            data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+            id: 'TodoList5',
+            fragment: gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
+          });
         };
         const promise = client.mutate({
           mutation,
@@ -1074,16 +1073,16 @@ describe('optimistic mutation results', () => {
       })
       .then(() => {
         const update = (proxy: any, mResult: any) => {
-          const data: any = proxy.readFragment(
-            'TodoList5',
-            gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-          );
+          const data: any = proxy.readFragment({
+            id: 'TodoList5',
+            fragment: gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
+          });
 
-          proxy.writeFragment(
-            { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-            'TodoList5',
-            gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-          );
+          proxy.writeFragment({
+            data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+            id: 'TodoList5',
+            fragment: gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
+          });
         };
         const promise = client.mutate({
           mutation,
@@ -1155,16 +1154,16 @@ describe('optimistic mutation results', () => {
       };
 
       const update = (proxy: any, mResult: any) => {
-        const data: any = proxy.readFragment(
-          'TodoList5',
-          gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-        );
+        const data: any = proxy.readFragment({
+          id: 'TodoList5',
+          fragment: gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
+        });
 
-        proxy.writeFragment(
-          { ...data, todos: [mResult.data.createTodo, ...data.todos] },
-          'TodoList5',
-          gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
-        );
+        proxy.writeFragment({
+          data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+          id: 'TodoList5',
+          fragment: gql`fragment todoList on TodoList { todos { id text completed __typename } }`,
+        });
       };
 
       client = new ApolloClient({

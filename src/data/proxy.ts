@@ -16,44 +16,44 @@ export interface DataProxy {
   /**
    * Reads a GraphQL query from the root query id.
    */
-  readQuery<QueryType>(
+  readQuery<QueryType>(config: {
     query: DocumentNode,
     variables?: Object,
-  ): QueryType;
+  }): QueryType;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  readFragment<FragmentType>(
+  readFragment<FragmentType>(config: {
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): FragmentType | null;
+  }): FragmentType | null;
 
   /**
    * Writes a GraphQL query to the root query id.
    */
-  writeQuery(
+  writeQuery(config: {
     data: any,
     query: DocumentNode,
     variables?: Object,
-  ): void;
+  }): void;
 
   /**
    * Writes a GraphQL fragment to any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  writeFragment(
+  writeFragment(config: {
     data: any,
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): void;
+  }): void;
 }
 
 /**
@@ -86,10 +86,13 @@ export class ReduxDataProxy implements DataProxy {
   /**
    * Reads a query from the Redux state.
    */
-  public readQuery<QueryType>(
+  public readQuery<QueryType>({
+    query,
+    variables,
+  }: {
     query: DocumentNode,
     variables?: Object,
-  ): QueryType {
+  }): QueryType {
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
       store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())),
@@ -102,12 +105,17 @@ export class ReduxDataProxy implements DataProxy {
   /**
    * Reads a fragment from the Redux state.
    */
-  public readFragment<FragmentType>(
+  public readFragment<FragmentType>({
+    id,
+    fragment,
+    fragmentName,
+    variables,
+  }: {
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): FragmentType | null {
+  }): FragmentType | null {
     const query = getFragmentQueryDocument(fragment, fragmentName);
     const data = getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState()));
 
@@ -129,11 +137,15 @@ export class ReduxDataProxy implements DataProxy {
   /**
    * Writes a query to the Redux state.
    */
-  public writeQuery(
+  public writeQuery({
+    data,
+    query,
+    variables,
+  }: {
     data: any,
     query: DocumentNode,
     variables?: Object,
-  ): void {
+  }): void {
     this.store.dispatch({
       type: 'APOLLO_WRITE',
       writes: [{
@@ -148,13 +160,19 @@ export class ReduxDataProxy implements DataProxy {
   /**
    * Writes a fragment to the Redux state.
    */
-  public writeFragment(
+  public writeFragment({
+    data,
+    id,
+    fragment,
+    fragmentName,
+    variables,
+  }: {
     data: any,
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): void {
+  }): void {
     this.store.dispatch({
       type: 'APOLLO_WRITE',
       writes: [{
@@ -216,10 +234,13 @@ export class TransactionDataProxy implements DataProxy {
    *
    * Throws an error if the transaction has finished.
    */
-  public readQuery<QueryType>(
+  public readQuery<QueryType>({
+    query,
+    variables,
+  }: {
     query: DocumentNode,
     variables?: Object,
-  ): QueryType {
+  }): QueryType {
     this.assertNotFinished();
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
@@ -235,12 +256,17 @@ export class TransactionDataProxy implements DataProxy {
    *
    * Throws an error if the transaction has finished.
    */
-  public readFragment<FragmentType>(
+  public readFragment<FragmentType>({
+    id,
+    fragment,
+    fragmentName,
+    variables,
+  }: {
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): FragmentType | null {
+  }): FragmentType | null {
     this.assertNotFinished();
     const { data } = this;
     const query = getFragmentQueryDocument(fragment, fragmentName);
@@ -265,11 +291,15 @@ export class TransactionDataProxy implements DataProxy {
    * a write to the store at the root query id. Cannot be called after
    * the transaction finishes.
    */
-  public writeQuery(
+  public writeQuery({
+    data,
+    query,
+    variables,
+  }: {
     data: any,
     query: DocumentNode,
     variables?: Object,
-  ): void {
+  }): void {
     this.assertNotFinished();
     this.writes.push({
       rootId: 'ROOT_QUERY',
@@ -284,13 +314,19 @@ export class TransactionDataProxy implements DataProxy {
    * write to the store form some fragment data at an arbitrary id. Cannot be
    * called after the transaction finishes.
    */
-  public writeFragment(
+  public writeFragment({
+    data,
+    id,
+    fragment,
+    fragmentName,
+    variables,
+  }: {
     data: any,
     id: string,
     fragment: DocumentNode,
     fragmentName?: string,
     variables?: Object,
-  ): void {
+  }): void {
     this.assertNotFinished();
     this.writes.push({
       rootId: id,

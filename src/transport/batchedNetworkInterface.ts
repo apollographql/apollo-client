@@ -102,7 +102,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
               response: Response;
               options: RequestInit;
             };
-          
+
             this.applyBatchAfterwares({
               responses,
               options: batchRequestAndOptions.options,

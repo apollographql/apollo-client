@@ -8,7 +8,7 @@ export interface AfterwareInterface {
 }
 
 export interface BatchAfterwareResponse {
-  responses: IResponse[];
+  responses: Response[];
   options: RequestInit;
 }
 

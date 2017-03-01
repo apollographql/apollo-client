@@ -378,7 +378,7 @@ export class QueryManager {
             try {
               observer.error(apolloError);
             } catch (e) {
-              console.error(`Error in observer.error \n${e.stack}`);
+              console.error('Error in observer.error \n', e.stack);
             }
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
@@ -441,7 +441,7 @@ export class QueryManager {
                 try {
                   observer.next(maybeDeepFreeze(this.transformResult(resultFromStore)));
                 } catch (e) {
-                  console.error(`Error in observer.next \n${e.stack}`);
+                  console.error('Error in observer.next \n', e.stack);
                 }
               }
             }

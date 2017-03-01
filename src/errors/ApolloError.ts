@@ -58,9 +58,6 @@ export class ApolloError extends Error {
     this.graphQLErrors = graphQLErrors || [];
     this.networkError = networkError || null;
 
-    // set up the stack trace
-    this.stack = new Error().stack;
-
     if (!errorMessage) {
       this.message = generateErrorMessage(this);
     } else {

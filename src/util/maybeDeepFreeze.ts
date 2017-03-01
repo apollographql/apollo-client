@@ -4,7 +4,7 @@ import {
 } from './environment';
 
 // taken straight from https://github.com/substack/deep-freeze to avoid import hassles with rollup
-function deepFreeze (o: any) {
+export function deepFreeze (o: any) {
   Object.freeze(o);
 
   Object.getOwnPropertyNames(o).forEach(function (prop) {

@@ -408,7 +408,7 @@ export class QueryManager {
             // result and mark it as stale.
             if (isMissing && !(options.returnPartialData || noFetch)) {
               resultFromStore = {
-                data: lastResult.data,
+                data: lastResult && lastResult.data,
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
                 networkStatus: queryStoreValue.networkStatus,
                 stale: true,

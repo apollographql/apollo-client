@@ -5,9 +5,16 @@ import {
 
 import {
   OperationResultReducer,
-  MutationBehavior,
   MutationQueryReducersMap,
 } from '../data/mutationResults';
+
+import {
+  DataProxy,
+} from '../data/proxy';
+
+import {
+  PureQueryOptions,
+} from './types';
 
 /**
  * We can change these options to an ObservableQuery
@@ -96,8 +103,8 @@ export interface SubscriptionOptions {
 export interface MutationOptions {
   mutation: DocumentNode;
   variables?: Object;
-  resultBehaviors?: MutationBehavior[];
   optimisticResponse?: Object;
   updateQueries?: MutationQueryReducersMap;
-  refetchQueries?: string[];
+  refetchQueries?: string[] | PureQueryOptions[];
+  update?: (proxy: DataProxy, mutationResult: Object) => void;
 }

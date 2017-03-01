@@ -25,7 +25,7 @@ export class QueryBatcher {
   public queuedRequests: QueryFetchRequest[] = [];
 
   private pollInterval: Number;
-  private pollTimer: NodeJS.Timer | any; //oddity in Typescript
+  private pollTimer: any;
 
   //This function is called to the queries in the queue to the server.
   private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
@@ -54,20 +54,16 @@ export class QueryBatcher {
 
   // Consumes the queue. Called on a polling interval.
   // Returns a list of promises (one for each query).
-  public consumeQueue(): Promise<ExecutionResult>[] | undefined {
+  public consumeQueue(): (Promise<ExecutionResult> | undefined)[] | undefined {
     if (this.queuedRequests.length < 1) {
       return undefined;
     }
 
-    const requests: Request[] = this.queuedRequests.map((queuedRequest) => {
-      return {
-        query: queuedRequest.request.query,
-        variables: queuedRequest.request.variables,
-        operationName: queuedRequest.request.operationName,
-      };
-    });
+    const requests: Request[] = this.queuedRequests.map(
+      (queuedRequest) => queuedRequest.request,
+    );
 
-    const promises: Promise<ExecutionResult>[] = [];
+    const promises: (Promise<ExecutionResult> | undefined)[] = [];
     const resolvers: any[] = [];
     const rejecters: any[] = [];
     this.queuedRequests.forEach((fetchRequest, index) => {

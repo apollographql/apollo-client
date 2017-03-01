@@ -1,8 +1,6 @@
 import { DocumentNode } from 'graphql';
-import {
-  QueryStoreValue,
-  NetworkStatus,
-} from '../queries/store';
+import { QueryStoreValue } from '../queries/store';
+import { NetworkStatus } from '../queries/networkStatus';
 
 export interface SubscriptionOptions {
   document: DocumentNode;
@@ -11,10 +9,16 @@ export interface SubscriptionOptions {
 
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
+export type PureQueryOptions = {
+  query: DocumentNode,
+  variables?: { [key: string]: any};
+};
+
 export type ApolloQueryResult<T> = {
   data: T;
   loading: boolean;
   networkStatus: NetworkStatus;
+  stale: boolean;
 
   // This type is different from the GraphQLResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.
@@ -42,4 +46,4 @@ export enum FetchType {
   poll = 3,
 }
 
-export type IdGetter = (value: Object) => string;
+export type IdGetter = (value: Object) => string | null | undefined;

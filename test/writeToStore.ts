@@ -878,7 +878,7 @@ describe('writing to the store', () => {
             generated: false,
           },
         },
-        [dataIdFromObject(data.author)]: {
+        [dataIdFromObject(data.author)!]: {
           firstName: data.author.firstName,
           id: data.author.id,
           __typename: data.author.__typename,
@@ -917,7 +917,7 @@ describe('writing to the store', () => {
             generated: false,
           },
         },
-        [dataIdFromObject(data.author)]: {
+        [dataIdFromObject(data.author)!]: {
           __typename: data.author.__typename,
           id: data.author.id,
           info: {
@@ -1011,43 +1011,6 @@ describe('writing to the store', () => {
       dataIdFromObject,
     });
     assert.deepEqual(storeWithId, expStoreWithId);
-  });
-
-  it('throw an error if a variable is not provided', () => {
-    const testData = [
-      {
-        mutation: gql`mutation mut($v: ID) { mut(v: $v) { id } }`,
-        variables: { not_the_proper_variable_name: '1' },
-        expected: /The inline argument "v" is expected as a variable but was not provided./,
-      },
-    ];
-
-    const result: any = { mut: { id: '1' } };
-
-    function isOperationDefinition(value: ASTNode): value is OperationDefinitionNode {
-      return value.kind === 'OperationDefinition';
-    }
-
-    testData.forEach(({mutation, variables, expected}) => {
-      mutation.definitions.map((def: OperationDefinitionNode) => {
-        assert.throws(() => {
-          if (isOperationDefinition(def)) {
-            writeSelectionSetToStore({
-              dataId: '5',
-              selectionSet: def.selectionSet,
-              result: cloneDeep(result),
-              context: {
-                store: {},
-                variables,
-                dataIdFromObject: () => '5',
-              },
-            });
-          } else {
-            throw 'No operation definition found';
-          }
-        }, expected);
-      });
-    });
   });
 
   it('does not swallow errors other than field errors', () => {

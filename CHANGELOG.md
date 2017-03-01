@@ -3,9 +3,10 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- ...
+- Do not stringify error stack traces [PR #1347](https://github.com/apollographql/apollo-client/pull/1347)
 
 ### 0.10.0
+- BREAKING: Run middleware and afterware only once per batched request [PR #1285](https://github.com/apollographql/apollo-client/pull/1285)
 - Add direct cache manipulation read and write methods to provide the user the power to interact with Apollo’s GraphQL data representation outside of mutations. [PR #1310](https://github.com/apollographql/apollo-client/pull/1310)
 - Clear pollInterval in `ObservableQuery#stopPolling` so that resubscriptions don't start polling again [PR #1328](https://github.com/apollographql/apollo-client/pull/1328)
 - Update dependencies (Typescript 2.2.1, node typings, etc.) [PR #1332](https://github.com/apollographql/apollo-client/pull/1332)

@@ -11,6 +11,8 @@ import {
   SelectionSetNode,
   /* tslint:enable */
 
+  DocumentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import {
@@ -59,6 +61,16 @@ import {
 } from './data/storeUtils';
 
 import {
+  getFragmentQueryDocument,
+} from './queries/getFromAST';
+
+import {
+  DataProxy,
+  ReduxDataProxy,
+  TransactionDataProxy,
+} from './data/proxy';
+
+import {
   version,
 } from './version';
 
@@ -100,6 +112,7 @@ export default class ApolloClient {
   public queryDeduplication: boolean;
 
   private devToolsHookCb: Function;
+  private proxy: DataProxy | undefined;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -337,6 +350,114 @@ export default class ApolloClient {
   }
 
   /**
+   * Tries to read some data from the store in the shape of the provided
+   * GraphQL query without making a network request. This method will start at
+   * the root query. To start at a specific id returned by `dataIdFromObject`
+   * use `readFragment`.
+   *
+   * @param query The GraphQL query shape to be used.
+   *
+   * @param variables Any variables that the GraphQL query may depend on.
+   */
+  public readQuery<QueryType>(config: {
+    query: DocumentNode,
+    variables?: Object,
+  }): QueryType {
+    return this.initProxy().readQuery<QueryType>(config);
+  }
+
+  /**
+   * Tries to read some data from the store in the shape of the provided
+   * GraphQL fragment without making a network request. This method will read a
+   * GraphQL fragment from any arbitrary id that is currently cached, unlike
+   * `readQuery` which will only read from the root query.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are reading. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
+   *
+   * @param id The root id to be used. This id should take the same form as the
+   * value returned by your `dataIdFromObject` function. If a value with your
+   * id does not exist in the store, `null` will be returned.
+   *
+   * @param fragment A GraphQL document with one or more fragments the shape of
+   * which will be used. If you provide more then one fragments then you must
+   * also specify the next argument, `fragmentName`, to select a single
+   * fragment to use when reading.
+   *
+   * @param fragmentName The name of the fragment in your GraphQL document to
+   * be used. Pass `undefined` if there is only one fragment and you want to
+   * use that.
+   *
+   * @param variables Any variables that your GraphQL fragments depend on.
+   */
+  public readFragment<FragmentType>(config: {
+    id: string,
+    fragment: DocumentNode,
+    fragmentName?: string,
+    variables?: Object,
+  }): FragmentType | null {
+    return this.initProxy().readFragment<FragmentType>(config);
+  }
+
+  /**
+   * Writes some data in the shape of the provided GraphQL query directly to
+   * the store. This method will start at the root query. To start at a a
+   * specific id returned by `dataIdFromObject` then use `writeFragment`.
+   *
+   * @param data The data you will be writing to the store.
+   *
+   * @param query The GraphQL query shape to be used.
+   *
+   * @param variables Any variables that the GraphQL query may depend on.
+   */
+  public writeQuery(config: {
+    data: any,
+    query: DocumentNode,
+    variables?: Object,
+  }): void {
+    return this.initProxy().writeQuery(config);
+  }
+
+  /**
+   * Writes some data in the shape of the provided GraphQL fragment directly to
+   * the store. This method will write to a GraphQL fragment from any arbitrary
+   * id that is currently cached, unlike `writeQuery` which will only write
+   * from the root query.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are writing. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
+   *
+   * @param data The data you will be writing to the store.
+   *
+   * @param id The root id to be used. This id should take the same form as the
+   * value returned by your `dataIdFromObject` function.
+   *
+   * @param fragment A GraphQL document with one or more fragments the shape of
+   * which will be used. If you provide more then one fragments then you must
+   * also specify the next argument, `fragmentName`, to select a single
+   * fragment to use when reading.
+   *
+   * @param fragmentName The name of the fragment in your GraphQL document to
+   * be used. Pass `undefined` if there is only one fragment and you want to
+   * use that.
+   *
+   * @param variables Any variables that your GraphQL fragments depend on.
+   */
+  public writeFragment(config: {
+    data: any,
+    id: string,
+    fragment: DocumentNode,
+    fragmentName?: string,
+    variables?: Object,
+  }): void {
+    return this.initProxy().writeFragment(config);
+  }
+
+  /**
    * Returns a reducer function configured according to the `reducerConfig` instance variable.
    */
   public reducer(): Function {
@@ -457,4 +578,20 @@ export default class ApolloClient {
       queryDeduplication: this.queryDeduplication,
     });
   };
+
+  /**
+   * Initializes a data proxy for this client instance if one does not already
+   * exist and returns either a previously initialized proxy instance or the
+   * newly initialized instance.
+   */
+  private initProxy(): DataProxy {
+    if (!this.proxy) {
+      this.initStore();
+      this.proxy = new ReduxDataProxy(
+        this.store,
+        this.reduxRootSelector || defaultReduxRootSelector,
+      );
+    }
+    return this.proxy;
+  }
 }

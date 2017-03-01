@@ -9,6 +9,10 @@ import {
 } from '../data/mutationResults';
 
 import {
+  DataProxy,
+} from '../data/proxy';
+
+import {
   PureQueryOptions,
 } from './types';
 
@@ -102,4 +106,5 @@ export interface MutationOptions {
   optimisticResponse?: Object;
   updateQueries?: MutationQueryReducersMap;
   refetchQueries?: string[] | PureQueryOptions[];
+  update?: (proxy: DataProxy, mutationResult: Object) => void;
 }

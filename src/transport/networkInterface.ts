@@ -7,8 +7,15 @@ import {
 
 import { print } from 'graphql-tag/printer';
 
-import { MiddlewareInterface } from './middleware';
-import { AfterwareInterface } from './afterware';
+import {
+  MiddlewareInterface,
+  BatchMiddlewareInterface,
+} from './middleware';
+
+import {
+  AfterwareInterface,
+  BatchAfterwareInterface,
+} from './afterware';
 
 /**
  * This is an interface that describes an GraphQL document to be sent
@@ -57,10 +64,10 @@ export interface SubscriptionNetworkInterface extends NetworkInterface {
 export interface HTTPNetworkInterface extends NetworkInterface {
   _uri: string;
   _opts: RequestInit;
-  _middlewares: MiddlewareInterface[];
-  _afterwares: AfterwareInterface[];
-  use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface;
-  useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface;
+  _middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[];
+  _afterwares: AfterwareInterface[] | BatchAfterwareInterface[];
+  use(middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[]): HTTPNetworkInterface;
+  useAfter(afterwares: AfterwareInterface[] | BatchAfterwareInterface[]): HTTPNetworkInterface;
 }
 
 export interface RequestAndOptions {
@@ -80,13 +87,13 @@ export function printRequest(request: Request): PrintedRequest {
   };
 }
 
-// TODO: refactor
-// add the batching to this.
-export class HTTPFetchNetworkInterface implements NetworkInterface {
+// Provide extension point for regular network interface and batched
+// network interface. Should not be used directly.
+export class BaseNetworkInterface implements NetworkInterface {
+  public _middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[];
+  public _afterwares: AfterwareInterface[] | BatchAfterwareInterface[];
   public _uri: string;
   public _opts: RequestInit;
-  public _middlewares: MiddlewareInterface[];
-  public _afterwares: AfterwareInterface[];
 
   constructor(uri: string | undefined, opts: RequestInit = {}) {
     if (!uri) {
@@ -99,15 +106,25 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
 
     this._uri = uri;
     this._opts = { ...opts };
+
     this._middlewares = [];
     this._afterwares = [];
   }
 
-  public applyMiddlewares({
-    request,
-    options,
-  }: RequestAndOptions): Promise<RequestAndOptions> {
+  public query(request: Request): Promise<ExecutionResult> {
     return new Promise((resolve, reject) => {
+      reject(new Error('BaseNetworkInterface should not be used directly'));
+    });
+  }
+}
+
+export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
+  public _middlewares: MiddlewareInterface[];
+  public _afterwares: AfterwareInterface[];
+
+  public applyMiddlewares(requestAndOptions: RequestAndOptions): Promise<RequestAndOptions> {
+    return new Promise((resolve, reject) => {
+      const { request, options } = requestAndOptions;
       const queue = (funcs: MiddlewareInterface[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
@@ -125,23 +142,21 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         next();
       };
 
-      // iterate through middlewares using next callback
       queue([...this._middlewares], this);
     });
   }
 
-  public applyAfterwares({
-    response,
-    options,
-  }: ResponseAndOptions): Promise<ResponseAndOptions> {
+  public applyAfterwares({response, options}: ResponseAndOptions): Promise<ResponseAndOptions> {
     return new Promise((resolve, reject) => {
       // Declare responseObject so that afterware can mutate it.
-      const responseObject = { response, options };
-      const queue = (funcs: any[], scope: any) => {
+      const responseObject = {response, options};
+      const queue = (funcs: AfterwareInterface[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();
-            f.applyAfterware.apply(scope, [responseObject, next]);
+            if (f) {
+              f.applyAfterware.apply(scope, [responseObject, next]);
+            }
           } else {
             resolve(responseObject);
           }
@@ -213,6 +228,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         throw new Error('Middleware must implement the applyMiddleware function');
       }
     });
+
     return this;
   }
 
@@ -224,6 +240,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         throw new Error('Afterware must implement the applyAfterware function');
       }
     });
+
     return this;
   }
 }

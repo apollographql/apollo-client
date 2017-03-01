@@ -57,6 +57,10 @@ import {
 } from './queries/networkStatus';
 
 import {
+  addTypenameToDocument,
+} from './queries/queryTransform';
+
+import {
   ApolloError,
 } from './errors/ApolloError';
 
@@ -80,6 +84,7 @@ export {
   readQueryFromStore,
   writeQueryToStore,
   print as printAST,
+  addTypenameToDocument,
   createFragmentMap,
   NetworkStatus,
   ApolloError,

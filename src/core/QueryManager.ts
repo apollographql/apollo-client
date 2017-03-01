@@ -56,6 +56,10 @@ import {
 } from '../data/resultReducers';
 
 import {
+  DataProxy,
+} from '../data/proxy';
+
+import {
   isProduction,
 } from '../util/environment';
 
@@ -226,12 +230,14 @@ export class QueryManager {
     optimisticResponse,
     updateQueries: updateQueriesByName,
     refetchQueries = [],
+    update: updateWithProxyFn,
   }: {
     mutation: DocumentNode,
     variables?: Object,
     optimisticResponse?: Object,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[] | PureQueryOptions[],
+    update?: (proxy: DataProxy, mutationResult: Object) => void,
   }): Promise<ApolloQueryResult<T>> {
     const mutationId = this.generateQueryId();
 
@@ -267,6 +273,7 @@ export class QueryManager {
       optimisticResponse,
       extraReducers: this.getExtraReducers(),
       updateQueries,
+      update: updateWithProxyFn,
     });
 
     return new Promise((resolve, reject) => {
@@ -288,6 +295,7 @@ export class QueryManager {
             variables: variables || {},
             extraReducers: this.getExtraReducers(),
             updateQueries,
+            update: updateWithProxyFn,
           });
 
           // If there was an error in our reducers, reject this promise!
@@ -400,7 +408,7 @@ export class QueryManager {
             // result and mark it as stale.
             if (isMissing && !(options.returnPartialData || noFetch)) {
               resultFromStore = {
-                data: lastResult.data,
+                data: lastResult && lastResult.data,
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
                 networkStatus: queryStoreValue.networkStatus,
                 stale: true,

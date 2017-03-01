@@ -5,11 +5,16 @@ import {
   isUpdateQueryResultAction,
   isStoreResetAction,
   isSubscriptionResultAction,
+  isWriteAction,
 } from '../actions';
 
 import {
   writeResultToStore,
 } from './writeToStore';
+
+import {
+  TransactionDataProxy,
+} from '../data/proxy';
 
 import {
   QueryStore,
@@ -182,6 +187,26 @@ export function data(
         });
       }
 
+      // If the mutation has some writes associated with it then we need to
+      // apply those writes to the store by running this reducer again with a
+      // write action.
+      if (constAction.update) {
+        const update = constAction.update;
+        const proxy = new TransactionDataProxy(
+          newState,
+          config.dataIdFromObject,
+        );
+        tryFunctionOrLogError(() => update(proxy, constAction.result));
+        const writes = proxy.finish();
+        newState = data(
+          newState,
+          { type: 'APOLLO_WRITE', writes },
+          queries,
+          mutations,
+          config,
+        );
+      }
+
       // XXX each reducer gets the state from the previous reducer.
       // Maybe they should all get a clone instead and then compare at the end to make sure it's consistent.
       if (constAction.extraReducers) {
@@ -198,6 +223,20 @@ export function data(
     // If we are resetting the store, we no longer need any of the data that is currently in
     // the store so we can just throw it all away.
     return {};
+  } else if (isWriteAction(action)) {
+    // Simply write our result to the store for this action for all of the
+    // writes that were specified.
+    return action.writes.reduce(
+      (currentState, write) => writeResultToStore({
+        result: write.result,
+        dataId: write.rootId,
+        document: write.document,
+        variables: write.variables,
+        store: currentState,
+        dataIdFromObject: config.dataIdFromObject,
+      }),
+      { ...previousState } as NormalizedCache,
+    );
   }
 
   return previousState;

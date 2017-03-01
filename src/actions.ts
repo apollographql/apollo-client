@@ -8,6 +8,10 @@ import {
 } from './data/mutationResults';
 
 import {
+  DataProxy,
+} from './data/proxy';
+
+import {
   ApolloReducer,
 } from './store';
 
@@ -89,6 +93,7 @@ export interface MutationInitAction {
   optimisticResponse: Object | undefined;
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
+  update?: (proxy: DataProxy, mutationResult: Object) => void;
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
@@ -105,6 +110,7 @@ export interface MutationResultAction {
   mutationId: string;
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
+  update?: (proxy: DataProxy, mutationResult: Object) => void;
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {
@@ -141,7 +147,7 @@ export function isStoreResetAction(action: ApolloAction): action is StoreResetAc
   return action.type === 'APOLLO_STORE_RESET';
 }
 
-export type SubscriptionResultAction = {
+export interface SubscriptionResultAction {
   type: 'APOLLO_SUBSCRIPTION_RESULT';
   result: ExecutionResult;
   subscriptionId: number;
@@ -149,10 +155,26 @@ export type SubscriptionResultAction = {
   document: DocumentNode;
   operationName: string;
   extraReducers?: ApolloReducer[];
-};
+}
 
 export function isSubscriptionResultAction(action: ApolloAction): action is SubscriptionResultAction {
   return action.type === 'APOLLO_SUBSCRIPTION_RESULT';
+}
+
+export interface DataWrite {
+  rootId: string;
+  result: any;
+  document: DocumentNode;
+  variables: Object;
+}
+
+export interface WriteAction {
+  type: 'APOLLO_WRITE';
+  writes: Array<DataWrite>;
+}
+
+export function isWriteAction(action: ApolloAction): action is WriteAction {
+  return action.type === 'APOLLO_WRITE';
 }
 
 export type ApolloAction =
@@ -166,4 +188,5 @@ export type ApolloAction =
   MutationErrorAction |
   UpdateQueryResultAction |
   StoreResetAction |
-  SubscriptionResultAction;
+  SubscriptionResultAction |
+  WriteAction;

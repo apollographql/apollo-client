@@ -692,4 +692,91 @@ describe('reading from the store', () => {
       computedField: 'This is a string!5bit',
     });
   });
+
+  it('will read from an arbitrary root id', () => {
+    const data: any = {
+      id: 'abcd',
+      stringField: 'This is a string!',
+      numberField: 5,
+      nullField: null,
+      nestedObj: {
+        id: 'abcde',
+        stringField: 'This is a string too!',
+        numberField: 6,
+        nullField: null,
+      } as StoreObject,
+      deepNestedObj: {
+        stringField: 'This is a deep string',
+        numberField: 7,
+        nullField: null,
+      } as StoreObject,
+      nullObject: null,
+      __typename: 'Item',
+    };
+
+    const store = {
+      'ROOT_QUERY': assign({}, assign({}, omit(data, 'nestedObj', 'deepNestedObj')), {
+        __typename: 'Query',
+        nestedObj: {
+          type: 'id',
+          id: 'abcde',
+          generated: false,
+        },
+      }) as StoreObject,
+      abcde: assign({}, data.nestedObj, {
+        deepNestedObj: {
+          type: 'id',
+          id: 'abcdef',
+          generated: false,
+        },
+      }) as StoreObject,
+      abcdef: data.deepNestedObj as StoreObject,
+    } as NormalizedCache;
+
+    const queryResult1 = readQueryFromStore({
+      store,
+      rootId: 'abcde',
+      query: gql`
+        {
+          stringField
+          numberField
+          nullField
+          deepNestedObj {
+            stringField
+            numberField
+            nullField
+          }
+        }
+      `,
+    });
+
+    assert.deepEqual(queryResult1, {
+      stringField: 'This is a string too!',
+      numberField: 6,
+      nullField: null,
+      deepNestedObj: {
+        stringField: 'This is a deep string',
+        numberField: 7,
+        nullField: null,
+      },
+    });
+
+    const queryResult2 = readQueryFromStore({
+      store,
+      rootId: 'abcdef',
+      query: gql`
+        {
+          stringField
+          numberField
+          nullField
+        }
+      `,
+    });
+
+    assert.deepEqual(queryResult2, {
+      stringField: 'This is a deep string',
+      numberField: 7,
+      nullField: null,
+    });
+  });
 });

@@ -6,8 +6,7 @@
 
 // Changes
 //  1. Reference to isomorphic-fetch
-//  2. Response -> IResponse
-//  3. wrapping as a module
+//  2. wrapping as a module
 
 // Type definitions for fetch-mock 5.0.0
 // Project: https://github.com/wheresrhys/fetch-mock
@@ -79,7 +78,7 @@ declare namespace FetchMock {
     * Function(url, opts): A function that is passed the url and opts fetch()
       is called with and that returns any of the responses listed above
     */
-  type MockResponse = IResponse | Promise<IResponse>
+  type MockResponse = Response | Promise<Response>
                       | number | Promise<number>
                       | string | Promise<string>
                       | Object | Promise<Object>

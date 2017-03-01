@@ -1196,4 +1196,247 @@ describe('mutation results', () => {
       done();
     }).catch(done);
   });
+
+  describe('store transaction updater', () => {
+    const mutation = gql`
+      mutation createTodo {
+        # skipping arguments in the test since they don't matter
+        createTodo {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          id: '99',
+          __typename: 'Todo',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
+    it('analogous of ARRAY_INSERT', () => {
+      let subscriptionHandle: Subscription;
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          update: (proxy, mResult: any) => {
+            assert.equal(mResult.data.createTodo.id, '99');
+            assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+            const id = 'TodoList5';
+            const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
+
+            const data: any = proxy.readFragment({ id, fragment });
+
+            proxy.writeFragment({
+              data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+              id, fragment,
+            });
+          },
+        });
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('does not fail if optional query variables are not supplied', () => {
+      let subscriptionHandle: Subscription;
+      const mutationWithVars = gql`
+          mutation createTodo($requiredVar: String!, $optionalVar: String) {
+              createTodo(requiredVar: $requiredVar, optionalVar:$optionalVar) {
+                  id
+                  text
+                  completed
+                  __typename
+              }
+              __typename
+          }
+      `;
+
+      // the test will pass if optionalVar is uncommented
+      const variables = {
+        requiredVar: 'x',
+        // optionalVar: 'y',
+      };
+      return setup({
+        request: {
+          query: mutationWithVars,
+          variables,
+        },
+        result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise((resolve, reject) => {
+          const handle = client.watchQuery({
+            query,
+            variables,
+          });
+          subscriptionHandle = handle.subscribe({
+            next(res) {
+              resolve(res);
+            },
+          });
+        });
+      })
+      .then(() => {
+        return client.mutate({
+          mutation: mutationWithVars,
+          variables,
+          update: (proxy, mResult: any) => {
+            assert.equal(mResult.data.createTodo.id, '99');
+            assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+            const id = 'TodoList5';
+            const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
+
+            const data: any = proxy.readFragment({ id, fragment });
+
+            proxy.writeFragment({
+              data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+              id, fragment,
+            });
+          },
+        });
+      })
+      .then(() => {
+        return client.query({query});
+      })
+      .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+
+    it('does not make next queries fail if a mutation fails', (done) => {
+      const obsHandle = setupObsHandle({
+        request: { query: mutation },
+        result: {errors: [new Error('mock error')]},
+      }, {
+        request: { query },
+        result,
+      });
+
+      obsHandle.subscribe({
+        next(obj) {
+          client.mutate({
+            mutation,
+            update: (proxy, mResult: any) => {
+              assert.equal(mResult.data.createTodo.id, '99');
+              assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+              const id = 'TodoList5';
+              const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
+
+              const data: any = proxy.readFragment({ id, fragment });
+
+              proxy.writeFragment({
+                data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+                id, fragment,
+              });
+            },
+          })
+          .then(
+            () => done(new Error('Mutation should have failed')),
+            () => client.mutate({
+              mutation,
+              update: (proxy, mResult: any) => {
+                assert.equal(mResult.data.createTodo.id, '99');
+                assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+                const id = 'TodoList5';
+                const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
+
+                const data: any = proxy.readFragment({ id, fragment });
+
+                proxy.writeFragment({
+                  data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+                  id, fragment,
+                });
+              },
+            }),
+          )
+          .then(
+            () => done(new Error('Mutation should have failed')),
+            () => obsHandle.refetch(),
+          )
+          .then(() => done(), done);
+        },
+      });
+    });
+
+    it('error handling in reducer functions', () => {
+      const oldError = console.error;
+      const errors: any[] = [];
+      console.error = (msg: string) => {
+        errors.push(msg);
+      };
+
+      let subscriptionHandle: Subscription;
+      return setup({
+        request: { query: mutation },
+        result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
+      })
+      .then(() => {
+        return client.mutate({
+          mutation,
+          update: () => {
+            throw new Error(`Hello... It's me.`);
+          },
+        });
+      })
+      .then(() => {
+        subscriptionHandle.unsubscribe();
+        assert.lengthOf(errors, 1);
+        assert.equal(errors[0].message, `Hello... It's me.`);
+        console.error = oldError;
+      });
+    });
+  });
 });

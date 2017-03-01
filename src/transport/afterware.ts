@@ -1,5 +1,5 @@
 export interface AfterwareResponse {
-  response: IResponse;
+  response: Response;
   options: RequestInit;
 }
 

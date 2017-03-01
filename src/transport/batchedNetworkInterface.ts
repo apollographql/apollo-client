@@ -32,7 +32,7 @@ export interface BatchRequestAndOptions {
 }
 
 export interface BatchResponseAndOptions {
-  responses: IResponse[];
+  responses: Response[];
   options: RequestInit;
 };
 
@@ -81,7 +81,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
       middlewarePromise.then((batchRequestAndOptions: BatchRequestAndOptions) => {
         return this.batchedFetchFromRemoteEndpoint(batchRequestAndOptions)
           .then(result => {
-            const httpResponse = result as IResponse;
+            const httpResponse = result as Response;
 
             if (!httpResponse.ok) {
               const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
@@ -99,10 +99,10 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
             }
 
             type ResponseAndOptions = {
-              response: IResponse;
+              response: Response;
               options: RequestInit;
             };
-
+          
             this.applyBatchAfterwares({
               responses,
               options: batchRequestAndOptions.options,
@@ -190,7 +190,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
 
   private batchedFetchFromRemoteEndpoint(
     batchRequestAndOptions: BatchRequestAndOptions,
-  ): Promise<IResponse> {
+  ): Promise<Response> {
     const options: RequestInit = {};
 
     // Combine all of the options given by the middleware into one object.

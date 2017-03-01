@@ -8,3 +8,12 @@ export interface MiddlewareRequest {
 export interface MiddlewareInterface {
   applyMiddleware(request: MiddlewareRequest, next: Function): void;
 }
+
+export interface BatchMiddlewareRequest {
+  requests: Request[];
+  options: RequestInit;
+}
+
+export interface BatchMiddlewareInterface {
+  applyBatchMiddleware(request: BatchMiddlewareRequest, next: Function): void;
+}

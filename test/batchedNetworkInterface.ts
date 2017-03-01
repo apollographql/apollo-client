@@ -2,6 +2,8 @@ import { assert } from 'chai';
 
 import { merge } from 'lodash';
 
+import * as sinon from 'sinon';
+
 import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInterface';
 
 import {
@@ -14,8 +16,8 @@ import {
   printRequest,
 } from '../src/transport/networkInterface';
 
-import { MiddlewareInterface } from '../src/transport/middleware';
-import { AfterwareInterface } from '../src/transport/afterware';
+import { BatchMiddlewareInterface } from '../src/transport/middleware';
+import { BatchAfterwareInterface } from '../src/transport/afterware';
 
 import { ExecutionResult } from 'graphql';
 
@@ -40,8 +42,8 @@ describe('HTTPBatchedNetworkInterface', () => {
       result: ExecutionResult,
     }[];
     fetchFunc?: any;
-    middlewares?: MiddlewareInterface[];
-    afterwares?: AfterwareInterface[];
+    middlewares?: BatchMiddlewareInterface[];
+    afterwares?: BatchAfterwareInterface[];
     opts?: RequestInit,
   }) => {
     const url = 'http://fake.com/graphql';
@@ -142,6 +144,60 @@ describe('HTTPBatchedNetworkInterface', () => {
     });
   });
 
+  it('should correctly execute middleware once per batch request', () => {
+    const middlewareCallCounter = sinon.stub();
+
+    return assertRoundtrip({
+      requestResultPairs: [
+        {
+          request: { query: authorQuery },
+          result: authorResult,
+        },
+        {
+          request: { query: personQuery },
+          result: personResult,
+        },
+      ],
+      middlewares: [{
+        applyBatchMiddleware(req, next) {
+          middlewareCallCounter();
+
+          next();
+        },
+      }],
+    })
+    .then(() => {
+      assert.equal(middlewareCallCounter.callCount, 1);
+    });
+  });
+
+  it('should correctly execute afterware once per batch request', () => {
+    const afterwareCallCounter = sinon.stub();
+
+    return assertRoundtrip({
+      requestResultPairs: [
+        {
+          request: { query: authorQuery },
+          result: authorResult,
+        },
+        {
+          request: { query: personQuery },
+          result: personResult,
+        },
+      ],
+      afterwares: [{
+        applyBatchAfterware({ responses }, next) {
+          afterwareCallCounter();
+
+          next();
+        },
+      }],
+    })
+    .then(() => {
+      assert.equal(afterwareCallCounter.callCount, 1);
+    });
+  });
+
   describe('errors', () => {
     it('should return errors thrown by fetch', (done) => {
       const err = new Error('Error of some kind thrown by fetch.');
@@ -182,8 +238,8 @@ describe('HTTPBatchedNetworkInterface', () => {
 
     it('should return errors thrown by middleware', (done) => {
       const err = new Error('Error of some kind thrown by middleware.');
-      const errorMiddleware: MiddlewareInterface = {
-        applyMiddleware() {
+      const errorMiddleware: BatchMiddlewareInterface = {
+        applyBatchMiddleware() {
           throw err;
         },
       };
@@ -203,8 +259,8 @@ describe('HTTPBatchedNetworkInterface', () => {
 
     it('should return errors thrown by afterware', (done) => {
       const err = new Error('Error of some kind thrown by afterware.');
-      const errorAfterware: AfterwareInterface = {
-        applyAfterware() {
+      const errorAfterware: BatchAfterwareInterface = {
+        applyBatchAfterware() {
           throw err;
         },
       };
@@ -224,8 +280,8 @@ describe('HTTPBatchedNetworkInterface', () => {
   });
 
   it('middleware should be able to modify requests/options', () => {
-    const changeMiddleware: MiddlewareInterface = {
-      applyMiddleware({ options }, next) {
+    const changeMiddleware: BatchMiddlewareInterface = {
+      applyBatchMiddleware({ options }, next) {
         (options as any).headers['Content-Length'] = '18';
         next();
       },

@@ -3,4 +3,4 @@
 	url = https://github.com/meteor/hexo-theme-meteor.git
 [submodule "code"]
 	path = code
-	url = https://github.com/apollostack/apollo-client.git
+	url = https://github.com/apollographql/apollo-client.git

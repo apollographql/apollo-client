@@ -6,7 +6,7 @@ import {
   getQueryDefinition,
 } from '../src/queries/getFromAST';
 
-import { print } from 'graphql-tag/printer';
+import { print } from 'graphql-tag/bundledPrinter';
 import gql from 'graphql-tag';
 import { assert } from 'chai';
 

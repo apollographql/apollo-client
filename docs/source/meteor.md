@@ -109,6 +109,20 @@ export const resolvers = {
 }
 ```
 
+### Query batching
+
+`meteor/apollo` gives you a `BatchedNetworkInterface` by default thanks to `createMeteorNetworkInterface`. This interface is meant to reduce significantly the number of requests sent to the server.
+
+In order to get the most out of it, you can attach a `dataloader` to every request to batch loading your queries (and cache them!).
+
+Here are some great resources to help you integrating query batching in your Meteor application:
+- About batched network interface:
+  - [Apollo Client documentation](http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching), the official documentation explaining how it works and how to set it up.
+  - [Query batching in Apollo](https://dev-blog.apollodata.com/query-batching-in-apollo-63acfd859862), an article from the Apollo blog with more in depth explanation.
+- About Dataloader:
+  - Apollo's [Graphql server documentation](http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching), get to know how to setup `dataloader` in your server-side implementation.
+  - [Dataloader repository](https://github.com/facebook/dataloader), a detailed explanation of batching & caching processes, plus a bonus of a 30-minute source code walkthrough video.
+
 ### Deployment
 
 It is _strongly_ recommended to explictly specify the `ROOT_URL` environment variable of your deployment. The configuration of the Apollo client and GraphQL server provided by this package depends on a configured `ROOT_URL`. Read more about that in the [Meteor Guide](https://guide.meteor.com/deployment.html#custom-deployment).
@@ -200,7 +214,7 @@ Meteor.logout(function() {
 ## SSR
 There are two additional configurations that you need to keep in mind when using [React Server Side Rendering](http://dev.apollodata.com/react/server-side-rendering.html) with Meteor.
 
-1. Use `isomorphic-fetch` to polyfill `fetch` server-side (used by Apollo Client).
+1. Use `isomorphic-fetch` to polyfill `fetch` server-side (used by Apollo Client's network interface).
 2. Connect your express server to Meteor's existing server with [WebApp.connectHandlers.use](https://docs.meteor.com/packages/webapp.html)
 3. Do not end the connection with `res.send()` and `res.end()` use `req.dynamicBody` and `req.dynamicHead` instead and call `next()`. [more info](https://github.com/meteor/meteor/pull/3860)
 
@@ -219,7 +233,7 @@ import { ApolloProvider } from 'react-apollo';
 import { renderToStringWithData } from 'react-apollo';
 import { match, RouterContext } from 'react-router';
 import Express from 'express';
-// #1 import isomorphic-fetch so the Apollo Client can be created
+// #1 import isomorphic-fetch so the network interface can be created
 import 'isomorphic-fetch';
 import Helmet from 'react-helmet';
 
@@ -240,6 +254,7 @@ app.use((req, res, next) => {
     } else if (renderProps) {
       
       // use createMeteorNetworkInterface to get a preconfigured network interface
+      // #1 network interface can be used server-side thanks to polyfilled `fetch`
       const networkInterface = createMeteorNetworkInterface({
         opts: {
           credentials: 'same-origin',
@@ -251,7 +266,6 @@ app.use((req, res, next) => {
       });
       
       // use meteorClientConfig to get a preconfigured Apollo Client options object
-      // #1 Apollo Client can be used because fetch is polyfilled
       const client = new ApolloClient(meteorClientConfig({ networkInterface }));
 
       const store = createStore(

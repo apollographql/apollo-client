@@ -4,7 +4,7 @@ title: Connecting data
 
 Now that we have created an `ApolloClient` instance and attached it to our UI tree with `ApolloProvider`, we can start using the main function of `react-apollo`: adding GraphQL functionality to our UI components.
 
-<h2 id="graphql">graphql</h2>
+<h2 id="graphql">`graphql`</h2>
 
 The `graphql` container is the recommended approach for fetching data or making mutations. It is a [Higher Order Component](https://facebook.github.io/react/blog/2016/07/13/mixins-considered-harmful.html#subscriptions-and-side-effects) for providing Apollo data to a component, or attaching mutations.
 
@@ -114,7 +114,7 @@ const MyComponentWithUpvote = graphql(Upvote, {
 
 <h2 id='compose'>compose</h2>
 
-`react-apollo` exports a `compose` function. Adopting the following pattern allows you to reduce the number of reassignments you're doing every time you wrap your component with `graphql` and often `connect` from `react-redux`. 
+`react-apollo` exports a `compose` function. Adopting the following pattern allows you to reduce the number of reassignments you're doing every time you wrap your component with `graphql` and often `connect` from `react-redux`.
 
 ```js
 import { graphql, compose } from 'react-apollo';

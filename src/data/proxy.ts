@@ -8,6 +8,101 @@ import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
 
+export interface DataProxyReadQueryOptions {
+  /**
+   * The GraphQL query shape to be used constructed using the `gql` template
+   * string tag from `graphql-tag`. The query will be used to determine the
+   * shape of the data to be read.
+   */
+  query: DocumentNode;
+
+  /**
+   * Any variables that the GraphQL query may depend on.
+   */
+  variables?: Object;
+}
+
+export interface DataProxyReadFragmentOptions {
+  /**
+   * The root id to be used. This id should take the same form as the
+   * value returned by your `dataIdFromObject` function. If a value with your
+   * id does not exist in the store, `null` will be returned.
+   */
+  id: string;
+
+  /**
+   * A GraphQL document created using the `gql` template string tag from
+   * `graphql-tag` with one or more fragments which will be used to determine
+   * the shape of data to read. If you provide more then one fragment in this
+   * document then you must also specify `fragmentName` to select a single.
+   */
+  fragment: DocumentNode;
+
+  /**
+   * The name of the fragment in your GraphQL document to be used. If you do
+   * not provide a `fragmentName` and there is only one fragment in your
+   * `fragment` document then that fragment will be used.
+   */
+  fragmentName?: string;
+
+  /**
+   * Any variables that your GraphQL fragments depend on.
+   */
+  variables?: Object;
+}
+
+export interface DataProxyWriteQueryOptions {
+  /**
+   * The data you will be writing to the store.
+   */
+  data: any;
+
+  /**
+   * The GraphQL query shape to be used constructed using the `gql` template
+   * string tag from `graphql-tag`. The query will be used to determine the
+   * shape of the data to be written.
+   */
+  query: DocumentNode;
+
+  /**
+   * Any variables that the GraphQL query may depend on.
+   */
+  variables?: Object;
+};
+
+export interface DataProxyWriteFragmentOptions {
+  /**
+   * The data you will be writing to the store.
+   */
+  data: any;
+
+  /**
+   * The root id to be used. This id should take the same form as the  value
+   * returned by your `dataIdFromObject` function.
+   */
+  id: string;
+
+  /**
+   * A GraphQL document created using the `gql` template string tag from
+   * `graphql-tag` with one or more fragments which will be used to determine
+   * the shape of data to write. If you provide more then one fragment in this
+   * document then you must also specify `fragmentName` to select a single.
+   */
+  fragment: DocumentNode;
+
+  /**
+   * The name of the fragment in your GraphQL document to be used. If you do
+   * not provide a `fragmentName` and there is only one fragment in your
+   * `fragment` document then that fragment will be used.
+   */
+  fragmentName?: string;
+
+  /**
+   * Any variables that your GraphQL fragments depend on.
+   */
+  variables?: Object;
+}
+
 /**
  * A proxy to the normalized data living in our store. This interface allows a
  * user to read and write denormalized data which feels natural to the user
@@ -18,44 +113,26 @@ export interface DataProxy {
   /**
    * Reads a GraphQL query from the root query id.
    */
-  readQuery<QueryType>(config: {
-    query: DocumentNode,
-    variables?: Object,
-  }): QueryType;
+  readQuery<QueryType>(options: DataProxyReadQueryOptions): QueryType;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  readFragment<FragmentType>(config: {
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  }): FragmentType | null;
+  readFragment<FragmentType>(options: DataProxyReadFragmentOptions): FragmentType | null;
 
   /**
    * Writes a GraphQL query to the root query id.
    */
-  writeQuery(config: {
-    data: any,
-    query: DocumentNode,
-    variables?: Object,
-  }): void;
+  writeQuery(options: DataProxyWriteQueryOptions): void;
 
   /**
    * Writes a GraphQL fragment to any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  writeFragment(config: {
-    data: any,
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  }): void;
+  writeFragment(options: DataProxyWriteFragmentOptions): void;
 }
 
 /**
@@ -91,10 +168,7 @@ export class ReduxDataProxy implements DataProxy {
   public readQuery<QueryType>({
     query,
     variables,
-  }: {
-    query: DocumentNode,
-    variables?: Object,
-  }): QueryType {
+  }: DataProxyReadQueryOptions): QueryType {
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
       store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())),
@@ -112,12 +186,7 @@ export class ReduxDataProxy implements DataProxy {
     fragment,
     fragmentName,
     variables,
-  }: {
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  }): FragmentType | null {
+  }: DataProxyReadFragmentOptions): FragmentType | null {
     const query = getFragmentQueryDocument(fragment, fragmentName);
     const data = getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState()));
 
@@ -143,11 +212,7 @@ export class ReduxDataProxy implements DataProxy {
     data,
     query,
     variables,
-  }: {
-    data: any,
-    query: DocumentNode,
-    variables?: Object,
-  }): void {
+  }: DataProxyWriteQueryOptions): void {
     this.store.dispatch({
       type: 'APOLLO_WRITE',
       writes: [{
@@ -168,13 +233,7 @@ export class ReduxDataProxy implements DataProxy {
     fragment,
     fragmentName,
     variables,
-  }: {
-    data: any,
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  }): void {
+  }: DataProxyWriteFragmentOptions): void {
     this.store.dispatch({
       type: 'APOLLO_WRITE',
       writes: [{
@@ -248,10 +307,7 @@ export class TransactionDataProxy implements DataProxy {
   public readQuery<QueryType>({
     query,
     variables,
-  }: {
-    query: DocumentNode,
-    variables?: Object,
-  }): QueryType {
+  }: DataProxyReadQueryOptions): QueryType {
     this.assertNotFinished();
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
@@ -272,12 +328,7 @@ export class TransactionDataProxy implements DataProxy {
     fragment,
     fragmentName,
     variables,
-  }: {
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  }): FragmentType | null {
+  }: DataProxyReadFragmentOptions): FragmentType | null {
     this.assertNotFinished();
     const { data } = this;
     const query = getFragmentQueryDocument(fragment, fragmentName);
@@ -306,11 +357,7 @@ export class TransactionDataProxy implements DataProxy {
     data,
     query,
     variables,
-  }: {
-    data: any,
-    query: DocumentNode,
-    variables?: Object,
-  }): void {
+  }: DataProxyWriteQueryOptions): void {
     this.assertNotFinished();
     this.applyWrite({
       rootId: 'ROOT_QUERY',
@@ -331,13 +378,7 @@ export class TransactionDataProxy implements DataProxy {
     fragment,
     fragmentName,
     variables,
-  }: {
-    data: any,
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  }): void {
+  }: DataProxyWriteFragmentOptions): void {
     this.assertNotFinished();
     this.applyWrite({
       rootId: id,

@@ -18,12 +18,12 @@ sidebar_categories:
     - initialization
     - higher-order-components
     - example-schema
+    - api
   Usage:
     - queries
     - mutations
     - receiving-updates
     - cache-updates
-    - api
   Recipes:
     - auth
     - pagination

@@ -3,10 +3,10 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Do not stringify error stack traces [PR #1347](https://github.com/apollographql/apollo-client/pull/1347)
 
 ### 0.10.1
 - Address deprecation warnings coming from `graphql-tag` [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)
+- Do not stringify error stack traces [PR #1347](https://github.com/apollographql/apollo-client/pull/1347)
 
 ### 0.10.0
 - BREAKING: Run middleware and afterware only once per batched request [PR #1285](https://github.com/apollographql/apollo-client/pull/1285)

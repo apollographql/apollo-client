@@ -27,8 +27,9 @@ const client = new ApolloClient({ ... });
 
 <h2 id="readquery">`readQuery`</h2>
 
-The `readQuery` method is very similar to the `query` method except that `readQuery` will _never_ make a request to your GraphQL server. `query` will first see if there is enough data to fulfill the query in the cache. If there is then that data will be returned from the cache. If there is not enough data `query` will send a request to your [network interface][].
+The `readQuery` method is very similar to the [`query` method on `ApolloClient`][] except that `readQuery` will _never_ make a request to your GraphQL server. `query` will first see if there is enough data to fulfill the query in the cache. If there is then that data will be returned from the cache. If there is not enough data `query` will send a request to your [network interface][].
 
+[`query` method on `ApolloClient`]: apollo-client-api.html#ApolloClient.query
 [network interface]: network.html
 
 `readQuery`, on the other hand, will _always_ read from the cache. If there is not enough data in the cache then `readQuery` will throw an error instead of sending a network request. You can use `readQuery` by giving it a GraphQL query like so:
@@ -67,6 +68,12 @@ const { todo } = client.readQuery({
   },
 });
 ```
+
+**Resources:**
+
+- [`ApolloClient#query` API documentation](apollo-client-api.html#ApolloClient.query)
+- [`ApolloClient#readQuery` API documentation](apollo-client-api.html#ApolloClient.readQuery)
+- [`DataProxy#readQuery` API documentation](apollo-client-api.html#DataProxy.readQuery)
 
 <h2 id="readfragment">`readFragment`</h2>
 
@@ -114,6 +121,11 @@ const todo = client.readFragment({
 If a todo with that id does not exist in the cache you will get `null` back. If a todo of that id does exist in the cache, but that todo does not have the `text` field then an error will be thrown.
 
 The beauty of `readFragment` is that the todo could have come from anywhere! The todo could have been selected as a singleton (`{ todo(id: 5) { ... } }`), the todo could have come from a list of todos (`{ todos { ... } }`), or the todo could have come from a mutation (`mutation { createTodo { ... } }`). As long as at some point your GraphQL server gave you a todo with the provided id and fields `id`, `text`, and `completed` you can read it from the cache at any part of your code.
+
+**Resources:**
+
+- [`ApolloClient#readFragment` API documentation](apollo-client-api.html#ApolloClient.readFragment)
+- [`DataProxy#readFragment` API documentation](apollo-client-api.html#DataProxy.readFragment)
 
 <h2 id="writequery-and-writefragment">`writeQuery` and `writeFragment`</h2>
 
@@ -168,6 +180,14 @@ client.writeQuery({
 });
 ```
 
+**Resources:**
+
+- [`ApolloClient#watchQuery` API documentation](apollo-client-api.html#ApolloClient.watchQuery)
+- [`ApolloClient#writeQuery` API documentation](apollo-client-api.html#ApolloClient.writeQuery)
+- [`ApolloClient#writeFragment` API documentation](apollo-client-api.html#ApolloClient.writeFragment)
+- [`DataProxy#writeQuery` API documentation](apollo-client-api.html#ApolloClient.writeQuery)
+- [`DataProxy#writeFragment` API documentation](apollo-client-api.html#ApolloClient.writeFragment)
+
 <h2 id="updating-the-cache-after-a-mutation">Updating the cache after a mutation</h2>
 
 Being able to read and write to the Apollo cache from anywhere in your application gives you a lot of power over your data. However, there is one place where we most often want to update the data in our cache and so Apollo Client has optimized for that use case. That place would be after a mutation. Let us say that we have the following GraphQL mutation:
@@ -220,7 +240,9 @@ client.mutate({
 });
 ```
 
-The first `proxy` argument has the same for methods that we just learned exist on the Apollo Client: `readQuery`, `readFragment`, `writeQuery`, and `writeFragment`. The reason we call them on a `proxy` object here instead of on our `client` instance is that we can easily apply optimistic updates (which we will demonstrate in a bit). The `proxy` object also provides an isolated transaction which shields you from any other mutations going on at the same time, and the `proxy` object also batches writes together until the very end.
+The first `proxy` argument is an instance of [`DataProxy`][] has the same for methods that we just learned exist on the Apollo Client: `readQuery`, `readFragment`, `writeQuery`, and `writeFragment`. The reason we call them on a `proxy` object here instead of on our `client` instance is that we can easily apply optimistic updates (which we will demonstrate in a bit). The `proxy` object also provides an isolated transaction which shields you from any other mutations going on at the same time, and the `proxy` object also batches writes together until the very end.
+
+[`DataProxy`](apollo-client-api.html#DataProxy)
 
 The `update` function is not a good place for side-effects as it may be called multiple times, and you may not call any of the methods on `proxy` asynchronously.
 
@@ -250,3 +272,8 @@ client.mutate({
 ```
 
 As you can see the `update` function on `client.mutate` provides extra change management functionality specific to the use case of a mutation while still providing you the powerful data control APIs that are available on `client`.
+
+**Resources:**
+
+- [`ApolloClient#mutate` API documentation](apollo-client-api.html#ApolloClient.mutate)
+- [`DataProxy` API documentation](apollo-client-api.html#DataProxy)

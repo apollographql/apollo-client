@@ -35,9 +35,9 @@ export class Observable<T> {
 }
 
 export interface Observer<T> {
-  next?: (value: T) => void;
-  error?: (error: Error) => void;
-  complete?: () => void;
+  readonly next?: (value: T) => void;
+  readonly error?: (error: Error) => void;
+  readonly complete?: () => void;
 }
 
 export interface Subscription {

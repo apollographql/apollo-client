@@ -5,6 +5,9 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Do not stringify error stack traces [PR #1347](https://github.com/apollographql/apollo-client/pull/1347)
 
+### 0.10.1
+- Address deprecation warnings coming from `graphql-tag` [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)
+
 ### 0.10.0
 - BREAKING: Run middleware and afterware only once per batched request [PR #1285](https://github.com/apollographql/apollo-client/pull/1285)
 - Add direct cache manipulation read and write methods to provide the user the power to interact with Apollo’s GraphQL data representation outside of mutations. [PR #1310](https://github.com/apollographql/apollo-client/pull/1310)

@@ -1,7 +1,7 @@
 ---
 title: Data Control
 order: 109
-description: How to control your normalized data in the GraphQL store.
+description: Powerful methods that give you total control over the data in your cache.
 ---
 
 Apollo Client normalizes all of your data so that if any data you previously fetched from your GraphQL server is updated in a later data fetch from your server then your data will be updated with the latest truth from your server.

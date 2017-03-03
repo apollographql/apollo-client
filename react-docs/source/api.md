@@ -4,7 +4,7 @@ title: API Documentation
 
 <h2 id="graphql">`graphql(query, config)(component)`</h2>
 
-The `graphql` function is the most important thing exported by `react-apollo`. With this function you can create higher-order components that can execute queries and update reactively based on the data in your Apollo store. The `graphql` function creates an “enhancer” function which when called with a component the enhancer function will create a new component with reactive GraphQL capabilities. This follows the React [higher-order component][] pattern which is also used by [`react-redux`’s `connect`][] function.
+The `graphql` function is the most important thing exported by `react-apollo`. With this function you can create higher-order components that can execute queries and update reactively based on the data in your Apollo store. The `graphql` function returns a function which will “enhance” any component with reactive GraphQL capabilities. This follows the React [higher-order component][] pattern which is also used by [`react-redux`’s `connect`][] function.
 
 [higher-order component]: https://facebook.github.io/react/docs/higher-order-components.html
 [`react-redux`’s `connect`]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
@@ -32,7 +32,7 @@ export default graphql(gql`
 `)(TodoApp);
 ```
 
-You may also be interested in using the `graphql` function as a [decorator][] on your React class component.
+Alternatively, you can also use the `graphql` function as a [decorator][] on your React class component.
 
 [decorator]: https://github.com/wycats/javascript-decorators
 
@@ -61,9 +61,7 @@ export default class TodoApp extends Component {
 }
 ```
 
-In this guide, we won't use the decorator syntax to make the code more familiar, but you can always use it if you prefer.
-
-The configuration options that your `graphql` function accepts will be different depending on if your GraphQL operation is a [query](#queries) or a [mutation](#mutations). Go to the appropriate API documentation for more information about available options.
+The configuration options that your `graphql` function accepts will be different depending on if your GraphQL operation is a [query](#queries), [mutation](#mutations), or a [subscription](#subscriptions). Go to the appropriate API documentation for more information about available options.
 
 <h3 id="queries">Queries</h3>
 
@@ -135,7 +133,28 @@ render() {
 }
 ```
 
-The `data` prop has some other useful properties which are all documented below. These properties can be accessed directly from `data`. For example, `data.loading` or `data.error`. These properties are documented below.
+The `data` prop has some other useful properties which can be accessed directly from `data`. For example, `data.loading` or `data.error`. These properties are documented below.
+
+Make sure to always check `data.loading` and `data.error` in your components before rendering. Properties like `data.todos` which contain your app’s data may be undefined while your component is performing its initial fetch. Checking `data.loading` and `data.error` helps you avoid any issues with undefined data. Such checks may look like:
+
+```js
+render() {
+  const { data: { loading, error, todos } } = this.props;
+  if (loading) {
+    return <p>Loading...</p>;
+  } else if (error) {
+    return <p>Error!</p>;
+  } else {
+    return (
+      <ul>
+        {todos.map(({ id, text }) => (
+          <li key={id}>{text}</li>
+        ))}
+      </ul>
+    );
+  }
+}
+```
 
 <h3 id="graphql-query-data.loading">`props.data.loading`</h3>
 
@@ -151,7 +170,7 @@ If an error occurred then this property will be an instance of [`ApolloError`][]
 
 <h3 id="graphql-query-data.variables">`props.data.variables`</h3>
 
-The variables that Apollo used to fetch data from your GraphQL endpoint. This property is helpful if you want to render some information based off of the variables that were used to make a request against your server.
+The variables that Apollo used to fetch data from your GraphQL endpoint. This property is helpful if you want to render some information based on the variables that were used to make a request against your server.
 
 <h3 id="graphql-query-data.fetchMore">`props.data.fetchMore(options)`</h3>
 

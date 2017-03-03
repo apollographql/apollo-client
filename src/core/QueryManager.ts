@@ -376,7 +376,7 @@ export class QueryManager {
           });
           if (observer.error) {
             // defer to avoid potential errors propagating back to Apollo
-            (setImmediate || setTimeout)(() => observer.error(apolloError));
+            setTimeout(() => observer.error(apolloError), 0);
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
             if (!isProduction()) {
@@ -436,9 +436,9 @@ export class QueryManager {
               if (isDifferentResult) {
                 lastResult = resultFromStore;
                 // defer to avoid potential errors propagating back to Apollo
-                (setImmediate || setTimeout)(() => {
+                setTimeout(() => {
                   observer.next(maybeDeepFreeze(this.transformResult(resultFromStore)));
-                });
+                }, 0);
               }
             }
           } catch (error) {

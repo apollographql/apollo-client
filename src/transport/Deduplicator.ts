@@ -5,7 +5,7 @@ import {
 
 import {
   print,
-} from 'graphql-tag/printer';
+} from 'graphql-tag/bundledPrinter';
 
 export class Deduplicator {
 

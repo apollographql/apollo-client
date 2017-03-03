@@ -5,7 +5,7 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import { print } from 'graphql-tag/printer';
+import { print } from 'graphql-tag/bundledPrinter';
 
 import {
   MiddlewareInterface,

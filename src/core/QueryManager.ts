@@ -77,7 +77,7 @@ import {
   /* tslint:enable */
 } from 'graphql';
 
-import { print } from 'graphql-tag/printer';
+import { print } from 'graphql-tag/bundledPrinter';
 
 import {
   readQueryFromStore,
@@ -374,6 +374,7 @@ export class QueryManager {
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,
           });
+
           const observerError = observer.error;
           if (observerError) {
             // defer to avoid potential errors propagating back to Apollo

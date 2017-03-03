@@ -378,7 +378,9 @@ export class QueryManager {
           const observerError = observer.error;
           if (observerError) {
             // defer to avoid potential errors propagating back to Apollo
-            setTimeout(() => observerError(apolloError), 0);
+            setTimeout(() => {
+              observerError(apolloError)
+            }, 0);
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
             if (!isProduction()) {
@@ -421,7 +423,8 @@ export class QueryManager {
               };
             }
 
-            if (observer.next) {
+            const observerNext = observer.next;
+            if (observerNext) {
               const isDifferentResult =
                 this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
                   lastResult &&
@@ -439,20 +442,18 @@ export class QueryManager {
                 lastResult = resultFromStore;
                 // defer to avoid potential errors propagating back to Apollo
                 setTimeout(() => {
-                  if (observer.next) {
-                    observer.next(maybeDeepFreeze(this.transformResult(resultFromStore)));
-                  }
+                  observerNext(maybeDeepFreeze(this.transformResult(resultFromStore)))
                 }, 0);
               }
             }
           } catch (error) {
             const observerError = observer.error;
             if (observerError) {
-              setTimeout(() =>
+              setTimeout(() => {
                 observerError(new ApolloError({
                   networkError: error,
-                }))
-              , 0);
+                }));
+              }, 0);
             }
             return;
           }

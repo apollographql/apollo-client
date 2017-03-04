@@ -1019,7 +1019,7 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
   });
 
-  it('does not deduplicate queries by default', () => {
+  it('does not deduplicate queries if option is set to false', () => {
     const queryDoc = gql`
       query {
         author {
@@ -1051,6 +1051,7 @@ it('should not let errors in observer.next reach the store', (done) => {
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
+      queryDeduplication: false,
     });
 
     const q1 = client.query({ query: queryDoc });
@@ -1063,7 +1064,7 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
   });
 
-  it('deduplicates queries if the option is set', () => {
+  it('deduplicates queries by default', () => {
     const queryDoc = gql`
       query {
         author {
@@ -1095,7 +1096,6 @@ it('should not let errors in observer.next reach the store', (done) => {
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
-      queryDeduplication: true,
     });
 
     const q1 = client.query({ query: queryDoc });

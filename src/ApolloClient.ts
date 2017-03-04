@@ -144,7 +144,7 @@ export default class ApolloClient implements DataProxy {
    * @param addTypename Adds the __typename field to every level of a GraphQL document, required
    * to support certain queries that contain fragments.
    *
-   * @param queryDeduplication If set to true, a query will not be sent to the server if a query
+   * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
@@ -177,7 +177,7 @@ export default class ApolloClient implements DataProxy {
       resultTransformer,
       customResolvers,
       connectToDevTools,
-      queryDeduplication = false,
+      queryDeduplication = true,
     } = options;
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');

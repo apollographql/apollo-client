@@ -262,7 +262,14 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     const reducer = options.updateQuery;
 
     const subscription = observable.subscribe({
-      next: (data) => {
+      error: (err) => {
+        if (options.onError) {
+          options.onError(err);
+        } else {
+          console.error('Unhandled GraphQL subscription errror', err);
+        }
+      },
+      next: reducer ? (data) => {
         const mapFn = (previousResult: Object, { variables }: { variables: Object }) => {
           return reducer(
             previousResult, {
@@ -272,16 +279,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           );
         };
         this.updateQuery(mapFn);
-      },
-      error: (err) => {
-        if (options.onError) {
-          options.onError(err);
-        } else {
-          console.error('Unhandled GraphQL subscription errror', err);
-        }
-      },
+      } : () => {}
     });
-
     this.subscriptionHandles.push(subscription);
 
     return () => {

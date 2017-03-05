@@ -11,6 +11,7 @@ import {
   runBenchmarks,
   DescriptionObject,
   log,
+  dataIdFromObject,
 } from './util';
 
 import {
@@ -18,6 +19,10 @@ import {
   ApolloQueryResult,
   ObservableQuery,
 } from '../src/index';
+
+import {
+  diffQueryAgainstStore,
+} from '../src/data/readFromStore';
 
 import mockNetworkInterface, {
   MockedResponse,
@@ -195,12 +200,7 @@ times(25, (countR: number) => {
     const client = new ApolloClient({
       networkInterface: mockNetworkInterface(...mockedResponses),
       addTypename: false,
-      dataIdFromObject: (object: any) => {
-        if (object.__typename && object.id) {
-          return object.__typename + '__' + object.id;
-        }
-        return null;
-      },
+      dataIdFromObject,
     });
 
     // insert a bunch of stuff into the cache
@@ -275,12 +275,7 @@ times(50, (index) => {
         result,
       }),
       addTypename: false,
-      dataIdFromObject: (object: any) => {
-        if (object.__typename && object.id) {
-          return object.__typename + '__' + object.id;
-        }
-        return null;
-      },
+      dataIdFromObject,
     });
 
     const myBenchmark = benchmark;
@@ -300,6 +295,63 @@ times(50, (index) => {
 
       end();
     });
+  });
+});
+
+// Measure only the amount of time it takes to diff a query against the store
+//
+// This test allows us to differentiate between the fixed cost of .query() and the fixed cost
+// of actually reading from the store.
+group((end) => {
+  // Prime the cache.
+  const query = gql`
+    query($id: String) {
+      house(id: $id) {
+        reservations {
+          name
+          id
+        }
+      }
+    }`;
+  const variables = { id: '7' };
+  const reservations: {
+    name: string,
+    id: string,
+  }[] = [{ name: 'a', id: '1'}, {name: 'b', id: '2'}, {name: 'c', id: '3'}];
+  const result = {
+    data: {
+      house: { reservations },
+    },
+  };
+  const client = new ApolloClient({
+    networkInterface: mockNetworkInterface({
+      request: { query, variables },
+      result,
+    }),
+    addTypename: false,
+    dataIdFromObject,
+  });
+
+  const myBenchmark = benchmark;
+
+  // We only keep track of the results so that V8 doesn't decide to just throw
+  // away our cache read code.
+  const results: any[] = [];
+  client.query({
+    query,
+    variables,
+  }).then(() => {
+    myBenchmark('diff query against store', (done) => {
+
+      results.push(diffQueryAgainstStore({
+        query,
+        variables,
+        store: client.store.getState()['apollo'].data,
+      }));
+      done();
+    });
+
+    end();
   });
 });
 

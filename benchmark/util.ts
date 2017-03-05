@@ -46,6 +46,15 @@ export function log(logString: string, ...args: any[]) {
   console.log(logString, ...args);
 }
 
+// A reasonable implementation of dataIdFromObject that we use within
+// the benchmarks.
+export const dataIdFromObject = (object: any) => {
+  if (object.__typename && object.id) {
+    return object.__typename + '__' + object.id;
+  }
+  return null;
+};
+
 interface Scope {
   benchmark?: BenchmarkFunction;
   afterEach?: AfterEachFunction;

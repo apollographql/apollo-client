@@ -1044,7 +1044,6 @@ describe('mutation results', () => {
     const watchedQuery = client.watchQuery({
       query: variableQuery,
       variables: variables1,
-      returnPartialData: false,
     });
 
     const firstSubs = watchedQuery.subscribe({

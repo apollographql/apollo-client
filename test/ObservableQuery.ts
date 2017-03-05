@@ -685,7 +685,7 @@ describe('ObservableQuery', () => {
           const observable = queryManager.watchQuery({
             query: superQuery,
             variables,
-            returnPartialData: true,
+            // returnPartialData: true,
           });
           assert.deepEqual(observable.currentResult(), {
             data: dataOne,

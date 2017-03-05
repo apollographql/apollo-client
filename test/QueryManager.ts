@@ -1259,7 +1259,7 @@ describe('QueryManager', () => {
     }).then(() => {
       const handle = queryManager.watchQuery<any>({
         query: complexQuery,
-        returnPartialData: true,
+        // returnPartialData: true,
       });
 
       return handle.result().then((result) => {
@@ -3001,7 +3001,7 @@ describe('QueryManager', () => {
       store,
     });
 
-    const observable1 = queryManager.watchQuery<any>({ query: query1, returnPartialData: true });
+    const observable1 = queryManager.watchQuery<any>({ query: query1, /* returnPartialData: true */ });
     const observable2 = queryManager.watchQuery<any>({ query: query2 });
 
     // I'm not sure the waiting 60 here really is required, but the test used to do it
@@ -3250,7 +3250,7 @@ describe('QueryManager', () => {
       );
 
       return queryManager.query<any>({ query: primeQuery }).then((primeResult) => {
-        const observable = queryManager.watchQuery<any>({ query, returnPartialData: true });
+        const observable = queryManager.watchQuery<any>({ query, /* returnPartialData: true */ });
 
         return observableToPromise({ observable },
           (result) => {
@@ -3382,7 +3382,7 @@ describe('QueryManager', () => {
         assert.deepEqual(result1.data, data1);
 
         let count = 0;
-        queryManager.watchQuery({ query: query2, returnPartialData: true }).subscribe({
+        queryManager.watchQuery({ query: query2, /* returnPartialData: true */ }).subscribe({
           next: result2 => {
             switch (count++) {
               case 0:

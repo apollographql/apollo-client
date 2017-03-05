@@ -36,7 +36,6 @@ export type QueryStoreValue = {
   networkError: Error | null;
   graphQLErrors: GraphQLError[];
   forceFetch: boolean;
-  returnPartialData: boolean;
   lastRequestId: number;
   metadata: any;
 };
@@ -104,7 +103,6 @@ export function queries(
       graphQLErrors: [],
       networkStatus: newNetworkStatus,
       forceFetch: action.forceFetch,
-      returnPartialData: action.returnPartialData,
       lastRequestId: action.requestId,
       metadata: action.metadata,
     };

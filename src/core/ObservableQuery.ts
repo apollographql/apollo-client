@@ -194,8 +194,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       forceFetch: true,
     };
 
-    return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
-      .then(result => this.queryManager.transformResult(result));
+    return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch);
+    //  .then(result => maybeDeepFreeze(result));
   }
 
   public fetchMore(
@@ -359,8 +359,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       return this.queryManager.fetchQuery(this.queryId, {
         ...this.options,
         variables: this.variables,
-      } as WatchQueryOptions)
-        .then(result => this.queryManager.transformResult(result));
+      } as WatchQueryOptions);
+      //  .then(result => maybeDeepFreeze(result));
     }
   }
 

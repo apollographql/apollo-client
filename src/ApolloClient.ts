@@ -33,8 +33,6 @@ import {
 
 import {
   ApolloQueryResult,
-  ResultComparator,
-  ResultTransformer,
   IdGetter,
 } from './core/types';
 
@@ -105,8 +103,6 @@ export default class ApolloClient implements DataProxy {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public resultTransformer: ResultTransformer | undefined;
-  public resultComparator: ResultComparator | undefined;
   public shouldForceFetch: boolean;
   public dataId: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
@@ -149,8 +145,6 @@ export default class ApolloClient implements DataProxy {
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
-    resultTransformer?: ResultTransformer,
-    resultComparator?: ResultComparator,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     addTypename?: boolean,
@@ -163,11 +157,9 @@ export default class ApolloClient implements DataProxy {
       reduxRootSelector,
       initialState,
       dataIdFromObject,
-      resultComparator,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       addTypename = true,
-      resultTransformer,
       customResolvers,
       connectToDevTools,
       queryDeduplication = true,
@@ -183,15 +175,6 @@ export default class ApolloClient implements DataProxy {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
-    if (resultTransformer) {
-      console.warn(
-        '"resultTransformer" is being considered for deprecation in an upcoming version. ' +
-        'If you are using it, please file an issue on apollostack/apollo-client ' +
-        'with a description of your use-case',
-      );
-    }
-    this.resultTransformer = resultTransformer;
-    this.resultComparator = resultComparator;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
@@ -465,8 +448,6 @@ export default class ApolloClient implements DataProxy {
       reduxRootSelector: reduxRootSelector,
       store,
       addTypename: this.addTypename,
-      resultTransformer: this.resultTransformer,
-      resultComparator: this.resultComparator,
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
     });

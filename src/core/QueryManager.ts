@@ -11,8 +11,6 @@ import {
 import { isEqual } from '../util/isEqual';
 
 import {
-  ResultTransformer,
-  ResultComparator,
   QueryListener,
   ApolloQueryResult,
   PureQueryOptions,
@@ -127,8 +125,6 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
-  private resultTransformer: ResultTransformer | undefined;
-  private resultComparator: ResultComparator | undefined;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
 
@@ -166,8 +162,6 @@ export class QueryManager {
     store,
     reduxRootSelector,
     reducerConfig = { mutationBehaviorReducers: {} },
-    resultTransformer,
-    resultComparator,
     addTypename = true,
     queryDeduplication = false,
   }: {
@@ -175,8 +169,6 @@ export class QueryManager {
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
     reducerConfig?: ApolloReducerConfig,
-    resultTransformer?: ResultTransformer,
-    resultComparator?: ResultComparator,
     addTypename?: boolean,
     queryDeduplication?: boolean,
   }) {
@@ -187,8 +179,6 @@ export class QueryManager {
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
-    this.resultTransformer = resultTransformer;
-    this.resultComparator = resultComparator;
     this.pollingTimers = {};
     this.queryListeners = {};
     this.queryDocuments = {};
@@ -319,7 +309,7 @@ export class QueryManager {
 
 
           delete this.queryDocuments[mutationId];
-          resolve(this.transformResult(<ApolloQueryResult<T>>result));
+          resolve(<ApolloQueryResult<T>>result);
         })
         .catch((err) => {
           this.store.dispatch({
@@ -423,8 +413,7 @@ export class QueryManager {
             }
 
             if (observer.next) {
-              const isDifferentResult =
-                this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
+              const isDifferentResult = !(
                   lastResult &&
                   resultFromStore &&
                   lastResult.networkStatus === resultFromStore.networkStatus &&
@@ -439,7 +428,7 @@ export class QueryManager {
               if (isDifferentResult) {
                 lastResult = resultFromStore;
                 try {
-                  observer.next(maybeDeepFreeze(this.transformResult(resultFromStore)));
+                  observer.next(maybeDeepFreeze(resultFromStore));
                 } catch (e) {
                   console.error('Error in observer.next \n', e.stack);
                 }
@@ -875,15 +864,6 @@ export class QueryManager {
       variables,
       document,
     };
-  }
-
-  // Give the result transformer a chance to observe or modify result data before it is passed on.
-  public transformResult<T>(result: ApolloQueryResult<T>): ApolloQueryResult<T> {
-    if (!this.resultTransformer) {
-      return result;
-    } else {
-      return this.resultTransformer(result);
-    }
   }
 
   // XXX: I think we just store this on the observable query at creation time

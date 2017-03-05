@@ -33,8 +33,6 @@ import {
 
 import {
   ApolloQueryResult,
-  ResultComparator,
-  ResultTransformer,
   IdGetter,
 } from './core/types';
 
@@ -100,14 +98,11 @@ function defaultReduxRootSelector(state: any) {
 export default class ApolloClient implements DataProxy {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
-  public reduxRootKey: string;
   public reduxRootSelector: ApolloStateSelector | null;
   public initialState: any;
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public resultTransformer: ResultTransformer | undefined;
-  public resultComparator: ResultComparator | undefined;
   public shouldForceFetch: boolean;
   public dataId: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
@@ -122,10 +117,6 @@ export default class ApolloClient implements DataProxy {
    *
    * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
    * to a GraphQL spec-compliant server.
-   *
-   * @deprecated please use "reduxRootSelector" instead
-   * @param reduxRootKey The root key within the Redux store in which data fetched from the server.
-   * will be stored. This option should only be used if the store is created outside of the client.
    *
    * @param reduxRootSelector Either a "selector" function that receives state from the Redux store
    * and returns the part of it that is managed by ApolloClient or a key that points to that state.
@@ -144,19 +135,16 @@ export default class ApolloClient implements DataProxy {
    * @param addTypename Adds the __typename field to every level of a GraphQL document, required
    * to support certain queries that contain fragments.
    *
-   * @param queryDeduplication If set to true, a query will not be sent to the server if a query
+   * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
 
   constructor(options: {
     networkInterface?: NetworkInterface,
-    reduxRootKey?: string,
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
-    resultTransformer?: ResultTransformer,
-    resultComparator?: ResultComparator,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     addTypename?: boolean,
@@ -166,57 +154,27 @@ export default class ApolloClient implements DataProxy {
   } = {}) {
     const {
       networkInterface,
-      reduxRootKey,
       reduxRootSelector,
       initialState,
       dataIdFromObject,
-      resultComparator,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       addTypename = true,
-      resultTransformer,
       customResolvers,
       connectToDevTools,
-      queryDeduplication = false,
+      queryDeduplication = true,
     } = options;
-    if (reduxRootKey && reduxRootSelector) {
-      throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
-    }
 
-    if (reduxRootKey) {
-      console.warn(
-          '"reduxRootKey" option is deprecated and might be removed in the upcoming versions, ' +
-          'please use the "reduxRootSelector" instead.',
-      );
-      this.reduxRootKey = reduxRootKey;
-    }
-
-    if (!reduxRootSelector && reduxRootKey) {
-      this.reduxRootSelector = (state: any) => state[reduxRootKey];
-    } else if (typeof reduxRootSelector === 'string') {
-      // for backwards compatibility, we set reduxRootKey if reduxRootSelector is a string
-      this.reduxRootKey = reduxRootSelector as string;
-      this.reduxRootSelector = (state: any) => state[reduxRootSelector as string];
-    } else if (typeof reduxRootSelector === 'function') {
+    if (typeof reduxRootSelector === 'function') {
       this.reduxRootSelector = reduxRootSelector;
-    } else {
-      // we need to know that reduxRootSelector wasn't provided by the user
-      this.reduxRootSelector = null;
+    } else if (typeof reduxRootSelector !== 'undefined') {
+      throw new Error('"reduxRootSelector" must be a function.');
     }
 
     this.initialState = initialState ? initialState : {};
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
-    if (resultTransformer) {
-      console.warn(
-        '"resultTransformer" is being considered for deprecation in an upcoming version. ' +
-        'If you are using it, please file an issue on apollostack/apollo-client ' +
-        'with a description of your use-case',
-      );
-    }
-    this.resultTransformer = resultTransformer;
-    this.resultComparator = resultComparator;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
@@ -428,8 +386,8 @@ export default class ApolloClient implements DataProxy {
 
     if (this.reduxRootSelector) {
       throw new Error(
-          'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
-          'They should only be used when the store is created outside of the client. ' +
+          'Cannot initialize the store because "reduxRootSelector" is provided. ' +
+          'reduxRootSelector should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
           `Please remove that option from ApolloClient constructor.`,
       );
@@ -454,8 +412,6 @@ export default class ApolloClient implements DataProxy {
         return result;
       },
     }));
-    // for backcompatibility, ensure that reduxRootKey is set to selector return value
-    this.reduxRootKey = DEFAULT_REDUX_ROOT_KEY;
   };
 
   public resetStore() {
@@ -475,9 +431,6 @@ export default class ApolloClient implements DataProxy {
       reduxRootSelector = this.reduxRootSelector;
     } else {
       reduxRootSelector = defaultReduxRootSelector;
-
-      // for backwards compatibility with react-apollo, we set reduxRootKey here.
-      this.reduxRootKey = DEFAULT_REDUX_ROOT_KEY;
     }
 
     // ensure existing store has apolloReducer
@@ -495,8 +448,6 @@ export default class ApolloClient implements DataProxy {
       reduxRootSelector: reduxRootSelector,
       store,
       addTypename: this.addTypename,
-      resultTransformer: this.resultTransformer,
-      resultComparator: this.resultComparator,
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
     });

@@ -673,6 +673,7 @@ describe('QueryManager', () => {
       variables: {
         id: '1',
       },
+      notifyOnNetworkStatusChange: false,
     };
     const data1 = {
       people_one: {
@@ -711,6 +712,7 @@ describe('QueryManager', () => {
           d { e f { g } }
         }
       `,
+      notifyOnNetworkStatusChange: false,
     };
 
     const data1 = {
@@ -789,6 +791,7 @@ describe('QueryManager', () => {
           d { e f { g } }
         }
       `,
+      notifyOnNetworkStatusChange: false,
     };
 
     const data1 = {
@@ -899,6 +902,42 @@ describe('QueryManager', () => {
     );
   });
 
+  it('returns frozen results from refetch', () => {
+    const request = {
+      query: gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }`,
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    const handle = queryManager.watchQuery<any>(request);
+    handle.subscribe({});
+
+    return handle.refetch().then( result => {
+      assert.deepEqual(result.data, data2);
+      assert.throws( () => (result.data as any).stuff = 'awful');
+    });
+  });
+
   it('allows you to refetch queries with new variables', () => {
     const query = gql`
       {
@@ -959,7 +998,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery<any>({ query });
+    const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
     return observableToPromise({ observable },
       (result) => {
         assert.deepEqual(result.data, data1);
@@ -1019,7 +1058,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery<any>({ query });
+    const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
     const originalOptions = assign({}, observable.options);
     return observableToPromise({ observable },
       (result) => {
@@ -1081,6 +1120,7 @@ describe('QueryManager', () => {
     const observable = queryManager.watchQuery<any>({
       query,
       pollInterval: 200,
+      notifyOnNetworkStatusChange: false,
     });
 
     return observableToPromise({ observable },
@@ -1494,7 +1534,7 @@ describe('QueryManager', () => {
         },
       ),
       store: store,
-    }).watchQuery({ query, variables });
+    }).watchQuery({ query, variables, notifyOnNetworkStatusChange: false });
 
     return observableToPromise({ observable },
       (result) => {
@@ -1563,7 +1603,7 @@ describe('QueryManager', () => {
       store: store,
     });
 
-    const observable = qm.watchQuery({ query, variables });
+    const observable = qm.watchQuery({ query, variables, notifyOnNetworkStatusChange: false });
 
     return observableToPromise({ observable },
       (result) => {
@@ -1741,6 +1781,7 @@ describe('QueryManager', () => {
         query,
         variables,
         pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
       });
 
       return observableToPromise({ observable },
@@ -1899,6 +1940,7 @@ describe('QueryManager', () => {
         query,
         variables,
         pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
       });
 
       const { promise, subscription } = observableToPromiseAndSubscription({
@@ -1961,6 +2003,7 @@ describe('QueryManager', () => {
         query,
         variables,
         pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
       });
 
       const { promise, subscription } = observableToPromiseAndSubscription({
@@ -2015,7 +2058,7 @@ describe('QueryManager', () => {
         },
       );
 
-      const observable = queryManager.watchQuery<any>({ query, variables });
+      const observable = queryManager.watchQuery<any>({ query, variables, notifyOnNetworkStatusChange: false });
       observable.startPolling(50);
 
       return observableToPromise({ observable },
@@ -2384,7 +2427,7 @@ describe('QueryManager', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      const observable = queryManager.watchQuery<any>({ query });
+      const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
 
       // wait to make sure store reset happened
       return observableToPromise({ observable, wait: 20 },
@@ -2692,7 +2735,7 @@ describe('QueryManager', () => {
         error: new Error('Network error occurred.'),
       },
     );
-    const observable = queryManager.watchQuery<any>({ query, pollInterval: 20 });
+    const observable = queryManager.watchQuery<any>({ query, pollInterval: 20, notifyOnNetworkStatusChange: false });
 
     return observableToPromise({
         observable,
@@ -3281,7 +3324,10 @@ describe('QueryManager', () => {
       );
       let count = 0;
 
-      queryManager.watchQuery({ query: testQuery }).subscribe({
+      queryManager.watchQuery({
+        query: testQuery,
+        notifyOnNetworkStatusChange: false,
+      }).subscribe({
         next: result => {
           switch (count++) {
             case 0:
@@ -3422,7 +3468,7 @@ describe('QueryManager', () => {
           result: { data: mutationData },
         },
       );
-      const observable = queryManager.watchQuery<any>({ query });
+      const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
       return observableToPromise({ observable },
         (result) => {
           assert.deepEqual(result.data, data);
@@ -3479,7 +3525,7 @@ describe('QueryManager', () => {
           result: { data: mutationData },
         },
       );
-      const observable = queryManager.watchQuery<any>({ query });
+      const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
       return observableToPromise({ observable },
         (result) => {
           assert.deepEqual(result.data, data);
@@ -3615,142 +3661,6 @@ describe('QueryManager', () => {
       console.warn = oldWarn;
       done();
     });
-  });
-
-  describe('result transformation', () => {
-
-    let client: ApolloClient;
-    let response: any;
-    let transformCount: number;
-
-    beforeEach(() => {
-      withWarning( () => {
-       transformCount = 0;
-
-        const networkInterface: NetworkInterface = {
-          query(request: Request): Promise<ExecutionResult> {
-            return Promise.resolve(response);
-          },
-        };
-
-        client = new ApolloClient({
-          networkInterface,
-          resultTransformer(result: ExecutionResult) {
-            transformCount++;
-            return {
-              data: assign({}, result.data, {transformCount}),
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              stale: false,
-            };
-          },
-        });
-      }, /resultTransformer/);
-    });
-
-    it('transforms query() results', () => {
-      response = {data: {foo: 123}};
-      return client.query({query: gql`{ foo }`})
-        .then((result: ApolloQueryResult<any>) => {
-          assert.deepEqual(result.data, {foo: 123, transformCount: 1});
-        });
-    });
-
-    it('transforms watchQuery() results', () => {
-      response = {data: {foo: 123}};
-      const observable = client.watchQuery({query: gql`{ foo }`});
-
-      return observableToPromise({ observable },
-        (result) => {
-          assert.deepEqual(result.data, {foo: 123, transformCount: 1});
-          response = {data: {foo: 456}};
-          observable.refetch();
-        },
-        (result) => assert.deepEqual(result.data, {foo: 456, transformCount: 2}),
-      );
-    });
-
-    it('does not transform identical watchQuery() results', () => {
-      response = {data: {foo: 123}};
-      const observable = client.watchQuery({query: gql`{ foo }`});
-
-      let succeed: Function;
-      return Promise.race([
-        // This will never resolve but *will* fail if we see the wrong number
-        // of callbacks
-        observableToPromise({ observable, shouldResolve: false },
-          (result) => {
-            assert.deepEqual(result.data, { foo: 123, transformCount: 1 });
-            // If a callback triggers before the then, we'll get a test failure
-            observable.refetch().then(() => succeed());
-          },
-        ),
-        new Promise((resolve) => succeed = resolve),
-      ]);
-    });
-
-    it('transforms mutate() results', () => {
-      response = {data: {foo: 123}};
-      return client.mutate({mutation: gql`mutation makeChanges { foo }`})
-        .then((result: ApolloQueryResult<any>) => {
-          assert.deepEqual(result.data, {foo: 123, transformCount: 1});
-        });
-    });
-
-  });
-
-  describe('result transformation with custom equality', () => {
-
-    class Model {}
-
-    let client: ApolloClient;
-    let response: any;
-
-    beforeEach(() => {
-      withWarning( () => {
-        const networkInterface: NetworkInterface = {
-          query(request: Request): Promise<ExecutionResult> {
-            return Promise.resolve(response);
-          },
-        };
-
-        client = new ApolloClient({
-          networkInterface,
-          resultTransformer(result: ApolloQueryResult<any>) {
-            result.data.__proto__ = Model.prototype;
-            return result;
-          },
-          resultComparator(result1: ApolloQueryResult<any>, result2: ApolloQueryResult<any>) {
-            // A real example would, say, deep compare the two while ignoring prototypes.
-            const foo1 = result1 && result1.data && result1.data.foo;
-            const foo2 = result2 && result2.data && result2.data.foo;
-            return foo1 === foo2;
-          },
-        });
-      }, /resultTransformer/);
-    });
-
-    it('does not transform identical watchQuery() results, according to the comparator', () => {
-      response = {data: {foo: 123}};
-      const observable = client.watchQuery({query: gql`{ foo }`});
-
-
-      let succeed: Function;
-      return Promise.race([
-        // This will never resolve but *will* fail if we see the wrong number
-        // of callbacks
-        observableToPromise({ observable, shouldResolve: false },
-          (result) => {
-            assert.instanceOf(result.data, Model);
-            response = {data: {foo: 123}}; // Ensure we have new response objects.
-            // If a callback triggers before the then, we'll get a test failure
-            observable.refetch().then(() => succeed());
-          },
-        ),
-        new Promise((resolve) => succeed = resolve),
-      ]);
-    });
-
   });
 
   it('exposes errors on a refetch as a rejection', (done) => {

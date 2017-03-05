@@ -19,6 +19,10 @@ import {
   ObservableQuery,
 } from '../src/index';
 
+import {
+  diffQueryAgainstStore,
+} from '../src/data/readFromStore';
+
 import mockNetworkInterface, {
   MockedResponse,
 } from '../test/mocks/mockNetworkInterface';
@@ -63,7 +67,6 @@ const getClientInstance = () => {
     addTypename: false,
   });
 };
-
 
 group((end) => {
   benchmark('constructing an instance', (done) => {
@@ -233,7 +236,9 @@ times(25, (countR: number) => {
     });
   });
 });
+*/
 
+/*
 // Measure the amount of time it takes to read a bunch of
 // objects from the cache.
 times(50, (index) => {
@@ -297,9 +302,71 @@ times(50, (index) => {
           done();
         });
       });
-
+      
       end();
     });
+  });
+});
+
+// Measure only the amount of time it takes to diff a query against the store
+//
+// This test allows us to differentiate between the fixed cost of .query() and the fixed cost
+// of actually reading from the store.
+group((end) => {
+  // Prime the cache.
+  const query = gql`
+    query($id: String) {
+      house(id: $id) {
+        reservations {
+          name
+          id
+        }
+      }
+    }`;
+  const variables = { id: '7' };
+  const reservations: {
+    name: string,
+    id: string,
+  }[] = [{ name: 'a', id: '1'}, {name: 'b', id: '2'}, {name: 'c', id: '3'}];
+  const result = {
+    data: {
+      house: { reservations },
+    },
+  };
+  const client = new ApolloClient({
+    networkInterface: mockNetworkInterface({
+      request: { query, variables },
+      result,
+    }),
+    addTypename: false,
+    dataIdFromObject: (object: any) => {
+      if (object.__typename && object.id) {
+        return object.__typename + '__' + object.id;
+      }
+      return null;
+    },
+  });
+  
+  const myBenchmark = benchmark;
+
+  // We only keep track of the results so that V8 doesn't decide to just throw
+  // away our cache read code.
+  const results: any[] = [];
+  client.query({
+    query,
+    variables,
+  }).then(() => {
+    myBenchmark('diff query against store', (done) => {
+      
+      results.push(diffQueryAgainstStore({
+        query,
+        variables,
+        store: client.store.getState()['apollo'].data,
+      }));
+      done();
+    });
+
+    end();
   });
 });
 

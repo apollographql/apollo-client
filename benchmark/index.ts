@@ -11,6 +11,7 @@ import {
   runBenchmarks,
   DescriptionObject,
   log,
+  dataIdFromObject,
 } from './util';
 
 import {
@@ -67,6 +68,7 @@ const getClientInstance = () => {
     addTypename: false,
   });
 };
+
 
 group((end) => {
   benchmark('constructing an instance', (done) => {
@@ -198,12 +200,7 @@ times(25, (countR: number) => {
     const client = new ApolloClient({
       networkInterface: mockNetworkInterface(...mockedResponses),
       addTypename: false,
-      dataIdFromObject: (object: any) => {
-        if (object.__typename && object.id) {
-          return object.__typename + '__' + object.id;
-        }
-        return null;
-      },
+      dataIdFromObject,
     });
 
     // insert a bunch of stuff into the cache
@@ -236,9 +233,7 @@ times(25, (countR: number) => {
     });
   });
 });
-*/
 
-/*
 // Measure the amount of time it takes to read a bunch of
 // objects from the cache.
 times(50, (index) => {
@@ -280,12 +275,7 @@ times(50, (index) => {
         result,
       }),
       addTypename: false,
-      dataIdFromObject: (object: any) => {
-        if (object.__typename && object.id) {
-          return object.__typename + '__' + object.id;
-        }
-        return null;
-      },
+      dataIdFromObject,
     });
 
     const myBenchmark = benchmark;
@@ -302,7 +292,7 @@ times(50, (index) => {
           done();
         });
       });
-      
+
       end();
     });
   });
@@ -339,12 +329,7 @@ group((end) => {
       result,
     }),
     addTypename: false,
-    dataIdFromObject: (object: any) => {
-      if (object.__typename && object.id) {
-        return object.__typename + '__' + object.id;
-      }
-      return null;
-    },
+    dataIdFromObject,
   });
   
   const myBenchmark = benchmark;

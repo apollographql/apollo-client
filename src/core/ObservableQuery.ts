@@ -196,8 +196,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       forceFetch: true,
     };
 
-    return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch);
-    //.then(result => maybeDeepFreeze(result));
+    return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
+    .then(result => maybeDeepFreeze(result));
   }
 
   public fetchMore(

@@ -902,6 +902,42 @@ describe('QueryManager', () => {
     );
   });
 
+  it('returns frozen results from refetch', () => {
+    const request = {
+      query: gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }`,
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    const handle = queryManager.watchQuery<any>(request);
+    handle.subscribe({});
+
+    return handle.refetch().then( result => {
+      assert.deepEqual(result.data, data2);
+      assert.throws( () => (result.data as any).stuff = 'awful');
+    });
+  });
+
   it('allows you to refetch queries with new variables', () => {
     const query = gql`
       {

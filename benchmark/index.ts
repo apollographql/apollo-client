@@ -331,7 +331,7 @@ group((end) => {
     addTypename: false,
     dataIdFromObject,
   });
-  
+
   const myBenchmark = benchmark;
 
   // We only keep track of the results so that V8 doesn't decide to just throw
@@ -342,7 +342,7 @@ group((end) => {
     variables,
   }).then(() => {
     myBenchmark('diff query against store', (done) => {
-      
+
       results.push(diffQueryAgainstStore({
         query,
         variables,

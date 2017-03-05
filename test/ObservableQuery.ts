@@ -642,6 +642,54 @@ describe('ObservableQuery', () => {
         });
     });
 
+    it('returns partial data from store when errors occurred', (done) => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query: superQuery, variables },
+        result: { data: superDataOne, errors: [error] },
+      });
+
+      queryManager.query({ query, variables })
+        .then((result: any) => {
+          const observable = queryManager.watchQuery({
+            query: superQuery,
+            variables,
+            returnPartialData: true,
+          });
+          assert.deepEqual(observable.currentResult(), {
+            data: dataOne,
+            loading: true,
+            networkStatus: 1,
+            partial: true,
+          });
+          let handleCount = 0;
+          const subscription = observable.subscribe({
+              next: result => {
+                done(new Error('Should have received error'));
+              },
+              error: error => {
+                try {
+                  handleCount++;
+                  const subResult = observable.currentResult();
+
+                  assert.deepEqual(subResult, {
+                    data: superDataOne,
+                    loading: false,
+                    networkStatus: 7,
+                    partial: true,
+                    //error: 'Error: GraphQL error: is offline.'
+                  });
+                } catch (e) {
+                  subscription.unsubscribe();
+                  done(e);
+                }
+              },
+            });
+        });
+    });
+
     it('returns partial data from the store immediately', (done) => {
       const queryManager = mockQueryManager({
         request: { query, variables },

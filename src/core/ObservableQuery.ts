@@ -134,7 +134,19 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         graphQLErrors: queryStoreValue.graphQLErrors,
         networkError: queryStoreValue.networkError,
       });
-      return { data: {}, loading: false, networkStatus: queryStoreValue.networkStatus, error };
+
+      let returnData = data;
+      if (partial && !this.options.returnPartialData) {
+        returnData = {};
+      }
+
+      return {
+        data: returnData,
+        loading: false,
+        networkStatus: queryStoreValue.networkStatus,
+        error,
+        partial,
+      };
     }
 
     const queryLoading = !queryStoreValue || queryStoreValue.networkStatus === NetworkStatus.loading;

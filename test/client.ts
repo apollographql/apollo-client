@@ -212,7 +212,7 @@ describe('client', () => {
       assert.equal(
           error.message,
           'Cannot initialize the store because "reduxRootSelector" is provided. ' +
-          'ReduxRootSelector should only be used when the store is created outside of the client. ' +
+          'reduxRootSelector should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
           `Please remove that option from ApolloClient constructor.`,
       );

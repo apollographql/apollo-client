@@ -439,7 +439,7 @@ export class QueryManager {
               if (isDifferentResult) {
                 lastResult = resultFromStore;
                 try {
-                  observer.next(maybeDeepFreeze(this.transformResult(resultFromStore)));
+                  observer.next(this.transformResult(resultFromStore));
                 } catch (e) {
                   console.error('Error in observer.next \n', e.stack);
                 }
@@ -823,24 +823,28 @@ export class QueryManager {
       previousResult: lastResult ? lastResult.data : undefined,
     };
 
+    let data = {};
+    let partial = true;
     try {
       // first try reading the full result from the store
-      const data = readQueryFromStore(readOptions);
-      return maybeDeepFreeze({ data, partial: false });
+      data = readQueryFromStore(readOptions);
+      partial = false;
     } catch (e) {
       // next, try reading partial results, if we want them
       if (queryOptions.returnPartialData || queryOptions.noFetch) {
         try {
           readOptions.returnPartialData = true;
-          const data = readQueryFromStore(readOptions);
-          return { data, partial: true };
+          data = readQueryFromStore(readOptions);
         } catch (e) {
           // fall through
         }
       }
-
-      return maybeDeepFreeze({ data: {}, partial: true });
     }
+
+    // It's a bit annoying that resultTransformer expects an ApolloQueryResult and not just data.
+    const transformed = this.transformResult({ data, loading: false, networkStatus: null });
+
+    return { data: transformed.data, partial };
   }
 
   public getQueryWithPreviousResult<T>(queryIdOrObservable: string | ObservableQuery<T>, isOptimistic = false) {
@@ -870,11 +874,11 @@ export class QueryManager {
 
   // Give the result transformer a chance to observe or modify result data before it is passed on.
   public transformResult<T>(result: ApolloQueryResult<T>): ApolloQueryResult<T> {
-    if (!this.resultTransformer) {
-      return result;
-    } else {
-      return this.resultTransformer(result);
+    if (this.resultTransformer) {
+      result = this.resultTransformer(result);
     }
+
+    return maybeDeepFreeze(result);
   }
 
   // XXX: I think we just store this on the observable query at creation time

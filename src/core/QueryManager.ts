@@ -469,6 +469,10 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
+    if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
+      options.notifyOnNetworkStatusChange = true;
+    }
+
     let transformedOptions = { ...options } as WatchQueryOptions;
     if (this.addTypename) {
       transformedOptions.query = addTypenameToDocument(transformedOptions.query);
@@ -491,6 +495,11 @@ export class QueryManager {
     if (options.query.kind !== 'Document') {
       throw new Error('You must wrap the query string in a "gql" tag.');
     }
+
+    if (typeof options.notifyOnNetworkStatusChange !== 'undefined' ) {
+      throw new Error('Cannot call "query" with "notifyOnNetworkStatusChange = true" ');
+    }
+    options.notifyOnNetworkStatusChange = false;
 
     const requestId = this.idCounter;
     const resPromise = new Promise((resolve, reject) => {

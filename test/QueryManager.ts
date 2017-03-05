@@ -673,6 +673,7 @@ describe('QueryManager', () => {
       variables: {
         id: '1',
       },
+      notifyOnNetworkStatusChange: false,
     };
     const data1 = {
       people_one: {
@@ -711,6 +712,7 @@ describe('QueryManager', () => {
           d { e f { g } }
         }
       `,
+      notifyOnNetworkStatusChange: false,
     };
 
     const data1 = {
@@ -789,6 +791,7 @@ describe('QueryManager', () => {
           d { e f { g } }
         }
       `,
+      notifyOnNetworkStatusChange: false,
     };
 
     const data1 = {
@@ -959,7 +962,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery<any>({ query });
+    const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
     return observableToPromise({ observable },
       (result) => {
         assert.deepEqual(result.data, data1);
@@ -1019,7 +1022,7 @@ describe('QueryManager', () => {
       },
     );
 
-    const observable = queryManager.watchQuery<any>({ query });
+    const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
     const originalOptions = assign({}, observable.options);
     return observableToPromise({ observable },
       (result) => {
@@ -1081,6 +1084,7 @@ describe('QueryManager', () => {
     const observable = queryManager.watchQuery<any>({
       query,
       pollInterval: 200,
+      notifyOnNetworkStatusChange: false,
     });
 
     return observableToPromise({ observable },
@@ -1494,7 +1498,7 @@ describe('QueryManager', () => {
         },
       ),
       store: store,
-    }).watchQuery({ query, variables });
+    }).watchQuery({ query, variables, notifyOnNetworkStatusChange: false });
 
     return observableToPromise({ observable },
       (result) => {
@@ -1563,7 +1567,7 @@ describe('QueryManager', () => {
       store: store,
     });
 
-    const observable = qm.watchQuery({ query, variables });
+    const observable = qm.watchQuery({ query, variables, notifyOnNetworkStatusChange: false });
 
     return observableToPromise({ observable },
       (result) => {
@@ -1741,6 +1745,7 @@ describe('QueryManager', () => {
         query,
         variables,
         pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
       });
 
       return observableToPromise({ observable },
@@ -1899,6 +1904,7 @@ describe('QueryManager', () => {
         query,
         variables,
         pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
       });
 
       const { promise, subscription } = observableToPromiseAndSubscription({
@@ -1961,6 +1967,7 @@ describe('QueryManager', () => {
         query,
         variables,
         pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
       });
 
       const { promise, subscription } = observableToPromiseAndSubscription({
@@ -2015,7 +2022,7 @@ describe('QueryManager', () => {
         },
       );
 
-      const observable = queryManager.watchQuery<any>({ query, variables });
+      const observable = queryManager.watchQuery<any>({ query, variables, notifyOnNetworkStatusChange: false });
       observable.startPolling(50);
 
       return observableToPromise({ observable },
@@ -2384,7 +2391,7 @@ describe('QueryManager', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      const observable = queryManager.watchQuery<any>({ query });
+      const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
 
       // wait to make sure store reset happened
       return observableToPromise({ observable, wait: 20 },
@@ -2692,7 +2699,7 @@ describe('QueryManager', () => {
         error: new Error('Network error occurred.'),
       },
     );
-    const observable = queryManager.watchQuery<any>({ query, pollInterval: 20 });
+    const observable = queryManager.watchQuery<any>({ query, pollInterval: 20, notifyOnNetworkStatusChange: false });
 
     return observableToPromise({
         observable,
@@ -3281,7 +3288,10 @@ describe('QueryManager', () => {
       );
       let count = 0;
 
-      queryManager.watchQuery({ query: testQuery }).subscribe({
+      queryManager.watchQuery({
+        query: testQuery,
+        notifyOnNetworkStatusChange: false,
+      }).subscribe({
         next: result => {
           switch (count++) {
             case 0:
@@ -3422,7 +3432,7 @@ describe('QueryManager', () => {
           result: { data: mutationData },
         },
       );
-      const observable = queryManager.watchQuery<any>({ query });
+      const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
       return observableToPromise({ observable },
         (result) => {
           assert.deepEqual(result.data, data);
@@ -3479,7 +3489,7 @@ describe('QueryManager', () => {
           result: { data: mutationData },
         },
       );
-      const observable = queryManager.watchQuery<any>({ query });
+      const observable = queryManager.watchQuery<any>({ query, notifyOnNetworkStatusChange: false });
       return observableToPromise({ observable },
         (result) => {
           assert.deepEqual(result.data, data);
@@ -3658,7 +3668,7 @@ describe('QueryManager', () => {
 
     it('transforms watchQuery() results', () => {
       response = {data: {foo: 123}};
-      const observable = client.watchQuery({query: gql`{ foo }`});
+      const observable = client.watchQuery({query: gql`{ foo }`, notifyOnNetworkStatusChange: false});
 
       return observableToPromise({ observable },
         (result) => {
@@ -3672,7 +3682,7 @@ describe('QueryManager', () => {
 
     it('does not transform identical watchQuery() results', () => {
       response = {data: {foo: 123}};
-      const observable = client.watchQuery({query: gql`{ foo }`});
+      const observable = client.watchQuery({query: gql`{ foo }`, notifyOnNetworkStatusChange: false});
 
       let succeed: Function;
       return Promise.race([

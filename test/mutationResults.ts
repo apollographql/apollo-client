@@ -209,6 +209,7 @@ describe('mutation results', () => {
 
     return client.watchQuery({
       query,
+      notifyOnNetworkStatusChange: false,
     });
   }
 
@@ -584,6 +585,7 @@ describe('mutation results', () => {
       .then(() => {
         observableQuery = client.watchQuery({
           query,
+          notifyOnNetworkStatusChange: false,
           reducer: (previousResult, action) => {
             counter++;
             if (isMutationResultAction(action)) {

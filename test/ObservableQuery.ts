@@ -112,7 +112,7 @@ describe('ObservableQuery', () => {
           result: { data: dataTwo },
         });
 
-        const observable = manager.watchQuery({ query, variables });
+        const observable = manager.watchQuery({ query, variables, notifyOnNetworkStatusChange: false });
         subscribeAndCount(done, observable, (handleCount, result) => {
           if (handleCount === 1) {
             assert.deepEqual(result.data, dataOne);
@@ -173,6 +173,7 @@ describe('ObservableQuery', () => {
           query,
           variables,
           pollInterval: 100,
+          notifyOnNetworkStatusChange: false,
         });
         subscribeAndCount(done, observable, (handleCount, result) => {
           if (handleCount === 1) {
@@ -333,7 +334,7 @@ describe('ObservableQuery', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      observable = queryManager.watchQuery({ query: testQuery, noFetch: true });
+      observable = queryManager.watchQuery({ query: testQuery, noFetch: true, notifyOnNetworkStatusChange: false });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 2) {
@@ -490,7 +491,11 @@ describe('ObservableQuery', () => {
 
       manager.query({ query, variables: differentVariables })
         .then(() => {
-          const observable: ObservableQuery<any> = manager.watchQuery({ query, variables });
+          const observable: ObservableQuery<any> = manager.watchQuery({
+            query,
+            variables,
+            notifyOnNetworkStatusChange: false,
+          });
 
           let errored = false;
           subscribeAndCount(done, observable, (handleCount, result) => {

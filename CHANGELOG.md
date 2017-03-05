@@ -7,6 +7,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Breaking: change default of notifyOnNetworkStatusChange to true
 - Breaking: change default of queryDeduplication to true
 - Breaking: remove deprecated reduxRootKey
+- Fix: make sure maybeDeepFreeze is called on results returned from setVariables and refetch
 
 
 ### 0.10.1

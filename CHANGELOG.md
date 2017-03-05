@@ -4,10 +4,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Fix (possibly breaking): Invoke afterware even on requests that error [PR #1351](https://github.com/apollographql/apollo-client/pull/1351)
-- Breaking: change default of notifyOnNetworkStatusChange to true
-- Breaking: change default of queryDeduplication to true
-- Breaking: remove deprecated reduxRootKey
-- Fix: make sure maybeDeepFreeze is called on results returned from setVariables and refetch
+- Breaking: change default of notifyOnNetworkStatusChange to true [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
+- Breaking: change default of queryDeduplication to true [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
+- Breaking: remove deprecated reduxRootKey [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
+- Fix: make sure maybeDeepFreeze is called on results returned from setVariables and refetch [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 
 
 ### 0.10.1

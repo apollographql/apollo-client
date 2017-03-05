@@ -11,6 +11,8 @@ import {
   SelectionSetNode,
   /* tslint:enable */
 
+  DocumentNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import {
@@ -45,18 +47,31 @@ import {
 } from './util/Observable';
 
 import {
+  isProduction,
+} from './util/environment';
+
+import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
 } from './core/watchQueryOptions';
 
 import {
-  MutationBehaviorReducerMap,
-} from './data/mutationResults';
-
-import {
   storeKeyNameFromFieldNameAndArgs,
 } from './data/storeUtils';
+
+import {
+  getFragmentQueryDocument,
+} from './queries/getFromAST';
+
+import {
+  DataProxy,
+  DataProxyReadQueryOptions,
+  DataProxyReadFragmentOptions,
+  DataProxyWriteQueryOptions,
+  DataProxyWriteFragmentOptions,
+  ReduxDataProxy,
+} from './data/proxy';
 
 import {
   version,
@@ -82,7 +97,7 @@ function defaultReduxRootSelector(state: any) {
  * receive results from the server and cache the results in a Redux store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
-export default class ApolloClient {
+export default class ApolloClient implements DataProxy {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
   public reduxRootKey: string;
@@ -91,15 +106,16 @@ export default class ApolloClient {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public resultTransformer: ResultTransformer;
-  public resultComparator: ResultComparator;
+  public resultTransformer: ResultTransformer | undefined;
+  public resultComparator: ResultComparator | undefined;
   public shouldForceFetch: boolean;
-  public dataId: IdGetter;
+  public dataId: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
 
   private devToolsHookCb: Function;
+  private proxy: DataProxy | undefined;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -132,22 +148,8 @@ export default class ApolloClient {
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
-  constructor({
-    networkInterface,
-    reduxRootKey,
-    reduxRootSelector,
-    initialState,
-    dataIdFromObject,
-    resultComparator,
-    ssrMode = false,
-    ssrForceFetchDelay = 0,
-    mutationBehaviorReducers = {} as MutationBehaviorReducerMap,
-    addTypename = true,
-    resultTransformer,
-    customResolvers,
-    connectToDevTools,
-    queryDeduplication = false,
-  }: {
+
+  constructor(options: {
     networkInterface?: NetworkInterface,
     reduxRootKey?: string,
     reduxRootSelector?: string | ApolloStateSelector,
@@ -157,12 +159,26 @@ export default class ApolloClient {
     resultComparator?: ResultComparator,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
-    mutationBehaviorReducers?: MutationBehaviorReducerMap,
     addTypename?: boolean,
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
   } = {}) {
+    const {
+      networkInterface,
+      reduxRootKey,
+      reduxRootSelector,
+      initialState,
+      dataIdFromObject,
+      resultComparator,
+      ssrMode = false,
+      ssrForceFetchDelay = 0,
+      addTypename = true,
+      resultTransformer,
+      customResolvers,
+      connectToDevTools,
+      queryDeduplication = false,
+    } = options;
     if (reduxRootKey && reduxRootSelector) {
       throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
     }
@@ -212,7 +228,6 @@ export default class ApolloClient {
 
     this.reducerConfig = {
       dataIdFromObject,
-      mutationBehaviorReducers,
       customResolvers,
     };
 
@@ -225,14 +240,10 @@ export default class ApolloClient {
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
     const defaultConnectToDevTools =
-      typeof process === 'undefined' || (process.env && process.env.NODE_ENV !== 'production') &&
+      !isProduction() &&
       typeof window !== 'undefined' && (!(window as any).__APOLLO_CLIENT__);
 
-    if (typeof connectToDevTools === 'undefined') {
-      connectToDevTools = defaultConnectToDevTools;
-    }
-
-    if (connectToDevTools) {
+    if (typeof connectToDevTools === 'undefined' ? defaultConnectToDevTools : connectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
     }
 
@@ -301,27 +312,6 @@ export default class ApolloClient {
    * error.
    *
    * It takes options as an object with the following keys and values:
-   *
-   * @param options.mutation A GraphQL document, often created with `gql` from the `graphql-tag` package,
-   * that contains a single mutation inside of it.
-   *
-   * @param options.variables An object that maps from the name of a variable as used in the mutation
-   * GraphQL document to that variable's value.
-   *
-   * @param options.optimisticResponse An object that represents the result of this mutation that will be
-   * optimistically stored before the server has actually returned a result. This is most often
-   * used for optimistic UI, where we want to be able to see the result of a mutation immediately,
-   * and update the UI later if any errors appear.
-   *
-   * @param options.updateQueries A {@link MutationQueryReducersMap}, which is map from query names to
-   * mutation query reducers. Briefly, this map defines how to incorporate the results of the
-   * mutation into the results of queries that are currently being watched by your application.
-   *
-   * @param options.refetchQueries A list of query names which will be refetched once this mutation has
-   * returned. This is often used if you have a set of queries which may be affected by a mutation
-   * and will have to update. Rather than writing a mutation query reducer (i.e. `updateQueries`)
-   * for this, you can simply refetch the queries that will be affected and achieve a consistent
-   * store once these queries return.
    */
   public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
@@ -339,6 +329,55 @@ export default class ApolloClient {
     delete realOptions.query;
 
     return this.queryManager.startGraphQLSubscription(realOptions);
+  }
+
+  /**
+   * Tries to read some data from the store in the shape of the provided
+   * GraphQL query without making a network request. This method will start at
+   * the root query. To start at a specific id returned by `dataIdFromObject`
+   * use `readFragment`.
+   */
+  public readQuery<T>(options: DataProxyReadQueryOptions): T {
+    return this.initProxy().readQuery<T>(options);
+  }
+
+  /**
+   * Tries to read some data from the store in the shape of the provided
+   * GraphQL fragment without making a network request. This method will read a
+   * GraphQL fragment from any arbitrary id that is currently cached, unlike
+   * `readQuery` which will only read from the root query.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are reading. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
+   */
+  public readFragment<T>(options: DataProxyReadFragmentOptions): T | null {
+    return this.initProxy().readFragment<T>(options);
+  }
+
+  /**
+   * Writes some data in the shape of the provided GraphQL query directly to
+   * the store. This method will start at the root query. To start at a a
+   * specific id returned by `dataIdFromObject` then use `writeFragment`.
+   */
+  public writeQuery(options: DataProxyWriteQueryOptions): void {
+    return this.initProxy().writeQuery(options);
+  }
+
+  /**
+   * Writes some data in the shape of the provided GraphQL fragment directly to
+   * the store. This method will write to a GraphQL fragment from any arbitrary
+   * id that is currently cached, unlike `writeQuery` which will only write
+   * from the root query.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are writing. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
+   */
+  public writeFragment(options: DataProxyWriteFragmentOptions): void {
+    return this.initProxy().writeFragment(options);
   }
 
   /**
@@ -420,10 +459,13 @@ export default class ApolloClient {
   };
 
   public resetStore() {
-    this.queryManager.resetStore();
+    if (this.queryManager) {
+      this.queryManager.resetStore();
+    }
   };
 
   public getInitialState(): { data: Object } {
+    this.initStore();
     return this.queryManager.getInitialState();
   }
 
@@ -459,4 +501,20 @@ export default class ApolloClient {
       queryDeduplication: this.queryDeduplication,
     });
   };
+
+  /**
+   * Initializes a data proxy for this client instance if one does not already
+   * exist and returns either a previously initialized proxy instance or the
+   * newly initialized instance.
+   */
+  private initProxy(): DataProxy {
+    if (!this.proxy) {
+      this.initStore();
+      this.proxy = new ReduxDataProxy(
+        this.store,
+        this.reduxRootSelector || defaultReduxRootSelector,
+      );
+    }
+    return this.proxy;
+  }
 }

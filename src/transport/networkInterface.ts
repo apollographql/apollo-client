@@ -1,12 +1,21 @@
+import 'whatwg-fetch';
+
 import {
   ExecutionResult,
   DocumentNode,
 } from 'graphql';
 
-import { print } from 'graphql-tag/printer';
+import { print } from 'graphql-tag/bundledPrinter';
 
-import { MiddlewareInterface } from './middleware';
-import { AfterwareInterface } from './afterware';
+import {
+  MiddlewareInterface,
+  BatchMiddlewareInterface,
+} from './middleware';
+
+import {
+  AfterwareInterface,
+  BatchAfterwareInterface,
+} from './afterware';
 
 /**
  * This is an interface that describes an GraphQL document to be sent
@@ -55,10 +64,10 @@ export interface SubscriptionNetworkInterface extends NetworkInterface {
 export interface HTTPNetworkInterface extends NetworkInterface {
   _uri: string;
   _opts: RequestInit;
-  _middlewares: MiddlewareInterface[];
-  _afterwares: AfterwareInterface[];
-  use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface;
-  useAfter(afterwares: AfterwareInterface[]): HTTPNetworkInterface;
+  _middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[];
+  _afterwares: AfterwareInterface[] | BatchAfterwareInterface[];
+  use(middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[]): HTTPNetworkInterface;
+  useAfter(afterwares: AfterwareInterface[] | BatchAfterwareInterface[]): HTTPNetworkInterface;
 }
 
 export interface RequestAndOptions {
@@ -67,7 +76,7 @@ export interface RequestAndOptions {
 }
 
 export interface ResponseAndOptions {
-  response: IResponse;
+  response: Response;
   options: RequestInit;
 }
 
@@ -78,17 +87,17 @@ export function printRequest(request: Request): PrintedRequest {
   };
 }
 
-// TODO: refactor
-// add the batching to this.
-export class HTTPFetchNetworkInterface implements NetworkInterface {
+// Provide extension point for regular network interface and batched
+// network interface. Should not be used directly.
+export class BaseNetworkInterface implements NetworkInterface {
+  public _middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[];
+  public _afterwares: AfterwareInterface[] | BatchAfterwareInterface[];
   public _uri: string;
   public _opts: RequestInit;
-  public _middlewares: MiddlewareInterface[];
-  public _afterwares: AfterwareInterface[];
 
-  constructor(uri: string, opts: RequestInit = {}) {
+  constructor(uri: string | undefined, opts: RequestInit = {}) {
     if (!uri) {
-      throw new Error('A remote enpdoint is required for a network layer');
+      throw new Error('A remote endpoint is required for a network layer');
     }
 
     if (typeof uri !== 'string') {
@@ -97,20 +106,32 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
 
     this._uri = uri;
     this._opts = { ...opts };
+
     this._middlewares = [];
     this._afterwares = [];
   }
 
-  public applyMiddlewares({
-    request,
-    options,
-  }: RequestAndOptions): Promise<RequestAndOptions> {
+  public query(request: Request): Promise<ExecutionResult> {
     return new Promise((resolve, reject) => {
+      reject(new Error('BaseNetworkInterface should not be used directly'));
+    });
+  }
+}
+
+export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
+  public _middlewares: MiddlewareInterface[];
+  public _afterwares: AfterwareInterface[];
+
+  public applyMiddlewares(requestAndOptions: RequestAndOptions): Promise<RequestAndOptions> {
+    return new Promise((resolve, reject) => {
+      const { request, options } = requestAndOptions;
       const queue = (funcs: MiddlewareInterface[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();
-            f.applyMiddleware.apply(scope, [{ request, options }, next]);
+            if (f) {
+              f.applyMiddleware.apply(scope, [{ request, options }, next]);
+            }
           } else {
             resolve({
               request,
@@ -121,26 +142,23 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         next();
       };
 
-      // iterate through middlewares using next callback
       queue([...this._middlewares], this);
     });
   }
 
-  public applyAfterwares({
-    response,
-    options,
-  }: ResponseAndOptions): Promise<ResponseAndOptions> {
+  public applyAfterwares({response, options}: ResponseAndOptions): Promise<ResponseAndOptions> {
     return new Promise((resolve, reject) => {
-      const queue = (funcs: any[], scope: any) => {
+      // Declare responseObject so that afterware can mutate it.
+      const responseObject = {response, options};
+      const queue = (funcs: AfterwareInterface[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();
-            f.applyAfterware.apply(scope, [{ response, options }, next]);
+            if (f) {
+              f.applyAfterware.apply(scope, [responseObject, next]);
+            }
           } else {
-            resolve({
-              response,
-              options,
-            });
+            resolve(responseObject);
           }
         };
         next();
@@ -154,7 +172,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
   public fetchFromRemoteEndpoint({
     request,
     options,
-  }: RequestAndOptions): Promise<IResponse> {
+  }: RequestAndOptions): Promise<Response> {
     return fetch(this._uri, {
       ...this._opts,
       body: JSON.stringify(printRequest(request)),
@@ -176,10 +194,21 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
       options,
     }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
       .then(response => this.applyAfterwares({
-        response: response as IResponse,
+        response: response as Response,
         options,
       }))
-      .then(({ response }) => (response as IResponse).json())
+      .then(({ response }) => {
+        const httpResponse = response as Response;
+
+        if (!httpResponse.ok) {
+          const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
+          (httpError as any).response = httpResponse;
+
+          throw httpError;
+        }
+
+        return httpResponse.json();
+      })
       .then((payload: ExecutionResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
@@ -199,6 +228,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         throw new Error('Middleware must implement the applyMiddleware function');
       }
     });
+
     return this;
   }
 
@@ -210,6 +240,7 @@ export class HTTPFetchNetworkInterface implements NetworkInterface {
         throw new Error('Afterware must implement the applyAfterware function');
       }
     });
+
     return this;
   }
 }
@@ -227,8 +258,8 @@ export function createNetworkInterface(
     throw new Error('You must pass an options argument to createNetworkInterface.');
   }
 
-  let uri: string;
-  let opts: RequestInit;
+  let uri: string | undefined;
+  let opts: RequestInit | undefined;
 
   // We want to change the API in the future so that you just pass all of the options as one
   // argument, so even though the internals work with two arguments we're warning here.
@@ -236,21 +267,10 @@ export function createNetworkInterface(
     console.warn(`Passing the URI as the first argument to createNetworkInterface is deprecated \
 as of Apollo Client 0.5. Please pass it as the "uri" property of the network interface options.`);
     opts = secondArgOpts;
-    uri = uriOrInterfaceOpts as string;
+    uri = uriOrInterfaceOpts;
   } else {
-    opts = (uriOrInterfaceOpts as NetworkInterfaceOptions).opts;
-    uri = (uriOrInterfaceOpts as NetworkInterfaceOptions).uri;
+    opts = uriOrInterfaceOpts.opts;
+    uri = uriOrInterfaceOpts.uri;
   }
-
-  // Warn if there is no global `fetch` implementation.
-  if (typeof fetch === 'undefined') {
-    console.warn([
-      '[apollo-client]: An implementation for the fetch browser API could not be found. Apollo',
-      'client requires fetch to execute GraphQL queries against your API server. Please include a',
-      'global fetch implementation such as [whatwg-fetch](http://npmjs.com/whatwg-fetch) so that',
-      'Apollo client can run in this environment.',
-    ].join(' '));
-  }
-
   return new HTTPFetchNetworkInterface(uri, opts);
 }

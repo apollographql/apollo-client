@@ -27,7 +27,13 @@ import {
   ApolloReducerConfig,
 } from '../store';
 
-import { isEqual } from '../util/isEqual';
+import {
+  isEqual,
+} from '../util/isEqual';
+
+import {
+  isTest,
+} from '../util/environment';
 
 /**
  * The key which the cache id for a given value is stored in the result object. This key is private
@@ -50,6 +56,7 @@ export type ReadQueryOptions = {
   variables?: Object,
   returnPartialData?: boolean,
   previousResult?: any,
+  rootId?: string,
   config?: ApolloReducerConfig,
 };
 
@@ -100,10 +107,15 @@ interface IdValueWithPreviousResult extends IdValue {
  * If nothing in the store changed since that previous result then values from the previous result
  * will be returned to preserve referential equality.
  */
-export function readQueryFromStore<QueryType>({ returnPartialData = false, ...options }: ReadQueryOptions): QueryType {
+export function readQueryFromStore<QueryType>(options: ReadQueryOptions): QueryType {
+  const optsPatch = {
+    returnPartialData:
+      ((options.returnPartialData !== undefined) ? options.returnPartialData : false),
+  };
+
   return diffQueryAgainstStore({
-    ...options,
-    returnPartialData,
+    ... options,
+    ... optsPatch,
   }).result;
 }
 
@@ -136,7 +148,7 @@ true option set in Apollo Client. Please turn on that option so that we can accu
 match fragments.`);
 
       /* istanbul ignore if */
-      if (process.env.NODE_ENV !== 'test') {
+      if (!isTest()) {
         // When running tests, we want to print the warning every time
         haveWarned = true;
       }
@@ -236,6 +248,7 @@ export function diffQueryAgainstStore({
   variables,
   returnPartialData = true,
   previousResult,
+  rootId = 'ROOT_QUERY',
   config,
 }: ReadQueryOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
@@ -245,7 +258,7 @@ export function diffQueryAgainstStore({
     // Global settings
     store,
     returnPartialData,
-    customResolvers: config && config.customResolvers,
+    customResolvers: (config && config.customResolvers) || {},
 
     // Flag set during execution
     hasMissingField: false,
@@ -253,7 +266,7 @@ export function diffQueryAgainstStore({
 
   const rootIdValue = {
     type: 'id',
-    id: 'ROOT_QUERY',
+    id: rootId,
     previousResult,
   };
 

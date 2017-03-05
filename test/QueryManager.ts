@@ -56,7 +56,7 @@ import {
   Observer,
 } from '../src/util/Observable';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 import wrap, { withWarning } from './util/wrap';
 
@@ -128,7 +128,7 @@ describe('QueryManager', () => {
     });
     const finalOptions = assign({ query, variables }, queryOptions) as WatchQueryOptions;
     return queryManager.watchQuery<any>(finalOptions).subscribe({
-      next: wrap(done, observer.next),
+      next: wrap(done, observer.next!),
       error: observer.error,
     });
   };
@@ -414,6 +414,36 @@ describe('QueryManager', () => {
     });
   });
 
+  // Easy to get into this state if you write an incorrect `formatError`
+  // function with graphql-server or express-graphql
+  it('error array with nulls (handle non-spec-compliant server) #1185', (done) => {
+    assertWithObserver({
+      done,
+      query: gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }`,
+      result: {
+        errors: [null as any],
+      },
+      observer: {
+        next() {
+          done(new Error('Should not fire next for an error'));
+        },
+        error(error) {
+          assert.deepEqual((error as any).graphQLErrors, [null]);
+          assert.equal(error.message, 'GraphQL error: Error message not found.');
+          done();
+        },
+      },
+    });
+  });
+
+
   it('handles network errors', (done) => {
     assertWithObserver({
       done,
@@ -433,7 +463,7 @@ describe('QueryManager', () => {
         error: (error) => {
           const apolloError = error as ApolloError;
           assert(apolloError.networkError);
-          assert.include(apolloError.networkError.message, 'Network error');
+          assert.include(apolloError.networkError!.message, 'Network error');
           done();
         },
       },
@@ -525,14 +555,14 @@ describe('QueryManager', () => {
       result: expResult,
     });
 
-    const observable = Rx.Observable.from(handle);
+    const observable = Rx.Observable.from(handle as any);
 
 
     observable
       .map(result => (assign({ fromRx: true }, result)))
       .subscribe({
       next: wrap(done, (newResult) => {
-        const expectedResult = assign({ fromRx: true, loading: false, networkStatus: 7 }, expResult);
+        const expectedResult = assign({ fromRx: true, loading: false, networkStatus: 7, stale: false }, expResult);
         assert.deepEqual(newResult, expectedResult);
         done();
       }),
@@ -2242,7 +2272,7 @@ describe('QueryManager', () => {
     });
 
     it('should only refetch once when we store reset', () => {
-      let queryManager: QueryManager = null;
+      let queryManager: QueryManager;
       const query = gql`
         query {
           author {
@@ -2281,8 +2311,8 @@ describe('QueryManager', () => {
     });
 
     it('should not refetch toredown queries', (done) => {
-      let queryManager: QueryManager = null;
-      let observable: ObservableQuery<any> = null;
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
       const query = gql`
         query {
           author {
@@ -2326,7 +2356,7 @@ describe('QueryManager', () => {
     });
 
     it('should not error on queries that are already in the store', () => {
-      let queryManager: QueryManager = null;
+      let queryManager: QueryManager;
       const query = gql`
         query {
           author {
@@ -2406,7 +2436,7 @@ describe('QueryManager', () => {
       const mockObservableQuery: ObservableQuery<any> = {
         refetch(variables: any): Promise<ExecutionResult> {
           done();
-          return null;
+          return null as never;
         },
         options: {
           query: query,
@@ -2436,7 +2466,7 @@ describe('QueryManager', () => {
         refetch(variables: any): Promise<ExecutionResult> {
           refetchCount ++;
           done();
-          return null;
+          return null as never;
         },
         options,
         queryManager: queryManager,
@@ -2453,7 +2483,7 @@ describe('QueryManager', () => {
     });
 
     it('should throw an error on an inflight query() if the store is reset', (done) => {
-      let queryManager: QueryManager = null;
+      let queryManager: QueryManager;
       const query = gql`
         query {
           author {
@@ -2504,9 +2534,9 @@ describe('QueryManager', () => {
 
       assert(apolloError.message);
       assert.equal(apolloError.networkError, networkError);
-      assert(!apolloError.graphQLErrors);
+      assert.deepEqual(apolloError.graphQLErrors, []);
       done();
-    });
+    }).catch(done);
   });
 
   it('should error when we attempt to give an id beginning with $', (done) => {
@@ -2764,7 +2794,7 @@ describe('QueryManager', () => {
     );
   });
 
-  it('should error when we orphan a real-id node in the store with a real-id node', () => {
+  it('should return stale data when we orphan a real-id node in the store with a real-id node', () => {
     const query1 = gql`
       query {
         author {
@@ -2829,26 +2859,156 @@ describe('QueryManager', () => {
 
     // I'm not sure the waiting 60 here really is required, but the test used to do it
     return Promise.all([
-      observableToPromise({
+      observableToPromise(
+        {
           observable: observable1,
-          errorCallbacks: [
-            // This isn't the best error message, but at least people will know they are missing
-            // data in the store.
-            (error: ApolloError) => assert.include(error.networkError.message, 'find field'),
-          ],
           wait: 60,
         },
-        (result) => assert.deepEqual(result.data, data1),
+        (result) => {
+          assert.deepEqual(result, {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: true,
+          });
+        },
       ),
-      observableToPromise({
+      observableToPromise(
+        {
           observable: observable2,
           wait: 60,
         },
-        (result) => assert.deepEqual(result.data, data2),
+        (result) => {
+          assert.deepEqual(result, {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
       ),
     ]);
   });
 
+  it('should return partial data when configured when we orphan a real-id node in the store with a real-id node', () => {
+    const query1 = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+          age
+          id
+          __typename
+        }
+      }
+    `;
+    const query2 = gql`
+      query {
+        author {
+          name {
+            firstName
+          }
+          id
+          __typename
+        }
+      }`;
+    const data1 = {
+      author: {
+        name: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        age: 18,
+        id: '187',
+        __typename: 'Author',
+      },
+    };
+    const data2 = {
+      author: {
+        name: {
+          firstName: 'John',
+        },
+        id: '197',
+        __typename: 'Author',
+      },
+    };
+    const reducerConfig = { dataIdFromObject };
+    const store = createApolloStore({ config: reducerConfig, reportCrashes: false });
+    const queryManager = createQueryManager({
+      networkInterface: mockNetworkInterface(
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+        },
+      ),
+      store,
+    });
+
+    const observable1 = queryManager.watchQuery<any>({ query: query1, returnPartialData: true });
+    const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise(
+        {
+          observable: observable1,
+          wait: 60,
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: {},
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            stale: false,
+          });
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+      ),
+      observableToPromise(
+        {
+          observable: observable2,
+          wait: 60,
+        },
+        (result) => {
+          assert.deepEqual(result, {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+      ),
+    ]);
+  });
 
   it('should error if we replace a real id node in the store with a generated id node', () => {
     const queryWithId = gql`
@@ -3088,6 +3248,114 @@ describe('QueryManager', () => {
         },
       });
     });
+
+    it('will update on `resetStore`', done => {
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data1 = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const data2 = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith 2',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query: testQuery },
+          result: { data: data1 },
+        },
+        {
+          request: { query: testQuery },
+          result: { data: data2 },
+        },
+      );
+      let count = 0;
+
+      queryManager.watchQuery({ query: testQuery }).subscribe({
+        next: result => {
+          switch (count++) {
+            case 0:
+              assert.isFalse(result.loading);
+              assert.deepEqual(result.data, data1);
+              setTimeout(() => {
+                queryManager.resetStore();
+              }, 0);
+              break;
+            case 1:
+              assert.isFalse(result.loading);
+              assert.deepEqual(result.data, data2);
+              done();
+              break;
+            default:
+              done(new Error('`next` was called to many times.'));
+          }
+        },
+        error: error => done(error),
+      });
+    });
+
+    it('will be true when partial data may be returned', done => {
+      const query1 = gql`{
+        a { x1 y1 z1 }
+      }`;
+      const query2 = gql`{
+        a { x1 y1 z1 }
+        b { x2 y2 z2 }
+      }`;
+      const data1 = {
+        a: { x1: 1, y1: 2, z1: 3 },
+      };
+      const data2 = {
+        a: { x1: 1, y1: 2, z1: 3 },
+        b: { x2: 3, y2: 2, z2: 1 },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+          delay: 5,
+        },
+      );
+
+      queryManager.query({ query: query1 }).then(result1 => {
+        assert.isFalse(result1.loading);
+        assert.deepEqual(result1.data, data1);
+
+        let count = 0;
+        queryManager.watchQuery({ query: query2, returnPartialData: true }).subscribe({
+          next: result2 => {
+            switch (count++) {
+              case 0:
+                assert.isTrue(result2.loading);
+                assert.deepEqual(result2.data, data1);
+                break;
+              case 1:
+                assert.isFalse(result2.loading);
+                assert.deepEqual(result2.data, data2);
+                done();
+                break;
+              default:
+                done(new Error('`next` was called to many times.'));
+            }
+          },
+          error: error => done(error),
+        });
+      }).catch(done);
+    });
   });
 
   describe('refetchQueries', () => {
@@ -3285,6 +3553,63 @@ describe('QueryManager', () => {
       .then(() => assert.equal(timesWarned, 0));
     });
 
+    it('also works with a query document and variables', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }`;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({ query });
+      return observableToPromise({ observable },
+        (result) => {
+          assert.deepEqual(result.data, data);
+          queryManager.mutate({ mutation, refetchQueries: [{ query }] });
+        },
+        (result) => assert.deepEqual(result.data, secondReqData),
+      );
+    });
+
     afterEach((done) => {
       // restore standard method
       console.warn = oldWarn;
@@ -3316,6 +3641,7 @@ describe('QueryManager', () => {
               data: assign({}, result.data, {transformCount}),
               loading: false,
               networkStatus: NetworkStatus.ready,
+              stale: false,
             };
           },
         });

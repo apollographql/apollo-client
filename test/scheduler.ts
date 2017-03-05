@@ -8,7 +8,7 @@ import {
   createApolloStore,
 } from '../src/store';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 import gql from 'graphql-tag';
 
 describe('QueryScheduler', () => {
@@ -37,7 +37,7 @@ describe('QueryScheduler', () => {
       query,
     };
     assert.throws(() => {
-      scheduler.startPollingQuery(queryOptions);
+      scheduler.startPollingQuery(queryOptions, null as never);
     });
   });
 

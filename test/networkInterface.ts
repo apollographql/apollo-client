@@ -25,13 +25,16 @@ import {
 
 import gql from 'graphql-tag';
 
-import { print } from 'graphql-tag/printer';
+import { print } from 'graphql-tag/bundledPrinter';
 
 import { withWarning } from './util/wrap';
 
 describe('network interface', () => {
   const swapiUrl = 'http://graphql-swapi.test/';
   const missingUrl = 'http://does-not-exist.test/';
+
+  const unauthorizedUrl = 'http://unauthorized.test/';
+  const serviceUnavailableUrl = 'http://service-unavailable.test/';
 
   const simpleQueryWithNoVars = gql`
     query people {
@@ -108,7 +111,7 @@ describe('network interface', () => {
     // We won't be too careful about counting calls or closely checking
     // parameters, but just do the basic stuff to ensure the request looks right
     fetchMock.post(swapiUrl, (url, opts) => {
-      const { query, variables } = JSON.parse((opts as RequestInit).body.toString());
+      const { query, variables } = JSON.parse((opts as RequestInit).body!.toString());
 
       if (query === print(simpleQueryWithNoVars)) {
         return simpleResult;
@@ -129,6 +132,9 @@ describe('network interface', () => {
     fetchMock.post(missingUrl, () => {
       throw new Error('Network error');
     });
+
+    fetchMock.post(unauthorizedUrl, 403);
+    fetchMock.post(serviceUnavailableUrl, 503);
   });
 
   after(() => {
@@ -138,43 +144,20 @@ describe('network interface', () => {
   describe('creating a network interface', () => {
     it('should throw without an argument', () => {
       assert.throws(() => {
-        createNetworkInterface(null);
+        createNetworkInterface(undefined as any);
       }, /must pass an options argument/);
     });
 
     it('should throw without an endpoint', () => {
       assert.throws(() => {
         createNetworkInterface({});
-      }, /A remote enpdoint is required for a network layer/);
+      }, /A remote endpoint is required for a network layer/);
     });
 
     it('should warn when the endpoint is passed as the first argument', () => {
       withWarning(() => {
         createNetworkInterface('/graphql');
       }, /Passing the URI as the first argument to createNetworkInterface is deprecated/);
-    });
-
-    it('will warn if there is no global fetch implementation', () => {
-      const origWarn = console.warn;
-      const origFetch = (global as any).fetch;
-
-      const warnCalls: Array<Array<any>> = [];
-
-      console.warn = (...args: Array<any>) => warnCalls.push(args);
-
-      delete (global as any).fetch;
-
-      assert.equal(warnCalls.length, 0);
-
-      createNetworkInterface({ uri: '/graphql' });
-
-      assert.equal(warnCalls.length, 1);
-      assert.equal(warnCalls[0].length, 1);
-      assert(/the fetch browser API could not be found/.test(warnCalls[0][0]));
-
-      // Put everything back the way it was.
-      console.warn = origWarn;
-      (global as any).fetch = origFetch;
     });
 
     it('should create an instance with a given uri', () => {
@@ -451,6 +434,13 @@ describe('network interface', () => {
   });
 
   describe('making a request', () => {
+    // this is a stub for the end user client api
+    const doomedToFail = {
+      query: simpleQueryWithNoVars,
+      variables: {},
+      debugName: 'People Query',
+    };
+
     it('should fetch remote data', () => {
       const swapi = createNetworkInterface({ uri: swapiUrl });
 
@@ -470,14 +460,27 @@ describe('network interface', () => {
     it('should throw on a network error', () => {
       const nowhere = createNetworkInterface({ uri: missingUrl });
 
-      // this is a stub for the end user client api
-      const doomedToFail = {
-        query: simpleQueryWithNoVars,
-        variables: {},
-        debugName: 'People Query',
-      };
-
       return assert.isRejected(nowhere.query(doomedToFail));
+    });
+
+    it('should throw an error with the response when request is forbidden', () => {
+      const unauthorizedInterface = createNetworkInterface({ uri: unauthorizedUrl });
+
+      return unauthorizedInterface.query(doomedToFail).catch(err => {
+        assert.isOk(err.response);
+        assert.equal(err.response.status, 403);
+        assert.equal(err.message, 'Network request failed with status 403 - "Forbidden"');
+      });
+    });
+
+    it('should throw an error with the response when service is unavailable', () => {
+      const unauthorizedInterface = createNetworkInterface({ uri: serviceUnavailableUrl });
+
+      return unauthorizedInterface.query(doomedToFail).catch(err => {
+        assert.isOk(err.response);
+        assert.equal(err.response.status, 503);
+        assert.equal(err.message, 'Network request failed with status 503 - "Service Unavailable"');
+      });
     });
   });
 });

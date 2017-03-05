@@ -12,7 +12,7 @@ export default (done: MochaDone, cb: (...args: any[]) => any) => (...args: any[]
 };
 
 export function withWarning(func: Function, regex: RegExp) {
-  let message: string;
+  let message: string = null as never;
   const oldWarn = console.warn;
 
   console.warn = (m: string) => message = m;

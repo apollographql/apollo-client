@@ -1,5 +1,6 @@
 import {
   MutationResultAction,
+  WriteAction,
   isMutationInitAction,
   isMutationResultAction,
   isMutationErrorAction,
@@ -14,16 +15,27 @@ import {
 } from '../data/storeUtils';
 
 import {
+  QueryStore,
+} from '../queries/store';
+
+import {
+  MutationStore,
+} from '../mutations/store';
+
+import {
   Store,
+  ApolloReducerConfig,
 } from '../store';
 
   import { assign } from '../util/assign';
 
-// a stack of patches of new or changed documents
-export type OptimisticStore = {
+export type OptimisticStoreItem = {
   mutationId: string,
   data: NormalizedCache,
-}[];
+};
+
+// a stack of patches of new or changed documents
+export type OptimisticStore = OptimisticStoreItem[];
 
 const optimisticDefaultState: any[] = [];
 
@@ -49,16 +61,17 @@ export function optimistic(
       operationName: action.operationName,
       variables: action.variables,
       mutationId: action.mutationId,
-      resultBehaviors: action.resultBehaviors,
       extraReducers: action.extraReducers,
+      updateQueries: action.updateQueries,
+      update: action.update,
     };
 
-    const fakeStore = {
+    const optimisticData = getDataWithOptimisticResults({
       ...store,
       optimistic: previousState,
-    };
-    const optimisticData = getDataWithOptimisticResults(fakeStore);
-    const fakeDataResultState = data(
+    });
+
+    const patch = getOptimisticDataPatch(
       optimisticData,
       fakeMutationResultAction,
       store.queries,
@@ -66,17 +79,8 @@ export function optimistic(
       config,
     );
 
-    // TODO: apply extra reducers and resultBehaviors to optimistic store?
-
-    const patch: any = {};
-
-    Object.keys(fakeDataResultState).forEach(key => {
-      if (optimisticData[key] !== fakeDataResultState[key]) {
-        patch[key] = fakeDataResultState[key];
-      }
-    });
-
     const optimisticState = {
+      action: fakeMutationResultAction,
       data: patch,
       mutationId: action.mutationId,
     };
@@ -86,12 +90,78 @@ export function optimistic(
     return newState;
   } else if ((isMutationErrorAction(action) || isMutationResultAction(action))
                && previousState.some(change => change.mutationId === action.mutationId)) {
-    // throw away optimistic changes of that particular mutation
-    const newState = previousState.filter(
-      (change) => change.mutationId !== action.mutationId);
-
-    return newState;
+    return rollbackOptimisticData(
+      change => change.mutationId === action.mutationId,
+      previousState,
+      store,
+      config,
+    );
   }
 
   return previousState;
+}
+
+function getOptimisticDataPatch (
+  previousData: NormalizedCache,
+  optimisticAction: MutationResultAction | WriteAction,
+  queries: QueryStore,
+  mutations: MutationStore,
+  config: ApolloReducerConfig,
+): any {
+  const optimisticData = data(
+    previousData,
+    optimisticAction,
+    queries,
+    mutations,
+    config,
+  );
+
+  const patch: any = {};
+
+  Object.keys(optimisticData).forEach(key => {
+    if (optimisticData[key] !== previousData[key]) {
+      patch[key] = optimisticData[key];
+    }
+  });
+
+  return patch;
+}
+
+/**
+ * Rolls back some optimistic data items depending on the provided filter
+ * function. In rolling back these items we also re-apply the other optimistic
+ * data patches to make sure our optimistic data is up to date.
+ *
+ * The filter function should return true for all items that we want to
+ * rollback.
+ */
+function rollbackOptimisticData (
+  filterFn: (item: OptimisticStoreItem) => boolean,
+  previousState = optimisticDefaultState,
+  store: any,
+  config: any,
+): OptimisticStore {
+  // Create a shallow copy of the data in the store.
+  const optimisticData = assign({}, store.data);
+
+  const newState = previousState
+    // Throw away optimistic changes of that particular mutation
+    .filter(item => !filterFn(item))
+    // Re-run all of our optimistic data actions on top of one another.
+    .map(change => {
+      const patch = getOptimisticDataPatch(
+        optimisticData,
+        change.action,
+        store.queries,
+        store.mutations,
+        config,
+      );
+      assign(optimisticData, patch);
+      return {
+        ...change,
+        data: patch,
+      };
+    });
+
+  return newState;
 }

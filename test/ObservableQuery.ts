@@ -31,7 +31,7 @@ import {
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
 
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests
@@ -256,8 +256,8 @@ describe('ObservableQuery', () => {
     });
 
     it('does a network request if noFetch becomes true then store is reset then noFetch becomes false', (done) => {
-      let queryManager: QueryManager = null;
-      let observable: ObservableQuery<any> = null;
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
           author {
@@ -309,8 +309,8 @@ describe('ObservableQuery', () => {
     });
 
     it('does a network request if noFetch becomes false', (done) => {
-      let queryManager: QueryManager = null;
-      let observable: ObservableQuery<any> = null;
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
           author {
@@ -376,6 +376,14 @@ describe('ObservableQuery', () => {
           done();
         }
       });
+    });
+
+    it('does not perform a query when unsubscribed if variables change', () => {
+      // Note: no responses, will throw if a query is made
+      const queryManager = mockQueryManager();
+      const observable = queryManager.watchQuery({ query, variables });
+
+      return observable.setVariables(differentVariables);
     });
 
     it('sets networkStatus to `setVariables` when fetching', (done) => {
@@ -564,6 +572,7 @@ describe('ObservableQuery', () => {
           data: dataOne,
           loading: false,
           networkStatus: 7,
+          partial: false,
         });
         done();
       });
@@ -572,12 +581,14 @@ describe('ObservableQuery', () => {
         loading: true,
         data: {},
         networkStatus: 1,
+        partial: true,
       });
       setTimeout(wrap(done, () => {
         assert.deepEqual(observable.currentResult(), {
           loading: true,
           data: {},
           networkStatus: 1,
+          partial: true,
         });
       }), 0);
     });
@@ -594,6 +605,7 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: false,
             networkStatus: 7,
+            stale: false,
           });
           const observable = queryManager.watchQuery({
             query,
@@ -603,6 +615,7 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: false,
             networkStatus: 7,
+            partial: false,
           });
         });
     });
@@ -625,7 +638,7 @@ describe('ObservableQuery', () => {
           const currentResult = observable.currentResult();
 
           assert.equal(currentResult.loading, false);
-          assert.deepEqual(currentResult.error.graphQLErrors, [error]);
+          assert.deepEqual(currentResult.error!.graphQLErrors, [error]);
         });
     });
 
@@ -649,23 +662,27 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: true,
             networkStatus: 1,
+            partial: true,
           });
 
           // we can use this to trigger the query
           subscribeAndCount(done, observable, (handleCount, subResult) => {
-            assert.deepEqual(subResult, observable.currentResult());
+            const { data, loading, networkStatus } = observable.currentResult();
+            assert.deepEqual(subResult, { data, loading, networkStatus, stale: false });
 
             if (handleCount === 1) {
               assert.deepEqual(subResult, {
                 data: dataOne,
                 loading: true,
                 networkStatus: 1,
+                stale: false,
               });
             } else if (handleCount === 2) {
               assert.deepEqual(subResult, {
                 data: superDataOne,
                 loading: false,
                 networkStatus: 7,
+                stale: false,
               });
               done();
             }
@@ -693,16 +710,19 @@ describe('ObservableQuery', () => {
             data: dataOne,
             loading: true,
             networkStatus: 1,
+            partial: false,
           });
 
           subscribeAndCount(done, observable, (handleCount, subResult) => {
-            assert.deepEqual(subResult, observable.currentResult());
+            const { data, loading, networkStatus } = observable.currentResult();
+            assert.deepEqual(subResult, { data, loading, networkStatus, stale: false });
 
             if (handleCount === 1) {
               assert.deepEqual(subResult, {
                 data: dataTwo,
                 loading: false,
                 networkStatus: 7,
+                stale: false,
               });
               done();
             }
@@ -748,12 +768,15 @@ describe('ObservableQuery', () => {
         });
 
         subscribeAndCount(done, observable, (count, result) => {
-          assert.deepEqual(result, observable.currentResult());
+          const { data, loading, networkStatus } = observable.currentResult();
+          assert.deepEqual(result, { data, loading, networkStatus, stale: false });
+
           if (count === 1) {
             assert.deepEqual(result, {
               data: dataOne,
               loading: false,
               networkStatus: 7,
+              stale: false,
             });
             queryManager.mutate({ mutation, optimisticResponse, updateQueries });
           } else if (count === 2) {
@@ -764,6 +787,115 @@ describe('ObservableQuery', () => {
           }
         });
       });
+
+      it('applies query reducers with correct variables', (done) => {
+        const queryManager = mockQueryManager({
+          // First we make the query
+          request: { query, variables },
+          result: { data: dataOne },
+        }, {
+          // Then we make a mutation
+          request: { query: mutation },
+          result: { data: mutationData },
+        }, {
+          // Then we make another query
+          request: { query, variables: differentVariables },
+          result: { data: dataTwo },
+        }, {
+          // Then we make another mutation
+          request: { query: mutation },
+          result: { data: mutationData },
+        });
+
+
+        let lastReducerVars: Array<Object> = [];
+        let lastReducerData: Array<Object> = [];
+        const observable = queryManager.watchQuery({
+          query,
+          variables,
+          reducer: (previous, action, reducerVars) => {
+            if (action.type === 'APOLLO_MUTATION_RESULT') {
+              // We want to track the history of the `variables` the reducer
+              // is given for the query.
+              lastReducerData.push(previous);
+              lastReducerVars.push(reducerVars);
+            }
+
+            return previous;
+          },
+        });
+
+        // Check that the variables fed into the reducer are correct.
+        function assertVariables() {
+          assert.lengthOf(lastReducerVars, 2);
+          assert.deepEqual(lastReducerVars[0], variables);
+          assert.deepEqual(lastReducerData[0], dataOne);
+          assert.deepEqual(lastReducerVars[1], differentVariables);
+          assert.deepEqual(lastReducerData[1], dataTwo);
+          done();
+        }
+
+        // Subscribe to the query, then run the mutation, then change the variables, then run another mutation.
+        let sub = observable.subscribe({});
+        queryManager.mutate({ mutation }).then(() => {
+          observable.setVariables(differentVariables);
+          queryManager.mutate({ mutation }).then(() => {
+            // We have to get out of the Promise scope here
+            // because the promises are capturing the assertion errors
+            // leading to timesouts.
+            setTimeout(assertVariables, 0);
+          });
+        });
+      });
+    });
+  });
+
+  describe('stopPolling', () => {
+    let timer: any;
+    let defer: Function = setImmediate;
+    beforeEach(() => timer = sinon.useFakeTimers());
+    afterEach(() => timer.restore());
+
+    it('does not restart polling after stopping and resubscribing', (done) => {
+      const observable = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+
+      observable.startPolling(100);
+      observable.stopPolling();
+
+      let startedPolling = false;
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          // first call to subscribe is the immediate result when
+          // subscribing. later calls to this callback indicate that
+          // we will be polling.
+
+          timer.tick(101);
+
+          // Wait a bit to see if the subscription's `next` was called
+          // again, indicating that we are polling for data.
+          defer(() => {
+            if (!startedPolling) {
+              // if we're not polling for data, it means this test
+              // is ok
+              done();
+            }
+          });
+        } else if (handleCount === 2) {
+          // oops! we are polling for data, this should not happen.
+          startedPolling = true;
+          done(new Error('should not start polling, already stopped'));
+        }
+      });
+
+      // trigger the first subscription callback
+      timer.tick(0);
     });
   });
 });

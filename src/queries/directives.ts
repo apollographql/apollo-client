@@ -7,11 +7,7 @@ import {
 } from 'graphql';
 
 
-export function shouldInclude(selection: SelectionNode, variables?: { [name: string]: any }): boolean {
-  if (!variables) {
-    variables = {};
-  }
-
+export function shouldInclude(selection: SelectionNode, variables: { [name: string]: any } = {}): boolean {
   if (!selection.directives) {
     return true;
   }
@@ -25,19 +21,19 @@ export function shouldInclude(selection: SelectionNode, variables?: { [name: str
     }
 
     //evaluate the "if" argument and skip (i.e. return undefined) if it evaluates to true.
-    const directiveArguments = directive.arguments;
+    const directiveArguments = directive.arguments || [];
     const directiveName = directive.name.value;
     if (directiveArguments.length !== 1) {
       throw new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
     }
 
 
-    const ifArgument = directive.arguments[0];
+    const ifArgument = directiveArguments[0];
     if (!ifArgument.name || ifArgument.name.value !== 'if') {
       throw new Error(`Invalid argument for the @${directiveName} directive.`);
     }
 
-    const ifValue = directive.arguments[0].value;
+    const ifValue = directiveArguments[0].value;
     let evaledValue: boolean = false;
     if (!ifValue || ifValue.kind !== 'BooleanValue') {
       // means it has to be a variable value if this is a valid @skip or @include directive

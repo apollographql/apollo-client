@@ -11,7 +11,7 @@ import {
 
 import {
   print,
-} from 'graphql-tag/printer';
+} from 'graphql-tag/bundledPrinter';
 
 import {
   createApolloStore,
@@ -42,7 +42,6 @@ import {
 } from './data/writeToStore';
 
 import {
-  MutationBehavior,
   MutationQueryReducersMap,
 } from './data/mutationResults';
 
@@ -55,7 +54,11 @@ import {
 
 import {
   NetworkStatus,
-} from './queries/store';
+} from './queries/networkStatus';
+
+import {
+  addTypenameToDocument,
+} from './queries/queryTransform';
 
 import {
   ApolloError,
@@ -81,6 +84,7 @@ export {
   readQueryFromStore,
   writeQueryToStore,
   print as printAST,
+  addTypenameToDocument,
   createFragmentMap,
   NetworkStatus,
   ApolloError,
@@ -101,7 +105,6 @@ export {
   WatchQueryOptions,
   MutationOptions,
   ObservableQuery,
-  MutationBehavior,
   MutationQueryReducersMap,
   Subscription,
   SubscriptionOptions,

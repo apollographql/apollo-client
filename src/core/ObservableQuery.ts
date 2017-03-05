@@ -27,6 +27,8 @@ import {
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { isEqual } from '../util/isEqual';
+import maybeDeepFreeze from '../util/maybeDeepFreeze';
+
 
 import {
   NetworkStatus,
@@ -195,7 +197,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     };
 
     return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch);
-    //  .then(result => maybeDeepFreeze(result));
+    //.then(result => maybeDeepFreeze(result));
   }
 
   public fetchMore(
@@ -359,8 +361,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       return this.queryManager.fetchQuery(this.queryId, {
         ...this.options,
         variables: this.variables,
-      } as WatchQueryOptions);
-      //  .then(result => maybeDeepFreeze(result));
+      } as WatchQueryOptions)
+      .then(result => maybeDeepFreeze(result));
     }
   }
 

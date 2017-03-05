@@ -4,7 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Fix (possibly breaking): Invoke afterware even on requests that error [PR #1351](https://github.com/apollographql/apollo-client/pull/1351)
-- Breaking: change default of notifyOnNetworkStatusChange to true [PR #?](xxx)
+- Breaking: change default of notifyOnNetworkStatusChange to true
+- Breaking: change default of queryDeduplication to true
+- Breaking: remove deprecated reduxRootKey
 
 
 ### 0.10.1

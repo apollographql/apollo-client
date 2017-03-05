@@ -535,6 +535,10 @@ describe('mutation results', () => {
     });
 
     it('runs multiple reducers', () => {
+      /**
+       * XXX This test sometimes fails on CI, but I cannot reproduce it locally.
+       * Maybe some sort of race condition?
+       */
       let counter = 0;
       let counter2 = 0;
       let observableQuery: any;

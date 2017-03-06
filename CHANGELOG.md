@@ -9,6 +9,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Breaking: remove deprecated reduxRootKey [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 - Fix: make sure maybeDeepFreeze is called on results returned from setVariables and refetch [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 - Fix: use setTimeout to throw uncaught errors in observer.next and observer.error[PR #1367](https://github.com/apollographql/apollo-client/pull/1367)
+- Remove returnPartialData option [PR #1370](https://github.com/apollographql/apollo-client/pull/1370)
 
 
 ### 0.10.1

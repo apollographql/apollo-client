@@ -368,10 +368,12 @@ export class QueryManager {
             try {
               observer.error(apolloError);
             } catch (e) {
-              console.error('Error in observer.error \n', e.stack);
+              // Throw error outside this control flow to avoid breaking Apollo's state
+              setTimeout(() => { throw e; }, 0);
             }
           } else {
-            console.error('Unhandled error', apolloError, apolloError.stack);
+            // Throw error outside this control flow to avoid breaking Apollo's state
+            setTimeout(() => { throw apolloError; }, 0);
             if (!isProduction()) {
               /* tslint:disable-next-line */
               console.info(
@@ -430,7 +432,8 @@ export class QueryManager {
                 try {
                   observer.next(maybeDeepFreeze(resultFromStore));
                 } catch (e) {
-                  console.error('Error in observer.next \n', e.stack);
+                  // Throw error outside this control flow to avoid breaking Apollo's state
+                  setTimeout(() => { throw e; }, 0);
                 }
               }
             }

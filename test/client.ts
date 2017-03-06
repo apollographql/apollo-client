@@ -482,8 +482,21 @@ describe('client', () => {
       });
   });
 
-it('should not let errors in observer.next reach the store', (done) => {
-
+  it('should surface errors in observer.next as uncaught', (done) => {
+    const expectedError = new Error('this error should not reach the store');
+    const listeners = process.listeners('uncaughtException');
+    const oldHandler = listeners[listeners.length - 1];
+    const handleUncaught = (e: Error) => {
+      process.removeListener('uncaughtException', handleUncaught);
+      process.addListener('uncaughtException', oldHandler);
+      if (e === expectedError) {
+        done();
+      } else {
+        done(e);
+      }
+    };
+    process.removeListener('uncaughtException', oldHandler);
+    process.addListener('uncaughtException', handleUncaught);
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -494,7 +507,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       }
     `;
 
-   const data = {
+  const data = {
       allPeople: {
         people: [
           {
@@ -516,24 +529,28 @@ it('should not let errors in observer.next reach the store', (done) => {
 
     const handle = client.watchQuery({ query });
 
-    const consoleDotError = console.error;
-    console.error = (err: string) => {
-      console.error = consoleDotError;
-      if (err.match(/Error in observer.next/)) {
-        done();
-      } else {
-        done(new Error('Expected error in observer.next to be caught'));
-      }
-    };
-
     handle.subscribe({
       next(result) {
-        throw new Error('this error should not reach the store');
+        throw expectedError;
       },
     });
   });
 
-  it('should not let errors in observer.error reach the store', (done) => {
+  it('should surfaces errors in observer.error as uncaught', (done) => {
+    const expectedError = new Error('this error should not reach the store');
+    const listeners = process.listeners('uncaughtException');
+    const oldHandler = listeners[listeners.length - 1];
+    const handleUncaught = (e: Error) => {
+      process.removeListener('uncaughtException', handleUncaught);
+      process.addListener('uncaughtException', oldHandler);
+      if (e === expectedError) {
+        done();
+      } else {
+        done(e);
+      }
+    };
+    process.removeListener('uncaughtException', oldHandler);
+    process.addListener('uncaughtException', handleUncaught);
 
     const query = gql`
       query people {
@@ -556,23 +573,12 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
 
     const handle = client.watchQuery({ query });
-
-    const consoleDotError = console.error;
-    console.error = (err: string) => {
-      console.error = consoleDotError;
-      if (err.match(/Error in observer.error/)) {
-        done();
-      } else {
-        done(new Error('Expected error in observer.error to be caught'));
-      }
-    };
-
     handle.subscribe({
       next() {
         done(new Error('did not expect next to be called'));
       },
       error(err) {
-        throw new Error('this error should not reach the store');
+        throw expectedError;
       },
     });
   });

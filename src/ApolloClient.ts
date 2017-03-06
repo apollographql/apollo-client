@@ -33,8 +33,6 @@ import {
 
 import {
   ApolloQueryResult,
-  ResultComparator,
-  ResultTransformer,
   IdGetter,
 } from './core/types';
 
@@ -66,8 +64,11 @@ import {
 
 import {
   DataProxy,
+  DataProxyReadQueryOptions,
+  DataProxyReadFragmentOptions,
+  DataProxyWriteQueryOptions,
+  DataProxyWriteFragmentOptions,
   ReduxDataProxy,
-  TransactionDataProxy,
 } from './data/proxy';
 
 import {
@@ -94,17 +95,14 @@ function defaultReduxRootSelector(state: any) {
  * receive results from the server and cache the results in a Redux store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
-export default class ApolloClient {
+export default class ApolloClient implements DataProxy {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
-  public reduxRootKey: string;
   public reduxRootSelector: ApolloStateSelector | null;
   public initialState: any;
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public resultTransformer: ResultTransformer | undefined;
-  public resultComparator: ResultComparator | undefined;
   public shouldForceFetch: boolean;
   public dataId: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
@@ -119,10 +117,6 @@ export default class ApolloClient {
    *
    * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
    * to a GraphQL spec-compliant server.
-   *
-   * @deprecated please use "reduxRootSelector" instead
-   * @param reduxRootKey The root key within the Redux store in which data fetched from the server.
-   * will be stored. This option should only be used if the store is created outside of the client.
    *
    * @param reduxRootSelector Either a "selector" function that receives state from the Redux store
    * and returns the part of it that is managed by ApolloClient or a key that points to that state.
@@ -141,19 +135,16 @@ export default class ApolloClient {
    * @param addTypename Adds the __typename field to every level of a GraphQL document, required
    * to support certain queries that contain fragments.
    *
-   * @param queryDeduplication If set to true, a query will not be sent to the server if a query
+   * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    */
 
   constructor(options: {
     networkInterface?: NetworkInterface,
-    reduxRootKey?: string,
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
-    resultTransformer?: ResultTransformer,
-    resultComparator?: ResultComparator,
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     addTypename?: boolean,
@@ -163,57 +154,27 @@ export default class ApolloClient {
   } = {}) {
     const {
       networkInterface,
-      reduxRootKey,
       reduxRootSelector,
       initialState,
       dataIdFromObject,
-      resultComparator,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       addTypename = true,
-      resultTransformer,
       customResolvers,
       connectToDevTools,
-      queryDeduplication = false,
+      queryDeduplication = true,
     } = options;
-    if (reduxRootKey && reduxRootSelector) {
-      throw new Error('Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.');
-    }
 
-    if (reduxRootKey) {
-      console.warn(
-          '"reduxRootKey" option is deprecated and might be removed in the upcoming versions, ' +
-          'please use the "reduxRootSelector" instead.',
-      );
-      this.reduxRootKey = reduxRootKey;
-    }
-
-    if (!reduxRootSelector && reduxRootKey) {
-      this.reduxRootSelector = (state: any) => state[reduxRootKey];
-    } else if (typeof reduxRootSelector === 'string') {
-      // for backwards compatibility, we set reduxRootKey if reduxRootSelector is a string
-      this.reduxRootKey = reduxRootSelector as string;
-      this.reduxRootSelector = (state: any) => state[reduxRootSelector as string];
-    } else if (typeof reduxRootSelector === 'function') {
+    if (typeof reduxRootSelector === 'function') {
       this.reduxRootSelector = reduxRootSelector;
-    } else {
-      // we need to know that reduxRootSelector wasn't provided by the user
-      this.reduxRootSelector = null;
+    } else if (typeof reduxRootSelector !== 'undefined') {
+      throw new Error('"reduxRootSelector" must be a function.');
     }
 
     this.initialState = initialState ? initialState : {};
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
-    if (resultTransformer) {
-      console.warn(
-        '"resultTransformer" is being considered for deprecation in an upcoming version. ' +
-        'If you are using it, please file an issue on apollostack/apollo-client ' +
-        'with a description of your use-case',
-      );
-    }
-    this.resultTransformer = resultTransformer;
-    this.resultComparator = resultComparator;
     this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
@@ -309,27 +270,6 @@ export default class ApolloClient {
    * error.
    *
    * It takes options as an object with the following keys and values:
-   *
-   * @param options.mutation A GraphQL document, often created with `gql` from the `graphql-tag` package,
-   * that contains a single mutation inside of it.
-   *
-   * @param options.variables An object that maps from the name of a variable as used in the mutation
-   * GraphQL document to that variable's value.
-   *
-   * @param options.optimisticResponse An object that represents the result of this mutation that will be
-   * optimistically stored before the server has actually returned a result. This is most often
-   * used for optimistic UI, where we want to be able to see the result of a mutation immediately,
-   * and update the UI later if any errors appear.
-   *
-   * @param options.updateQueries A {@link MutationQueryReducersMap}, which is map from query names to
-   * mutation query reducers. Briefly, this map defines how to incorporate the results of the
-   * mutation into the results of queries that are currently being watched by your application.
-   *
-   * @param options.refetchQueries A list of query names which will be refetched once this mutation has
-   * returned. This is often used if you have a set of queries which may be affected by a mutation
-   * and will have to update. Rather than writing a mutation query reducer (i.e. `updateQueries`)
-   * for this, you can simply refetch the queries that will be affected and achieve a consistent
-   * store once these queries return.
    */
   public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
@@ -354,16 +294,9 @@ export default class ApolloClient {
    * GraphQL query without making a network request. This method will start at
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
-   *
-   * @param query The GraphQL query shape to be used.
-   *
-   * @param variables Any variables that the GraphQL query may depend on.
    */
-  public readQuery<QueryType>(config: {
-    query: DocumentNode,
-    variables?: Object,
-  }): QueryType {
-    return this.initProxy().readQuery<QueryType>(config);
+  public readQuery<T>(options: DataProxyReadQueryOptions): T {
+    return this.initProxy().readQuery<T>(options);
   }
 
   /**
@@ -376,48 +309,18 @@ export default class ApolloClient {
    * with multiple fragments that represent what you are reading. If you pass
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
-   *
-   * @param id The root id to be used. This id should take the same form as the
-   * value returned by your `dataIdFromObject` function. If a value with your
-   * id does not exist in the store, `null` will be returned.
-   *
-   * @param fragment A GraphQL document with one or more fragments the shape of
-   * which will be used. If you provide more then one fragments then you must
-   * also specify the next argument, `fragmentName`, to select a single
-   * fragment to use when reading.
-   *
-   * @param fragmentName The name of the fragment in your GraphQL document to
-   * be used. Pass `undefined` if there is only one fragment and you want to
-   * use that.
-   *
-   * @param variables Any variables that your GraphQL fragments depend on.
    */
-  public readFragment<FragmentType>(config: {
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  }): FragmentType | null {
-    return this.initProxy().readFragment<FragmentType>(config);
+  public readFragment<T>(options: DataProxyReadFragmentOptions): T | null {
+    return this.initProxy().readFragment<T>(options);
   }
 
   /**
    * Writes some data in the shape of the provided GraphQL query directly to
    * the store. This method will start at the root query. To start at a a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
-   *
-   * @param data The data you will be writing to the store.
-   *
-   * @param query The GraphQL query shape to be used.
-   *
-   * @param variables Any variables that the GraphQL query may depend on.
    */
-  public writeQuery(config: {
-    data: any,
-    query: DocumentNode,
-    variables?: Object,
-  }): void {
-    return this.initProxy().writeQuery(config);
+  public writeQuery(options: DataProxyWriteQueryOptions): void {
+    return this.initProxy().writeQuery(options);
   }
 
   /**
@@ -430,31 +333,9 @@ export default class ApolloClient {
    * with multiple fragments that represent what you are writing. If you pass
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
-   *
-   * @param data The data you will be writing to the store.
-   *
-   * @param id The root id to be used. This id should take the same form as the
-   * value returned by your `dataIdFromObject` function.
-   *
-   * @param fragment A GraphQL document with one or more fragments the shape of
-   * which will be used. If you provide more then one fragments then you must
-   * also specify the next argument, `fragmentName`, to select a single
-   * fragment to use when reading.
-   *
-   * @param fragmentName The name of the fragment in your GraphQL document to
-   * be used. Pass `undefined` if there is only one fragment and you want to
-   * use that.
-   *
-   * @param variables Any variables that your GraphQL fragments depend on.
    */
-  public writeFragment(config: {
-    data: any,
-    id: string,
-    fragment: DocumentNode,
-    fragmentName?: string,
-    variables?: Object,
-  }): void {
-    return this.initProxy().writeFragment(config);
+  public writeFragment(options: DataProxyWriteFragmentOptions): void {
+    return this.initProxy().writeFragment(options);
   }
 
   /**
@@ -505,8 +386,8 @@ export default class ApolloClient {
 
     if (this.reduxRootSelector) {
       throw new Error(
-          'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
-          'They should only be used when the store is created outside of the client. ' +
+          'Cannot initialize the store because "reduxRootSelector" is provided. ' +
+          'reduxRootSelector should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
           `Please remove that option from ApolloClient constructor.`,
       );
@@ -531,8 +412,6 @@ export default class ApolloClient {
         return result;
       },
     }));
-    // for backcompatibility, ensure that reduxRootKey is set to selector return value
-    this.reduxRootKey = DEFAULT_REDUX_ROOT_KEY;
   };
 
   public resetStore() {
@@ -552,9 +431,6 @@ export default class ApolloClient {
       reduxRootSelector = this.reduxRootSelector;
     } else {
       reduxRootSelector = defaultReduxRootSelector;
-
-      // for backwards compatibility with react-apollo, we set reduxRootKey here.
-      this.reduxRootKey = DEFAULT_REDUX_ROOT_KEY;
     }
 
     // ensure existing store has apolloReducer
@@ -572,8 +448,6 @@ export default class ApolloClient {
       reduxRootSelector: reduxRootSelector,
       store,
       addTypename: this.addTypename,
-      resultTransformer: this.resultTransformer,
-      resultComparator: this.resultComparator,
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
     });

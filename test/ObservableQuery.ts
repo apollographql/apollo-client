@@ -112,7 +112,7 @@ describe('ObservableQuery', () => {
           result: { data: dataTwo },
         });
 
-        const observable = manager.watchQuery({ query, variables });
+        const observable = manager.watchQuery({ query, variables, notifyOnNetworkStatusChange: false });
         subscribeAndCount(done, observable, (handleCount, result) => {
           if (handleCount === 1) {
             assert.deepEqual(result.data, dataOne);
@@ -173,6 +173,7 @@ describe('ObservableQuery', () => {
           query,
           variables,
           pollInterval: 100,
+          notifyOnNetworkStatusChange: false,
         });
         subscribeAndCount(done, observable, (handleCount, result) => {
           if (handleCount === 1) {
@@ -333,7 +334,7 @@ describe('ObservableQuery', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      observable = queryManager.watchQuery({ query: testQuery, noFetch: true });
+      observable = queryManager.watchQuery({ query: testQuery, noFetch: true, notifyOnNetworkStatusChange: false });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 2) {
@@ -374,6 +375,30 @@ describe('ObservableQuery', () => {
           assert.isFalse(result.loading);
           assert.deepEqual(result.data, dataTwo);
           done();
+        }
+      });
+    });
+
+    it('returns results that are frozen in development mode', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables: differentVariables },
+        result: { data: dataTwo },
+      });
+      const nop = () => { return 1; };
+      const sub = observable.subscribe({ next: nop });
+
+      observable.setVariables(differentVariables).then(result2 => {
+        assert.deepEqual(result2.data, dataTwo);
+        try {
+          (result2.data as any).stuff = 'awful';
+          done(new Error('results from setVariables should be frozen in development mode'));
+        } catch (e) {
+          done();
+        } finally {
+          sub.unsubscribe();
         }
       });
     });
@@ -490,7 +515,11 @@ describe('ObservableQuery', () => {
 
       manager.query({ query, variables: differentVariables })
         .then(() => {
-          const observable: ObservableQuery<any> = manager.watchQuery({ query, variables });
+          const observable: ObservableQuery<any> = manager.watchQuery({
+            query,
+            variables,
+            notifyOnNetworkStatusChange: false,
+          });
 
           let errored = false;
           subscribeAndCount(done, observable, (handleCount, result) => {

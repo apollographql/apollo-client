@@ -11,8 +11,6 @@ import {
 import { isEqual } from '../util/isEqual';
 
 import {
-  ResultTransformer,
-  ResultComparator,
   QueryListener,
   ApolloQueryResult,
   PureQueryOptions,
@@ -127,8 +125,6 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
-  private resultTransformer: ResultTransformer | undefined;
-  private resultComparator: ResultComparator | undefined;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
 
@@ -166,8 +162,6 @@ export class QueryManager {
     store,
     reduxRootSelector,
     reducerConfig = { mutationBehaviorReducers: {} },
-    resultTransformer,
-    resultComparator,
     addTypename = true,
     queryDeduplication = false,
   }: {
@@ -175,8 +169,6 @@ export class QueryManager {
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
     reducerConfig?: ApolloReducerConfig,
-    resultTransformer?: ResultTransformer,
-    resultComparator?: ResultComparator,
     addTypename?: boolean,
     queryDeduplication?: boolean,
   }) {
@@ -187,8 +179,6 @@ export class QueryManager {
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
-    this.resultTransformer = resultTransformer;
-    this.resultComparator = resultComparator;
     this.pollingTimers = {};
     this.queryListeners = {};
     this.queryDocuments = {};
@@ -319,7 +309,7 @@ export class QueryManager {
 
 
           delete this.queryDocuments[mutationId];
-          resolve(this.transformResult(<ApolloQueryResult<T>>result));
+          resolve(<ApolloQueryResult<T>>result);
         })
         .catch((err) => {
           this.store.dispatch({
@@ -425,8 +415,7 @@ export class QueryManager {
 
             const observerNext = observer.next;
             if (observerNext) {
-              const isDifferentResult =
-                this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
+              const isDifferentResult = !(
                   lastResult &&
                   resultFromStore &&
                   lastResult.networkStatus === resultFromStore.networkStatus &&
@@ -442,7 +431,7 @@ export class QueryManager {
                 lastResult = resultFromStore;
                 // defer to avoid potential errors propagating back to Apollo
                 setTimeout(() => {
-                  observerNext(maybeDeepFreeze(this.transformResult(resultFromStore)))
+                  observerNext(maybeDeepFreeze(resultFromStore))
                 }, 0);
               }
             }
@@ -473,6 +462,10 @@ export class QueryManager {
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
+    if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
+      options.notifyOnNetworkStatusChange = true;
+    }
+
     let transformedOptions = { ...options } as WatchQueryOptions;
     if (this.addTypename) {
       transformedOptions.query = addTypenameToDocument(transformedOptions.query);
@@ -495,6 +488,11 @@ export class QueryManager {
     if (options.query.kind !== 'Document') {
       throw new Error('You must wrap the query string in a "gql" tag.');
     }
+
+    if (typeof options.notifyOnNetworkStatusChange !== 'undefined' ) {
+      throw new Error('Cannot call "query" with "notifyOnNetworkStatusChange = true" ');
+    }
+    options.notifyOnNetworkStatusChange = false;
 
     const requestId = this.idCounter;
     const resPromise = new Promise((resolve, reject) => {
@@ -870,15 +868,6 @@ export class QueryManager {
       variables,
       document,
     };
-  }
-
-  // Give the result transformer a chance to observe or modify result data before it is passed on.
-  public transformResult<T>(result: ApolloQueryResult<T>): ApolloQueryResult<T> {
-    if (!this.resultTransformer) {
-      return result;
-    } else {
-      return this.resultTransformer(result);
-    }
   }
 
   // XXX: I think we just store this on the observable query at creation time

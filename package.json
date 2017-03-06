@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "apollostack/apollo-client"
+    "url": "apollographql/apollo-client"
   },
   "keywords": [
     "ecmascript",

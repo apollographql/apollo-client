@@ -1,5 +1,5 @@
 ---
-title: API Documentation
+title: API Reference
 ---
 
 <h2 id="graphql">`graphql(query, config)(component)`</h2>
@@ -94,7 +94,9 @@ export default graphql(gql`{ ... }`, {
     // Options go here.
   },
 })(MyComponent);
+```
 
+```js
 export default graphql(gql`{ ... }`, {
   options: (props) => ({
     // Options are computed from `props` here.
@@ -187,6 +189,10 @@ By setting `config.withRef` to true you will be able to get the instance of your
 Below you can see an example of this behavior.
 
 **Example:**
+
+This example uses the [React `ref` feature][].
+
+[React `ref` feature]: https://facebook.github.io/react/docs/refs-and-the-dom.html
 
 ```js
 class MyWrappedComponent extends Component { ... }
@@ -314,21 +320,78 @@ A boolean representing whether or not a query request is currently in flight for
 
 However, just because `data.loading` is true it does not mean that you won’t have data. For instance, if you already have `data.todos`, but you want to get the latest todos from your API `data.loading` might be true, but you will still have the todos from your previous request.
 
+**Example:**
+
+```js
+function MyComponent({ data: { loading } }) {
+  if (loading) {
+    return <div>Loading...</div>;
+  } else {
+    // ...
+  }
+}
+
+export default graphql(gql`query { ... }`)(MyComponent);
+```
+
 <h3 id="graphql-query-data.error">`props.data.error`</h3>
 
 If an error occurred then this property will be an instance of [`ApolloError`][]. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
 
 [`ApolloError`]: /core/apollo-client-api.html#ApolloError
 
+**Example:**
+
+```js
+function MyComponent({ data: { error } }) {
+  if (error) {
+    return <div>Error!</div>;
+  } else {
+    // ...
+  }
+}
+
+export default graphql(gql`query { ... }`)(MyComponent);
+```
+
 <h3 id="graphql-query-data.variables">`props.data.variables`</h3>
 
 The variables that Apollo used to fetch data from your GraphQL endpoint. This property is helpful if you want to render some information based on the variables that were used to make a request against your server.
+
+**Example:**
+
+```js
+function MyComponent({ data: { variables } }) {
+  return (
+    <div>
+      Query executed with the following variables:
+      <code>{JSON.stringify(variables)}</code>
+    </div>
+  );
+}
+
+export default graphql(gql`query { ... }`)(MyComponent);
+```
 
 <h3 id="graphql-query-data.refetch">`props.data.refetch()`</h3>
 
 Forces your component to re-execute the query you defined in the `graphql` function. This method is helpful when you want to reload the data in your component, or retry a fetch after an error.
 
 `data.refetch` returns a promise that resolves with the new data fetched from your API once the query has finished executing. The promise will reject if the query failed.
+
+**Example:**
+
+```js
+function MyComponent({ data: { refetch } }) {
+  return (
+    <button onClick={() => refetch()}>
+      Reload
+    </button>
+  );
+}
+
+export default graphql(gql`query { ... }`)(MyComponent);
+```
 
 <h3 id="graphql-query-data.fetchMore">`props.data.fetchMore(options)`</h3>
 
@@ -368,9 +431,49 @@ Polling is a good way to keep the data in your UI fresh. By refetching your data
 
 If you call `data.startPolling` when your query is already polling then the current polling process will be cancelled and a new process will be started with the interval you specified.
 
+You may also use [`options.pollInterval`](#graphql-query-options.pollInterval) to start polling immediately after your component mounts.
+
+**Example:**
+
+```js
+class MyComponent extends Component {
+  componentDidMount() {
+    this.props.data.startPolling(1000);
+  }
+
+  render() {
+    // ...
+  }
+}
+
+export default graphql(gql`query { ... }`)(MyComponent);
+```
+
 <h3 id="graphql-query-data.stopPolling">`props.data.stopPolling()`</h3>
 
 By calling this function you will stop any current polling process. Your query will not start polling again until you call `props.data.startPolling`.
+
+**Example:**
+
+```js
+class MyComponent extends Component {
+  componentDidMount() {
+    this.props.data.startPolling(1000);
+  }
+
+  componentDidUpdate() {
+    if (this.props.error) {
+      this.props.data.stopPolling();
+    }
+  }
+
+  render() {
+    // ...
+  }
+}
+
+export default graphql(gql`query { ... }`)(MyComponent);
+```
 
 <h3 id="graphql-query-data.updateQuery">`props.data.updateQuery(updaterFn)`</h3>
 
@@ -395,15 +498,221 @@ data.updateQuery((previousResult) => ({
 
 <h3 id="graphql-query-options">`config.options`</h3>
 
-TODO
+An object or function that returns an object of options that are used to configure how the query is fetched and updated.
+
+If `config.options` is a function then it will take the component’s props as its first argument.
+
+The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config.options).
+
+**Example:**
+
+```js
+export default graphql(gql`{ ... }`, {
+  options: {
+    // Options go here.
+  },
+})(MyComponent);
+```
+
+```js
+export default graphql(gql`{ ... }`, {
+  options: (props) => ({
+    // Options are computed from `props` here.
+  }),
+})(MyComponent);
+```
+
+<h3 id="graphql-query-options.variables">`config.options.variables`</h3>
+
+The variables that will be used when executing the query operation. These variables should correspond with the variables that your query definition accepts. If you define `config.options` as a function then you may compute your variables from your props.
+
+**Example:**
+
+```js
+export default graphql(gql`
+  query ($width: Int!, $height: Int!) {
+    ...
+  }
+`, {
+  options: (props) => ({
+    variables: {
+      width: props.size,
+      height: props.size,
+    },
+  }),
+})(MyComponent);
+```
+
+<h3 id="graphql-query-options.forceFetch">`config.options.forceFetch`</h3>
+
+When your component is initially mounted it will either execute your GraphQL query using your network interface, or if the data required to resolve your request already exists in your normalized cache then Apollo will just return the data from your cache instead of executing a network request.
+
+Often this is the desired behavior so that you may reduce load on your servers by not executing queries that you do not have to. However, sometimes you may *always* want to execute a query even if the data already exists in your cache. If you always want to execute your query then set `options.forceFetch` to true. By default it will be set to false.
+
+**Example:**
+
+```js
+export default graphql(gql`query { ... }`, {
+  forceFetch: true,
+})(MyComponent);
+```
+
+<h3 id="graphql-query-options.noFetch">`config.options.noFetch`</h3>
+
+`options.noFetch` is the opposite of `options.forceFetch`. When `options.noFetch` is true you will never execute your GraphQL query using the network interface. Instead you will *always* read from the cache. Even if no data is there.
+
+When you don’t have enough data in your cache to resolve your query and `options.noFetch` is true then you will get an error. By default `options.noFetch` is false.
+
+**Example:**
+
+```js
+export default graphql(gql`query { ... }`, {
+  noFetch: true,
+})(MyComponent);
+```
+
+<h3 id="graphql-query-options.pollInterval">`config.options.pollInterval`</h3>
+
+The interval in milliseconds at which you want to start polling. Whenever that number of milliseconds elapses your query will be executed using the network interface and another execution will be scheduled using the configured number of milliseconds.
+
+This option will start polling your query immeadiately when the component mounts. If you want to start and stop polling dynamically then you may use [`props.data.stopPolling`](#graphql-query-data.startPolling) and [`props.data.startPolling`](#graphql-query-data.stopPolling).
+
+**Example:**
+
+```js
+export default graphql(gql`query { ... }`, {
+  pollInterval: 5000,
+})(MyComponent);
+```
 
 <h3 id="mutations">Mutations</h3>
 
+The operation that you pass into your `graphql` function decides how your component will behave. If you pass a mutation into your `graphql` function then Apollo will set up a `mutate` function in your components props that you may call at any time.
+
+Here is an example component that uses a mutation with the `graphql` function:
+
+```js
+export default graphql(gql`
+  mutation TodoCompleteMutation($id: ID!) {
+    completeTodo(id: $id) {
+      id
+      text
+      completed
+    }
+  }
+`)(TodoCompleteButton);
+
+function TodoCompleteButton({ todoID, mutate }) {
+  return (
+    <button onClick={() => mutate({ variables: { id: todoID } })}>
+      Complete
+    </button>
+  );
+}
+```
+
+<h3 id="graphql-mutation-mutate">`props.mutate`</h3>
+
+The higher order component created when you pass a mutation to `graphql` will provide your component with a single prop named `mutate`. Unlike the `data` prop which you get when you pass a query to `graphql`, `mutate` is a function.
+
+The `mutate` function will actually execute your mutation using the network interface therefore mutating your data. The `mutate` function will also then update your cache in ways you define.
+
+To learn more about how mutations work, be sure to check out the [mutations usage documentation](mutations.html).
+
+The `mutate` function accepts the same options that [`config.options` for mutations](#graphql-mutation-options) accepts, so to make sure to read through the documentation for that to know what you can pass into the `mutate` function.
+
+The reason the `mutate` function accepts the same options is that it will use the options from [`config.options`](#graphql-mutation-options) _by default_. When you pass an object into the `mutate` function you are just overriding what is already in [`config.options`](#graphql-mutation-options).
+
+**Example:**
+
+```js
+function MyComponent({ mutate }) {
+  return (
+    <button onClick={() => mutate()}>
+      Mutate
+    </button>
+  );
+}
+
+export default graphql(gql`mutation { ... }`)(MyComponent);
+```
+
 <h3 id="graphql-mutation-options">`config.options`</h3>
 
-TODO
+An object or function that returns an object of options that are used to configure how the query is fetched and updated.
 
-<!-- TODO: ### Subscriptions? -->
+If `config.options` is a function then it will take the component’s props as its first argument.
+
+The options available for use in this object depend on the operation type you pass in as the first argument to `graphql`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config.options).
+
+The properties accepted in this options object may also be excepted by the [`props.mutate`](#graphql-mutation-mutate) function. Any options passed into the `mutate` function will take precedence over the options defined in the `config` object.
+
+**Example:**
+
+```js
+export default graphql(gql`mutation { ... }`, {
+  options: {
+    // Options go here.
+  },
+})(MyComponent);
+```
+
+```js
+export default graphql(gql`mutation { ... }`, {
+  options: (props) => ({
+    // Options are computed from `props` here.
+  }),
+})(MyComponent);
+```
+
+```js
+function MyComponent({ mutate }) {
+  return (
+    <button onClick={() => {
+      mutate({
+        // Options are component from `props` and component state here.
+      });
+    }}>
+      Mutate
+    </button>
+  )
+}
+
+export default graphql(gql`mutation { ... }`)(MyComponent);
+```
+
+<h3 id="graphql-mutation-options.variables">`config.options.variables`</h3>
+
+The variables which will be used to execute the mutation operation. These variables should correspond to the variables that your mutation definition accepts. If you define `config.options` as a function, or you pass variables into the [`props.mutate`](#graphql-mutation-mutate) function then you may compute your variables from props and component state.
+
+**Example:**
+
+```js
+export default graphql(gql`
+  mutation ($foo: String!, $bar: String!) {
+    ...
+  }
+`, {
+  options: (props) => ({
+    variables: {
+      foo: props.foo,
+      bar: props.bar,
+    },
+  }),
+})(MyComponent);
+```
+
+<h3 id="graphql-mutation-options.optimisticResponse">`config.options.optimisticResponse`</h3>
+
+<h3 id="graphql-mutation-options.update">`config.options.update`</h3>
+
+<h3 id="graphql-mutation-options.updateQueries">`config.options.updateQueries`</h3>
+
+<h3 id="graphql-mutation-options.forceFetch">`config.options.forceFetch`</h3>
+
+<h3 id="subscription">Subscriptions</h3>
+
+TODO
 
 <h2 id="ApolloProvider">`<ApolloProvider client={client} />`</h2>
 

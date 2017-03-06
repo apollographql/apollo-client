@@ -544,6 +544,7 @@ export class QueryManager {
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
         variables,
+        returnPartialData: true,
         config: this.reducerConfig,
       });
 

@@ -59,14 +59,8 @@ export type ReadQueryOptions = {
   config?: ApolloReducerConfig,
 };
 
-export type DiffQueryAgainstStoreOptions = {
-  store: NormalizedCache,
-  query: DocumentNode,
-  variables?: Object,
-  previousResult?: any,
+export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean,
-  rootId?: string,
-  config?: ApolloReducerConfig,
 };
 
 export type CustomResolver = (rootValue: any, args: { [argName: string]: any }) => any;

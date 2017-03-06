@@ -32,6 +32,7 @@ To use this client in a web browser or mobile app, you'll need a build system ca
 - [Meteor](http://dev.apollodata.com/core/meteor.html)
 - [Blaze](http://github.com/Swydo/blaze-apollo)
 - [Vanilla JS](http://dev.apollodata.com/core/)
+- [Next.js](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
 
 ---
 

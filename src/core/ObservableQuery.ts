@@ -279,7 +279,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         if (options.onError) {
           options.onError(err);
         } else {
-          console.error('Unhandled GraphQL subscription errror', err);
+          console.error('Unhandled GraphQL subscription error', err);
         }
       },
     });

@@ -536,8 +536,8 @@ describe('mutation results', () => {
 
     it('runs multiple reducers', () => {
       /**
-       * XXX This test sometimes fails on CI, but I cannot reproduce it locally.
-       * Maybe some sort of race condition?
+       * XXX This test has sometimes failed on CI in the past, but I cannot reproduce it locally.
+       * Could be some sort of race condition.
        */
       let counter = 0;
       let counter2 = 0;

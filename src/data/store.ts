@@ -160,7 +160,6 @@ export function data(
             store: previousState,
             query: query.document,
             variables: query.variables,
-            returnPartialData: true,
             config,
           });
 

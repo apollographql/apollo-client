@@ -54,8 +54,17 @@ export type ReadQueryOptions = {
   store: NormalizedCache,
   query: DocumentNode,
   variables?: Object,
-  returnPartialData?: boolean,
   previousResult?: any,
+  rootId?: string,
+  config?: ApolloReducerConfig,
+};
+
+export type DiffQueryAgainstStoreOptions = {
+  store: NormalizedCache,
+  query: DocumentNode,
+  variables?: Object,
+  previousResult?: any,
+  returnPartialData?: boolean,
   rootId?: string,
   config?: ApolloReducerConfig,
 };
@@ -98,20 +107,12 @@ interface IdValueWithPreviousResult extends IdValue {
  * @param {Object} [variables] A map from the name of a variable to its value. These variables can
  * be referenced by the query document.
  *
- * @param {boolean} [returnPartialData] If set to true, the query will be resolved even if all of
- * the data needed to resolve the query is not found in the store. The data keys that are not found
- * will not be present in the returned object. If set to false, an error will be thrown if there
- * are fields that cannot be resolved from the store.
- *
  * @param {any} previousResult The previous result returned by this function for the same query.
  * If nothing in the store changed since that previous result then values from the previous result
  * will be returned to preserve referential equality.
  */
 export function readQueryFromStore<QueryType>(options: ReadQueryOptions): QueryType {
-  const optsPatch = {
-    returnPartialData:
-      ((options.returnPartialData !== undefined) ? options.returnPartialData : false),
-  };
+  const optsPatch = { returnPartialData: false };
 
   return diffQueryAgainstStore({
     ... options,
@@ -201,8 +202,7 @@ const readStoreResolver: Resolver = (
     }
 
     if (! context.returnPartialData) {
-      throw new Error(`Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.
-Perhaps you want to use the \`returnPartialData\` option?`);
+      throw new Error(`Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.`);
     }
 
     context.hasMissingField = true;
@@ -238,7 +238,6 @@ Perhaps you want to use the \`returnPartialData\` option?`);
  * identify if any data was missing from the store.
  * @param  {DocumentNode} query A parsed GraphQL query document
  * @param  {Store} store The Apollo Client store object
- * @param  {boolean} [returnPartialData] Whether to throw an error if any fields are missing
  * @param  {any} previousResult The previous result returned by this function for the same query
  * @return {result: Object, isMissing: [boolean]}
  */
@@ -246,11 +245,11 @@ export function diffQueryAgainstStore({
   store,
   query,
   variables,
-  returnPartialData = true,
   previousResult,
+  returnPartialData = true,
   rootId = 'ROOT_QUERY',
   config,
-}: ReadQueryOptions): DiffResult {
+}: DiffQueryAgainstStoreOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
   getQueryDefinition(query);
 

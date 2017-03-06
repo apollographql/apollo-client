@@ -387,7 +387,6 @@ export class QueryManager {
               store: this.getDataWithOptimisticResults(),
               query: this.queryDocuments[queryId],
               variables: queryStoreValue.previousVariables || queryStoreValue.variables,
-              returnPartialData: true,
               config: this.reducerConfig,
               previousResult: lastResult && lastResult.data,
             });
@@ -544,7 +543,6 @@ export class QueryManager {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
-        returnPartialData: true,
         variables,
         config: this.reducerConfig,
       });
@@ -820,7 +818,6 @@ export class QueryManager {
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
       query: document,
       variables,
-      returnPartialData: false,
       config: this.reducerConfig,
       previousResult: lastResult ? lastResult.data : undefined,
     };
@@ -830,17 +827,6 @@ export class QueryManager {
       const data = readQueryFromStore(readOptions);
       return maybeDeepFreeze({ data, partial: false });
     } catch (e) {
-      // next, try reading partial results, if we want them
-      if (queryOptions.noFetch) {
-        try {
-          readOptions.returnPartialData = true;
-          const data = readQueryFromStore(readOptions);
-          return { data, partial: true };
-        } catch (e) {
-          // fall through
-        }
-      }
-
       return maybeDeepFreeze({ data: {}, partial: true });
     }
   }
@@ -988,7 +974,6 @@ export class QueryManager {
             resultFromStore = readQueryFromStore({
               store: this.getApolloState().data,
               variables,
-              returnPartialData: noFetch,
               query: document,
               config: this.reducerConfig,
             });

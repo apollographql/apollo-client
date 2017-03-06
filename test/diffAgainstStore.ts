@@ -191,7 +191,6 @@ describe('diffing queries against the store', () => {
     const { isMissing } = diffQueryAgainstStore({
       store,
       query: unionQuery,
-      returnPartialData: false,
     });
 
     assert.isTrue(isMissing);
@@ -241,7 +240,7 @@ describe('diffing queries against the store', () => {
     });
   });
 
-  it('returns available fields if throwOnMissingField is false', () => {
+  it('returns available fields if returnPartialData is true', () => {
     const firstQuery = gql`
       {
         people_one(id: "1") {

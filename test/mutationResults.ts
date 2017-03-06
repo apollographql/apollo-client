@@ -659,6 +659,8 @@ describe('mutation results', () => {
     });
 
     it('does not fail if the query is still loading', () => {
+      // XXX we don't check here that the resolver still runs, we just check that no errors are thrown.
+      // The resolver doesn't actually run.
       function setupReducerObsHandle(...mockedResponses: any[]) {
         networkInterface = mockNetworkInterface({
           request: { query },

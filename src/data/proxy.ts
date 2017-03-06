@@ -174,7 +174,6 @@ export class ReduxDataProxy implements DataProxy {
       store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())),
       query,
       variables,
-      returnPartialData: false,
     });
   }
 
@@ -201,7 +200,6 @@ export class ReduxDataProxy implements DataProxy {
       store: data,
       query,
       variables,
-      returnPartialData: false,
     });
   }
 
@@ -314,7 +312,6 @@ export class TransactionDataProxy implements DataProxy {
       store: this.data,
       query,
       variables,
-      returnPartialData: false,
     });
   }
 
@@ -344,7 +341,6 @@ export class TransactionDataProxy implements DataProxy {
       store: data,
       query,
       variables,
-      returnPartialData: false,
     });
   }
 

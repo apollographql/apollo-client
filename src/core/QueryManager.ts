@@ -364,12 +364,13 @@ export class QueryManager {
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,
           });
-          if (observer.error) {
-            try {
-              observer.error(apolloError);
-            } catch (e) {
-              console.error('Error in observer.error \n', e.stack);
-            }
+
+          const observerError = observer.error;
+          if (observerError) {
+            // defer to avoid potential errors propagating back to Apollo
+            setTimeout(() => {
+              observerError(apolloError)
+            }, 0);
           } else {
             console.error('Unhandled error', apolloError, apolloError.stack);
             if (!isProduction()) {
@@ -412,7 +413,8 @@ export class QueryManager {
               };
             }
 
-            if (observer.next) {
+            const observerNext = observer.next;
+            if (observerNext) {
               const isDifferentResult = !(
                   lastResult &&
                   resultFromStore &&
@@ -427,18 +429,20 @@ export class QueryManager {
 
               if (isDifferentResult) {
                 lastResult = resultFromStore;
-                try {
-                  observer.next(maybeDeepFreeze(resultFromStore));
-                } catch (e) {
-                  console.error('Error in observer.next \n', e.stack);
-                }
+                // defer to avoid potential errors propagating back to Apollo
+                setTimeout(() => {
+                  observerNext(maybeDeepFreeze(resultFromStore))
+                }, 0);
               }
             }
           } catch (error) {
-            if (observer.error) {
-              observer.error(new ApolloError({
-                networkError: error,
-              }));
+            const observerError = observer.error;
+            if (observerError) {
+              setTimeout(() => {
+                observerError(new ApolloError({
+                  networkError: error,
+                }));
+              }, 0);
             }
             return;
           }

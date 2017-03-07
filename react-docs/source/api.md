@@ -8,7 +8,10 @@ The `gql` template tag is what you use to define GraphQL queries in your Apollo 
 
 You may embed other GraphQL documents inside of other GraphQL documents using template string interpolation. This allows you to use fragments defined in one part of your codebase inside of a query define in a completely different file. See the example below for a demonstration of how this works.
 
+For convenience the `gql` tag is exported from the [`graphql-tag`][] package.
+
 [GraphQL.js AST format]: https://github.com/graphql/graphql-js/blob/d92dd9883b76e54babf2b0ffccdab838f04fc46c/src/language/ast.js
+[`graphql-tag`]: https://www.npmjs.com/package/graphql-tag
 
 **Example:**
 
@@ -994,6 +997,40 @@ export default withApollo(MyComponent);
 function MyComponent({ client }) {
   console.log(client);
 }
+```
+
+<h2 id="ApolloClient">`ApolloClient`</h2>
+
+An `ApolloClient` instance is the core of the API for Apollo. It contains all of the methods you would need to interact with your GraphQL data, and it is the class you will use no matter which integration you are using.
+
+To learn how to create your own instance of `ApolloClient` see the [initialization documentation article](initialization.html). You will then pass this instance into a root [`<ApolloProvider/>` component](#ApolloProvider).
+
+For convenience `ApolloClient` is exported by `react-apollo` from the core Apollo Client package.
+
+[To see the full API documentation for the `ApolloClient` class go to the core  documentation site.](../core/apollo-client-api.html#apollo-client)
+
+**Example:**
+
+```js
+const client = new ApolloClient({
+  ...
+});
+```
+
+<h2 id="createNetworkInterface">`createNetworkInterface(config)`</h2>
+
+The `createNetworkInterface()` function creates a simple HTTP network interface using the provided configuration object which includes the URI Apollo will use to fetch GraphQL from.
+
+For convenience `createNetworkInterface()` is exported by `react-apollo` from the core Apollo Client package.
+
+[To learn more about `createNetworkInterface` and network interfaces in general go to the core documentation site.](../core/network.html)
+
+**Example:**
+
+```js
+const networkInterface = createNetworkInterface({
+  uri: '/graphql',
+});
 ```
 
 <h2 id="compose">`compose(...enhancers)(component)`</h2>

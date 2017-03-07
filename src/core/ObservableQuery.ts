@@ -454,6 +454,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     }
 
     if (!!this.options.pollInterval) {
+      if (this.options.fetchPolicy === 'cache-first' || (this.options.fetchPolicy === 'cache-only')) {
+        throw new Error('Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.');
+      }
+
       if (this.options.noFetch) {
         throw new Error('noFetch option should not use query polling.');
       }

@@ -676,7 +676,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to transform queries on forced fetches', (done) => {
+  it('should be able to transform queries on network-only fetches', (done) => {
     const query = gql`
       query {
         author {
@@ -719,7 +719,7 @@ describe('client', () => {
       networkInterface,
       addTypename: true,
     });
-    client.query({ forceFetch: true, query }).then((actualResult) => {
+    client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, transformedResult);
       done();
     });
@@ -762,7 +762,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to handle named fragments on forced fetches', () => {
+  it('should be able to handle named fragments on network-only queries', () => {
     const query = gql`
       fragment authorDetails on Author {
         firstName
@@ -792,7 +792,7 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ forceFetch: true, query }).then((actualResult) => {
+    return client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
     });
   });
@@ -1088,7 +1088,7 @@ describe('client', () => {
     });
   });
 
-  describe('forceFetch', () => {
+  describe('network-only fetchPolicy', () => {
     const query = gql`
       query number {
         myNumber {
@@ -1136,7 +1136,7 @@ describe('client', () => {
       // Run a query first to initialize the store
       return client.query({ query })
         // then query for real
-        .then(() => client.query({ query, forceFetch: true }))
+        .then(() => client.query({ query, fetchPolicy: 'network-only' }))
         .then((result) => {
           assert.deepEqual(result.data, { myNumber: { n: 2 } });
         });
@@ -1149,7 +1149,7 @@ describe('client', () => {
         addTypename: false,
       });
 
-      const options = { query, forceFetch: true };
+      const options = { query, fetchPolicy: 'network-only' };
 
       // Run a query first to initialize the store
       return client.query({ query })
@@ -1159,7 +1159,7 @@ describe('client', () => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
 
           // Test that options weren't mutated, issue #339
-          assert.deepEqual(options, { query, forceFetch: true });
+          assert.deepEqual(options, { query, fetchPolicy: 'network-only' });
         });
     });
 
@@ -1176,14 +1176,14 @@ describe('client', () => {
       const outerPromise = client.query({ query })
         // then query for real
         .then(() => {
-          const promise = client.query({ query, forceFetch: true });
+          const promise = client.query({ query, fetchPolicy: 'network-only' });
           clock.tick(0);
           return promise;
         })
         .then((result) => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
           clock.tick(100);
-          const promise = client.query({ query, forceFetch: true });
+          const promise = client.query({ query, fetchPolicy: 'network-only' });
           clock.tick(0);
           return promise;
         })

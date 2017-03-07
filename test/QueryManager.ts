@@ -2453,7 +2453,6 @@ describe('QueryManager', () => {
       const queryManager = createQueryManager({});
       const options = assign({}) as WatchQueryOptions;
       options.fetchPolicy = 'cache-only';
-      // options.noFetch = true;
       options.query = query;
       let refetchCount = 0;
       const mockObservableQuery: ObservableQuery<any> = {

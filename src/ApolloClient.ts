@@ -103,7 +103,7 @@ export default class ApolloClient implements DataProxy {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public shouldForceFetch: boolean;
+  public disableNetworkFetches: boolean;
   public dataId: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
@@ -175,13 +175,13 @@ export default class ApolloClient implements DataProxy {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
-    this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
+    this.disableNetworkFetches = ssrMode && ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
 
     if (ssrForceFetchDelay) {
-      setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
+      setTimeout(() => this.disableNetworkFetches = true, ssrForceFetchDelay);
     }
 
     this.reducerConfig = {
@@ -229,7 +229,7 @@ export default class ApolloClient implements DataProxy {
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
-    if (!this.shouldForceFetch && options.forceFetch) {
+    if (this.disableNetworkFetches && options.forceFetch) {
       options = {
         ...options,
         forceFetch: false,
@@ -254,7 +254,7 @@ export default class ApolloClient implements DataProxy {
     // XXX what if I pass pollInterval? Will it just keep running?
     // XXX why doesn't this stop the query after it's done?
 
-    if (!this.shouldForceFetch && options.forceFetch) {
+    if (this.disableNetworkFetches && options.forceFetch) {
       options = {
         ...options,
         forceFetch: false,

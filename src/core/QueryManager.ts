@@ -544,7 +544,7 @@ export class QueryManager {
     const queryString = print(queryDoc);
 
     let storeResult: any;
-    let needToFetch: boolean = forceFetch;
+    let needToFetch: boolean = forceFetch || fetchPolicy === 'network-only';
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
@@ -575,6 +575,7 @@ export class QueryManager {
       document: queryDoc,
       variables,
       forceFetch,
+      fetchPolicy,
       queryId,
       requestId,
       // we store the old variables in order to trigger "loading new variables"

@@ -179,6 +179,7 @@ describe('createApolloStore', () => {
       document: queryDocument,
       variables: {},
       forceFetch: false,
+      fetchPolicy: 'cache-first',
       requestId: 1,
       storePreviousVariables: false,
       isPoll: false,

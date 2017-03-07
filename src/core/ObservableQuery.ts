@@ -148,6 +148,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // See more: https://github.com/apollostack/apollo-client/issues/707
     // Basically: is there a query in flight right now (modolo the next tick)?
     const loading = (this.options.forceFetch && queryLoading)
+      || (this.options.fetchPolicy === 'network-only' && queryLoading)
       || (partial && this.options.fetchPolicy !== 'cache-only');
 
     // if there is nothing in the query store, it means this query hasn't fired yet. Therefore the
@@ -312,6 +313,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     // If forceFetch went from false to true or cachePolicy went from cache-only to something else
     const tryFetch: boolean = (!oldOptions.forceFetch && opts.forceFetch)
+      || (oldOptions.fetchPolicy !== 'network-only' && opts.fetchPolicy === 'network-only')
       || (oldOptions.fetchPolicy === 'cache-only' && opts.fetchPolicy !== 'cache-only')
       || false;
 

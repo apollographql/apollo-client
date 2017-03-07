@@ -35,13 +35,6 @@ export interface ModifiableWatchQueryOptions {
    * within the GraphQL query.
    */
   variables?: { [key: string]: any };
-  /**
-   * Specifies whether the client should diff the query against the cache and only
-   * fetch the portions of it that aren't already available (it does this when forceFetch is
-   * false) or it should just fetch the entire query from the server and update the cache
-   * accordingly (it does this when forceFetch is true).
-   */
-  forceFetch?: boolean;
 
   /**
    * The time interval (in milliseconds) on which this query should be

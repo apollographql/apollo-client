@@ -523,16 +523,9 @@ export class QueryManager {
     // network status for the query this is fetching for.
     fetchMoreForQueryId?: string,
   ): Promise<ApolloQueryResult<T>> {
-    if (options.fetchPolicy) {
-      if (options.forceFetch) {
-        // XXX This is just here until we remove noFetch and forceFetch altogether.
-        throw new Error('cannot use fetchPolicy with noFetch or forceFetch set to true');
-      }
-    }
 
     const {
       variables = {},
-      forceFetch = false,
       metadata = null,
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
     } = options;
@@ -544,12 +537,12 @@ export class QueryManager {
     const queryString = print(queryDoc);
 
     let storeResult: any;
-    let needToFetch: boolean = forceFetch || fetchPolicy === 'network-only';
+    let needToFetch: boolean = fetchPolicy === 'network-only';
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
-    if ( (fetchType !== FetchType.refetch && !forceFetch && fetchPolicy !== 'network-only')) {
+    if ( (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only')) {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,

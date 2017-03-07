@@ -6,9 +6,9 @@ title: API Reference
 
 The `gql` template tag is what you use to define GraphQL queries in your Apollo Client apps. It parses your GraphQL query into the [GraphQL.js AST format][] which may then be consumed by Apollo Client methods. Whenever Apollo Client is asking for a GraphQL query you will always want to wrap it in a `gql` template tag.
 
-You may embed other GraphQL documents inside of other GraphQL documents using template string interpolation. This allows you to use fragments defined in one part of your codebase inside of a query define in a completely different file. See the example below for a demonstration of how this works.
+You may embed a GraphQL document containing only fragments inside of another GraphQL document using template string interpolation. This allows you to use fragments defined in one part of your codebase inside of a query define in a completely different file. See the example below for a demonstration of how this works.
 
-For convenience the `gql` tag is exported from the [`graphql-tag`][] package.
+For convenience the `gql` tag is re-exported in `react-apollo` from the [`graphql-tag`][] package.
 
 [GraphQL.js AST format]: https://github.com/graphql/graphql-js/blob/d92dd9883b76e54babf2b0ffccdab838f04fc46c/src/language/ast.js
 [`graphql-tag`]: https://www.npmjs.com/package/graphql-tag
@@ -72,6 +72,19 @@ export default graphql(gql`
 `)(TodoApp);
 ```
 
+You may also define an intermediate function and hook up your component with the `graphql()` function like this:
+
+```js
+// Create our enhancer function.
+const withTodoAppQuery = graphql(gql`query { ... }`);
+
+// Enhance our component.
+const TodoAppWidthData = withTodoAppQuery(TodoApp);
+
+// Export the enhanced component.
+export default TodoAppWithData;
+```
+
 Alternatively, you can also use the `graphql()` function as a [decorator][] on your React class component.
 
 [decorator]: https://github.com/wycats/javascript-decorators
@@ -109,7 +122,7 @@ Before we look into the specific behaviors of each operation, let us look at the
 
 <h3 id="graphql-config">`config`</h3>
 
-The `config` object is the second argument you pass into the `graphql()` function. After your GraphQL document. The config is optional and allows you to add some custom behavior to your higher order component.
+The `config` object is the second argument you pass into the `graphql()` function, after your GraphQL document. The config is optional and allows you to add some custom behavior to your higher order component.
 
 ```js
 export default graphql(
@@ -156,6 +169,8 @@ The function you define behaves almost exactly like [`mapProps` from Recompose][
 
 `config.props` is most useful when you want to abstract away complex functions calls into a simple prop that you can pass down to your component.
 
+Another benefit of `config.props` is that it also allows you to decouple your pure UI components from your GraphQL and Apollo concerns. You can write your pure UI components in one file and then keep the logic required for them to interact with the store in a completely different place in your project. You can accomplish this by your pure UI components only asking for the props needed to render and `config.props` can contain the logic to provide exactly the props your pure component needs from the data provided by your GraphQL API.
+
 **Example:**
 
 This example uses [`props.data.fetchMore`](#graphql-query-data.fetchMore).
@@ -184,6 +199,8 @@ If `config.skip` is true then all of the React Apollo code will be skipped *enti
 
 Instead of passing a boolean to `config.skip`, you may also pass a function to `config.skip`. The function will take your components props and should return a boolean. If the boolean returns true then the skip behavior will go into effect.
 
+`config.skip` is especially useful if you want to use a different query based on some prop. You can see this in an example below.
+
 **Example:**
 
 ```js
@@ -196,6 +213,21 @@ export default graphql(gql`{ ... }`, {
 export default graphql(gql`{ ... }`, {
   skip: props => !!props.skip,
 })(MyComponent);
+```
+
+The following example uses the [`compose()`](#compose) function to use multiple `graphql()` enhancers at once.
+
+```js
+export default compose(
+  graphql(gql`query MyQuery1 { ... }`, { skip: props => !props.useQuery1 }),
+  graphql(gql`query MyQuery2 { ... }`, { skip: props => props.useQuery1 }),
+)(MyComponent);
+
+function MyComponent({ data }) {
+  // The data may be from `MyQuery1` or `MyQuery2` depending on the value
+  // of the prop `useQuery1`.
+  console.log(data);
+}
 ```
 
 <h3 id="graphql-config.name">`config.name`</h3>
@@ -237,19 +269,19 @@ This example uses the [React `ref` feature][].
 [React `ref` feature]: https://facebook.github.io/react/docs/refs-and-the-dom.html
 
 ```js
-class MyWrappedComponent extends Component { ... }
+class MyComponent extends Component { ... }
 
-const MyComponent = graphql(
+const MyGraphQLComponent = graphql(
   gql`{ ... }`,
   { withRef: true },
-)(MyWrappedComponent);
+)(MyComponent);
 
 class MyContainerComponent extends Component {
   render() {
     return (
-      <MyWrappedComponent
+      <MyGraphQLComponent
         ref={component => {
-          assert(component.getWrappedInstance() instanceof MyWrappedComponent);
+          assert(component.getWrappedInstance() instanceof MyComponent);
         }}
       />
     );
@@ -396,6 +428,39 @@ function MyComponent({ data: { error } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
+<h3 id="graphql-query-data.networkStatus">`props.data.networkStatus`</h3>
+
+`data.networkStatus` provides a more detailed view into the state of a network request on your component then [`data.loading`](#graphql-query-data.loading) does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
+
+1. `loading`: The query has never been run before and the query is now currently running. A query will still have this network status even if a result was returned from the cache, but a query was dispatched anyway.
+2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#graphql-query-options-variables) changes on their queries.
+3. `fetchMore`: Indicates that `fetchMore` was called on this query and that the query created is currently in flight.
+4. `refetch`: It means that `refetch` was called on a query and the refetch request is currently in flight.
+5. Unused.
+6. `poll`: Indicates that a polling query is currently in flight. So for example if you are polling a query every 10 seconds then the network status will switch to `poll` every 10 seconds whenever a poll request has been sent but not resolved.
+7. `ready`: No request is in flight for this query, and no errors happened. Everything is OK.
+8. `error`: No request is in flight for this query, but one or more errors were detected.
+
+If the network status is less then 7 then it is equivalent to [`data.loading`](#graphql-query-data.loading) being true. In fact you could replace all of your `data.loading` checks with `data.networkStatus < 7` and you would not see a difference. It is recommended that you use `data.loading`, however.
+
+`data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status.
+
+**Example:**
+
+```js
+function MyComponent({ data: { networkStatus } }) {
+  if (networkStatus === 6) {
+    return <div>Polling!</div>;
+  } else if (networkStatus < 7) {
+    return <div>Loading...</div>;
+  } else {
+    // ...
+  }
+}
+
+export default graphql(gql`query { ... }`)(MyComponent);
+```
+
 <h3 id="graphql-query-data.variables">`props.data.variables`</h3>
 
 The variables that Apollo used to fetch data from your GraphQL endpoint. This property is helpful if you want to render some information based on the variables that were used to make a request against your server.
@@ -473,13 +538,14 @@ Polling is a good way to keep the data in your UI fresh. By refetching your data
 
 If you call `data.startPolling` when your query is already polling then the current polling process will be cancelled and a new process will be started with the interval you specified.
 
-You may also use [`options.pollInterval`](#graphql-query-options.pollInterval) to start polling immediately after your component mounts.
+You may also use [`options.pollInterval`](#graphql-query-options.pollInterval) to start polling immediately after your component mounts. It is recommend that you use [`options.pollInterval`](#graphql-query-options.pollInterval) if you don’t need to arbitrarily start and stop polling.
 
 **Example:**
 
 ```js
 class MyComponent extends Component {
   componentDidMount() {
+    // In this specific case you may want to use `options.pollInterval` isntead.
     this.props.data.startPolling(1000);
   }
 
@@ -789,6 +855,44 @@ export default graphql(gql`
 `)(MyComponent);
 ```
 
+<h3 id="graphql-mutation-options.update">`config.options.update`</h3>
+
+This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
+
+`options.update` takes two arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the respone from your mutation. Either the optimistic response, or the actual response returned by your server.
+
+In order to change the data in your store call methods on your [`DataProxy`][] instance like [`writeQuery`][] and [`writeFragment`][]. This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
+
+To read the data from the store that you are changing, make sure to use methods on your [`DataProxy`][] like [`readQuery`][] and [`readFragment`][].
+
+For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../core/data-control.html#updating-the-cache-after-a-mutation).
+
+[`DataProxy`]: ../core/apollo-client-api.html#DataProxy
+[`writeQuery`]: ../core/apollo-client-api.html#DataProxy.writeQuery
+[`writeFragment`]: ../core/apollo-client-api.html#DataProxy.writeFragment
+[`readQuery`]: ../core/apollo-client-api.html#DataProxy.readQuery
+[`readFragment`]: ../core/apollo-client-api.html#DataProxy.readFragment
+
+**Example:**
+
+```js
+const query = gql`{ todos { ... } }`
+
+export default graphql(gql`
+  mutation ($text: String!) {
+    createTodo(text: $text) { ... }
+  }
+`, {
+  options: {
+    update: (proxy, { data: { createTodo } }) => {
+      const data = proxy.readQuery({ query });
+      data.todos.push(createTodo);
+      proxy.writeQuery({ query, data });
+    },
+  },
+})(MyComponent);
+```
+
 <h3 id="graphql-mutation-options.refetchQueries">`config.options.refetchQueries`</h3>
 
 Sometimes when you make a mutation you also want to update the data in your queries so that your users may see an up-to-date user interface. There are more fine-grained ways to update the data in your cache which include [`options.updateQueries`](#graphql-mutation-options.updateQueries), and [`options.update`](#graphql-mutation-options.update). However, you can update the data in your cache more reliably at the cost of a higher efficiency by using `options.refetchQueries`.
@@ -905,44 +1009,6 @@ export default graphql(gql`
           },
         };
       },
-    },
-  },
-})(MyComponent);
-```
-
-<h3 id="graphql-mutation-options.update">`config.options.update`</h3>
-
-This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
-
-`options.update` takes to arguments. The first is an instance of a [`DataProxy`][] object which has some methods which will allow you to interact with the data in your store. The second is the respone from your mutation. Either the optimistic response, or the actual response returned by your server.
-
-In order to change the data in your store call methods on your [`DataProxy`][] instance like [`writeQuery`][] and [`writeFragment`][]. This will update your cache and reactively re-render any of your GraphQL components which are querying affected data.
-
-To read the data from the store that you are changing, make sure to use methods on your [`DataProxy`][] like [`readQuery`][] and [`readFragment`][].
-
-For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../core/data-control.html#updating-the-cache-after-a-mutation).
-
-[`DataProxy`]: ../core/apollo-client-api.html#DataProxy
-[`writeQuery`]: ../core/apollo-client-api.html#DataProxy.writeQuery
-[`writeFragment`]: ../core/apollo-client-api.html#DataProxy.writeFragment
-[`readQuery`]: ../core/apollo-client-api.html#DataProxy.readQuery
-[`readFragment`]: ../core/apollo-client-api.html#DataProxy.readFragment
-
-**Example:**
-
-```js
-const query = gql`{ todos { ... } }`
-
-export default graphql(gql`
-  mutation ($text: String!) {
-    createTodo(text: $text) { ... }
-  }
-`, {
-  options: {
-    update: (proxy, { data: { createTodo } }) => {
-      const data = proxy.readQuery({ query });
-      data.todos.push(createTodo);
-      proxy.writeQuery({ query, data });
     },
   },
 })(MyComponent);

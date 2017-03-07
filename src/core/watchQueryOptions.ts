@@ -46,7 +46,7 @@ export interface ModifiableWatchQueryOptions {
   /**
    * If this is set to true, the query is resolved *only* within information
    * available in the cache (i.e. we never hit the server). If a particular field is not available
-   * in the cache, it will not be available in the result.
+   * in the cache, it will throw an error.
    */
   noFetch?: boolean;
   /**

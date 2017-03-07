@@ -1256,7 +1256,7 @@ describe('QueryManager', () => {
     done();
   });
 
-  it('supports noFetch fetching only cached data', () => {
+  it('supports cache-only fetchPolicy fetching only cached data', () => {
     const primeQuery = gql`
       query primeQuery {
         luke: people_one(id: 1) {
@@ -1295,7 +1295,8 @@ describe('QueryManager', () => {
     }).then(() => {
       const handle = queryManager.watchQuery<any>({
         query: complexQuery,
-        noFetch: true,
+        fetchPolicy: 'cache-only',
+        // noFetch: true,
       });
 
       return handle.result().then((result) => {

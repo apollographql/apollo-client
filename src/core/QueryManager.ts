@@ -341,9 +341,12 @@ export class QueryManager {
         return;
       }
 
-      const noFetch = this.observableQueries[queryId] ? this.observableQueries[queryId].observableQuery.options.noFetch : options.noFetch;
+      const storedQuery = this.observableQueries[queryId];
 
-      const shouldNotifyIfLoading = queryStoreValue.previousVariables || noFetch;
+      const noFetch = storedQuery ? storedQuery.observableQuery.options.noFetch : options.noFetch;
+      const fetchPolicy = storedQuery ? storedQuery.observableQuery.options.fetchPolicy : options.fetchPolicy;
+
+      const shouldNotifyIfLoading = queryStoreValue.previousVariables || noFetch || fetchPolicy === 'cache-only';
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
@@ -396,7 +399,7 @@ export class QueryManager {
             // If there is some data missing and the user has told us that they
             // do not tolerate partial data then we want to return the previous
             // result and mark it as stale.
-            if (isMissing && !noFetch) {
+            if (isMissing && !noFetch && fetchPolicy !== 'cache-only') {
               resultFromStore = {
                 data: lastResult && lastResult.data,
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
@@ -612,7 +615,6 @@ export class QueryManager {
         return networkResult;
       }
     }
-
     // If we have no query to send to the server, we should return the result
     // found within the store.
     return Promise.resolve({ data: storeResult });
@@ -1044,7 +1046,6 @@ export class QueryManager {
   }): Promise<ExecutionResult> {
     const {
       variables,
-      noFetch,
     } = options;
     const request: Request = {
       query: document,

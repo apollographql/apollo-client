@@ -1216,7 +1216,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('should error if we pass noFetch on a polling query', (done) => {
+  it('should error if we pass fetchPolicy = cache-first or cache-only on a polling query', (done) => {
     assert.throw(() => {
       assertWithObserver({
         done,
@@ -1232,7 +1232,25 @@ describe('QueryManager', () => {
               lastName
             }
           }`,
-        queryOptions: { pollInterval: 200, noFetch: true },
+        queryOptions: { pollInterval: 200, fetchPolicy: 'cache-only' },
+      });
+    });
+    assert.throw(() => {
+      assertWithObserver({
+        done,
+        observer: {
+          next(result) {
+            done(new Error('Returned a result when it should not have.'));
+          },
+        },
+        query: gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }`,
+        queryOptions: { pollInterval: 200, fetchPolicy: 'cache-first' },
       });
     });
     done();

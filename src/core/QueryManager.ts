@@ -521,11 +521,21 @@ export class QueryManager {
     // network status for the query this is fetching for.
     fetchMoreForQueryId?: string,
   ): Promise<ApolloQueryResult<T>> {
+    if (options.fetchPolicy) {
+      if (options.forceFetch || options.noFetch) {
+        // XXX This is just here until we remove noFetch and forceFetch altogether.
+        throw new Error('cannot use fetchPolicy with noFetch or forceFetch set to true');
+      }
+
+      return this.fetchQuery(queryId, options, fetchType, fetchMoreForQueryId);
+    }
+
     const {
       variables = {},
       forceFetch = false,
       noFetch = false,
       metadata = null,
+      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
     } = options;
 
     const {
@@ -539,7 +549,8 @@ export class QueryManager {
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
-    if (fetchType !== FetchType.refetch && !forceFetch) {
+    // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
+    if (fetchType !== FetchType.refetch && !forceFetch && fetchPolicy !== 'network-only') {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
@@ -549,13 +560,13 @@ export class QueryManager {
       });
 
       // If we're in here, only fetch if we have missing fields
-      needToFetch = isMissing || false;
+      needToFetch = isMissing || fetchPolicy === 'cache-and-network';
 
       storeResult = result;
     }
 
     const requestId = this.generateRequestId();
-    const shouldFetch = needToFetch && !noFetch;
+    const shouldFetch = needToFetch && !noFetch && fetchPolicy !== 'cache-only';
 
     // Initialize query in store with unique requestId
     this.queryDocuments[queryId] = queryDoc;
@@ -591,19 +602,127 @@ export class QueryManager {
     }
 
     if (shouldFetch) {
-      return this.fetchRequest({
+      const networkResult = this.fetchRequest({
         requestId,
         queryId,
         document: queryDoc,
         options,
         fetchMoreForQueryId,
       });
+
+      if (fetchPolicy !== 'cache-and-network') {
+        return networkResult;
+      }
     }
 
     // If we have no query to send to the server, we should return the result
     // found within the store.
     return Promise.resolve({ data: storeResult });
   }
+
+/*
+
+  private fetchQueryFromCache<T>(
+    query: DocumentNode,
+    variables: {[key: string]: any} | undefined
+  ): T {
+    return readQueryFromStore<T>({
+      query,
+      store: this.reduxRootSelector(this.store.getState()).data,
+      variables,
+      config: this.reducerConfig,
+    });
+  }
+
+  private fetchQueryFromNetwork<T>(
+    queryId: string,
+    options: WatchQueryOptions,
+    fetchType?: FetchType,
+    fetchMoreForQueryId?: string,
+  ): Promise<ExecutionResult> {
+    return this.fetchRequest({
+      requestId: this.generateRequestId(),
+      queryId,
+      document: options.query,
+      options,
+      fetchMoreForQueryId,
+    });
+  }
+
+  private putResultInCache(){
+
+  }
+
+  // Attempt at an easier to parse fetchQuery. Just documented for posterity
+  public newFetchQuery<T>(
+    queryId: string,
+    options: WatchQueryOptions,
+    fetchType?: FetchType,
+
+    // This allows us to track if this is a query spawned by a `fetchMore`
+    // call for another query. We need this data to compute the `fetchMore`
+    // network status for the query this is fetching for.
+    fetchMoreForQueryId?: string,
+  ): Promise<ApolloQueryResult<T>> {
+
+    const { fetchPolicy } = options;
+
+    const transformedOptions = {
+      ...options,
+      query: this.transformQueryDocument(options).queryDoc,
+    };
+
+    if (fetchPolicy === 'cache-first') {
+      try {
+        const result = this.fetchQueryFromCache(transformedOptions.query, transformedOptions.variables);
+        return Promise.resolve({ data: result });
+      } catch (e) {
+        return this.fetchQueryFromNetwork(queryId, transformedOptions, fetchType, fetchMoreForQueryId);
+      }
+
+    } else if (fetchPolicy === 'cache-only') {
+      try {
+        const result = this.fetchQueryFromCache(transformedOptions.query, transformedOptions.variables);
+        return Promise.resolve({ data: result });
+      } catch (e) {
+        // XXX should we provide more specific information on which fields were missing?
+        throw new Error(`A cache-only fetchPolicy was specified but query could not be fulfilled from cache:\n${e.message}`);
+      }
+
+    } else if (fetchPolicy === 'network-first') {
+      try {
+        return this.fetchQueryFromNetwork(queryId, transformedOptions, fetchType, fetchMoreForQueryId);
+      } catch (eNetwork) {
+        try {
+          const result = this.fetchQueryFromCache(transformedOptions.query, transformedOptions.variables);
+          return Promise.resolve({ data: result });
+        } catch (eCache) {
+          throw new Error(
+            `A network-first fetchPolicy was specified, but both network request and cache lookup failed:\n` +
+            eCache.message + '\n' +
+            eNetwork.message
+          );
+        }
+      }
+
+    } else if (fetchPolicy === 'network-only') {
+        return this.fetchQueryFromNetwork(queryId, transformedOptions, fetchType, fetchMoreForQueryId);
+
+    } else if (fetchPolicy === 'cache-and-network') {
+      let result: ExecutionResult;
+      const networkResult = this.fetchQueryFromNetwork(queryId, transformedOptions, fetchType, fetchMoreForQueryId);
+      try {
+        result = this.fetchQueryFromCache(transformedOptions.query, transformedOptions.variables);
+        return Promise.resolve({ data: result });
+      } catch (e) {
+        return networkResult;
+      }
+    } else {
+      throw new Error(`Unknown fetch policy: ${fetchPolicy}`);
+    }
+  }
+
+  */
 
   public generateQueryId() {
     const queryId = this.idCounter.toString();

@@ -18,8 +18,8 @@ import {
 
   /**
    * fetchPolicy determines where the client may return a result from. The options are:
+   * - cache-first (default): return result from cache. Only fetch from network if cached result is not available.
    * - cache-and-network: returns result from cache first (if it exists), then return network result once it's available
-   * - cache-first: return result from cache. Only fetch from network if cached result is not available.
    * - network-first: return result from network, but if network request fails, use result from cache, if available.
    * - cache-only: return result from cache if avaiable, fail otherwise.
    * - network-only: return result from network, fail if network call doesn't succeed.

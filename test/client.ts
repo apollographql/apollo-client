@@ -376,7 +376,6 @@ describe('client', () => {
           networkError: null,
           graphQLErrors: [],
           forceFetch: false,
-          returnPartialData: false,
           lastRequestId: 2,
           previousVariables: null,
           metadata: null,

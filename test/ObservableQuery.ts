@@ -671,54 +671,6 @@ describe('ObservableQuery', () => {
         });
     });
 
-    it('returns partial data from the store immediately', (done) => {
-      const queryManager = mockQueryManager({
-        request: { query, variables },
-        result: { data: dataOne },
-      }, {
-        request: { query: superQuery, variables },
-        result: { data: superDataOne },
-      });
-
-      queryManager.query({ query, variables })
-        .then((result: any) => {
-          const observable = queryManager.watchQuery({
-            query: superQuery,
-            variables,
-            returnPartialData: true,
-          });
-          assert.deepEqual(observable.currentResult(), {
-            data: dataOne,
-            loading: true,
-            networkStatus: 1,
-            partial: true,
-          });
-
-          // we can use this to trigger the query
-          subscribeAndCount(done, observable, (handleCount, subResult) => {
-            const { data, loading, networkStatus } = observable.currentResult();
-            assert.deepEqual(subResult, { data, loading, networkStatus, stale: false });
-
-            if (handleCount === 1) {
-              assert.deepEqual(subResult, {
-                data: dataOne,
-                loading: true,
-                networkStatus: 1,
-                stale: false,
-              });
-            } else if (handleCount === 2) {
-              assert.deepEqual(subResult, {
-                data: superDataOne,
-                loading: false,
-                networkStatus: 7,
-                stale: false,
-              });
-              done();
-            }
-          });
-        });
-    });
-
     it('returns loading even if full data is available when force fetching', (done) => {
       const queryManager = mockQueryManager({
         request: { query, variables },

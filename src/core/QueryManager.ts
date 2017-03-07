@@ -343,8 +343,7 @@ export class QueryManager {
 
       const noFetch = this.observableQueries[queryId] ? this.observableQueries[queryId].observableQuery.options.noFetch : options.noFetch;
 
-      const shouldNotifyIfLoading = queryStoreValue.returnPartialData
-        || queryStoreValue.previousVariables || noFetch;
+      const shouldNotifyIfLoading = queryStoreValue.previousVariables || noFetch;
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
@@ -388,7 +387,6 @@ export class QueryManager {
               store: this.getDataWithOptimisticResults(),
               query: this.queryDocuments[queryId],
               variables: queryStoreValue.previousVariables || queryStoreValue.variables,
-              returnPartialData: true,
               config: this.reducerConfig,
               previousResult: lastResult && lastResult.data,
             });
@@ -398,7 +396,7 @@ export class QueryManager {
             // If there is some data missing and the user has told us that they
             // do not tolerate partial data then we want to return the previous
             // result and mark it as stale.
-            if (isMissing && !(options.returnPartialData || noFetch)) {
+            if (isMissing && !noFetch) {
               resultFromStore = {
                 data: lastResult && lastResult.data,
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
@@ -458,6 +456,10 @@ export class QueryManager {
   // network errors and non-network errors, the shouldSubscribe option will go away.
 
   public watchQuery<T>(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery<T> {
+    if ((options as any).returnPartialData) {
+      throw new Error('returnPartialData option is no longer supported since Apollo Client 1.0.');
+    }
+
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
@@ -480,7 +482,7 @@ export class QueryManager {
   }
 
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
-    if (options.returnPartialData) {
+    if ((options as any).returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
 
@@ -522,7 +524,6 @@ export class QueryManager {
     const {
       variables = {},
       forceFetch = false,
-      returnPartialData = false,
       noFetch = false,
       metadata = null,
     } = options;
@@ -542,8 +543,8 @@ export class QueryManager {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
-        returnPartialData: true,
         variables,
+        returnPartialData: true,
         config: this.reducerConfig,
       });
 
@@ -564,7 +565,6 @@ export class QueryManager {
       document: queryDoc,
       variables,
       forceFetch,
-      returnPartialData: returnPartialData || noFetch,
       queryId,
       requestId,
       // we store the old variables in order to trigger "loading new variables"
@@ -578,7 +578,7 @@ export class QueryManager {
 
     // If there is no part of the query we need to fetch from the server (or,
     // noFetch is turned on), we just write the store result as the final result.
-    if (!shouldFetch || returnPartialData) {
+    if (!shouldFetch) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: { data: storeResult },
@@ -819,7 +819,6 @@ export class QueryManager {
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
       query: document,
       variables,
-      returnPartialData: false,
       config: this.reducerConfig,
       previousResult: lastResult ? lastResult.data : undefined,
     };
@@ -829,17 +828,6 @@ export class QueryManager {
       const data = readQueryFromStore(readOptions);
       return maybeDeepFreeze({ data, partial: false });
     } catch (e) {
-      // next, try reading partial results, if we want them
-      if (queryOptions.returnPartialData || queryOptions.noFetch) {
-        try {
-          readOptions.returnPartialData = true;
-          const data = readQueryFromStore(readOptions);
-          return { data, partial: true };
-        } catch (e) {
-          // fall through
-        }
-      }
-
       return maybeDeepFreeze({ data: {}, partial: true });
     }
   }
@@ -940,7 +928,6 @@ export class QueryManager {
     const {
       variables,
       noFetch,
-      returnPartialData,
     } = options;
     const request: Request = {
       query: document,
@@ -988,7 +975,6 @@ export class QueryManager {
             resultFromStore = readQueryFromStore({
               store: this.getApolloState().data,
               variables,
-              returnPartialData: returnPartialData || noFetch,
               query: document,
               config: this.reducerConfig,
             });

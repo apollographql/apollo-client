@@ -1037,7 +1037,7 @@ const networkInterface = createNetworkInterface({
 
 For utility purposes, `react-apollo` exports a `compose` function. Using this function you may cleanly use several component enhancers at once. Including multiple [`graphql()`](#graphql), [`withApollo()`](#withApollo), or [Redux `connect()`][] enhancers. This should clean up your code when you use multiple enhancers. [Redux][] also exports a `compose` function, and so does [Recompose][] so you may choose to use the function from whichever library feels most appropriate.
 
-An important note is that `compose()` non-intuitively executes the last enhancer _first_ and works its way backwards through the list of enhancers. If this does not make sense to you consider using [`flowRight()` from Lodash][] which otherwise has the same behavior.
+An important note is that `compose()` executes the last enhancer _first_ and works its way backwards through the list of enhancers. To illustrate calling three functions like this: `funcC(funcB(funcA(component)))` is equivalent to calling `compose()` like this: `compose(funcC, funcB, funcA)(component)`. If this does not make sense to you consider using [`flowRight()` from Lodash][] which otherwise has the same behavior.
 
 [Redux `connect()`]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
 [Redux]: http://redux.js.org/

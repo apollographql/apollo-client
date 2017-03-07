@@ -912,9 +912,34 @@ TODO
 
 <h2 id="ApolloProvider">`<ApolloProvider client={client} />`</h2>
 
+Makes the GraphQL client available to any of your components enhanced by the `graphql` fucntion. The `<ApolloProvider/>` component works the same as the [`react-redux` `<Provider/>` component][]. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql`](#graphql) function, or the [`withApollo`](#withApollo) function. You may also provide your Redux store using the `<ApolloProvider/>` component in addition to providing your GraphQL client.
+
+If you do not add this component to the root of your React tree then your components enhanced with Apollo capabilities will not be able to function.
+
+To learn more about initializing an instance of [`ApolloClient`][], be sure to read the [setup and options guide](initialization.html).
+
+The `<ApolloProvider/>` component takes the following props:
+
+- `client`: The required [`ApolloClient`][] instance. This [`ApolloClient`][] instance will be used by all of your components enhanced with GraphQL capabilties.
+- `[store]`: This is an optional instance of a Redux store. If you choose to pass in your Redux store here then `<ApolloProvider/>` will also provide your Redux store like the [`react-redux` `<Provider/>` component][]. This means you only need to use one provider component instead of two!
+
+[`react-redux` `<Provider/>` component]: https://github.com/reactjs/react-redux/blob/master/docs/api.md#provider-store
+[`ApolloClient`]: ../core/apollo-client-api.html#apollo-client
+
+**Example:**
+
+```js
+ReactDOM.render(
+  <ApolloProvider client={client}>
+    <MyRootComponent />
+  </ApolloProvider>,
+  document.getElementById('root'),
+);
+```
+
 <h2 id="withApollo">`withApollo(component)`</h2>
 
-<h2 id="compose">`compose(TODO)`</h2>
+<h2 id="compose">`compose(...enhancers)`</h2>
 
 <h2 id="server">Server</h2>
 

@@ -931,7 +931,7 @@ describe('mutation results', () => {
         {
           request: { query: mutation },
           result: mutationResult,
-        }
+        },
       );
       const subs = obsHandle.subscribe({
         next: () => null,

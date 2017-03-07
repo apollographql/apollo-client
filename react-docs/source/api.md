@@ -79,7 +79,7 @@ You may also define an intermediate function and hook up your component with the
 const withTodoAppQuery = graphql(gql`query { ... }`);
 
 // Enhance our component.
-const TodoAppWidthData = withTodoAppQuery(TodoApp);
+const TodoAppWithData = withTodoAppQuery(TodoApp);
 
 // Export the enhanced component.
 export default TodoAppWithData;

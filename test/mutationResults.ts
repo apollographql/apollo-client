@@ -213,6 +213,30 @@ describe('mutation results', () => {
     });
   }
 
+  function setupDelayObsHandle(delay: number, ...mockedResponses: any[]) {
+    networkInterface = mockNetworkInterface({
+      request: { query },
+      result,
+      delay,
+    }, ...mockedResponses);
+
+    client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+      dataIdFromObject: (obj: any) => {
+        if (obj.id && obj.__typename) {
+          return obj.__typename + obj.id;
+        }
+        return null;
+      },
+    });
+
+    return client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
+  }
+
   function setup(...mockedResponses: any[]) {
     const obsHandle = setupObsHandle(...mockedResponses);
     return obsHandle.result();
@@ -733,7 +757,7 @@ describe('mutation results', () => {
   });
 
 
-  describe('query result reducers', () => {
+  describe('updateQueries', () => {
     const mutation = gql`
       mutation createTodo {
         # skipping arguments in the test since they don't matter
@@ -885,6 +909,33 @@ describe('mutation results', () => {
       });
       // Cancel the query right away!
       subs.unsubscribe();
+      return client.mutate({
+        mutation,
+        updateQueries: {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+            assert.equal(mResult.data.createTodo.id, '99');
+            assert.equal(mResult.data.createTodo.text, 'This one was created with a mutation.');
+
+            const state = cloneDeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        },
+      });
+    });
+
+    it('does not fail if the query did not finish loading', () => {
+      const obsHandle = setupDelayObsHandle(
+        15,
+        {
+          request: { query: mutation },
+          result: mutationResult,
+        }
+      );
+      const subs = obsHandle.subscribe({
+        next: () => null,
+      });
       return client.mutate({
         mutation,
         updateQueries: {

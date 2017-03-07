@@ -94,7 +94,7 @@ group((end) => {
     const client = getClientInstance();
     const observable = client.watchQuery({
       query: simpleQuery,
-      noFetch: true,
+      fetchPolicy: 'cache-only',
     });
     observable.subscribe({
       next(res: ApolloQueryResult<Object>) {
@@ -132,7 +132,7 @@ group((end) => {
         promises.push(new Promise<void>((resolve, reject) => {
           client.watchQuery({
             query: simpleQuery,
-            noFetch: true,
+            fetchPolicy: 'cache-only',
           }).subscribe({
             next(res: ApolloQueryResult<Object>) {
               if (Object.keys(res.data).length > 0) {
@@ -287,7 +287,7 @@ times(50, (index) => {
         client.query({
           query,
           variables,
-          noFetch: true,
+          fetchPolicy: 'cache-only',
         }).then(() => {
           done();
         });

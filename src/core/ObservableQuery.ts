@@ -148,7 +148,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // See more: https://github.com/apollostack/apollo-client/issues/707
     // Basically: is there a query in flight right now (modolo the next tick)?
     const loading = (this.options.forceFetch && queryLoading)
-      || (partial && !this.options.noFetch);
+      || (partial && !this.options.noFetch /* && this.options.fetchPolicy !== 'cache-only' */);
 
     // if there is nothing in the query store, it means this query hasn't fired yet. Therefore the
     // network status is dependent on queryLoading.
@@ -182,6 +182,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     if (this.options.noFetch) {
       throw new Error('noFetch option should not use query refetch.');
+    }
+
+    if (this.options.fetchPolicy === 'cache-only') {
+      throw new Error('cache-only fetchPolicy option should not be used together with query refetch.');
     }
 
     // Update the existing options with new variables

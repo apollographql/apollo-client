@@ -823,7 +823,10 @@ export class QueryManager {
     Object.keys(this.observableQueries).forEach((queryId) => {
       const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
 
-      if (!this.observableQueries[queryId].observableQuery.options.noFetch) {
+      const noFetch = this.observableQueries[queryId].observableQuery.options.noFetch;
+      const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
+
+      if (!noFetch && fetchPolicy !== 'cache-only') {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });

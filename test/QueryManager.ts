@@ -1296,7 +1296,6 @@ describe('QueryManager', () => {
       const handle = queryManager.watchQuery<any>({
         query: complexQuery,
         fetchPolicy: 'cache-only',
-        // noFetch: true,
       });
 
       return handle.result().then((result) => {
@@ -2443,7 +2442,7 @@ describe('QueryManager', () => {
       queryManager.resetStore();
     });
 
-    it('should not call refetch on a noFetch Observable if the store is reset', (done) => {
+    it('should not call refetch on a cache-only Observable if the store is reset', (done) => {
       const query = gql`
         query {
           author {
@@ -2453,7 +2452,8 @@ describe('QueryManager', () => {
         }`;
       const queryManager = createQueryManager({});
       const options = assign({}) as WatchQueryOptions;
-      options.noFetch = true;
+      options.fetchPolicy = 'cache-only';
+      // options.noFetch = true;
       options.query = query;
       let refetchCount = 0;
       const mockObservableQuery: ObservableQuery<any> = {

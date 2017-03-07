@@ -302,7 +302,7 @@ export class QueryManager {
               this.query({
                 query: pureQuery.query,
                 variables: pureQuery.variables,
-                fetchPolicy: 'network-only'
+                fetchPolicy: 'network-only',
               });
             });
           }
@@ -574,7 +574,6 @@ export class QueryManager {
       queryString,
       document: queryDoc,
       variables,
-      forceFetch,
       fetchPolicy,
       queryId,
       requestId,

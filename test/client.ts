@@ -66,6 +66,10 @@ import {
   createMockedIResponse,
 } from './mocks/mockFetch';
 
+import {
+  WatchQueryOptions,
+} from '../src/core/watchQueryOptions';
+
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors/ApolloError';
@@ -1148,7 +1152,7 @@ describe('client', () => {
         addTypename: false,
       });
 
-      const options = { query, fetchPolicy: 'network-only' };
+      const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
 
       // Run a query first to initialize the store
       return client.query({ query })

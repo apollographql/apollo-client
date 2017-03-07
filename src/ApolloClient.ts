@@ -175,13 +175,13 @@ export default class ApolloClient implements DataProxy {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
-    this.disableNetworkFetches = ssrMode && ssrForceFetchDelay > 0;
+    this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
 
     if (ssrForceFetchDelay) {
-      setTimeout(() => this.disableNetworkFetches = true, ssrForceFetchDelay);
+      setTimeout(() => this.disableNetworkFetches = false, ssrForceFetchDelay);
     }
 
     this.reducerConfig = {
@@ -229,10 +229,11 @@ export default class ApolloClient implements DataProxy {
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
-    if (this.disableNetworkFetches && options.forceFetch) {
+    // XXX Overwriting options is probably not the best way to do this long term...
+    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = {
         ...options,
-        forceFetch: false,
+        fetchPolicy: 'cache-first',
       } as WatchQueryOptions;
     }
 
@@ -251,13 +252,11 @@ export default class ApolloClient implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
-    // XXX what if I pass pollInterval? Will it just keep running?
-    // XXX why doesn't this stop the query after it's done?
-
-    if (this.disableNetworkFetches && options.forceFetch) {
+    // XXX Overwriting options is probably not the best way to do this long term...
+    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = {
         ...options,
-        forceFetch: false,
+        fetchPolicy: 'cache-first',
       } as WatchQueryOptions;
     }
 

@@ -628,7 +628,7 @@ describe('mutation results', () => {
         });
         observableQuery2 = client.watchQuery({
           query: filteredQuery,
-          forceFetch: true, // need force-fetch to get the filteredTodos,
+          fetchPolicy: 'network-only', // need force-fetch to get the filteredTodos,
           reducer: (previousResult, action) => {
             counter2++;
             if (isMutationResultAction(action) && action.result.data!['createTodo'].completed) {

@@ -51,7 +51,6 @@ export interface QueryInitAction {
   queryString: string;
   document: DocumentNode;
   variables: Object;
-  forceFetch: boolean;
   fetchPolicy: FetchPolicy;
   queryId: string;
   requestId: number;

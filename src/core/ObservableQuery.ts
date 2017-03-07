@@ -229,7 +229,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         combinedOptions = {
           ...combinedOptions,
           query: combinedOptions.query,
-          forceFetch: true,
+          fetchPolicy: 'network-only',
         } as WatchQueryOptions;
         return this.queryManager.fetchQuery(qid, combinedOptions, FetchType.normal, this.queryId);
       })

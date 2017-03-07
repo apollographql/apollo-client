@@ -302,7 +302,7 @@ export class QueryManager {
               this.query({
                 query: pureQuery.query,
                 variables: pureQuery.variables,
-                forceFetch: true,
+                fetchPolicy: 'network-only'
               });
             });
           }
@@ -549,7 +549,7 @@ export class QueryManager {
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
-    if (fetchType !== FetchType.refetch && !forceFetch && fetchPolicy !== 'network-only') {
+    if ( (fetchType !== FetchType.refetch && !forceFetch && fetchPolicy !== 'network-only')) {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,

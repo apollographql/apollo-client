@@ -2112,7 +2112,7 @@ describe('QueryManager', () => {
         observableToPromise({ observable },
           (result) => {
             assert.deepEqual(result.data, data1);
-            queryManager.query({ query, variables, forceFetch: true })
+            queryManager.query({ query, variables, fetchPolicy: 'network-only' })
               .then(() => timeout(new Error('Should have two results by now')));
           },
           (result) => assert.deepEqual(result.data, data2),
@@ -2617,7 +2617,7 @@ describe('QueryManager', () => {
     queryManager.query<any>({ query }).then((result) => {
       assert.deepEqual(result.data, data);
 
-      queryManager.query<any>({ query, forceFetch: true }).then(() => {
+      queryManager.query<any>({ query, fetchPolicy: 'network-only' }).then(() => {
         done(new Error('Returned a result when it was not supposed to.'));
       }).catch((error) => {
         // make that the error thrown doesn't empty the state

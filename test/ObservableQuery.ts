@@ -227,7 +227,6 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, data);
-          observable.setOptions({ forceFetch: false });
           observable.refetch(variables2);
         } else if (handleCount === 3) { // 3 because there is an intermediate loading state
           assert.deepEqual(result.data, data2);
@@ -236,7 +235,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if forceFetch becomes true', (done) => {
+    it('does a network request if fetchPolicy becomes networkOnly', (done) => {
       const observable: ObservableQuery<any> = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
@@ -248,7 +247,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, dataOne);
-          observable.setOptions({ forceFetch: true });
+          observable.setOptions({ fetchPolicy: 'network-only' });
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, dataTwo);
           done();
@@ -671,7 +670,7 @@ describe('ObservableQuery', () => {
         });
     });
 
-    it('returns loading even if full data is available when force fetching', (done) => {
+    it('returns loading even if full data is available when using network-only fetchPolicy', (done) => {
       const queryManager = mockQueryManager({
         request: { query, variables },
         result: { data: dataOne },
@@ -685,7 +684,7 @@ describe('ObservableQuery', () => {
           const observable = queryManager.watchQuery({
             query,
             variables,
-            forceFetch: true,
+            fetchPolicy: 'network-only',
           });
           assert.deepEqual(observable.currentResult(), {
             data: dataOne,

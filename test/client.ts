@@ -375,7 +375,6 @@ describe('client', () => {
           networkStatus: NetworkStatus.ready,
           networkError: null,
           graphQLErrors: [],
-          forceFetch: false,
           lastRequestId: 2,
           previousVariables: null,
           metadata: null,

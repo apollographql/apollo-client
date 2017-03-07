@@ -526,8 +526,6 @@ export class QueryManager {
         // XXX This is just here until we remove noFetch and forceFetch altogether.
         throw new Error('cannot use fetchPolicy with noFetch or forceFetch set to true');
       }
-
-      return this.fetchQuery(queryId, options, fetchType, fetchMoreForQueryId);
     }
 
     const {

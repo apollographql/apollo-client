@@ -1,4 +1,4 @@
-import { Request } from './networkInterface';
+import { Request, NetworkInterface } from './networkInterface';
 
 export interface MiddlewareRequest {
   request: Request;
@@ -6,7 +6,7 @@ export interface MiddlewareRequest {
 }
 
 export interface MiddlewareInterface {
-  applyMiddleware(request: MiddlewareRequest, next: Function): void;
+  applyMiddleware(this: NetworkInterface, request: MiddlewareRequest, next: Function): void;
 }
 
 export interface BatchMiddlewareRequest {
@@ -15,5 +15,5 @@ export interface BatchMiddlewareRequest {
 }
 
 export interface BatchMiddlewareInterface {
-  applyBatchMiddleware(request: BatchMiddlewareRequest, next: Function): void;
+  applyBatchMiddleware(this: NetworkInterface, request: BatchMiddlewareRequest, next: Function): void;
 }

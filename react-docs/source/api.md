@@ -2,6 +2,43 @@
 title: API Reference
 ---
 
+<h2 id="gql">``gql`{ ... }` ``</h2>
+
+The `gql` template tag is what you use to define GraphQL queries in your Apollo Client apps. It parses your GraphQL query into the [GraphQL.js AST format][] which may then be consumed by Apollo Client methods. Whenever Apollo Client is asking for a GraphQL query you will always want to wrap it in a `gql` template tag.
+
+You may embed other GraphQL documents inside of other GraphQL documents using template string interpolation. This allows you to use fragments defined in one part of your codebase inside of a query define in a completely different file. See the example below for a demonstration of how this works.
+
+[GraphQL.js AST format]: https://github.com/graphql/graphql-js/blob/d92dd9883b76e54babf2b0ffccdab838f04fc46c/src/language/ast.js
+
+**Example:**
+
+Notice how in the `query` variable we not only include the `fragments` variable through template string interpolation (`${fragments}`), but we also include a spread for the `foo` fragment in our query. If we were to pass the `query` variable to many of our Apollo Client methods it would attempt to execute that query.
+
+```js
+const fragments = gql`
+  fragment foo on Foo {
+    a
+    b
+    c
+    ...bar
+  }
+
+  fragment bar on Bar {
+    d
+    e
+    f
+  }
+`;
+
+const query = gql`
+  query {
+    ...foo
+  }
+
+  ${fragments}
+`;
+```
+
 <h2 id="graphql">`graphql(query, config)(component)`</h2>
 
 The `graphql()` function is the most important thing exported by `react-apollo`. With this function you can create higher-order components that can execute queries and update reactively based on the data in your Apollo store. The `graphql()` function returns a function which will “enhance” any component with reactive GraphQL capabilities. This follows the React [higher-order component][] pattern which is also used by [`react-redux`’s `connect`][] function.

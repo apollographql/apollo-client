@@ -148,7 +148,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // See more: https://github.com/apollostack/apollo-client/issues/707
     // Basically: is there a query in flight right now (modolo the next tick)?
     const loading = (this.options.forceFetch && queryLoading)
-      || (partial && !this.options.noFetch /* && this.options.fetchPolicy !== 'cache-only' */);
+      || (partial && this.options.fetchPolicy !== 'cache-only');
 
     // if there is nothing in the query store, it means this query hasn't fired yet. Therefore the
     // network status is dependent on queryLoading.
@@ -179,10 +179,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       ...this.variables,
       ...variables,
     };
-
-    if (this.options.noFetch) {
-      throw new Error('noFetch option should not use query refetch.');
-    }
 
     if (this.options.fetchPolicy === 'cache-only') {
       throw new Error('cache-only fetchPolicy option should not be used together with query refetch.');
@@ -314,9 +310,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       this.stopPolling();
     }
 
-    // If forceFetch went from false to true or noFetch went from true to false
+    // If forceFetch went from false to true or cachePolicy went from cache-only to something else
     const tryFetch: boolean = (!oldOptions.forceFetch && opts.forceFetch)
-      || (oldOptions.noFetch && !opts.noFetch)
       || (oldOptions.fetchPolicy === 'cache-only' && opts.fetchPolicy !== 'cache-only')
       || false;
 
@@ -407,10 +402,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       throw new Error('Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.');
     }
 
-    if (this.options.noFetch) {
-      throw new Error('noFetch option should not use query polling.');
-    }
-
     if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
       this.isCurrentlyPolling = false;
@@ -462,10 +453,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     if (!!this.options.pollInterval) {
       if (this.options.fetchPolicy === 'cache-first' || (this.options.fetchPolicy === 'cache-only')) {
         throw new Error('Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.');
-      }
-
-      if (this.options.noFetch) {
-        throw new Error('noFetch option should not use query polling.');
       }
 
       this.isCurrentlyPolling = true;

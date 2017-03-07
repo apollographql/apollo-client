@@ -343,10 +343,9 @@ export class QueryManager {
 
       const storedQuery = this.observableQueries[queryId];
 
-      const noFetch = storedQuery ? storedQuery.observableQuery.options.noFetch : options.noFetch;
       const fetchPolicy = storedQuery ? storedQuery.observableQuery.options.fetchPolicy : options.fetchPolicy;
 
-      const shouldNotifyIfLoading = queryStoreValue.previousVariables || noFetch || fetchPolicy === 'cache-only';
+      const shouldNotifyIfLoading = queryStoreValue.previousVariables || fetchPolicy === 'cache-only';
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
@@ -399,7 +398,7 @@ export class QueryManager {
             // If there is some data missing and the user has told us that they
             // do not tolerate partial data then we want to return the previous
             // result and mark it as stale.
-            if (isMissing && !noFetch && fetchPolicy !== 'cache-only') {
+            if (isMissing && fetchPolicy !== 'cache-only') {
               resultFromStore = {
                 data: lastResult && lastResult.data,
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
@@ -525,7 +524,7 @@ export class QueryManager {
     fetchMoreForQueryId?: string,
   ): Promise<ApolloQueryResult<T>> {
     if (options.fetchPolicy) {
-      if (options.forceFetch || options.noFetch) {
+      if (options.forceFetch) {
         // XXX This is just here until we remove noFetch and forceFetch altogether.
         throw new Error('cannot use fetchPolicy with noFetch or forceFetch set to true');
       }
@@ -534,7 +533,6 @@ export class QueryManager {
     const {
       variables = {},
       forceFetch = false,
-      noFetch = false,
       metadata = null,
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
     } = options;
@@ -567,7 +565,7 @@ export class QueryManager {
     }
 
     const requestId = this.generateRequestId();
-    const shouldFetch = needToFetch && !noFetch && fetchPolicy !== 'cache-only';
+    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
 
     // Initialize query in store with unique requestId
     this.queryDocuments[queryId] = queryDoc;
@@ -589,7 +587,7 @@ export class QueryManager {
     });
 
     // If there is no part of the query we need to fetch from the server (or,
-    // noFetch is turned on), we just write the store result as the final result.
+    // cachePolicy is cache-only), we just write the store result as the final result.
     if (!shouldFetch) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
@@ -823,10 +821,9 @@ export class QueryManager {
     Object.keys(this.observableQueries).forEach((queryId) => {
       const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
 
-      const noFetch = this.observableQueries[queryId].observableQuery.options.noFetch;
       const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
 
-      if (!noFetch && fetchPolicy !== 'cache-only') {
+      if (fetchPolicy !== 'cache-only') {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });

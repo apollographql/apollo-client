@@ -49,7 +49,9 @@ It is possible to use middleware with the network interface created via `createN
 - `req: object` The HTTP request being processed by the middleware.
 - `next: function` This function pushes the HTTP request onward through the middleware.
 
-This example shows how you'd create a middleware.  It can be done either by providing the required object directly to `.use()` or by creating an object and passing it to `.use()`. In both cases all middleware objects have to be wrapped inside an array.
+The `req` object contains the options from the `createNetworkInterface` definition, but you can pass extra options to the request by using the `req.options` object.
+
+The following example shows how you'd create a middleware.  It can be done either by providing the required object directly to `.use()` or by creating an object and passing it to `.use()`. In both cases all middleware objects have to be wrapped inside an array.
 
 In both examples, we'll show how you would add an authentication token to the HTTP header of the requests being sent by the client.
 
@@ -73,7 +75,7 @@ const client = new ApolloClient({
 });
 ```
 
-The above example shows the use of a single middleware passed directly to .use(). It checks to see if we have a token (JWT, for example) and passes that token into the HTTP header of the request, so we can authenticate interactions with GraphQL performed through our network interface.
+The above example shows the use of a single middleware passed directly to `.use()`. It checks to see if we have a token (JWT, for example) and passes that token into the HTTP header of the request, so we can authenticate interactions with GraphQL performed through our network interface.
 
 The following example shows the use of multiple middlewares passed as an array:
 

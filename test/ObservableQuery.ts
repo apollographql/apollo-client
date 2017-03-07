@@ -256,7 +256,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if noFetch becomes true then store is reset then noFetch becomes false', (done) => {
+    it('does a network request if cachePolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', (done) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -289,7 +289,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 1);
 
           setTimeout(() => {
-            observable.setOptions({noFetch: true});
+            observable.setOptions({fetchPolicy: 'cache-only'});
 
             queryManager.resetStore();
           }, 0);
@@ -298,7 +298,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 1);
 
           setTimeout(() => {
-            observable.setOptions({noFetch: false});
+            observable.setOptions({fetchPolicy: 'cache-first'});
           }, 0);
         } else if (handleCount === 3) {
           assert.deepEqual(result.data, data);
@@ -309,7 +309,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if noFetch becomes false', (done) => {
+    it('does a network request if fetchPolicy changes from cache-only', (done) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -334,7 +334,7 @@ describe('ObservableQuery', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      observable = queryManager.watchQuery({ query: testQuery, noFetch: true, notifyOnNetworkStatusChange: false });
+      observable = queryManager.watchQuery({ query: testQuery, fetchPolicy: 'cache-only', notifyOnNetworkStatusChange: false });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 2) {
@@ -342,7 +342,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 0);
 
           setTimeout(() => {
-            observable.setOptions({noFetch: false});
+            observable.setOptions({fetchPolicy: 'cache-first'});
           }, 0);
         } else if (handleCount === 3) {
           assert.deepEqual(result.data, data);

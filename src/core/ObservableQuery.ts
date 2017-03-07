@@ -316,7 +316,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     // If forceFetch went from false to true or noFetch went from true to false
     const tryFetch: boolean = (!oldOptions.forceFetch && opts.forceFetch)
-      || (oldOptions.noFetch && !opts.noFetch) || false;
+      || (oldOptions.noFetch && !opts.noFetch)
+      || (oldOptions.fetchPolicy === 'cache-only' && opts.fetchPolicy !== 'cache-only')
+      || false;
 
     return this.setVariables(this.options.variables, tryFetch);
   }

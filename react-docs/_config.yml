@@ -16,7 +16,6 @@ sidebar_categories:
   null:
     - index
     - initialization
-    - higher-order-components
     - example-schema
     - api
   Usage:

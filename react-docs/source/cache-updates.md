@@ -13,7 +13,7 @@ While Apollo can do basic caching based on the shape of GraphQL queries and thei
 By default, Apollo does not use object IDs at all, doing caching based only on the path to the object from the root query. However, if you specify a function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), you can decide how Apollo will identify and de-duplicate the objects returned from the server.
 
 ```js
-import ApolloClient from 'apollo-client';
+import { ApolloClient } from 'react-apollo';
 
 // If your database has unique IDs across all types of objects, you can use
 // a very simple function!
@@ -44,7 +44,7 @@ These IDs allow Apollo Client to reactively tell all queries that fetched a part
 So to do `dataIdFromObject` most concisely, your client initialization might look like this:
 
 ```
-import ApolloClient, {createNetworkInterface} from 'apollo-client'
+import { ApolloClient, createNetworkInterface } from 'react-apollo'
 
 const networkInterface = createNetworkInterface('http://localhost:3000/graphql') // TBD: Need to provide the right path for production
 
@@ -287,7 +287,7 @@ mutate({
 })
 ```
 
-Fundamentally, `updateQueries` is a map going from the name of a query (in our case, `Comment`) to a function that receives the previous result that this query received as well as the result returned by the mutation. In our case, the mutation returns information about the new comment. This function should then incorporate the mutation result into a new object containing the result previously received by the query (`prev`) and return that new object.  
+Fundamentally, `updateQueries` is a map going from the name of a query (in our case, `Comment`) to a function that receives the previous result that this query received as well as the result returned by the mutation. In our case, the mutation returns information about the new comment. This function should then incorporate the mutation result into a new object containing the result previously received by the query (`prev`) and return that new object.
 
 Note that the function must not alter the `prev` object (because `prev` is compared with the new object returned to see what changes the function made and hence what prop updates are needed).
 
@@ -356,8 +356,8 @@ const CommentsPageWithData = graphql(CommentsPageQuery, {
           // NOTE: some more sanity checks are usually recommended here to make
           // sure the previousResult is not empty and that the mutation results
           // contains the data we expect.
-          
-          // NOTE: variables contains the current query variables, 
+
+          // NOTE: variables contains the current query variables,
           // not the variables of the query or mutation that caused the action.
 
           return update(previousResult, {

@@ -2,6 +2,10 @@
 title: API Reference
 ---
 
+This is a complete reference of every single feature available in React Apollo. This document is not the best place to start for beginners, but rather a place you should return to whenever you have a question about one of React Apollo’s APIs.
+
+If you are just getting started with Apollo Client then you should read the documentation article on [Queries](queries.html) next.
+
 <h2 id="gql">``gql`{ ... }` ``</h2>
 
 The `gql` template tag is what you use to define GraphQL queries in your Apollo Client apps. It parses your GraphQL query into the [GraphQL.js AST format][] which may then be consumed by Apollo Client methods. Whenever Apollo Client is asking for a GraphQL query you will always want to wrap it in a `gql` template tag.
@@ -334,6 +338,8 @@ function TodoApp({ data: { todos } }) {
   );
 }
 ```
+
+For a more natural overview of queries with the `graphql()` function be sure to read the [Queries documentation article](queries.html). For a technical overview of all the features supported by the `graphql()` function for queries, continue on.
 
 <h3 id="graphql-query-data">`props.data`</h3>
 
@@ -718,6 +724,8 @@ function TodoCompleteButton({ todoID, mutate }) {
   );
 }
 ```
+
+For a more natural overview of mutations with the `graphql()` function be sure to read the [Mutations documentation article](mutations.html). For a technical overview of all the features supported by the `graphql()` function for mutations, continue on.
 
 <h3 id="graphql-mutation-mutate">`props.mutate`</h3>
 

@@ -4,7 +4,9 @@ title: Introduction
 
 This is the official guide to using GraphQL in your [React](https://facebook.github.io/react/) app with the [Apollo](http://apollostack.com) JavaScript GraphQL client and the [react-apollo](https://github.com/apollostack/react-apollo) integration package. For a step-by-step hands-on tutorial you can also check out the [Learn Apollo](https://www.learnapollo.com) website by Graphcool.
 
-[Get started now with the setup instructions.](/react/initialization.html)
+[**Get started now with the setup instructions.**](/react/initialization.html)
+
+[**See all of the available features with the API reference.**](/react/api.html)
 
 The Apollo community builds and maintains tools designed to make it easier to use [GraphQL](http://graphql.org) across a range of front-end and server technologies. Although this guide focuses on the integration with React, there is a similar [guide](/angular2) for Angular 2, and the [core](/core) `apollo-client` JavaScript package can be used anywhere JavaScript runs.
 

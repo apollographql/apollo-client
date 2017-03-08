@@ -32,13 +32,7 @@ export interface ModifiableWatchQueryOptions {
    * accordingly (it does this when forceFetch is true).
    */
   forceFetch?: boolean;
-  /**
-   * This specifies whether {@link Observer} instances for this query
-   * should be updated with partial results. For example, when a portion of a query can be resolved
-   * entirely from the cache, that result will be delivered to the Observer first and the
-   * rest of the result (as provided by the server) will be returned later.
-   */
-  returnPartialData?: boolean;
+
   /**
    * If this is set to true, the query is resolved *only* within information
    * available in the cache (i.e. we never hit the server). If a particular field is not available
@@ -50,6 +44,16 @@ export interface ModifiableWatchQueryOptions {
    * refetched from the server.
    */
   pollInterval?: number;
+
+  /**
+   * fetchPolicy determines where the client may return a result from. The options are:
+   * - cache-and-network: returns result from cache first (if it exists), then return network result once it's available
+   * - cache-first: return result from cache. Only fetch from network if cached result is not available.
+   * - network-first: return result from network, but if network request fails, use result from cache, if available.
+   * - cache-only: return result from cache if avaiable, fail otherwise.
+   * - network-only: return result from network, fail if network call doesn't succeed.
+   */
+  // fetchPolicy?: string;
 
   /**
    * Whether or not updates to the network status should trigger next on the observer of this query

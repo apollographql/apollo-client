@@ -43,6 +43,7 @@ import {
 
 import {
   readQueryFromStore,
+  diffQueryAgainstStore,
 } from './readFromStore';
 
 import {
@@ -155,14 +156,19 @@ export function data(
             return;
           }
 
+
           // Read the current query result from the store.
-          const currentQueryResult = readQueryFromStore({
+          const { result: currentQueryResult, isMissing } = diffQueryAgainstStore({
             store: previousState,
             query: query.document,
             variables: query.variables,
             returnPartialData: true,
             config,
           });
+
+          if (isMissing) {
+            return;
+          }
 
           const reducer = updateQueries[queryId];
 

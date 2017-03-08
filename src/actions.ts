@@ -48,7 +48,6 @@ export interface QueryInitAction {
   document: DocumentNode;
   variables: Object;
   forceFetch: boolean;
-  returnPartialData: boolean;
   queryId: string;
   requestId: number;
   storePreviousVariables: boolean;

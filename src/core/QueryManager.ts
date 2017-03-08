@@ -11,8 +11,6 @@ import {
 import { isEqual } from '../util/isEqual';
 
 import {
-  ResultTransformer,
-  ResultComparator,
   QueryListener,
   ApolloQueryResult,
   PureQueryOptions,
@@ -127,8 +125,6 @@ export class QueryManager {
   private networkInterface: NetworkInterface;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
-  private resultTransformer: ResultTransformer | undefined;
-  private resultComparator: ResultComparator | undefined;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
 
@@ -166,8 +162,6 @@ export class QueryManager {
     store,
     reduxRootSelector,
     reducerConfig = { mutationBehaviorReducers: {} },
-    resultTransformer,
-    resultComparator,
     addTypename = true,
     queryDeduplication = false,
   }: {
@@ -175,8 +169,6 @@ export class QueryManager {
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
     reducerConfig?: ApolloReducerConfig,
-    resultTransformer?: ResultTransformer,
-    resultComparator?: ResultComparator,
     addTypename?: boolean,
     queryDeduplication?: boolean,
   }) {
@@ -187,8 +179,6 @@ export class QueryManager {
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
-    this.resultTransformer = resultTransformer;
-    this.resultComparator = resultComparator;
     this.pollingTimers = {};
     this.queryListeners = {};
     this.queryDocuments = {};
@@ -319,7 +309,7 @@ export class QueryManager {
 
 
           delete this.queryDocuments[mutationId];
-          resolve(this.transformResult(<ApolloQueryResult<T>>result));
+          resolve(<ApolloQueryResult<T>>result);
         })
         .catch((err) => {
           this.store.dispatch({
@@ -353,8 +343,7 @@ export class QueryManager {
 
       const noFetch = this.observableQueries[queryId] ? this.observableQueries[queryId].observableQuery.options.noFetch : options.noFetch;
 
-      const shouldNotifyIfLoading = queryStoreValue.returnPartialData
-        || queryStoreValue.previousVariables || noFetch;
+      const shouldNotifyIfLoading = queryStoreValue.previousVariables || noFetch;
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
@@ -378,10 +367,12 @@ export class QueryManager {
             try {
               observer.error(apolloError);
             } catch (e) {
-              console.error('Error in observer.error \n', e.stack);
+              // Throw error outside this control flow to avoid breaking Apollo's state
+              setTimeout(() => { throw e; }, 0);
             }
           } else {
-            console.error('Unhandled error', apolloError, apolloError.stack);
+            // Throw error outside this control flow to avoid breaking Apollo's state
+            setTimeout(() => { throw apolloError; }, 0);
             if (!isProduction()) {
               /* tslint:disable-next-line */
               console.info(
@@ -396,7 +387,6 @@ export class QueryManager {
               store: this.getDataWithOptimisticResults(),
               query: this.queryDocuments[queryId],
               variables: queryStoreValue.previousVariables || queryStoreValue.variables,
-              returnPartialData: true,
               config: this.reducerConfig,
               previousResult: lastResult && lastResult.data,
             });
@@ -406,7 +396,7 @@ export class QueryManager {
             // If there is some data missing and the user has told us that they
             // do not tolerate partial data then we want to return the previous
             // result and mark it as stale.
-            if (isMissing && !(options.returnPartialData || noFetch)) {
+            if (isMissing && !noFetch) {
               resultFromStore = {
                 data: lastResult && lastResult.data,
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
@@ -423,8 +413,7 @@ export class QueryManager {
             }
 
             if (observer.next) {
-              const isDifferentResult =
-                this.resultComparator ? !this.resultComparator(lastResult, resultFromStore) : !(
+              const isDifferentResult = !(
                   lastResult &&
                   resultFromStore &&
                   lastResult.networkStatus === resultFromStore.networkStatus &&
@@ -439,9 +428,10 @@ export class QueryManager {
               if (isDifferentResult) {
                 lastResult = resultFromStore;
                 try {
-                  observer.next(maybeDeepFreeze(this.transformResult(resultFromStore)));
+                  observer.next(maybeDeepFreeze(resultFromStore));
                 } catch (e) {
-                  console.error('Error in observer.next \n', e.stack);
+                  // Throw error outside this control flow to avoid breaking Apollo's state
+                  setTimeout(() => { throw e; }, 0);
                 }
               }
             }
@@ -466,8 +456,16 @@ export class QueryManager {
   // network errors and non-network errors, the shouldSubscribe option will go away.
 
   public watchQuery<T>(options: WatchQueryOptions, shouldSubscribe = true): ObservableQuery<T> {
+    if ((options as any).returnPartialData) {
+      throw new Error('returnPartialData option is no longer supported since Apollo Client 1.0.');
+    }
+
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
+
+    if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
+      options.notifyOnNetworkStatusChange = true;
+    }
 
     let transformedOptions = { ...options } as WatchQueryOptions;
     if (this.addTypename) {
@@ -484,13 +482,18 @@ export class QueryManager {
   }
 
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
-    if (options.returnPartialData) {
+    if ((options as any).returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
 
     if (options.query.kind !== 'Document') {
       throw new Error('You must wrap the query string in a "gql" tag.');
     }
+
+    if (typeof options.notifyOnNetworkStatusChange !== 'undefined' ) {
+      throw new Error('Cannot call "query" with "notifyOnNetworkStatusChange = true" ');
+    }
+    options.notifyOnNetworkStatusChange = false;
 
     const requestId = this.idCounter;
     const resPromise = new Promise((resolve, reject) => {
@@ -521,7 +524,6 @@ export class QueryManager {
     const {
       variables = {},
       forceFetch = false,
-      returnPartialData = false,
       noFetch = false,
       metadata = null,
     } = options;
@@ -541,8 +543,8 @@ export class QueryManager {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
-        returnPartialData: true,
         variables,
+        returnPartialData: true,
         config: this.reducerConfig,
       });
 
@@ -563,7 +565,6 @@ export class QueryManager {
       document: queryDoc,
       variables,
       forceFetch,
-      returnPartialData: returnPartialData || noFetch,
       queryId,
       requestId,
       // we store the old variables in order to trigger "loading new variables"
@@ -577,7 +578,7 @@ export class QueryManager {
 
     // If there is no part of the query we need to fetch from the server (or,
     // noFetch is turned on), we just write the store result as the final result.
-    if (!shouldFetch || returnPartialData) {
+    if (!shouldFetch) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: { data: storeResult },
@@ -818,7 +819,6 @@ export class QueryManager {
       store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
       query: document,
       variables,
-      returnPartialData: false,
       config: this.reducerConfig,
       previousResult: lastResult ? lastResult.data : undefined,
     };
@@ -828,17 +828,6 @@ export class QueryManager {
       const data = readQueryFromStore(readOptions);
       return maybeDeepFreeze({ data, partial: false });
     } catch (e) {
-      // next, try reading partial results, if we want them
-      if (queryOptions.returnPartialData || queryOptions.noFetch) {
-        try {
-          readOptions.returnPartialData = true;
-          const data = readQueryFromStore(readOptions);
-          return { data, partial: true };
-        } catch (e) {
-          // fall through
-        }
-      }
-
       return maybeDeepFreeze({ data: {}, partial: true });
     }
   }
@@ -866,15 +855,6 @@ export class QueryManager {
       variables,
       document,
     };
-  }
-
-  // Give the result transformer a chance to observe or modify result data before it is passed on.
-  public transformResult<T>(result: ApolloQueryResult<T>): ApolloQueryResult<T> {
-    if (!this.resultTransformer) {
-      return result;
-    } else {
-      return this.resultTransformer(result);
-    }
   }
 
   // XXX: I think we just store this on the observable query at creation time
@@ -948,7 +928,6 @@ export class QueryManager {
     const {
       variables,
       noFetch,
-      returnPartialData,
     } = options;
     const request: Request = {
       query: document,
@@ -996,7 +975,6 @@ export class QueryManager {
             resultFromStore = readQueryFromStore({
               store: this.getApolloState().data,
               variables,
-              returnPartialData: returnPartialData || noFetch,
               query: document,
               config: this.reducerConfig,
             });

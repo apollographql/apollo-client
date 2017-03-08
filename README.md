@@ -34,6 +34,7 @@ If you know you want to use the core `apollo-client` package you can get started
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import gql from 'graphql-tag';
 
 const client = new ApolloClient({
   networkInterface: createNetworkInterface({

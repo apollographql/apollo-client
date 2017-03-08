@@ -315,4 +315,58 @@ describe('HTTPBatchedNetworkInterface', () => {
       opts: options,
     });
   });
+
+  describe('afterware execution', () => {
+    const afterwareStub = sinon.stub();
+    const testAfterwares: BatchAfterwareInterface[] = [
+      {
+        applyBatchAfterware(response, next) {
+          afterwareStub();
+          next();
+        },
+      },
+      {
+        applyBatchAfterware(response, next) {
+          afterwareStub();
+          next();
+        },
+      },
+    ];
+
+    afterEach(() => afterwareStub.reset());
+
+    it('executes afterware when valid responses given back', done => {
+      assertRoundtrip({
+        requestResultPairs: [{
+          request: { query: authorQuery },
+          result: authorResult,
+        }],
+        afterwares: testAfterwares,
+      }).then(() => {
+        assert.equal(afterwareStub.callCount, testAfterwares.length, 'Afterwares provided were not invoked');
+        done();
+      }).catch(err => {
+        done(err);
+      });
+    });
+
+    it('executes afterware when an invalid response is given back', done => {
+      const fakeForbiddenResponse = createMockedIResponse([], { status: 401, statusText: 'Unauthorized'});
+      const fetchFunc = () => Promise.resolve(fakeForbiddenResponse);
+
+      assertRoundtrip({
+        requestResultPairs: [{
+          request: { query: authorQuery },
+          result: authorResult,
+        }],
+        fetchFunc,
+        afterwares: testAfterwares,
+      }).then(() => {
+        done(new Error('The networkInterface did not reject as expected'));
+      }).catch(err => {
+        assert.equal(afterwareStub.callCount, testAfterwares.length, 'Afterwares provided were not invoked');
+        done();
+      });
+    });
+  });
 });

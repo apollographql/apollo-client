@@ -176,53 +176,6 @@ describe('client', () => {
     );
   });
 
-  it('sets reduxRootKey by default (backcompat)', () => {
-    const client = new ApolloClient();
-
-    client.initStore();
-
-    assert.equal(client.reduxRootKey, 'apollo');
-  });
-
-  it('sets reduxRootKey if you use ApolloClient as middleware', () => {
-    const client = new ApolloClient();
-
-    createStore(
-        combineReducers({
-          apollo: client.reducer(),
-        } as any),
-        // here "client.setStore(store)" will be called internally,
-        // this method throws if "reduxRootSelector" or "reduxRootKey"
-        // are not configured properly
-        applyMiddleware(client.middleware()),
-    );
-
-    assert.equal(client.reduxRootKey, 'apollo');
-  });
-
-  it('can allow passing in a top level key (backcompat)', () => {
-    withWarning(() => {
-      const reduxRootKey = 'testApollo';
-      const client = new ApolloClient({
-        reduxRootKey,
-      });
-
-      // shouldn't throw
-      createStore(
-          combineReducers({
-            testApollo: client.reducer(),
-          } as any),
-          // here "client.setStore(store)" will be called internally,
-          // this method throws if "reduxRootSelector" or "reduxRootKey"
-          // are not configured properly
-          applyMiddleware(client.middleware()),
-      );
-
-      // Check if the key is added to the client instance, like before
-      assert.equal(client.reduxRootKey, 'testApollo');
-    }, /reduxRootKey/);
-  });
-
   it('should allow passing in a selector function for apollo state', () => {
     const reduxRootSelector = (state: any) => state.testApollo;
     const client = new ApolloClient({
@@ -241,65 +194,9 @@ describe('client', () => {
     );
   });
 
-  it('should allow passing reduxRootSelector as a string', () => {
+  it('should not allow passing reduxRootSelector as a string', () => {
     const reduxRootSelector = 'testApollo';
-    const client = new ApolloClient({
-      reduxRootSelector,
-    });
-
-    // shouldn't throw
-    createStore(
-        combineReducers({
-          testApollo: client.reducer(),
-        } as any),
-        // here "client.setStore(store)" will be called internally,
-        // this method throws if "reduxRootSelector" or "reduxRootKey"
-        // are not configured properly
-        applyMiddleware(client.middleware()),
-    );
-
-    // Check if the key is added to the client instance, like before
-    assert.equal(client.reduxRootKey, 'testApollo');
-  });
-
-  it('should throw an error if both "reduxRootKey" and "reduxRootSelector" are passed', () => {
-    const reduxRootSelector = (state: any) => state.testApollo;
-    try {
-      new ApolloClient({
-        reduxRootKey: 'apollo',
-        reduxRootSelector,
-      });
-
-      assert.fail();
-    } catch (error) {
-      assert.equal(
-          error.message,
-          'Both "reduxRootKey" and "reduxRootSelector" are configured, but only one of two is allowed.',
-      );
-    }
-
-  });
-
-  it('should throw an error if "reduxRootKey" is provided and the client tries to create the store', () => {
-    const client = withWarning(() => {
-      return new ApolloClient({
-        reduxRootKey: 'test',
-      });
-    }, /reduxRootKey/);
-
-    try {
-      client.initStore();
-
-      assert.fail();
-    } catch (error) {
-      assert.equal(
-          error.message,
-          'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
-          'They should only be used when the store is created outside of the client. ' +
-          'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`,
-      );
-    }
+    assert.throws( () => new ApolloClient({ reduxRootSelector }));
   });
 
   it('should throw an error if "reduxRootSelector" is provided and the client tries to create the store', () => {
@@ -314,8 +211,8 @@ describe('client', () => {
     } catch (error) {
       assert.equal(
           error.message,
-          'Cannot initialize the store because "reduxRootSelector" or "reduxRootKey" is provided. ' +
-          'They should only be used when the store is created outside of the client. ' +
+          'Cannot initialize the store because "reduxRootSelector" is provided. ' +
+          'reduxRootSelector should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
           `Please remove that option from ApolloClient constructor.`,
       );
@@ -479,7 +376,6 @@ describe('client', () => {
           networkError: null,
           graphQLErrors: [],
           forceFetch: false,
-          returnPartialData: false,
           lastRequestId: 2,
           previousVariables: null,
           metadata: null,
@@ -503,7 +399,7 @@ describe('client', () => {
   });
 
   it('allows for a single query with existing store and custom key', () => {
-    const reduxRootKey = 'test';
+    const reduxRootSelector = (store: any) => store['test'];
 
     const query = gql`
       query people {
@@ -530,18 +426,16 @@ describe('client', () => {
       result: { data },
     });
 
-    const client = withWarning(() => {
-      return new ApolloClient({
-        reduxRootKey,
-        networkInterface,
-        addTypename: false,
-      });
-    }, /reduxRootKey/);
+    const client = new ApolloClient({
+      reduxRootSelector,
+      networkInterface,
+      addTypename: false,
+    });
 
     createStore(
       combineReducers({
         todos: todosReducer,
-        [reduxRootKey]: client.reducer()as any,
+        test: client.reducer()as any,
       }),
       applyMiddleware(client.middleware()),
     );
@@ -551,6 +445,7 @@ describe('client', () => {
         assert.deepEqual(result.data, data);
       });
   });
+
   it('should return errors correctly for a single query', () => {
 
     const query = gql`
@@ -586,8 +481,21 @@ describe('client', () => {
       });
   });
 
-it('should not let errors in observer.next reach the store', (done) => {
-
+  it('should surface errors in observer.next as uncaught', (done) => {
+    const expectedError = new Error('this error should not reach the store');
+    const listeners = process.listeners('uncaughtException');
+    const oldHandler = listeners[listeners.length - 1];
+    const handleUncaught = (e: Error) => {
+      process.removeListener('uncaughtException', handleUncaught);
+      process.addListener('uncaughtException', oldHandler);
+      if (e === expectedError) {
+        done();
+      } else {
+        done(e);
+      }
+    };
+    process.removeListener('uncaughtException', oldHandler);
+    process.addListener('uncaughtException', handleUncaught);
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -598,7 +506,7 @@ it('should not let errors in observer.next reach the store', (done) => {
       }
     `;
 
-   const data = {
+  const data = {
       allPeople: {
         people: [
           {
@@ -620,24 +528,28 @@ it('should not let errors in observer.next reach the store', (done) => {
 
     const handle = client.watchQuery({ query });
 
-    const consoleDotError = console.error;
-    console.error = (err: string) => {
-      console.error = consoleDotError;
-      if (err.match(/Error in observer.next/)) {
-        done();
-      } else {
-        done(new Error('Expected error in observer.next to be caught'));
-      }
-    };
-
     handle.subscribe({
       next(result) {
-        throw new Error('this error should not reach the store');
+        throw expectedError;
       },
     });
   });
 
-  it('should not let errors in observer.error reach the store', (done) => {
+  it('should surfaces errors in observer.error as uncaught', (done) => {
+    const expectedError = new Error('this error should not reach the store');
+    const listeners = process.listeners('uncaughtException');
+    const oldHandler = listeners[listeners.length - 1];
+    const handleUncaught = (e: Error) => {
+      process.removeListener('uncaughtException', handleUncaught);
+      process.addListener('uncaughtException', oldHandler);
+      if (e === expectedError) {
+        done();
+      } else {
+        done(e);
+      }
+    };
+    process.removeListener('uncaughtException', oldHandler);
+    process.addListener('uncaughtException', handleUncaught);
 
     const query = gql`
       query people {
@@ -660,23 +572,12 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
 
     const handle = client.watchQuery({ query });
-
-    const consoleDotError = console.error;
-    console.error = (err: string) => {
-      console.error = consoleDotError;
-      if (err.match(/Error in observer.error/)) {
-        done();
-      } else {
-        done(new Error('Expected error in observer.error to be caught'));
-      }
-    };
-
     handle.subscribe({
       next() {
         done(new Error('did not expect next to be called'));
       },
       error(err) {
-        throw new Error('this error should not reach the store');
+        throw expectedError;
       },
     });
   });
@@ -1019,7 +920,7 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
   });
 
-  it('does not deduplicate queries by default', () => {
+  it('does not deduplicate queries if option is set to false', () => {
     const queryDoc = gql`
       query {
         author {
@@ -1051,6 +952,7 @@ it('should not let errors in observer.next reach the store', (done) => {
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
+      queryDeduplication: false,
     });
 
     const q1 = client.query({ query: queryDoc });
@@ -1063,7 +965,7 @@ it('should not let errors in observer.next reach the store', (done) => {
     });
   });
 
-  it('deduplicates queries if the option is set', () => {
+  it('deduplicates queries by default', () => {
     const queryDoc = gql`
       query {
         author {
@@ -1095,7 +997,6 @@ it('should not let errors in observer.next reach the store', (done) => {
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
-      queryDeduplication: true,
     });
 
     const q1 = client.query({ query: queryDoc });

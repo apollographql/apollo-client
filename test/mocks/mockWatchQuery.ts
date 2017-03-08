@@ -10,5 +10,6 @@ export default (...mockedResponses: MockedResponse[]) => {
   return queryManager.watchQuery({
     query: firstRequest.query!,
     variables: firstRequest.variables,
+    notifyOnNetworkStatusChange: false, // XXX might not always be the right option. Set for legacy reasons.
   });
 };

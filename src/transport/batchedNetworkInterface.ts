@@ -84,10 +84,13 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
             const httpResponse = result as Response;
 
             if (!httpResponse.ok) {
-              const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
-              (httpError as any).response = httpResponse;
+              return this.applyBatchAfterwares({ responses: [httpResponse], options: batchRequestAndOptions })
+                  .then(() => {
+                    const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
+                    (httpError as any).response = httpResponse;
 
-              throw httpError;
+                    throw httpError;
+                  });
             }
 
             // XXX can we be stricter with the type here?

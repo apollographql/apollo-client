@@ -30,15 +30,7 @@ To use this client in a web browser or mobile app, you'll need a build system ca
 
 ## Usage
 
-If you know you want to use the core `apollo-client` package you can get started by constructing an instance of the core class [`ApolloClient`][] like so:
-
-```js
-import ApolloClient from 'apollo-client';
-
-const client = new ApolloClient();
-```
-
-This will create a new client that you can use for all of your GraphQL data fetching needs, but most of the time you will also want to create your own custom network interface. By default Apollo Client guesses that your GraphQL API lives at `/graphql`, but this is not always the case. To use your own network interface you may call the [`createNetworkInterface`][] function:
+If you know you want to use the core `apollo-client` package you can get started by constructing an instance of the core class [`ApolloClient`][] with a network interface created by network interface you may call the [`createNetworkInterface`][] function like so:
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
@@ -52,7 +44,7 @@ const client = new ApolloClient({
 
 Replace `https://graphql.example.com` with your GraphQL APIs URL and you’re off to the moon!
 
-To execute a query with your client you may call the `client.query` method like this:
+To execute a query with your client you may now call the `client.query` method like this:
 
 ```js
 client.query({

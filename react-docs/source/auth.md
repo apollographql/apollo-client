@@ -8,7 +8,7 @@ Apollo Client comes with a pluggable [HTTP network interface](/core/network.html
 
 ## Cookie
 
-If your app is browser based and you are using cookies for login, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the `{ credentials: 'same-origin' }` option:
+If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `{ credentials: 'same-origin' }` as shown below, if your backend server is the same domain or else `{ credentials: 'include' }` if your backend is a different domain. 
 
 ```js
 const networkInterface = createNetworkInterface({
@@ -24,6 +24,15 @@ const client = new ApolloClient({
 ```
 
 This option is simply passed through to the [`fetch` polyfill](https://github.com/github/fetch) used by the network interface when sending the query.
+
+Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings, 
+
+// enable cors
+var corsOptions = {
+  origin: '<insert uri of front-end domain>',
+  credentials: true // <-- REQUIRED backend setting
+};
+app.use(cors(corsOptions));
 
 ## Header
 

@@ -1,5 +1,11 @@
 # [Apollo client](http://dev.apollodata.com/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
+The `apollo-client` package is the core of the Apollo frontend toolchain. By itself the `apollo-client` package is not as useful for building rich reactive UIs as `apollo-client` with a custom view integration library for your framework of choice.
+
+To get started with React go to our [React Apollo documentation website](http://dev.apollodata.com/react/).
+
+If you don’t use React, do not worry! The Apollo Client has view layer [integrations for all the popular frontend frameworks](#learn-how-to-use-apollo-client-with-your-favorite-framework).
+
 Apollo Client can be used in any JavaScript frontend where you want to use data from a GraphQL server. It's:
 
 1. **Incrementally adoptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
@@ -14,13 +20,48 @@ Get started on the [home page](http://dev.apollodata.com/), which has great exam
 
 ## Installation
 
-```txt
-npm install apollo-client
+```bash
+npm install apollo-client --save
 ```
 
 To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3.
 
 **NEW:** Install the [Apollo Client Developer tools for Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) for a great GraphQL developer experience!
+
+## Usage
+
+If you know you want to use the core `apollo-client` package you can get started by constructing an instance of the core class [`ApolloClient`][] like so:
+
+```js
+import ApolloClient from 'apollo-client';
+
+const client = new ApolloClient();
+```
+
+This will create a new client that you can use for all of your GraphQL data fetching needs, but most of the time you will also want to create your own custom network interface. By default Apollo Client guesses that your GraphQL API lives at `/graphql`, but this is not always the case. To use your own network interface you may call the [`createNetworkInterface`][] function:
+
+```js
+import ApolloClient, { createNetworkInterface } from 'apollo-client';
+
+const client = new ApolloClient({
+  networkInterface: createNetworkInterface({
+    uri: 'https://graphql.example.com',
+  }),
+});
+```
+
+Replace `https://graphql.example.com` with your GraphQL APIs URL and you’re off to the moon!
+
+From there you may use your `client` instance to perform all sorts of tasks on your data like [reactively watching queries with `watchQuery`][], [changing data on your server with `mutate`][], or [reading a fragment from your local cache with `readFragment`][].
+
+To learn more about all of the features available to you through the `apollo-client` package be sure to read through the [**`apollo-client` API reference**][].
+
+[`ApolloClient`]: http://dev.apollodata.com/core/apollo-client-api.html
+[`createNetworkInterface`]: http://dev.apollodata.com/core/network.html
+[reactively watchi queries with `watchQuery`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.watchQuery
+[changing data on your server with `mutate`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.mutate
+[reading a fragment from your local cache with `readFragment`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.readFragment
+[`apollo-client` API reference]: http://dev.apollodata.com/core/apollo-client-api.html
 
 ## Learn how to use Apollo Client with your favorite framework
 
@@ -53,12 +94,6 @@ npm test
 ```
 
 This project uses TypeScript for static typing and TSLint for linting. You can get both of these built into your editor with no configuration by opening this project in [Visual Studio Code](https://code.visualstudio.com/), an open source IDE which is available for free on all platforms.
-
-#### Useful tools
-
-Should be moved into some kind of CONTRIBUTING.md soon...
-
-- [AST explorer](https://astexplorer.net/): you can use this to see what the GraphQL query AST looks like for different queries
 
 #### Important discussions
 

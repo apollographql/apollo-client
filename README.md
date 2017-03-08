@@ -1,10 +1,10 @@
 # [Apollo client](http://dev.apollodata.com/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-The `apollo-client` package is the core of the Apollo frontend toolchain. By itself the `apollo-client` package is not as useful for building rich reactive UIs as `apollo-client` with a custom view integration library for your framework of choice.
+The `apollo-client` package is the core of the Apollo frontend toolchain. It allows you to interact with your GraphQL data in smart and reactive ways. To get the most value out of `apollo-client` you should use it with one of its view integration layers.
 
-To get started with React go to our [**React Apollo documentation website**](http://dev.apollodata.com/react/).
+To get started with the React integration go to our [**React Apollo documentation website**](http://dev.apollodata.com/react/).
 
-If you don’t use React, do not worry! The Apollo Client has view layer [integrations for all the popular frontend frameworks](#learn-how-to-use-apollo-client-with-your-favorite-framework).
+Apollo Client also has view layer integrations for [all the popular frontend frameworks](#learn-how-to-use-apollo-client-with-your-favorite-framework). For the best experience make sure to use the view integration layer for your frontend framework of choice.
 
 Apollo Client can be used in any JavaScript frontend where you want to use data from a GraphQL server. It's:
 

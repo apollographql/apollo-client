@@ -81,7 +81,7 @@ const createReservations = (count: number) => {
     });
   });
   return reservations;
-}
+};
 
 group((end) => {
   benchmark('constructing an instance', (done) => {
@@ -263,7 +263,7 @@ times(50, (index) => {
     const houseId = '12';
     const reservationCount = index + 1;
     const reservations = createReservations(reservationCount);
-    
+
     const variables = {id: houseId };
     const result = {
       data: {
@@ -309,10 +309,10 @@ times(50, (index) => {
 times(50, (index) => {
   group((end) => {
     const reservationCount = index + 1;
-    
+
     // Prime the cache.
     const query = gql`
-      query($id: String) {  
+      query($id: String) {
         house(id: $id) {
           reservations {
             name

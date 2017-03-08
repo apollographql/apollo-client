@@ -345,7 +345,8 @@ export class QueryManager {
 
       const fetchPolicy = storedQuery ? storedQuery.observableQuery.options.fetchPolicy : options.fetchPolicy;
 
-      const shouldNotifyIfLoading = queryStoreValue.previousVariables || fetchPolicy === 'cache-only';
+      const shouldNotifyIfLoading = queryStoreValue.previousVariables ||
+                                    fetchPolicy === 'cache-only' || fetchPolicy === 'cache-and-network';
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 

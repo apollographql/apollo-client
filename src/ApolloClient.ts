@@ -252,6 +252,10 @@ export default class ApolloClient implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
+    if (options.fetchPolicy === 'cache-and-network') {
+      throw new Error('cache-and-network fetchPolicy can only be used with watchQuery');
+    }
+
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = {

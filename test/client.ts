@@ -70,6 +70,8 @@ import {
   WatchQueryOptions,
 } from '../src/core/watchQueryOptions';
 
+import subscribeAndCount from './util/subscribeAndCount';
+
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors/ApolloError';
@@ -1089,6 +1091,113 @@ describe('client', () => {
           );
         });
     });
+  });
+
+  describe('cache-and-network fetchPolicy', () => {
+    const query = gql`
+      query number {
+        myNumber {
+          n
+        }
+      }
+    `;
+
+    const initialData = {
+      myNumber: {
+        n: 1,
+      },
+    };
+    const networkFetch = {
+      myNumber: {
+        n: 2,
+      },
+    };
+
+    // Test that cache-and-network can only be used on watchQuery, not query.
+    it('errors when being used on query', () => {
+      const client = new ApolloClient();
+      assert.throws(
+        () => {
+          client.query({ query, fetchPolicy: 'cache-and-network' });
+        },
+      );
+    });
+
+    it('fetches from cache first, then network', (done) => {
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data: networkFetch },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      client.writeQuery({
+        query,
+        data: initialData,
+      });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+
+      subscribeAndCount(done, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, initialData);
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, networkFetch);
+          done();
+        }
+      });
+    });
+
+    it('does not fail if cache entry is not present', (done) => {
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data: networkFetch },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+
+      subscribeAndCount(done, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.equal(result.data, undefined);
+          assert(result.loading);
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, networkFetch);
+          assert(!result.loading);
+          done();
+        }
+      });
+    });
+
+    it('fails if network request fails', (done) => {
+      const networkInterface = mockNetworkInterface(); // no queries = no replies.
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+
+      let count = 0;
+      obs.subscribe({
+        next: (result) => {
+          assert.equal(result.data, undefined);
+          assert(result.loading);
+          count++;
+         },
+        error: (e) => {
+          assert.match(e.message, /No more mocked responses/);
+          assert.equal(count, 1); // make sure next was called.
+          done();
+        },
+      });
+    });
+
   });
 
   describe('network-only fetchPolicy', () => {

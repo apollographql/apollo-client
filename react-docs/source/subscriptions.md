@@ -6,11 +6,11 @@ In addition to fetching data using queries and modifying data using mutations, G
 
 GraphQL Subscriptions is a way to push data from the server to the clients that choose to listen to real time messages from the server.  
 
-similar to queries - they contain the selection set (list of fields) the client side needs, but those will be pushed from the server on the specific subscription name.
+similar to queries - they contain the selection set (list of fields) the client side needs, but instead of returning only once, a new result is sent every time a specified event happens on the server.
 
-Common usage of subscriptions is for notifying the client side regarding changes and notifications based on events: creation of a new object, updated fields and so on.
+A common use-case for subscriptions is for notifying the client side of changes based on events, for example the creation of a new object, updated fields and so on.
 
-A server will expose a schema like so:
+GraphQL subscriptions contain the definition of the notification in the shema, for example `commentAdded`:
 
 ```js
 type Subscription {
@@ -18,7 +18,7 @@ type Subscription {
 }
 ```
 
-and the client will listen to `onCommentAdded` subscription and choose a selection set from it:
+and the client will listen to `onCommentAdded` subscription and request a selection set from it:
 
 ```js
 subscription onCommentAdded($repoFullName: String!){
@@ -29,7 +29,7 @@ subscription onCommentAdded($repoFullName: String!){
 }
 ```
 
-The above example for subscription will be triggered when a new comment will be added for a GitHub repository to GitHunt, and the client will recieve the following payload:
+The above example for subscription will be triggered when a new comment is added on GitHunt for a specific repository. The response sent to the client looks as follows:
 
 ```json
 {
@@ -40,7 +40,7 @@ The above example for subscription will be triggered when a new comment will be 
 }
 ```
 
-> Subscriptions can be an alternative for re-fetching queries using polling.
+> Subscriptions are a good alternative to polling when the initial state is large, but the incremental change sets are small. The starting state can be fetched with a query and subsequently updated through a subscription.
 
 <h2 id="subscriptions-client">Getting started</h2>
 
@@ -50,23 +50,25 @@ To start using GraphQL subscriptions on the client, using a WebSocaket transport
 npm install --save subscriptions-transport-ws
 ```
 
-> `subscriptions-transport-ws` is a library for GraphQL - you can also use it without Apollo.
+> `subscriptions-transport-ws` is an transport implementation for subscriptions - you can also use it without Apollo.
 
 > Read [here](/tools/graphql-server/subscriptions.html#setup) on how to setup GraphQL subscriptions on your server.
 
-Then, create GraphQL subscriptions transport client (`SubscriptionClient`):
+Then, create a GraphQL subscriptions transport client (`SubscriptionClient`):
 
 ```js
-import {SubscriptionClient, addGraphQLSubscriptions} from 'subscriptions-transport-ws';
+import {SubscriptionClient} from 'subscriptions-transport-ws';
 
 const wsClient = new SubscriptionClient(`http://localhost:5000/`, {
     reconnect: true
 });
 ```
 
-and extend your existing Apollo-Client network interface using `addGraphQLSubscriptions` util method:
+and extend your existing Apollo-Client network interface using the `addGraphQLSubscriptions` function:
 
 ```js
+import {SubscriptionClient, addGraphQLSubscriptions} from 'subscriptions-transport-ws';
+
 // Create regular NetworkInterface by using apollo-client's API:
 const networkInterface = createNetworkInterface({
  uri: 'http://localhost:3000'
@@ -84,11 +86,11 @@ const apolloClient = new ApolloClient({
 });
 ```
 
-<h2 id="subscribe-to-data">Subscribe to data</h2>
+<h2 id="subscribe-to-more">subscribeToMore</h2>
 
-With GraphQL subscriptions your client will be alerted on push from the server and you can choose how to handle it:
+With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
 
-* Just use it as a notification and run any logic you want when it happens, for example alerting the user or refetching data
+* You can either use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
 * Use the subscription's selection set to get data with the notification and merge that data into the store
 
 We will focus on the latter.
@@ -193,9 +195,7 @@ export class CommentsPage extends Component {
 
 <h2 id="authentication">Authentication over WebSocket</h2>
 
-`SubscriptionClient` constructor also accepts `connectionParams` field, which is a custom object you can pass to your server, and validate the connection is server side before creating your subscriptions.
-
-> You can read about authentication on the server [here](/tools/graphql-server/subscriptions.html#authentication).
+The `SubscriptionClient` constructor also accepts a `connectionParams` field, which is a custom object that is passed to your server, and lets the server validate the connection before setting up any subscriptions.
 
 ```js
 import {SubscriptionClient} from 'subscriptions-transport-ws';
@@ -208,4 +208,4 @@ const wsClient = new SubscriptionClient(`http://localhost:5000/`, {
 });
 ```
 
-> You can use `connectionParams` for any use you need, not only authentication.
+> You can use `connectionParams` for anything else you might need, not only authentication, and check its payload on the server side with [SubscriptionsServer](/tools/graphql-server/subscriptions.html#authentication).

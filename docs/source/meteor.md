@@ -206,7 +206,7 @@ The idea is that you need to let Meteor to finally render the html you can just 
 
 Here is a full working example:
 ```
-meteor add webapp
+meteor add apollo webapp
 meteor npm install --save react react-dom apollo-client redux react-apollo react-router react-helmet express isomorphic-fetch
 ```
 

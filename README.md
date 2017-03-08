@@ -2,7 +2,7 @@
 
 The `apollo-client` package is the core of the Apollo frontend toolchain. By itself the `apollo-client` package is not as useful for building rich reactive UIs as `apollo-client` with a custom view integration library for your framework of choice.
 
-To get started with React go to our [React Apollo documentation website](http://dev.apollodata.com/react/).
+To get started with React go to our [**React Apollo documentation website**](http://dev.apollodata.com/react/).
 
 If you don’t use React, do not worry! The Apollo Client has view layer [integrations for all the popular frontend frameworks](#learn-how-to-use-apollo-client-with-your-favorite-framework).
 

@@ -61,7 +61,7 @@ To learn more about all of the features available to you through the `apollo-cli
 [reactively watching queries with `watchQuery`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.watchQuery
 [changing data on your server with `mutate`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.mutate
 [reading a fragment from your local cache with `readFragment`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.readFragment
-[*`apollo-client` API reference**]: http://dev.apollodata.com/core/apollo-client-api.html
+[**`apollo-client` API reference**]: http://dev.apollodata.com/core/apollo-client-api.html
 
 ## Learn how to use Apollo Client with your favorite framework
 

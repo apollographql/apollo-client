@@ -729,44 +729,55 @@ describe('mutation results', () => {
       });
     });
 
-    it('does not swallow errors', done => {
+    describe('error handling', () => {
+      const oldWarn = console.warn;
       let warned: any;
       let timesWarned = 0;
-      const oldWarn = console.warn;
-      // mock warn method
-      console.warn = (...args: any[]) => {
-        warned = args;
-        timesWarned++;
-      };
 
-      client = new ApolloClient({
-        networkInterface: mockNetworkInterface({
-          request: { query },
-          result,
-        }),
+      beforeEach((done) => {
+        // clear warnings
+        warned = null;
+        timesWarned = 0;
+        // mock warn method
+        console.warn = (...args: any[]) => {
+          warned = args;
+          timesWarned++;
+        };
+        done();
       });
 
-      const observable = client.watchQuery({
-        query,
-        reducer: () => {
-          throw new Error('Don’t swallow me right up!');
-        },
+      it('does not swallow errors', done => {
+        client = new ApolloClient({
+          networkInterface: mockNetworkInterface({
+            request: { query },
+            result,
+          }),
+        });
+
+        const observable = client.watchQuery({
+          query,
+          reducer: () => {
+            throw new Error('Don’t swallow me right up!');
+          },
+        });
+
+        observable.subscribe({
+          next: () => {
+            done(new Error('`next` should not be called.'));
+          },
+          error: error => {
+            assert(/swallow/.test(error.message));
+            assert(/swallow/.test(warned[1].message));
+            assert.equal(timesWarned, 1);
+            done();
+          },
+        });
       });
 
-      observable.subscribe({
-        next: () => {
-          // restore standard method
-          console.warn = oldWarn;
-          done(new Error('`next` should not be called.'));
-        },
-        error: error => {
-          assert(/swallow/.test(error.message));
-          assert(/swallow/.test(warned[1].message));
-          assert.equal(timesWarned, 1);
-          // restore standard method
-          console.warn = oldWarn;
-          done();
-        },
+      afterEach((done) => {
+        // restore standard method
+        console.warn = oldWarn;
+        done();
       });
     });
   });

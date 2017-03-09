@@ -1,5 +1,5 @@
 ---
-title: Data Control
+title: Reading and Writing to the Store
 order: 109
 description: Powerful methods that give you total control over the data in your cache.
 ---

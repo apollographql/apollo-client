@@ -32,7 +32,7 @@ The most straightforward use of fragments is to reuse parts of queries (or mutat
 To do so, we can simply share a fragment describing the fields we need for a comment:
 
 ```js
-import gql from 'graphql-tag';
+import { gql } from 'react-apollo';
 
 CommentsPage.fragments = {
   comment: gql`
@@ -77,8 +77,6 @@ export const COMMENT_QUERY = gql`
   ${CommentsPage.fragments.comment}
 `;
 ```
-
-> NOTE: you may get a warning about fragments already existing, this will be fixed in a release of Apollo Client soon.
 
 You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollostack/GitHunt-React/blob/master/ui/routes/CommentsPage.js).
 

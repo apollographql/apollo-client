@@ -14,10 +14,10 @@ For instance, in GitHunt, we want to display the currently logged-in user in the
 
 ```js
 import React, { Component, PropTypes } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { gql, graphql } from 'react-apollo';
 
 class Profile extends Component { ... }
+
 Profile.propTypes = {
   data: PropTypes.shape({
     loading: PropTypes.bool.isRequired,
@@ -161,8 +161,7 @@ If you want to change the name of the default `data` prop, but keep the exact sa
 
 ```js
 import React, { Component, PropTypes } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { gql, graphql } from 'react-apollo';
 
 class Profile extends Component { ... }
 Profile.propTypes = {
@@ -194,8 +193,7 @@ If you want complete control over the props of the child component, use the `pro
 ```js
 
 import React, { Component, PropTypes } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { gql, graphql } from 'react-apollo';
 
 // Here Profile has a more generic API, that's not coupled to Apollo or the
 // shape of the query that we've used
@@ -228,3 +226,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 ```
 
 This style of usage leads to the greatest decoupling between your presentational component (`Profile`) and Apollo.
+
+* * *
+
+For more information about all of the options and features supported by React Apollo for GraphQL queries be sure to review the [API reference on `graphql()` queries](api.html#queries).

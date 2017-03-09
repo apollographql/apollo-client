@@ -15,8 +15,7 @@ If you want to use your own store, you'll need to pass in reducer and middleware
 
 ```js
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
-import ApolloClient from 'apollo-client';
-import { ApolloProvider } from 'react-apollo';
+import { ApolloClient, ApolloProvider } from 'react-apollo';
 
 import { todoReducer, userReducer } from './reducers';
 
@@ -32,7 +31,7 @@ const store = createStore(
   compose(
       applyMiddleware(client.middleware()),
       // If you are using the devToolsExtension, you can add it here also
-      window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
+      (typeof window.__REDUX_DEVTOOLS_EXTENSION__ !== 'undefined') ? window.__REDUX_DEVTOOLS_EXTENSION__() : f => f,
   )
 );
 

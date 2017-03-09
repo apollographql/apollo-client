@@ -70,8 +70,7 @@ We'll see how to take your component tree and turn it into a string in the next 
 Once you put that all together, you'll end up with initialization code that looks like this:
 
 ```js
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
-import { ApolloProvider } from 'react-apollo';
+import { ApolloClient, createNetworkInterface, ApolloProvider } from 'react-apollo';
 import Express from 'express';
 import { match, RouterContext } from 'react-router';
 

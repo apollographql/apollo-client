@@ -167,7 +167,7 @@ If your GraphQL endpoint is on the same server that you're rendering from, you m
 
 <h3 id="skip-for-ssr">Skipping queries for SSR</h3>
 
-If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in it's loading state on the server. For example:
+If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
 ```js
 const withClientOnlyUser = graphql(GET_USER_WITH_ID, {

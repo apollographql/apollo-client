@@ -66,6 +66,12 @@ import {
   createMockedIResponse,
 } from './mocks/mockFetch';
 
+import {
+  WatchQueryOptions,
+} from '../src/core/watchQueryOptions';
+
+import subscribeAndCount from './util/subscribeAndCount';
+
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { ApolloError } from '../src/errors/ApolloError';
@@ -375,7 +381,6 @@ describe('client', () => {
           networkStatus: NetworkStatus.ready,
           networkError: null,
           graphQLErrors: [],
-          forceFetch: false,
           lastRequestId: 2,
           previousVariables: null,
           metadata: null,
@@ -676,7 +681,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to transform queries on forced fetches', (done) => {
+  it('should be able to transform queries on network-only fetches', (done) => {
     const query = gql`
       query {
         author {
@@ -719,7 +724,7 @@ describe('client', () => {
       networkInterface,
       addTypename: true,
     });
-    client.query({ forceFetch: true, query }).then((actualResult) => {
+    client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, transformedResult);
       done();
     });
@@ -762,7 +767,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to handle named fragments on forced fetches', () => {
+  it('should be able to handle named fragments on network-only queries', () => {
     const query = gql`
       fragment authorDetails on Author {
         firstName
@@ -792,7 +797,7 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ forceFetch: true, query }).then((actualResult) => {
+    return client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
     });
   });
@@ -1088,7 +1093,114 @@ describe('client', () => {
     });
   });
 
-  describe('forceFetch', () => {
+  describe('cache-and-network fetchPolicy', () => {
+    const query = gql`
+      query number {
+        myNumber {
+          n
+        }
+      }
+    `;
+
+    const initialData = {
+      myNumber: {
+        n: 1,
+      },
+    };
+    const networkFetch = {
+      myNumber: {
+        n: 2,
+      },
+    };
+
+    // Test that cache-and-network can only be used on watchQuery, not query.
+    it('errors when being used on query', () => {
+      const client = new ApolloClient();
+      assert.throws(
+        () => {
+          client.query({ query, fetchPolicy: 'cache-and-network' });
+        },
+      );
+    });
+
+    it('fetches from cache first, then network', (done) => {
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data: networkFetch },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      client.writeQuery({
+        query,
+        data: initialData,
+      });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+
+      subscribeAndCount(done, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, initialData);
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, networkFetch);
+          done();
+        }
+      });
+    });
+
+    it('does not fail if cache entry is not present', (done) => {
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data: networkFetch },
+      });
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+
+      subscribeAndCount(done, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.equal(result.data, undefined);
+          assert(result.loading);
+        } else if (handleCount === 2) {
+          assert.deepEqual(result.data, networkFetch);
+          assert(!result.loading);
+          done();
+        }
+      });
+    });
+
+    it('fails if network request fails', (done) => {
+      const networkInterface = mockNetworkInterface(); // no queries = no replies.
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+
+      let count = 0;
+      obs.subscribe({
+        next: (result) => {
+          assert.equal(result.data, undefined);
+          assert(result.loading);
+          count++;
+         },
+        error: (e) => {
+          assert.match(e.message, /No more mocked responses/);
+          assert.equal(count, 1); // make sure next was called.
+          done();
+        },
+      });
+    });
+
+  });
+
+  describe('network-only fetchPolicy', () => {
     const query = gql`
       query number {
         myNumber {
@@ -1136,7 +1248,7 @@ describe('client', () => {
       // Run a query first to initialize the store
       return client.query({ query })
         // then query for real
-        .then(() => client.query({ query, forceFetch: true }))
+        .then(() => client.query({ query, fetchPolicy: 'network-only' }))
         .then((result) => {
           assert.deepEqual(result.data, { myNumber: { n: 2 } });
         });
@@ -1149,7 +1261,7 @@ describe('client', () => {
         addTypename: false,
       });
 
-      const options = { query, forceFetch: true };
+      const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
 
       // Run a query first to initialize the store
       return client.query({ query })
@@ -1159,7 +1271,7 @@ describe('client', () => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
 
           // Test that options weren't mutated, issue #339
-          assert.deepEqual(options, { query, forceFetch: true });
+          assert.deepEqual(options, { query, fetchPolicy: 'network-only' });
         });
     });
 
@@ -1176,14 +1288,14 @@ describe('client', () => {
       const outerPromise = client.query({ query })
         // then query for real
         .then(() => {
-          const promise = client.query({ query, forceFetch: true });
+          const promise = client.query({ query, fetchPolicy: 'network-only' });
           clock.tick(0);
           return promise;
         })
         .then((result) => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
           clock.tick(100);
-          const promise = client.query({ query, forceFetch: true });
+          const promise = client.query({ query, fetchPolicy: 'network-only' });
           clock.tick(0);
           return promise;
         })

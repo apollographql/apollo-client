@@ -1216,7 +1216,7 @@ describe('QueryManager', () => {
     });
   });
 
-  it('should error if we pass noFetch on a polling query', (done) => {
+  it('should error if we pass fetchPolicy = cache-first or cache-only on a polling query', (done) => {
     assert.throw(() => {
       assertWithObserver({
         done,
@@ -1232,13 +1232,31 @@ describe('QueryManager', () => {
               lastName
             }
           }`,
-        queryOptions: { pollInterval: 200, noFetch: true },
+        queryOptions: { pollInterval: 200, fetchPolicy: 'cache-only' },
+      });
+    });
+    assert.throw(() => {
+      assertWithObserver({
+        done,
+        observer: {
+          next(result) {
+            done(new Error('Returned a result when it should not have.'));
+          },
+        },
+        query: gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }`,
+        queryOptions: { pollInterval: 200, fetchPolicy: 'cache-first' },
       });
     });
     done();
   });
 
-  it('supports noFetch fetching only cached data', () => {
+  it('supports cache-only fetchPolicy fetching only cached data', () => {
     const primeQuery = gql`
       query primeQuery {
         luke: people_one(id: 1) {
@@ -1277,7 +1295,7 @@ describe('QueryManager', () => {
     }).then(() => {
       const handle = queryManager.watchQuery<any>({
         query: complexQuery,
-        noFetch: true,
+        fetchPolicy: 'cache-only',
       });
 
       return handle.result().then((result) => {
@@ -2094,7 +2112,7 @@ describe('QueryManager', () => {
         observableToPromise({ observable },
           (result) => {
             assert.deepEqual(result.data, data1);
-            queryManager.query({ query, variables, forceFetch: true })
+            queryManager.query({ query, variables, fetchPolicy: 'network-only' })
               .then(() => timeout(new Error('Should have two results by now')));
           },
           (result) => assert.deepEqual(result.data, data2),
@@ -2424,7 +2442,7 @@ describe('QueryManager', () => {
       queryManager.resetStore();
     });
 
-    it('should not call refetch on a noFetch Observable if the store is reset', (done) => {
+    it('should not call refetch on a cache-only Observable if the store is reset', (done) => {
       const query = gql`
         query {
           author {
@@ -2434,7 +2452,7 @@ describe('QueryManager', () => {
         }`;
       const queryManager = createQueryManager({});
       const options = assign({}) as WatchQueryOptions;
-      options.noFetch = true;
+      options.fetchPolicy = 'cache-only';
       options.query = query;
       let refetchCount = 0;
       const mockObservableQuery: ObservableQuery<any> = {
@@ -2599,7 +2617,7 @@ describe('QueryManager', () => {
     queryManager.query<any>({ query }).then((result) => {
       assert.deepEqual(result.data, data);
 
-      queryManager.query<any>({ query, forceFetch: true }).then(() => {
+      queryManager.query<any>({ query, fetchPolicy: 'network-only' }).then(() => {
         done(new Error('Returned a result when it was not supposed to.'));
       }).catch((error) => {
         // make that the error thrown doesn't empty the state

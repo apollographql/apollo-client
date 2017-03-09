@@ -147,8 +147,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // will not end up hitting the server.
     // See more: https://github.com/apollostack/apollo-client/issues/707
     // Basically: is there a query in flight right now (modolo the next tick)?
-    const loading = (this.options.forceFetch && queryLoading)
-      || (partial && !this.options.noFetch);
+    const loading = (this.options.fetchPolicy === 'network-only' && queryLoading)
+      || (partial && this.options.fetchPolicy !== 'cache-only');
 
     // if there is nothing in the query store, it means this query hasn't fired yet. Therefore the
     // network status is dependent on queryLoading.
@@ -180,8 +180,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       ...variables,
     };
 
-    if (this.options.noFetch) {
-      throw new Error('noFetch option should not use query refetch.');
+    if (this.options.fetchPolicy === 'cache-only') {
+      throw new Error('cache-only fetchPolicy option should not be used together with query refetch.');
     }
 
     // Update the existing options with new variables
@@ -190,10 +190,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       ...this.variables,
     };
 
-    // Override forceFetch for this call only
-    const combinedOptions = {
+    // Override fetchPolicy for this call only
+    const combinedOptions: WatchQueryOptions = {
       ...this.options,
-      forceFetch: true,
+      fetchPolicy: 'network-only',
     };
 
     return this.queryManager.fetchQuery(this.queryId, combinedOptions, FetchType.refetch)
@@ -228,7 +228,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         combinedOptions = {
           ...combinedOptions,
           query: combinedOptions.query,
-          forceFetch: true,
+          fetchPolicy: 'network-only',
         } as WatchQueryOptions;
         return this.queryManager.fetchQuery(qid, combinedOptions, FetchType.normal, this.queryId);
       })
@@ -310,9 +310,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       this.stopPolling();
     }
 
-    // If forceFetch went from false to true or noFetch went from true to false
-    const tryFetch: boolean = (!oldOptions.forceFetch && opts.forceFetch)
-      || (oldOptions.noFetch && !opts.noFetch) || false;
+    // If fetchPolicy went from cache-only to something else, or from something else to network-only
+    const tryFetch: boolean = (oldOptions.fetchPolicy !== 'network-only' && opts.fetchPolicy === 'network-only')
+      || (oldOptions.fetchPolicy === 'cache-only' && opts.fetchPolicy !== 'cache-only')
+      || false;
 
     return this.setVariables(this.options.variables, tryFetch);
   }
@@ -397,8 +398,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   public startPolling(pollInterval: number) {
-    if (this.options.noFetch) {
-      throw new Error('noFetch option should not use query polling.');
+    if (this.options.fetchPolicy === 'cache-first' || (this.options.fetchPolicy === 'cache-only')) {
+      throw new Error('Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.');
     }
 
     if (this.isCurrentlyPolling) {
@@ -450,8 +451,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     }
 
     if (!!this.options.pollInterval) {
-      if (this.options.noFetch) {
-        throw new Error('noFetch option should not use query polling.');
+      if (this.options.fetchPolicy === 'cache-first' || (this.options.fetchPolicy === 'cache-only')) {
+        throw new Error('Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.');
       }
 
       this.isCurrentlyPolling = true;

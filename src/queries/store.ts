@@ -35,7 +35,6 @@ export type QueryStoreValue = {
   networkStatus: NetworkStatus;
   networkError: Error | null;
   graphQLErrors: GraphQLError[];
-  forceFetch: boolean;
   lastRequestId: number;
   metadata: any;
 };
@@ -102,7 +101,6 @@ export function queries(
       networkError: null,
       graphQLErrors: [],
       networkStatus: newNetworkStatus,
-      forceFetch: action.forceFetch,
       lastRequestId: action.requestId,
       metadata: action.metadata,
     };
@@ -113,7 +111,7 @@ export function queries(
     // We have a complement to this if statement in the query result and query
     // error action branch, but importantly *not* in the client result branch.
     // This is because the implementation of `fetchMore` *always* sets
-    // `forceFetch` to `true` so we would never have a client result.
+    // `fetchPolicy` to `network-only` so we would never have a client result.
     if (typeof action.fetchMoreForQueryId === 'string') {
       newState[action.fetchMoreForQueryId] = {
         // We assume that that both a query with id `action.moreForQueryId`

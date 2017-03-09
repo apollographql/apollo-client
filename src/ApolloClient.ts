@@ -103,7 +103,7 @@ export default class ApolloClient implements DataProxy {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public shouldForceFetch: boolean;
+  public disableNetworkFetches: boolean;
   public dataId: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
@@ -175,13 +175,13 @@ export default class ApolloClient implements DataProxy {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
-    this.shouldForceFetch = !(ssrMode || ssrForceFetchDelay > 0);
+    this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
 
     if (ssrForceFetchDelay) {
-      setTimeout(() => this.shouldForceFetch = true, ssrForceFetchDelay);
+      setTimeout(() => this.disableNetworkFetches = false, ssrForceFetchDelay);
     }
 
     this.reducerConfig = {
@@ -229,10 +229,11 @@ export default class ApolloClient implements DataProxy {
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
-    if (!this.shouldForceFetch && options.forceFetch) {
+    // XXX Overwriting options is probably not the best way to do this long term...
+    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = {
         ...options,
-        forceFetch: false,
+        fetchPolicy: 'cache-first',
       } as WatchQueryOptions;
     }
 
@@ -251,13 +252,15 @@ export default class ApolloClient implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
-    // XXX what if I pass pollInterval? Will it just keep running?
-    // XXX why doesn't this stop the query after it's done?
+    if (options.fetchPolicy === 'cache-and-network') {
+      throw new Error('cache-and-network fetchPolicy can only be used with watchQuery');
+    }
 
-    if (!this.shouldForceFetch && options.forceFetch) {
+    // XXX Overwriting options is probably not the best way to do this long term...
+    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = {
         ...options,
-        forceFetch: false,
+        fetchPolicy: 'cache-first',
       } as WatchQueryOptions;
     }
 

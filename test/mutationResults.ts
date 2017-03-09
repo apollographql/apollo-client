@@ -628,7 +628,7 @@ describe('mutation results', () => {
         });
         observableQuery2 = client.watchQuery({
           query: filteredQuery,
-          forceFetch: true, // need force-fetch to get the filteredTodos,
+          fetchPolicy: 'network-only', // need force-fetch to get the filteredTodos,
           reducer: (previousResult, action) => {
             counter2++;
             if (isMutationResultAction(action) && action.result.data!['createTodo'].completed) {
@@ -675,7 +675,7 @@ describe('mutation results', () => {
         assert.equal(counter2, 2);
 
         // There should be one more todo item than before
-        assert.equal(newResult.data.todoList.filteredTodos.length, 2);
+        assert.equal(newResult.data.todoList.filteredTodos.length, 2); // XXX this test sometimes fails in CI
 
         // Since we used `prepend` it should be at the front
         assert.equal(newResult.data.todoList.filteredTodos[0].text, 'This one was created with a mutation.');

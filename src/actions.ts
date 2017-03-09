@@ -15,6 +15,10 @@ import {
   ApolloReducer,
 } from './store';
 
+import {
+  FetchPolicy,
+} from './core/watchQueryOptions';
+
 export type QueryResultAction = {
   type: 'APOLLO_QUERY_RESULT';
   result: ExecutionResult;
@@ -47,7 +51,7 @@ export interface QueryInitAction {
   queryString: string;
   document: DocumentNode;
   variables: Object;
-  forceFetch: boolean;
+  fetchPolicy: FetchPolicy;
   queryId: string;
   requestId: number;
   storePreviousVariables: boolean;

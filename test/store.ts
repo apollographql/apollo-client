@@ -150,7 +150,6 @@ describe('createApolloStore', () => {
     const emptyState: Store = {
       queries: {
         'test.0': {
-          'forceFetch': false,
           'graphQLErrors': [],
           'lastRequestId': 1,
           'networkStatus': 1,
@@ -178,7 +177,7 @@ describe('createApolloStore', () => {
       queryString: '',
       document: queryDocument,
       variables: {},
-      forceFetch: false,
+      fetchPolicy: 'cache-first',
       requestId: 1,
       storePreviousVariables: false,
       isPoll: false,

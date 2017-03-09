@@ -17,6 +17,16 @@ import {
 } from './types';
 
 /**
+ * fetchPolicy determines where the client may return a result from. The options are:
+ * - cache-first (default): return result from cache. Only fetch from network if cached result is not available.
+ * - cache-and-network: returns result from cache first (if it exists), then return network result once it's available
+ * - cache-only: return result from cache if avaiable, fail otherwise.
+ * - network-only: return result from network, fail if network call doesn't succeed.
+ */
+
+export type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
+
+/**
  * We can change these options to an ObservableQuery
  */
 export interface ModifiableWatchQueryOptions {
@@ -25,20 +35,7 @@ export interface ModifiableWatchQueryOptions {
    * within the GraphQL query.
    */
   variables?: { [key: string]: any };
-  /**
-   * Specifies whether the client should diff the query against the cache and only
-   * fetch the portions of it that aren't already available (it does this when forceFetch is
-   * false) or it should just fetch the entire query from the server and update the cache
-   * accordingly (it does this when forceFetch is true).
-   */
-  forceFetch?: boolean;
 
-  /**
-   * If this is set to true, the query is resolved *only* within information
-   * available in the cache (i.e. we never hit the server). If a particular field is not available
-   * in the cache, it will not be available in the result.
-   */
-  noFetch?: boolean;
   /**
    * The time interval (in milliseconds) on which this query should be
    * refetched from the server.
@@ -46,14 +43,9 @@ export interface ModifiableWatchQueryOptions {
   pollInterval?: number;
 
   /**
-   * fetchPolicy determines where the client may return a result from. The options are:
-   * - cache-and-network: returns result from cache first (if it exists), then return network result once it's available
-   * - cache-first: return result from cache. Only fetch from network if cached result is not available.
-   * - network-first: return result from network, but if network request fails, use result from cache, if available.
-   * - cache-only: return result from cache if avaiable, fail otherwise.
-   * - network-only: return result from network, fail if network call doesn't succeed.
+   * Specifies the {@link FetchPolicy} to be used for this query
    */
-  // fetchPolicy?: string;
+  fetchPolicy?: FetchPolicy;
 
   /**
    * Whether or not updates to the network status should trigger next on the observer of this query

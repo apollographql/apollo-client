@@ -56,6 +56,7 @@ ReactDOM.render(
   <ApolloProvider client={client}>
     <MyRootComponent />
   </ApolloProvider>,
+  domContainerNode
 )
 ```
 

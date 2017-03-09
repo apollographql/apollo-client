@@ -221,16 +221,20 @@ There are two additional configurations that you need to keep in mind when using
 The idea is that you need to let Meteor to finally render the html you can just provide it extra `body` and or `head` for the html and Meteor will append it, otherwise CSS/JS and or other merged html content that Meteor serve by default (including your application main .js file) will be missing.
 
 Here is a full working example:
+```
+meteor add apollo webapp
+meteor npm install --save react react-dom apollo-client redux react-apollo react-router react-helmet express isomorphic-fetch
+```
+
 ```js
 import { Meteor } from 'meteor/meteor';
 import { WebApp } from 'meteor/webapp';
-import { meteorClientConfig, createMeteorNetworkInterface } from 'meteor/apollo';
+import { meteorClientConfig } from 'meteor/apollo';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
-import { ApolloProvider } from 'react-apollo';
-import { renderToStringWithData } from 'react-apollo';
+import { ApolloProvider, renderToStringWithData } from 'react-apollo';
 import { match, RouterContext } from 'react-router';
 import Express from 'express';
 // #1 import isomorphic-fetch so the network interface can be created
@@ -241,8 +245,8 @@ import routes from '../both/routes';
 import rootReducer from '../../ui/reducers';
 import Body from '../both/routes/body';
 
-// #2 do not use new
-const app = Express();
+// 1# do not use new
+const app = Express(); // eslint-disable-line new-cap
 
 app.use((req, res, next) => {
   match({ routes, location: req.originalUrl }, (error, redirectLocation, renderProps) => {
@@ -252,7 +256,6 @@ app.use((req, res, next) => {
       console.error('ROUTER ERROR:', error); // eslint-disable-line no-console
       res.status(500);
     } else if (renderProps) {
-      
       // use createMeteorNetworkInterface to get a preconfigured network interface
       // #1 network interface can be used server-side thanks to polyfilled `fetch`
       const networkInterface = createMeteorNetworkInterface({
@@ -264,7 +267,7 @@ app.use((req, res, next) => {
         // a third-party package like meteorhacks:fast-render
         loginToken: req.cookies['meteor-login-token'],
       });
-      
+
       // use meteorClientConfig to get a preconfigured Apollo Client options object
       const client = new ApolloClient(meteorClientConfig({ networkInterface }));
 
@@ -275,8 +278,8 @@ app.use((req, res, next) => {
         }),
         {}, // initial state
         compose(
-          applyMiddleware(client.middleware())
-        )
+          applyMiddleware(client.middleware()),
+        ),
       );
 
       const component = (
@@ -302,7 +305,7 @@ app.use((req, res, next) => {
         next();
       });
     } else {
-      console.log('not found');
+      console.log('not found'); // eslint-disable-line no-console
     }
   });
 });

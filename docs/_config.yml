@@ -19,6 +19,7 @@ sidebar_categories:
     - apollo-client-api
   'Technical Documentation':
     - network
+    - read-and-write
     - devtools
     - how-it-works
   Integrations:

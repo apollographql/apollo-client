@@ -379,9 +379,9 @@ const CommentsPageWithData = graphql(CommentsPageQuery, {
 })(CommentsPage);
 ```
 
-As you can see, the `reducer` option can be used to achieve the same goal as `updateQueries`, but it is more flexible and works with any type of action, not just mutations. For example, the query result can be updated based on another query's result, or even a simple redux action.
+As you can see, the `reducer` option can be used to achieve the same goal as `updateQueries`, but it is more flexible and works with any type of Apollo action, not just mutations. For example, the query result can be updated based on another query's result, or even a simple redux action.
 
-*Please Note:* It is currently impossible to respond to actions arriving from outside of Apollo (e.g. your custom Redux actions). See [this thread](https://github.com/apollographql/apollo-client/issues/1013) for more information.
+*Note:* It is not currently possible to respond to actions arriving from outside of Apollo (e.g. your custom Redux actions) in a result reducer. See [this thread](https://github.com/apollographql/apollo-client/issues/1013) for more information.
 
 
 **When should you use reducer vs. updateQueries vs. refetchQueries?**

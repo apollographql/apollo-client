@@ -39,7 +39,7 @@ app.use(cors(corsOptions));
 Another common way to identify yourself when using HTTP is to send along an authorization header. The Apollo network interface has a middleware feature that lets you modify requests before they are sent to the server. It's easy to add an `authorization` header to every HTTP request. In this example, we'll pull the login token from `localStorage` every time a request is sent:
 
 ```js
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import { ApolloClient, createNetworkInterface } from 'react-apollo';
 
 const networkInterface = createNetworkInterface({
   uri: '/graphql',

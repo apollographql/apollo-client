@@ -39,8 +39,7 @@ Using `graphql` with mutations makes it easy to bind actions to components. Unli
 
 ```js
 import React, { Component, PropTypes } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { gql, graphql } from 'react-apollo';
 
 class NewEntry extends Component { ... }
 NewEntry.propTypes = {
@@ -76,8 +75,7 @@ You can directly pass options to the default `mutate` prop when you call it in t
 
 ```js
 import React, { Component, PropTypes } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { gql, graphql } from 'react-apollo';
 
 class NewEntry extends Component {
   onClick() {
@@ -86,7 +84,7 @@ class NewEntry extends Component {
         console.log('got data', data);
       }).catch((error) => {
         console.log('there was an error sending the query', error);
-      });      
+      });
   }
   render() {
     return <div onClick={this.onClick.bind(this)}>Click me</div>;
@@ -111,8 +109,7 @@ However, typically you'd want to keep the concern of formatting the mutation opt
 
 ```js
 import React, { Component, PropTypes } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { gql, graphql } from 'react-apollo';
 
 class NewEntry extends Component {
   render() {
@@ -142,8 +139,7 @@ All you need to do is specify the `optimisticResponse` option. This "fake result
 
 ```js
 import React, { Component, PropTypes } from 'react';
-import { graphql } from 'react-apollo';
-import gql from 'graphql-tag';
+import { gql, graphql } from 'react-apollo';
 
 class CommentPage extends Component { ... }
 CommentPage.propTypes = {
@@ -199,6 +195,9 @@ In most cases, the data available from a mutation result should be the server de
 
 Most of the time it is not necessary to tell Apollo which parts of the cache to update. It can automatically figure out which objects have changed if you use [dataIdFromObject](cache-updates.html#dataIdFromObject). However, there are cases like inserting or deleting items from a list, which cannot be done that way. In those cases, you have a few options:
 
-1. use [`refetchQueries`](cache-updates.html#refetchQueries) to completely refetch parts of your cache after the mutation has completed. 
+1. use [`refetchQueries`](cache-updates.html#refetchQueries) to completely refetch parts of your cache after the mutation has completed.
 2. use [`updateQueries`](cache-updates.html#updateQueries) to specify how the mutation result affects results of previous queries in the cache.
 
+* * *
+
+For more information about all of the options and features supported by React Apollo for GraphQL mutations be sure to review the [API reference on `graphql()` mutations](api.html#mutations).

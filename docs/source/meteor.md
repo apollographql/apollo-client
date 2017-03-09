@@ -10,7 +10,7 @@ To install `apollo`, run these commands:
 
 ```text
 meteor add apollo
-meteor npm install --save apollo-client isomorphic-fetch graphql-server-express express graphql graphql-tools body-parser
+meteor npm install --save apollo-client graphql-server-express express graphql graphql-tools body-parser
 ```
 
 ## Usage
@@ -109,6 +109,20 @@ export const resolvers = {
 }
 ```
 
+### Query batching
+
+`meteor/apollo` gives you a `BatchedNetworkInterface` by default thanks to `createMeteorNetworkInterface`. This interface is meant to reduce significantly the number of requests sent to the server.
+
+In order to get the most out of it, you can attach a `dataloader` to every request to batch loading your queries (and cache them!).
+
+Here are some great resources to help you integrating query batching in your Meteor application:
+- About batched network interface:
+  - [Apollo Client documentation](http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching), the official documentation explaining how it works and how to set it up.
+  - [Query batching in Apollo](https://dev-blog.apollodata.com/query-batching-in-apollo-63acfd859862), an article from the Apollo blog with more in depth explanation.
+- About Dataloader:
+  - Apollo's [Graphql server documentation](http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching), get to know how to setup `dataloader` in your server-side implementation.
+  - [Dataloader repository](https://github.com/facebook/dataloader), a detailed explanation of batching & caching processes, plus a bonus of a 30-minute source code walkthrough video.
+
 ### Deployment
 
 It is _strongly_ recommended to explictly specify the `ROOT_URL` environment variable of your deployment. The configuration of the Apollo client and GraphQL server provided by this package depends on a configured `ROOT_URL`. Read more about that in the [Meteor Guide](https://guide.meteor.com/deployment.html#custom-deployment).
@@ -136,7 +150,7 @@ The default configuration of the client is:
 - `uri`: `Meteor.absoluteUrl('graphql')`, points to the default GraphQL server endpoint, such as http://locahost:3000/graphql or https://www.my-app.com/graphql.
 - `opts`: `{}`, additional [`FetchOptions`](https://github.github.io/fetch#options) passed to the [`NetworkInterface`](http://dev.apollodata.com/core/network.html#createNetworkInterface).
 - `useMeteorAccounts`: `true`, enable the Meteor User Accounts middleware to identify the user with every request thanks to her login token.
-- `batchingInterface`: `true`, use a [`BatchedNetworkInterface`](http://dev.apollodata.com/core/network.html#query-batching) instead of [`NetworkInterface`](http://dev.apollodata.com/core/network.html#network-interfaces).
+- `batchingInterface`: `false`, if `true` use a [`BatchedNetworkInterface`](http://dev.apollodata.com/core/network.html#query-batching) instead of [`NetworkInterface`](http://dev.apollodata.com/core/network.html#network-interfaces).
 - `batchInterval`: `10`, if the `batchingInterface` field is `true`, this field defines the batch interval to determine how long the network interface batches up queries before sending them to the server.
 
 Additionally, if the `useMeteorAccounts` is set to `true`, you can add to your `customNetworkInterface` a `loginToken` field while doing [server-side rendering](http://dev.apollodata.com/core/meteor.html#SSR) to handle the current user.
@@ -148,8 +162,8 @@ import ApolloClient from 'apollo-client'
 import { createMeteorNetworkInterface, meteorClientConfig } from 'meteor/apollo';
 
 const networkInterface = createMeteorNetworkInterface({
-  // use a classic network interface instead of a batched network interface
-  batchingInterface: false, 
+  // use a batched network interface instead of a classic network interface
+  batchingInterface: true, 
 });
 
 const client = new ApolloClient(meteorClientConfig({ networkInterface }));
@@ -199,8 +213,10 @@ Meteor.logout(function() {
 
 ## SSR
 There are two additional configurations that you need to keep in mind when using [React Server Side Rendering](http://dev.apollodata.com/react/server-side-rendering.html) with Meteor.
-1. Connect your express server to Meteor's existing server with [WebApp.connectHandlers.use](https://docs.meteor.com/packages/webapp.html)
-2. Do not end the connection with `res.send()` and `res.end()` use `req.dynamicBody` and `req.dynamicHead` instead and call `next()`. [more info](https://github.com/meteor/meteor/pull/3860)
+
+1. Use `isomorphic-fetch` to polyfill `fetch` server-side (used by Apollo Client's network interface).
+2. Connect your express server to Meteor's existing server with [WebApp.connectHandlers.use](https://docs.meteor.com/packages/webapp.html)
+3. Do not end the connection with `res.send()` and `res.end()` use `req.dynamicBody` and `req.dynamicHead` instead and call `next()`. [more info](https://github.com/meteor/meteor/pull/3860)
 
 The idea is that you need to let Meteor to finally render the html you can just provide it extra `body` and or `head` for the html and Meteor will append it, otherwise CSS/JS and or other merged html content that Meteor serve by default (including your application main .js file) will be missing.
 
@@ -221,6 +237,7 @@ import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import { ApolloProvider, renderToStringWithData } from 'react-apollo';
 import { match, RouterContext } from 'react-router';
 import Express from 'express';
+// #1 import isomorphic-fetch so the network interface can be created
 import 'isomorphic-fetch';
 import Helmet from 'react-helmet';
 
@@ -240,6 +257,7 @@ app.use((req, res, next) => {
       res.status(500);
     } else if (renderProps) {
       // use createMeteorNetworkInterface to get a preconfigured network interface
+      // #1 network interface can be used server-side thanks to polyfilled `fetch`
       const networkInterface = createMeteorNetworkInterface({
         opts: {
           credentials: 'same-origin',
@@ -274,16 +292,16 @@ app.use((req, res, next) => {
         const initialState = client.store.getState()[client.reduxRootKey].data;
         // the body content we want to append
         const body = <Body content={content} state={initialState} />;
-        // #2 `req.dynamicBody` will hold that body and meteor will take care of
+        // #3 `req.dynamicBody` will hold that body and meteor will take care of
         // actually appending it to the end result
         req.dynamicBody = ReactDOM.renderToStaticMarkup(body);
         const head = Helmet.rewind();
-        // #2 `req.dynamicHead` in this case we use `react-helmet` to add seo tags
+        // #3 `req.dynamicHead` in this case we use `react-helmet` to add seo tags
         req.dynamicHead = `  ${head.title.toString()}
   ${head.meta.toString()}
   ${head.link.toString()}
 `;
-        // #2 Important we do not want to return this, we just let meteor handle it
+        // #3 Important we do not want to return this, we just let meteor handle it
         next();
       });
     } else {
@@ -291,7 +309,7 @@ app.use((req, res, next) => {
     }
   });
 });
-// #1 connect your express server with meteor's
+// #2 connect your express server with meteor's
 WebApp.connectHandlers.use(Meteor.bindEnvironment(app));
 ```
 

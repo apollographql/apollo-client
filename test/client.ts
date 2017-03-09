@@ -889,6 +889,52 @@ describe('client', () => {
     });
   });
 
+  it('should be able to handle inlined fragments on an Interface type', (done) => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
+          __typename
+        }
+      }
+
+      fragment ItemFragment on Item {
+        id
+        ... on ColorItem {
+          color
+          __typename
+        }
+        __typename
+      }`;
+    const result = {
+      'items': [
+        {
+          '__typename': 'ColorItem',
+          'id': '27tlpoPeXm6odAxj3paGQP',
+          'color': 'red',
+        },
+        {
+          '__typename': 'MonochromeItem',
+          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+        }
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: { query },
+      result: { data: result },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+    client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+      done();
+    });
+  });
+
   it('should send operationName along with the query to the server', (done) => {
     const query = gql`
       query myQueryName {

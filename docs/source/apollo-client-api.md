@@ -48,6 +48,8 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 
 An interface to the normalized data in your store. `ApolloClient` implements this interface and so do various other objects you may receive when updating the store. A `DataProxy` is used in the `update` function on `client.mutate` to give you a window into your normalized data.
 
+This interface is currently only used in the context of the `update` function provided to [`ApolloClient.mutate`](apollo-client-api.html#ApolloClient.mutate).
+
 {% tsapibox DataProxy.readQuery %}
 {% tsapibox DataProxy.readFragment %}
 {% tsapibox DataProxy.writeQuery %}

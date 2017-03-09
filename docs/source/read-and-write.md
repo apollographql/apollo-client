@@ -1,7 +1,7 @@
 ---
-title: Reading and Writing to the Store
+title: Direct Cache Access
 order: 109
-description: Powerful methods that give you total control over the data in your cache.
+description: Read and write functions for fine-grained cache access.
 ---
 
 Apollo Client normalizes all of your data so that if any data you previously fetched from your GraphQL server is updated in a later data fetch from your server then your data will be updated with the latest truth from your server.
@@ -27,12 +27,9 @@ const client = new ApolloClient({ ... });
 
 <h2 id="readquery">`readQuery`</h2>
 
-The `readQuery` method is very similar to the [`query` method on `ApolloClient`][] except that `readQuery` will _never_ make a request to your GraphQL server. `query` will first see if there is enough data to fulfill the query in the cache. If there is then that data will be returned from the cache. If there is not enough data `query` will send a request to your [network interface][].
+The `readQuery` method is very similar to the [`query` method on `ApolloClient`][] except that `readQuery` will _never_ make a request to your GraphQL server. The `query` method, on the other hand, may send a request to your server if the appropriate data is not in your cache whereas `readQuery` will throw an error if the data is not in your cache. `readQuery` will _always_ read from the cache. You can use `readQuery` by giving it a GraphQL query like so:
 
 [`query` method on `ApolloClient`]: apollo-client-api.html#ApolloClient.query
-[network interface]: network.html
-
-`readQuery`, on the other hand, will _always_ read from the cache. If there is not enough data in the cache then `readQuery` will throw an error instead of sending a network request. You can use `readQuery` by giving it a GraphQL query like so:
 
 ```js
 const { todo } = client.readQuery({
@@ -190,7 +187,7 @@ client.writeQuery({
 
 <h2 id="updating-the-cache-after-a-mutation">Updating the cache after a mutation</h2>
 
-Being able to read and write to the Apollo cache from anywhere in your application gives you a lot of power over your data. However, there is one place where we most often want to update the data in our cache and so Apollo Client has optimized for that use case. That place would be after a mutation. Let us say that we have the following GraphQL mutation:
+Being able to read and write to the Apollo cache from anywhere in your application gives you a lot of power over your data. However, there is one place where we most often want to update our cached data: after a mutation. As such, Apollo Client has optimized the experience for updating your cache with the read and write methods after a mutation with the `update` function. Let us say that we have the following GraphQL mutation:
 
 ```graphql
 mutation TodoCreateMutation($text: String!) {
@@ -244,8 +241,6 @@ The first `proxy` argument is an instance of [`DataProxy`][] has the same for me
 
 [`DataProxy`](apollo-client-api.html#DataProxy)
 
-The `update` function is not a good place for side-effects as it may be called multiple times, and you may not call any of the methods on `proxy` asynchronously.
-
 If you provide an `optimisticResponse` option to the mutation then the `update` function will be run twice. Once immeadiately after you call `client.mutate` with the data from `optimisticResponse`. After the mutation succesfully executes against the server the changes made in the first call to `update` will be rolled back and `update` will be called with the *actual* data returned by the mutation and not just the optimistic response.
 
 Putting it all together:
@@ -272,6 +267,8 @@ client.mutate({
 ```
 
 As you can see the `update` function on `client.mutate` provides extra change management functionality specific to the use case of a mutation while still providing you the powerful data control APIs that are available on `client`.
+
+The `update` function is not a good place for side-effects as it may be called multiple times. Also, you may not call any of the methods on `proxy` asynchronously.
 
 **Resources:**
 

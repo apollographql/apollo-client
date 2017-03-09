@@ -6,11 +6,11 @@ In addition to fetching data using queries and modifying data using mutations, G
 
 GraphQL Subscriptions is a way to push data from the server to the clients that choose to listen to real time messages from the server.  
 
-similar to queries - they contain the selection set (list of fields) the client side needs, but instead of returning only once, a new result is sent every time a specified event happens on the server.
+Subscriptions are similar to queries in that they specify the selection set (list of fields) that the client is requesting, but instead of immediately returning a single answer, a result is sent every time a specified event happens on the server.
 
-A common use-case for subscriptions is for notifying the client side of changes based on events, for example the creation of a new object, updated fields and so on.
+A common use-case for subscriptions is notifying the client side of changes based on events, for example the creation of a new object, updated fields and so on.
 
-GraphQL subscriptions contain the definition of the notification in the shema, for example `commentAdded`:
+GraphQL subscriptions have to be defined in the schema:
 
 ```js
 type Subscription {
@@ -18,7 +18,7 @@ type Subscription {
 }
 ```
 
-and the client will listen to `onCommentAdded` subscription and request a selection set from it:
+A client can subscribe by sending a subscription query:
 
 ```js
 subscription onCommentAdded($repoFullName: String!){
@@ -29,28 +29,33 @@ subscription onCommentAdded($repoFullName: String!){
 }
 ```
 
-The above example for subscription will be triggered when a new comment is added on GitHunt for a specific repository. The response sent to the client looks as follows:
+The response sent to the client looks as follows:
 
 ```json
 {
+  "data": {
     "commentAdded": {
-        "id": "123",
-        "content": "Hello!"
+      "id": "123",
+      "content": "Hello!"
     }
+  }
 }
 ```
 
+In the above example, the subscription is expected to send a new result every time a comment is added on GitHunt for a specific repository. Note that the code above only defines the GraphQL subscription in the schema. Read [setting up subscriptions on the client](#subscriptions-client) and [setting up GraphQL subscriptions for the server](http://dev.apollodata.com/tools/graphql-subscriptions/index.html) to learn how to add subscriptions to your app.
+
 > Subscriptions are a good alternative to polling when the initial state is large, but the incremental change sets are small. The starting state can be fetched with a query and subsequently updated through a subscription.
 
-<h2 id="subscriptions-client">Getting started</h2>
 
-To start using GraphQL subscriptions on the client, using a WebSocaket transport, install `subscriptions-transport-ws` from npm:
+<h2 id="subscriptions-client">Setting up subscriptions on the client</h2>
+
+To start using GraphQL subscriptions on the client with a WebSocaket transport, install `subscriptions-transport-ws` from npm:
 
 ```shell
 npm install --save subscriptions-transport-ws
 ```
 
-> `subscriptions-transport-ws` is an transport implementation for subscriptions - you can also use it without Apollo.
+> `subscriptions-transport-ws` is an transport implementation for subscriptions that works with any server or client, not only Apollo.
 
 > Read [here](/tools/graphql-server/subscriptions.html#setup) on how to setup GraphQL subscriptions on your server.
 
@@ -90,12 +95,12 @@ const apolloClient = new ApolloClient({
 
 With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
 
-* You can either use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
-* Use the subscription's selection set to get data with the notification and merge that data into the store
+* use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
+* use the data sent along with the notification and merge it directly into the store (existing queries are automatically notified)
 
-We will focus on the latter.
+`subscribeToMore` lets you do the latter easily.
 
-First you will need to define a GraphQL query and then extend it using `subscribeToMore` with the new data from the subscription.
+`subscribeToMore` is a function available on every query result in `react-apollo`. It works just like [`fetchMore`](/react/cache-updates.html#fetchMore), except that the update function gets called every time the subscription returns, instead of only once.
 
 Here is a regular query:
 
@@ -176,7 +181,7 @@ const withData = graphql(COMMENT_QUERY, {
 });
 ```
 
-and start the actual subscription using `subscribeToNewComments` method with the subscription variables:
+and start the actual subscription by calling the `subscribeToNewComments` function with the subscription variables:
 
 ```js
 export class CommentsPage extends Component {
@@ -195,7 +200,7 @@ export class CommentsPage extends Component {
 
 <h2 id="authentication">Authentication over WebSocket</h2>
 
-The `SubscriptionClient` constructor also accepts a `connectionParams` field, which is a custom object that is passed to your server, and lets the server validate the connection before setting up any subscriptions.
+In many cases it is necessary to authenticate clients before allowing them to receive subscription results. To do this, the `SubscriptionClient` constructor accepts a `connectionParams` field, which passes a custom object that the server can use to validate the connection before setting up any subscriptions.
 
 ```js
 import {SubscriptionClient} from 'subscriptions-transport-ws';

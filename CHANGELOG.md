@@ -10,7 +10,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Fix: make sure maybeDeepFreeze is called on results returned from setVariables and refetch [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 - Fix: use setTimeout to throw uncaught errors in observer.next and observer.error[PR #1367](https://github.com/apollographql/apollo-client/pull/1367)
 - Remove returnPartialData option [PR #1370](https://github.com/apollographql/apollo-client/pull/1370)
-- Update TypeScript Middleware and Afterware interfaces to include a datatype for 'this' in apply function.
+- Update TypeScript Middleware and Afterware interfaces to include a datatype for 'this' in apply function. [PR #1372](https://github.com/apollographql/apollo-client/pull/1372)
 
 ### 0.10.1
 - Address deprecation warnings coming from `graphql-tag` [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)

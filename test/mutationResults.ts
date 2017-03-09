@@ -730,6 +730,15 @@ describe('mutation results', () => {
     });
 
     it('does not swallow errors', done => {
+      let warned: any;
+      let timesWarned = 0;
+      const oldWarn = console.warn;
+      // mock warn method
+      console.warn = (...args: any[]) => {
+        warned = args;
+        timesWarned++;
+      };
+
       client = new ApolloClient({
         networkInterface: mockNetworkInterface({
           request: { query },
@@ -746,10 +755,16 @@ describe('mutation results', () => {
 
       observable.subscribe({
         next: () => {
+          // restore standard method
+          console.warn = oldWarn;
           done(new Error('`next` should not be called.'));
         },
         error: error => {
           assert(/swallow/.test(error.message));
+          assert(/swallow/.test(warned[1].message));
+          assert.equal(timesWarned, 1);
+          // restore standard method
+          console.warn = oldWarn;
           done();
         },
       });

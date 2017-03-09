@@ -58,9 +58,9 @@ export function createStoreReducer(
 
     let nextResult;
     try {
-      nextResult = resultReducer(currentResult, action, variables); // action should include operation name
+      nextResult = resultReducer(result, action, variables); // action should include operation name
     } catch (err) {
-      console.warn('Error in a resultReducer, ignoring and moving on.  ', err);
+      console.warn('Unhandled error in result reducer', err);
       throw err;
     }
 

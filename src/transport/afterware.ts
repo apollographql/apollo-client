@@ -1,4 +1,5 @@
-import { NetworkInterface } from './networkInterface';
+import { HTTPFetchNetworkInterface } from './networkInterface';
+import { HTTPBatchedNetworkInterface } from './batchedNetworkInterface';
 
 export interface AfterwareResponse {
   response: Response;
@@ -6,7 +7,7 @@ export interface AfterwareResponse {
 }
 
 export interface AfterwareInterface {
-  applyAfterware(this: NetworkInterface, response: AfterwareResponse, next: Function): any;
+  applyAfterware(this: HTTPFetchNetworkInterface, response: AfterwareResponse, next: Function): any;
 }
 
 export interface BatchAfterwareResponse {
@@ -15,5 +16,5 @@ export interface BatchAfterwareResponse {
 }
 
 export interface BatchAfterwareInterface {
-  applyBatchAfterware(this: NetworkInterface, response: BatchAfterwareResponse, next: Function): any;
+  applyBatchAfterware(this: HTTPBatchedNetworkInterface, response: BatchAfterwareResponse, next: Function): any;
 }

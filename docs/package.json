@@ -6,15 +6,15 @@
     "version": "3.2.0"
   },
   "dependencies": {
-    "hexo": "3.2.0",
+    "hexo": "3.2.2",
     "hexo-generator-archive": "^0.1.2",
     "hexo-generator-category": "^0.1.2",
-    "hexo-generator-index": "^0.1.2",
-    "hexo-generator-tag": "^0.1.1",
-    "hexo-renderer-ejs": "^0.1.0",
-    "hexo-renderer-less": "^0.2.0",
+    "hexo-generator-index": "^0.2.0",
+    "hexo-generator-tag": "^0.2.0",
+    "hexo-renderer-ejs": "^0.2.0",
     "hexo-renderer-marked": "^0.2.4",
-    "hexo-server": "^0.1.2",
+    "hexo-renderer-less": "^0.2.0",
+    "hexo-server": "^0.2.0",
     "hexo-typescript-api-box": "apollographql/hexo-typescript-api-box#4539552c303c4482943424abec44b2864b8f634a",
     "typedoc": "^0.5.7"
   },

@@ -67,7 +67,7 @@ const FeedWithData = graphql(FeedEntries, {
 
 The `pollInterval` option to a query sets a time interval in milliseconds, on which the query will be refetched. In this case, Apollo will take care of refetching this query every twenty seconds, making sure that your UI is only 20 seconds out of date at any given moment.
 
-Generally, you shouldn't have polling intervals that are very small, say, less than 10 seconds. If you have data that changes frequently and it needs to reflect in the UI immediately, you should use GraphQL subscriptions, a feature coming soon to Apollo Client.
+Generally, you shouldn't have polling intervals that are very small, say, less than 10 seconds. If you have data that changes frequently and it needs to reflect in the UI immediately, you should use [GraphQL subscriptions](#subscriptions).
 
 ## Subscriptions
 

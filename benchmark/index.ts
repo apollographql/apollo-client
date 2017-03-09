@@ -69,6 +69,19 @@ const getClientInstance = () => {
   });
 };
 
+const createReservations = (count: number) => {
+    const reservations: {
+      name: string,
+      id: string,
+    }[] = [];
+  times(count, (reservationIndex) => {
+    reservations.push({
+      name: 'Fake Reservation',
+      id: reservationIndex.toString(),
+    });
+  });
+  return reservations;
+};
 
 group((end) => {
   benchmark('constructing an instance', (done) => {
@@ -248,17 +261,8 @@ times(50, (index) => {
         }
       }`;
     const houseId = '12';
-    const reservations: {
-      name: string,
-      id: string,
-    }[] = [];
-    const reservationCount = (index + 1);
-    times(reservationCount, (reservationIndex) => {
-      reservations.push({
-        name: 'Fake Reservation',
-        id: reservationIndex.toString(),
-      });
-    });
+    const reservationCount = index + 1;
+    const reservations = createReservations(reservationCount);
 
     const variables = {id: houseId };
     const result = {
@@ -302,56 +306,57 @@ times(50, (index) => {
 //
 // This test allows us to differentiate between the fixed cost of .query() and the fixed cost
 // of actually reading from the store.
-group((end) => {
-  // Prime the cache.
-  const query = gql`
-    query($id: String) {
-      house(id: $id) {
-        reservations {
-          name
-          id
+times(50, (index) => {
+  group((end) => {
+    const reservationCount = index + 1;
+
+    // Prime the cache.
+    const query = gql`
+      query($id: String) {
+        house(id: $id) {
+          reservations {
+            name
+            id
+          }
         }
-      }
-    }`;
-  const variables = { id: '7' };
-  const reservations: {
-    name: string,
-    id: string,
-  }[] = [{ name: 'a', id: '1'}, {name: 'b', id: '2'}, {name: 'c', id: '3'}];
-  const result = {
-    data: {
-      house: { reservations },
-    },
-  };
-  const client = new ApolloClient({
-    networkInterface: mockNetworkInterface({
-      request: { query, variables },
-      result,
-    }),
-    addTypename: false,
-    dataIdFromObject,
-  });
-
-  const myBenchmark = benchmark;
-
-  // We only keep track of the results so that V8 doesn't decide to just throw
-  // away our cache read code.
-  const results: any[] = [];
-  client.query({
-    query,
-    variables,
-  }).then(() => {
-    myBenchmark('diff query against store', (done) => {
-
-      results.push(diffQueryAgainstStore({
-        query,
-        variables,
-        store: client.store.getState()['apollo'].data,
-      }));
-      done();
+      }`;
+    const variables = { id: '7' };
+    const reservations = createReservations(reservationCount);
+    const result = {
+      data: {
+        house: { reservations },
+      },
+    };
+    const client = new ApolloClient({
+      networkInterface: mockNetworkInterface({
+        request: { query, variables },
+        result,
+      }),
+      addTypename: false,
+      dataIdFromObject,
     });
 
-    end();
+    const myBenchmark = benchmark;
+
+    // We only keep track of the results so that V8 doesn't decide to just throw
+    // away our cache read code.
+    const results: any[] = [];
+    client.query({
+      query,
+      variables,
+    }).then(() => {
+      myBenchmark(`diff query against store with ${reservationCount} items`, (done) => {
+
+        results.push(diffQueryAgainstStore({
+          query,
+          variables,
+          store: client.store.getState()['apollo'].data,
+        }));
+        done();
+      });
+
+      end();
+    });
   });
 });
 

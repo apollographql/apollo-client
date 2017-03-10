@@ -463,6 +463,15 @@ export class QueryManager {
       throw new Error('returnPartialData option is no longer supported since Apollo Client 1.0.');
     }
 
+    if ((options as any).forceFetch) {
+      throw new Error('forceFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
+    }
+
+    if ((options as any).noFetch) {
+      throw new Error('noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
+    }
+
+
     // Call just to get errors synchronously
     getQueryDefinition(options.query);
 
@@ -487,6 +496,14 @@ export class QueryManager {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     if ((options as any).returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
+    }
+
+    if ((options as any).forceFetch) {
+      throw new Error('forceFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
+    }
+
+    if ((options as any).noFetch) {
+      throw new Error('noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
     }
 
     if (options.query.kind !== 'Document') {

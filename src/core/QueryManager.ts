@@ -272,7 +272,7 @@ export class QueryManager {
           if (result.errors) {
             const error = new ApolloError({
               graphQLErrors: result.errors,
-            })
+            });
             this.store.dispatch({
               type: 'APOLLO_MUTATION_ERROR',
               error,

@@ -26,14 +26,14 @@ const client = new ApolloClient({
 This option is simply passed through to the [`fetch` polyfill](https://github.com/github/fetch) used by the network interface when sending the query.
 
 Note: the backend must also allow credentials from the requested origin. e.g. if using the popular 'cors' package from npm in node.js, the following settings would work in tandem with the above apollo client settings, 
-
+```js
 // enable cors
 var corsOptions = {
   origin: '<insert uri of front-end domain>',
   credentials: true // <-- REQUIRED backend setting
 };
 app.use(cors(corsOptions));
-
+```
 ## Header
 
 Another common way to identify yourself when using HTTP is to send along an authorization header. The Apollo network interface has a middleware feature that lets you modify requests before they are sent to the server. It's easy to add an `authorization` header to every HTTP request. In this example, we'll pull the login token from `localStorage` every time a request is sent:

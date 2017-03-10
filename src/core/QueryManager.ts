@@ -270,9 +270,17 @@ export class QueryManager {
       this.networkInterface.query(request)
         .then((result) => {
           if (result.errors) {
-            reject(new ApolloError({
+            const error = new ApolloError({
               graphQLErrors: result.errors,
-            }));
+            })
+            this.store.dispatch({
+              type: 'APOLLO_MUTATION_ERROR',
+              error,
+              mutationId,
+            });
+
+            delete this.queryDocuments[mutationId];
+            reject(error);
             return;
           }
 

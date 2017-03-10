@@ -31,6 +31,7 @@ import {
   WatchQueryOptions,
   MutationOptions,
   SubscriptionOptions,
+  FetchPolicy,
 } from './core/watchQueryOptions';
 
 import {
@@ -102,6 +103,7 @@ export {
   // internal type definitions for export
   NetworkInterface,
   HTTPFetchNetworkInterface,
+  FetchPolicy,
   WatchQueryOptions,
   MutationOptions,
   ObservableQuery,

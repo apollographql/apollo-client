@@ -6,6 +6,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### 1.0.0-rc.1
 - throw error if deprecated options are being used [PR #1396](https://github.com/apollographql/apollo-client/pull/1396)
+- Fix: rollback optimistic response before ApolloError rejected in `QueryManager#mutate` [PR #1398](https://github.com/apollographql/apollo-client/pull/1398)
 
 ### 1.0.0-rc.1
 - Fix (possibly breaking): Invoke afterware even on requests that error [PR #1351](https://github.com/apollographql/apollo-client/pull/1351)

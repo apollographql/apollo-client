@@ -118,8 +118,8 @@ export default class ApolloClient implements DataProxy {
    * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
    * to a GraphQL spec-compliant server.
    *
-   * @param reduxRootSelector Either a "selector" function that receives state from the Redux store
-   * and returns the part of it that is managed by ApolloClient or a key that points to that state.
+   * @param reduxRootSelector A "selector" function that receives state from the Redux store
+   * and returns the part of it that is managed by ApolloClient.
    * This option should only be used if the store is created outside of the client.
    *
    * @param initialState The initial state assigned to the store.

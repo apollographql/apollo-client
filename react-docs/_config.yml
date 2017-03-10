@@ -21,6 +21,7 @@ sidebar_categories:
   Usage:
     - queries
     - mutations
+    - subscriptions
     - receiving-updates
     - cache-updates
   Recipes:

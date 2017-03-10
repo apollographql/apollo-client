@@ -5,6 +5,9 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 
 ### 1.0.0-rc.1
+- throw error if deprecated options are being used [PR #1396](https://github.com/apollographql/apollo-client/pull/1396)
+
+### 1.0.0-rc.1
 - Fix (possibly breaking): Invoke afterware even on requests that error [PR #1351](https://github.com/apollographql/apollo-client/pull/1351)
 - Breaking: change default of notifyOnNetworkStatusChange to true [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 - Breaking: change default of queryDeduplication to true [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)

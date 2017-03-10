@@ -449,52 +449,6 @@ describe('QueryScheduler', () => {
     }, 100);
   });
 
-  it('should correctly start polling queries', (done) => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-
-    const data = {
-      'author': {
-        'firstName': 'John',
-        'lastName': 'Smith',
-      },
-    };
-    const queryOptions = {
-      query,
-      pollInterval: 80,
-    };
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: queryOptions,
-        result: { data },
-      },
-    );
-    const queryManager = new QueryManager({
-      networkInterface: networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
-      addTypename: false,
-    });
-    const scheduler = new QueryScheduler({
-      queryManager,
-    });
-    let timesFired = 0;
-    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', (queryStoreValue) => {
-      timesFired += 1;
-    });
-    setTimeout(() => {
-      assert.isAtLeast(timesFired, 0);
-      scheduler.stopPollingQuery(queryId);
-      done();
-    }, 120);
-  });
-
   it('should correctly start new polling query after removing old one', (done) => {
     const query = gql`
       query {

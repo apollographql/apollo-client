@@ -118,7 +118,7 @@ export class QueryScheduler {
 
       const queryOptions = this.registeredQueries[queryId];
       const pollingOptions = { ...queryOptions } as WatchQueryOptions;
-      pollingOptions.forceFetch = true;
+      pollingOptions.fetchPolicy = 'network-only';
       this.fetchQuery<T>(queryId, pollingOptions, FetchType.poll);
       return true;
     });

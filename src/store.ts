@@ -93,7 +93,7 @@ export function createApolloReducer(config: ApolloReducerConfig): Function {
       };
 
       // use the two lines below to debug tests :)
-      // console.log('ACTION', action.type, action);
+      // console.log('ACTION', action.type, JSON.stringify(action, null, 2));
       // console.log('new state', newState);
 
       // Note, we need to have the results of the

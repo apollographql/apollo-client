@@ -79,7 +79,7 @@ import {
   /* tslint:enable */
 } from 'graphql';
 
-import { print } from 'graphql-tag/bundledPrinter';
+import { print } from 'graphql/language/printer';
 
 import {
   readQueryFromStore,

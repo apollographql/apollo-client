@@ -12,7 +12,7 @@ import {
 
 import {
   print,
-} from 'graphql-tag/bundledPrinter';
+} from 'graphql/language/printer';
 
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server

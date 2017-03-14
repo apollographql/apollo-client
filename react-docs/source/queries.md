@@ -38,7 +38,7 @@ const CurrentUserForLayout = gql`
 const ProfileWithData = graphql(CurrentUserForLayout)(Profile);
 ```
 
-When we use `graphql` in this simple way with a GraphQL query document, [`ApolloClient.watchQuery`](/core/apollo-client-api.html#watchQuery) is used under the hood to execute the query before the results are passed to the child component in a prop called `data`. In addition to the `currentUser` field selected in the query, the `data` prop also includes a field called `loading`, a Boolean value indicating if the the query is currently being loaded from the server.
+When we use `graphql` in this simple way with a GraphQL query document, [`ApolloClient.watchQuery`](/core/apollo-client-api.html#watchQuery) is used under the hood to execute the query before the results are passed to the child component in a prop called `data`. In addition to the `currentUser` field selected in the query, the `data` prop also includes a field called `loading`, a Boolean value indicating if the query is currently being loaded from the server.
 
 The `data.currentUser` sub-prop will change as what the client knows about the current user changes over time. That information is stored in Apollo Client's global cache, so if some other query fetches new information about the current user, this component will update to remain consistent. You can read more about techniques to bring the cache up to date with the server in the [article on the subject](cache-updates.html).
 

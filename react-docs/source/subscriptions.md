@@ -2,7 +2,7 @@
 title: Subscriptions
 ---
 
-In addition to fetching data using queries and modifying data using mutations, GraphQL spec also has a third operation type, called `subscription`.
+In addition to fetching data using queries and modifying data using mutations, the GraphQL spec also has a third operation type, called `subscription`.
 
 GraphQL Subscriptions is a way to push data from the server to the clients that choose to listen to real time messages from the server.  
 

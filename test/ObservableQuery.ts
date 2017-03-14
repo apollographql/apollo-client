@@ -227,7 +227,6 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, data);
-          observable.setOptions({ forceFetch: false });
           observable.refetch(variables2);
         } else if (handleCount === 3) { // 3 because there is an intermediate loading state
           assert.deepEqual(result.data, data2);
@@ -236,7 +235,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if forceFetch becomes true', (done) => {
+    it('does a network request if fetchPolicy becomes networkOnly', (done) => {
       const observable: ObservableQuery<any> = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
@@ -248,7 +247,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, dataOne);
-          observable.setOptions({ forceFetch: true });
+          observable.setOptions({ fetchPolicy: 'network-only' });
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, dataTwo);
           done();
@@ -256,7 +255,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if noFetch becomes true then store is reset then noFetch becomes false', (done) => {
+    it('does a network request if cachePolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', (done) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -289,7 +288,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 1);
 
           setTimeout(() => {
-            observable.setOptions({noFetch: true});
+            observable.setOptions({fetchPolicy: 'cache-only'});
 
             queryManager.resetStore();
           }, 0);
@@ -298,7 +297,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 1);
 
           setTimeout(() => {
-            observable.setOptions({noFetch: false});
+            observable.setOptions({fetchPolicy: 'cache-first'});
           }, 0);
         } else if (handleCount === 3) {
           assert.deepEqual(result.data, data);
@@ -309,7 +308,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if noFetch becomes false', (done) => {
+    it('does a network request if fetchPolicy changes from cache-only', (done) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`
@@ -334,7 +333,7 @@ describe('ObservableQuery', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      observable = queryManager.watchQuery({ query: testQuery, noFetch: true, notifyOnNetworkStatusChange: false });
+      observable = queryManager.watchQuery({ query: testQuery, fetchPolicy: 'cache-only', notifyOnNetworkStatusChange: false });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 2) {
@@ -342,7 +341,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 0);
 
           setTimeout(() => {
-            observable.setOptions({noFetch: false});
+            observable.setOptions({fetchPolicy: 'cache-first'});
           }, 0);
         } else if (handleCount === 3) {
           assert.deepEqual(result.data, data);
@@ -671,7 +670,7 @@ describe('ObservableQuery', () => {
         });
     });
 
-    it('returns loading even if full data is available when force fetching', (done) => {
+    it('returns loading even if full data is available when using network-only fetchPolicy', (done) => {
       const queryManager = mockQueryManager({
         request: { query, variables },
         result: { data: dataOne },
@@ -685,7 +684,7 @@ describe('ObservableQuery', () => {
           const observable = queryManager.watchQuery({
             query,
             variables,
-            forceFetch: true,
+            fetchPolicy: 'network-only',
           });
           assert.deepEqual(observable.currentResult(), {
             data: dataOne,

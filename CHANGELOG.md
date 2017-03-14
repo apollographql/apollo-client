@@ -3,14 +3,20 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
+### 1.0.0-rc.2
+- throw error if deprecated options are being used [PR #1396](https://github.com/apollographql/apollo-client/pull/1396)
+
+### 1.0.0-rc.1
 - Fix (possibly breaking): Invoke afterware even on requests that error [PR #1351](https://github.com/apollographql/apollo-client/pull/1351)
 - Breaking: change default of notifyOnNetworkStatusChange to true [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 - Breaking: change default of queryDeduplication to true [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 - Breaking: remove deprecated reduxRootKey [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 - Fix: make sure maybeDeepFreeze is called on results returned from setVariables and refetch [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
 - Fix: use setTimeout to throw uncaught errors in observer.next and observer.error[PR #1367](https://github.com/apollographql/apollo-client/pull/1367)
-- Remove returnPartialData option [PR #1370](https://github.com/apollographql/apollo-client/pull/1370)
-- Update TypeScript Middleware and Afterware interfaces to include a datatype for 'this' in apply function. [PR #1372](https://github.com/apollographql/apollo-client/pull/1372)
+- Fix: Update TypeScript Middleware and Afterware interfaces to include a datatype for 'this' in apply function. [PR #1372](https://github.com/apollographql/apollo-client/pull/1372)
+- Breaking: Remove returnPartialData option [PR #1370](https://github.com/apollographql/apollo-client/pull/1370)
+- Breaking: Implement fetchPolicy to replace noFetch and forceFetch [PR #1371](https://github.com/apollographql/apollo-client/pull/1371)
 
 ### 0.10.1
 - Address deprecation warnings coming from `graphql-tag` [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)

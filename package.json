@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "0.10.1",
+  "version": "1.0.0-rc.2",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/src/index.js",
@@ -12,6 +12,7 @@
     "pretest": "npm run compile:test",
     "test": "npm run testonly --",
     "benchmark": "npm run compile:benchmark && node --stack-size=20000 lib/benchmark/index.js",
+    "benchmark:inspect": "npm run compile:benchmark && node --stack-size=20000 --inspect --debug-brk lib/benchmark/index.js",
     "posttest": "npm run lint",
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=27",
     "compile": "tsc",
@@ -56,8 +57,8 @@
   "devDependencies": {
     "@types/benchmark": "^1.0.30",
     "@types/chai": "^3.4.32",
-    "@types/chai-as-promised": "0.0.29",
-    "@types/lodash": "4.14.54",
+    "@types/chai-as-promised": "0.0.30",
+    "@types/lodash": "4.14.55",
     "@types/mocha": "^2.2.31",
     "@types/node": "^7.0.5",
     "@types/promises-a-plus": "0.0.27",

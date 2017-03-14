@@ -49,7 +49,7 @@ In the above example, the subscription is expected to send a new result every ti
 
 <h2 id="subscriptions-client">Setting up subscriptions on the client</h2>
 
-To start using GraphQL subscriptions on the client with a WebSocaket transport, install `subscriptions-transport-ws` from npm:
+To start using GraphQL subscriptions on the client with a Websocket transport, install `subscriptions-transport-ws` from npm:
 
 ```shell
 npm install --save subscriptions-transport-ws
@@ -62,32 +62,32 @@ npm install --save subscriptions-transport-ws
 Then, create a GraphQL subscriptions transport client (`SubscriptionClient`):
 
 ```js
-import {SubscriptionClient} from 'subscriptions-transport-ws';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 const wsClient = new SubscriptionClient(`http://localhost:5000/`, {
-    reconnect: true
+  reconnect: true
 });
 ```
 
-and extend your existing Apollo-Client network interface using the `addGraphQLSubscriptions` function:
+Then, extend your existing Apollo-Client network interface using the `addGraphQLSubscriptions` function:
 
 ```js
-import {SubscriptionClient, addGraphQLSubscriptions} from 'subscriptions-transport-ws';
+import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
 
-// Create regular NetworkInterface by using apollo-client's API:
+// Create a normal network interface:
 const networkInterface = createNetworkInterface({
- uri: 'http://localhost:3000'
+  uri: 'http://localhost:3000'
 });
 
 // Extend the network interface with the WebSocket
 const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
-    networkInterface,
-    wsClient
+  networkInterface,
+  wsClient
 );
 
 // Finally, create your ApolloClient instance with the modified network interface
 const apolloClient = new ApolloClient({
-    networkInterface: networkInterfaceWithSubscriptions
+  networkInterface: networkInterfaceWithSubscriptions
 });
 ```
 
@@ -95,10 +95,10 @@ const apolloClient = new ApolloClient({
 
 With GraphQL subscriptions your client will be alerted on push from the server and you should choose the pattern that fits your application the most:
 
-* use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
-* use the data sent along with the notification and merge it directly into the store (existing queries are automatically notified)
+* Use it as a notification and run any logic you want when it fires, for example alerting the user or refetching data
+* Use the data sent along with the notification and merge it directly into the store (existing queries are automatically notified)
 
-`subscribeToMore` lets you do the latter easily.
+With `subscribeToMore`, you can easily do the latter.
 
 `subscribeToMore` is a function available on every query result in `react-apollo`. It works just like [`fetchMore`](/react/cache-updates.html#fetchMore), except that the update function gets called every time the subscription returns, instead of only once.
 

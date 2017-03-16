@@ -10,7 +10,13 @@ chai.use(chaiAsPromised);
 const { assert, expect } = chai;
 
 import {
+  createMockedIResponse,
+} from './mocks/mockFetch';
+
+import {
   createNetworkInterface,
+  HTTPFetchNetworkInterface,
+  ParsedResponse,
 //  NetworkInterface,
 //  Request,
 } from '../src/transport/networkInterface';
@@ -480,6 +486,50 @@ describe('network interface', () => {
         assert.isOk(err.response);
         assert.equal(err.response.status, 503);
         assert.equal(err.message, 'Network request failed with status 503 - "Service Unavailable"');
+      });
+    });
+    describe('parsing the response', () => {
+      context('response contains valid JSON', () => {
+        let fakeResponse: Response | null = null
+          , fakeResponseData: Object | null = null;
+        beforeEach(() => {
+          fakeResponseData = { data: { foo: 'bar' } };
+          const mockResponse = createMockedIResponse(fakeResponseData, { status: 200, statusText: 'ok'});
+          fakeResponse = mockResponse as Response;
+        });
+        it('should return a parsed response with a body attribute equal to parsed response payload', (done) => {
+          HTTPFetchNetworkInterface.parseResponse(fakeResponse as Response).then((parsedResponse: ParsedResponse) => {
+            assert.deepEqual(parsedResponse.body, fakeResponseData, 'parsed response body does not equal parsed response payload');
+            done();
+          }).catch((err: Error) => done(err));
+        });
+        it('should return a parsed response with a null rawBody attribute', (done) => {
+          HTTPFetchNetworkInterface.parseResponse(fakeResponse as Response).then((parsedResponse: ParsedResponse) => {
+            assert.strictEqual(parsedResponse.rawBody, null, 'parsed response rawBody is not null');
+            done();
+          }).catch((err: Error) => done(err));
+        });
+      });
+      context('response does not contain valid JSON', () => {
+        let fakeResponse: Response | null = null
+          , fakeResponseData: String | null = null;
+        beforeEach(() => {
+          fakeResponseData = 'foo';
+          const mockResponse = createMockedIResponse(fakeResponseData, { status: 200, statusText: 'ok'});
+          fakeResponse = mockResponse as Response;
+        });
+        it('should return a parsed response with a null body attribute', (done) => {
+          HTTPFetchNetworkInterface.parseResponse(fakeResponse as Response).then((parsedResponse: ParsedResponse) => {
+            assert.strictEqual(parsedResponse.body, null, 'parsed response body is not null');
+            done();
+          }).catch((err: Error) => done(err));
+        });
+        it('should return a parsed response with a rawBody attribute equal to the unparsed response payload', (done) => {
+          HTTPFetchNetworkInterface.parseResponse(fakeResponse as Response).then((parsedResponse: ParsedResponse) => {
+            assert.deepEqual(parsedResponse.rawBody, fakeResponseData, 'parsed response rawBody does not equal unparsed response payload');
+            done();
+          }).catch((err: Error) => done(err));
+        });
       });
     });
   });

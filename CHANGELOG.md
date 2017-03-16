@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Breaking: Parse response before delegating to afterware [PR #1425](https://github.com/apollographql/apollo-client/pull/1425)
 
 ### 1.0.2
 - Fix bug that caused reducer updates to fail because typename was not added automatically [PR #1540](https://github.com/apollographql/apollo-client/pull/1540)

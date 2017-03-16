@@ -76,8 +76,19 @@ export interface RequestAndOptions {
 }
 
 export interface ResponseAndOptions {
-  response: Response;
+  response: ParsedResponse;
   options: RequestInit;
+}
+
+export interface ParsedResponse {
+  ok: Boolean;
+  isJSON: Boolean;
+  body: Object | Array<Object>;
+  rawBody: String | null;
+  headers: Object;
+  status: Number;
+  statusText: String;
+  url: String;
 }
 
 export function printRequest(request: Request): PrintedRequest {
@@ -121,6 +132,39 @@ export class BaseNetworkInterface implements NetworkInterface {
 export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
   public _middlewares: MiddlewareInterface[];
   public _afterwares: AfterwareInterface[];
+
+  public static parseResponse (response: Response): Promise<ParsedResponse> {
+    const headers: Object = Object.assign({}, response.headers);
+    const status: Number = response.status;
+    const statusText: String = response.statusText;
+    const url: String = response.url;
+    const ok: Boolean = response.ok;
+
+    return response.text()
+      .then(str => {
+        let body: Object | null = null;
+        let isJSON: Boolean = false;
+        let rawBody: String | null = null;
+
+        try {
+          body = JSON.parse(str);
+          isJSON = true;
+        } catch (e) {
+          rawBody = str;
+        }
+
+        return Promise.resolve({
+          ok,
+          isJSON,
+          body,
+          rawBody,
+          headers,
+          status,
+          statusText,
+          url,
+        });
+      });
+  }
 
   public applyMiddlewares(requestAndOptions: RequestAndOptions): Promise<RequestAndOptions> {
     return new Promise((resolve, reject) => {
@@ -193,13 +237,28 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
       request,
       options,
     }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
-      .then(response => this.applyAfterwares({
-        response: response as Response,
+      .then((response: Response) => HTTPFetchNetworkInterface.parseResponse(response))
+      .then((response: ParsedResponse) => this.applyAfterwares({
+        response: response as ParsedResponse,
         options,
       }))
-      .then(({ response }) => {
-        const httpResponse = response as Response;
+      .then((responseAndOptions: ResponseAndOptions) => {
+        const httpResponse = responseAndOptions.response as ParsedResponse;
+      
+        if (!httpResponse.ok) {
+          const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
+          (httpError as any).response = httpResponse;
 
+          throw httpError;
+        }
+
+        if (!httpResponse.isJSON) {
+          const httpError = new Error('Network request failed to return valid JSON');
+          (httpError as any).response = httpResponse;
+
+          throw httpError;
+        }
+        
         return httpResponse.json().catch(() => {
           const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
           (httpError as any).response = httpResponse;

@@ -29,7 +29,7 @@ And if you needed to pass additional options to [`fetch`](https://github.github.
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
-const networkInterface = createNetworkInterface({ 
+const networkInterface = createNetworkInterface({
   uri: 'https://example.com/graphql',
   opts: {
     // Additional fetch options like `credentials` or `headers`
@@ -285,9 +285,9 @@ Query batching is a transport-level mechanism that works only with servers that 
    operationName: 'Query2',
  }]
  ```
- 
+
  <h2 id="query-deduplication">Query deduplication</h2>
- Query deduplication can help reduce the number of queries that are sent over the wire. It is turned off by default, but can be turned on by passing the `queryDeduplication` option to Apollo Client. If turned on, query deduplication happens before the query hits the network layer. 
+ Query deduplication can help reduce the number of queries that are sent over the wire. It is turned off by default, but can be turned on by passing the `queryDeduplication` option to Apollo Client. If turned on, query deduplication happens before the query hits the network layer.
 
 ```js
 const apolloClient = new ApolloClient({
@@ -297,3 +297,43 @@ const apolloClient = new ApolloClient({
  ```
  
  Query deduplication can be useful if many components display the same data, but you don't want to fetch that data from the server many times. It works by comparing a query to all queries currently in flight. If an identical query is currently in flight, the new query will be mapped to the same promise and resolved when the currently in-flight query returns.
+
+ <h2 id="query-batch-wares">Middleware and Afterware for batching network interfaces</h2>
+
+In a batching network interface middlewares and afterwares do not run once per query but instead run once per batch request. Creating middleware and afterware for a batching network interface is very similar as standard middleware and afterware except instead of `applyMiddleware` and `applyAfterware`, you want to use `applyBatchMiddleware` and `applyBatchAfterware`.
+
+```js
+import ApolloClient, { createBatchingNetworkInterface } from 'apollo-client';
+
+const networkInterface = createBatchingNetworkInterface({
+  uri: 'localhost:3000',
+  batchInterval: 10,
+  opts: {
+});
+
+const token = 'first-token-value';
+
+const authMiddleware = {
+  applyBatchMiddleware(req, next) {
+    if (!req.options.headers) {
+      req.options.headers = {};  // Create the headers object if needed.
+    }
+    req.options.headers['authorization'] = token;
+    next();
+  }
+}
+
+const loggingAfterware = {
+  applyBatchAfterware(res, next) {
+    console.log((res.responses);
+    next();
+  }
+}
+
+networkInterface.use([authMiddleware]);
+networkInterface.useAfter([loggingAfterware]);
+
+const client = new ApolloClient({
+  networkInterface,
+});
+```

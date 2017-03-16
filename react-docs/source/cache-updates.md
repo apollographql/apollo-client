@@ -134,7 +134,7 @@ const FeedWithData = graphql(FeedQuery, {
           updateQuery: (prev, { fetchMoreResult }) => {
             if (!fetchMoreResult.data) { return prev; }
             return Object.assign({}, prev, {
-              feed: [...prev.feed, ...fetchMoreResult.data.feed],
+              feed: [...prev.feed, ...fetchMoreResult.feed],
             });
           },
         });
@@ -154,7 +154,7 @@ return fetchMore({
   updateQuery: (prev, { fetchMoreResult }) => {
     if (!fetchMoreResult.data) { return prev; }
     return Object.assign({}, prev, {
-      feed: [...prev.feed, ...fetchMoreResult.data.feed],
+      feed: [...prev.feed, ...fetchMoreResult.feed],
     });
   },
 });

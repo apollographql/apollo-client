@@ -15,7 +15,7 @@
     "hexo-renderer-marked": "^0.2.4",
     "hexo-renderer-less": "^0.2.0",
     "hexo-server": "^0.2.0",
-    "hexo-typescript-api-box": "apollographql/hexo-typescript-api-box#4539552c303c4482943424abec44b2864b8f634a",
+    "hexo-typescript-api-box": "0.9.0",
     "typedoc": "^0.5.7"
   },
   "devDependencies": {

@@ -298,9 +298,9 @@ const apolloClient = new ApolloClient({
  
  Query deduplication can be useful if many components display the same data, but you don't want to fetch that data from the server many times. It works by comparing a query to all queries currently in flight. If an identical query is currently in flight, the new query will be mapped to the same promise and resolved when the currently in-flight query returns.
 
- <h2 id="query-batch-wares">Batch Middleware and Afterware</h2>
+ <h2 id="query-batch-wares">Middleware and Afterware for batching network interfaces</h2>
 
-Batch middleware and afterware do not run once per query but instead run once per batch request. Creating batch middleware and batch afterware is very similar as standard middleware and afterware except instead of `applyMiddleware` and `applyAfterware`, you want to use `applyBatchMiddleware` and `applyBatchAfterware`.
+In a batching network interface middlewares and afterwares do not run once per query but instead run once per batch request. Creating middleware and afterware for a batching network interface is very similar as standard middleware and afterware except instead of `applyMiddleware` and `applyAfterware`, you want to use `applyBatchMiddleware` and `applyBatchAfterware`.
 
 ```js
 import ApolloClient, { createBatchingNetworkInterface } from 'apollo-client';

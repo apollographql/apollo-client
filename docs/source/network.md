@@ -116,17 +116,33 @@ const client = new ApolloClient({
 Given the above code, the header's `Authorization` value will be that of `token2`.  This example shows how you can use more than one middleware to make multiple/separate modifications to the request being processed in the form of a chain.  This example doesn't show the use of `localStorage`, but is instead just meant to demonstrate the use of more than one middleware, passed to `.use()` as an array.
 
 <h3 id="networkInterfaceAfterware" title="Afterware">Afterware</h3>
-'Afterware' is very similar to a middleware, except that a afterware runs after a request has been made,
+
+'Afterware' is very similar to a middleware, except that an afterware runs after a request has been made,
 that is when a response is going to get processed. It's perfect for responding to the situation where a user becomes logged out during their session.
 
 It is possible to use afterware with the network interface created via `createNetworkInterface`.
 In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.
 Each object must contain an `applyAfterware` method with the following parameters:
 
-- `{ response }: object` A object contain the HTTP response of a GraphQL fetch.
+- `{ response }: object` A object containing the parsed HTTP response of a GraphQL fetch.
 - `next: function` This function pushes the HTTP response onward through the afterware.
 
-This example shows how you'd create a afterware.
+The response object is shaped as such:
+
+```js
+interface ParsedResponse {
+  ok: Boolean;
+  isJSON: Boolean;
+  body: Object | Array<Object>;
+  rawBody: String | null;
+  headers: Object;
+  status: Number;
+  statusText: String;
+  url: String;
+}
+```
+
+The following example demonstrates how to implement an afterware function.
 It can be done either by providing the required object directly to `.useAfter()`
 or by creating an object and passing it to `.useAfter()`.
 In both cases all afterware objects have to be wrapped inside an array.

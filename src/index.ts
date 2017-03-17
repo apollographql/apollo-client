@@ -11,7 +11,7 @@ import {
 
 import {
   print,
-} from 'graphql-tag/printer';
+} from 'graphql-tag/bundledPrinter';
 
 import {
   createApolloStore,
@@ -30,7 +30,8 @@ import {
 import {
   WatchQueryOptions,
   MutationOptions,
-  DeprecatedSubscriptionOptions,
+  SubscriptionOptions,
+  FetchPolicy,
 } from './core/watchQueryOptions';
 
 import {
@@ -42,7 +43,6 @@ import {
 } from './data/writeToStore';
 
 import {
-  MutationBehavior,
   MutationQueryReducersMap,
 } from './data/mutationResults';
 
@@ -55,23 +55,21 @@ import {
 
 import {
   NetworkStatus,
-} from './queries/store';
+} from './queries/networkStatus';
+
+import {
+  addTypenameToDocument,
+} from './queries/queryTransform';
 
 import {
   ApolloError,
 } from './errors/ApolloError';
 
 import ApolloClient from './ApolloClient';
-import {
-  createFragment,
-  clearFragmentDefinitions,
-  disableFragmentWarnings,
-  enableFragmentWarnings,
-} from './fragments';
 
 import {
   ApolloQueryResult,
-} from './core/QueryManager';
+} from './core/types';
 
 import {
   toIdValue,
@@ -87,15 +85,10 @@ export {
   readQueryFromStore,
   writeQueryToStore,
   print as printAST,
+  addTypenameToDocument,
   createFragmentMap,
   NetworkStatus,
   ApolloError,
-
-  // fragment stuff
-  createFragment,
-  clearFragmentDefinitions,
-  disableFragmentWarnings,
-  enableFragmentWarnings,
 
   getQueryDefinition,
   getFragmentDefinitions,
@@ -110,13 +103,13 @@ export {
   // internal type definitions for export
   NetworkInterface,
   HTTPFetchNetworkInterface,
+  FetchPolicy,
   WatchQueryOptions,
   MutationOptions,
   ObservableQuery,
-  MutationBehavior,
   MutationQueryReducersMap,
   Subscription,
-  DeprecatedSubscriptionOptions as SubscriptionOptions,
+  SubscriptionOptions,
   ApolloStore,
   ApolloClient
 };

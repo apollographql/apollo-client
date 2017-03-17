@@ -15,8 +15,6 @@ import {
   NameNode,
 } from 'graphql';
 
-import isObject = require('lodash/isObject');
-
 function isStringValue(value: ValueNode): value is StringValueNode {
   return value.kind === 'StringValue';
 }
@@ -59,10 +57,7 @@ function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNo
     value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
     argObj[name.value] = nestedArgObj;
   } else if (isVariable(value)) {
-    if (! variables || !(value.name.value in variables)) {
-      throw new Error(`The inline argument "${value.name.value}" is expected as a variable but was not provided.`);
-    }
-    const variableValue = (variables as any)[value.name.value];
+    const variableValue = (variables || {} as any)[value.name.value];
     argObj[name.value] = variableValue;
   } else if (isListValue(value)) {
     argObj[name.value] = value.values.map((listValue) => {
@@ -143,10 +138,14 @@ export interface JsonValue {
   json: any;
 }
 
-export type StoreValue = number | string | string[] | IdValue | JsonValue | void;
+export type StoreValue = number | string | string[] | IdValue | JsonValue | null | undefined | void;
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
-  return (isObject(idObject) && (idObject as (IdValue | JsonValue)).type === 'id');
+  return (
+    idObject != null &&
+    typeof idObject === 'object' &&
+    (idObject as (IdValue | JsonValue)).type === 'id'
+  );
 }
 
 export function toIdValue(id: string, generated = false): IdValue {
@@ -158,5 +157,9 @@ export function toIdValue(id: string, generated = false): IdValue {
 }
 
 export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
-  return (isObject(jsonObject) && (jsonObject as (IdValue | JsonValue)).type === 'json');
+  return (
+    jsonObject != null &&
+    typeof jsonObject === 'object' &&
+    (jsonObject as (IdValue | JsonValue)).type === 'json'
+  );
 }

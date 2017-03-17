@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "commonjs",
+    "module": "es2015",
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
@@ -12,7 +12,8 @@
     "removeComments": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "strictNullChecks": true
   },
   "files": [
     "node_modules/typescript/lib/lib.es2015.d.ts",
@@ -20,6 +21,7 @@
     "typings.d.ts",
     "fetch-mock.typings.d.ts",
     "src/index.ts",
-    "test/tests.ts"
+    "test/tests.ts",
+    "benchmark/index.ts"
    ]
 }

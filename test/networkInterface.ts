@@ -1,8 +1,7 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import assign = require('lodash/assign');
-import isequal = require('lodash/isEqual');
+import { assign, isEqual } from 'lodash';
 import * as fetchMock from 'fetch-mock';
 
 // make it easy to assert with promises
@@ -26,13 +25,16 @@ import {
 
 import gql from 'graphql-tag';
 
-import { print } from 'graphql-tag/printer';
+import { print } from 'graphql-tag/bundledPrinter';
 
 import { withWarning } from './util/wrap';
 
 describe('network interface', () => {
   const swapiUrl = 'http://graphql-swapi.test/';
   const missingUrl = 'http://does-not-exist.test/';
+
+  const unauthorizedUrl = 'http://unauthorized.test/';
+  const serviceUnavailableUrl = 'http://service-unavailable.test/';
 
   const simpleQueryWithNoVars = gql`
     query people {
@@ -109,19 +111,19 @@ describe('network interface', () => {
     // We won't be too careful about counting calls or closely checking
     // parameters, but just do the basic stuff to ensure the request looks right
     fetchMock.post(swapiUrl, (url, opts) => {
-      const { query, variables } = JSON.parse((opts as RequestInit).body.toString());
+      const { query, variables } = JSON.parse((opts as RequestInit).body!.toString());
 
       if (query === print(simpleQueryWithNoVars)) {
         return simpleResult;
       }
 
       if (query === print(simpleQueryWithVar)
-          && isequal(variables, { personNum: 1 })) {
+          && isEqual(variables, { personNum: 1 })) {
         return simpleResult;
       }
 
       if (query === print(complexQueryWithTwoVars)
-          && isequal(variables, { personNum: 1, filmNum: 1 })) {
+          && isEqual(variables, { personNum: 1, filmNum: 1 })) {
         return complexResult;
       }
 
@@ -130,6 +132,9 @@ describe('network interface', () => {
     fetchMock.post(missingUrl, () => {
       throw new Error('Network error');
     });
+
+    fetchMock.post(unauthorizedUrl, 403);
+    fetchMock.post(serviceUnavailableUrl, 503);
   });
 
   after(() => {
@@ -139,14 +144,14 @@ describe('network interface', () => {
   describe('creating a network interface', () => {
     it('should throw without an argument', () => {
       assert.throws(() => {
-        createNetworkInterface(null);
+        createNetworkInterface(undefined as any);
       }, /must pass an options argument/);
     });
 
     it('should throw without an endpoint', () => {
       assert.throws(() => {
         createNetworkInterface({});
-      }, /A remote enpdoint is required for a network layer/);
+      }, /A remote endpoint is required for a network layer/);
     });
 
     it('should warn when the endpoint is passed as the first argument', () => {
@@ -429,6 +434,13 @@ describe('network interface', () => {
   });
 
   describe('making a request', () => {
+    // this is a stub for the end user client api
+    const doomedToFail = {
+      query: simpleQueryWithNoVars,
+      variables: {},
+      debugName: 'People Query',
+    };
+
     it('should fetch remote data', () => {
       const swapi = createNetworkInterface({ uri: swapiUrl });
 
@@ -448,14 +460,27 @@ describe('network interface', () => {
     it('should throw on a network error', () => {
       const nowhere = createNetworkInterface({ uri: missingUrl });
 
-      // this is a stub for the end user client api
-      const doomedToFail = {
-        query: simpleQueryWithNoVars,
-        variables: {},
-        debugName: 'People Query',
-      };
-
       return assert.isRejected(nowhere.query(doomedToFail));
+    });
+
+    it('should throw an error with the response when request is forbidden', () => {
+      const unauthorizedInterface = createNetworkInterface({ uri: unauthorizedUrl });
+
+      return unauthorizedInterface.query(doomedToFail).catch(err => {
+        assert.isOk(err.response);
+        assert.equal(err.response.status, 403);
+        assert.equal(err.message, 'Network request failed with status 403 - "Forbidden"');
+      });
+    });
+
+    it('should throw an error with the response when service is unavailable', () => {
+      const unauthorizedInterface = createNetworkInterface({ uri: serviceUnavailableUrl });
+
+      return unauthorizedInterface.query(doomedToFail).catch(err => {
+        assert.isOk(err.response);
+        assert.equal(err.response.status, 503);
+        assert.equal(err.message, 'Network request failed with status 503 - "Service Unavailable"');
+      });
     });
   });
 });

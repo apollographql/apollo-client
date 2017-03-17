@@ -6,7 +6,7 @@ import {
   assert,
 } from 'chai';
 
-import clonedeep = require('lodash/cloneDeep');
+import { cloneDeep } from 'lodash';
 
 import { isSubscriptionResultAction } from '../src/actions';
 
@@ -29,7 +29,6 @@ describe('GraphQL Subscriptions', () => {
 
   let sub1: any;
   let options: any;
-  let realOptions: any;
   let watchQueryOptions: any;
   let sub2: any;
   let commentsQuery: any;
@@ -59,19 +58,6 @@ describe('GraphQL Subscriptions', () => {
 
     options = {
       query: gql`
-        subscription UserInfo($name: String) {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
-      variables: {
-          name: 'Changping Chen',
-        },
-    };
-
-    realOptions = {
-      document: gql`
         subscription UserInfo($name: String) {
           user(name: $name) {
             name
@@ -193,7 +179,7 @@ describe('GraphQL Subscriptions', () => {
       addTypename: false,
     });
 
-    const obs = queryManager.startGraphQLSubscription(realOptions);
+    const obs = queryManager.startGraphQLSubscription(options);
 
     let counter = 0;
 
@@ -232,7 +218,7 @@ describe('GraphQL Subscriptions', () => {
       addTypename: false,
     });
 
-    const sub = queryManager.startGraphQLSubscription(realOptions).subscribe({
+    const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
         assert.deepEqual(result, results[numResults].result);
         numResults++;
@@ -282,7 +268,7 @@ describe('GraphQL Subscriptions', () => {
       reducer: (previousResult, action) => {
         counter++;
         if (isSubscriptionResultAction(action)) {
-          const newResult = clonedeep(previousResult) as any;
+          const newResult = cloneDeep(previousResult) as any;
           newResult.number++;
           return newResult;
         }
@@ -292,7 +278,7 @@ describe('GraphQL Subscriptions', () => {
       next: () => null,
     });
 
-    const sub = queryManager.startGraphQLSubscription(realOptions).subscribe({
+    const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
         assert.deepEqual(result, results[numResults].result);
         numResults++;
@@ -312,52 +298,4 @@ describe('GraphQL Subscriptions', () => {
       network.fireResult(id);
     }
   });
-
-  // it('should work with an observable query', (done) => {
-  //   const network = mockSubscriptionNetworkInterface([sub2], {
-  //     request: {
-  //       query: commentsQuery,
-  //       variables: commentsVariables,
-  //     },
-  //     result: commentsResult, // list of 10 comments
-  //   });
-  //   const client = new ApolloClient({
-  //     networkInterface: network,
-  //   });
-  //   client.query({
-  //     query: commentsQuery,
-  //     variables: commentsVariables,
-  //   }).then(() => {
-  //     const graphQLSubscriptionOptions = {
-  //       subscription: commentsSub,
-  //       variables: commentsVariables,
-  //       updateQuery: (prev, updateOptions) => {
-  //         const state = clonedeep(prev) as any;
-  //         // prev is that data field of the query result
-  //         // updateOptions.subscriptionResult is the result entry from the subscription result
-  //         state.entry.comments = [...state.entry.comments, ...(updateOptions.subscriptionResult as any).entry.comments];
-  //         return state;
-  //       },
-  //     };
-  //     const obsHandle = client.watchQuery(commentsWatchQueryOptions);
-
-  //     obsHandle.subscribe({
-  //       next(result) {
-  //         let expectedComments = [];
-  //         for (let i = 1; i <= 11; i++) {
-  //           expectedComments.push({ text: `comment ${i}` });
-  //         }
-  //         assert.equal(result.data.entry.comments.length, 11);
-  //         assert.deepEqual(result.data.entry.comments, expectedComments);
-  //         done();
-  //       },
-  //     });
-
-  //     const id = obsHandle.startGraphQLSubscription(graphQLSubscriptionOptions);
-  //     network.fireResult(id);
-  //   });
-  // });
-
-  // TODO: test that we can make two subscriptions one one watchquery.
-
 });

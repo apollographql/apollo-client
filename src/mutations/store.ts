@@ -18,7 +18,7 @@ export interface MutationStoreValue {
   mutationString: string;
   variables: Object;
   loading: boolean;
-  error: Error;
+  error: Error | null;
 }
 
 export interface SelectionSetWithRoot {

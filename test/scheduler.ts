@@ -8,7 +8,7 @@ import {
   createApolloStore,
 } from '../src/store';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import { NetworkStatus } from '../src/queries/store';
+import { NetworkStatus } from '../src/queries/networkStatus';
 import gql from 'graphql-tag';
 
 describe('QueryScheduler', () => {
@@ -37,7 +37,7 @@ describe('QueryScheduler', () => {
       query,
     };
     assert.throws(() => {
-      scheduler.startPollingQuery(queryOptions);
+      scheduler.startPollingQuery(queryOptions, null as never);
     });
   });
 
@@ -324,7 +324,7 @@ describe('QueryScheduler', () => {
       queryManager,
     });
     const queryId = 'fake-id';
-    scheduler.addQueryOnInterval(queryId, queryOptions);
+    scheduler.addQueryOnInterval<any>(queryId, queryOptions);
     assert.equal(Object.keys(scheduler.intervalQueries).length, 1);
     assert.equal(Object.keys(scheduler.intervalQueries)[0], queryOptions.pollInterval.toString());
     const queries = (<any>scheduler.intervalQueries)[queryOptions.pollInterval.toString()];
@@ -447,52 +447,6 @@ describe('QueryScheduler', () => {
       assert.equal(timesFired, 1);
       done();
     }, 100);
-  });
-
-  it('should correctly start polling queries', (done) => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }`;
-
-    const data = {
-      'author': {
-        'firstName': 'John',
-        'lastName': 'Smith',
-      },
-    };
-    const queryOptions = {
-      query,
-      pollInterval: 80,
-    };
-
-    const networkInterface = mockNetworkInterface(
-      {
-        request: queryOptions,
-        result: { data },
-      },
-    );
-    const queryManager = new QueryManager({
-      networkInterface: networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
-      addTypename: false,
-    });
-    const scheduler = new QueryScheduler({
-      queryManager,
-    });
-    let timesFired = 0;
-    const queryId = scheduler.startPollingQuery(queryOptions, 'fake-id', (queryStoreValue) => {
-      timesFired += 1;
-    });
-    setTimeout(() => {
-      assert.isAtLeast(timesFired, 0);
-      scheduler.stopPollingQuery(queryId);
-      done();
-    }, 120);
   });
 
   it('should correctly start new polling query after removing old one', (done) => {

@@ -3,10 +3,102 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Fix: Update TypeScript Middleware and Afterware interfaces to include a datatype for 'this' in apply function. [PR #1372](https://github.com/apollographql/apollo-client/pull/1372)
+- Breaking: Remove data property from fetchMore result [PR #1416](https://github.com/apollographql/apollo-client/pull/1416)
+- Fix: rollback optimistic response before ApolloError rejected in `QueryManager#mutate` [PR #1398](https://github.com/apollographql/apollo-client/pull/1398)
 
+### 1.0.0-rc.2
+- throw error if deprecated options are being used [PR #1396](https://github.com/apollographql/apollo-client/pull/1396)
+
+### 1.0.0-rc.1
+- Fix (possibly breaking): Invoke afterware even on requests that error [PR #1351](https://github.com/apollographql/apollo-client/pull/1351)
+- Breaking: change default of notifyOnNetworkStatusChange to true [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
+- Breaking: change default of queryDeduplication to true [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
+- Breaking: remove deprecated reduxRootKey [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
+- Fix: make sure maybeDeepFreeze is called on results returned from setVariables and refetch [PR #1362](https://github.com/apollographql/apollo-client/pull/1362)
+- Fix: use setTimeout to throw uncaught errors in observer.next and observer.error[PR #1367](https://github.com/apollographql/apollo-client/pull/1367)
+- Breaking: Remove returnPartialData option [PR #1370](https://github.com/apollographql/apollo-client/pull/1370)
+- Breaking: Implement fetchPolicy to replace noFetch and forceFetch [PR #1371](https://github.com/apollographql/apollo-client/pull/1371)
+- console.warn() when an exception is encountered in a result reducer [PR #1383](https://github.com/apollographql/apollo-client/pull/1383)
+
+
+### 0.10.1
+- Address deprecation warnings coming from `graphql-tag` [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)
+- Do not stringify error stack traces [PR #1347](https://github.com/apollographql/apollo-client/pull/1347)
+
+### 0.10.0
+- BREAKING: Run middleware and afterware only once per batched request [PR #1285](https://github.com/apollographql/apollo-client/pull/1285)
+- Add direct cache manipulation read and write methods to provide the user the power to interact with Apollo’s GraphQL data representation outside of mutations. [PR #1310](https://github.com/apollographql/apollo-client/pull/1310)
+- Clear pollInterval in `ObservableQuery#stopPolling` so that resubscriptions don't start polling again [PR #1328](https://github.com/apollographql/apollo-client/pull/1328)
+- Update dependencies (Typescript 2.2.1, node typings, etc.) [PR #1332](https://github.com/apollographql/apollo-client/pull/1332)
+- Fix bug that caused: `error: Cannot read property 'data' of undefined`, when no previous result was available [PR #1339](https://github.com/apollographql/apollo-client/pull/1339).
+- Add 'addTypenameToDocument' to root export for usage in custom network interfaces and testing [PR #1341](https://github.com/apollographql/apollo-client/pull/1341)
+
+### 0.9.0
+- Prefer stale data over partial data in cases where a user would previously get an error. [PR #1306](https://github.com/apollographql/apollo-client/pull/1306)
+- Update TypeScript `MutationOptions` definition with the new object type available in `refetchQueries`. [PR #1315](https://github.com/apollographql/apollo-client/pull/1315)
+- Add `fetchMore` network status to enable loading information for `fetchMore` queries. [PR #1305](https://github.com/apollographql/apollo-client/pull/1305)
+
+### 0.8.7
+- Ensure batching network interface passes through extra parameters in order to support persisted queries [PR #1302](https://github.com/apollographql/apollo-client/pull/1302/files)
+
+### 0.8.6
+- Fix bug that caused `refetch` to not refetch in some cases [PR #1264](https://github.com/apollographql/apollo-client/pull/1264)
+
+### 0.8.5
+- Fix crash if resetStore() or getInitialState() called prior to query/mutation.  [PR #1286](https://github.com/apollostack/apollo-client/pull/1286).
+
+### 0.8.4
+- Fix afterware to support retrying requests [PR #1274](https://github.com/apollostack/apollo-client/pull/1274).
+
+### 0.8.3
+- Fix bug that caused query reducers to always be called with initial variables. [PR #1270](https://github.com/apollostack/apollo-client/pull/1270).
+- Added benchmarks and benchmarking utilities built on top of [benchmark.js](https://benchmarkjs.com). [PR #1159](https://github.com/apollostack/apollo-client/pull/1159).
+
+### 0.8.2
+- Removed dependency on Node.js typings. [PR #1248](https://github.com/apollostack/apollo-client/pull/1248)
+- Remove orphaned promise that was causing a Bluebird error. [PR #1256](https://github.com/apollographql/apollo-client/pull/1256)
+- End code flow on promise rejection in `mutate` implementation. [PR #1259](https://github.com/apollographql/apollo-client/pull/1259)
+
+### 0.8.1
+- Allow refetching with query documents after mutation. [PR #1234](https://github.com/apollostack/apollo-client/pull/1234)
+- Enable TypeScript strict null checking in source code. [PR #1221](https://github.com/apollostack/apollo-client/pull/1221)
+
+### 0.8.0
+- Allow optional mutation arguments. [PR #1174](https://github.com/apollostack/apollo-client/pull/1174)
+- Fix bug where there could be store inconsistencies for two dependent optimistic updates [PR #1144](https://github.com/apollostack/apollo-client/pull/1144)
+- expose partial in ObservableQuery#currentResult [PR #1097](https://github.com/apollostack/apollo-client/pull/1097)
+- Calculate `loading` from `networkStatus`. [PR #1202](https://github.com/apollostack/apollo-client/pull/1202)
+- Fix typings error with `strictNullChecks` [PR #1188](https://github.com/apollostack/apollo-client/pull/1188)
+- Add IResponse to NetworkErrors [PR #1199](https://github.com/apollostack/apollo-client/issues/1199)
+- Gracefully handle `null` GraphQL errors. [PR #1208](https://github.com/apollostack/apollo-client/pull/1208)
+- *Breaking:* Remove undocumented `resultBehaviors` feature. [PR #1173](https://github.com/apollostack/apollo-client/pull/1173)
+
+### 0.7.3
+- *Fixed breaking change:* readQueryFromStore was incomptibale with Typescript 2.0 compiler. [PR #1171](https://github.com/apollostack/apollo-client/pull/1171)
+
+### 0.7.2
+Re-release of 0.7.1 with proper internal directory structure
+
+### 0.7.1
+- *Undo breaking change:* Add whatwg-fetch polyfill (most likely only until version 1.0) [PR #1155](https://github.com/apollostack/apollo-client/pull/1155)
+
+### 0.7.0
+- Deprecate "resultTransformer" [PR #1095](https://github.com/apollostack/apollo-client/pull/1095)
+- Deep freeze results in development and test mode [PR #1095](https://github.com/apollostack/apollo-client/pull/1095)
+- *Breaking:* Use generic types for query and mutation [PR #914](https://github.com/apollostack/apollo-client/pull/914)
+- Support AMD [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
+- Support ES6 Modules and tree-shaking (`module`, `jsnext:main`) [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
+- *Breaking:* Replace `@types/redux` with official typescript definitions [PR #1069](https://github.com/apollostack/apollo-client/pull/1069)
+- *Breaking:* Remove fragment option from query, watchQuery etc. [PR #1096](https://github.com/apollostack/apollo-client/pull/1096)
+- Broadcast new store state only when Apollo state was affected by an action [PR #1118](https://github.com/apollostack/apollo-client/pull/1118)
+- Remove lodash as a production dependency [PR #1122](https://github.com/apollostack/apollo-client/pull/1122)
+- Breaking: Minor fix to write to `ROOT_SUBSCRIPTION` ID in the store for subscription results. [PR #1122](https://github.com/apollostack/apollo-client/pull/1127)
+- *Breaking:* Remove `whatwg-fetch` polyfill dependency and instead warn when a global `fetch` implementation is not found. [PR #1134](https://github.com/apollostack/apollo-client/pull/1134)
+- Child objects returned from `watchQuery` may now be referentially equal (so `a === b`) to previous objects in the same position if nothing changed in the store. This allows for a better UI integration experience when determining what needs to rerender. [PR #1136](https://github.com/apollostack/apollo-client/pull/1136)
 
 ### 0.6.0
-- Switch to `@types/graphql` instead of `typed-graphql` for typings. [PR 1041](https://github.com/apollostack/apollo-client/pull/1041) [PR #934](https://github.com/apollostack/apollo-client/issues/934)
+- *Breaking:* Switch to `@types/graphql` instead of `typed-graphql` for typings. [PR 1041](https://github.com/apollostack/apollo-client/pull/1041) [PR #934](https://github.com/apollostack/apollo-client/issues/934)
 
 ### 0.5.26
 - Add variables to MutationResultAction [PR #1106](https://github.com/apollostack/apollo-client/pull/1106)

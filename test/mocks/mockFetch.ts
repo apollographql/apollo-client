@@ -4,6 +4,9 @@ import 'whatwg-fetch';
 // structure to the MockedNetworkInterface.
 
 export interface MockedIResponse {
+  ok: boolean;
+  status: number;
+  statusText?: string;
   json(): Promise<JSON>;
 }
 
@@ -14,8 +17,14 @@ export interface MockedFetchResponse {
   delay?: number;
 }
 
-export function createMockedIResponse(result: Object): MockedIResponse {
+export function createMockedIResponse(result: Object, options?: any): MockedIResponse {
+  const status = options && options.status || 200;
+  const statusText = options && options.statusText || undefined;
+
   return {
+    ok: status === 200,
+    status,
+    statusText,
     json() {
       return Promise.resolve(result);
     },
@@ -52,7 +61,7 @@ export class MockFetch {
       throw new Error(`No more mocked fetch responses for the params ${url} and ${opts}`);
     }
 
-    const { result, delay } = responses.shift();
+    const { result, delay } = responses.shift()!;
 
     if (!result) {
       throw new Error(`Mocked fetch response should contain a result.`);

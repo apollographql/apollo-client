@@ -3,7 +3,7 @@ import {
 } from 'graphql';
 
 import {
-  readQueryFromStore,
+  diffQueryAgainstStore,
 } from './readFromStore';
 
 import {
@@ -37,22 +37,34 @@ export function createStoreReducer(
   document: DocumentNode,
   variables: Object,
   config: ApolloReducerConfig,
-  // TODO: maybe turn the arguments into a single object argument
 ): ApolloReducer {
 
   return (store: NormalizedCache, action: ApolloAction) => {
-    const currentResult = readQueryFromStore({
+
+    const { result, isMissing } = diffQueryAgainstStore({
       store,
       query: document,
       variables,
       returnPartialData: true,
       config,
     });
-    // TODO add info about networkStatus
 
-    const nextResult = resultReducer(currentResult, action, variables); // action should include operation name
+    if (isMissing) {
+      // If there is data missing, the query most likely isn't done loading yet. If there's an actual problem
+      // with the query's data, the error would surface on that query, so we don't need to throw here.
+      // It would be very hard for people to deal with missing data in reducers, so we opt not to invoke them.
+      return store;
+    }
 
-    if (currentResult !== nextResult) {
+    let nextResult;
+    try {
+      nextResult = resultReducer(result, action, variables); // action should include operation name
+    } catch (err) {
+      console.warn('Unhandled error in result reducer', err);
+      throw err;
+    }
+
+    if (result !== nextResult) {
       return writeResultToStore({
         dataId: 'ROOT_QUERY',
         result: nextResult,

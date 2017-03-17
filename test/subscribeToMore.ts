@@ -4,10 +4,8 @@ const { assert } = chai;
 import {
   mockSubscriptionNetworkInterface,
 } from './mocks/mockNetworkInterface';
-import ApolloClient from '../src';
 
-// import assign = require('lodash/assign');
-// import clonedeep = require('lodash/cloneDeep');
+import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
 
@@ -115,7 +113,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 3);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
       );
       done();
     }, 50);
@@ -165,7 +163,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 2);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
       );
       assert.equal(errorCount, 1);
       done();
@@ -216,7 +214,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 2);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7 },
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
       );
       assert.equal(errorCount, 1);
       console.error = consoleErr;

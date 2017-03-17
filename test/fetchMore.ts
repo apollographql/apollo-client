@@ -243,7 +243,7 @@ describe('fetchMore on an observable query', () => {
         variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
         updateQuery: (prev, options) => {
           const state = cloneDeep(prev) as any;
-          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];
+          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).entry.comments];
           return state;
         },
       });
@@ -273,7 +273,7 @@ describe('fetchMore on an observable query', () => {
         variables: variables2,
         updateQuery: (prev, options) => {
           const state = cloneDeep(prev) as any;
-          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.comments];
+          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).comments];
           return state;
         },
       });
@@ -318,7 +318,7 @@ describe('fetchMore on an observable query', () => {
               variables: { start: 10 },
               updateQuery: (prev, options) => {
                 const state = cloneDeep(prev) as any;
-                state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];
+                state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).entry.comments];
                 return state;
               },
             });
@@ -373,7 +373,7 @@ describe('fetchMore on an observable query', () => {
               variables: { start: 10 },
               updateQuery: (prev, options) => {
                 const state = cloneDeep(prev) as any;
-                state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).data.entry.comments];
+                state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).entry.comments];
                 return state;
               },
             });

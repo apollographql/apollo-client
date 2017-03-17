@@ -467,6 +467,7 @@ export default class ApolloClient implements DataProxy {
       this.proxy = new ReduxDataProxy(
         this.store,
         this.reduxRootSelector || defaultReduxRootSelector,
+        this.reducerConfig,
       );
     }
     return this.proxy;

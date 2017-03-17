@@ -124,7 +124,7 @@ It is possible to use afterware with the network interface created via `createNe
 In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.
 Each object must contain an `applyAfterware` method with the following parameters:
 
-- `{ response }: object` A object containing the parsed HTTP response of a GraphQL fetch.
+- `{ response }: object` An object containing the parsed HTTP response of a GraphQL fetch.
 - `next: function` This function pushes the HTTP response onward through the afterware.
 
 The response object is shaped as such:

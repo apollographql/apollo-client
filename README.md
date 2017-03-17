@@ -1,6 +1,6 @@
 # [Apollo client](http://dev.apollodata.com/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-The `apollo-client` package is the core of the Apollo frontend toolchain. It allows you to interact with your GraphQL data in smart and reactive ways. To get the most value out of `apollo-client` you should use it with one of its view integration layers.
+Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, etc. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client` you should use it with one of its view layer integrations.
 
 To get started with the React integration go to our [**React Apollo documentation website**](http://dev.apollodata.com/react/).
 

@@ -77,7 +77,7 @@ const crashReporter = (store: any) => (next: any) => (action: any) => {
 
 export type ApolloReducer = (store: NormalizedCache, action: ApolloAction) => NormalizedCache;
 
-export function createApolloReducer(config: ApolloReducerConfig): Function {
+export function createApolloReducer(config: ApolloReducerConfig): (state: Store, action: ApolloAction) => Store {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
     try {
       const newState: Store = {
@@ -176,7 +176,7 @@ export function createApolloStore({
   }
 
   return createStore(
-    combineReducers({ [reduxRootKey]: createApolloReducer(config) as any }), // XXX see why this type fails
+    combineReducers({ [reduxRootKey]: createApolloReducer(config) }),
     initialState,
     compose(...enhancers),
   );

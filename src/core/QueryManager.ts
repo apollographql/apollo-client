@@ -500,6 +500,10 @@ export class QueryManager {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
 
+    if ((options as any).pollInterval) {
+      throw new Error('pollInterval option only supported on watchQuery.');
+    }
+
     if ((options as any).forceFetch) {
       throw new Error('forceFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
     }

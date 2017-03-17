@@ -411,6 +411,22 @@ export default class ApolloClient implements DataProxy {
     }));
   };
 
+  /**
+   * Resets your entire store by clearing out your cache and then re-executing
+   * all of your active queries. This makes it so that you may guarantee that
+   * there is no data left in your store from a time before you called this
+   * method.
+   *
+   * `resetStore()` is useful when your user just logged out. You’ve removed the
+   * user session, and you now want to make sure that any references to data you
+   * might have fetched while the user session was active is gone.
+   *
+   * It is important to remember that `resetStore()` *will* refetch any active
+   * queries. This means that any components that might be mounted will execute
+   * their queries again using your network interface. If you do not want to
+   * re-execute any queries then you should make sure to stop watching any
+   * active queries.
+   */
   public resetStore() {
     if (this.queryManager) {
       this.queryManager.resetStore();

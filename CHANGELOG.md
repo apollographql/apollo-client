@@ -19,6 +19,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Fix: use setTimeout to throw uncaught errors in observer.next and observer.error[PR #1367](https://github.com/apollographql/apollo-client/pull/1367)
 - Breaking: Remove returnPartialData option [PR #1370](https://github.com/apollographql/apollo-client/pull/1370)
 - Breaking: Implement fetchPolicy to replace noFetch and forceFetch [PR #1371](https://github.com/apollographql/apollo-client/pull/1371)
+- console.warn() when an exception is encountered in a result reducer [PR #1383](https://github.com/apollographql/apollo-client/pull/1383)
 
 
 ### 0.10.1

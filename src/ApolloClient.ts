@@ -24,6 +24,10 @@ import {
 } from './store';
 
 import {
+  ApolloAction,
+} from './actions';
+
+import {
   CustomResolverMap,
 } from './data/readFromStore';
 
@@ -338,7 +342,7 @@ export default class ApolloClient implements DataProxy {
   /**
    * Returns a reducer function configured according to the `reducerConfig` instance variable.
    */
-  public reducer(): Function {
+  public reducer(): (state: Store, action: ApolloAction) => Store  {
     return createApolloReducer(this.reducerConfig);
   }
 

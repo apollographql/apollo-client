@@ -56,34 +56,34 @@ The result for that query might look like this:
 
 One option might be to just throw that blob of JSON directly into the store, and be done with it. But it turns out that the best option is to _normalize_ the data (see [Benefits](#query-benefits)). This means splitting the tree into individual objects and references between them, and storing those objects in a flattened data structure.
 
-This process requires generating a unique identifier for each object, because we need to be able to refer to the objects somehow to put them back together again. The function for generating the unique ID is pluggable via the `dataIdFromObject` option to the `ApolloClient` constructor, so you can pick which field is used:
+This process requires generating a unique identifier for each object, because we need to be able to refer to the objects somehow to put them back together again. 
 
-```
-// Default ID - the path to the object in the query
-'ROOT_QUERY.allPeople.0'
+By default, `ApolloClient` will attempt to use the commonly found primary keys of `id` and `_id` for the unique identifier if they exist on an object.  
 
-// ID if an ID getter is plugged in
-'1'
-```
+If `id` and `_id` are not specified, `ApolloClient` will, by default, fall back to the path to the object in the query, such as `ROOT_QUERY.allPeople.0` for the first record returned on the `allPeople` root query.
 
-So if you have the right ID getter function, you can end up with a really nice structure in the store:
+This "getter" behavior for unique identifiers can be configured manually via the `dataIdFromObject` option passed to the `ApolloClient` constructor, so you can pick which field is used if some of your data follows unorthodox primary key conventions.
+
+For example, if you wanted to key off of the `key` field for all of your data, you could configure `dataIdFromObject` like so:
 
 ```js
-// The normalized form of the result above
-{
-  'ROOT_QUERY.allPeople': [
-    '1',
-    '4'
-  ],
-  '1': {
-    id: '1',
-    name: 'Luke Skywalker',
-  },
-  '4': {
-    id: '4',
-    name: 'Darth Vader'
+var client = new ApolloClient({
+  dataFromObjectId: object => object.key
+});
+```
+
+This also allows you to use different unique identifiers for different data types by keying off of the `__typename` property attached to every object typed by GraphQL.  For example:
+
+```js
+var client = new ApolloClient({
+  dataFromObjectId: object => {
+    switch (object.__typename) {
+      case 'foo': return object.key; // use `key` as the primary key
+      case 'bar': return object.blah; // use `blah` as the priamry key
+      default: return object.id || object._id; // fall back to `id` and `_id` for all other types
+    }
   }
-}
+});
 ```
 
 <h3 id='query-benefits'>Benefits</h3>

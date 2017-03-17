@@ -90,11 +90,13 @@ function defaultReduxRootSelector(state: any) {
 }
 
 function defaultDataIdFromObject (result: any): string | null | undefined {
-  if (result.id && result.__typename) {
-    return `${result.__typename}:${result.id}`;
-  }
-  if (result._id && result.__typename) {
-    return `${result.__typename}:${result._id}`;
+  if (result.__typename) {
+    if (result.id !== undefined) {
+      return `${result.__typename}:${result.id}`;
+    }
+    if (result._id !== undefined) {
+      return `${result.__typename}:${result._id}`;
+    }
   }
   return null;
 }

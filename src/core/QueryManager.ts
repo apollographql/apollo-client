@@ -15,7 +15,6 @@ import {
   ApolloQueryResult,
   PureQueryOptions,
   FetchType,
-  SubscriptionOptions,
 } from './types';
 
 import {
@@ -112,7 +111,10 @@ import {
   ApolloError,
 } from '../errors/ApolloError';
 
-import { WatchQueryOptions } from './watchQueryOptions';
+import {
+  WatchQueryOptions,
+  SubscriptionOptions,
+} from './watchQueryOptions';
 
 import { ObservableQuery } from './ObservableQuery';
 
@@ -751,10 +753,10 @@ export class QueryManager {
     options: SubscriptionOptions,
   ): Observable<any> {
     const {
-      document,
+      query,
       variables,
     } = options;
-    let transformedDoc = document;
+    let transformedDoc = query;
     // Apply the query transformer if one has been provided.
     if (this.addTypename) {
       transformedDoc = addTypenameToDocument(transformedDoc);

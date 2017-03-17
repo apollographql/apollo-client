@@ -29,7 +29,6 @@ describe('GraphQL Subscriptions', () => {
 
   let sub1: any;
   let options: any;
-  let realOptions: any;
   let watchQueryOptions: any;
   let sub2: any;
   let commentsQuery: any;
@@ -59,19 +58,6 @@ describe('GraphQL Subscriptions', () => {
 
     options = {
       query: gql`
-        subscription UserInfo($name: String) {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
-      variables: {
-          name: 'Changping Chen',
-        },
-    };
-
-    realOptions = {
-      document: gql`
         subscription UserInfo($name: String) {
           user(name: $name) {
             name
@@ -193,7 +179,7 @@ describe('GraphQL Subscriptions', () => {
       addTypename: false,
     });
 
-    const obs = queryManager.startGraphQLSubscription(realOptions);
+    const obs = queryManager.startGraphQLSubscription(options);
 
     let counter = 0;
 
@@ -232,7 +218,7 @@ describe('GraphQL Subscriptions', () => {
       addTypename: false,
     });
 
-    const sub = queryManager.startGraphQLSubscription(realOptions).subscribe({
+    const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
         assert.deepEqual(result, results[numResults].result);
         numResults++;
@@ -292,7 +278,7 @@ describe('GraphQL Subscriptions', () => {
       next: () => null,
     });
 
-    const sub = queryManager.startGraphQLSubscription(realOptions).subscribe({
+    const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
         assert.deepEqual(result, results[numResults].result);
         numResults++;

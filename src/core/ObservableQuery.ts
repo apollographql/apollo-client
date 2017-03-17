@@ -258,7 +258,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     options: SubscribeToMoreOptions,
   ): () => void {
     const observable = this.queryManager.startGraphQLSubscription({
-      document: options.document,
+      query: options.document,
       variables: options.variables,
     });
 

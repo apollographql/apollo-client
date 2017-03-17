@@ -283,13 +283,7 @@ export default class ApolloClient implements DataProxy {
   public subscribe(options: SubscriptionOptions): Observable<any> {
     this.initStore();
 
-    const realOptions = {
-      ...options,
-      document: options.query,
-    };
-    delete realOptions.query;
-
-    return this.queryManager.startGraphQLSubscription(realOptions);
+    return this.queryManager.startGraphQLSubscription(options);
   }
 
   /**

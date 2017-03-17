@@ -89,6 +89,10 @@ function defaultReduxRootSelector(state: any) {
   return state[DEFAULT_REDUX_ROOT_KEY];
 }
 
+function defaultDataIdFromObject (object: any): string | null | undefined {
+  return object.id || object._id || undefined;
+}
+
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -152,11 +156,13 @@ export default class ApolloClient implements DataProxy {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
   } = {}) {
+    let {
+      dataIdFromObject,
+    } = options;
     const {
       networkInterface,
       reduxRootSelector,
       initialState,
-      dataIdFromObject,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       addTypename = true,
@@ -176,7 +182,7 @@ export default class ApolloClient implements DataProxy {
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
-    this.dataId = dataIdFromObject;
+    this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
 

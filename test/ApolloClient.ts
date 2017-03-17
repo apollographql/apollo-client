@@ -728,5 +728,96 @@ describe('ApolloClient', () => {
         },
       });
     });
+    it('will use a default id getter if one is not specified', () => {
+      const client = new ApolloClient({
+        initialState: { apollo: { data: {} } },
+      });
+
+      client.writeQuery({
+        query: gql`{ a b foo { c d bar { id e f } } }`,
+        data: { a: 1, b: 2, foo: { c: 3, d: 4, bar: { id: 'foobar', e: 5, f: 6 } } },
+      });
+
+      client.writeQuery({
+        query: gql`{ g h bar { i j foo { _id k l } } }`,
+        data: { g: 8, h: 9, bar: { i: 10, j: 11, foo: { _id: 'barfoo', k: 12, l: 13 } } },
+      });
+
+      assert.deepEqual(
+        client.readQuery({
+          query: gql`{ a b g h bar { i j foo { _id k l } } foo { c d bar { id e f } } }`,
+        }), {
+          a: 1,
+          b: 2,
+          g: 8,
+          h: 9,
+          bar: {
+            i: 10,
+            j: 11,
+            foo: {
+              _id: 'barfoo',
+              k: 12,
+              l: 13,
+            },
+          },
+          foo: {
+            c: 3,
+            d: 4,
+            bar: {
+              id: 'foobar',
+              e: 5,
+              f: 6,
+            },
+          },
+        },
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {
+        'ROOT_QUERY': {
+          a: 1,
+          b: 2,
+          g: 8,
+          h: 9,
+          bar: {
+            type: 'id',
+            id: '$ROOT_QUERY.bar',
+            generated: true,
+          },
+          foo: {
+            type: 'id',
+            id: '$ROOT_QUERY.foo',
+            generated: true,
+          },
+        },
+        '$ROOT_QUERY.foo': {
+          c: 3,
+          d: 4,
+          bar: {
+            type: 'id',
+            id: 'foobar',
+            generated: false,
+          },
+        },
+        '$ROOT_QUERY.bar': {
+          i: 10,
+          j: 11,
+          foo: {
+            type: 'id',
+            id: 'barfoo',
+            generated: false,
+          },
+        },
+        'foobar': {
+          id: 'foobar',
+          e: 5,
+          f: 6,
+        },
+        'barfoo': {
+          _id: 'barfoo',
+          k: 12,
+          l: 13,
+        },
+      });
+    });
   });
 });

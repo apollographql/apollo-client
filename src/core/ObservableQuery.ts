@@ -233,6 +233,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         return this.queryManager.fetchQuery(qid, combinedOptions, FetchType.normal, this.queryId);
       })
       .then((fetchMoreResult) => {
+        const { data } = fetchMoreResult;
         const reducer = fetchMoreOptions.updateQuery;
         const mapFn = (previousResult: any, { variables }: {variables: any }) => {
 
@@ -241,7 +242,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           const queryVariables = variables;
           return reducer(
             previousResult, {
-              fetchMoreResult,
+              fetchMoreResult: data,
               queryVariables,
             });
         };
@@ -257,7 +258,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     options: SubscribeToMoreOptions,
   ): () => void {
     const observable = this.queryManager.startGraphQLSubscription({
-      document: options.document,
+      query: options.document,
       variables: options.variables,
     });
 

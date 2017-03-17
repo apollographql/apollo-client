@@ -12,7 +12,7 @@ Here are some ways to contribute to the project, from easiest to most difficult:
 * [Improving the documentation](#improving-the-documentation)
 * [Responding to issues](#responding-to-issues)
 * [Small bug fixes](#small-bug-fixes)
-* [Suggesting features](#suggesting-features)
+* [Suggesting features](#feature-requests)
 * [Big pull requests](#big-prs)
 
 ## Issues
@@ -25,7 +25,7 @@ While we will try to be as helpful as we can on any issue reported, please inclu
 
 1. **Intended outcome:** What you were trying to accomplish when the bug occurred, and as much code as possible related to the source of the problem.
 2. **Actual outcome:** A description of what actually happened, including a screenshot or copy-paste of any related error messages, logs, or other output that might be related. Places to look for information include your browser console, server console, and network logs. Please avoid non-specific phrases like “didn’t work” or “broke”.
-3. **How to reproduce the issue:** Instructions for how the issue can be reproduced by a maintainer or contributor. Be as specific as possible, and only mention what is necessary to reproduce the bug. If possible, try to isolate the exact circumstances in which the bug occurs and avoid speculation over what the cause might be.
+3. **How to reproduce the issue:** Instructions for how the issue can be reproduced by a maintainer or contributor. Be as specific as possible, and only mention what is necessary to reproduce the bug. If possible, build a reproduction with our [error template](https://github.com/apollographql/react-apollo-error-template) to isolate the exact circumstances in which the bug occurs. Avoid speculation over what the cause might be.
 
 Creating a good reproduction really helps contributors investigate and resolve your issue quickly. In many cases, the act of creating a minimal reproduction illuminates that the source of the bug was somewhere outside the library in question, saving time and effort for everyone.
 

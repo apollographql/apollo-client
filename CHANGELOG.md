@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Fix: Update TypeScript Middleware and Afterware interfaces to include a datatype for 'this' in apply function. [PR #1372](https://github.com/apollographql/apollo-client/pull/1372)
 
 ### 1.0.0-rc.2
 - throw error if deprecated options are being used [PR #1396](https://github.com/apollographql/apollo-client/pull/1396)

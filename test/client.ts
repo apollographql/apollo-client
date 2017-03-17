@@ -1451,6 +1451,48 @@ describe('client', () => {
     });
   });
 
+  it('should rollback optimistic after mutation got a GraphQL error', (done) => {
+    const mutation = gql`
+      mutation {
+        newPerson {
+          person {
+            firstName
+            lastName
+          }
+        }
+      }`;
+    const data = {
+      person: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const errors = [ new Error('Some kind of GraphQL error.') ];
+    const client = new ApolloClient({
+      networkInterface: mockNetworkInterface({
+        request: { query: mutation },
+        result: { data, errors },
+      }),
+      addTypename: false,
+    });
+    const mutatePromise = client.mutate({
+      mutation,
+      optimisticResponse: {
+        person: {
+          firstName: 'John*',
+          lastName: 'Smith*',
+        },
+      },
+    });
+    assert.equal(client.store.getState().apollo.optimistic.length, 1);
+    mutatePromise.then((result) => {
+      done(new Error('Returned a result when it should not have.'));
+    }).catch((error: ApolloError) => {
+      assert.equal(client.store.getState().apollo.optimistic.length, 0);
+      done();
+    });
+  });
+
   it('has a resetStore method which calls QueryManager', (done) => {
     const client = new ApolloClient();
     client.queryManager = {

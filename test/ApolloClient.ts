@@ -728,14 +728,14 @@ describe('ApolloClient', () => {
         },
       });
     });
-    it('will use a default id getter if one is not specified', () => {
+    it('will not use a default id getter if either _id or id is present when __typename is not also present', () => {
       const client = new ApolloClient({
         initialState: { apollo: { data: {} } },
       });
 
       client.writeQuery({
         query: gql`{ a b foo { c d bar { id e f } } }`,
-        data: { a: 1, b: 2, foo: { c: 3, d: 4, bar: { id: 'foobar', e: 5, f: 6 } } },
+        data: { a: 1, b: 2, foo: { c: 3, d: 4, bar: { __typename: 'bar', id: 'foobar', e: 5, f: 6 } } },
       });
 
       client.writeQuery({
@@ -794,7 +794,7 @@ describe('ApolloClient', () => {
           d: 4,
           bar: {
             type: 'id',
-            id: 'foobar',
+            id: 'bar:foobar',
             generated: false,
           },
         },
@@ -803,16 +803,107 @@ describe('ApolloClient', () => {
           j: 11,
           foo: {
             type: 'id',
-            id: 'barfoo',
-            generated: false,
+            id: '$ROOT_QUERY.bar.foo',
+            generated: true,
           },
         },
-        'foobar': {
+        'bar:foobar': {
           id: 'foobar',
           e: 5,
           f: 6,
         },
-        'barfoo': {
+        '$ROOT_QUERY.bar.foo': {
+          _id: 'barfoo',
+          k: 12,
+          l: 13,
+        },
+      });
+    });
+    it('will use a default id getter if one is not specified and __typename is present along with either _id or id', () => {
+      const client = new ApolloClient({
+        initialState: { apollo: { data: {} } },
+      });
+
+      client.writeQuery({
+        query: gql`{ a b foo { c d bar { id e f } } }`,
+        data: { a: 1, b: 2, foo: { c: 3, d: 4, bar: { __typename: 'bar', id: 'foobar', e: 5, f: 6 } } },
+      });
+
+      client.writeQuery({
+        query: gql`{ g h bar { i j foo { _id k l } } }`,
+        data: { g: 8, h: 9, bar: { i: 10, j: 11, foo: { __typename: 'foo', _id: 'barfoo', k: 12, l: 13 } } },
+      });
+
+      assert.deepEqual(
+        client.readQuery({
+          query: gql`{ a b g h bar { i j foo { _id k l } } foo { c d bar { id e f } } }`,
+        }), {
+          a: 1,
+          b: 2,
+          g: 8,
+          h: 9,
+          bar: {
+            i: 10,
+            j: 11,
+            foo: {
+              _id: 'barfoo',
+              k: 12,
+              l: 13,
+            },
+          },
+          foo: {
+            c: 3,
+            d: 4,
+            bar: {
+              id: 'foobar',
+              e: 5,
+              f: 6,
+            },
+          },
+        },
+      );
+
+      assert.deepEqual(client.store.getState().apollo.data, {
+        'ROOT_QUERY': {
+          a: 1,
+          b: 2,
+          g: 8,
+          h: 9,
+          bar: {
+            type: 'id',
+            id: '$ROOT_QUERY.bar',
+            generated: true,
+          },
+          foo: {
+            type: 'id',
+            id: '$ROOT_QUERY.foo',
+            generated: true,
+          },
+        },
+        '$ROOT_QUERY.foo': {
+          c: 3,
+          d: 4,
+          bar: {
+            type: 'id',
+            id: 'bar:foobar',
+            generated: false,
+          },
+        },
+        '$ROOT_QUERY.bar': {
+          i: 10,
+          j: 11,
+          foo: {
+            type: 'id',
+            id: 'foo:barfoo',
+            generated: false,
+          },
+        },
+        'bar:foobar': {
+          id: 'foobar',
+          e: 5,
+          f: 6,
+        },
+        'foo:barfoo': {
           _id: 'barfoo',
           k: 12,
           l: 13,

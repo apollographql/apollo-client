@@ -89,8 +89,14 @@ function defaultReduxRootSelector(state: any) {
   return state[DEFAULT_REDUX_ROOT_KEY];
 }
 
-function defaultDataIdFromObject (object: any): string | null | undefined {
-  return object.id || object._id || undefined;
+function defaultDataIdFromObject (result: any): string | null | undefined {
+  if (result.id && result.__typename) {
+    return `${result.__typename}:${result.id}`;
+  }
+  if (result._id && result.__typename) {
+    return `${result.__typename}:${result._id}`;
+  }
+  return null;
 }
 
 /**

@@ -865,6 +865,7 @@ export class QueryManager {
       const data = readQueryFromStore(readOptions);
       return maybeDeepFreeze({ data, partial: false });
     } catch (e) {
+      if (readOptions.store['ROOT_QUERY']) console.warn(e.message);
       return maybeDeepFreeze({ data: {}, partial: true });
     }
   }

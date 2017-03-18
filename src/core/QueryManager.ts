@@ -105,7 +105,7 @@ import {
 } from '../util/Observable';
 
 import {
-  observableShare
+  observableShare,
 } from '../util/ObservableShare';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';

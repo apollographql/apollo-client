@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 
 import {
-  parse as urlParse
+  parse as urlParse,
 } from 'url';
 
 import {
@@ -285,8 +285,8 @@ as of Apollo Client 0.5. Please pass it as the "uri" property of the network int
     throw new Error('A remote endpoint is required for a network layer');
   }
 
-  var parser = urlParse(uri);
-  switch(parser.protocol) {
+  let parser = urlParse(uri);
+  switch (parser.protocol) {
     case null: return new HTTPFetchNetworkInterface(uri, opts);
     case 'http:': return new HTTPFetchNetworkInterface(uri, opts);
     case 'ws:': return new WebsocketNetworkInterface(uri, opts);

@@ -11,7 +11,7 @@ export function observableShare<T>(obs: Observable<T>, replayCount: number = 0):
     if (observers.length === 1) {
       subscription = obs.subscribe({
         next: (v) => {
-          if ( replayCount != 0 ) {
+          if ( replayCount !== 0 ) {
             replayBuffer.push(v);
             if ( replayBuffer.length > replayCount ) {
               replayBuffer.shift();
@@ -21,7 +21,7 @@ export function observableShare<T>(obs: Observable<T>, replayCount: number = 0):
           observers.forEach((curObs) => {
             curObs.next && curObs.next(v);
           });
-        },
+        } ,
         error: (e) => observers.forEach((curObs) => {
           curObs.error && curObs.error(e);
         }),
@@ -44,6 +44,6 @@ export function observableShare<T>(obs: Observable<T>, replayCount: number = 0):
         subscription && subscription.unsubscribe();
         subscription = undefined;
       }
-    }
+    };
   });
 }

@@ -21,7 +21,7 @@ export class Observable<T> {
     return this;
   }
 
-  public map<R>(mapFn: (v:T) => R): Observable<R> {
+  public map<R>(mapFn: (v: T) => R): Observable<R> {
     return new Observable((observer) => {
       return this.subscribe({
         next: (v) => {
@@ -37,7 +37,7 @@ export class Observable<T> {
     });
   }
 
-  public filter(filterFn: (v:T) => boolean): Observable<T> {
+  public filter(filterFn: (v: T) => boolean): Observable<T> {
     return new Observable((observer) => {
       return this.subscribe({
         next: (v) => filterFn(v) && observer.next && observer.next(v),
@@ -47,7 +47,7 @@ export class Observable<T> {
     });
   }
 
-  public switchMap<R>(mapFn: (v:T) => Observable<R>): Observable<R> {
+  public switchMap<R>(mapFn: (v: T) => Observable<R>): Observable<R> {
     return new Observable((observer) => {
       let lastSubscription: Subscription | undefined;
       let trunkSubscription = this.subscribe({
@@ -71,7 +71,7 @@ export class Observable<T> {
         if ( trunkSubscription ) {
           trunkSubscription.unsubscribe();
         }
-      }
+      };
     });
   }
 

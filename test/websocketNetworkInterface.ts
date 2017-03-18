@@ -27,6 +27,7 @@ import gql from 'graphql-tag';
 
 // import { print } from 'graphql-tag/printer';
 
+// XXX: Will require to be move to an online instance.
 const SWAPI_URL = 'ws://localhost:3000/graphql';
 
 describe('reactive network interface', () => {
@@ -98,7 +99,7 @@ describe('reactive network interface', () => {
               ],
             },
           },
-        }
+        },
       );
     });
 
@@ -124,45 +125,3 @@ describe('reactive network interface', () => {
     });
   });
 });
-
-// simulate middleware by altering variables and options
-function TestWare(
-  variables: Array<{ key: string, val: any }> = [],
-  options: Array<{ key: string, val: any }> = [],
-  bodyParams: Array<{ key: string, val: any }> = []
-) {
-
-  return {
-    applyMiddleware: (request: MiddlewareRequest, next: Function): void => {
-      variables.map((variable) => {
-        (<any>request.request.variables)[variable.key] = variable.val;
-      });
-
-      options.map((variable) => {
-        (<any>request.options)[variable.key] = variable.val;
-      });
-
-      bodyParams.map((param) => {
-        request.request[param.key as string] = param.val;
-      });
-
-      next();
-    },
-  };
-};
-
-// simulate afterware by altering variables and options
-function TestAfterWare(
-  options: Array<{ key: string, val: any }> = []
-) {
-
-  return {
-    applyAfterware: (response: AfterwareResponse, next: Function): void => {
-      options.map((variable) => {
-        (<any>response.options)[variable.key] = variable.val;
-      });
-
-      next();
-    },
-  };
-};

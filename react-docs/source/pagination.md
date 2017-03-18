@@ -65,10 +65,10 @@ const FeedWithData = graphql(FEED_QUERY, {
             offset: feed.length,
           },
           updateQuery: (previousResult, { fetchMoreResult }) => {
-            if (!fetchMoreResult.data) { return previousResult; }
+            if (!fetchMoreResult) { return previousResult; }
             return Object.assign({}, previousResult, {
               // Append the new feed results to the old one
-              feed: [...previousResult.feed, ...fetchMoreResult.data.feed],
+              feed: [...previousResult.feed, ...fetchMoreResult.feed],
             });
           },
         });
@@ -140,12 +140,12 @@ const CommentsWithData = graphql(Comment, {
           },
           updateQuery: (previousResult, { fetchMoreResult }) => {
             const previousEntry = previousResult.entry;
-            const newComments = fetchMoreResult.data.moreComments.comments;
+            const newComments = fetchMoreResult.moreComments.comments;
 
             return {
               // By returning `cursor` here, we update the `loadMore` function
               // to the new cursor.
-              cursor: fetchMoreResult.data.cursor,
+              cursor: fetchMoreResult.cursor,
 
               entry: {
                 // Put the new comments in the front of the list
@@ -204,8 +204,8 @@ const CommentsWithData = graphql(CommentsQuery, {
             cursor: comments.pageInfo.endCursor,
           },
           updateQuery: (previousResult, { fetchMoreResult }) => {
-            const newEdges = fetchMoreResult.data.comments.edges;
-            const pageInfo = fetchMoreResult.data.comments.pageInfo;
+            const newEdges = fetchMoreResult.comments.edges;
+            const pageInfo = fetchMoreResult.comments.pageInfo;
 
             return {
               // Put the new comments at the end of the list and update `pageInfo`

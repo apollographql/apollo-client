@@ -91,7 +91,8 @@
     "typescript": "2.2.1",
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",
-    "webpack-bundle-analyzer": "^2.1.1"
+    "webpack-bundle-analyzer": "^2.1.1",
+    "websocket-client": "^1.0.0"
   },
   "optionalDependencies": {
     "@types/async": "^2.0.31",

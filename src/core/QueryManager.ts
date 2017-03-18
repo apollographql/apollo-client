@@ -104,6 +104,10 @@ import {
   Observable,
 } from '../util/Observable';
 
+import {
+  observableShare
+} from '../util/ObservableShare';
+
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import {
@@ -316,7 +320,6 @@ export class QueryManager {
               });
             });
           }
-
 
           delete this.queryDocuments[mutationId];
           resolve(<ApolloQueryResult<T>>result);
@@ -780,56 +783,41 @@ export class QueryManager {
     };
 
     let subId: number;
-    let observers: Observer<any>[] = [];
-
-    return new Observable((observer) => {
-      observers.push(observer);
-
+    const obs = observableShare(new Observable((observer) => {
       // TODO REFACTOR: the result here is not a normal GraphQL result.
 
-      // If this is the first observer, actually initiate the network subscription
-      if (observers.length === 1) {
-        const handler = (error: Error, result: any) => {
-          if (error) {
-            observers.forEach((obs) => {
-              if (obs.error) {
-                obs.error(error);
-              }
-            });
-          } else {
-            this.store.dispatch({
-              type: 'APOLLO_SUBSCRIPTION_RESULT',
-              document: transformedDoc,
-              operationName: getOperationName(transformedDoc),
-              result: { data: result },
-              variables: variables || {},
-              subscriptionId: subId,
-              extraReducers: this.getExtraReducers(),
-            });
-            // It's slightly awkward that the data for subscriptions doesn't come from the store.
-            observers.forEach((obs) => {
-              if (obs.next) {
-                obs.next(result);
-              }
-            });
-          }
-        };
+      const handler = (error: Error, result: any) => {
+        if (error) {
+          observer.error && observer.error(error);
+        } else {
+          this.store.dispatch({
+            type: 'APOLLO_SUBSCRIPTION_RESULT',
+            document: transformedDoc,
+            operationName: getOperationName(transformedDoc),
+            result: { data: result },
+            variables: variables || {},
+            subscriptionId: subId,
+            extraReducers: this.getExtraReducers(),
+          });
+          // It's slightly awkward that the data for subscriptions doesn't come from the store.
+          observer.next && observer.next(result);
+        }
+      };
 
-        // QueryManager sets up the handler so the query can be transformed. Alternatively,
-        // pass in the transformer to the ObservableQuery.
-        subId = (this.networkInterface as SubscriptionNetworkInterface).subscribe(
-          request, handler);
-      }
+      // QueryManager sets up the handler so the query can be transformed. Alternatively,
+      // pass in the transformer to the ObservableQuery.
+      subId = (this.networkInterface as SubscriptionNetworkInterface).subscribe(
+        request, handler);
 
+      return () => {
+        (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(subId);
+      };
+    }));
+
+    // Wrap it again to support tests
+    return new Observable((observer) => {
       return {
-        unsubscribe: () => {
-          observers = observers.filter((obs) => obs !== observer);
-
-          // If we removed the last observer, tear down the network subscription
-          if (observers.length === 0) {
-            (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(subId);
-          }
-        },
+        unsubscribe: obs.subscribe(observer).unsubscribe,
         // Used in tests...
         _networkSubscriptionId: subId,
       } as Subscription;

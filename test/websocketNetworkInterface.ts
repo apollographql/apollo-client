@@ -9,7 +9,7 @@ chai.use(chaiAsPromised);
 const { assert, expect } = chai;
 
 import {
-  createReactiveNetworkInterface,
+  createNetworkInterface,
 } from '../src/transport/networkInterface';
 import {
   WebsocketNetworkInterface,
@@ -33,12 +33,12 @@ describe('reactive network interface', () => {
   describe('creating a network interface', () => {
     it('should throw without an endpoint', () => {
       assert.throws(() => {
-        createReactiveNetworkInterface(null);
-      }, /A remote enpdoint is required for a network layer/);
+        createNetworkInterface(null as any);
+      }, /You must pass an options argument to createNetworkInterface./);
     });
 
     it('should create an instance with a given uri', () => {
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql' }) as WebsocketNetworkInterface;
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       assert.equal(networkInterface._uri, '/graphql');
     });
 
@@ -48,8 +48,7 @@ describe('reactive network interface', () => {
         credentials: 'include',
       };
 
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql' , opts: customOpts }) as WebsocketNetworkInterface;
-
+      const networkInterface = createNetworkInterface({ uri: '/graphql' , opts: customOpts });
       assert.deepEqual(networkInterface._opts, assign({}, customOpts));
     });
 
@@ -60,7 +59,7 @@ describe('reactive network interface', () => {
       };
       const originalOpts = assign({}, customOpts);
 
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql', opts: customOpts }) as WebsocketNetworkInterface;
+      const networkInterface = createNetworkInterface({ uri: '/graphql', opts: customOpts });
 
       delete customOpts.headers;
 
@@ -71,7 +70,7 @@ describe('reactive network interface', () => {
   describe('middleware', () => {
     it('should throw an error if you pass something bad', () => {
       const malWare: any = {};
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql' }) as WebsocketNetworkInterface;
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
 
       try {
         networkInterface.use([malWare]);
@@ -88,7 +87,7 @@ describe('reactive network interface', () => {
     it('should take a middleware and assign it', () => {
       const testWare = TestWare();
 
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql' }) as WebsocketNetworkInterface;
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.use([testWare]);
 
       assert.equal(networkInterface._middlewares[0], testWare);
@@ -98,7 +97,7 @@ describe('reactive network interface', () => {
       const testWare1 = TestWare();
       const testWare2 = TestWare();
 
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql' }) as WebsocketNetworkInterface;
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.use([testWare1, testWare2]);
 
       assert.deepEqual(networkInterface._middlewares, [testWare1, testWare2]);
@@ -109,7 +108,7 @@ describe('reactive network interface', () => {
         { key: 'personNum', val: 1 },
       ]);
 
-      const swapi = createReactiveNetworkInterface({ uri: SWAPI_URL }) as WebsocketNetworkInterface;
+      const swapi = createNetworkInterface({ uri: SWAPI_URL });
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -127,7 +126,7 @@ describe('reactive network interface', () => {
       };
 
       return assert.eventually.deepEqual(
-        swapi.query(simpleRequest).take(1).toPromise(),
+        swapi.query(simpleRequest),
         {
           data: {
             allPeople: {
@@ -142,70 +141,6 @@ describe('reactive network interface', () => {
       );
     });
 
-    // Options not support for the moment being.
-    // it('should alter the options but not overwrite defaults', () => {
-    //   const testWare1 = TestWare([], [
-    //     { key: 'planet', val: 'mars' },
-    //   ]);
-
-    //   const swapi = createReactiveNetworkInterface({ uri: SWAPI_URL }) as WebsocketNetworkInterface;
-    //   swapi.use([testWare1]);
-    //   // this is a stub for the end user client api
-    //   const simpleRequest = {
-    //     query: gql`
-    //       query people {
-    //         allPeople(first: 1) {
-    //           people {
-    //             name
-    //           }
-    //         }
-    //       }
-    //     `,
-    //     variables: {},
-    //     debugName: 'People query',
-    //   };
-
-    //   return swapi.query(simpleRequest).take(1).toPromise().then((data) => {
-    //     assert.equal(this.lastFetchOpts.planet, 'mars');
-    //     assert.notOk((<any>swapi._opts)['planet']);
-    //   });
-    // });
-
-    // it('should alter the request body params', () => {
-    //   const testWare1 = TestWare([], [], [
-    //     { key: 'newParam', val: '0123456789' },
-    //   ]);
-
-    //   const swapi = createReactiveNetworkInterface({ uri: SWAPI_URL }) as WebsocketNetworkInterface;
-    //   swapi.use([testWare1]);
-    //   // this is a stub for the end user client api
-    //   const simpleRequest = {
-    //     query: gql`
-    //       query people($personNum: Int!) {
-    //         allPeople(first: $personNum) {
-    //           people {
-    //             name
-    //           }
-    //         }
-    //       }
-    //     `,
-    //     variables: {},
-    //     debugName: 'People query',
-    //   };
-
-    //   return swapi.query(simpleRequest).take(1).toPromise().then((data) => {
-    //     return assert.deepEqual(
-    //       JSON.parse(this.lastFetchOpts.body),
-    //       {
-    //         query: 'query people($personNum: Int!) {\n  allPeople(first: $personNum) {\n    people {\n      name\n    }\n  }\n}\n',
-    //         variables: {},
-    //         debugName: 'People query',
-    //         newParam: '0123456789',
-    //       }
-    //     );
-    //   });
-    // });
-
     it('handle multiple middlewares', () => {
       const testWare1 = TestWare([
         { key: 'personNum', val: 1 },
@@ -214,7 +149,7 @@ describe('reactive network interface', () => {
         { key: 'filmNum', val: 1 },
       ]);
 
-      const swapi = createReactiveNetworkInterface({ uri: SWAPI_URL }) as WebsocketNetworkInterface;
+      const swapi = createNetworkInterface({ uri: SWAPI_URL });
       swapi.use([testWare1, testWare2]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -239,7 +174,7 @@ describe('reactive network interface', () => {
       };
 
       return assert.eventually.deepEqual(
-        swapi.query(simpleRequest).take(1).toPromise(),
+        swapi.query(simpleRequest),
         {
           data: {
             allPeople: {
@@ -268,7 +203,7 @@ describe('reactive network interface', () => {
     it('should throw an error if you pass something bad', () => {
       const malWare = TestAfterWare();
       delete malWare.applyAfterware;
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql' }) as WebsocketNetworkInterface;
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
 
       try {
         networkInterface.useAfter([malWare]);
@@ -285,7 +220,7 @@ describe('reactive network interface', () => {
     it('should take a afterware and assign it', () => {
       const testWare = TestAfterWare();
 
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql' }) as WebsocketNetworkInterface;
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.useAfter([testWare]);
 
       assert.equal(networkInterface._afterwares[0], testWare);
@@ -295,7 +230,7 @@ describe('reactive network interface', () => {
       const testWare1 = TestAfterWare();
       const testWare2 = TestAfterWare();
 
-      const networkInterface = createReactiveNetworkInterface({ uri: '/graphql' }) as WebsocketNetworkInterface;
+      const networkInterface = createNetworkInterface({ uri: '/graphql' });
       networkInterface.useAfter([testWare1, testWare2]);
 
       assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
@@ -304,7 +239,7 @@ describe('reactive network interface', () => {
 
   describe('making a request', () => {
     it('should fetch remote data', () => {
-      const swapi = createReactiveNetworkInterface({ uri: SWAPI_URL }) as WebsocketNetworkInterface;
+      const swapi = createNetworkInterface({ uri: SWAPI_URL });
 
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -322,7 +257,7 @@ describe('reactive network interface', () => {
       };
 
       return assert.eventually.deepEqual(
-        swapi.query(simpleRequest).take(1).toPromise(),
+        swapi.query(simpleRequest),
         {
           data: {
             allPeople: {
@@ -338,7 +273,7 @@ describe('reactive network interface', () => {
     });
 
     it('should throw on a network error', () => {
-      const nowhere = createReactiveNetworkInterface({ uri: 'http://does-not-exist.test/' }) as WebsocketNetworkInterface;
+      const nowhere = createNetworkInterface({ uri: 'http://does-not-exist.test/' });
 
       // this is a stub for the end user client api
       const doomedToFail = {
@@ -355,7 +290,7 @@ describe('reactive network interface', () => {
         debugName: 'People Query',
       };
 
-      return assert.isRejected(nowhere.query(doomedToFail).take(1).toPromise());
+      return assert.isRejected(nowhere.query(doomedToFail));
     });
   });
 });

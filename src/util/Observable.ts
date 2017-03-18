@@ -21,6 +21,54 @@ export class Observable<T> {
     return this;
   }
 
+  public map<R>(mapFn: (v:T) => R): Observable<R> {
+    return new Observable((observer) => {
+      return this.subscribe({
+        next: (v) => observer.next && observer.next(mapFn(v)),
+        error: observer.error && observer.error.bind(observer),
+        complete: observer.complete && observer.complete.bind(observer),
+      });
+    });
+  }
+
+  public filter(filterFn: (v:T) => boolean): Observable<T> {
+    return new Observable((observer) => {
+      return this.subscribe({
+        next: (v) => filterFn(v) && observer.next && observer.next(v),
+        error: observer.error && observer.error.bind(observer),
+        complete: observer.complete && observer.complete.bind(observer),
+      });
+    });
+  }
+
+  public switchMap<R>(mapFn: (v:T) => Observable<R>): Observable<R> {
+    return new Observable((observer) => {
+      let lastSubscription: Subscription | undefined;
+      let trunkSubscription = this.subscribe({
+        next: (v) => {
+          if ( lastSubscription ) {
+            lastSubscription.unsubscribe();
+          }
+
+          lastSubscription = mapFn(v).subscribe(observer);
+        },
+        error: observer.error && observer.error.bind(observer),
+        complete: observer.complete && observer.complete.bind(observer),
+      });
+
+      return () => {
+        if ( lastSubscription ) {
+          lastSubscription.unsubscribe();
+          lastSubscription = undefined;
+        }
+
+        if ( trunkSubscription ) {
+          trunkSubscription.unsubscribe();
+        }
+      }
+    });
+  }
+
   public subscribe(observer: Observer<T>): Subscription {
     let subscriptionOrCleanupFunction = this.subscriberFunction(observer);
 

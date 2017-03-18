@@ -1,16 +1,15 @@
-import { WebSocket } from './websocket';
-
 import { Request, RequestAndOptions, ResponseAndOptions, SubscriptionNetworkInterface } from './networkInterface';
 import { MiddlewareInterface } from './middleware';
 import { AfterwareInterface } from './afterware';
 
 import { Observer, Observable } from '../util/Observable';
 import { observableShare } from '../util/ObservableShare';
-// import { Observer, Observable } from 'rxjs';
 
 import {
   ExecutionResult,
 } from 'graphql';
+
+import { WebSocket } from './websocket';
 
 //export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
 import { NetworkInterface } from './networkInterface';
@@ -39,78 +38,15 @@ export class WebsocketNetworkInterface implements NetworkInterface {
     this._init_connection();
   }
 
-  public applyMiddlewares({
-    request,
-    options,
-  }: RequestAndOptions): Observable<RequestAndOptions> {
-    return new Observable<RequestAndOptions>((observer: Observer<RequestAndOptions>) => {
-      const queue = (funcs: MiddlewareInterface[], scope: any) => {
-        const next = () => {
-          if (funcs.length > 0) {
-            const f = funcs.shift();
-            try {
-                f && f.applyMiddleware.apply(scope, [{ request, options }, next]);
-            } catch (e) {
-                observer.error && observer.error(e);
-            }
-          } else {
-            observer.next && observer.next({
-              request,
-              options,
-            });
-            observer.complete && observer.complete();
-          }
-        };
-        next();
-      };
-
-      // iterate through middlewares using next callback
-      queue([...this._middlewares], this);
-
-      return () => { /* noop */ };
-    });
-  }
-
-  public applyAfterwares({
-    response,
-    options,
-  }: ResponseAndOptions): Observable<ResponseAndOptions> {
-    return new Observable<ResponseAndOptions>((observer: Observer<ResponseAndOptions>) => {
-      const queue = (funcs: any[], scope: any) => {
-        const next = () => {
-          if (funcs.length > 0) {
-            const f = funcs.shift();
-            try {
-                f.applyAfterware.apply(scope, [{ response, options }, next]);
-            } catch (e) {
-                observer.error && observer.error(e);
-            }
-          } else {
-            observer.next && observer.next({
-              response,
-              options,
-            });
-            observer.complete && observer.complete();
-          }
-        };
-        next();
-      };
-
-      // iterate through afterwares using next callback
-      queue([...this._afterwares], this);
-
-      return () => { /* noop */ };
-    });
-  }
-
   public fetchFromRemoteEndpoint({
     request,
 //    options, # TODO: options in websocket?
   }: RequestAndOptions): Observable<ExecutionResult> {
     return this.connection$.switchMap((ws) => {
         return new Observable<ExecutionResult>((observer: Observer<ExecutionResult>) => {
-            let reqId: number = this.nextReqId ++;
-            ws.send(JSON.stringify({...request, id: reqId }));
+            let reqId: number = ++this.nextReqId;
+            const wsRequest = {type: 'start', payload: { ...request }, id: reqId };
+            ws.send(JSON.stringify(wsRequest));
 
             let dataSub = this.incoming$
             .filter((v) => (v.id === reqId))
@@ -160,50 +96,17 @@ export class WebsocketNetworkInterface implements NetworkInterface {
   private _query(request: Request): Observable<ExecutionResult> {
     const options = {...this._opts};
 
-    return this.applyMiddlewares({
-      request,
-      options,
-    }).switchMap(this.fetchFromRemoteEndpoint.bind(this))
-      .switchMap(result => {
-        return this.applyAfterwares({
-          response: result as Response,
-          options,
-        }).map(({response}) => response);
-      })
-      .map((payload: ExecutionResult) => {
-        if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
-          throw new Error(
-            `Server response was missing for query '${request.debugName}'.`
-          );
-        } else {
-          return payload as ExecutionResult;
-        }
-      });
+    return this.fetchFromRemoteEndpoint({ request, options })
+    .map((payload: ExecutionResult) => {
+      if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
+        throw new Error(
+          `Server response was missing for query '${request.debugName}'.`
+        );
+      } else {
+        return payload as ExecutionResult;
+      }
+    });
   };
-
-  public use(middlewares: MiddlewareInterface[]) {
-    middlewares.forEach((middleware) => {
-      if (typeof middleware.applyMiddleware === 'function') {
-        this._middlewares.push(middleware);
-      } else {
-        throw new Error('Middleware must implement the applyMiddleware function');
-      }
-    });
-
-    return this;
-  }
-
-  public useAfter(afterwares: AfterwareInterface[]) {
-    afterwares.forEach(afterware => {
-      if (typeof afterware.applyAfterware === 'function') {
-        this._afterwares.push(afterware);
-      } else {
-        throw new Error('Afterware must implement the applyAfterware function');
-      }
-    });
-
-    return this;
-  }
 
   private _init_connection(): void {
     this.connection$ = new Observable<WebSocket>((observer: Observer<WebSocket>) => {
@@ -235,13 +138,13 @@ export class WebsocketNetworkInterface implements NetworkInterface {
       return new Observable<any>((observer: Observer<any>) => {
         let originalOnmessage = ws.onmessage;
         ws.onmessage = (msg: any) => {
-          observer.next && observer.next(JSON.parse(msg));
+          observer.next && observer.next(msg.data);
         };
 
         return () => {
           ws.onmessage = originalOnmessage;
         };
-      });
+      }).map((v) => JSON.parse(v));
     }));
   }
 }

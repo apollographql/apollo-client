@@ -3,7 +3,7 @@ let WebSocketPolyfill = undefined; //WebSocket;
 // Is node?
 if ( typeof module !== 'undefined' && module.exports ) {
   // Use polyfill
-  WebSocketPolyfill = require('websocket-client').WebSocket;
+  WebSocketPolyfill = require('websocket').w3cwebsocket;
 } else {
   // Use browser native
   WebSocketPolyfill = WebSocket;

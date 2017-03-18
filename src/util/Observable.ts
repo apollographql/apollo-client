@@ -24,7 +24,13 @@ export class Observable<T> {
   public map<R>(mapFn: (v:T) => R): Observable<R> {
     return new Observable((observer) => {
       return this.subscribe({
-        next: (v) => observer.next && observer.next(mapFn(v)),
+        next: (v) => {
+          try {
+            observer.next && observer.next(mapFn(v));
+          } catch (e) {
+            observer.error && observer.error(e);
+          }
+        },
         error: observer.error && observer.error.bind(observer),
         complete: observer.complete && observer.complete.bind(observer),
       });

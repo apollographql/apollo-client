@@ -68,6 +68,45 @@ describe('reactive network interface', () => {
     });
   });
 
+  describe('sanities', () => {
+    it('doesn\'t blow if unsubscribing twice', () => {
+      const swapi = createNetworkInterface({ uri: SWAPI_URL });
+
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: gql`
+        subscription {
+          raisingCount(delay: 10)
+        }
+        `,
+        variables: {},
+        debugName: 'raisingCount Subscription',
+      };
+
+      const subId = swapi.subscribe(simpleRequest, (e: Error, v: any) => { /* noop */ });
+      swapi.unsubscribe(subId);
+      swapi.unsubscribe(subId);
+    });
+
+    it('throws if no handler given for subscription', () => {
+      const swapi = createNetworkInterface({ uri: SWAPI_URL });
+
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: gql`
+        subscription {
+          raisingCount(delay: 10)
+        }
+        `,
+        variables: {},
+        debugName: 'raisingCount Subscription',
+      };
+
+      assert.throws(swapi.subscribe.bind(simpleRequest),
+      /Handler function was not provided/);
+    });
+  });
+
   describe('making a request', () => {
     it('should fetch remote data', () => {
       const swapi = createNetworkInterface({ uri: SWAPI_URL });
@@ -101,6 +140,48 @@ describe('reactive network interface', () => {
           },
         },
       );
+    });
+
+    it('should subscribe to remote data', () => {
+      const swapi = createNetworkInterface({ uri: SWAPI_URL });
+
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: gql`
+        subscription {
+          raisingCount(delay: 10)
+        }
+        `,
+        variables: {},
+        debugName: 'raisingCount Subscription',
+      };
+
+      return new Promise((resolve, reject) => {
+        let currentCount = 0;
+        const subId = swapi.subscribe(simpleRequest, (e: Error, v: { [key: string]: any }) => {
+          if (e) {
+            setImmediate(() => swapi.unsubscribe(subId));
+            return reject(e);
+          }
+
+          if (v.errors && v.errors.length > 0) {
+            setImmediate(() => swapi.unsubscribe(subId));
+            return reject(v.errors[0]);
+          }
+
+          try {
+            assert.equal(v.data.raisingCount, currentCount ++);
+          } catch (err) {
+            setImmediate(() => swapi.unsubscribe(subId));
+            return reject(e);
+          }
+
+          if ( 3 === currentCount ) {
+            setImmediate(() => swapi.unsubscribe(subId));
+            return resolve(v);
+          }
+        });
+      });
     });
 
     it('should throw on a network error', () => {

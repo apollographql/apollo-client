@@ -1,8 +1,7 @@
 import { Request, RequestAndOptions, ResponseAndOptions, SubscriptionNetworkInterface } from './networkInterface';
-import { MiddlewareInterface } from './middleware';
 import { AfterwareInterface } from './afterware';
 
-import { Observer, Observable } from '../util/Observable';
+import { Observer, Observable, Subscription } from '../util/Observable';
 import { observableShare } from '../util/ObservableShare';
 
 import {
@@ -11,14 +10,12 @@ import {
 
 import { WebSocket } from './websocket';
 
-//export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
-import { NetworkInterface } from './networkInterface';
-export class WebsocketNetworkInterface implements NetworkInterface {
+export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
   public _uri: string;
   public _opts: RequestInit;
-  public _middlewares: MiddlewareInterface[];
-  public _afterwares: AfterwareInterface[];
   private nextReqId: number = 0;
+  private _nextSubId: number = 0;
+  private _subscriptions: { [key: number]: Subscription } = {};
   private connection$: Observable<WebSocket>;
   private incoming$: Observable<any>;
 
@@ -33,8 +30,6 @@ export class WebsocketNetworkInterface implements NetworkInterface {
 
     this._uri = uri;
     this._opts = {...opts};
-    this._middlewares = [];
-    this._afterwares = [];
     this._init_connection();
   }
 
@@ -91,6 +86,32 @@ export class WebsocketNetworkInterface implements NetworkInterface {
         complete: () => resolve(undefined),
       });
     });
+  }
+
+  public subscribe(request: Request, handler: (error: any, result: any) => void): number {
+    if ( !handler || typeof handler !== 'function' ) {
+      throw new Error('Handler function was not provided');
+    }
+
+    const subId = this._nextSubId ++;
+    const subscription = this._query(request).subscribe({
+      next: (v) => handler(undefined, v),
+      error: (e) => handler(e, undefined),
+      complete: () => this.unsubscribe(subId),
+    });
+    this._subscriptions[subId] = subscription;
+
+    return subId;
+  }
+
+  public unsubscribe(id: number): void {
+    const indexNum: string = id.toString();
+    if ( !this._subscriptions[id] ) {
+      return;
+    }
+
+    this._subscriptions[id].unsubscribe();
+    delete this._subscriptions[id];
   }
 
   private _query(request: Request): Observable<ExecutionResult> {

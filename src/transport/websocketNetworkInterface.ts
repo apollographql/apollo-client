@@ -130,7 +130,7 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
   };
 
   private _init_connection(): void {
-    this.connection$ = new Observable<WebSocket>((observer: Observer<WebSocket>) => {
+    let _connection$ = new Observable<WebSocket>((observer: Observer<WebSocket>) => {
       let ws: WebSocket = new WebSocket(this._uri);
 
       ws.onopen = () => {
@@ -153,9 +153,9 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
         ws.close();
       };
     });
-    this.connection$ = observableShare(this.connection$, 1);
+    _connection$ = observableShare(_connection$, 1);
 
-    this.incoming$ = observableShare(this.connection$.switchMap((ws) => {
+    this.incoming$ = observableShare(_connection$.switchMap((ws) => {
       return new Observable<any>((observer: Observer<any>) => {
         let originalOnmessage = ws.onmessage;
         ws.onmessage = (msg: any) => {
@@ -167,5 +167,33 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
         };
       }).map((v) => JSON.parse(v));
     }));
+
+    this.connection$ = _connection$.switchMap((ws) => {
+        return new Observable((observer) => {
+          ws.send(JSON.stringify({
+            type: 'init',
+            payload: this._opts.headers,
+          }));
+
+          return this.incoming$.subscribe({
+            next: (p) => {
+              switch (p.type) {
+                case 'init_success':
+                  observer.next && observer.next(ws);
+                  break;
+                case 'init_fail':
+                  observer.error && observer.error(new Error('Connection rejected'));
+                  break;
+                default:
+                  /* noop */
+                  return;
+              }
+            },
+            error: (e) => observer.error && observer.error(e),
+            complete: () => observer.complete && observer.complete,
+          });
+        });
+    });
+    this.connection$ = observableShare(this.connection$, 1);
   }
 }

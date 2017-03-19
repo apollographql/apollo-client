@@ -1,4 +1,4 @@
-import 'whatwg-fetch';
+import './fetchPolyfill';
 
 import {
   ExecutionResult,

@@ -15,3 +15,9 @@ declare module 'graphql-tag/parser' {
 declare module 'graphql-tag/bundledPrinter' {
   function print(ast: any): string;
 }
+
+declare module 'unfetch' {
+  // Uses the type of fetch from `@types/whatwg-fetch`.
+  const _fetch: typeof fetch
+  export default _fetch;
+}

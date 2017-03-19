@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Added `HTTPBatchedNetworkInterface` as an index export to make it easier
-to subclass externally, consistent with `HTTPFetchNetworkInterface`.
+to subclass externally, consistent with `HTTPFetchNetworkInterface`. [PR #1446](https://github.com/apollographql/apollo-client/pull/1446)
 
 ### 1.0.0-rc.4
 - Fix: Update TypeScript Middleware and Afterware interfaces to include a datatype for 'this' in apply function. [PR #1372](https://github.com/apollographql/apollo-client/pull/1372)

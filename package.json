@@ -79,6 +79,7 @@
     "lodash": "^4.17.1",
     "minimist": "^1.2.0",
     "mocha": "^3.0.0",
+    "nodemon": "^1.11.0",
     "pretty-bytes": "^4.0.0",
     "remap-istanbul": "0.8.0",
     "request": "^2.75.0",

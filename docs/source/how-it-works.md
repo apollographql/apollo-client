@@ -56,11 +56,11 @@ The result for that query might look like this:
 
 One option might be to just throw that blob of JSON directly into the store, and be done with it. But it turns out that the best option is to _normalize_ the data (see [Benefits](#query-benefits)). This means splitting the tree into individual objects and references between them, and storing those objects in a flattened data structure.
 
-This process requires generating a unique identifier for each object, because we need to be able to refer to the objects somehow to put them back together again. 
+This process requires generating a unique identifier for each object, because we need to be able to refer to the objects somehow to put them back together again.
 
-By default, `ApolloClient` will attempt to use the commonly found primary keys of `id` and `_id` for the unique identifier if they exist on an object.  
+By default, `ApolloClient` will attempt to use the commonly found primary keys of `id` and `_id` for the unique identifier if they exist along with `__typename` on an object.  
 
-If `id` and `_id` are not specified, `ApolloClient` will, by default, fall back to the path to the object in the query, such as `ROOT_QUERY.allPeople.0` for the first record returned on the `allPeople` root query.
+If `id` and `_id` are not specified, or if `__typename` is not specified, `ApolloClient` will fall back to the path to the object in the query, such as `ROOT_QUERY.allPeople.0` for the first record returned on the `allPeople` root query.
 
 This "getter" behavior for unique identifiers can be configured manually via the `dataIdFromObject` option passed to the `ApolloClient` constructor, so you can pick which field is used if some of your data follows unorthodox primary key conventions.
 

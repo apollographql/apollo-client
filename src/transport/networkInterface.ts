@@ -6,10 +6,6 @@ import {
 } from 'graphql';
 
 import {
-  parse as urlParse,
-} from 'url';
-
-import {
   WebsocketNetworkInterface,
 } from './websocketNetworkInterface';
 
@@ -285,11 +281,13 @@ as of Apollo Client 0.5. Please pass it as the "uri" property of the network int
     throw new Error('A remote endpoint is required for a network layer');
   }
 
-  let parser = urlParse(uri);
-  switch (parser.protocol) {
-    case null: return new HTTPFetchNetworkInterface(uri, opts);
+  const uriArr = uri.split('/');
+  const protocol = uriArr.length === 1 ? '' : uriArr[0];
+
+  switch (protocol) {
+    case '': // relative http - fallthrough
     case 'http:': return new HTTPFetchNetworkInterface(uri, opts);
     case 'ws:': return new WebsocketNetworkInterface(uri, opts);
-    default: throw new Error(`protocol ${parser.protocol}// is not supported.`);
+    default: throw new Error(`protocol ${protocol}// is not supported.`);
   }
 }

@@ -2,22 +2,22 @@ import { assert } from 'chai';
 import { createStore } from 'redux';
 import gql from 'graphql-tag';
 import { print } from 'graphql-tag/bundledPrinter';
-import { createApolloStore } from '../src/store';
+import { createApolloStore, ApolloReducerConfig } from '../src/store';
 import { ReduxDataProxy, TransactionDataProxy } from '../src/data/proxy';
 
 describe('ReduxDataProxy', () => {
   function createDataProxy({
     initialState,
-    dataIdFromObject,
+    config,
   }: {
     initialState?: any,
-    dataIdFromObject?: (object: any) => string | null,
+    config?: ApolloReducerConfig,
   } = {}) {
     const store = createApolloStore({
       initialState,
-      config: { dataIdFromObject },
+      config,
     });
-    return new ReduxDataProxy(store, ({ apollo }) => apollo);
+    return new ReduxDataProxy(store, ({ apollo }) => apollo, config || {});
   }
 
   describe('readQuery', () => {
@@ -439,7 +439,7 @@ describe('ReduxDataProxy', () => {
 
     it('will write some deeply nested data into the store at any id', () => {
       const proxy = createDataProxy({
-        dataIdFromObject: (o: any) => o.id,
+        config : { dataIdFromObject: (o: any) => o.id },
       });
 
       proxy.writeFragment({
@@ -619,7 +619,7 @@ describe('ReduxDataProxy', () => {
 describe('TransactionDataProxy', () => {
   describe('readQuery', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy({});
+      const proxy: any = new TransactionDataProxy({}, {});
       proxy.finish();
 
       assert.throws(() => {
@@ -634,7 +634,7 @@ describe('TransactionDataProxy', () => {
           b: 2,
           c: 3,
         },
-      });
+      }, {});
 
       assert.deepEqual(proxy.readQuery({ query: gql`{ a }` }), { a: 1 });
       assert.deepEqual(proxy.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
@@ -668,7 +668,7 @@ describe('TransactionDataProxy', () => {
           j: 8,
           k: 9,
         },
-      });
+      }, {});
 
       assert.deepEqual(
         proxy.readQuery({ query: gql`{ a d { e } }` }),
@@ -690,7 +690,7 @@ describe('TransactionDataProxy', () => {
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
         },
-      });
+      }, {});
 
       assert.deepEqual(proxy.readQuery({
         query: gql`query ($literal: Boolean, $value: Int) {
@@ -707,7 +707,7 @@ describe('TransactionDataProxy', () => {
 
   describe('readFragment', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy({});
+      const proxy: any = new TransactionDataProxy({}, {});
       proxy.finish();
 
       assert.throws(() => {
@@ -716,7 +716,7 @@ describe('TransactionDataProxy', () => {
     });
 
     it('will throw an error when there is no fragment', () => {
-      const proxy = new TransactionDataProxy({});
+      const proxy = new TransactionDataProxy({}, {});
 
       assert.throws(() => {
         proxy.readFragment({ id: 'x', fragment: gql`query { a b c }` });
@@ -727,7 +727,7 @@ describe('TransactionDataProxy', () => {
     });
 
     it('will throw an error when there is more than one fragment but no fragment name', () => {
-      const proxy = new TransactionDataProxy({});
+      const proxy = new TransactionDataProxy({}, {});
 
       assert.throws(() => {
         proxy.readFragment({ id: 'x', fragment: gql`fragment a on A { a } fragment b on B { b }` });
@@ -767,7 +767,7 @@ describe('TransactionDataProxy', () => {
           j: 8,
           k: 9,
         },
-      });
+      }, {});
 
       assert.deepEqual(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e h { i } }` }),
@@ -810,7 +810,7 @@ describe('TransactionDataProxy', () => {
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
         },
-      });
+      }, {});
 
       assert.deepEqual(proxy.readFragment({
         id: 'foo',
@@ -828,13 +828,13 @@ describe('TransactionDataProxy', () => {
     });
 
     it('will return null when an id that can’t be found is provided', () => {
-      const client1 = new TransactionDataProxy({});
+      const client1 = new TransactionDataProxy({}, {});
       const client2 = new TransactionDataProxy({
         'bar': { __typename: 'Type1', a: 1, b: 2, c: 3 },
-      });
+      }, {});
       const client3 = new TransactionDataProxy({
         'foo': { __typename: 'Type1', a: 1, b: 2, c: 3 },
-      });
+      }, {});
 
       assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
@@ -844,7 +844,7 @@ describe('TransactionDataProxy', () => {
 
   describe('writeQuery', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy({});
+      const proxy: any = new TransactionDataProxy({}, {});
       proxy.finish();
 
       assert.throws(() => {
@@ -853,7 +853,7 @@ describe('TransactionDataProxy', () => {
     });
 
     it('will create writes that get returned when finished', () => {
-      const proxy = new TransactionDataProxy({});
+      const proxy = new TransactionDataProxy({}, {});
 
       proxy.writeQuery({
         data: { a: 1, b: 2, c: 3 },
@@ -887,7 +887,7 @@ describe('TransactionDataProxy', () => {
 
   describe('writeFragment', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy({});
+      const proxy: any = new TransactionDataProxy({}, {});
       proxy.finish();
 
       assert.throws(() => {
@@ -896,7 +896,7 @@ describe('TransactionDataProxy', () => {
     });
 
     it('will create writes that get returned when finished', () => {
-      const proxy = new TransactionDataProxy({});
+      const proxy = new TransactionDataProxy({}, {});
 
       proxy.writeFragment({
         data: { a: 1, b: 2, c: 3 },
@@ -960,7 +960,7 @@ describe('TransactionDataProxy', () => {
         },
       };
 
-      const proxy = new TransactionDataProxy(data);
+      const proxy = new TransactionDataProxy(data, {});
 
       assert.deepEqual(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
@@ -1043,7 +1043,7 @@ describe('TransactionDataProxy', () => {
 
     it('will write data to a specific id', () => {
       const data = {};
-      const proxy = new TransactionDataProxy(data, (o: any) => o.id);
+      const proxy = new TransactionDataProxy(data, { dataIdFromObject : (o: any) => o.id });
 
       proxy.writeQuery({
         query: gql`{ a b foo { c d bar { id e f } } }`,

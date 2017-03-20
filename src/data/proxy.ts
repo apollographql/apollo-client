@@ -205,7 +205,7 @@ export class ReduxDataProxy implements DataProxy {
       store: data,
       query,
       variables,
-      config: this.reducerConfig
+      config: this.reducerConfig,
     });
   }
 
@@ -314,7 +314,7 @@ export class TransactionDataProxy implements DataProxy {
       store: this.data,
       query,
       variables,
-      config: this.reducerConfig
+      config: this.reducerConfig,
     });
   }
 

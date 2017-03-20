@@ -108,6 +108,16 @@ const client = new ApolloClient({
 
 Apollo Client will use the return value of the custom resolver to look up the item in its cache. `toIdValue` must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object.
 
+It is possible to return a list of ids if you expect a list of entities.
+```
+customResolvers: {
+  Query: {
+    books: (_, args) => args['ids'].map(id => toIdValue(dataIdFromObject({ __typename: 'book', id: id }))),
+  },
+},
+```
+Also it is possibly to dynamically decide inside resolver whether you want to use cache for this request or not. If not just return `toIdValue(null)` or `[toIdValue(null)]` for list fields.
+
 <h2 id="fetchMore">Using `fetchMore`</h2>
 
 `fetchMore` can be used to manually update the result of one query based on the data returned by another query. Most often, it is used to handle pagination. In our GitHunt example, we have a paginated feed that displays a list of GitHub respositories. When we hit the "Load More" button, we don't want Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.

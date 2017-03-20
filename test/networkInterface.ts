@@ -160,6 +160,18 @@ describe('network interface', () => {
       }, /Passing the URI as the first argument to createNetworkInterface is deprecated/);
     });
 
+    it('should throw when the endpoint is not string', () => {
+      assert.throws(() => {
+        createNetworkInterface({ uri: <any>[] });
+      }, /Remote endpoint must be a string/);
+    });
+
+    it('should throw when the endpoint protocol is not known', () => {
+      assert.throws(() => {
+        createNetworkInterface({ uri: 'undefined://someurl.com' });
+      }, /protocol undefined:\/\/ is not supported/);
+    });
+
     it('should create an instance with a given uri', () => {
       const networkInterface = createNetworkInterface({ uri: '/graphql' });
       assert.equal(networkInterface._uri, '/graphql');

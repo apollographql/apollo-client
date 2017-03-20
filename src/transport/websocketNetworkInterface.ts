@@ -8,6 +8,21 @@ import {
   ExecutionResult,
 } from 'graphql';
 
+export class WSMessageTypes {
+  public static RGQL_MSG_ERROR        = 'error';
+  public static RGQL_MSG_COMPLETE     = 'complete';
+  public static RGQL_MSG_DATA         = 'data';
+  public static RGQL_MSG_START        = 'start';
+  public static RGQL_MSG_STOP         = 'stop';
+  public static RGQL_MSG_KEEPALIVE    = 'keepalive';
+  public static RGQL_MSG_INIT         = 'init';
+  public static RGQL_MSG_INIT_SUCCESS = 'init_success';
+  public static RGQL_MSG_INIT_FAIL    = 'init_fail';
+
+  /* istanbul ignore next */
+  constructor() { throw new Error('Static Class'); }
+}
+
 export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
   public _uri: string;
   public _opts: RequestInit;
@@ -17,15 +32,7 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
   private connection$: Observable<WebSocket>;
   private incoming$: Observable<any>;
 
-  constructor(uri: string | undefined, opts: RequestInit = {}) {
-    if (!uri) {
-      throw new Error('A remote enpdoint is required for a network layer');
-    }
-
-    if (typeof uri !== 'string') {
-      throw new Error('Remote endpoint must be a string');
-    }
-
+  constructor(uri: string, opts: RequestInit = {}) {
     this._uri = uri;
     this._opts = {...opts};
     this._init_connection();
@@ -38,7 +45,7 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
     return this.connection$.switchMap((ws) => {
         return new Observable<ExecutionResult>((observer: Observer<ExecutionResult>) => {
             let reqId: number = ++this.nextReqId;
-            const wsRequest = {type: 'start', payload: { ...request }, id: reqId };
+            const wsRequest = {type: WSMessageTypes.RGQL_MSG_START, payload: { ...request }, id: reqId };
             ws.send(JSON.stringify(wsRequest));
 
             let dataSub = this.incoming$
@@ -46,11 +53,11 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
             .subscribe({
               next: (v) => {
                 switch ( v.type ) {
-                  case 'data':
+                  case WSMessageTypes.RGQL_MSG_DATA:
                     return observer.next && observer.next(v.payload);
-                  case 'error':
+                  case WSMessageTypes.RGQL_MSG_ERROR:
                     return observer.error && observer.error(new Error(v.payload));
-                  case 'complete':
+                  case WSMessageTypes.RGQL_MSG_COMPLETE:
                     return observer.complete && observer.complete();
                   default:
                     return observer.error && observer.error(new Error('unexpected message arrived.'));
@@ -62,7 +69,7 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
 
             return () => {
                 if ( ws.readyState === WebSocket.OPEN ) {
-                    ws.send(JSON.stringify({'id': reqId, 'type': 'stop'}));
+                    ws.send(JSON.stringify({id: reqId, type: WSMessageTypes.RGQL_MSG_STOP}));
                 }
 
                 if ( dataSub ) {
@@ -117,6 +124,7 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
 
     return this.fetchFromRemoteEndpoint({ request, options })
     .map((payload: ExecutionResult) => {
+      /* istanbul ignore if */
       if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
         throw new Error(
           `Server response was missing for query '${request.debugName}'.`,
@@ -140,7 +148,7 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
       };
 
       ws.onclose = (ev: CloseEvent) => {
-        if ( ev.code !== 0 ) {
+        if ( ev.code !== 1000 /* CLOSE_NORMAL */) {
           observer.error && observer.error(new Error(`Connection Closed with error: ${ev.code}: ${ev.reason}`));
         } else {
           observer.complete && observer.complete();
@@ -169,17 +177,17 @@ export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
     this.connection$ = _connection$.switchMap((ws) => {
         return new Observable((observer) => {
           ws.send(JSON.stringify({
-            type: 'init',
+            type: WSMessageTypes.RGQL_MSG_INIT,
             payload: this._opts.headers,
           }));
 
           return this.incoming$.subscribe({
             next: (p) => {
               switch (p.type) {
-                case 'init_success':
+                case WSMessageTypes.RGQL_MSG_INIT_SUCCESS:
                   observer.next && observer.next(ws);
                   break;
-                case 'init_fail':
+                case WSMessageTypes.RGQL_MSG_INIT_FAIL:
                   observer.error && observer.error(new Error('Connection rejected'));
                   break;
                 default:

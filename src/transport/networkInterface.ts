@@ -99,15 +99,7 @@ export class BaseNetworkInterface implements NetworkInterface {
   public _uri: string;
   public _opts: RequestInit;
 
-  constructor(uri: string | undefined, opts: RequestInit = {}) {
-    if (!uri) {
-      throw new Error('A remote endpoint is required for a network layer');
-    }
-
-    if (typeof uri !== 'string') {
-      throw new Error('Remote endpoint must be a string');
-    }
-
+  constructor(uri: string, opts: RequestInit = {}) {
     this._uri = uri;
     this._opts = { ...opts };
 
@@ -115,6 +107,7 @@ export class BaseNetworkInterface implements NetworkInterface {
     this._afterwares = [];
   }
 
+  /* istanbul ignore next */
   public query(request: Request): Promise<ExecutionResult> {
     return new Promise((resolve, reject) => {
       reject(new Error('BaseNetworkInterface should not be used directly'));
@@ -214,6 +207,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
         return httpResponse.json();
       })
       .then((payload: ExecutionResult) => {
+        /* istanbul ignore if */
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
             `Server response was missing for query '${request.debugName}'.`,
@@ -306,6 +300,10 @@ export function addGraphQLSubscriptions(networkInterface: NetworkInterface, subs
 function interfaceFactory(uri: string | undefined, opts: RequestInit | undefined): NetworkInterface {
   if (!uri) {
     throw new Error('A remote endpoint is required for a network layer');
+  }
+
+  if (typeof uri !== 'string') {
+    throw new Error('Remote endpoint must be a string');
   }
 
   const uriArr = uri.split('/');

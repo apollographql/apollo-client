@@ -56,7 +56,11 @@ export class Observable<T> {
             lastSubscription.unsubscribe();
           }
 
-          lastSubscription = mapFn(v).subscribe(observer);
+          lastSubscription = mapFn(v).subscribe({
+            next: (mappedValue) => observer.next && observer.next(mappedValue),
+            error: (e) => observer.error && observer.error(e),
+            /* Complete is not forwared */
+          });
         },
         error: observer.error && observer.error.bind(observer),
         complete: observer.complete && observer.complete.bind(observer),

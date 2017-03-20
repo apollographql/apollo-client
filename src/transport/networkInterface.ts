@@ -251,6 +251,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
 
 export interface NetworkInterfaceOptions {
   uri?: string;
+  subscriptionsURI?: string;
   opts?: RequestInit;
 }
 
@@ -264,6 +265,7 @@ export function createNetworkInterface(
 
   let uri: string | undefined;
   let opts: RequestInit | undefined;
+  let subscriptionsURI: string | undefined;
 
   // We want to change the API in the future so that you just pass all of the options as one
   // argument, so even though the internals work with two arguments we're warning here.
@@ -275,8 +277,33 @@ as of Apollo Client 0.5. Please pass it as the "uri" property of the network int
   } else {
     opts = uriOrInterfaceOpts.opts;
     uri = uriOrInterfaceOpts.uri;
+    subscriptionsURI = uriOrInterfaceOpts.subscriptionsURI;
   }
 
+  const networkInterface = interfaceFactory(uri, opts);
+  if ( subscriptionsURI && (subscriptionsURI !== uri) ) {
+    const subscriptionNetworkInterface = interfaceFactory(subscriptionsURI, opts);
+    return addGraphQLSubscriptions(networkInterface, subscriptionNetworkInterface);
+  }
+
+  return networkInterface;
+}
+
+export function addGraphQLSubscriptions(networkInterface: NetworkInterface, subscriptionInterface: NetworkInterface): any {
+  return Object.assign(networkInterface, {
+    subscribe(request: any, handler: any): number {
+      return subscriptionInterface.subscribe({
+        query: print(request.query),
+        variables: request.variables,
+      }, handler);
+    },
+    unsubscribe(id: number): void {
+      subscriptionInterface.unsubscribe(id);
+    },
+  });
+}
+
+function interfaceFactory(uri: string | undefined, opts: RequestInit | undefined): NetworkInterface {
   if (!uri) {
     throw new Error('A remote endpoint is required for a network layer');
   }

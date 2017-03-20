@@ -29,6 +29,7 @@ import gql from 'graphql-tag';
 
 // XXX: Will require to be move to an online instance.
 const SWAPI_URL = 'ws://localhost:3000/graphql';
+const SWAPI_HTTP_URL = 'http://localhost:3000/graphql';
 
 describe('reactive network interface', () => {
   describe('creating a network interface', () => {
@@ -203,6 +204,86 @@ describe('reactive network interface', () => {
       };
 
       return assert.isRejected(nowhere.query(doomedToFail));
+    });
+
+  });
+
+  describe('supports hybrid mode', () => {
+    const swapi = createNetworkInterface({
+      uri: SWAPI_HTTP_URL,
+      subscriptionsURI: SWAPI_URL,
+    });
+
+    it('should fetch remote data', () => {
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: gql`
+          query people {
+            allPeople(first: 1) {
+              people {
+                name
+              }
+            }
+          }
+        `,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequest),
+        {
+          data: {
+            allPeople: {
+              people: [
+                {
+                  name: 'Luke Skywalker',
+                },
+              ],
+            },
+          },
+        },
+      );
+    });
+
+    it('should subscribe to remote data', () => {
+      // this is a stub for the end user client api
+      const simpleRequest = {
+        query: gql`
+        subscription {
+          raisingCount(delay: 10)
+        }
+        `,
+        variables: {},
+        debugName: 'raisingCount Subscription',
+      };
+
+      return new Promise((resolve, reject) => {
+        let currentCount = 0;
+        const subId = swapi.subscribe(simpleRequest, (e: Error, v: { [key: string]: any }) => {
+          if (e) {
+            setImmediate(() => swapi.unsubscribe(subId));
+            return reject(e);
+          }
+
+          if (v.errors && v.errors.length > 0) {
+            setImmediate(() => swapi.unsubscribe(subId));
+            return reject(v.errors[0]);
+          }
+
+          try {
+            assert.equal(v.data.raisingCount, currentCount ++);
+          } catch (err) {
+            setImmediate(() => swapi.unsubscribe(subId));
+            return reject(e);
+          }
+
+          if ( 3 === currentCount ) {
+            setImmediate(() => swapi.unsubscribe(subId));
+            return resolve(v);
+          }
+        });
+      });
     });
   });
 });

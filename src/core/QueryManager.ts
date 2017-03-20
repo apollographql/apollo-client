@@ -15,7 +15,6 @@ import {
   ApolloQueryResult,
   PureQueryOptions,
   FetchType,
-  SubscriptionOptions,
 } from './types';
 
 import {
@@ -112,7 +111,10 @@ import {
   ApolloError,
 } from '../errors/ApolloError';
 
-import { WatchQueryOptions } from './watchQueryOptions';
+import {
+  WatchQueryOptions,
+  SubscriptionOptions,
+} from './watchQueryOptions';
 
 import { ObservableQuery } from './ObservableQuery';
 
@@ -270,9 +272,17 @@ export class QueryManager {
       this.networkInterface.query(request)
         .then((result) => {
           if (result.errors) {
-            reject(new ApolloError({
+            const error = new ApolloError({
               graphQLErrors: result.errors,
-            }));
+            });
+            this.store.dispatch({
+              type: 'APOLLO_MUTATION_ERROR',
+              error,
+              mutationId,
+            });
+
+            delete this.queryDocuments[mutationId];
+            reject(error);
             return;
           }
 
@@ -496,6 +506,10 @@ export class QueryManager {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     if ((options as any).returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
+    }
+
+    if ((options as any).pollInterval) {
+      throw new Error('pollInterval option only supported on watchQuery.');
     }
 
     if ((options as any).forceFetch) {
@@ -751,10 +765,10 @@ export class QueryManager {
     options: SubscriptionOptions,
   ): Observable<any> {
     const {
-      document,
+      query,
       variables,
     } = options;
-    let transformedDoc = document;
+    let transformedDoc = query;
     // Apply the query transformer if one has been provided.
     if (this.addTypename) {
       transformedDoc = addTypenameToDocument(transformedDoc);

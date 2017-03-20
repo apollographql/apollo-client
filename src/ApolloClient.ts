@@ -24,6 +24,10 @@ import {
 } from './store';
 
 import {
+  ApolloAction,
+} from './actions';
+
+import {
   CustomResolverMap,
 } from './data/readFromStore';
 
@@ -118,8 +122,8 @@ export default class ApolloClient implements DataProxy {
    * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
    * to a GraphQL spec-compliant server.
    *
-   * @param reduxRootSelector Either a "selector" function that receives state from the Redux store
-   * and returns the part of it that is managed by ApolloClient or a key that points to that state.
+   * @param reduxRootSelector A "selector" function that receives state from the Redux store
+   * and returns the part of it that is managed by ApolloClient.
    * This option should only be used if the store is created outside of the client.
    *
    * @param initialState The initial state assigned to the store.
@@ -283,13 +287,7 @@ export default class ApolloClient implements DataProxy {
   public subscribe(options: SubscriptionOptions): Observable<any> {
     this.initStore();
 
-    const realOptions = {
-      ...options,
-      document: options.query,
-    };
-    delete realOptions.query;
-
-    return this.queryManager.startGraphQLSubscription(realOptions);
+    return this.queryManager.startGraphQLSubscription(options);
   }
 
   /**
@@ -344,7 +342,7 @@ export default class ApolloClient implements DataProxy {
   /**
    * Returns a reducer function configured according to the `reducerConfig` instance variable.
    */
-  public reducer(): Function {
+  public reducer(): (state: Store, action: ApolloAction) => Store  {
     return createApolloReducer(this.reducerConfig);
   }
 
@@ -417,6 +415,22 @@ export default class ApolloClient implements DataProxy {
     }));
   };
 
+  /**
+   * Resets your entire store by clearing out your cache and then re-executing
+   * all of your active queries. This makes it so that you may guarantee that
+   * there is no data left in your store from a time before you called this
+   * method.
+   *
+   * `resetStore()` is useful when your user just logged out. You’ve removed the
+   * user session, and you now want to make sure that any references to data you
+   * might have fetched while the user session was active is gone.
+   *
+   * It is important to remember that `resetStore()` *will* refetch any active
+   * queries. This means that any components that might be mounted will execute
+   * their queries again using your network interface. If you do not want to
+   * re-execute any queries then you should make sure to stop watching any
+   * active queries.
+   */
   public resetStore() {
     if (this.queryManager) {
       this.queryManager.resetStore();

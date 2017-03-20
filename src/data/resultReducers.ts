@@ -56,8 +56,13 @@ export function createStoreReducer(
       return store;
     }
 
-
-    const nextResult = resultReducer(result, action, variables); // action should include operation name
+    let nextResult;
+    try {
+      nextResult = resultReducer(result, action, variables); // action should include operation name
+    } catch (err) {
+      console.warn('Unhandled error in result reducer', err);
+      throw err;
+    }
 
     if (result !== nextResult) {
       return writeResultToStore({

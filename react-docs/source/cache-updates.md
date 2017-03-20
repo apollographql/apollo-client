@@ -106,7 +106,7 @@ const client = new ApolloClient({
     });
 ```
 
-Apollo Client will use the return value of the custom resolver to look up the item in its cache. `toIdValue` must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object.
+Apollo Client will use the return value of the custom resolver to look up the item in its cache. `toIdValue` must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object. "Query" key in this example is your root query type name.
 
 <h2 id="fetchMore">Using `fetchMore`</h2>
 

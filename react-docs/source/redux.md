@@ -47,7 +47,7 @@ If you'd like to use a different root key for the client reducer (rather than `a
 
 ```js
 const client = new ApolloClient({
-  reduxRootKey: state => state.differentKey,
+  reduxRootSelector: state => state.differentKey,
 });
 
 const store = createStore(

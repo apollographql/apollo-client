@@ -7,6 +7,7 @@ import {
 
 import {
   createBatchingNetworkInterface,
+  HTTPBatchedNetworkInterface,
 } from './transport/batchedNetworkInterface';
 
 import {
@@ -75,8 +76,6 @@ import {
   toIdValue,
 } from './data/storeUtils';
 
-// We expose the print method from GraphQL so that people that implement
-// custom network interfaces can turn query ASTs into query strings as needed.
 export {
   createNetworkInterface,
   createBatchingNetworkInterface,
@@ -84,25 +83,25 @@ export {
   createApolloReducer,
   readQueryFromStore,
   writeQueryToStore,
-  print as printAST,
   addTypenameToDocument,
   createFragmentMap,
   NetworkStatus,
   ApolloError,
-
   getQueryDefinition,
   getFragmentDefinitions,
   FragmentMap,
-
   Request,
-
   ApolloQueryResult,
-
   toIdValue,
 
-  // internal type definitions for export
+  // Expose the print method from GraphQL so that people that implement
+  // custom network interfaces can turn query ASTs into query strings as needed.
+  print as printAST,
+
+  // Internal type definitions
   NetworkInterface,
   HTTPFetchNetworkInterface,
+  HTTPBatchedNetworkInterface,
   FetchPolicy,
   WatchQueryOptions,
   MutationOptions,

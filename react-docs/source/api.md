@@ -847,7 +847,7 @@ In order to change the data in your store call methods on your [`DataProxy`][] i
 
 To read the data from the store that you are changing, make sure to use methods on your [`DataProxy`][] like [`readQuery`][] and [`readFragment`][].
 
-For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../core/data-control.html#updating-the-cache-after-a-mutation).
+For more information on updating your cache after a mutation with the `options.update` function make sure to read the [Apollo Client technical documentation on the subject](../core/read-and-write.html#updating-the-cache-after-a-mutation).
 
 [`DataProxy`]: ../core/apollo-client-api.html#DataProxy
 [`writeQuery`]: ../core/apollo-client-api.html#DataProxy.writeQuery

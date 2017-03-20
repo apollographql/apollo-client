@@ -8,8 +8,6 @@ import {
   ExecutionResult,
 } from 'graphql';
 
-import { WebSocket } from './websocket';
-
 export class WebsocketNetworkInterface implements SubscriptionNetworkInterface {
   public _uri: string;
   public _opts: RequestInit;

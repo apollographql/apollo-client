@@ -23,6 +23,9 @@ console.warn = console.error = (...messages: string[]) => {
   }
 };
 
+// Load WebSocket polyfill
+import './websocket';
+
 process.on('unhandledRejection', () => {});
 
 import './writeToStore';

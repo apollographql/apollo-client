@@ -15,5 +15,5 @@ if ( typeof module !== 'undefined' && module.exports ) {
 }
 /* tslint:enable */
 
-export { WebSocketPolyfill as WebSocket };
+(<any>global)['WebSocket'] = WebSocketPolyfill;
 export default WebSocketPolyfill;

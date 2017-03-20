@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 import { print } from 'graphql-tag/bundledPrinter';
 import { createApolloStore, ApolloReducerConfig } from '../src/store';
 import { ReduxDataProxy, TransactionDataProxy } from '../src/data/proxy';
+import { toIdValue } from '../src/data/storeUtils';
 
 describe('ReduxDataProxy', () => {
   function createDataProxy({
@@ -88,6 +89,48 @@ describe('ReduxDataProxy', () => {
         proxy.readQuery({ query: gql`{ a b c d { e f g h { i j k } } }` }),
         { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
       );
+    });
+
+    it('will read data using custom resolvers', () => {
+      const proxy = createDataProxy({
+        initialState: {
+          apollo: {
+            data: {
+              'ROOT_QUERY': {
+                __typename: 'Query',
+              },
+              foo: {
+                id: 'foo',
+                a: 1,
+                b: '2',
+                c: null,
+              },
+            },
+          },
+        },
+        config: {
+          dataIdFromObject: (object: any) => object.id,
+          customResolvers: {
+            Query: {
+              thing: (_, args) => toIdValue(args.id),
+            },
+          },
+        },
+      });
+
+      const queryResult = proxy.readQuery({
+        query: gql`
+          query {
+            thing(id: "foo") {
+              a b c
+            }
+          }
+        `,
+      });
+
+      assert.deepEqual(queryResult, {
+        thing: { a: 1, b: '2', c: null },
+      });
     });
 
     it('will read some data from the store with variables', () => {
@@ -266,6 +309,44 @@ describe('ReduxDataProxy', () => {
       assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), { a: 1, b: 2, c: 3 });
+    });
+
+    it('will read data using custom resolvers', () => {
+      const proxy = createDataProxy({
+        initialState: {
+          apollo: {
+            data: {
+              'ROOT_QUERY': {
+                __typename: 'Query',
+              },
+              foo: {
+                __typename: 'Thing',
+                id: 'foo',
+                a: 1,
+                b: '2',
+                c: null,
+              },
+            },
+          },
+        },
+        config: {
+          dataIdFromObject: (object: any) => object.id,
+          customResolvers: {
+            Query: {
+              thing: (_, args) => toIdValue(args.id),
+            },
+          },
+        },
+      });
+
+      const queryResult = proxy.readFragment({
+        id: 'foo',
+        fragment: gql`fragment fooFragment on Thing { a b c } `,
+      });
+
+      assert.deepEqual(queryResult, {
+        thing: { a: 1, b: '2', c: null },
+      });
     });
   });
 
@@ -703,6 +784,41 @@ describe('TransactionDataProxy', () => {
         },
       }), { a: 1, b: 2 });
     });
+
+    it('will read data using custom resolvers', () => {
+      const proxy = new TransactionDataProxy({
+        'ROOT_QUERY': {
+          __typename: 'Query',
+        },
+        foo: {
+          id: 'foo',
+          a: 1,
+          b: '2',
+          c: null,
+        },
+      }, {
+        dataIdFromObject: (object: any) => object.id,
+        customResolvers: {
+          Query: {
+            thing: (_, args) => toIdValue(args.id),
+          },
+        },
+      });
+
+      const queryResult = proxy.readQuery({
+        query: gql`
+          query {
+            thing(id: "foo") {
+              a b c
+            }
+          }
+        `,
+      });
+
+      assert.deepEqual(queryResult, {
+        thing: { a: 1, b: '2', c: null },
+      });
+    });
   });
 
   describe('readFragment', () => {
@@ -839,6 +955,37 @@ describe('TransactionDataProxy', () => {
       assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), { a: 1, b: 2, c: 3 });
+    });
+
+    it('will read data using custom resolvers', () => {
+      const proxy = new TransactionDataProxy({
+        'ROOT_QUERY': {
+          __typename: 'Query',
+        },
+        foo: {
+          __typename: 'Thing',
+          id: 'foo',
+          a: 1,
+          b: '2',
+          c: null,
+        },
+      }, {
+        dataIdFromObject: (object: any) => object.id,
+        customResolvers: {
+          Query: {
+            thing: (_, args) => toIdValue(args.id),
+          },
+        },
+      });
+
+      const queryResult = proxy.readFragment({
+        id: 'foo',
+        fragment: gql`fragment fooFragment on Thing { a b c } `,
+      });
+
+      assert.deepEqual(queryResult, {
+        thing: { a: 1, b: '2', c: null },
+      });
     });
   });
 

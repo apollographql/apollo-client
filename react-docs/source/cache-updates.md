@@ -108,7 +108,7 @@ const client = new ApolloClient({
 
 Apollo Client will use the return value of the custom resolver to look up the item in its cache. `toIdValue` must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object.
 
-It is possible to return a list of ids if you expect a list of entities.
+It is also possible to return a list of ids:
 ```
 customResolvers: {
   Query: {
@@ -116,7 +116,6 @@ customResolvers: {
   },
 },
 ```
-Also it is possibly to dynamically decide inside resolver whether you want to use cache for this request or not. If not just return `toIdValue(null)` or `[toIdValue(null)]` for list fields.
 
 <h2 id="fetchMore">Using `fetchMore`</h2>
 

@@ -5,6 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Added `HTTPBatchedNetworkInterface` as an index export to make it easier
 to subclass externally, consistent with `HTTPFetchNetworkInterface`. [PR #1446](https://github.com/apollographql/apollo-client/pull/1446)
+- Fix `cachePolicy: cache-and-network` queries never dispatching `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
 
 
 ### 1.0.0-rc.5

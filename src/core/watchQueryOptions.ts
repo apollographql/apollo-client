@@ -84,7 +84,7 @@ export interface FetchMoreQueryOptions {
 export type SubscribeToMoreOptions = {
   document: DocumentNode;
   variables?: { [key: string]: any };
-  updateQuery: (previousQueryResult: Object, options: {
+  updateQuery?: (previousQueryResult: Object, options: {
     subscriptionData: { data: any },
     variables: { [key: string]: any },
   }) => Object;

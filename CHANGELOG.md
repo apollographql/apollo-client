@@ -5,7 +5,7 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Added `HTTPBatchedNetworkInterface` as an index export to make it easier
 to subclass externally, consistent with `HTTPFetchNetworkInterface`. [PR #1446](https://github.com/apollographql/apollo-client/pull/1446)
-
+- Make `updateQuery` option of `subscribeToMore` optional [PR #1455](https://github.com/apollographql/apollo-client/pull/1455)
 
 ### 1.0.0-rc.5
 - Fix: Revert PR that caused uncaught promise rejections [PR #1133](https://github.com/apollographql/apollo-client/pull/1133)

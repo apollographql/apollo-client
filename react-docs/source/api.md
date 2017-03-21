@@ -508,7 +508,7 @@ A common practice is to wrap the `subscribeToMore` call within `componentWillRec
 
 - `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
 - `[variables]`: The optional variables you may provide that will be used with the `document` option.
-- `[updateQuery]`: A required function run every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function.
+- `[updateQuery]`: A required function run every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data.fetchMore) callback.
 - `[onError]`: An optional error callback.
 
 **Example:**
@@ -520,7 +520,13 @@ class SubscriptionComponent extends Component {
     this.subscription = null;
     ...
   }
-    componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps) {
+    // Check if props have changed and, if necessary, stop the subscription
+    if (this.props.subscriptionParam !== nextProps.subscriptionParam) {
+      this.subscription.unsubscribe();
+      this.subscription = null;
+    }
+    // Subscribe or re-subscribe
     if (!this.subscription && !nextProps.data.loading) {
       this.systemsSub = nextProps.data.subscribeToMore({
         document: gql`subscription {...}`,

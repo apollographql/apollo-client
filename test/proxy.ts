@@ -974,7 +974,7 @@ describe('TransactionDataProxy', () => {
         },
         bar: {
           __typename: 'Thing',
-          id: 'foo',
+          id: 'bar',
           a: 1,
           b: '2',
           c: null,

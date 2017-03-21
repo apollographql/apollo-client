@@ -500,7 +500,48 @@ data.fetchMore({
 
 <h3 id="graphql-query-data.subscribeToMore">`props.data.subscribeToMore(options)`</h3>
 
-TODO
+This function will set up a subscription, triggering updates whenever the server sends a subscription publication. This requires subscriptions to be set up on the server to properly work. Check out the [subscriptions guide](http://dev.apollodata.com/react/receiving-updates.html#Subscriptions) and the [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) for more information on getting this set up.
+
+This function returns a `Subscription` object which can be used to unsubscribe later.
+
+A common practice is to wrap the `subscribeToMore` call within `componentWillReceiveProps` and perform the subscription after the original query has completed. To ensure the subscription isn't created multiple times, you can attach it to the component instance. See the example for more details.
+
+- `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
+- `[variables]`: The optional variables you may provide that will be used with the `document` option.
+- `[updateQuery]`: A required function run every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data.fetchMore) callback.
+- `[onError]`: An optional error callback.
+
+**Example:**
+
+```js
+class SubscriptionComponent extends Component {
+  constructor(props){
+    super(props);
+    this.subscription = null;
+    ...
+  }
+  componentWillReceiveProps(nextProps) {
+    // Check if props have changed and, if necessary, stop the subscription
+    if (this.props.subscriptionParam !== nextProps.subscriptionParam) {
+      this.subscription.unsubscribe();
+      this.subscription = null;
+    }
+    // Subscribe or re-subscribe
+    if (!this.subscription && !nextProps.data.loading) {
+      this.systemsSub = nextProps.data.subscribeToMore({
+        document: gql`subscription {...}`,
+        updateQuery: (previousResult, { subscriptionData, variables }) => {
+          // Perform updates on previousResult with subscriptionData
+          return updatedResult;
+        }
+      });
+    }
+  }
+  render() {
+    ...
+  }
+}
+```
 
 <h3 id="graphql-query-data.startPolling">`props.data.startPolling(interval)`</h3>
 

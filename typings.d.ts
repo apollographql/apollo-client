@@ -11,7 +11,3 @@ declare module 'graphql-tag/parser' {
       options?: ParseOptions
   ): DocumentNode;
 }
-
-declare module 'graphql-tag/bundledPrinter' {
-  function print(ast: any): string;
-}

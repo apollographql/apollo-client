@@ -77,6 +77,22 @@ describe('subscribeToMore', () => {
     results: [...results3],
   };
 
+  const results4 = ['Vyacheslav Kim', 'Changping Chen'].map(
+    name => ({ result: { name: name }, delay: 10 }),
+  );
+
+  const sub4 = {
+    request: {
+      query: gql`
+        subscription newValues {
+          name
+        }
+      `,
+    },
+    id: 0,
+    results: [...results4],
+  };
+
   it('triggers new result from subscription data', (done) => {
     let latestResult: any = null;
     const networkInterface = mockSubscriptionNetworkInterface([sub1], req1);
@@ -226,5 +242,55 @@ describe('subscribeToMore', () => {
     }
   });
 
+  it('updates new result from subscription via a reducer in watchQuery options', (done) => {
+    let latestResult: any = null;
+    const networkInterface = mockSubscriptionNetworkInterface([sub4], req1);
+    let counter = 0;
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const obsHandle = client.watchQuery({
+      query,
+      reducer: (previousResult, action) => {
+        if (action.type === 'APOLLO_SUBSCRIPTION_RESULT' && action.operationName === 'newValues') {
+          if (action.result.data) {
+            return { entry: { value: action.result.data.name } };
+          }
+        }
+        return previousResult;
+      },
+    });
+    const sub = obsHandle.subscribe({
+      next(queryResult) {
+        latestResult = queryResult;
+        counter++;
+      },
+    });
+
+    obsHandle.subscribeToMore({
+      document: gql`
+        subscription newValues {
+          name
+        }
+      `,
+    });
+
+    setTimeout(() => {
+      sub.unsubscribe();
+      assert.equal(counter, 3);
+      assert.deepEqual(
+        latestResult,
+        { data: { entry: { value: 'Changping Chen' } }, loading: false, networkStatus: 7, stale: false },
+      );
+      done();
+    }, 50);
+
+    for (let i = 0; i < 2; i++) {
+      networkInterface.fireResult(0); // 0 is the id of the subscription for the NI
+    }
+  });
   // TODO add a test that checks that subscriptions are cancelled when obs is unsubscribed from.
 });

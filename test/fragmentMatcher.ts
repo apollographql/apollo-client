@@ -58,6 +58,7 @@ describe('IntrospectionFragmentMatcher', () => {
       store,
       returnPartialData: false,
       hasMissingField: false,
+      missingFields: [],
       customResolvers: {},
     };
 

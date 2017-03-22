@@ -50,9 +50,17 @@ import {
  */
 export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
 
+export type MissingField = {
+  storeKeyName: string,
+  objId: string,
+  fieldName: string,
+  args: any,
+};
+
 export type DiffResult = {
-  result?: any;
-  isMissing?: boolean;
+  result?: any,
+  isMissing: boolean,
+  missingFields: Array<MissingField>,
 };
 
 export type ReadQueryOptions = {
@@ -124,6 +132,7 @@ export type ReadStoreContext = {
   store: NormalizedCache;
   returnPartialData: boolean;
   hasMissingField: boolean;
+  missingFields: Array<MissingField>;
   customResolvers: CustomResolverMap;
 };
 
@@ -161,6 +170,7 @@ const readStoreResolver: Resolver = (
     }
 
     context.hasMissingField = true;
+    context.missingFields.push({ storeKeyName, objId, fieldName, args });
 
     return fieldValue;
   }
@@ -219,6 +229,9 @@ export function diffQueryAgainstStore({
 
     // Flag set during execution
     hasMissingField: false,
+
+    // Array set during execution
+    missingFields: [],
   };
 
   const rootIdValue = {
@@ -232,9 +245,12 @@ export function diffQueryAgainstStore({
     resultMapper,
   });
 
+  const missingFields = context.missingFields;
+
   return {
     result,
-    isMissing: context.hasMissingField,
+    missingFields: missingFields,
+    isMissing: !!missingFields.length,
   };
 }
 

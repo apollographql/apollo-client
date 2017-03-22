@@ -140,7 +140,8 @@ Defining a `customClientConfig` object extends or replaces fields of the default
 The default configuration of the client is:
 - `networkInterface`: `createMeteorNetworkInterface()`, a pre-configured network interface. See below for more information.
 - `ssrMode`: `Meteor.isServer`, enable server-side rendering mode by default if used server-side.
-- `dataIdFromObject`: `object.__typename + object._id`, store normalization with document typename + Meteor's Mongo `_id` if possible.
+
+The store is normalized by default with `__typename` + `_id` identifiers. See [store normalization](http://dev.apollodata.com/core/how-it-works.html#normalize) section for more information.
 
 ### createMeteorNetworkInterface
 
@@ -150,7 +151,7 @@ The default configuration of the client is:
 - `uri`: `Meteor.absoluteUrl('graphql')`, points to the default GraphQL server endpoint, such as http://locahost:3000/graphql or https://www.my-app.com/graphql.
 - `opts`: `{}`, additional [`FetchOptions`](https://github.github.io/fetch#options) passed to the [`NetworkInterface`](http://dev.apollodata.com/core/network.html#createNetworkInterface).
 - `useMeteorAccounts`: `true`, enable the Meteor User Accounts middleware to identify the user with every request thanks to her login token.
-- `batchingInterface`: `false`, if `true` use a [`BatchedNetworkInterface`](http://dev.apollodata.com/core/network.html#query-batching) instead of [`NetworkInterface`](http://dev.apollodata.com/core/network.html#network-interfaces).
+- `batchingInterface`: `true`, use a [`BatchedNetworkInterface`](http://dev.apollodata.com/core/network.html#query-batching) by default instead of [`NetworkInterface`](http://dev.apollodata.com/core/network.html#network-interfaces).
 - `batchInterval`: `10`, if the `batchingInterface` field is `true`, this field defines the batch interval to determine how long the network interface batches up queries before sending them to the server.
 
 Additionally, if the `useMeteorAccounts` is set to `true`, you can add to your `customNetworkInterface` a `loginToken` field while doing [server-side rendering](http://dev.apollodata.com/core/meteor.html#SSR) to handle the current user.

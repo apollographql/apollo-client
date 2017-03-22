@@ -79,6 +79,28 @@ import {
   version,
 } from './version';
 
+
+
+/**
+ * Suggest installing the devtools for developers who are using Apollo Client
+ */
+if (process.env.NODE_ENV !== 'production') {
+  if ( typeof window !== 'undefined' && window.document && window.top === window.self) {
+
+    // First check if devtools is not installed
+    if (typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+      // Only for Chrome
+      if (navigator.userAgent.indexOf('Chrome') > -1) {
+        // tslint:disable-next-line
+        console.debug('Download the Apollo DevTools ' +
+        'for a better development experience: ' +
+        'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm');
+      }
+    }
+  }
+}
+
+
 /**
  * This type defines a "selector" function that receives state from the Redux store
  * and returns the part of it that is managed by ApolloClient

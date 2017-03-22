@@ -40,6 +40,7 @@ import {
 
 import {
   QueryManager,
+  ShouldRefetchIfStaleCb,
 } from './core/QueryManager';
 
 import {
@@ -128,6 +129,7 @@ export default class ApolloClient implements DataProxy {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
+  public shouldRefetchIfStale: ShouldRefetchIfStaleCb | undefined;
   public disableNetworkFetches: boolean;
   /**
    * The dataIdFromObject function used by this client instance.
@@ -169,6 +171,9 @@ export default class ApolloClient implements DataProxy {
    * @param addTypename Adds the __typename field to every level of a GraphQL document, required
    * to support certain queries that contain fragments.
    *
+   * @param shouldRefetchIfStale Callback to decide wether a query which returns stale data
+   * should trigger a refetch or not.
+   *
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
@@ -183,6 +188,7 @@ export default class ApolloClient implements DataProxy {
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     addTypename?: boolean,
+    shouldRefetchIfStale?: ShouldRefetchIfStaleCb,
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
@@ -198,6 +204,7 @@ export default class ApolloClient implements DataProxy {
       ssrMode = false,
       ssrForceFetchDelay = 0,
       addTypename = true,
+      shouldRefetchIfStale,
       customResolvers,
       connectToDevTools,
       fragmentMatcher,
@@ -236,6 +243,7 @@ export default class ApolloClient implements DataProxy {
 
     this.initialState = initialState ? initialState : {};
     this.addTypename = addTypename;
+    this.shouldRefetchIfStale = shouldRefetchIfStale;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
     this.dataIdFromObject = this.dataId;
@@ -542,6 +550,7 @@ export default class ApolloClient implements DataProxy {
       reduxRootSelector: reduxRootSelector,
       store,
       addTypename: this.addTypename,
+      shouldRefetchIfStale: this.shouldRefetchIfStale,
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
       fragmentMatcher: this.fragmentMatcher,

@@ -200,7 +200,7 @@ export function data(
         const update = constAction.update;
         const proxy = new TransactionDataProxy(
           newState,
-          config.dataIdFromObject,
+          config,
         );
         tryFunctionOrLogError(() => update(proxy, constAction.result));
         const writes = proxy.finish();

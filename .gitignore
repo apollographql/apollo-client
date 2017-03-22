@@ -37,3 +37,6 @@ npm
 
 # alm editor
 .alm
+
+# yarn
+yarn.lock

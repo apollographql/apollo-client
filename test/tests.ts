@@ -23,6 +23,9 @@ console.warn = console.error = (...messages: string[]) => {
   }
 };
 
+// Load WebSocket polyfill
+import './websocket';
+
 process.on('unhandledRejection', () => {});
 
 import './writeToStore';
@@ -30,6 +33,7 @@ import './readFromStore';
 import './roundtrip';
 import './diffAgainstStore';
 import './networkInterface';
+import './websocketNetworkInterface';
 import './deduplicator';
 import './QueryManager';
 import './client';

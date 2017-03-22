@@ -143,7 +143,6 @@ describe('GraphQL Subscriptions', () => {
 
   });
 
-
   it('should start a subscription on network interface and unsubscribe', (done) => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     // This test calls directly through Apollo Client

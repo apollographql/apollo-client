@@ -5,6 +5,10 @@ import {
   DocumentNode,
 } from 'graphql';
 
+import {
+  WebsocketNetworkInterface,
+} from './websocketNetworkInterface';
+
 import { print } from 'graphql-tag/bundledPrinter';
 
 import {
@@ -95,15 +99,7 @@ export class BaseNetworkInterface implements NetworkInterface {
   public _uri: string;
   public _opts: RequestInit;
 
-  constructor(uri: string | undefined, opts: RequestInit = {}) {
-    if (!uri) {
-      throw new Error('A remote endpoint is required for a network layer');
-    }
-
-    if (typeof uri !== 'string') {
-      throw new Error('Remote endpoint must be a string');
-    }
-
+  constructor(uri: string, opts: RequestInit = {}) {
     this._uri = uri;
     this._opts = { ...opts };
 
@@ -111,6 +107,7 @@ export class BaseNetworkInterface implements NetworkInterface {
     this._afterwares = [];
   }
 
+  /* istanbul ignore next */
   public query(request: Request): Promise<ExecutionResult> {
     return new Promise((resolve, reject) => {
       reject(new Error('BaseNetworkInterface should not be used directly'));
@@ -210,6 +207,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
         return httpResponse.json();
       })
       .then((payload: ExecutionResult) => {
+        /* istanbul ignore if */
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
           throw new Error(
             `Server response was missing for query '${request.debugName}'.`,
@@ -247,19 +245,21 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
 
 export interface NetworkInterfaceOptions {
   uri?: string;
+  subscriptionsURI?: string;
   opts?: RequestInit;
 }
 
 export function createNetworkInterface(
   uriOrInterfaceOpts: string | NetworkInterfaceOptions,
   secondArgOpts: NetworkInterfaceOptions = {},
-): HTTPNetworkInterface {
+): NetworkInterface {
   if (! uriOrInterfaceOpts) {
     throw new Error('You must pass an options argument to createNetworkInterface.');
   }
 
   let uri: string | undefined;
   let opts: RequestInit | undefined;
+  let subscriptionsURI: string | undefined;
 
   // We want to change the API in the future so that you just pass all of the options as one
   // argument, so even though the internals work with two arguments we're warning here.
@@ -271,6 +271,48 @@ as of Apollo Client 0.5. Please pass it as the "uri" property of the network int
   } else {
     opts = uriOrInterfaceOpts.opts;
     uri = uriOrInterfaceOpts.uri;
+    subscriptionsURI = uriOrInterfaceOpts.subscriptionsURI;
   }
-  return new HTTPFetchNetworkInterface(uri, opts);
+
+  const networkInterface = interfaceFactory(uri, opts);
+  if ( subscriptionsURI && (subscriptionsURI !== uri) ) {
+    const subscriptionNetworkInterface = interfaceFactory(subscriptionsURI, opts);
+    return addGraphQLSubscriptions(networkInterface, subscriptionNetworkInterface);
+  }
+
+  return networkInterface;
+}
+
+export function addGraphQLSubscriptions(networkInterface: NetworkInterface, subscriptionInterface: NetworkInterface): any {
+  return Object.assign(networkInterface, {
+    subscribe(request: any, handler: any): number {
+      return subscriptionInterface.subscribe({
+        query: print(request.query),
+        variables: request.variables,
+      }, handler);
+    },
+    unsubscribe(id: number): void {
+      subscriptionInterface.unsubscribe(id);
+    },
+  });
+}
+
+function interfaceFactory(uri: string | undefined, opts: RequestInit | undefined): NetworkInterface {
+  if (!uri) {
+    throw new Error('A remote endpoint is required for a network layer');
+  }
+
+  if (typeof uri !== 'string') {
+    throw new Error('Remote endpoint must be a string');
+  }
+
+  const uriArr = uri.split('/');
+  const protocol = uriArr.length === 1 ? '' : uriArr[0];
+
+  switch (protocol) {
+    case '': // relative http - fallthrough
+    case 'http:': return new HTTPFetchNetworkInterface(uri, opts);
+    case 'ws:': return new WebsocketNetworkInterface(uri, opts);
+    default: throw new Error(`protocol ${protocol}// is not supported.`);
+  }
 }

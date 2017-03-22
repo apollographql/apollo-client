@@ -3,10 +3,15 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Improvement: Default selector for `dataIdFromObject` that tries `id` and falls back to `_id` to reduce configuration requirements whenever `__typename` is present.
-- Added `HTTPBatchedNetworkInterface` as an index export to make it easier
+
+
+### 1.0.0-rc.6
+- Feature: Default selector for `dataIdFromObject` that tries `id` and falls back to `_id` to reduce configuration requirements whenever `__typename` is present.
+- Adde `HTTPBatchedNetworkInterface` as an index export to make it easier
 to subclass externally, consistent with `HTTPFetchNetworkInterface`. [PR #1446](https://github.com/apollographql/apollo-client/pull/1446)
 - Make `updateQuery` option of `subscribeToMore` optional [PR #1455](https://github.com/apollographql/apollo-client/pull/1455)
+- Fix: Use custom resolvers in readQuery and readFragment functions [PR #1434](https://github.com/apollographql/apollo-client/pull/1434)
+- Print suggestion to use devtools in development mode [PR #1466](https://github.com/apollographql/apollo-client/pull/1466)
 
 ### 1.0.0-rc.5
 - Fix: Revert PR that caused uncaught promise rejections [PR #1133](https://github.com/apollographql/apollo-client/pull/1133)

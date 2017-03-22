@@ -349,7 +349,7 @@ mutate({
 
 <h2 id="resultReducers">Using `reducer`</h2>
 
-While `updateQueries` can only be used to update other queries based on the result of a mutation, the `reducer` option is a way that lets you update the query result based on any **apollo** action, including results of other queries or mutations. It acts just like a Redux reducer on the non-normalized query result:
+While `updateQueries` can only be used to update other queries based on the result of a mutation, the `reducer` option is a way that lets you update the query result based on any **apollo** action, including results of other queries, mutations o subscriptions. It acts just like a Redux reducer on the non-normalized query result:
 
 ```javascript
 import update from 'immutability-helper';

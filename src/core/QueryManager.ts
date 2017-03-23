@@ -504,6 +504,14 @@ export class QueryManager {
   }
 
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
+    if (!options.query) {
+      throw new Error('query option is required. You must specify your GraphQL document in the query option.');
+    }
+
+    if (options.query.kind !== 'Document') {
+      throw new Error('You must wrap the query string in a "gql" tag.');
+    }
+
     if ((options as any).returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
@@ -518,10 +526,6 @@ export class QueryManager {
 
     if ((options as any).noFetch) {
       throw new Error('noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
-    }
-
-    if (options.query.kind !== 'Document') {
-      throw new Error('You must wrap the query string in a "gql" tag.');
     }
 
     if (typeof options.notifyOnNetworkStatusChange !== 'undefined' ) {

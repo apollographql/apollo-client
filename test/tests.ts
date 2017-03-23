@@ -18,7 +18,7 @@ require('source-map-support').install();
 console.warn = console.error = (...messages: string[]) => {
   console.log(`==> Error in test: Tried to log warning or error with message:
 `, ...messages);
-  if (!process.env.CI) {
+  if ( (!process.env.CI) && (!process.env.COV) ) {
     process.exit(1);
   }
 };

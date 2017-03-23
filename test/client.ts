@@ -225,6 +225,17 @@ describe('client', () => {
     }
   });
 
+  it('should throw an error if query option is missing or not wrapped with a "gql" tag', () => {
+    const client = new ApolloClient();
+
+    assert.throws(() => {
+      client.query(gql`{ a }` as any);
+    }, 'query option is required. You must specify your GraphQL document in the query option.');
+    assert.throws(() => {
+      client.query({ query: '{ a }' } as any);
+    }, 'You must wrap the query string in a "gql" tag.');
+  });
+
   it('should allow for a single query to take place', () => {
     const query = gql`
       query people {

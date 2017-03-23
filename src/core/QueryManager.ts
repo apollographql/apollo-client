@@ -617,7 +617,8 @@ export class QueryManager {
 
     // If there is no part of the query we need to fetch from the server (or,
     // cachePolicy is cache-only), we just write the store result as the final result.
-    if (!shouldFetch) {
+    const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
+    if (shouldDispatchClientResult) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
         result: { data: storeResult },

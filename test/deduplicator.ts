@@ -45,6 +45,47 @@ describe('query deduplication', () => {
 
   });
 
+  it(`will not deduplicate requests following an errored query`, () => {
+
+    const document: DocumentNode = gql`query test1($x: String){
+      test(x: $x)
+    }`;
+    const variables = { x: 'Hello World' };
+
+    const request: Request = {
+      query: document,
+      variables: variables,
+      operationName: getOperationName(document),
+    };
+
+    let called = 0;
+    const deduper = new Deduplicator({
+      query: () => {
+        called += 1;
+        switch (called) {
+          case 1:
+            return new Promise((resolve, reject) => {
+              setTimeout(reject);
+            });
+          case 2:
+            return new Promise((resolve, reject) => {
+              setTimeout(resolve);
+            });
+          default:
+            return assert(false, 'Should not have been called more than twice');
+        }
+
+      },
+    } as any );
+
+    return deduper.query(request)
+    .catch( () => {
+      deduper.query(request);
+      return assert.equal(called, 2);
+    });
+
+  });
+
   it(`deduplicates identical queries`, () => {
 
     const document: DocumentNode = gql`query test1($x: String){

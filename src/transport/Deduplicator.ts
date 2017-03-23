@@ -32,6 +32,10 @@ export class Deduplicator {
     .then( res => {
       delete this.inFlightRequestPromises[key];
       return res;
+    })
+    .catch( err => {
+        delete this.inFlightRequestPromises[key];
+        throw err;
     });
   }
 

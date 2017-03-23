@@ -486,7 +486,7 @@ export class QueryManager {
     getQueryDefinition(options.query);
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
-      options.notifyOnNetworkStatusChange = true;
+      options.notifyOnNetworkStatusChange = false;
     }
 
     let transformedOptions = { ...options } as WatchQueryOptions;
@@ -529,7 +529,7 @@ export class QueryManager {
     }
 
     if (typeof options.notifyOnNetworkStatusChange !== 'undefined' ) {
-      throw new Error('Cannot call "query" with "notifyOnNetworkStatusChange = true" ');
+      throw new Error('Cannot call "query" with "notifyOnNetworkStatusChange" option. Only "watchQuery" has that option.');
     }
     options.notifyOnNetworkStatusChange = false;
 

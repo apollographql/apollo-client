@@ -3,11 +3,12 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Fix `cachePolicy: cache-and-network` queries never dispatching `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
 
 
 ### 1.0.0-rc.6
 - Feature: Default selector for `dataIdFromObject` that tries `id` and falls back to `_id` to reduce configuration requirements whenever `__typename` is present.
-- Adde `HTTPBatchedNetworkInterface` as an index export to make it easier
+- Add `HTTPBatchedNetworkInterface` as an index export to make it easier
 to subclass externally, consistent with `HTTPFetchNetworkInterface`. [PR #1446](https://github.com/apollographql/apollo-client/pull/1446)
 - Make `updateQuery` option of `subscribeToMore` optional [PR #1455](https://github.com/apollographql/apollo-client/pull/1455)
 - Fix: Use custom resolvers in readQuery and readFragment functions [PR #1434](https://github.com/apollographql/apollo-client/pull/1434)
@@ -21,6 +22,7 @@ to subclass externally, consistent with `HTTPFetchNetworkInterface`. [PR #1446](
 - Fix: Update TypeScript Middleware and Afterware interfaces to include a datatype for 'this' in apply function. [PR #1372](https://github.com/apollographql/apollo-client/pull/1372)
 - Breaking: Remove data property from fetchMore result [PR #1416](https://github.com/apollographql/apollo-client/pull/1416)
 - Fix: rollback optimistic response before ApolloError rejected in `QueryManager#mutate` [PR #1398](https://github.com/apollographql/apollo-client/pull/1398)
+- console.warn() when an exception is encountered in a result reducer [PR #1383](https://github.com/apollographql/apollo-client/pull/1383)
 
 ### 1.0.0-rc.3
 deprecated (wrong build)
@@ -37,7 +39,6 @@ deprecated (wrong build)
 - Fix: use setTimeout to throw uncaught errors in observer.next and observer.error[PR #1367](https://github.com/apollographql/apollo-client/pull/1367)
 - Breaking: Remove returnPartialData option [PR #1370](https://github.com/apollographql/apollo-client/pull/1370)
 - Breaking: Implement fetchPolicy to replace noFetch and forceFetch [PR #1371](https://github.com/apollographql/apollo-client/pull/1371)
-- console.warn() when an exception is encountered in a result reducer [PR #1383](https://github.com/apollographql/apollo-client/pull/1383)
 
 
 ### 0.10.1

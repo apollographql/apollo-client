@@ -902,7 +902,6 @@ describe('client', () => {
         id
         ... on ColorItem {
           color
-          __typename
         }
         __typename
       }`;
@@ -916,9 +915,39 @@ describe('client', () => {
         {
           '__typename': 'MonochromeItem',
           'id': '1t3iFLsHBm4c4RjOMdMgOO',
-        }
+        },
       ],
     };
+
+
+    const fancyFragmentMatcher = (
+      idValue: any,
+      typeCondition: string,
+      context: any,
+    ): boolean => {
+
+      const obj = context.store[idValue.id];
+
+      if (! obj) {
+        return false;
+      }
+
+      const implementingTypesMap: {[key: string]: string[]} = {
+        'Item': ['ColorItem', 'MonochromeItem'],
+      };
+
+      if (obj.__typename === typeCondition) {
+        return true;
+      }
+
+      const implementingTypes = implementingTypesMap[typeCondition];
+      if (implementingTypes && implementingTypes.indexOf(obj.__typename) > -1) {
+        return true;
+      }
+
+      return false;
+    };
+
 
     const networkInterface = mockNetworkInterface(
     {
@@ -928,6 +957,7 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
+      fragmentMatcher: fancyFragmentMatcher,
     });
     return client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);

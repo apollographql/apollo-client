@@ -7,6 +7,10 @@ import {
 } from 'redux';
 
 import {
+  FragmentMatcher,
+} from 'graphql-anywhere';
+
+import {
   data,
 } from './data/store';
 
@@ -185,4 +189,5 @@ export function createApolloStore({
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   customResolvers?: CustomResolverMap;
+  fragmentMatcher?: FragmentMatcher;
 };

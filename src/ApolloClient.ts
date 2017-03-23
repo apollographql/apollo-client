@@ -16,6 +16,10 @@ import {
 } from 'graphql';
 
 import {
+  FragmentMatcher,
+} from 'graphql-anywhere';
+
+import {
   createApolloStore,
   ApolloStore,
   createApolloReducer,
@@ -176,6 +180,7 @@ export default class ApolloClient implements DataProxy {
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
+   * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
    */
 
   constructor(options: {
@@ -189,6 +194,7 @@ export default class ApolloClient implements DataProxy {
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
+    fragmentMatcher?: FragmentMatcher,
   } = {}) {
     let {
       dataIdFromObject,
@@ -203,6 +209,7 @@ export default class ApolloClient implements DataProxy {
       customResolvers,
       connectToDevTools,
       queryDeduplication = true,
+      fragmentMatcher,
     } = options;
 
     if (typeof reduxRootSelector === 'function') {
@@ -227,6 +234,7 @@ export default class ApolloClient implements DataProxy {
     this.reducerConfig = {
       dataIdFromObject,
       customResolvers,
+      fragmentMatcher,
     };
 
     this.watchQuery = this.watchQuery.bind(this);

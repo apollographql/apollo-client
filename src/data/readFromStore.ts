@@ -123,7 +123,7 @@ type ReadStoreContext = {
 
 let haveWarned = false;
 
-const fragmentMatcher: FragmentMatcher = (
+const defaultFragmentMatcher: FragmentMatcher = (
   idValue: IdValue,
   typeCondition: string,
   context: ReadStoreContext,
@@ -152,6 +152,8 @@ match fragments.`);
     context.returnPartialData = true;
     return true;
   }
+
+  // console.log('TC: is ', obj.__typename, ' a ', typeCondition);
 
   if (obj.__typename === typeCondition) {
     return true;
@@ -247,6 +249,8 @@ export function diffQueryAgainstStore({
   // Throw the right validation error by trying to find a query in the document
   getQueryDefinition(query);
 
+  const availableFragmentMatcher = (config && config.fragmentMatcher) || defaultFragmentMatcher;
+
   const context: ReadStoreContext = {
     // Global settings
     store,
@@ -264,7 +268,7 @@ export function diffQueryAgainstStore({
   };
 
   const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
-    fragmentMatcher,
+    fragmentMatcher: availableFragmentMatcher,
     resultMapper,
   });
 

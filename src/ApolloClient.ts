@@ -79,6 +79,28 @@ import {
   version,
 } from './version';
 
+
+
+/**
+ * Suggest installing the devtools for developers who are using Apollo Client
+ */
+if (process.env.NODE_ENV !== 'production') {
+  if ( typeof window !== 'undefined' && window.document && window.top === window.self) {
+
+    // First check if devtools is not installed
+    if (typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+      // Only for Chrome
+      if (navigator.userAgent.indexOf('Chrome') > -1) {
+        // tslint:disable-next-line
+        console.debug('Download the Apollo DevTools ' +
+        'for a better development experience: ' +
+        'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm');
+      }
+    }
+  }
+}
+
+
 /**
  * This type defines a "selector" function that receives state from the Redux store
  * and returns the part of it that is managed by ApolloClient
@@ -91,6 +113,18 @@ const DEFAULT_REDUX_ROOT_KEY = 'apollo';
 
 function defaultReduxRootSelector(state: any) {
   return state[DEFAULT_REDUX_ROOT_KEY];
+}
+
+function defaultDataIdFromObject (result: any): string | null {
+  if (result.__typename) {
+    if (result.id !== undefined) {
+      return `${result.__typename}:${result.id}`;
+    }
+    if (result._id !== undefined) {
+      return `${result.__typename}:${result._id}`;
+    }
+  }
+  return null;
 }
 
 /**
@@ -156,11 +190,13 @@ export default class ApolloClient implements DataProxy {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
   } = {}) {
+    let {
+      dataIdFromObject,
+    } = options;
     const {
       networkInterface,
       reduxRootSelector,
       initialState,
-      dataIdFromObject,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       addTypename = true,
@@ -180,7 +216,7 @@ export default class ApolloClient implements DataProxy {
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
-    this.dataId = dataIdFromObject;
+    this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
 
@@ -481,6 +517,7 @@ export default class ApolloClient implements DataProxy {
       this.proxy = new ReduxDataProxy(
         this.store,
         this.reduxRootSelector || defaultReduxRootSelector,
+        this.reducerConfig,
       );
     }
     return this.proxy;

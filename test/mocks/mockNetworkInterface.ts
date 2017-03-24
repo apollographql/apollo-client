@@ -6,49 +6,49 @@ import {
 } from '../../src/transport/networkInterface';
 
 import {
-  GraphQLResult,
-  Document,
+  ExecutionResult,
+  DocumentNode,
 } from 'graphql';
 
 import {
   print,
-} from 'graphql-tag/printer';
+} from 'graphql-tag/bundledPrinter';
 
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server
 export default function mockNetworkInterface(
-  ...mockedResponses: MockedResponse[]
+  ...mockedResponses: MockedResponse[],
 ): NetworkInterface {
   return new MockNetworkInterface(mockedResponses);
 }
 
 export function mockSubscriptionNetworkInterface(
-  mockedSubscriptions: MockedSubscription[], ...mockedResponses: MockedResponse[]
+  mockedSubscriptions: MockedSubscription[], ...mockedResponses: MockedResponse[],
 ): MockSubscriptionNetworkInterface {
   return new MockSubscriptionNetworkInterface(mockedSubscriptions, mockedResponses);
 }
 
 export function mockBatchedNetworkInterface(
-    ...mockedResponses: MockedResponse[]
+    ...mockedResponses: MockedResponse[],
 ): BatchedNetworkInterface {
   return new MockBatchedNetworkInterface(mockedResponses);
 }
 
 export interface ParsedRequest {
   variables?: Object;
-  query?: Document;
+  query?: DocumentNode;
   debugName?: string;
 }
 
 export interface MockedResponse {
   request: ParsedRequest;
-  result?: GraphQLResult;
+  result?: ExecutionResult;
   error?: Error;
   delay?: number;
 }
 
 export interface MockedSubscriptionResult {
-  result?: GraphQLResult;
+  result?: ExecutionResult;
   error?: Error;
   delay?: number;
 }
@@ -92,7 +92,7 @@ export class MockNetworkInterface implements NetworkInterface {
         throw new Error(`No more mocked responses for the query: ${print(request.query)}, variables: ${JSON.stringify(request.variables)}`);
       }
 
-      const { result, error, delay } = responses.shift();
+      const { result, error, delay } = responses.shift()!;
 
       if (!result && !error) {
         throw new Error(`Mocked response should contain either result or error: ${key}`);
@@ -150,10 +150,11 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
       };
     const key = requestToKey(parsedRequest);
     if (this.mockedSubscriptionsByKey.hasOwnProperty(key)) {
-      const subscription = this.mockedSubscriptionsByKey[key].shift();
-      this.handlersById[subscription.id] = handler;
-      this.mockedSubscriptionsById[subscription.id] = subscription;
-      return subscription.id;
+      const subscription = this.mockedSubscriptionsByKey[key].shift()!;
+      const id = subscription.id!;
+      this.handlersById[id] = handler;
+      this.mockedSubscriptionsById[id] = subscription;
+      return id;
     } else {
       throw new Error('Network interface does not have subscription associated with this request.');
     }
@@ -164,11 +165,11 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
     const handler = this.handlersById[id];
     if (this.mockedSubscriptionsById.hasOwnProperty(id.toString())) {
       const subscription = this.mockedSubscriptionsById[id];
-      if (subscription.results.length === 0) {
+      if (subscription.results!.length === 0) {
         throw new Error(`No more mocked subscription responses for the query: ` +
         `${print(subscription.request.query)}, variables: ${JSON.stringify(subscription.request.variables)}`);
       }
-      const response = subscription.results.shift();
+      const response = subscription.results!.shift()!;
       setTimeout(() => {
         handler(response.error, response.result);
       }, response.delay ? response.delay : 0);
@@ -185,8 +186,8 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
 export class MockBatchedNetworkInterface
 extends MockNetworkInterface implements BatchedNetworkInterface {
 
-  public batchQuery(requests: Request[]): Promise<GraphQLResult[]> {
-    const resultPromises: Promise<GraphQLResult>[] = [];
+  public batchQuery(requests: Request[]): Promise<ExecutionResult[]> {
+    const resultPromises: Promise<ExecutionResult>[] = [];
     requests.forEach((request) => {
       resultPromises.push(this.query(request));
     });

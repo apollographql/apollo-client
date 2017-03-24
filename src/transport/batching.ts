@@ -3,7 +3,7 @@ import {
 } from './networkInterface';
 
 import {
-  GraphQLResult,
+  ExecutionResult,
 } from 'graphql';
 
 export interface QueryFetchRequest {
@@ -12,34 +12,34 @@ export interface QueryFetchRequest {
   // promise is created when the query fetch request is
   // added to the queue and is resolved once the result is back
   // from the server.
-  promise?: Promise<GraphQLResult>;
-  resolve?: (result: GraphQLResult) => void;
+  promise?: Promise<ExecutionResult>;
+  resolve?: (result: ExecutionResult) => void;
   reject?: (error: Error) => void;
 };
 
 // QueryBatcher operates on a queue  of QueryFetchRequests. It polls and checks this queue
 // for new fetch requests. If there are multiple requests in the queue at a time, it will batch
-// them together into one query. Batching can be toggled with the shouldBatch option.
+// them together into one query.
 export class QueryBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   public queuedRequests: QueryFetchRequest[] = [];
 
   private pollInterval: Number;
-  private pollTimer: NodeJS.Timer | any; //oddity in Typescript
+  private pollTimer: any;
 
   //This function is called to the queries in the queue to the server.
-  private batchFetchFunction: (request: Request[]) => Promise<GraphQLResult[]>;
+  private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
 
   constructor({
     batchFetchFunction,
   }: {
-    batchFetchFunction: (request: Request[]) => Promise<GraphQLResult[]>,
+    batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>,
   }) {
     this.queuedRequests = [];
     this.batchFetchFunction = batchFetchFunction;
   }
 
-  public enqueueRequest(request: Request): Promise<GraphQLResult> {
+  public enqueueRequest(request: Request): Promise<ExecutionResult> {
     const fetchRequest: QueryFetchRequest = {
       request,
     };
@@ -54,20 +54,16 @@ export class QueryBatcher {
 
   // Consumes the queue. Called on a polling interval.
   // Returns a list of promises (one for each query).
-  public consumeQueue(): Promise<GraphQLResult>[] | undefined {
+  public consumeQueue(): (Promise<ExecutionResult> | undefined)[] | undefined {
     if (this.queuedRequests.length < 1) {
       return undefined;
     }
 
-    const requests: Request[] = this.queuedRequests.map((queuedRequest) => {
-      return {
-        query: queuedRequest.request.query,
-        variables: queuedRequest.request.variables,
-        operationName: queuedRequest.request.operationName,
-      };
-    });
+    const requests: Request[] = this.queuedRequests.map(
+      (queuedRequest) => queuedRequest.request,
+    );
 
-    const promises: Promise<GraphQLResult>[] = [];
+    const promises: (Promise<ExecutionResult> | undefined)[] = [];
     const resolvers: any[] = [];
     const rejecters: any[] = [];
     this.queuedRequests.forEach((fetchRequest, index) => {

@@ -1,9 +1,39 @@
 import { GraphQLError } from 'graphql';
 
+  // XXX some duck typing here because for some reason new ApolloError is not instanceof ApolloError
+  export function isApolloError(err: Error): err is ApolloError {
+    return err.hasOwnProperty('graphQLErrors');
+  }
+
+  // Sets the error message on this error according to the
+  // the GraphQL and network errors that are present.
+  // If the error message has already been set through the
+  // constructor or otherwise, this function is a nop.
+  const generateErrorMessage = (err: ApolloError) => {
+
+
+    let message = '';
+    // If we have GraphQL errors present, add that to the error message.
+    if (Array.isArray(err.graphQLErrors) && err.graphQLErrors.length !== 0) {
+      err.graphQLErrors.forEach((graphQLError: GraphQLError) => {
+        const errorMessage = graphQLError ? graphQLError.message : 'Error message not found.';
+        message += `GraphQL error: ${errorMessage}\n`;
+      });
+    }
+
+    if (err.networkError) {
+      message += 'Network error: ' + err.networkError.message + '\n';
+    }
+
+    // strip newline from the end of the message
+    message = message.replace(/\n$/, '');
+    return message;
+  };
+
 export class ApolloError extends Error {
   public message: string;
   public graphQLErrors: GraphQLError[];
-  public networkError: Error;
+  public networkError: Error | null;
 
   // An object that can be used to provide some additional information
   // about an error, e.g. specifying the type of error this is. Used
@@ -20,19 +50,16 @@ export class ApolloError extends Error {
     extraInfo,
   }: {
     graphQLErrors?: GraphQLError[],
-    networkError?: Error,
+    networkError?: Error | null,
     errorMessage?: string,
     extraInfo?: any,
   }) {
     super(errorMessage);
-    this.graphQLErrors = graphQLErrors;
-    this.networkError = networkError;
-
-    // set up the stack trace
-    this.stack = new Error().stack;
+    this.graphQLErrors = graphQLErrors || [];
+    this.networkError = networkError || null;
 
     if (!errorMessage) {
-      this.generateErrorMessage();
+      this.message = generateErrorMessage(this);
     } else {
       this.message = errorMessage;
     }
@@ -40,30 +67,4 @@ export class ApolloError extends Error {
     this.extraInfo = extraInfo;
   }
 
-  // Sets the error message on this error according to the
-  // the GraphQL and network errors that are present.
-  // If the error message has already been set through the
-  // constructor or otherwise, this function is a nop.
-  private generateErrorMessage() {
-    if (typeof this.message !== 'undefined' &&
-       this.message !== '') {
-      return;
-    }
-
-    let message = '';
-    // If we have GraphQL errors present, add that to the error message.
-    if (Array.isArray(this.graphQLErrors) && this.graphQLErrors.length !== 0) {
-      this.graphQLErrors.forEach((graphQLError) => {
-        message += 'GraphQL error: ' + graphQLError.message + '\n';
-      });
-    }
-
-    if (this.networkError) {
-      message += 'Network error: ' + this.networkError.message + '\n';
-    }
-
-    // strip newline from the end of the message
-    message = message.replace(/\n$/, '');
-    this.message = message;
-  }
 }

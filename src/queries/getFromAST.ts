@@ -1,21 +1,18 @@
 import {
-  Document,
-  OperationDefinition,
-  FragmentDefinition,
+  DocumentNode,
+  OperationDefinitionNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
-import assign = require('lodash.assign');
-import countBy = require('lodash.countby');
-import identity = require('lodash.identity');
 
-export function getMutationDefinition(doc: Document): OperationDefinition {
+export function getMutationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let mutationDef: OperationDefinition = null;
+  let mutationDef: OperationDefinitionNode | null = null;
   doc.definitions.forEach((definition) => {
     if (definition.kind === 'OperationDefinition'
-        && (definition as OperationDefinition).operation === 'mutation') {
-      mutationDef = definition as OperationDefinition;
+        && (definition as OperationDefinitionNode).operation === 'mutation') {
+      mutationDef = definition as OperationDefinitionNode;
     }
   });
 
@@ -27,59 +24,65 @@ export function getMutationDefinition(doc: Document): OperationDefinition {
 }
 
 // Checks the document for errors and throws an exception if there is an error.
-export function checkDocument(doc: Document) {
+export function checkDocument(doc: DocumentNode) {
   if (doc.kind !== 'Document') {
     throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
   }
 
-  const definitionTypes = doc.definitions.map((definition) => {
-    if (definition.kind !== 'OperationDefinition' && definition.kind !== 'FragmentDefinition') {
-      throw new Error(`Schema type definitions not allowed in queries. Found: "${definition.kind}"`);
+  let foundOperation = false;
+
+  doc.definitions.forEach((definition) => {
+    switch (definition.kind) {
+      // If this is a fragment that’s fine.
+      case 'FragmentDefinition':
+        break;
+      // We can only find one operation, so the first time nothing happens. The second time we
+      // encounter an operation definition we throw an error.
+      case 'OperationDefinition':
+        if (foundOperation) {
+          throw new Error('Queries must have exactly one operation definition.');
+        }
+        foundOperation = true;
+        break;
+      // If this is any other operation kind, throw an error.
+      default:
+        throw new Error(`Schema type definitions not allowed in queries. Found: "${definition.kind}"`);
     }
-
-    return definition.kind;
   });
-  const typeCounts = countBy(definitionTypes, identity);
-
-  // can't have more than one operation definition per query
-  if (typeCounts['OperationDefinition'] > 1) {
-    throw new Error('Queries must have exactly one operation definition.');
-  }
 }
 
-export function getOperationName(doc: Document): string {
+export function getOperationName(doc: DocumentNode): string {
   let res: string = '';
   doc.definitions.forEach((definition) => {
-    if (definition.kind === 'OperationDefinition'
-        && (definition as OperationDefinition).name) {
-      res = (definition as OperationDefinition).name.value;
+    if (definition.kind === 'OperationDefinition' && definition.name) {
+      res = definition.name.value;
     }
   });
   return res;
 }
 
 // Returns the FragmentDefinitions from a particular document as an array
-export function getFragmentDefinitions(doc: Document): FragmentDefinition[] {
-  let fragmentDefinitions: FragmentDefinition[] = doc.definitions.filter((definition) => {
+export function getFragmentDefinitions(doc: DocumentNode): FragmentDefinitionNode[] {
+  let fragmentDefinitions: FragmentDefinitionNode[] = doc.definitions.filter((definition) => {
     if (definition.kind === 'FragmentDefinition') {
       return true;
     } else {
       return false;
     }
-  }) as FragmentDefinition[];
+  }) as FragmentDefinitionNode[];
 
   return fragmentDefinitions;
 }
 
-export function getQueryDefinition(doc: Document): OperationDefinition {
+export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let queryDef: OperationDefinition = null;
+  let queryDef: OperationDefinitionNode | null = null;
   doc.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition'
-       && (definition as OperationDefinition).operation === 'query') {
-      queryDef = definition as OperationDefinition;
+       && (definition as OperationDefinitionNode).operation === 'query') {
+      queryDef = definition as OperationDefinitionNode;
     }
   });
 
@@ -91,13 +94,13 @@ export function getQueryDefinition(doc: Document): OperationDefinition {
 }
 
 // TODO REFACTOR: fix this and query/mutation definition to not use map, please.
-export function getOperationDefinition(doc: Document): OperationDefinition {
+export function getOperationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
-  let opDef: OperationDefinition = null;
+  let opDef: OperationDefinitionNode | null = null;
   doc.definitions.map((definition) => {
     if (definition.kind === 'OperationDefinition') {
-      opDef = definition as OperationDefinition;
+      opDef = definition as OperationDefinitionNode;
     }
   });
 
@@ -108,7 +111,7 @@ export function getOperationDefinition(doc: Document): OperationDefinition {
   return opDef;
 }
 
-export function getFragmentDefinition(doc: Document): FragmentDefinition {
+export function getFragmentDefinition(doc: DocumentNode): FragmentDefinitionNode {
   if (doc.kind !== 'Document') {
     throw new Error(`Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
@@ -118,25 +121,25 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
     throw new Error('Fragment must have exactly one definition.');
   }
 
-  const fragmentDef = doc.definitions[0] as FragmentDefinition;
+  const fragmentDef = doc.definitions[0] as FragmentDefinitionNode;
 
   if (fragmentDef.kind !== 'FragmentDefinition') {
     throw new Error('Must be a fragment definition.');
   }
 
-  return fragmentDef as FragmentDefinition;
+  return fragmentDef as FragmentDefinitionNode;
 }
 
 /**
  * This is an interface that describes a map from fragment names to fragment definitions.
  */
 export interface FragmentMap {
-  [fragmentName: string]: FragmentDefinition;
+  [fragmentName: string]: FragmentDefinitionNode;
 }
 
 // Utility function that takes a list of fragment definitions and makes a hash out of them
 // that maps the name of the fragment to the fragment definition.
-export function createFragmentMap(fragments: FragmentDefinition[] = []): FragmentMap {
+export function createFragmentMap(fragments: FragmentDefinitionNode[] = []): FragmentMap {
   const symTable: FragmentMap = {};
   fragments.forEach((fragment) => {
     symTable[fragment.name.value] = fragment;
@@ -145,15 +148,84 @@ export function createFragmentMap(fragments: FragmentDefinition[] = []): Fragmen
   return symTable;
 }
 
-// Utility function that takes a list of fragment definitions and adds them to a particular
-// document.
-export function addFragmentsToDocument(queryDoc: Document,
-  fragments: FragmentDefinition[]): Document {
-  if (!fragments) {
-    return queryDoc;
+/**
+ * Returns a query document which adds a single query operation that only
+ * spreads the target fragment inside of it.
+ *
+ * So for example a document of:
+ *
+ * ```graphql
+ * fragment foo on Foo { a b c }
+ * ```
+ *
+ * Turns into:
+ *
+ * ```graphql
+ * { ...foo }
+ *
+ * fragment foo on Foo { a b c }
+ * ```
+ *
+ * The target fragment will either be the only fragment in the document, or a
+ * fragment specified by the provided `fragmentName`. If there is more then one
+ * fragment, but a `fragmentName` was not defined then an error will be thrown.
+ */
+export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode {
+  let actualFragmentName = fragmentName;
+
+  // Build an array of all our fragment definitions that will be used for
+  // validations. We also do some validations on the other definitions in the
+  // document while building this list.
+  const fragments: Array<FragmentDefinitionNode> = [];
+  document.definitions.forEach(definition => {
+    // Throw an error if we encounter an operation definition because we will
+    // define our own operation definition later on.
+    if (definition.kind === 'OperationDefinition') {
+      throw new Error(
+        `Found a ${definition.operation} operation${definition.name ? ` named '${definition.name.value}'` : ''}. ` +
+        'No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+      );
+    }
+    // Add our definition to the fragments array if it is a fragment
+    // definition.
+    if (definition.kind === 'FragmentDefinition') {
+      fragments.push(definition);
+    }
+  });
+
+  // If the user did not give us a fragment name then let us try to get a
+  // name from a single fragment in the definition.
+  if (typeof actualFragmentName === 'undefined') {
+    if (fragments.length !== 1) {
+      throw new Error(`Found ${fragments.length} fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`);
+    }
+    actualFragmentName = fragments[0].name.value;
   }
-  checkDocument(queryDoc);
-  return assign({}, queryDoc, {
-    definitions: queryDoc.definitions.concat(fragments),
-  }) as Document;
+
+  // Generate a query document with an operation that simply spreads the
+  // fragment inside of it.
+  const query: DocumentNode = {
+    ...document,
+    definitions: [
+      {
+        kind: 'OperationDefinition',
+        operation: 'query',
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'FragmentSpread',
+              name: {
+                kind: 'Name',
+                value: actualFragmentName,
+              },
+            },
+          ],
+        },
+      },
+      ...document.definitions,
+    ],
+  };
+
+  return query;
 }

@@ -5,17 +5,24 @@ import {
   isUpdateQueryResultAction,
   isStoreResetAction,
   isSubscriptionResultAction,
+  isWriteAction,
 } from '../actions';
 
 import {
   writeResultToStore,
 } from './writeToStore';
 
-import assign = require('lodash.assign');
+import {
+  TransactionDataProxy,
+} from '../data/proxy';
 
 import {
   QueryStore,
 } from '../queries/store';
+
+import {
+  getOperationName,
+} from '../queries/getFromAST';
 
 import {
   MutationStore,
@@ -31,21 +38,24 @@ import {
 } from './storeUtils';
 
 import {
-  defaultMutationBehaviorReducers,
-  MutationBehaviorReducerArgs,
-} from './mutationResults';
-
-import {
   replaceQueryResults,
 } from './replaceQueryResults';
 
+import {
+  readQueryFromStore,
+  diffQueryAgainstStore,
+} from './readFromStore';
+
+import {
+  tryFunctionOrLogError,
+} from '../util/errorHandling';
 
 export function data(
   previousState: NormalizedCache = {},
   action: ApolloAction,
   queries: QueryStore,
   mutations: MutationStore,
-  config: ApolloReducerConfig
+  config: ApolloReducerConfig,
 ): NormalizedCache {
   // XXX This is hopefully a temporary binding to get around
   // https://github.com/Microsoft/TypeScript/issues/7719
@@ -68,7 +78,7 @@ export function data(
       const queryStoreValue = queries[action.queryId];
 
       // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as NormalizedCache;
+      const clonedState = { ...previousState } as NormalizedCache;
 
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
@@ -97,13 +107,13 @@ export function data(
     if (! graphQLResultHasError(action.result)) {
 
       // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as NormalizedCache;
+      const clonedState = { ...previousState } as NormalizedCache;
 
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
       let newState = writeResultToStore({
         result: action.result.data,
-        dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
+        dataId: 'ROOT_SUBSCRIPTION',
         document: action.document,
         variables: action.variables,
         store: clonedState,
@@ -126,7 +136,7 @@ export function data(
       const queryStoreValue = mutations[constAction.mutationId];
 
       // XXX use immutablejs instead of cloning
-      const clonedState = assign({}, previousState) as NormalizedCache;
+      const clonedState = { ...previousState } as NormalizedCache;
 
       let newState = writeResultToStore({
         result: constAction.result.data,
@@ -137,25 +147,70 @@ export function data(
         dataIdFromObject: config.dataIdFromObject,
       });
 
-      // TODO REFACTOR: remove result behaviors
-      if (constAction.resultBehaviors) {
-        constAction.resultBehaviors.forEach((behavior) => {
-          const args: MutationBehaviorReducerArgs = {
-            behavior,
-            result: constAction.result,
-            variables: queryStoreValue.variables,
-            document: constAction.document,
-            config,
-          };
+      // If this action wants us to update certain queries. Let’s do it!
+      const { updateQueries } = constAction;
+      if (updateQueries) {
+        Object.keys(updateQueries).forEach(queryId => {
+          const query = queries[queryId];
+          if (!query) {
+            return;
+          }
 
-          if (defaultMutationBehaviorReducers[behavior.type]) {
-            newState = defaultMutationBehaviorReducers[behavior.type](newState, args);
-          } else if (config.mutationBehaviorReducers[behavior.type]) {
-            newState = config.mutationBehaviorReducers[behavior.type](newState, args);
-          } else {
-            throw new Error(`No mutation result reducer defined for type ${behavior.type}`);
+
+          // Read the current query result from the store.
+          const { result: currentQueryResult, isMissing } = diffQueryAgainstStore({
+            store: previousState,
+            query: query.document,
+            variables: query.variables,
+            returnPartialData: true,
+            config,
+          });
+
+          if (isMissing) {
+            return;
+          }
+
+          const reducer = updateQueries[queryId];
+
+          // Run our reducer using the current query result and the mutation result.
+          const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, {
+            mutationResult: constAction.result,
+            queryName: getOperationName(query.document),
+            queryVariables: query.variables,
+          }));
+
+          // Write the modified result back into the store if we got a new result.
+          if (nextQueryResult) {
+            newState = writeResultToStore({
+              result: nextQueryResult,
+              dataId: 'ROOT_QUERY',
+              document: query.document,
+              variables: query.variables,
+              store: newState,
+              dataIdFromObject: config.dataIdFromObject,
+            });
           }
         });
+      }
+
+      // If the mutation has some writes associated with it then we need to
+      // apply those writes to the store by running this reducer again with a
+      // write action.
+      if (constAction.update) {
+        const update = constAction.update;
+        const proxy = new TransactionDataProxy(
+          newState,
+          config,
+        );
+        tryFunctionOrLogError(() => update(proxy, constAction.result));
+        const writes = proxy.finish();
+        newState = data(
+          newState,
+          { type: 'APOLLO_WRITE', writes },
+          queries,
+          mutations,
+          config,
+        );
       }
 
       // XXX each reducer gets the state from the previous reducer.
@@ -174,6 +229,20 @@ export function data(
     // If we are resetting the store, we no longer need any of the data that is currently in
     // the store so we can just throw it all away.
     return {};
+  } else if (isWriteAction(action)) {
+    // Simply write our result to the store for this action for all of the
+    // writes that were specified.
+    return action.writes.reduce(
+      (currentState, write) => writeResultToStore({
+        result: write.result,
+        dataId: write.rootId,
+        document: write.document,
+        variables: write.variables,
+        store: currentState,
+        dataIdFromObject: config.dataIdFromObject,
+      }),
+      { ...previousState } as NormalizedCache,
+    );
   }
 
   return previousState;

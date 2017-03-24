@@ -4,6 +4,9 @@ import 'whatwg-fetch';
 // structure to the MockedNetworkInterface.
 
 export interface MockedIResponse {
+  ok: boolean;
+  status: number;
+  statusText?: string;
   json(): Promise<JSON>;
 }
 
@@ -14,8 +17,14 @@ export interface MockedFetchResponse {
   delay?: number;
 }
 
-export function createMockedIResponse(result: Object): MockedIResponse {
+export function createMockedIResponse(result: Object, options?: any): MockedIResponse {
+  const status = options && options.status || 200;
+  const statusText = options && options.statusText || undefined;
+
   return {
+    ok: status === 200,
+    status,
+    statusText,
     json() {
       return Promise.resolve(result);
     },
@@ -48,12 +57,11 @@ export class MockFetch {
   public fetch(url: string, opts: RequestInit) {
     const key = this.fetchParamsToKey(url, opts);
     const responses = this.mockedResponsesByKey[key];
-
     if (!responses || responses.length === 0) {
       throw new Error(`No more mocked fetch responses for the params ${url} and ${opts}`);
     }
 
-    const { result, delay } = responses.shift();
+    const { result, delay } = responses.shift()!;
 
     if (!result) {
       throw new Error(`Mocked fetch response should contain a result.`);
@@ -69,7 +77,7 @@ export class MockFetch {
   public fetchParamsToKey(url: string, opts: RequestInit): string {
     return JSON.stringify({
       url,
-      opts,
+      opts: sortByKey(opts),
     });
   }
 
@@ -79,6 +87,19 @@ export class MockFetch {
   public getFetch() {
     return this.fetch.bind(this);
   }
+}
+
+function sortByKey(obj: any): Object {
+  return Object.keys(obj).sort().reduce(
+    (ret: any, key: string): Object => (
+      Object.assign({
+        [key]: Object.prototype.toString.call(obj[key]).slice(8, -1) === 'Object'
+          ? sortByKey(obj[key])
+          : obj[key],
+      }, ret)
+    ),
+    {},
+  );
 }
 
 export function createMockFetch(...mockedResponses: MockedFetchResponse[]) {

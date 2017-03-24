@@ -2,14 +2,11 @@ language: node_js
 node_js:
   - "6"
   - "4"
-cache:
-  directories:
-    # cache node modules
-    - node_modules
+
 install:
   - npm install -g coveralls
-  - npm install
   - npm prune
+  - npm install
 
 script:
   - npm test
@@ -19,3 +16,6 @@ script:
 
 # Allow Travis tests to run in containers.
 sudo: false
+
+notifications:
+  email: false

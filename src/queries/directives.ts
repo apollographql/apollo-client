@@ -1,17 +1,13 @@
 // Provides the methods that allow QueryManager to handle
 // the `skip` and `include` directives within GraphQL.
 import {
-  Selection,
-  Variable,
-  BooleanValue,
+  SelectionNode,
+  VariableNode,
+  BooleanValueNode,
 } from 'graphql';
 
 
-export function shouldInclude(selection: Selection, variables?: { [name: string]: any }): boolean {
-  if (!variables) {
-    variables = {};
-  }
-
+export function shouldInclude(selection: SelectionNode, variables: { [name: string]: any } = {}): boolean {
   if (!selection.directives) {
     return true;
   }
@@ -25,32 +21,32 @@ export function shouldInclude(selection: Selection, variables?: { [name: string]
     }
 
     //evaluate the "if" argument and skip (i.e. return undefined) if it evaluates to true.
-    const directiveArguments = directive.arguments;
+    const directiveArguments = directive.arguments || [];
     const directiveName = directive.name.value;
     if (directiveArguments.length !== 1) {
       throw new Error(`Incorrect number of arguments for the @${directiveName} directive.`);
     }
 
 
-    const ifArgument = directive.arguments[0];
+    const ifArgument = directiveArguments[0];
     if (!ifArgument.name || ifArgument.name.value !== 'if') {
       throw new Error(`Invalid argument for the @${directiveName} directive.`);
     }
 
-    const ifValue = directive.arguments[0].value;
+    const ifValue = directiveArguments[0].value;
     let evaledValue: boolean = false;
     if (!ifValue || ifValue.kind !== 'BooleanValue') {
       // means it has to be a variable value if this is a valid @skip or @include directive
       if (ifValue.kind !== 'Variable') {
         throw new Error(`Argument for the @${directiveName} directive must be a variable or a bool ean value.`);
       } else {
-        evaledValue = variables[(ifValue as Variable).name.value];
+        evaledValue = variables[(ifValue as VariableNode).name.value];
         if (evaledValue === undefined) {
           throw new Error(`Invalid variable referenced in @${directiveName} directive.`);
         }
       }
     } else {
-      evaledValue = (ifValue as BooleanValue).value;
+      evaledValue = (ifValue as BooleanValueNode).value;
     }
 
     if (directiveName === 'skip') {

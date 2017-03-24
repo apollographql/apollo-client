@@ -693,7 +693,7 @@ Valid `fetchPolicy` values are:
 
 ```js
 export default graphql(gql`query { ... }`, {
-  fetchPolicy: 'cache-and-network',
+  options: { fetchPolicy: 'cache-and-network' },
 })(MyComponent);
 ```
 
@@ -709,7 +709,7 @@ If you set `options.pollInterval` to 0 then that means no polling instead of exe
 
 ```js
 export default graphql(gql`query { ... }`, {
-  pollInterval: 5000,
+  options: { pollInterval: 5000 },
 })(MyComponent);
 ```
 

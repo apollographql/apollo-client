@@ -17,7 +17,7 @@ import {
 
 import {
   FetchPolicy,
-} from './core/watchQueryOptions';
+} from './core/fetchPolicy';
 
 export type QueryResultAction = {
   type: 'APOLLO_QUERY_RESULT';

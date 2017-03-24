@@ -16,15 +16,9 @@ import {
   PureQueryOptions,
 } from './types';
 
-/**
- * fetchPolicy determines where the client may return a result from. The options are:
- * - cache-first (default): return result from cache. Only fetch from network if cached result is not available.
- * - cache-and-network: returns result from cache first (if it exists), then return network result once it's available
- * - cache-only: return result from cache if avaiable, fail otherwise.
- * - network-only: return result from network, fail if network call doesn't succeed.
- */
-
-export type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
+import {
+  FetchPolicy,
+} from './fetchPolicy';
 
 /**
  * We can change these options to an ObservableQuery

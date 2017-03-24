@@ -70,6 +70,11 @@ import {
   WatchQueryOptions,
 } from '../src/core/watchQueryOptions';
 
+import {
+  CACHE_AND_NETWORK,
+  NETWORK_ONLY,
+} from '../src/core/fetchPolicy';
+
 import subscribeAndCount from './util/subscribeAndCount';
 
 import * as chaiAsPromised from 'chai-as-promised';
@@ -735,7 +740,7 @@ describe('client', () => {
       networkInterface,
       addTypename: true,
     });
-    client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
+    client.query({ fetchPolicy: NETWORK_ONLY, query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, transformedResult);
       done();
     });
@@ -808,7 +813,7 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
+    return client.query({ fetchPolicy: NETWORK_ONLY, query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
     });
   });
@@ -1197,7 +1202,7 @@ describe('client', () => {
       const client = new ApolloClient();
       assert.throws(
         () => {
-          client.query({ query, fetchPolicy: 'cache-and-network' });
+          client.query({ query, fetchPolicy: CACHE_AND_NETWORK });
         },
       );
     });
@@ -1217,7 +1222,7 @@ describe('client', () => {
         data: initialData,
       });
 
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+      const obs = client.watchQuery({ query, fetchPolicy: CACHE_AND_NETWORK});
 
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
@@ -1239,7 +1244,7 @@ describe('client', () => {
         addTypename: false,
       });
 
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+      const obs = client.watchQuery({ query, fetchPolicy: CACHE_AND_NETWORK});
 
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
@@ -1260,7 +1265,7 @@ describe('client', () => {
         addTypename: false,
       });
 
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+      const obs = client.watchQuery({ query, fetchPolicy: CACHE_AND_NETWORK});
 
       let count = 0;
       obs.subscribe({
@@ -1327,7 +1332,7 @@ describe('client', () => {
       // Run a query first to initialize the store
       return client.query({ query })
         // then query for real
-        .then(() => client.query({ query, fetchPolicy: 'network-only' }))
+        .then(() => client.query({ query, fetchPolicy: NETWORK_ONLY }))
         .then((result) => {
           assert.deepEqual(result.data, { myNumber: { n: 2 } });
         });
@@ -1340,7 +1345,7 @@ describe('client', () => {
         addTypename: false,
       });
 
-      const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
+      const options: WatchQueryOptions = { query, fetchPolicy: NETWORK_ONLY };
 
       // Run a query first to initialize the store
       return client.query({ query })
@@ -1350,7 +1355,7 @@ describe('client', () => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
 
           // Test that options weren't mutated, issue #339
-          assert.deepEqual(options, { query, fetchPolicy: 'network-only' });
+          assert.deepEqual(options, { query, fetchPolicy: NETWORK_ONLY });
         });
     });
 
@@ -1367,14 +1372,14 @@ describe('client', () => {
       const outerPromise = client.query({ query })
         // then query for real
         .then(() => {
-          const promise = client.query({ query, fetchPolicy: 'network-only' });
+          const promise = client.query({ query, fetchPolicy: NETWORK_ONLY });
           clock.tick(0);
           return promise;
         })
         .then((result) => {
           assert.deepEqual(result.data, { myNumber: { n: 1 } });
           clock.tick(100);
-          const promise = client.query({ query, fetchPolicy: 'network-only' });
+          const promise = client.query({ query, fetchPolicy: NETWORK_ONLY });
           clock.tick(0);
           return promise;
         })

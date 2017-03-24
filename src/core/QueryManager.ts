@@ -35,6 +35,14 @@ import {
 } from '../store';
 
 import {
+  CACHE_AND_NETWORK,
+  CACHE_FIRST,
+  CACHE_ONLY,
+  DEFAULT,
+  NETWORK_ONLY,
+} from './fetchPolicy';
+
+import {
   checkDocument,
   getQueryDefinition,
   getOperationName,
@@ -312,7 +320,7 @@ export class QueryManager {
               this.query({
                 query: pureQuery.query,
                 variables: pureQuery.variables,
-                fetchPolicy: 'network-only',
+                fetchPolicy: NETWORK_ONLY,
               });
             });
           }
@@ -356,7 +364,7 @@ export class QueryManager {
       const fetchPolicy = storedQuery ? storedQuery.observableQuery.options.fetchPolicy : options.fetchPolicy;
 
       const shouldNotifyIfLoading = queryStoreValue.previousVariables ||
-                                    fetchPolicy === 'cache-only' || fetchPolicy === 'cache-and-network';
+                                    fetchPolicy === CACHE_ONLY || fetchPolicy === CACHE_AND_NETWORK;
 
       const networkStatusChanged = lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus;
 
@@ -409,7 +417,7 @@ export class QueryManager {
             // If there is some data missing and the user has told us that they
             // do not tolerate partial data then we want to return the previous
             // result and mark it as stale.
-            if (isMissing && fetchPolicy !== 'cache-only') {
+            if (isMissing && fetchPolicy !== CACHE_ONLY) {
               resultFromStore = {
                 data: lastResult && lastResult.data,
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
@@ -563,7 +571,7 @@ export class QueryManager {
     const {
       variables = {},
       metadata = null,
-      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
+      fetchPolicy = DEFAULT,
     } = options;
 
     const {
@@ -573,12 +581,12 @@ export class QueryManager {
     const queryString = print(queryDoc);
 
     let storeResult: any;
-    let needToFetch: boolean = fetchPolicy === 'network-only';
+    let needToFetch: boolean = fetchPolicy === NETWORK_ONLY;
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
-    if ( (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only')) {
+    if ( (fetchType !== FetchType.refetch && fetchPolicy !== NETWORK_ONLY)) {
       const { isMissing, result } = diffQueryAgainstStore({
         query: queryDoc,
         store: this.reduxRootSelector(this.store.getState()).data,
@@ -588,13 +596,13 @@ export class QueryManager {
       });
 
       // If we're in here, only fetch if we have missing fields
-      needToFetch = isMissing || fetchPolicy === 'cache-and-network';
+      needToFetch = isMissing || fetchPolicy === CACHE_AND_NETWORK;
 
       storeResult = result;
     }
 
     const requestId = this.generateRequestId();
-    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
+    const shouldFetch = needToFetch && fetchPolicy !== CACHE_ONLY;
 
     // Initialize query in store with unique requestId
     this.queryDocuments[queryId] = queryDoc;
@@ -617,7 +625,7 @@ export class QueryManager {
 
     // If there is no part of the query we need to fetch from the server (or,
     // cachePolicy is cache-only), we just write the store result as the final result.
-    const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
+    const shouldDispatchClientResult = !shouldFetch || fetchPolicy === CACHE_AND_NETWORK;
     if (shouldDispatchClientResult) {
       this.store.dispatch({
         type: 'APOLLO_QUERY_RESULT_CLIENT',
@@ -639,7 +647,7 @@ export class QueryManager {
         fetchMoreForQueryId,
       });
 
-      if (fetchPolicy !== 'cache-and-network') {
+      if (fetchPolicy !== CACHE_AND_NETWORK) {
         return networkResult;
       }
     }
@@ -749,7 +757,7 @@ export class QueryManager {
 
       const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
 
-      if (fetchPolicy !== 'cache-only') {
+      if (fetchPolicy !== CACHE_ONLY) {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });

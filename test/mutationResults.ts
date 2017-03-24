@@ -10,6 +10,10 @@ import { assign, cloneDeep } from 'lodash';
 
 import { ObservableQuery } from '../src/core/ObservableQuery';
 
+import {
+  NETWORK_ONLY,
+} from '../src/core/fetchPolicy';
+
 import gql from 'graphql-tag';
 
 describe('mutation results', () => {
@@ -629,7 +633,7 @@ describe('mutation results', () => {
         });
         observableQuery2 = client.watchQuery({
           query: filteredQuery,
-          fetchPolicy: 'network-only', // need force-fetch to get the filteredTodos,
+          fetchPolicy: NETWORK_ONLY, // need force-fetch to get the filteredTodos,
           reducer: (previousResult, action) => {
             counter2++;
             if (isMutationResultAction(action) && action.result.data!['createTodo'].completed) {

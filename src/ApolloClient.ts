@@ -467,9 +467,14 @@ export default class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore() {
+  public resetStore(options: {
+    refetch?: boolean,
+  } = {}) {
+    const {
+      refetch = true,
+    } = options;
     if (this.queryManager) {
-      this.queryManager.resetStore();
+      this.queryManager.resetStore(options);
     }
   };
 

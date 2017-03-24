@@ -721,7 +721,12 @@ export class QueryManager {
     }
   }
 
-  public resetStore(): void {
+  public resetStore(options: {
+    refetch?: boolean,
+  } = {}): void {
+    const {
+      refetch = true,
+    } = options;
     // Before we have sent the reset action to the store,
     // we can no longer rely on the results returned by in-flight
     // requests since these may depend on values that previously existed
@@ -744,15 +749,17 @@ export class QueryManager {
     // watched. If there is an existing query in flight when the store is reset,
     // the promise for it will be rejected and its results will not be written to the
     // store.
-    Object.keys(this.observableQueries).forEach((queryId) => {
-      const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
+    if (refetch) {
+      Object.keys(this.observableQueries).forEach((queryId) => {
+        const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
 
-      const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
+        const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
 
-      if (fetchPolicy !== 'cache-only') {
-        this.observableQueries[queryId].observableQuery.refetch();
-      }
-    });
+        if (fetchPolicy !== 'cache-only') {
+          this.observableQueries[queryId].observableQuery.refetch();
+        }
+      });
+    }
   }
 
   public startQuery<T>(queryId: string, options: WatchQueryOptions, listener: QueryListener) {

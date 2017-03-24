@@ -474,7 +474,7 @@ export default class ApolloClient implements DataProxy {
       refetch = true,
     } = options;
     if (this.queryManager) {
-      this.queryManager.resetStore(options);
+      this.queryManager.resetStore({ refetch });
     }
   };
 

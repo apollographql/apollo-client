@@ -1,5 +1,6 @@
 import {
   addTypenameToDocument,
+  addIntrospectionToDocument,
 } from '../src/queries/queryTransform';
 
 import {
@@ -245,5 +246,117 @@ describe('query transforms', () => {
         }`);
     const modifiedQuery = addTypenameToDocument(testQuery);
     assert.equal(print(expectedQuery), print(getQueryDefinition(modifiedQuery)));
+  });
+
+  it('should correctly add fragment introspection', () => {
+    let testQuery = gql`
+      query {
+        people {
+          ... on Droid {
+            modelNumber
+          }
+
+          ... on Human {
+            firstName
+          }
+        }
+      }
+    `;
+    const newQueryDoc = addIntrospectionToDocument(testQuery);
+
+    const expectedQuery = gql`
+      query {
+        people {
+          ... on Droid {
+            modelNumber
+          }
+
+          ... on Human {
+            firstName
+          }
+        }
+
+        __Droid:__type(name: "Droid") {
+          possibleTypes {
+            name
+          }
+        }
+
+        __Human:__type(name: "Human") {
+          possibleTypes {
+            name
+          }
+        }
+      }
+    `;
+    const expectedQueryStr = print(expectedQuery);
+
+    assert.equal(expectedQueryStr, print(newQueryDoc));
+  });
+
+  it('should correctly add fragment introspection without duplicates', () => {
+    let testQuery = gql`
+      query MyNamedQuery {
+        people {
+          ... on Droid {
+            modelNumber
+          }
+
+          ... on Human {
+            firstName
+          }
+        }
+
+        anotherPerson {
+          ... on Droid {
+            modelNumber
+          }
+
+          ... on Human {
+            firstName
+          }
+        }
+      }
+    `;
+    const newQueryDoc = addIntrospectionToDocument(testQuery);
+
+    const expectedQuery = gql`
+      query MyNamedQuery {
+        people {
+          ... on Droid {
+            modelNumber
+          }
+
+          ... on Human {
+            firstName
+          }
+        }
+
+        anotherPerson {
+          ... on Droid {
+            modelNumber
+          }
+
+          ... on Human {
+            firstName
+          }
+        }
+
+        __Droid:__type(name: "Droid") {
+          possibleTypes {
+            name
+          }
+        }
+
+        __Human:__type(name: "Human") {
+          possibleTypes {
+            name
+          }
+        }
+      }
+    `;
+    const expectedQueryStr = print(expectedQuery);
+
+    assert.equal(expectedQueryStr, print(newQueryDoc));
   });
 });

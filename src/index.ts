@@ -60,6 +60,7 @@ import {
 
 import {
   addTypenameToDocument,
+  addIntrospectionToDocument,
 } from './queries/queryTransform';
 
 import {
@@ -84,6 +85,7 @@ export {
   readQueryFromStore,
   writeQueryToStore,
   addTypenameToDocument,
+  addIntrospectionToDocument,
   createFragmentMap,
   NetworkStatus,
   ApolloError,

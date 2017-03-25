@@ -42,6 +42,7 @@ import {
 
 import {
   addTypenameToDocument,
+  addIntrospectionToDocument,
 } from '../queries/queryTransform';
 
 import {
@@ -124,6 +125,7 @@ export class QueryManager {
   public store: ApolloStore;
 
   private addTypename: boolean;
+  private addInlineFragmentIntrospection: boolean;
   private networkInterface: NetworkInterface;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
@@ -165,6 +167,7 @@ export class QueryManager {
     reduxRootSelector,
     reducerConfig = { mutationBehaviorReducers: {} },
     addTypename = true,
+    addInlineFragmentIntrospection = true,
     queryDeduplication = false,
   }: {
     networkInterface: NetworkInterface,
@@ -172,6 +175,7 @@ export class QueryManager {
     reduxRootSelector: ApolloStateSelector,
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
+    addInlineFragmentIntrospection?: boolean,
     queryDeduplication?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
@@ -185,6 +189,7 @@ export class QueryManager {
     this.queryListeners = {};
     this.queryDocuments = {};
     this.addTypename = addTypename;
+    this.addInlineFragmentIntrospection = addInlineFragmentIntrospection;
     this.queryDeduplication = queryDeduplication;
 
     this.scheduler = new QueryScheduler({
@@ -232,6 +237,10 @@ export class QueryManager {
     update?: (proxy: DataProxy, mutationResult: Object) => void,
   }): Promise<ApolloQueryResult<T>> {
     const mutationId = this.generateQueryId();
+
+    if (this.addInlineFragmentIntrospection) {
+      mutation = addIntrospectionToDocument(mutation);
+    }
 
     if (this.addTypename) {
       mutation = addTypenameToDocument(mutation);
@@ -490,6 +499,11 @@ export class QueryManager {
     }
 
     let transformedOptions = { ...options } as WatchQueryOptions;
+
+    if (this.addInlineFragmentIntrospection) {
+      transformedOptions.query = addIntrospectionToDocument(transformedOptions.query);
+    }
+
     if (this.addTypename) {
       transformedOptions.query = addTypenameToDocument(transformedOptions.query);
     }
@@ -775,9 +789,14 @@ export class QueryManager {
     } = options;
     let transformedDoc = query;
     // Apply the query transformer if one has been provided.
+    if (this.addInlineFragmentIntrospection) {
+      transformedDoc = addIntrospectionToDocument(transformedDoc);
+    }
+
     if (this.addTypename) {
       transformedDoc = addTypenameToDocument(transformedDoc);
     }
+
     const request: Request = {
       query: transformedDoc,
       variables,
@@ -909,6 +928,10 @@ export class QueryManager {
 
     let transformedDoc = observableQuery.options.query;
 
+    if (this.addInlineFragmentIntrospection) {
+      transformedDoc = addIntrospectionToDocument(transformedDoc);
+    }
+
     if (this.addTypename) {
       // TODO XXX: do we need to make a copy of the document before transforming it?
       transformedDoc = addTypenameToDocument(transformedDoc);
@@ -928,6 +951,10 @@ export class QueryManager {
     let queryDoc = options.query;
 
     // Apply the query transformer if one has been provided
+    if (this.addInlineFragmentIntrospection) {
+      queryDoc = addIntrospectionToDocument(queryDoc);
+    }
+
     if (this.addTypename) {
       queryDoc = addTypenameToDocument(queryDoc);
     }

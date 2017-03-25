@@ -509,9 +509,9 @@ export class QueryManager {
     }
 
     let transformedOptions = { ...options } as WatchQueryOptions;
-    if (this.addTypename) {
-      transformedOptions.query = addTypenameToDocument(transformedOptions.query);
-    }
+    // if (this.addTypename) {
+    //  transformedOptions.query = addTypenameToDocument(transformedOptions.query);
+    // }
 
     let observableQuery = new ObservableQuery<T>({
       scheduler: this.scheduler,

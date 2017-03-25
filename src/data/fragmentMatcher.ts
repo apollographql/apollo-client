@@ -69,6 +69,7 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
       return;
     })
     .catch( (err: any) => {
+      // XXX I have a suspicion we may never get here even if introspection query fails
       this.readyPromise = null; // so we may try again
       throw err;
     });

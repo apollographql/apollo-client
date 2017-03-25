@@ -113,6 +113,37 @@ describe('IntrospectionFragmentMatcher', () => {
     });
   });
 
+  it('does not need to fetch if introspection result is cached', () => {
+    const ifm = new IntrospectionFragmentMatcher();
+
+    const introspectionResultData = {
+      __schema: {
+        types: [{
+          kind: 'UNION',
+          name: 'Item',
+          possibleTypes: [{
+            name: 'ItemA',
+          }, {
+            name: 'ItemB',
+          }],
+        }],
+      },
+    };
+
+    const client = new ApolloClient({
+      fragmentMatcher: ifm,
+      networkInterface: { query: () => { throw new Error('Must not fetch from server!'); } },
+    });
+
+    client.writeQuery({ query: introspectionQuery, data: introspectionResultData });
+    client.writeQuery({ query: gql`{ a }`, data: { a: '1' } });
+
+    return client.query({ query: gql`{ a }` })
+    .then( res => {
+      return assert.deepEqual(res.data, { a: '1' });
+    });
+  });
+
   it('will fetch introspection query only once even if called multiple times', () => {
     const ifm = new IntrospectionFragmentMatcher();
 

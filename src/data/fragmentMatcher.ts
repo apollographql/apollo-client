@@ -10,9 +10,9 @@ import {
   isTest,
 } from '../util/environment';
 
-export interface FragmentMatcherInstance {
+export interface FragmentMatcherInterface {
   canBypassInit: (query: DocumentNode) => boolean;
-  init(queryManager?: QueryManager): Promise<void>;
+  ensureReady(queryManager?: QueryManager): Promise<void>;
   match(idValue: IdValue, typeCondition: string, context: ReadStoreContext): boolean;
 }
 
@@ -30,10 +30,10 @@ export type IntrospectionResultData = {
   },
 };
 
-export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
+export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
 
   private isReady: boolean;
-  private readyPromise: Promise<void>;
+  private readyPromise: Promise<void> | null;
   private possibleTypesMap: PossibleTypesMap;
 
   constructor(options?: {
@@ -46,7 +46,7 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
       this.isReady = false;
     }
 
-    this.init = this.init.bind(this);
+    this.ensureReady = this.ensureReady.bind(this);
     this.canBypassInit = this.canBypassInit.bind(this);
     this.match = this.match.bind(this);
   }
@@ -54,7 +54,7 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
   /**
    * The init method has to get called before the match function can be used.
    */
-  public init(queryManager: QueryManager): Promise<void> {
+  public ensureReady(queryManager: QueryManager): Promise<void> {
     if (this.readyPromise) {
       return this.readyPromise;
     }
@@ -66,6 +66,7 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
       return;
     })
     .catch( (err: any) => {
+      this.readyPromise = null; // so we may try again
       throw err;
     });
 
@@ -82,8 +83,6 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
       // this should basically never happen in proper use.
       throw new Error('FragmentMatcher.match() was called before FragmentMatcher.init()');
     }
-
-    // invariant(isIdValue(idValue), 'boo hoo, I am sad');
 
     const obj = context.store[idValue.id];
 
@@ -121,12 +120,15 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
 
 let haveWarned = false;
 
-export class HeuristicFragmentMatcher {
+/**
+ * This fragment matcher is very basic and unable to match union or interface type conditions
+ */
+export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
   constructor() {
     // do nothing
   }
 
-  public init() {
+  public ensureReady() {
     return Promise.resolve();
   }
 
@@ -139,7 +141,6 @@ export class HeuristicFragmentMatcher {
     typeCondition: string,
     context: ReadStoreContext,
   ): boolean {
-    // assertIdValue(idValue);
 
     const obj = context.store[idValue.id];
 
@@ -163,8 +164,6 @@ export class HeuristicFragmentMatcher {
       context.returnPartialData = true;
       return true;
     }
-
-    // console.log('TC: is ', obj.__typename, ' a ', typeCondition);
 
     if (obj.__typename === typeCondition) {
       return true;

@@ -7,7 +7,7 @@ import { getFragmentQueryDocument } from '../queries/getFromAST';
 import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
-import { FragmentMatcherInstance } from './fragmentMatcher';
+import { FragmentMatcherInterface } from './fragmentMatcher';
 
 export interface DataProxyReadQueryOptions {
   /**
@@ -157,12 +157,12 @@ export class ReduxDataProxy implements DataProxy {
 
   private reducerConfig: ApolloReducerConfig;
 
-  private fragmentMatcher: FragmentMatcherInstance;
+  private fragmentMatcher: FragmentMatcherInterface;
 
   constructor(
     store: ApolloStore,
     reduxRootSelector: (state: any) => Store,
-    fragmentMatcher: FragmentMatcherInstance,
+    fragmentMatcher: FragmentMatcherInterface,
     reducerConfig: ApolloReducerConfig,
   ) {
     this.store = store;

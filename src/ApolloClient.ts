@@ -17,7 +17,7 @@ import {
 
 import {
   HeuristicFragmentMatcher,
-  FragmentMatcherInstance,
+  FragmentMatcherInterface,
 } from './data/fragmentMatcher';
 
 import {
@@ -154,7 +154,7 @@ export default class ApolloClient implements DataProxy {
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
-  private fragmentMatcher: FragmentMatcherInstance;
+  private fragmentMatcher: FragmentMatcherInterface;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -196,7 +196,7 @@ export default class ApolloClient implements DataProxy {
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
-    fragmentMatcher?: FragmentMatcherInstance,
+    fragmentMatcher?: FragmentMatcherInterface,
   } = {}) {
     let {
       dataIdFromObject,

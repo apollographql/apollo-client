@@ -57,7 +57,7 @@ import {
 } from '../data/proxy';
 
 import {
-  FragmentMatcherInstance,
+  FragmentMatcherInterface,
   HeuristicFragmentMatcher,
 } from '../data/fragmentMatcher';
 
@@ -134,7 +134,7 @@ export class QueryManager {
   private reduxRootSelector: ApolloStateSelector;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
-  private fragmentMatcher: FragmentMatcherInstance;
+  private fragmentMatcher: FragmentMatcherInterface;
 
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -177,7 +177,7 @@ export class QueryManager {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
-    fragmentMatcher?: FragmentMatcherInstance,
+    fragmentMatcher?: FragmentMatcherInterface,
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
     queryDeduplication?: boolean,
@@ -578,11 +578,11 @@ export class QueryManager {
     // putting this in front of the real fetchQuery function lets us make sure
     // that the fragment matcher is initialized before we try to read from the store
     if (this.fragmentMatcher.canBypassInit(options.query)) {
-      return this.fetchQueryWithoutInit(queryId, options, fetchType, fetchMoreForQueryId);
+      return this.fetchQueryAfterInit(queryId, options, fetchType, fetchMoreForQueryId);
     }
 
-    return this.fragmentMatcher.init(this).then( () => {
-      return this.fetchQueryWithoutInit(queryId, options, fetchType, fetchMoreForQueryId);
+    return this.fragmentMatcher.ensureReady(this).then( () => {
+      return this.fetchQueryAfterInit(queryId, options, fetchType, fetchMoreForQueryId);
     });
   }
 
@@ -840,10 +840,11 @@ export class QueryManager {
     };
   }
 
-  // This function runs fetchQuery without initializing the fragment matcher.
-  // We always want to initialize the fragment matcher, so this function should not be accessible outside.
-  // The only place we call this function from is within fetchQuery after initializing the fragment matcher.
-  private fetchQueryWithoutInit<T>(
+  /** This function runs fetchQuery without initializing the fragment matcher.
+   * We always want to initialize the fragment matcher, so this function should not be accessible outside.
+   * The only place we call this function from is within fetchQuery after initializing the fragment matcher.
+   */
+  private fetchQueryAfterInit<T>(
     queryId: string,
     options: WatchQueryOptions,
     fetchType?: FetchType,

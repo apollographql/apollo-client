@@ -106,7 +106,7 @@ describe('IntrospectionFragmentMatcher', () => {
       customResolvers: {},
     };
 
-    return ifm.init(manager)
+    return ifm.ensureReady(manager)
     .then( () => {
       assert.equal(ifm.match(idValue as any, 'Item', readStoreContext), true );
       assert.equal(ifm.match(idValue as any, 'NotAnItem', readStoreContext), false );
@@ -136,13 +136,13 @@ describe('IntrospectionFragmentMatcher', () => {
         });
 
 
-    const p = ifm.init(manager)
+    const p = ifm.ensureReady(manager)
     .then( () => {
       // test that it doesn't fetch again if it's already ready
-      assert.doesNotThrow(() => ifm.init(manager));
+      assert.doesNotThrow(() => ifm.ensureReady(manager));
     });
     // test that calling it twice in the same tick doesn't cause problems
-    assert.doesNotThrow(() => ifm.init(manager));
+    assert.doesNotThrow(() => ifm.ensureReady(manager));
     return p;
   });
 });

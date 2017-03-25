@@ -964,12 +964,12 @@ describe('client', () => {
       networkInterface,
       addTypename: false,
       fragmentMatcher: {
-        init: () => Promise.resolve(),
+        ensureReady: () => Promise.resolve(),
         canBypassInit: () => true,
         match: fancyFragmentMatcher,
       },
     });
-    return client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then((actualResult: any) => {
       assert.deepEqual(actualResult.data, result);
     });
   });

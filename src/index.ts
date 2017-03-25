@@ -78,7 +78,7 @@ import {
 
 import {
   IntrospectionFragmentMatcher,
-  FragmentMatcherInstance,
+  FragmentMatcherInterface,
 } from './data/fragmentMatcher';
 
 export {
@@ -100,7 +100,7 @@ export {
   toIdValue,
 
   IntrospectionFragmentMatcher,
-  FragmentMatcherInstance,
+  FragmentMatcherInterface,
 
   // Expose the print method from GraphQL so that people that implement
   // custom network interfaces can turn query ASTs into query strings as needed.

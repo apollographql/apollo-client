@@ -1,15 +1,13 @@
 import { NetworkInterface } from '../transport/networkInterface';
 import { QueryManager } from '../core/queryManager';
-import gql from 'graphql-tag'; // TODO don't do this, pre-compile it.
-
 import { IdValue, isIdValue } from './storeUtils';
 import { ReadStoreContext } from './readFromStore';
+import introspectionQuery from './fragmentMatcherIntrospectionQuery';
 
 export interface FragmentMatcherInstance {
   init(queryManager?: QueryManager): Promise<void>;
   match(idValue: IdValue, typeCondition: string, context: ReadStoreContext): boolean;
 }
-
 
 type PossibleTypesMap = {[key: string]: string[]};
 
@@ -30,18 +28,6 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
   private isReady: boolean;
   private readyPromise: Promise<void>;
   private possibleTypesMap: PossibleTypesMap;
-  private introspectionQuery = gql`{
-    __schema {
-      types {
-        kind
-        name
-        possibleTypes {
-          name
-        }
-      }
-    }
-  }`; //TODO don't depend on gql!
-
 
   constructor(options?: {
     introspectionQueryResultData?: IntrospectionResultData, // XXX do we need a better type here?
@@ -62,7 +48,7 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
       return this.readyPromise;
     }
 
-    this.readyPromise = queryManager.query({ query: this.introspectionQuery })
+    this.readyPromise = queryManager.query({ query: introspectionQuery })
     .then( res => {
       this.possibleTypesMap = this.parseIntrospectionResult(res.data as IntrospectionResultData);
       this.isReady = true;

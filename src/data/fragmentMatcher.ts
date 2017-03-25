@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql';
 
 import { NetworkInterface } from '../transport/networkInterface';
-import { QueryManager } from '../core/queryManager';
+import { QueryManager } from '../core/QueryManager';
 import { IdValue, isIdValue } from './storeUtils';
 import { ReadStoreContext } from './readFromStore';
 import introspectionQuery from './fragmentMatcherIntrospectionQuery';

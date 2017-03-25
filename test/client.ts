@@ -260,6 +260,56 @@ describe('client', () => {
     clientRoundrip(query, data);
   });
 
+  it('should allow for a single query with default variables to take place', () => {
+    const query = gql`
+      query people($first: Int = 1) {
+        allPeople(first: $first) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    clientRoundrip(query, data);
+  });
+
+  it('should allow for a single query with default variables to get overridden', () => {
+    const query = gql`
+      query people($first: Int = 4) {
+        allPeople(first: $first) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const variables = { $first: 1 };
+
+    clientRoundrip(query, data, variables);
+  });
+
   it('should allow fragments on root query', () => {
     const query = gql`
       query {

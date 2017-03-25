@@ -482,8 +482,19 @@ export class QueryManager {
     }
 
 
-    // Call just to get errors synchronously
-    getQueryDefinition(options.query);
+    // get errors synchronously
+    const queryDefinition = getQueryDefinition(options.query);
+
+    // assign variable default values if supplied
+    if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
+      const defaultValues = queryDefinition.variableDefinitions
+                              .filter(({ defaultValue }) => defaultValue)
+                              .map(({ variable, defaultValue }) => ({ [variable.name.value]: defaultValue }));
+      options.variables = {
+        ...defaultValues,
+        ...options.variables,
+      };
+    }
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
       options.notifyOnNetworkStatusChange = false;

@@ -906,10 +906,11 @@ describe('client', () => {
 
       fragment ItemFragment on Item {
         id
+        __typename
         ... on ColorItem {
           color
+          __typename
         }
-        __typename
       }`;
     const result = {
       'items': [
@@ -962,7 +963,6 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       networkInterface,
-      addTypename: false,
       fragmentMatcher: {
         ensureReady: () => Promise.resolve(),
         canBypassInit: () => true,
@@ -987,6 +987,7 @@ describe('client', () => {
         id
         ... on ColorItem {
           color
+          __typename
         }
         __typename
       }`;
@@ -1033,7 +1034,6 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      addTypename: false,
       fragmentMatcher: fm,
     });
 

@@ -46,6 +46,12 @@ import {
 } from '../src/core/QueryManager';
 
 import {
+  IntrospectionFragmentMatcher,
+} from '../src/data/fragmentMatcher';
+
+import fragmentMatcherIntrospectionQuery from '../src/data/fragmentMatcherIntrospectionQuery';
+
+import {
   createNetworkInterface,
   HTTPNetworkInterface,
   Request,
@@ -886,6 +892,153 @@ describe('client', () => {
     client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
       done();
+    });
+  });
+
+  it('should be able to handle inlined fragments on an Interface type', () => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
+          __typename
+        }
+      }
+
+      fragment ItemFragment on Item {
+        id
+        __typename
+        ... on ColorItem {
+          color
+          __typename
+        }
+      }`;
+    const result = {
+      'items': [
+        {
+          '__typename': 'ColorItem',
+          'id': '27tlpoPeXm6odAxj3paGQP',
+          'color': 'red',
+        },
+        {
+          '__typename': 'MonochromeItem',
+          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+        },
+      ],
+    };
+
+
+    const fancyFragmentMatcher = (
+      idValue: any, // TODO types, please.
+      typeCondition: string,
+      context: any,
+    ): boolean => {
+
+      const obj = context.store[idValue.id];
+
+      if (! obj) {
+        return false;
+      }
+
+      const implementingTypesMap: {[key: string]: string[]} = {
+        'Item': ['ColorItem', 'MonochromeItem'],
+      };
+
+      if (obj.__typename === typeCondition) {
+        return true;
+      }
+
+      const implementingTypes = implementingTypesMap[typeCondition];
+      if (implementingTypes && implementingTypes.indexOf(obj.__typename) > -1) {
+        return true;
+      }
+
+      return false;
+    };
+
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: { query },
+      result: { data: result },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      fragmentMatcher: {
+        ensureReady: () => Promise.resolve(),
+        canBypassInit: () => true,
+        match: fancyFragmentMatcher,
+      },
+    });
+    return client.query({ query }).then((actualResult: any) => {
+      assert.deepEqual(actualResult.data, result);
+    });
+  });
+
+  it('should be able to handle inlined fragments on an Interface type with introspection fragment matcher', () => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
+          __typename
+        }
+      }
+
+      fragment ItemFragment on Item {
+        id
+        ... on ColorItem {
+          color
+          __typename
+        }
+        __typename
+      }`;
+    const result = {
+      'items': [
+        {
+          '__typename': 'ColorItem',
+          'id': '27tlpoPeXm6odAxj3paGQP',
+          'color': 'red',
+        },
+        {
+          '__typename': 'MonochromeItem',
+          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+        },
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: fragmentMatcherIntrospectionQuery },
+        delay: 5, // we put a delay here to make really sure the client waits
+        result: {
+          data: {
+            __schema: {
+              types: [{
+                kind: 'INTERFACE',
+                name: 'Item',
+                possibleTypes: [{
+                  name: 'ColorItem',
+                }, {
+                  name: 'MonochromeItem',
+                }],
+              }],
+            },
+          },
+        },
+      },
+      {
+        request: { query },
+        result: { data: result },
+      });
+
+    const fm = new IntrospectionFragmentMatcher();
+
+    const client = new ApolloClient({
+      networkInterface,
+      fragmentMatcher: fm,
+    });
+
+    return client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
     });
   });
 

@@ -32,8 +32,12 @@ import {
   WatchQueryOptions,
   MutationOptions,
   SubscriptionOptions,
-  FetchPolicy,
 } from './core/watchQueryOptions';
+
+import {
+  FetchPolicy,
+  FETCH_POLICIES,
+} from './core/fetchPolicy';
 
 import {
   readQueryFromStore,
@@ -93,6 +97,7 @@ export {
   Request,
   ApolloQueryResult,
   toIdValue,
+  FETCH_POLICIES,
 
   // Expose the print method from GraphQL so that people that implement
   // custom network interfaces can turn query ASTs into query strings as needed.

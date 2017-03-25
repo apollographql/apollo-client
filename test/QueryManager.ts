@@ -11,6 +11,12 @@ import { ObservableQuery } from '../src/core/ObservableQuery';
 import { WatchQueryOptions } from '../src/core/watchQueryOptions';
 
 import {
+  CACHE_FIRST,
+  CACHE_ONLY,
+  NETWORK_ONLY,
+} from '../src/core/fetchPolicy';
+
+import {
   createApolloStore,
   ApolloStore,
 } from '../src/store';
@@ -1232,7 +1238,7 @@ describe('QueryManager', () => {
               lastName
             }
           }`,
-        queryOptions: { pollInterval: 200, fetchPolicy: 'cache-only' },
+        queryOptions: { pollInterval: 200, fetchPolicy: CACHE_ONLY },
       });
     });
     assert.throw(() => {
@@ -1250,7 +1256,7 @@ describe('QueryManager', () => {
               lastName
             }
           }`,
-        queryOptions: { pollInterval: 200, fetchPolicy: 'cache-first' },
+        queryOptions: { pollInterval: 200, fetchPolicy: CACHE_FIRST },
       });
     });
     done();
@@ -1295,7 +1301,7 @@ describe('QueryManager', () => {
     }).then(() => {
       const handle = queryManager.watchQuery<any>({
         query: complexQuery,
-        fetchPolicy: 'cache-only',
+        fetchPolicy: CACHE_ONLY,
       });
 
       return handle.result().then((result) => {
@@ -2112,7 +2118,7 @@ describe('QueryManager', () => {
         observableToPromise({ observable },
           (result) => {
             assert.deepEqual(result.data, data1);
-            queryManager.query({ query, variables, fetchPolicy: 'network-only' })
+            queryManager.query({ query, variables, fetchPolicy: NETWORK_ONLY })
               .then(() => timeout(new Error('Should have two results by now')));
           },
           (result) => assert.deepEqual(result.data, data2),
@@ -2452,7 +2458,7 @@ describe('QueryManager', () => {
         }`;
       const queryManager = createQueryManager({});
       const options = assign({}) as WatchQueryOptions;
-      options.fetchPolicy = 'cache-only';
+      options.fetchPolicy = CACHE_ONLY;
       options.query = query;
       let refetchCount = 0;
       const mockObservableQuery: ObservableQuery<any> = {
@@ -2617,7 +2623,7 @@ describe('QueryManager', () => {
     queryManager.query<any>({ query }).then((result) => {
       assert.deepEqual(result.data, data);
 
-      queryManager.query<any>({ query, fetchPolicy: 'network-only' }).then(() => {
+      queryManager.query<any>({ query, fetchPolicy: NETWORK_ONLY }).then(() => {
         done(new Error('Returned a result when it was not supposed to.'));
       }).catch((error) => {
         // make that the error thrown doesn't empty the state

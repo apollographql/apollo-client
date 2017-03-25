@@ -41,6 +41,12 @@ import {
 } from './core/types';
 
 import {
+  CACHE_AND_NETWORK,
+  CACHE_FIRST,
+  NETWORK_ONLY,
+} from './core/fetchPolicy';
+
+import {
   ObservableQuery,
 } from './core/ObservableQuery';
 
@@ -270,10 +276,10 @@ export default class ApolloClient implements DataProxy {
     this.initStore();
 
     // XXX Overwriting options is probably not the best way to do this long term...
-    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
+    if (this.disableNetworkFetches && options.fetchPolicy === NETWORK_ONLY) {
       options = {
         ...options,
-        fetchPolicy: 'cache-first',
+        fetchPolicy: CACHE_FIRST,
       } as WatchQueryOptions;
     }
 
@@ -292,15 +298,15 @@ export default class ApolloClient implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
-    if (options.fetchPolicy === 'cache-and-network') {
-      throw new Error('cache-and-network fetchPolicy can only be used with watchQuery');
+    if (options.fetchPolicy === CACHE_AND_NETWORK) {
+      throw new Error(`${CACHE_AND_NETWORK} fetchPolicy can only be used with watchQuery`);
     }
 
     // XXX Overwriting options is probably not the best way to do this long term...
-    if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
+    if (this.disableNetworkFetches && options.fetchPolicy === NETWORK_ONLY) {
       options = {
         ...options,
-        fetchPolicy: 'cache-first',
+        fetchPolicy: CACHE_FIRST,
       } as WatchQueryOptions;
     }
 

@@ -11,6 +11,11 @@ import {
   QueryManager,
 } from '../src/core/QueryManager';
 import {
+  CACHE_FIRST,
+  CACHE_ONLY,
+  NETWORK_ONLY,
+} from '../src/core/fetchPolicy';
+import {
   createApolloStore,
   ApolloStore,
 } from '../src/store';
@@ -247,7 +252,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, dataOne);
-          observable.setOptions({ fetchPolicy: 'network-only' });
+          observable.setOptions({ fetchPolicy: NETWORK_ONLY });
         } else if (handleCount === 2) {
           assert.deepEqual(result.data, dataTwo);
           done();
@@ -288,7 +293,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 1);
 
           setTimeout(() => {
-            observable.setOptions({fetchPolicy: 'cache-only'});
+            observable.setOptions({fetchPolicy: CACHE_ONLY});
 
             queryManager.resetStore();
           }, 0);
@@ -297,7 +302,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 1);
 
           setTimeout(() => {
-            observable.setOptions({fetchPolicy: 'cache-first'});
+            observable.setOptions({fetchPolicy: CACHE_FIRST});
           }, 0);
         } else if (handleCount === 3) {
           assert.deepEqual(result.data, data);
@@ -333,7 +338,7 @@ describe('ObservableQuery', () => {
         },
       };
       queryManager = createQueryManager({ networkInterface });
-      observable = queryManager.watchQuery({ query: testQuery, fetchPolicy: 'cache-only', notifyOnNetworkStatusChange: false });
+      observable = queryManager.watchQuery({ query: testQuery, fetchPolicy: CACHE_ONLY, notifyOnNetworkStatusChange: false });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 2) {
@@ -341,7 +346,7 @@ describe('ObservableQuery', () => {
           assert.equal(timesFired, 0);
 
           setTimeout(() => {
-            observable.setOptions({fetchPolicy: 'cache-first'});
+            observable.setOptions({fetchPolicy: CACHE_FIRST});
           }, 0);
         } else if (handleCount === 3) {
           assert.deepEqual(result.data, data);
@@ -684,7 +689,7 @@ describe('ObservableQuery', () => {
           const observable = queryManager.watchQuery({
             query,
             variables,
-            fetchPolicy: 'network-only',
+            fetchPolicy: NETWORK_ONLY,
           });
           assert.deepEqual(observable.currentResult(), {
             data: dataOne,

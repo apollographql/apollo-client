@@ -7,6 +7,10 @@ import {
   createApolloStore,
 } from '../src/store';
 
+import {
+  CACHE_FIRST,
+} from '../src/core/fetchPolicy';
+
 describe('createApolloStore', () => {
   it('does not require any arguments', () => {
     const store = createApolloStore();
@@ -177,7 +181,7 @@ describe('createApolloStore', () => {
       queryString: '',
       document: queryDocument,
       variables: {},
-      fetchPolicy: 'cache-first',
+      fetchPolicy: CACHE_FIRST,
       requestId: 1,
       storePreviousVariables: false,
       isPoll: false,

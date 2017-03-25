@@ -17,6 +17,10 @@ import {
   QueryListener,
 } from '../core/types';
 
+import {
+  NETWORK_ONLY,
+} from '../core/fetchPolicy';
+
 import { ObservableQuery } from '../core/ObservableQuery';
 
 import { WatchQueryOptions } from '../core/watchQueryOptions';
@@ -118,7 +122,7 @@ export class QueryScheduler {
 
       const queryOptions = this.registeredQueries[queryId];
       const pollingOptions = { ...queryOptions } as WatchQueryOptions;
-      pollingOptions.fetchPolicy = 'network-only';
+      pollingOptions.fetchPolicy = NETWORK_ONLY;
       this.fetchQuery<T>(queryId, pollingOptions, FetchType.poll);
       return true;
     });

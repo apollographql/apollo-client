@@ -21,6 +21,10 @@ import {
 } from '../src/index';
 
 import {
+  CACHE_ONLY,
+} from '../src/core/fetchPolicy';
+
+import {
   diffQueryAgainstStore,
 } from '../src/data/readFromStore';
 
@@ -107,7 +111,7 @@ group((end) => {
     const client = getClientInstance();
     const observable = client.watchQuery({
       query: simpleQuery,
-      fetchPolicy: 'cache-only',
+      fetchPolicy: CACHE_ONLY,
     });
     observable.subscribe({
       next(res: ApolloQueryResult<Object>) {
@@ -145,7 +149,7 @@ group((end) => {
         promises.push(new Promise<void>((resolve, reject) => {
           client.watchQuery({
             query: simpleQuery,
-            fetchPolicy: 'cache-only',
+            fetchPolicy: CACHE_ONLY,
           }).subscribe({
             next(res: ApolloQueryResult<Object>) {
               if (Object.keys(res.data).length > 0) {
@@ -291,7 +295,7 @@ times(50, (index) => {
         client.query({
           query,
           variables,
-          fetchPolicy: 'cache-only',
+          fetchPolicy: CACHE_ONLY,
         }).then(() => {
           done();
         });

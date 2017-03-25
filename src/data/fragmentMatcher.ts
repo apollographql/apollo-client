@@ -1,3 +1,5 @@
+import { DocumentNode } from 'graphql';
+
 import { NetworkInterface } from '../transport/networkInterface';
 import { QueryManager } from '../core/queryManager';
 import { IdValue, isIdValue } from './storeUtils';
@@ -9,6 +11,7 @@ import {
 } from '../util/environment';
 
 export interface FragmentMatcherInstance {
+  canBypassInit: (query: DocumentNode) => boolean;
   init(queryManager?: QueryManager): Promise<void>;
   match(idValue: IdValue, typeCondition: string, context: ReadStoreContext): boolean;
 }
@@ -42,6 +45,10 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
     } else {
       this.isReady = false;
     }
+
+    this.init = this.init.bind(this);
+    this.canBypassInit = this.canBypassInit.bind(this);
+    this.match = this.match.bind(this);
   }
 
   /**
@@ -59,11 +66,15 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
       return;
     })
     .catch( err => {
-      console.error(`Fragment Matcher introspection query failed`);
+      // console.error(`Fragment Matcher introspection query failed`);
       throw err;
     });
 
     return this.readyPromise;
+  }
+
+  public canBypassInit(query: DocumentNode) {
+    return query === introspectionQuery;
   }
 
 
@@ -118,6 +129,10 @@ export class HeuristicFragmentMatcher {
 
   public init() {
     return Promise.resolve();
+  }
+
+  public canBypassInit() {
+    return true; // we don't need to initialize this fragment matcher.
   }
 
   public match(

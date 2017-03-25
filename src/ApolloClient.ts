@@ -85,27 +85,6 @@ import {
 } from './version';
 
 
-
-/**
- * Suggest installing the devtools for developers who are using Apollo Client
- */
-if (process.env.NODE_ENV !== 'production') {
-  if ( typeof window !== 'undefined' && window.document && window.top === window.self) {
-
-    // First check if devtools is not installed
-    if (typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
-      // Only for Chrome
-      if (navigator.userAgent.indexOf('Chrome') > -1) {
-        // tslint:disable-next-line
-        console.debug('Download the Apollo DevTools ' +
-        'for a better development experience: ' +
-        'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm');
-      }
-    }
-  }
-}
-
-
 /**
  * This type defines a "selector" function that receives state from the Redux store
  * and returns the part of it that is managed by ApolloClient
@@ -131,6 +110,8 @@ function defaultDataIdFromObject (result: any): string | null {
   }
   return null;
 }
+
+let hasSuggestedDevtools = false;
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -258,6 +239,26 @@ export default class ApolloClient implements DataProxy {
 
     if (typeof connectToDevTools === 'undefined' ? defaultConnectToDevTools : connectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
+    }
+
+    /**
+     * Suggest installing the devtools for developers who don't have them
+     */
+    if (!hasSuggestedDevtools && !isProduction()) {
+      hasSuggestedDevtools = true;
+      if ( typeof window !== 'undefined' && window.document && window.top === window.self) {
+
+        // First check if devtools is not installed
+        if (typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+          // Only for Chrome
+          if (navigator.userAgent.indexOf('Chrome') > -1) {
+            // tslint:disable-next-line
+            console.debug('Download the Apollo DevTools ' +
+            'for a better development experience: ' +
+            'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm');
+          }
+        }
+      }
     }
 
     this.version = version;

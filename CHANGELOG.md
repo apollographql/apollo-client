@@ -3,6 +3,8 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
+### 1.0.0-rc.7
 - Fix: `cachePolicy: cache-and-network` queries now dispatch `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
 - Fix: query deduplication no longer causes query errors to prevent subsequent successful execution of the same query  [PR #1481](https://github.com/apollographql/apollo-client/pull/1481)
 - Breaking: change default of notifyOnNetworkStatusChange back to false [PR #1482](https://github.com/apollographql/apollo-client/pull/1482)

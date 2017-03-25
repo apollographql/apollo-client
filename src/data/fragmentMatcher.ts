@@ -60,13 +60,12 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInstance {
     }
 
     this.readyPromise = queryManager.query({ query: introspectionQuery })
-    .then( res => {
+    .then( (res: any) => {
       this.possibleTypesMap = this.parseIntrospectionResult(res.data as IntrospectionResultData);
       this.isReady = true;
       return;
     })
-    .catch( err => {
-      // console.error(`Fragment Matcher introspection query failed`);
+    .catch( (err: any) => {
       throw err;
     });
 

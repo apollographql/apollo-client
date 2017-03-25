@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 import * as sinon from 'sinon';
+import * as fetchMock from 'fetch-mock';
 
 import ApolloClient, {
   printAST,
@@ -1817,6 +1818,43 @@ describe('client', () => {
         assert.equal(error.message, 'Network error: Uh oh!');
         done();
       },
+    });
+  });
+
+  it('should throw a GraphQL error', () => {
+    const url = 'http://not-a-real-url.com';
+    const query = gql`
+      query {
+        posts {
+          foo
+        }
+      }
+    `;
+    const result = {
+      errors: [{
+        message: 'Cannot query field "foo" on type "Post".',
+        locations: [{
+          line: 1,
+          column: 1,
+        }],
+      }],
+    };
+
+    fetchMock.post(url, () => {
+      return {
+        status: 400,
+        body: result,
+      };
+    });
+    const networkInterface = createNetworkInterface({ uri: url });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    return client.query({ query }).catch(err => {
+      assert.equal(err.message, 'GraphQL error: Cannot query field "foo" on type "Post".');
+      fetchMock.restore();
     });
   });
 });

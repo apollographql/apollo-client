@@ -16,8 +16,9 @@ import {
 } from 'graphql';
 
 import {
-  FragmentMatcher,
-} from 'graphql-anywhere';
+  HeuristicFragmentMatcher,
+  FragmentMatcherInstance,
+} from './data/fragmentMatcher';
 
 import {
   createApolloStore,
@@ -153,6 +154,7 @@ export default class ApolloClient implements DataProxy {
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
+  private fragmentMatcher: FragmentMatcherInstance;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -194,7 +196,7 @@ export default class ApolloClient implements DataProxy {
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
-    fragmentMatcher?: FragmentMatcher,
+    fragmentMatcher?: FragmentMatcherInstance,
   } = {}) {
     let {
       dataIdFromObject,
@@ -208,14 +210,20 @@ export default class ApolloClient implements DataProxy {
       addTypename = true,
       customResolvers,
       connectToDevTools,
-      queryDeduplication = true,
       fragmentMatcher,
+      queryDeduplication = true,
     } = options;
 
     if (typeof reduxRootSelector === 'function') {
       this.reduxRootSelector = reduxRootSelector;
     } else if (typeof reduxRootSelector !== 'undefined') {
       throw new Error('"reduxRootSelector" must be a function.');
+    }
+
+    if (typeof fragmentMatcher === 'undefined') {
+      this.fragmentMatcher = new HeuristicFragmentMatcher();
+    } else {
+      this.fragmentMatcher = fragmentMatcher;
     }
 
     this.initialState = initialState ? initialState : {};
@@ -234,7 +242,6 @@ export default class ApolloClient implements DataProxy {
     this.reducerConfig = {
       dataIdFromObject,
       customResolvers,
-      fragmentMatcher,
     };
 
     this.watchQuery = this.watchQuery.bind(this);
@@ -511,6 +518,7 @@ export default class ApolloClient implements DataProxy {
       addTypename: this.addTypename,
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
+      fragmentMatcher: this.fragmentMatcher,
     });
   };
 
@@ -525,6 +533,7 @@ export default class ApolloClient implements DataProxy {
       this.proxy = new ReduxDataProxy(
         this.store,
         this.reduxRootSelector || defaultReduxRootSelector,
+        this.fragmentMatcher,
         this.reducerConfig,
       );
     }

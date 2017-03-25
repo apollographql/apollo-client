@@ -10,7 +10,13 @@ import {
   StoreObject,
 } from '../src/data/storeUtils';
 
+import {
+  HeuristicFragmentMatcher,
+} from '../src/data/fragmentMatcher';
+const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
+
 import gql from 'graphql-tag';
+
 
 describe('reading from the store', () => {
   it('rejects malformed queries', () => {
@@ -282,6 +288,7 @@ describe('reading from the store', () => {
           }
         }
       `,
+      fragmentMatcherFunction,
     });
 
     assert.deepEqual(queryResult, {

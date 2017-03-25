@@ -57,6 +57,11 @@ import {
 } from '../data/proxy';
 
 import {
+  FragmentMatcherInstance,
+  HeuristicFragmentMatcher,
+} from '../data/fragmentMatcher';
+
+import {
   isProduction,
 } from '../util/environment';
 
@@ -129,6 +134,7 @@ export class QueryManager {
   private reduxRootSelector: ApolloStateSelector;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
+  private fragmentMatcher: FragmentMatcherInstance;
 
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -164,12 +170,14 @@ export class QueryManager {
     store,
     reduxRootSelector,
     reducerConfig = { mutationBehaviorReducers: {} },
+    fragmentMatcher,
     addTypename = true,
     queryDeduplication = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
+    fragmentMatcher?: FragmentMatcherInstance,
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
     queryDeduplication?: boolean,
@@ -186,6 +194,16 @@ export class QueryManager {
     this.queryDocuments = {};
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
+
+    // XXX This logic is duplicated in ApolloClient.ts for two reasons:
+    // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.
+    // 2. we need it here so we don't have to rewrite all the tests.
+    // in the longer term we should remove the need for 2 and move it to ApolloClient.ts only.
+    if (typeof fragmentMatcher === 'undefined') {
+      this.fragmentMatcher = new HeuristicFragmentMatcher();
+    } else {
+      this.fragmentMatcher = fragmentMatcher;
+    }
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -401,6 +419,7 @@ export class QueryManager {
               query: this.queryDocuments[queryId],
               variables: queryStoreValue.previousVariables || queryStoreValue.variables,
               config: this.reducerConfig,
+              fragmentMatcherFunction: this.fragmentMatcher.match,
               previousResult: lastResult && lastResult.data,
             });
 
@@ -584,6 +603,7 @@ export class QueryManager {
         store: this.reduxRootSelector(this.store.getState()).data,
         variables,
         returnPartialData: true,
+        fragmentMatcherFunction: this.fragmentMatcher.match,
         config: this.reducerConfig,
       });
 

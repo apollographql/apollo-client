@@ -5,6 +5,7 @@ import { print } from 'graphql-tag/bundledPrinter';
 import { createApolloStore, ApolloReducerConfig } from '../src/store';
 import { ReduxDataProxy, TransactionDataProxy } from '../src/data/proxy';
 import { toIdValue } from '../src/data/storeUtils';
+import { HeuristicFragmentMatcher } from '../src/data/fragmentMatcher';
 
 describe('ReduxDataProxy', () => {
   function createDataProxy({
@@ -18,7 +19,8 @@ describe('ReduxDataProxy', () => {
       initialState,
       config,
     });
-    return new ReduxDataProxy(store, ({ apollo }) => apollo, config || {});
+    const fm = new HeuristicFragmentMatcher();
+    return new ReduxDataProxy(store, ({ apollo }) => apollo, fm, config || {});
   }
 
   describe('readQuery', () => {

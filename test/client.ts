@@ -957,7 +957,10 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
-      fragmentMatcher: fancyFragmentMatcher,
+      fragmentMatcher: {
+        init: () => Promise.resolve(),
+        match: fancyFragmentMatcher,
+      },
     });
     return client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);

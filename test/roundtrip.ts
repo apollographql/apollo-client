@@ -15,6 +15,11 @@ import gql from 'graphql-tag';
 
 import { withWarning } from './util/wrap';
 
+import {
+  HeuristicFragmentMatcher,
+} from '../src/data/fragmentMatcher';
+const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
+
 describe('roundtrip', () => {
   it('real graphql result', () => {
     storeRoundtrip(gql`
@@ -421,6 +426,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     store,
     query,
     variables,
+    fragmentMatcherFunction,
   });
 
   assert.deepEqual(reconstructedResult, result);

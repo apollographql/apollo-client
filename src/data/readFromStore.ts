@@ -53,6 +53,7 @@ export type DiffResult = {
 export type ReadQueryOptions = {
   store: NormalizedCache,
   query: DocumentNode,
+  fragmentMatcherFunction?: FragmentMatcher, // optional because only queries with fragments require it.
   variables?: Object,
   previousResult?: any,
   rootId?: string,
@@ -119,53 +120,6 @@ export type ReadStoreContext = {
   returnPartialData: boolean;
   hasMissingField: boolean;
   customResolvers: CustomResolverMap;
-};
-
-let haveWarned = false;
-
-const defaultFragmentMatcher: FragmentMatcher = (
-  idValue: IdValue,
-  typeCondition: string,
-  context: ReadStoreContext,
-): boolean => {
-  assertIdValue(idValue);
-
-  const obj = context.store[idValue.id];
-
-  if (! obj) {
-    return false;
-  }
-
-  if (! obj.__typename) {
-    if (! haveWarned) {
-      console.warn(`You're using fragments in your queries, but don't have the addTypename:
-true option set in Apollo Client. Please turn on that option so that we can accurately
-match fragments.`);
-
-      /* istanbul ignore if */
-      if (!isTest()) {
-        // When running tests, we want to print the warning every time
-        haveWarned = true;
-      }
-    }
-
-    context.returnPartialData = true;
-    return true;
-  }
-
-  // console.log('TC: is ', obj.__typename, ' a ', typeCondition);
-
-  if (obj.__typename === typeCondition) {
-    return true;
-  }
-
-  // XXX here we reach an issue - we don't know if this fragment should match or not. It's either:
-  // 1. A fragment on a non-matching concrete type or interface or union
-  // 2. A fragment on a matching interface or union
-  // If it's 1, we don't want to return anything, if it's 2 we want to match. We can't tell the
-  // difference, so for now, we just do our best to resolve the fragment but turn on partial data
-  context.returnPartialData = true;
-  return true;
 };
 
 const readStoreResolver: Resolver = (
@@ -244,12 +198,11 @@ export function diffQueryAgainstStore({
   previousResult,
   returnPartialData = true,
   rootId = 'ROOT_QUERY',
+  fragmentMatcherFunction,
   config,
 }: DiffQueryAgainstStoreOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
   getQueryDefinition(query);
-
-  const availableFragmentMatcher = (config && config.fragmentMatcher) || defaultFragmentMatcher;
 
   const context: ReadStoreContext = {
     // Global settings
@@ -268,7 +221,7 @@ export function diffQueryAgainstStore({
   };
 
   const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
-    fragmentMatcher: availableFragmentMatcher,
+    fragmentMatcher: fragmentMatcherFunction,
     resultMapper,
   });
 

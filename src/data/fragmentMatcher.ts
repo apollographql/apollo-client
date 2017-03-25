@@ -59,6 +59,9 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
       return this.readyPromise;
     }
 
+    // XXX this is not terribly efficient, because it will store a whole bunch
+    // of type information in the store that we don't actually need.
+    // It would be much better if we could query only for unions and interfaces.
     this.readyPromise = queryManager.query({ query: introspectionQuery })
     .then( (res: any) => {
       this.possibleTypesMap = this.parseIntrospectionResult(res.data as IntrospectionResultData);

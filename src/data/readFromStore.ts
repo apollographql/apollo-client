@@ -114,7 +114,7 @@ export function readQueryFromStore<QueryType>(options: ReadQueryOptions): QueryT
   }).result;
 }
 
-type ReadStoreContext = {
+export type ReadStoreContext = {
   store: NormalizedCache;
   returnPartialData: boolean;
   hasMissingField: boolean;
@@ -278,7 +278,7 @@ export function diffQueryAgainstStore({
   };
 }
 
-function assertIdValue(idValue: IdValue) {
+export function assertIdValue(idValue: IdValue) {
   if (! isIdValue(idValue)) {
     throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
 an object reference. This should never happen during normal use unless you have custom code \

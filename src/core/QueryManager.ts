@@ -122,9 +122,9 @@ export class QueryManager {
   public pollingTimers: {[queryId: string]: any};
   public scheduler: QueryScheduler;
   public store: ApolloStore;
+  public networkInterface: NetworkInterface;
 
   private addTypename: boolean;
-  private networkInterface: NetworkInterface;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
   private reducerConfig: ApolloReducerConfig;

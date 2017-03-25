@@ -2442,6 +2442,38 @@ describe('QueryManager', () => {
       queryManager.resetStore();
     });
 
+    it('should not call refetch on a mocked Observable if refetch option is set to false', (done) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const queryManager = mockQueryManager();
+
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery<any> = {
+        refetch(variables: any): Promise<ExecutionResult> {
+          refetchCount ++;
+          done();
+          return null as never;
+        },
+        options: {
+          query: query,
+        },
+        scheduler: queryManager.scheduler,
+      } as any as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.resetStore({ refetch: false});
+      setTimeout(() => {
+        assert.equal(refetchCount, 0);
+        done();
+      }, 400);
+    });
+
     it('should not call refetch on a cache-only Observable if the store is reset', (done) => {
       const query = gql`
         query {

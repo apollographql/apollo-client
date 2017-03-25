@@ -76,6 +76,11 @@ import {
   toIdValue,
 } from './data/storeUtils';
 
+import {
+  IntrospectionFragmentMatcher,
+  FragmentMatcherInstance,
+} from './data/fragmentMatcher';
+
 export {
   createNetworkInterface,
   createBatchingNetworkInterface,
@@ -93,6 +98,9 @@ export {
   Request,
   ApolloQueryResult,
   toIdValue,
+
+  IntrospectionFragmentMatcher,
+  FragmentMatcherInstance,
 
   // Expose the print method from GraphQL so that people that implement
   // custom network interfaces can turn query ASTs into query strings as needed.

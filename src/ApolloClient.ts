@@ -111,6 +111,8 @@ function defaultDataIdFromObject (result: any): string | null {
   return null;
 }
 
+let hasSuggestedDevtools = false;
+
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -242,7 +244,8 @@ export default class ApolloClient implements DataProxy {
     /**
      * Suggest installing the devtools for developers who don't have them
      */
-    if (!isProduction()) {
+    if (!hasSuggestedDevtools && !isProduction()) {
+      hasSuggestedDevtools = true;
       if ( typeof window !== 'undefined' && window.document && window.top === window.self) {
 
         // First check if devtools is not installed

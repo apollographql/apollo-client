@@ -1,5 +1,5 @@
 import { Request, HTTPFetchNetworkInterface } from './networkInterface';
-import { HTTPBatchedNetworkInterface } from './batchedNetworkInterface';
+import { HTTPBatchNetworkInterface } from './batchNetworkInterface';
 
 
 export interface MiddlewareRequest {
@@ -17,5 +17,5 @@ export interface BatchMiddlewareRequest {
 }
 
 export interface BatchMiddlewareInterface {
-  applyBatchMiddleware(this: HTTPBatchedNetworkInterface, request: BatchMiddlewareRequest, next: Function): void;
+  applyBatchMiddleware(this: HTTPBatchNetworkInterface, request: BatchMiddlewareRequest, next: Function): void;
 }

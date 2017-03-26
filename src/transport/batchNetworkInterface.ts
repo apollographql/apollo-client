@@ -40,7 +40,7 @@ export interface BatchResponseAndOptions {
 // together requests over the HTTP transport. Note that this implementation will only work correctly
 // for GraphQL server implementations that support batching. If such a server is not available, you
 // should see `addQueryMerging` instead.
-export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
+export class HTTPBatchNetworkInterface extends BaseNetworkInterface {
 
   public _middlewares: BatchMiddlewareInterface[];
   public _afterwares: BatchAfterwareInterface[];
@@ -79,7 +79,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
 
     return new Promise((resolve, reject) => {
       middlewarePromise.then((batchRequestAndOptions: BatchRequestAndOptions) => {
-        return this.batchedFetchFromRemoteEndpoint(batchRequestAndOptions)
+        return this.batchFetchFromRemoteEndpoint(batchRequestAndOptions)
           .then(result => {
             const httpResponse = result as Response;
 
@@ -98,7 +98,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
           })
           .then(responses => {
             if (typeof responses.map !== 'function') {
-              throw new Error('BatchingNetworkInterface: server response is not an array');
+              throw new Error('BatchNetworkInterface: server response is not an array');
             }
 
             type ResponseAndOptions = {
@@ -191,7 +191,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
     return this;
   }
 
-  private batchedFetchFromRemoteEndpoint(
+  private batchFetchFromRemoteEndpoint(
     batchRequestAndOptions: BatchRequestAndOptions,
   ): Promise<Response> {
     const options: RequestInit = {};
@@ -218,15 +218,15 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
   };
 }
 
-export interface BatchingNetworkInterfaceOptions {
+export interface BatchNetworkInterfaceOptions {
   uri: string;
   batchInterval: number;
   opts?: RequestInit;
 }
 
-export function createBatchingNetworkInterface(options: BatchingNetworkInterfaceOptions): HTTPNetworkInterface {
+export function createBatchNetworkInterface(options: BatchNetworkInterfaceOptions): HTTPNetworkInterface {
   if (! options) {
     throw new Error('You must pass an options argument to createNetworkInterface.');
   }
-  return new HTTPBatchedNetworkInterface(options.uri, options.batchInterval, options.opts || {});
+  return new HTTPBatchNetworkInterface(options.uri, options.batchInterval, options.opts || {});
 }

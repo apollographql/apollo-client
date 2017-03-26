@@ -6,9 +6,9 @@ import {
 } from './transport/networkInterface';
 
 import {
-  createBatchingNetworkInterface,
-  HTTPBatchedNetworkInterface,
-} from './transport/batchedNetworkInterface';
+  createBatchNetworkInterface,
+  HTTPBatchNetworkInterface,
+} from './transport/batchNetworkInterface';
 
 import {
   print,
@@ -83,7 +83,7 @@ import {
 
 export {
   createNetworkInterface,
-  createBatchingNetworkInterface,
+  createBatchNetworkInterface,
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,
@@ -109,7 +109,7 @@ export {
   // Internal type definitions
   NetworkInterface,
   HTTPFetchNetworkInterface,
-  HTTPBatchedNetworkInterface,
+  HTTPBatchNetworkInterface,
   FetchPolicy,
   WatchQueryOptions,
   MutationOptions,

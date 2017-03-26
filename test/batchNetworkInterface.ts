@@ -4,7 +4,7 @@ import { merge } from 'lodash';
 
 import * as sinon from 'sinon';
 
-import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInterface';
+import { HTTPBatchNetworkInterface } from '../src/transport/batchNetworkInterface';
 
 import {
   createMockFetch,
@@ -27,9 +27,9 @@ import 'whatwg-fetch';
 
 declare var fetch: any;
 
-describe('HTTPBatchedNetworkInterface', () => {
+describe('HTTPBatchNetworkInterface', () => {
   // Helper method that tests a roundtrip given a particular set of requests to the
-  // batched network interface and the
+  // batch network interface and the
   const assertRoundtrip = ({
     requestResultPairs,
     fetchFunc,
@@ -47,10 +47,10 @@ describe('HTTPBatchedNetworkInterface', () => {
     opts?: RequestInit,
   }) => {
     const url = 'http://fake.com/graphql';
-    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, 10, opts);
+    const batchNetworkInterface = new HTTPBatchNetworkInterface(url, 10, opts);
 
-    batchedNetworkInterface.use(middlewares);
-    batchedNetworkInterface.useAfter(afterwares);
+    batchNetworkInterface.use(middlewares);
+    batchNetworkInterface.useAfter(afterwares);
 
     const printedRequests: Array<any> = [];
     const resultList: Array<any> = [];
@@ -72,7 +72,7 @@ describe('HTTPBatchedNetworkInterface', () => {
       result: createMockedIResponse(resultList),
     });
 
-    return batchedNetworkInterface.batchQuery(requestResultPairs.map(({ request }) => request))
+    return batchNetworkInterface.batchQuery(requestResultPairs.map(({ request }) => request))
       .then((results) => {
         assert.deepEqual(results, resultList);
       });
@@ -113,11 +113,11 @@ describe('HTTPBatchedNetworkInterface', () => {
   it('should construct itself correctly', () => {
     const url = 'http://notreal.com/graphql';
     const opts = {};
-    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, 10, opts);
-    assert(batchedNetworkInterface);
-    assert.equal(batchedNetworkInterface._uri, url);
-    assert.deepEqual(batchedNetworkInterface._opts, opts);
-    assert(batchedNetworkInterface.batchQuery);
+    const batchNetworkInterface = new HTTPBatchNetworkInterface(url, 10, opts);
+    assert(batchNetworkInterface);
+    assert.equal(batchNetworkInterface._uri, url);
+    assert.deepEqual(batchNetworkInterface._opts, opts);
+    assert(batchNetworkInterface.batchQuery);
   });
 
   it('should correctly return the result for a single request', () => {

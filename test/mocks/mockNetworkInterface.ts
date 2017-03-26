@@ -1,6 +1,6 @@
 import {
   NetworkInterface,
-  BatchedNetworkInterface,
+  BatchNetworkInterface,
   Request,
   SubscriptionNetworkInterface,
 } from '../../src/transport/networkInterface';
@@ -28,10 +28,10 @@ export function mockSubscriptionNetworkInterface(
   return new MockSubscriptionNetworkInterface(mockedSubscriptions, mockedResponses);
 }
 
-export function mockBatchedNetworkInterface(
+export function mockBatchNetworkInterface(
     ...mockedResponses: MockedResponse[],
-): BatchedNetworkInterface {
-  return new MockBatchedNetworkInterface(mockedResponses);
+): BatchNetworkInterface {
+  return new MockBatchNetworkInterface(mockedResponses);
 }
 
 export interface ParsedRequest {
@@ -183,8 +183,8 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
   }
 }
 
-export class MockBatchedNetworkInterface
-extends MockNetworkInterface implements BatchedNetworkInterface {
+export class MockBatchNetworkInterface
+extends MockNetworkInterface implements BatchNetworkInterface {
 
   public batchQuery(requests: Request[]): Promise<ExecutionResult[]> {
     const resultPromises: Promise<ExecutionResult>[] = [];

@@ -4,10 +4,12 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Feature: support defaultValues for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
+
+### 1.0.0-rc.7
 - Fix: `cachePolicy: cache-and-network` queries now dispatch `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
 - Fix: query deduplication no longer causes query errors to prevent subsequent successful execution of the same query  [PR #1481](https://github.com/apollographql/apollo-client/pull/1481)
 - Breaking: change default of notifyOnNetworkStatusChange back to false [PR #1482](https://github.com/apollographql/apollo-client/pull/1482)
-
+- Feature: add fragmentMatcher option to client and implement IntrospectionFragmentMatcher [PR #1483](https://github.com/apollographql/apollo-client/pull/1483)
 
 ### 1.0.0-rc.6
 - Feature: Default selector for `dataIdFromObject` that tries `id` and falls back to `_id` to reduce configuration requirements whenever `__typename` is present.

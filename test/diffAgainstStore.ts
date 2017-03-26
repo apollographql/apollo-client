@@ -9,6 +9,11 @@ import { writeQueryToStore } from '../src/data/writeToStore';
 
 import gql from 'graphql-tag';
 
+import {
+  HeuristicFragmentMatcher,
+} from '../src/data/fragmentMatcher';
+const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
+
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
     const query = gql`
@@ -148,6 +153,7 @@ describe('diffing queries against the store', () => {
       store,
       query: unionQuery,
       returnPartialData: false,
+      fragmentMatcherFunction,
     });
 
     assert.isTrue(isMissing);

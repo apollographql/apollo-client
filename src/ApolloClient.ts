@@ -16,6 +16,11 @@ import {
 } from 'graphql';
 
 import {
+  HeuristicFragmentMatcher,
+  FragmentMatcherInterface,
+} from './data/fragmentMatcher';
+
+import {
   createApolloStore,
   ApolloStore,
   createApolloReducer,
@@ -80,27 +85,6 @@ import {
 } from './version';
 
 
-
-/**
- * Suggest installing the devtools for developers who are using Apollo Client
- */
-if (process.env.NODE_ENV !== 'production') {
-  if ( typeof window !== 'undefined' && window.document && window.top === window.self) {
-
-    // First check if devtools is not installed
-    if (typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
-      // Only for Chrome
-      if (navigator.userAgent.indexOf('Chrome') > -1) {
-        // tslint:disable-next-line
-        console.debug('Download the Apollo DevTools ' +
-        'for a better development experience: ' +
-        'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm');
-      }
-    }
-  }
-}
-
-
 /**
  * This type defines a "selector" function that receives state from the Redux store
  * and returns the part of it that is managed by ApolloClient
@@ -127,6 +111,8 @@ function defaultDataIdFromObject (result: any): string | null {
   return null;
 }
 
+let hasSuggestedDevtools = false;
+
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -149,6 +135,7 @@ export default class ApolloClient implements DataProxy {
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
+  private fragmentMatcher: FragmentMatcherInterface;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -176,6 +163,7 @@ export default class ApolloClient implements DataProxy {
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
+   * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
    */
 
   constructor(options: {
@@ -189,6 +177,7 @@ export default class ApolloClient implements DataProxy {
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
+    fragmentMatcher?: FragmentMatcherInterface,
   } = {}) {
     let {
       dataIdFromObject,
@@ -202,6 +191,7 @@ export default class ApolloClient implements DataProxy {
       addTypename = true,
       customResolvers,
       connectToDevTools,
+      fragmentMatcher,
       queryDeduplication = true,
     } = options;
 
@@ -209,6 +199,12 @@ export default class ApolloClient implements DataProxy {
       this.reduxRootSelector = reduxRootSelector;
     } else if (typeof reduxRootSelector !== 'undefined') {
       throw new Error('"reduxRootSelector" must be a function.');
+    }
+
+    if (typeof fragmentMatcher === 'undefined') {
+      this.fragmentMatcher = new HeuristicFragmentMatcher();
+    } else {
+      this.fragmentMatcher = fragmentMatcher;
     }
 
     this.initialState = initialState ? initialState : {};
@@ -243,6 +239,26 @@ export default class ApolloClient implements DataProxy {
 
     if (typeof connectToDevTools === 'undefined' ? defaultConnectToDevTools : connectToDevTools) {
       (window as any).__APOLLO_CLIENT__ = this;
+    }
+
+    /**
+     * Suggest installing the devtools for developers who don't have them
+     */
+    if (!hasSuggestedDevtools && !isProduction()) {
+      hasSuggestedDevtools = true;
+      if ( typeof window !== 'undefined' && window.document && window.top === window.self) {
+
+        // First check if devtools is not installed
+        if (typeof (window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+          // Only for Chrome
+          if (navigator.userAgent.indexOf('Chrome') > -1) {
+            // tslint:disable-next-line
+            console.debug('Download the Apollo DevTools ' +
+            'for a better development experience: ' +
+            'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm');
+          }
+        }
+      }
     }
 
     this.version = version;
@@ -503,6 +519,7 @@ export default class ApolloClient implements DataProxy {
       addTypename: this.addTypename,
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
+      fragmentMatcher: this.fragmentMatcher,
     });
   };
 
@@ -517,6 +534,7 @@ export default class ApolloClient implements DataProxy {
       this.proxy = new ReduxDataProxy(
         this.store,
         this.reduxRootSelector || defaultReduxRootSelector,
+        this.fragmentMatcher,
         this.reducerConfig,
       );
     }

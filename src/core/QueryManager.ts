@@ -527,7 +527,7 @@ export class QueryManager {
                               });
 
       options.variables = {
-        // ...defaultValues,
+        ...defaultValues,
         ...options.variables,
       };
     }

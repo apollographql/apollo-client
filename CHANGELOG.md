@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Make `QueryBatcher` more efficient and avoid `setInterval` leakage [PR #1498](https://github.com/apollographql/apollo-client/pull/1498).
 - Remove dependency on `graphql-tag/printer` per [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)
 
 ### 1.0.0-rc.7

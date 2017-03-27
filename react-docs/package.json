@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "handlebars": "^4.0.5",
-    "hexo": "3.2.2",
+    "hexo": "3.2.0",
     "hexo-generator-archive": "^0.1.2",
     "hexo-generator-category": "^0.1.2",
     "hexo-generator-index": "^0.2.0",
@@ -25,6 +25,7 @@
   "scripts": {
     "start": "hexo serve",
     "deploy": "hexo-s3-deploy",
-    "develop-theme": "nodemon -x 'rm db.json; hexo serve' -w assets/ -w code/ -w source/ -w themes/ -w scripts/"
+    "develop-theme": "nodemon -x 'rm db.json; hexo serve' -w assets/ -w code/ -w source/ -w themes/ -w scripts/",
+    "generate": "hexo generate"
   }
 }

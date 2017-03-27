@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { createStore } from 'redux';
 import gql from 'graphql-tag';
-import { print } from 'graphql-tag/bundledPrinter';
+import { print } from 'graphql/language/printer';
 import { createApolloStore, ApolloReducerConfig } from '../src/store';
 import { ReduxDataProxy, TransactionDataProxy } from '../src/data/proxy';
 import { toIdValue } from '../src/data/storeUtils';

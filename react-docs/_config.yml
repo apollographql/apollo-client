@@ -3,8 +3,8 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Use GraphQL with React
-propertytitle: Apollo React Docs
+title: Apollo React Docs
+propertytitle: Using GraphQL with React
 subtitle: React Guide
 description: A guide to using the Apollo GraphQL Client with React.
 author:
@@ -17,13 +17,18 @@ sidebar_categories:
     - index
     - initialization
     - example-schema
-    - api
   Usage:
     - queries
     - mutations
     - subscriptions
     - receiving-updates
     - cache-updates
+  API Reference:
+    - api
+    - api-graphql
+    - api-queries
+    - api-mutations
+    - api-server
   Recipes:
     - auth
     - pagination

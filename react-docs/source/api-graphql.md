@@ -100,7 +100,7 @@ export default graphql(
 
 Lets go through all of the properties that may live on your `config` object.
 
-<h3 id="graphql-config.options">`config.options`</h3>
+<h3 id="graphql-config-options">`config.options`</h3>
 
 `config.options` is an object or a function that allows you to define the specific behavior your component should use in handling your GraphQL data.
 
@@ -126,7 +126,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-config.props">`config.props`</h3>
+<h3 id="graphql-config-props">`config.props`</h3>
 
 The `config.props` property allows you to define a map function that takes your props including the props added by the `graphql()` function ([`props.data`](#graphql-query-data) for queries and [`props.mutate`](#graphql-mutation-mutate) for mutations) and allows you to compute a new props object that will be provided to the component that `graphql()` is wrapping.
 
@@ -160,7 +160,7 @@ function MyComponent({ onLoadMore }) {
 }
 ```
 
-<h3 id="graphql-config.skip">`config.skip`</h3>
+<h3 id="graphql-config-skip">`config.skip`</h3>
 
 If `config.skip` is true then all of the React Apollo code will be skipped *entirely*. It will be as if the `graphql()` function were a simple identity function. Your component will behave as if the `graphql()` function were not there at all.
 
@@ -191,7 +191,7 @@ function MyComponent({ data }) {
 }
 ```
 
-<h3 id="graphql-config.name">`config.name`</h3>
+<h3 id="graphql-config-name">`config.name`</h3>
 
 This property allows you to configure the name of the prop that gets passed down to your component. By default if the GraphQL document you pass into `graphql()` is a query then your prop will be named [`data`](#graphql-query-data). If you pass a mutation then your prop will be named [`mutate`](#graphql-mutation-mutate). While appropriate these default names collide when you are trying to use multiple queries or mutations with the same component. To avoid collisions you may use `config.name` to provide the prop from each query or mutation HOC a new name.
 
@@ -217,7 +217,7 @@ function MyComponent(props) {
 }
 ```
 
-<h3 id="graphql-config.withRef">`config.withRef`</h3>
+<h3 id="graphql-config-withRef">`config.withRef`</h3>
 
 By setting `config.withRef` to true you will be able to get the instance of your wrapped component from your higher-order GraphQL component using a `getWrappedInstance` method available on the instance of your higher-order GraphQL component.
 
@@ -262,7 +262,7 @@ class MyContainerComponent extends Component {
 }
 ```
 
-<h3 id="graphql-config.alias">`config.alias`</h3>
+<h3 id="graphql-config-alias">`config.alias`</h3>
 
 By default the display name for React Apollo components is `Apollo(${WrappedComponent.displayName})`. This is a pattern used by most React libraries that make use of higher order components. However, it may get a little confusing when you are using more then one higher order components and you look at the [React Devtools][].
 

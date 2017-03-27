@@ -511,23 +511,23 @@ export class QueryManager {
     if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
       const defaultValues = queryDefinition.variableDefinitions
                               .filter(({ defaultValue }) => defaultValue)
-                              .map(({ variable, defaultValue }) : any => {
+                              .map(({ variable, defaultValue }) : { [key: string]: any } => {
                                 if (!defaultValue) {
-                                  return;
+                                  return {}; // should never reach
                                 }
 
-                                const v: any = {};
+                                const defaultValueObj: { [key: string]: any } = {};
                                 valueToObjectRepresentation(
-                                  v,
+                                  defaultValueObj,
                                   variable.name,
                                   defaultValue,
                                 );
 
-                                return {[`$${variable.name.value}`]: v[variable.name.value]};
+                                return defaultValueObj;
                               });
 
       options.variables = {
-        ...defaultValues,
+        // ...defaultValues,
         ...options.variables,
       };
     }

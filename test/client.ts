@@ -312,8 +312,6 @@ describe('client', () => {
       },
     };
 
-    // const variables = { $test: ['array1', 'array2'] };
-
     clientRoundrip(query, data);
   });
 
@@ -338,7 +336,7 @@ describe('client', () => {
       },
     };
 
-    const variables = { $first: 1 };
+    const variables = { first: 1 };
 
     clientRoundrip(query, data, variables);
   });

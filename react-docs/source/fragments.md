@@ -23,7 +23,7 @@ There are two principal uses for fragments in Apollo:
   - Sharing fields between multiple queries, mutations or subscriptions.
   - Breaking your queries up to allow you to co-locate field access with the places they are used.
 
-In this document we'll outline patterns to do both; we'll also make use of utilities in the [`graphql-anywhere`](https://github.com/apollostack/graphql-anywhere) and [`graphql-tag`](https://github.com/apollostack/graphql-tag) packages which aim to help us, especially with the second problem.
+In this document we'll outline patterns to do both; we'll also make use of utilities in the [`graphql-anywhere`](https://github.com/apollographql/graphql-anywhere) and [`graphql-tag`](https://github.com/apollographql/graphql-tag) packages which aim to help us, especially with the second problem.
 
 <h2 id="reusing-fragments">Reusing Fragments</h2>
 
@@ -78,7 +78,7 @@ export const COMMENT_QUERY = gql`
 `;
 ```
 
-You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollostack/GitHunt-React/blob/master/ui/routes/CommentsPage.js).
+You can see the full source code to the `CommentsPage` in GitHunt [here](https://github.com/apollographql/GitHunt-React/blob/master/ui/routes/CommentsPage.js).
 
 <h2 id="colocating-fragments">Colocating Fragments</h2>
 
@@ -86,7 +86,7 @@ A key advantage of GraphQL is the tree-like nature of the response data, which i
 
 Although this technique doesn't always make sense (for instance it's not always the case that the GraphQL schema is driven by the UI requirements), when it does, it's possible to use some patterns in Apollo client to take full advantage of it.
 
-In GitHunt, we show an example of this on the [`FeedPage`](https://github.com/apollostack/GitHunt-React/blob/master/ui/routes/FeedPage.js), which constructs the follow view hierarchy:
+In GitHunt, we show an example of this on the [`FeedPage`](https://github.com/apollographql/GitHunt-React/blob/master/ui/routes/FeedPage.js), which constructs the follow view hierarchy:
 
 ```
 FeedPage

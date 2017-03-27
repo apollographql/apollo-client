@@ -5,7 +5,7 @@
 To run:
 
 ```
-git clone --recursive https://github.com/apollostack/react-docs.git
+git clone --recursive https://github.com/apollographql/react-docs.git
 cd react-docs
 npm install
 npm start

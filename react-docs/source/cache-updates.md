@@ -121,7 +121,7 @@ customResolvers: {
 
 `fetchMore` can be used to manually update the result of one query based on the data returned by another query. Most often, it is used to handle pagination. In our GitHunt example, we have a paginated feed that displays a list of GitHub respositories. When we hit the "Load More" button, we don't want Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.
 
-This is possible with `fetchMore`. The `fetchMore` method allows us to fetch another query and incorporate that query's result into the result of one existing query. We can see it in action within the [GitHunt](https://github.com/apollostack/GitHunt-React) code:
+This is possible with `fetchMore`. The `fetchMore` method allows us to fetch another query and incorporate that query's result into the result of one existing query. We can see it in action within the [GitHunt](https://github.com/apollographql/GitHunt-React) code:
 
 ```javascript
 const FeedQuery = gql`
@@ -326,7 +326,7 @@ mutate({
         }
       }
     }`,
-    variables: { repoFullName: 'apollostack/apollo-client' },
+    variables: { repoFullName: 'apollographql/apollo-client' },
   }],
 })
 ```
@@ -340,7 +340,7 @@ mutate({
   //... insert comment mutation
   refetchQueries: [{
     query: RepoCommentsQuery,
-    variables: { repoFullName: 'apollostack/apollo-client' },
+    variables: { repoFullName: 'apollographql/apollo-client' },
   }],
 })
 ```

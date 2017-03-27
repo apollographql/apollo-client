@@ -4,7 +4,7 @@ sidebar_title: Introduction
 description: Apollo Client manages server-side GraphQL data in your React app so you don't have to.
 ---
 
-This is the official guide for using GraphQL in your React or React Native app using the [react-apollo](https://github.com/apollostack/react-apollo) package. React-Apollo is a convenient yet powerful way to bind GraphQL queries to your React components, so that you can focus on developing your UI while data fetching and management just gets out of the way.
+This is the official guide for using GraphQL in your React or React Native app using the [react-apollo](https://github.com/apollographql/react-apollo) package. React-Apollo is a convenient yet powerful way to bind GraphQL queries to your React components, so that you can focus on developing your UI while data fetching and management just gets out of the way.
 
 <h2 id="tutorials">Tutorials</h2>
 

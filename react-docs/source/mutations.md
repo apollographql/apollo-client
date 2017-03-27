@@ -6,7 +6,7 @@ In addition to fetching data using queries, Apollo also handles GraphQL mutation
 
 ```js
 mutation {
-  submitRepository(repoFullName: "apollostack/apollo-client") {
+  submitRepository(repoFullName: "apollographql/apollo-client") {
     id
     repoName
   }
@@ -25,7 +25,7 @@ The above mutation will submit a new GitHub repository to GitHunt, saving an ent
   "data": {
     "submitRepository": {
       "id": "123",
-      "repoName": "apollostack/apollo-client"
+      "repoName": "apollographql/apollo-client"
     }
   }
 }
@@ -48,7 +48,7 @@ NewEntry.propTypes = {
 
 const submitRepository = gql`
   mutation submitRepository {
-    submitRepository(repoFullName: "apollostack/apollo-client") {
+    submitRepository(repoFullName: "apollographql/apollo-client") {
       createdAt
     }
   }
@@ -79,7 +79,7 @@ import { gql, graphql } from 'react-apollo';
 
 class NewEntry extends Component {
   onClick() {
-    this.props.mutate({ variables: { repoFullName: 'apollostack/apollo-client' } })
+    this.props.mutate({ variables: { repoFullName: 'apollographql/apollo-client' } })
       .then(({ data }) => {
         console.log('got data', data);
       }).catch((error) => {
@@ -113,7 +113,7 @@ import { gql, graphql } from 'react-apollo';
 
 class NewEntry extends Component {
   render() {
-    return <div onClick={() => this.props.submit('apollostack/apollo-client')}>Click me</div>;
+    return <div onClick={() => this.props.submit('apollographql/apollo-client')}>Click me</div>;
   }
 }
 NewEntry.propTypes = {

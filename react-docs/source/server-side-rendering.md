@@ -115,7 +115,7 @@ app.listen(basePort, () => console.log( // eslint-disable-line no-console
   `App Server is now running on http://localhost:${basePort}`
 ));
 ```
-You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollostack/GitHunt-React/blob/master/ui/server.js) for a complete working example.
+You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/ui/server.js) for a complete working example.
 
 Next we'll see what that rendering code actually does.
 

@@ -39,15 +39,15 @@ sidebar_categories:
     - redux
     - webpack
     - server-side-rendering
-github_repo: apollostack/react-docs
+github_repo: apollographql/react-docs
 content_root: source
 
 typescript_api_box:
   data_file: docs.json
 
 social_links:
-  github: 'https://github.com/apollostack'
-  twitter: '@apollostack'
+  github: 'https://github.com/apollographql'
+  twitter: '@apollographql'
 
 # API keys
 apis:

@@ -11,5 +11,5 @@ GitHunt is an application in the style of Product Hunt that shows a list of GitH
 
 <h2 id="code">Get the code</h2>
 
-- [The API server code](https://github.com/apollostack/GitHunt-API) demonstrates combining two data sources--a third-party API and a local database--in a single GraphQL endpoint.
-- The [React UI](https://github.com/apollostack/GitHunt-React) demonstrates a lot of the concepts in this guide.
+- [The API server code](https://github.com/apollographql/GitHunt-API) demonstrates combining two data sources--a third-party API and a local database--in a single GraphQL endpoint.
+- The [React UI](https://github.com/apollographql/GitHunt-React) demonstrates a lot of the concepts in this guide.

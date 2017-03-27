@@ -46,7 +46,7 @@ import './fetchMore';
 import './errors';
 import './mockNetworkInterface';
 import './graphqlSubscriptions';
-import './batchedNetworkInterface';
+import './batchNetworkInterface';
 import './ObservableQuery';
 import './subscribeToMore';
 import './customResolvers';

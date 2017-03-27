@@ -51,7 +51,7 @@ export interface NetworkInterface {
   query(request: Request): Promise<ExecutionResult>;
 }
 
-export interface BatchedNetworkInterface extends NetworkInterface {
+export interface BatchNetworkInterface extends NetworkInterface {
   batchQuery(requests: Request[]): Promise<ExecutionResult[]>;
 }
 
@@ -87,7 +87,7 @@ export function printRequest(request: Request): PrintedRequest {
   };
 }
 
-// Provide extension point for regular network interface and batched
+// Provide extension point for regular network interface and batch
 // network interface. Should not be used directly.
 export class BaseNetworkInterface implements NetworkInterface {
   public _middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[];

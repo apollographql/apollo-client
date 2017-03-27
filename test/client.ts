@@ -59,8 +59,8 @@ import {
 } from '../src/transport/networkInterface';
 
 import {
-  createBatchingNetworkInterface,
-} from '../src/transport/batchedNetworkInterface';
+  createBatchNetworkInterface,
+} from '../src/transport/batchNetworkInterface';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 
@@ -1719,7 +1719,7 @@ describe('client', () => {
       },
       result: createMockedIResponse([firstResult, secondResult]),
     });
-    const networkInterface = createBatchingNetworkInterface({
+    const networkInterface = createBatchNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
       opts: {},
@@ -1780,7 +1780,7 @@ describe('client', () => {
       },
       result: createMockedIResponse(firstResult),
     });
-    const networkInterface = createBatchingNetworkInterface({
+    const networkInterface = createBatchNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
       opts: {},
@@ -1791,7 +1791,7 @@ describe('client', () => {
     ]).then((results) => {
       assert.equal(true, false, 'expected response to throw an error');
     }).catch( e => {
-      assert.equal(e.message, 'BatchingNetworkInterface: server response is not an array');
+      assert.equal(e.message, 'BatchNetworkInterface: server response is not an array');
       fetch = oldFetch;
       done();
     });
@@ -1860,7 +1860,7 @@ describe('client', () => {
       },
       result: createMockedIResponse([secondResult]),
     });
-    const networkInterface = createBatchingNetworkInterface({
+    const networkInterface = createBatchNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
       opts: {},

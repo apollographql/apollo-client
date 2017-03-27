@@ -27,7 +27,7 @@ export class QueryBatcher {
   private pollInterval: Number;
   private pollTimer: any;
 
-  //This function is called to the queries in the queue to the server.
+  // This function is called to the queries in the queue to the server.
   private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
 
   constructor({
@@ -73,9 +73,9 @@ export class QueryBatcher {
     });
 
     this.queuedRequests = [];
-    const batchedPromise = this.batchFetchFunction(requests);
+    const batchPromise = this.batchFetchFunction(requests);
 
-    batchedPromise.then((results) => {
+    batchPromise.then((results) => {
       results.forEach((result, index) => {
         resolvers[index](result);
       });

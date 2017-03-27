@@ -4,12 +4,12 @@ import { QueryBatcher,
 import { assert } from 'chai';
 import { Request } from '../src/transport/networkInterface';
 import {
-  mockBatchedNetworkInterface,
+  mockBatchNetworkInterface,
 } from './mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
 import { ExecutionResult } from 'graphql';
 
-const networkInterface = mockBatchedNetworkInterface();
+const networkInterface = mockBatchNetworkInterface();
 
 describe('QueryBatcher', () => {
   it('should construct', () => {
@@ -69,7 +69,7 @@ describe('QueryBatcher', () => {
         'lastName': 'Smith',
       },
     };
-    const myNetworkInterface = mockBatchedNetworkInterface(
+    const myNetworkInterface = mockBatchNetworkInterface(
       {
         request: { query },
         result: { data },
@@ -105,7 +105,7 @@ describe('QueryBatcher', () => {
       const request2: Request = {
         query,
       };
-      const NI = mockBatchedNetworkInterface(
+      const NI = mockBatchNetworkInterface(
           {
             request: { query },
             result: {data },
@@ -134,7 +134,7 @@ describe('QueryBatcher', () => {
     });
 
     it('should return a promise when we enqueue a request and resolve it with a result', (done) => {
-      const NI = mockBatchedNetworkInterface(
+      const NI = mockBatchNetworkInterface(
           {
             request: { query },
             result: { data },
@@ -189,7 +189,7 @@ describe('QueryBatcher', () => {
       query: query,
     };
     const error = new Error('Network error');
-    const myNetworkInterface = mockBatchedNetworkInterface(
+    const myNetworkInterface = mockBatchNetworkInterface(
       {
         request: { query },
         error,

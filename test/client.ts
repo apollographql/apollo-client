@@ -291,6 +291,32 @@ describe('client', () => {
     clientRoundrip(query, data);
   });
 
+  it('should allow for a single query with complex default variables to take place', () => {
+    const query = gql`
+      query people($test: Input = {key: ["value", "value2"], key2: {key3: 4}}) {
+        allPeople(name: $name) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    // const variables = { $test: ['array1', 'array2'] };
+
+    clientRoundrip(query, data);
+  });
+
   it('should allow for a single query with default variables to get overridden', () => {
     const query = gql`
       query people($first: Int = 4) {

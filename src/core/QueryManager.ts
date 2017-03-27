@@ -46,6 +46,7 @@ import {
 
 import {
   NormalizedCache,
+  valueToObjectRepresentation,
 } from '../data/storeUtils';
 
 import {
@@ -70,6 +71,7 @@ import maybeDeepFreeze from '../util/maybeDeepFreeze';
 import {
   ExecutionResult,
   DocumentNode,
+  NameNode,
   // TODO REFACTOR: do we still need this??
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
@@ -77,6 +79,7 @@ import {
   /* tslint:disable */
   SelectionSetNode,
   /* tslint:enable */
+  ValueNode,
 } from 'graphql';
 
 import { print } from 'graphql-tag/bundledPrinter';
@@ -508,7 +511,21 @@ export class QueryManager {
     if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
       const defaultValues = queryDefinition.variableDefinitions
                               .filter(({ defaultValue }) => defaultValue)
-                              .map(({ variable, defaultValue }) => ({ [variable.name.value]: defaultValue }));
+                              .map(({ variable, defaultValue }) : any => {
+                                if (!defaultValue) {
+                                  return;
+                                }
+
+                                const v: any = {};
+                                valueToObjectRepresentation(
+                                  v,
+                                  variable.name,
+                                  defaultValue,
+                                );
+
+                                return {[`$${variable.name.value}`]: v[variable.name.value]};
+                              });
+
       options.variables = {
         ...defaultValues,
         ...options.variables,

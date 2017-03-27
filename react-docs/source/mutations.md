@@ -62,6 +62,8 @@ NewEntry.propTypes = {
 };
 ```
 
+<h3 id="multiple-mutations">Multiple mutations</h3>
+
 If you need more than one mutation on a component, you make a graphql container for each:
 
 ```js
@@ -71,7 +73,20 @@ const ComponentWithMutations =
   )
 ```
 
-Note the use of the [`name` option on the `graphql()` call](higher-order-components.html#graphql-api) to name the prop that will receive the mutation function for each mutation (by default that name is 'mutate').
+Make sure to use the [`name` option on the `graphql()` container](api-graphql.html#graphql-config-name) to name the provided prop, so that the two containers don't both try to name their function `mutate`.
+
+If you want a better syntax for the above, consider using [`compose`](api-graphql.html#compose):
+
+```js
+import { compose } from 'react-apollo';
+
+const ComponentWithMutations = compose(
+  graphql(submitNewUser, {name : 'newUserMutation'}),
+  graphql(submitRepository, {name: 'newRepositoryMutation'})
+)(Component);
+```
+
+This does the exact same thing as the previous snippet, but with a nicer syntax that flattens things out.
 
 <h3 id="calling-mutations">Calling mutations</h3>
 

@@ -67,7 +67,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config.options).
+The options available for use in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
 
 The properties accepted in this options object may also be excepted by the [`props.mutate`](#graphql-mutation-mutate) function. Any options passed into the `mutate` function will take precedence over the options defined in the `config` object.
 
@@ -105,7 +105,7 @@ function MyComponent({ mutate }) {
 export default graphql(gql`mutation { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options.variables">`options.variables`</h3>
+<h3 id="graphql-mutation-options-variables">`options.variables`</h3>
 
 The variables which will be used to execute the mutation operation. These variables should correspond to the variables that your mutation definition accepts. If you define `config.options` as a function, or you pass variables into the [`props.mutate`](#graphql-mutation-mutate) function then you may compute your variables from props and component state.
 
@@ -126,13 +126,13 @@ export default graphql(gql`
 })(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options.optimisticResponse">`options.optimisticResponse`</h3>
+<h3 id="graphql-mutation-options-optimisticResponse">`options.optimisticResponse`</h3>
 
 Often when you mutate data it is fairly easy to predict what the response of the mutation will be before asking your server. The optimistic response option allows you to make your mutations feel faster by simulating the result of your mutation in your UI before the mutation actually finishes.
 
 To learn more about the benefits of optimistic data and how to use it be sure to read the recipe on [Optimistic UI](optimistic-ui.html).
 
-This optimistic response will be used with [`options.update`](#graphql-mutation-options.update) and [`options.updateQueries`](#graphql-mutation-options.updateQueries) to apply an update to your cache which will be rolled back before applying the update from the actual response.
+This optimistic response will be used with [`options.update`](#graphql-mutation-options-update) and [`options.updateQueries`](#graphql-mutation-options-updateQueries) to apply an update to your cache which will be rolled back before applying the update from the actual response.
 
 **Example:**
 
@@ -171,7 +171,7 @@ export default graphql(gql`
 `)(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options.update">`options.update`</h3>
+<h3 id="graphql-mutation-options-update">`options.update`</h3>
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.update` function.
 
@@ -209,9 +209,9 @@ export default graphql(gql`
 })(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options.refetchQueries">`options.refetchQueries`</h3>
+<h3 id="graphql-mutation-options-refetchQueries">`options.refetchQueries`</h3>
 
-Sometimes when you make a mutation you also want to update the data in your queries so that your users may see an up-to-date user interface. There are more fine-grained ways to update the data in your cache which include [`options.updateQueries`](#graphql-mutation-options.updateQueries), and [`options.update`](#graphql-mutation-options.update). However, you can update the data in your cache more reliably at the cost of efficiency by using `options.refetchQueries`.
+Sometimes when you make a mutation you also want to update the data in your queries so that your users may see an up-to-date user interface. There are more fine-grained ways to update the data in your cache which include [`options.updateQueries`](#graphql-mutation-options-updateQueries), and [`options.update`](#graphql-mutation-options-update). However, you can update the data in your cache more reliably at the cost of efficiency by using `options.refetchQueries`.
 
 `options.refetchQueries` will execute one or more queries using your network interface and will then normalize the results of those queries into your cache. Allowing you to potentially refetch queries you had fetched before, or fetch brand new queries.
 
@@ -265,7 +265,7 @@ export default graphql(gql`mutation { ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-mutation-options.updateQueries">`options.updateQueries`</h3>
+<h3 id="graphql-mutation-options-updateQueries">`options.updateQueries`</h3>
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.updateQueries` function.
 
@@ -295,7 +295,7 @@ The first argument to the function you provide as the value for your object will
 
 The second argument to your function value will be an object with three properties:
 
-- `mutationResult`: The `mutationResult` property will represent the result of your mutation after hitting the server. If you provided an [`options.optimisticResponse`](#graphql-mutation-options.optimisticResponse) then `mutationResult` may be that object.
+- `mutationResult`: The `mutationResult` property will represent the result of your mutation after hitting the server. If you provided an [`options.optimisticResponse`](#graphql-mutation-options-optimisticResponse) then `mutationResult` may be that object.
 - `queryVariables`: The last set of variables that the query was executed with. This is helpful because when you specify the query name it will only update the data in the store for your current variable set.
 - `queryName`: This is the name of the query you are updating. It is the same name as the key you provided to `options.updateQueries`.
 

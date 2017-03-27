@@ -85,13 +85,13 @@ render() {
 }
 ```
 
-<h3 id="graphql-query-data.loading">`data.loading`</h3>
+<h3 id="graphql-query-data-loading">`data.loading`</h3>
 
 A boolean representing whether or not a query request is currently in flight for this component. This means that a query request has been sent using your network interface, and we have not yet gotten a response back. Use this property to render a loading component.
 
 However, just because `data.loading` is true it does not mean that you won’t have data. For instance, if you already have `data.todos`, but you want to get the latest todos from your API `data.loading` might be true, but you will still have the todos from your previous request.
 
-There are multiple different network states that your query may be in. If you want to see what the network state of your component is in more detail then refer to [`data.networkStatus`](#graphql-query-data.networkStatus).
+There are multiple different network states that your query may be in. If you want to see what the network state of your component is in more detail then refer to [`data.networkStatus`](#graphql-query-data-networkStatus).
 
 **Example:**
 
@@ -107,7 +107,7 @@ function MyComponent({ data: { loading } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data.error">`data.error`</h3>
+<h3 id="graphql-query-data-error">`data.error`</h3>
 
 If an error occurred then this property will be an instance of [`ApolloError`][]. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
 
@@ -127,9 +127,9 @@ function MyComponent({ data: { error } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data.networkStatus">`data.networkStatus`</h3>
+<h3 id="graphql-query-data-networkStatus">`data.networkStatus`</h3>
 
-`data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`](#graphql-query-data.loading) does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
+`data.networkStatus` is useful if you want to display a different loading indicator (or no indicator at all) depending on your network status as it provides a more detailed view into the state of a network request on your component than [`data.loading`](#graphql-query-data-loading) does. `data.networkStatus` is an enum with different number values between 1 and 8. These number values each represent a different network state.
 
 1. `loading`: The query has never been run before and the request is now pending. A query will still have this network status even if a result was returned from the cache, but a query was dispatched anyway.
 2. `setVariables`: If a query’s variables change and a network request was fired then the network status will be `setVariables` until the result of that query comes back. React users will see this when [`options.variables`](#graphql-query-options-variables) changes on their queries.
@@ -140,7 +140,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 7. `ready`: No request is in flight for this query, and no errors happened. Everything is OK.
 8. `error`: No request is in flight for this query, but one or more errors were detected.
 
-If the network status is less then 7 then it is equivalent to [`data.loading`](#graphql-query-data.loading) being true. In fact you could replace all of your `data.loading` checks with `data.networkStatus < 7` and you would not see a difference. It is recommended that you use `data.loading`, however.
+If the network status is less then 7 then it is equivalent to [`data.loading`](#graphql-query-data-loading) being true. In fact you could replace all of your `data.loading` checks with `data.networkStatus < 7` and you would not see a difference. It is recommended that you use `data.loading`, however.
 
 **Example:**
 
@@ -158,7 +158,7 @@ function MyComponent({ data: { networkStatus } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data.variables">`data.variables`</h3>
+<h3 id="graphql-query-data-variables">`data.variables`</h3>
 
 The variables that Apollo used to fetch data from your GraphQL endpoint. This property is helpful if you want to render some information based on the variables that were used to make a request against your server.
 
@@ -177,7 +177,7 @@ function MyComponent({ data: { variables } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data.refetch">`data.refetch()`</h3>
+<h3 id="graphql-query-data-refetch">`data.refetch()`</h3>
 
 Forces your component to refetch the query you defined in the `graphql()` function. This method is helpful when you want to reload the data in your component, or retry a fetch after an error.
 
@@ -197,7 +197,7 @@ function MyComponent({ data: { refetch } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data.fetchMore">`data.fetchMore(options)`</h3>
+<h3 id="graphql-query-data-fetchMore">`data.fetchMore(options)`</h3>
 
 The `data.fetchMore` function allows you to do pagination with your query component. To learn more about pagination with `data.fetchMore`, be sure to read the [pagination](pagination.html) recipe which contains helpful illustrations on how you can do pagination with React Apollo.
 
@@ -223,7 +223,7 @@ data.fetchMore({
 });
 ```
 
-<h3 id="graphql-query-data.subscribeToMore">`data.subscribeToMore(options)`</h3>
+<h3 id="graphql-query-data-subscribeToMore">`data.subscribeToMore(options)`</h3>
 
 This function will set up a subscription, triggering updates whenever the server sends a subscription publication. This requires subscriptions to be set up on the server to properly work. Check out the [subscriptions guide](http://dev.apollodata.com/react/receiving-updates.html#Subscriptions) and the [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) for more information on getting this set up.
 
@@ -233,7 +233,7 @@ A common practice is to wrap the `subscribeToMore` call within `componentWillRec
 
 - `[document]`: Document is a required property that accepts a GraphQL subscription created with `graphql-tag`’s `gql` template string tag. It should contain a single GraphQL subscription operation with the data that will be returned.
 - `[variables]`: The optional variables you may provide that will be used with the `document` option.
-- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data.fetchMore) callback. Alternatively, you could update the query using a [reducer](http://dev.apollodata.com/react/cache-updates.html#resultReducers) as part of the [options](http://dev.apollodata.com/react/queries.html#graphql-options) of your `graphql()` function.
+- `[updateQuery]`: An optional function that runs every time the server sends an update. This modifies the results of the HOC query. The first argument, `previousResult`, will be the previous data returned by the query you defined in your `graphql()` function. The second argument is an object with two properties. `subscriptionData` is result of the subscription. `variables` is the variables object used with the subscription query. Using these arguments you should return a new data object with the same shape as the GraphQL query you defined in your `graphql()` function. This is similar to the [`fetchMore`](#graphql-query-data-fetchMore) callback. Alternatively, you could update the query using a [reducer](http://dev.apollodata.com/react/cache-updates.html#resultReducers) as part of the [options](http://dev.apollodata.com/react/queries.html#graphql-options) of your `graphql()` function.
 - `[onError]`: An optional error callback.
 
 In order to update the query's store with the result of the subscription, you must specify either the `updateQuery` option in `subscribeToMore` or the `reducer` option in your `graphql()` function.
@@ -271,7 +271,7 @@ class SubscriptionComponent extends Component {
 ```
 
 
-<h3 id="graphql-query-data.startPolling">`data.startPolling(interval)`</h3>
+<h3 id="graphql-query-data-startPolling">`data.startPolling(interval)`</h3>
 
 This function will set up an interval and send a fetch request every time that interval ellapses. The function takes only one integer argument which allows you to configure how often you want your query to be executed in milliseconds. In other words, the `interval` argument represents the milliseconds between polls.
 
@@ -279,7 +279,7 @@ Polling is a good way to keep the data in your UI fresh. By refetching your data
 
 If you call `data.startPolling` when your query is already polling then the current polling process will be cancelled and a new process will be started with the interval you specified.
 
-You may also use [`options.pollInterval`](#graphql-query-options.pollInterval) to start polling immediately after your component mounts. It is recommend that you use [`options.pollInterval`](#graphql-query-options.pollInterval) if you don’t need to arbitrarily start and stop polling.
+You may also use [`options.pollInterval`](#graphql-config-options-pollInterval) to start polling immediately after your component mounts. It is recommend that you use [`options.pollInterval`](#graphql-config-options-pollInterval) if you don’t need to arbitrarily start and stop polling.
 
 If you set your `interval` to 0 then that means no polling instead of executing a request every JavaScript event loop tick.
 
@@ -300,7 +300,7 @@ class MyComponent extends Component {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data.stopPolling">`data.stopPolling()`</h3>
+<h3 id="graphql-query-data-stopPolling">`data.stopPolling()`</h3>
 
 By calling this function you will stop any current polling process. Your query will not start polling again until you call `data.startPolling`.
 
@@ -329,7 +329,7 @@ class MyComponent extends Component {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data.updateQuery">`data.updateQuery(updaterFn)`</h3>
+<h3 id="graphql-query-data-updateQuery">`data.updateQuery(updaterFn)`</h3>
 
 This function allows you to update the data for your query outside of the context of any mutation, subscription, or fetch. This function only takes a single argument which will be another function. The argument function has the following signature:
 
@@ -358,7 +358,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config.options).
+The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
 
 **Example:**
 
@@ -378,7 +378,7 @@ export default graphql(gql`{ ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-query-options.variables">`options.variables`</h3>
+<h3 id="graphql-config-options-variables">`options.variables`</h3>
 
 The variables that will be used when executing the query operation. These variables should correspond with the variables that your query definition accepts. If you define `config.options` as a function then you may compute your variables from your props.
 
@@ -399,7 +399,7 @@ export default graphql(gql`
 })(MyComponent);
 ```
 
-<h3 id="graphql-query-options.fetchPolicy">`options.fetchPolicy`</h3>
+<h3 id="graphql-config-options-fetchPolicy">`options.fetchPolicy`</h3>
 
 The fetch policy is an option which allows you to specify how you want your component to interact with the Apollo data cache. By default your component will try to read from the cache first, and if the full data for your query is in the cache then Apollo simply returns the data from the cache. If the full data for your query is *not* in the cache then Apollo will execute your request using your network interface. By changing this option you can change this behavior.
 
@@ -422,11 +422,11 @@ export default graphql(gql`query { ... }`, {
 })(MyComponent);
 ```
 
-<h3 id="graphql-query-options.pollInterval">`options.pollInterval`</h3>
+<h3 id="graphql-config-options-pollInterval">`options.pollInterval`</h3>
 
 The interval in milliseconds at which you want to start polling. Whenever that number of milliseconds elapses your query will be executed using the network interface and another execution will be scheduled using the configured number of milliseconds.
 
-This option will start polling your query immeadiately when the component mounts. If you want to start and stop polling dynamically then you may use [`data.stopPolling`](#graphql-query-data.startPolling) and [`data.startPolling`](#graphql-query-data.stopPolling).
+This option will start polling your query immeadiately when the component mounts. If you want to start and stop polling dynamically then you may use [`data.stopPolling`](#graphql-query-data-startPolling) and [`data.startPolling`](#graphql-query-data-stopPolling).
 
 If you set `options.pollInterval` to 0 then that means no polling instead of executing a request every JavaScript event loop tick.
 

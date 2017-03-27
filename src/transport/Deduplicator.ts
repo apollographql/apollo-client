@@ -5,7 +5,7 @@ import {
 
 import {
   print,
-} from 'graphql-tag/bundledPrinter';
+} from 'graphql/language/printer';
 
 export class Deduplicator {
 
@@ -32,6 +32,10 @@ export class Deduplicator {
     .then( res => {
       delete this.inFlightRequestPromises[key];
       return res;
+    })
+    .catch( err => {
+        delete this.inFlightRequestPromises[key];
+        throw err;
     });
   }
 

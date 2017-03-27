@@ -52,7 +52,7 @@ describe('updateQuery on a simple query', () => {
       },
     });
 
-    return new Promise((resolve) => setTimeout(resolve))
+    return new Promise((resolve) => setTimeout(resolve, 5))
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
         assert.equal(latestResult.data.entry.value, 1);
@@ -119,7 +119,7 @@ describe('updateQuery on a query with required and optional variables', () => {
       },
     });
 
-    return new Promise((resolve) => setTimeout(resolve))
+    return new Promise((resolve) => setTimeout(resolve, 5))
         .then(() => obsHandle)
         .then((watchedQuery: ObservableQuery<any>) => {
           assert.equal(latestResult.data.entry.value, 1);

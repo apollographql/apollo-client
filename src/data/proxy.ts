@@ -1,5 +1,5 @@
 import { DocumentNode } from 'graphql';
-import { ApolloStore, Store } from '../store';
+import { ApolloStore, Store, ApolloReducerConfig } from '../store';
 import { DataWrite } from '../actions';
 import { IdGetter } from '../core/types';
 import { NormalizedCache } from '../data/storeUtils';
@@ -7,6 +7,7 @@ import { getFragmentQueryDocument } from '../queries/getFromAST';
 import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
+import { FragmentMatcherInterface } from './fragmentMatcher';
 
 export interface DataProxyReadQueryOptions {
   /**
@@ -154,12 +155,20 @@ export class ReduxDataProxy implements DataProxy {
    */
   private reduxRootSelector: (state: any) => Store;
 
+  private reducerConfig: ApolloReducerConfig;
+
+  private fragmentMatcher: FragmentMatcherInterface;
+
   constructor(
     store: ApolloStore,
     reduxRootSelector: (state: any) => Store,
+    fragmentMatcher: FragmentMatcherInterface,
+    reducerConfig: ApolloReducerConfig,
   ) {
     this.store = store;
     this.reduxRootSelector = reduxRootSelector;
+    this.reducerConfig = reducerConfig;
+    this.fragmentMatcher = fragmentMatcher;
   }
 
   /**
@@ -174,6 +183,8 @@ export class ReduxDataProxy implements DataProxy {
       store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())),
       query,
       variables,
+      fragmentMatcherFunction: this.fragmentMatcher.match,
+      config: this.reducerConfig,
     });
   }
 
@@ -200,6 +211,8 @@ export class ReduxDataProxy implements DataProxy {
       store: data,
       query,
       variables,
+      fragmentMatcherFunction: this.fragmentMatcher.match,
+      config: this.reducerConfig,
     });
   }
 
@@ -260,11 +273,7 @@ export class TransactionDataProxy implements DataProxy {
    */
   private data: NormalizedCache;
 
-  /**
-   * Gets a data id from an object. This is used when writing to our local
-   * cache clone.
-   */
-  private dataIdFromObject: IdGetter;
+  private reducerConfig: ApolloReducerConfig;
 
   /**
    * An array of actions that we build up during the life of the transaction.
@@ -277,9 +286,9 @@ export class TransactionDataProxy implements DataProxy {
    */
   private isFinished: boolean;
 
-  constructor(data: NormalizedCache, dataIdFromObject: IdGetter = () => null) {
+  constructor(data: NormalizedCache, reducerConfig: ApolloReducerConfig) {
     this.data = { ...data };
-    this.dataIdFromObject = dataIdFromObject;
+    this.reducerConfig = reducerConfig;
     this.writes = [];
     this.isFinished = false;
   }
@@ -312,6 +321,7 @@ export class TransactionDataProxy implements DataProxy {
       store: this.data,
       query,
       variables,
+      config: this.reducerConfig,
     });
   }
 
@@ -341,6 +351,7 @@ export class TransactionDataProxy implements DataProxy {
       store: data,
       query,
       variables,
+      config: this.reducerConfig,
     });
   }
 
@@ -405,7 +416,7 @@ export class TransactionDataProxy implements DataProxy {
       document: write.document,
       variables: write.variables,
       store: this.data,
-      dataIdFromObject: this.dataIdFromObject,
+      dataIdFromObject: this.reducerConfig.dataIdFromObject || (() => null),
     });
     this.writes.push(write);
   }

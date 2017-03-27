@@ -12,7 +12,7 @@ import {
 
 import {
   print,
-} from 'graphql-tag/bundledPrinter';
+} from 'graphql/language/printer';
 
 import {
   createApolloStore,
@@ -76,6 +76,11 @@ import {
   toIdValue,
 } from './data/storeUtils';
 
+import {
+  IntrospectionFragmentMatcher,
+  FragmentMatcherInterface,
+} from './data/fragmentMatcher';
+
 export {
   createNetworkInterface,
   createBatchingNetworkInterface,
@@ -93,6 +98,9 @@ export {
   Request,
   ApolloQueryResult,
   toIdValue,
+
+  IntrospectionFragmentMatcher,
+  FragmentMatcherInterface,
 
   // Expose the print method from GraphQL so that people that implement
   // custom network interfaces can turn query ASTs into query strings as needed.

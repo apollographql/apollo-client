@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.0-rc.7",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/src/index.js",
@@ -17,6 +17,7 @@
     "filesize": "npm run compile:browser && ./scripts/filesize.js --file=./dist/index.min.js --maxGzip=27",
     "compile": "tsc",
     "compile:benchmark": "tsc -p tsconfig.test.json",
+    "compile:coverage": "tsc -p tsconfig.coverage.json",
     "compile:test": "tsc -p tsconfig.test.json",
     "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/apollo.umd.js -o=./dist/index.js && npm run minify:browser",
     "minify:browser": "uglifyjs --compress --mangle --screw-ie8 -o=./dist/index.min.js -- ./dist/index.js",
@@ -26,7 +27,8 @@
     "postcompile": "npm run bundle",
     "prepublish": "npm run compile",
     "lint": "grunt tslint",
-    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
+    "precoverage": "npm run compile:coverage",
+    "coverage": "COV=1 istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
     "testonly": "mocha --reporter spec --full-trace lib/test/tests.js",
     "preanalyze": "npm run compile",
@@ -49,7 +51,8 @@
   "license": "MIT",
   "dependencies": {
     "graphql-anywhere": "^3.0.1",
-    "graphql-tag": "^1.3.2",
+    "graphql": "^0.9.1",
+    "graphql-tag": "^2.0.0",
     "redux": "^3.4.0",
     "symbol-observable": "^1.0.2",
     "whatwg-fetch": "^2.0.0"
@@ -58,7 +61,7 @@
     "@types/benchmark": "^1.0.30",
     "@types/chai": "^3.4.32",
     "@types/chai-as-promised": "0.0.30",
-    "@types/lodash": "4.14.55",
+    "@types/lodash": "4.14.58",
     "@types/mocha": "^2.2.31",
     "@types/node": "^7.0.5",
     "@types/promises-a-plus": "0.0.27",
@@ -88,14 +91,14 @@
     "sinon": "^2.1.0",
     "source-map-support": "^0.4.0",
     "tslint": "4.5.1",
-    "typescript": "2.2.1",
+    "typescript": "2.2.2",
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",
     "webpack-bundle-analyzer": "^2.1.1"
   },
   "optionalDependencies": {
     "@types/async": "^2.0.31",
-    "@types/graphql": "^0.8.0",
+    "@types/graphql": "^0.9.0",
     "@types/isomorphic-fetch": "0.0.33"
   }
 }

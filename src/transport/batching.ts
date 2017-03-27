@@ -17,25 +17,27 @@ export interface QueryFetchRequest {
   reject?: (error: Error) => void;
 };
 
-// QueryBatcher operates on a queue  of QueryFetchRequests. It polls and checks this queue
-// for new fetch requests. If there are multiple requests in the queue at a time, it will batch
-// them together into one query.
+// QueryBatcher doesn't fire requests immediately. Requests that were enqueued within
+// a certain amount of time (configurable through `batchInterval`) will be batched together
+// into one query.
 export class QueryBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   public queuedRequests: QueryFetchRequest[] = [];
 
-  private pollInterval: Number;
-  private pollTimer: any;
+  private batchInterval: Number;
 
   //This function is called to the queries in the queue to the server.
   private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
 
   constructor({
+    batchInterval,
     batchFetchFunction,
   }: {
+    batchInterval: number,
     batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>,
   }) {
     this.queuedRequests = [];
+    this.batchInterval = batchInterval;
     this.batchFetchFunction = batchFetchFunction;
   }
 
@@ -49,16 +51,17 @@ export class QueryBatcher {
       fetchRequest.reject = reject;
     });
 
+    // The first enqueued request triggers the queue consumption after `batchInterval` milliseconds.
+    if (this.queuedRequests.length === 1) {
+      this.scheduleQueueConsumption();
+    }
+
     return fetchRequest.promise;
   }
 
-  // Consumes the queue. Called on a polling interval.
+  // Consumes the queue.
   // Returns a list of promises (one for each query).
   public consumeQueue(): (Promise<ExecutionResult> | undefined)[] | undefined {
-    if (this.queuedRequests.length < 1) {
-      return undefined;
-    }
-
     const requests: Request[] = this.queuedRequests.map(
       (queuedRequest) => queuedRequest.request,
     );
@@ -87,21 +90,9 @@ export class QueryBatcher {
     return promises;
   }
 
-  // TODO instead of start and stop, just set a timeout when a request comes in,
-  // and batch up everything in that interval. If no requests come in, don't batch.
-  public start(pollInterval: Number) {
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
-    }
-    this.pollInterval = pollInterval;
-    this.pollTimer = setInterval(() => {
+  private scheduleQueueConsumption(): void {
+    setTimeout(() => {
       this.consumeQueue();
-    }, this.pollInterval);
-  }
-
-  public stop() {
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
-    }
+    }, this.batchInterval);
   }
 }

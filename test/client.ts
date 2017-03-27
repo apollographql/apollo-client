@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 import * as sinon from 'sinon';
+import * as fetchMock from 'fetch-mock';
 
 import ApolloClient, {
   printAST,
@@ -29,7 +30,7 @@ import gql from 'graphql-tag';
 
 import {
   print,
-} from 'graphql-tag/bundledPrinter';
+} from 'graphql/language/printer';
 
 import { NetworkStatus } from '../src/queries/networkStatus';
 
@@ -43,6 +44,12 @@ import {
 import {
   QueryManager,
 } from '../src/core/QueryManager';
+
+import {
+  IntrospectionFragmentMatcher,
+} from '../src/data/fragmentMatcher';
+
+import fragmentMatcherIntrospectionQuery from '../src/data/fragmentMatcherIntrospectionQuery';
 
 import {
   createNetworkInterface,
@@ -223,6 +230,17 @@ describe('client', () => {
           `Please remove that option from ApolloClient constructor.`,
       );
     }
+  });
+
+  it('should throw an error if query option is missing or not wrapped with a "gql" tag', () => {
+    const client = new ApolloClient();
+
+    assert.throws(() => {
+      client.query(gql`{ a }` as any);
+    }, 'query option is required. You must specify your GraphQL document in the query option.');
+    assert.throws(() => {
+      client.query({ query: '{ a }' } as any);
+    }, 'You must wrap the query string in a "gql" tag.');
   });
 
   it('should allow for a single query to take place', () => {
@@ -874,6 +892,153 @@ describe('client', () => {
     client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
       done();
+    });
+  });
+
+  it('should be able to handle inlined fragments on an Interface type', () => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
+          __typename
+        }
+      }
+
+      fragment ItemFragment on Item {
+        id
+        __typename
+        ... on ColorItem {
+          color
+          __typename
+        }
+      }`;
+    const result = {
+      'items': [
+        {
+          '__typename': 'ColorItem',
+          'id': '27tlpoPeXm6odAxj3paGQP',
+          'color': 'red',
+        },
+        {
+          '__typename': 'MonochromeItem',
+          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+        },
+      ],
+    };
+
+
+    const fancyFragmentMatcher = (
+      idValue: any, // TODO types, please.
+      typeCondition: string,
+      context: any,
+    ): boolean => {
+
+      const obj = context.store[idValue.id];
+
+      if (! obj) {
+        return false;
+      }
+
+      const implementingTypesMap: {[key: string]: string[]} = {
+        'Item': ['ColorItem', 'MonochromeItem'],
+      };
+
+      if (obj.__typename === typeCondition) {
+        return true;
+      }
+
+      const implementingTypes = implementingTypesMap[typeCondition];
+      if (implementingTypes && implementingTypes.indexOf(obj.__typename) > -1) {
+        return true;
+      }
+
+      return false;
+    };
+
+
+    const networkInterface = mockNetworkInterface(
+    {
+      request: { query },
+      result: { data: result },
+    });
+    const client = new ApolloClient({
+      networkInterface,
+      fragmentMatcher: {
+        ensureReady: () => Promise.resolve(),
+        canBypassInit: () => true,
+        match: fancyFragmentMatcher,
+      },
+    });
+    return client.query({ query }).then((actualResult: any) => {
+      assert.deepEqual(actualResult.data, result);
+    });
+  });
+
+  it('should be able to handle inlined fragments on an Interface type with introspection fragment matcher', () => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
+          __typename
+        }
+      }
+
+      fragment ItemFragment on Item {
+        id
+        ... on ColorItem {
+          color
+          __typename
+        }
+        __typename
+      }`;
+    const result = {
+      'items': [
+        {
+          '__typename': 'ColorItem',
+          'id': '27tlpoPeXm6odAxj3paGQP',
+          'color': 'red',
+        },
+        {
+          '__typename': 'MonochromeItem',
+          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+        },
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: fragmentMatcherIntrospectionQuery },
+        delay: 5, // we put a delay here to make really sure the client waits
+        result: {
+          data: {
+            __schema: {
+              types: [{
+                kind: 'INTERFACE',
+                name: 'Item',
+                possibleTypes: [{
+                  name: 'ColorItem',
+                }, {
+                  name: 'MonochromeItem',
+                }],
+              }],
+            },
+          },
+        },
+      },
+      {
+        request: { query },
+        result: { data: result },
+      });
+
+    const fm = new IntrospectionFragmentMatcher();
+
+    const client = new ApolloClient({
+      networkInterface,
+      fragmentMatcher: fm,
+    });
+
+    return client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
     });
   });
 
@@ -1806,6 +1971,43 @@ describe('client', () => {
         assert.equal(error.message, 'Network error: Uh oh!');
         done();
       },
+    });
+  });
+
+  it('should throw a GraphQL error', () => {
+    const url = 'http://not-a-real-url.com';
+    const query = gql`
+      query {
+        posts {
+          foo
+        }
+      }
+    `;
+    const result = {
+      errors: [{
+        message: 'Cannot query field "foo" on type "Post".',
+        locations: [{
+          line: 1,
+          column: 1,
+        }],
+      }],
+    };
+
+    fetchMock.post(url, () => {
+      return {
+        status: 400,
+        body: result,
+      };
+    });
+    const networkInterface = createNetworkInterface({ uri: url });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    return client.query({ query }).catch(err => {
+      assert.equal(err.message, 'GraphQL error: Cannot query field "foo" on type "Post".');
+      fetchMock.restore();
     });
   });
 });

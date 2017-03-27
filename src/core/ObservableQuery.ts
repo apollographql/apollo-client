@@ -203,6 +203,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   public fetchMore(
     fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
   ): Promise<ApolloQueryResult<T>> {
+    if (!fetchMoreOptions.updateQuery) {
+      throw new Error('updateQuery option is required. This function defines how to update the query data with the new results.');
+    }
     return Promise.resolve()
       .then(() => {
         const qid = this.queryManager.generateQueryId();
@@ -262,19 +265,20 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       variables: options.variables,
     });
 
-    const reducer = options.updateQuery;
-
     const subscription = observable.subscribe({
       next: (data) => {
-        const mapFn = (previousResult: Object, { variables }: { variables: Object }) => {
-          return reducer(
-            previousResult, {
-              subscriptionData: { data },
-              variables,
-            },
-          );
-        };
-        this.updateQuery(mapFn);
+        if (options.updateQuery) {
+          const reducer = options.updateQuery;
+          const mapFn = (previousResult: Object, { variables }: { variables: Object }) => {
+            return reducer(
+              previousResult, {
+                subscriptionData: { data },
+                variables,
+              },
+            );
+          };
+          this.updateQuery(mapFn);
+        }
       },
       error: (err) => {
         if (options.onError) {

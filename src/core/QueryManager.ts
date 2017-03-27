@@ -57,6 +57,11 @@ import {
 } from '../data/proxy';
 
 import {
+  FragmentMatcherInterface,
+  HeuristicFragmentMatcher,
+} from '../data/fragmentMatcher';
+
+import {
   isProduction,
 } from '../util/environment';
 
@@ -74,7 +79,7 @@ import {
   /* tslint:enable */
 } from 'graphql';
 
-import { print } from 'graphql-tag/bundledPrinter';
+import { print } from 'graphql/language/printer';
 
 import {
   readQueryFromStore,
@@ -122,13 +127,14 @@ export class QueryManager {
   public pollingTimers: {[queryId: string]: any};
   public scheduler: QueryScheduler;
   public store: ApolloStore;
+  public networkInterface: NetworkInterface;
 
   private addTypename: boolean;
-  private networkInterface: NetworkInterface;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
+  private fragmentMatcher: FragmentMatcherInterface;
 
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -164,12 +170,14 @@ export class QueryManager {
     store,
     reduxRootSelector,
     reducerConfig = { mutationBehaviorReducers: {} },
+    fragmentMatcher,
     addTypename = true,
     queryDeduplication = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
     reduxRootSelector: ApolloStateSelector,
+    fragmentMatcher?: FragmentMatcherInterface,
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
     queryDeduplication?: boolean,
@@ -186,6 +194,16 @@ export class QueryManager {
     this.queryDocuments = {};
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
+
+    // XXX This logic is duplicated in ApolloClient.ts for two reasons:
+    // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.
+    // 2. we need it here so we don't have to rewrite all the tests.
+    // in the longer term we should remove the need for 2 and move it to ApolloClient.ts only.
+    if (typeof fragmentMatcher === 'undefined') {
+      this.fragmentMatcher = new HeuristicFragmentMatcher();
+    } else {
+      this.fragmentMatcher = fragmentMatcher;
+    }
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -401,6 +419,7 @@ export class QueryManager {
               query: this.queryDocuments[queryId],
               variables: queryStoreValue.previousVariables || queryStoreValue.variables,
               config: this.reducerConfig,
+              fragmentMatcherFunction: this.fragmentMatcher.match,
               previousResult: lastResult && lastResult.data,
             });
 
@@ -486,13 +505,13 @@ export class QueryManager {
     getQueryDefinition(options.query);
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
-      options.notifyOnNetworkStatusChange = true;
+      options.notifyOnNetworkStatusChange = false;
     }
 
     let transformedOptions = { ...options } as WatchQueryOptions;
-    if (this.addTypename) {
-      transformedOptions.query = addTypenameToDocument(transformedOptions.query);
-    }
+    // if (this.addTypename) {
+    //  transformedOptions.query = addTypenameToDocument(transformedOptions.query);
+    // }
 
     let observableQuery = new ObservableQuery<T>({
       scheduler: this.scheduler,
@@ -504,6 +523,14 @@ export class QueryManager {
   }
 
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
+    if (!options.query) {
+      throw new Error('query option is required. You must specify your GraphQL document in the query option.');
+    }
+
+    if (options.query.kind !== 'Document') {
+      throw new Error('You must wrap the query string in a "gql" tag.');
+    }
+
     if ((options as any).returnPartialData) {
       throw new Error('returnPartialData option only supported on watchQuery.');
     }
@@ -520,12 +547,8 @@ export class QueryManager {
       throw new Error('noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
     }
 
-    if (options.query.kind !== 'Document') {
-      throw new Error('You must wrap the query string in a "gql" tag.');
-    }
-
     if (typeof options.notifyOnNetworkStatusChange !== 'undefined' ) {
-      throw new Error('Cannot call "query" with "notifyOnNetworkStatusChange = true" ');
+      throw new Error('Cannot call "query" with "notifyOnNetworkStatusChange" option. Only "watchQuery" has that option.');
     }
     options.notifyOnNetworkStatusChange = false;
 
@@ -549,98 +572,18 @@ export class QueryManager {
     queryId: string,
     options: WatchQueryOptions,
     fetchType?: FetchType,
-
-    // This allows us to track if this is a query spawned by a `fetchMore`
-    // call for another query. We need this data to compute the `fetchMore`
-    // network status for the query this is fetching for.
     fetchMoreForQueryId?: string,
   ): Promise<ApolloQueryResult<T>> {
 
-    const {
-      variables = {},
-      metadata = null,
-      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
-    } = options;
-
-    const {
-      queryDoc,
-    } = this.transformQueryDocument(options);
-
-    const queryString = print(queryDoc);
-
-    let storeResult: any;
-    let needToFetch: boolean = fetchPolicy === 'network-only';
-
-    // If this is not a force fetch, we want to diff the query against the
-    // store before we fetch it from the network interface.
-    // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
-    if ( (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only')) {
-      const { isMissing, result } = diffQueryAgainstStore({
-        query: queryDoc,
-        store: this.reduxRootSelector(this.store.getState()).data,
-        variables,
-        returnPartialData: true,
-        config: this.reducerConfig,
-      });
-
-      // If we're in here, only fetch if we have missing fields
-      needToFetch = isMissing || fetchPolicy === 'cache-and-network';
-
-      storeResult = result;
+    // putting this in front of the real fetchQuery function lets us make sure
+    // that the fragment matcher is initialized before we try to read from the store
+    if (this.fragmentMatcher.canBypassInit(options.query)) {
+      return this.fetchQueryAfterInit(queryId, options, fetchType, fetchMoreForQueryId);
     }
 
-    const requestId = this.generateRequestId();
-    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
-
-    // Initialize query in store with unique requestId
-    this.queryDocuments[queryId] = queryDoc;
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_INIT',
-      queryString,
-      document: queryDoc,
-      variables,
-      fetchPolicy,
-      queryId,
-      requestId,
-      // we store the old variables in order to trigger "loading new variables"
-      // state if we know we will go to the server
-      storePreviousVariables: shouldFetch,
-      isPoll: fetchType === FetchType.poll,
-      isRefetch: fetchType === FetchType.refetch,
-      fetchMoreForQueryId,
-      metadata,
+    return this.fragmentMatcher.ensureReady(this).then( () => {
+      return this.fetchQueryAfterInit(queryId, options, fetchType, fetchMoreForQueryId);
     });
-
-    // If there is no part of the query we need to fetch from the server (or,
-    // cachePolicy is cache-only), we just write the store result as the final result.
-    if (!shouldFetch) {
-      this.store.dispatch({
-        type: 'APOLLO_QUERY_RESULT_CLIENT',
-        result: { data: storeResult },
-        variables,
-        document: queryDoc,
-        complete: !shouldFetch,
-        queryId,
-        requestId,
-      });
-    }
-
-    if (shouldFetch) {
-      const networkResult = this.fetchRequest({
-        requestId,
-        queryId,
-        document: queryDoc,
-        options,
-        fetchMoreForQueryId,
-      });
-
-      if (fetchPolicy !== 'cache-and-network') {
-        return networkResult;
-      }
-    }
-    // If we have no query to send to the server, we should return the result
-    // found within the store.
-    return Promise.resolve({ data: storeResult });
   }
 
   public generateQueryId() {
@@ -895,6 +838,110 @@ export class QueryManager {
       variables,
       document,
     };
+  }
+
+  /** This function runs fetchQuery without initializing the fragment matcher.
+   * We always want to initialize the fragment matcher, so this function should not be accessible outside.
+   * The only place we call this function from is within fetchQuery after initializing the fragment matcher.
+   */
+  private fetchQueryAfterInit<T>(
+    queryId: string,
+    options: WatchQueryOptions,
+    fetchType?: FetchType,
+
+    // This allows us to track if this is a query spawned by a `fetchMore`
+    // call for another query. We need this data to compute the `fetchMore`
+    // network status for the query this is fetching for.
+    fetchMoreForQueryId?: string,
+  ): Promise<ApolloQueryResult<T>> {
+
+    const {
+      variables = {},
+      metadata = null,
+      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
+    } = options;
+
+    const {
+      queryDoc,
+    } = this.transformQueryDocument(options);
+
+    const queryString = print(queryDoc);
+
+    let storeResult: any;
+    let needToFetch: boolean = fetchPolicy === 'network-only';
+
+    // If this is not a force fetch, we want to diff the query against the
+    // store before we fetch it from the network interface.
+    // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
+    if ( (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only')) {
+      const { isMissing, result } = diffQueryAgainstStore({
+        query: queryDoc,
+        store: this.reduxRootSelector(this.store.getState()).data,
+        variables,
+        returnPartialData: true,
+        fragmentMatcherFunction: this.fragmentMatcher.match,
+        config: this.reducerConfig,
+      });
+
+      // If we're in here, only fetch if we have missing fields
+      needToFetch = isMissing || fetchPolicy === 'cache-and-network';
+
+      storeResult = result;
+    }
+
+    const requestId = this.generateRequestId();
+    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
+
+    // Initialize query in store with unique requestId
+    this.queryDocuments[queryId] = queryDoc;
+    this.store.dispatch({
+      type: 'APOLLO_QUERY_INIT',
+      queryString,
+      document: queryDoc,
+      variables,
+      fetchPolicy,
+      queryId,
+      requestId,
+      // we store the old variables in order to trigger "loading new variables"
+      // state if we know we will go to the server
+      storePreviousVariables: shouldFetch,
+      isPoll: fetchType === FetchType.poll,
+      isRefetch: fetchType === FetchType.refetch,
+      fetchMoreForQueryId,
+      metadata,
+    });
+
+    // If there is no part of the query we need to fetch from the server (or,
+    // cachePolicy is cache-only), we just write the store result as the final result.
+    const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
+    if (shouldDispatchClientResult) {
+      this.store.dispatch({
+        type: 'APOLLO_QUERY_RESULT_CLIENT',
+        result: { data: storeResult },
+        variables,
+        document: queryDoc,
+        complete: !shouldFetch,
+        queryId,
+        requestId,
+      });
+    }
+
+    if (shouldFetch) {
+      const networkResult = this.fetchRequest({
+        requestId,
+        queryId,
+        document: queryDoc,
+        options,
+        fetchMoreForQueryId,
+      });
+
+      if (fetchPolicy !== 'cache-and-network') {
+        return networkResult;
+      }
+    }
+    // If we have no query to send to the server, we should return the result
+    // found within the store.
+    return Promise.resolve({ data: storeResult });
   }
 
   // XXX: I think we just store this on the observable query at creation time

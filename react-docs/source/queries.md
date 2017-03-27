@@ -2,9 +2,9 @@
 title: Queries
 ---
 
-On this page, you can learn how to use `react-apollo` to attach GraphQL query results to your React UI. You can read about GraphQL queries themselves in detail at [graphql.org](http://graphql.org/docs/queries/).
+On this page, you can learn how to use `react-apollo` to attach GraphQL query results to your React UI. This guide assumes some familiarity with GraphQL itself. You can read about GraphQL queries themselves in detail at [graphql.org](http://graphql.org/docs/queries/).
 
-Note that when using `react-apollo`, you don't have to learn anything special about the query syntax, since everything is just standard GraphQL. Anything you can type into the GraphiQL query explorer, you can also put into your `react-apollo` code.
+One of our core values is "it's just GraphQL". When using `react-apollo`, you don't have to learn anything special about the query syntax, since everything is just standard GraphQL. Anything you can type into the GraphiQL query IDE, you can also put into your `react-apollo` code.
 
 <h2 id="basics">Basic Queries</h2>
 

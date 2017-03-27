@@ -12,7 +12,7 @@ The best way to get started with Apollo in your React app is to do a quick tutor
 
 <h3>[Learn Apollo](https://www.learnapollo.com)</h3>
 
-This tutorial covers building the client side of a simple Pokedex app from start to finish. It's available for [React](https://www.learnapollo.com/tutorial-react/react-01), [React Native](https://www.learnapollo.com/tutorial-react-native/react-native-01), and other platforms. Learn Apollo is maintained by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform that lets you stand up a GraphQL server without writing any code.
+This community-developed tutorial covers building the client side of a simple Pokedex app from start to finish. It's available for [React](https://www.learnapollo.com/tutorial-react/react-01), [React Native](https://www.learnapollo.com/tutorial-react-native/react-native-01), and other platforms. Learn Apollo is maintained by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform that lets you stand up a GraphQL server without writing any code.
 
 <h3 id="full-stack-graphql">[Full-Stack GraphQL + React tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc)</h3>
 

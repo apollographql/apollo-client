@@ -25,7 +25,7 @@ import {
 
 import gql from 'graphql-tag';
 
-import { print } from 'graphql-tag/bundledPrinter';
+import { print } from 'graphql/language/printer';
 
 import { withWarning } from './util/wrap';
 

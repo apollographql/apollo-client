@@ -14,7 +14,7 @@ import {
   OperationDefinitionNode,
 } from 'graphql';
 
-import { print } from 'graphql-tag/bundledPrinter';
+import { print } from 'graphql/language/printer';
 import gql from 'graphql-tag';
 import { assert } from 'chai';
 

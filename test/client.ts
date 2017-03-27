@@ -30,7 +30,7 @@ import gql from 'graphql-tag';
 
 import {
   print,
-} from 'graphql-tag/bundledPrinter';
+} from 'graphql/language/printer';
 
 import { NetworkStatus } from '../src/queries/networkStatus';
 

@@ -2,7 +2,7 @@
 title: Mutations
 ---
 
-In addition to fetching data using queries, Apollo also handles GraphQL mutations. Mutations are identical to queries in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the root fields on this query are going to be performing writes to the backend.
+In addition to fetching data using queries, Apollo also helps you handle GraphQL mutations. In GraphQL, mutations are identical to queries in syntax, the only difference being that you use the keyword `mutation` instead of `query` to indicate that the root fields on this query are going to be performing writes to the backend.
 
 ```js
 mutation {
@@ -15,8 +15,8 @@ mutation {
 
 GraphQL mutations represent two things in one query string:
 
-1. The mutation field name with arguments, `submitRepository`, which represents the actual operation to be done on the server
-2. The fields you want back from the result of the mutation to update the client: `{ id, repoName }`
+1. The mutation field name with arguments, `submitRepository`, which represents the actual operation to be done on the server.
+2. The fields you want back from the result of the mutation to update the client, in this case `{ id, repoName }`.
 
 The above mutation will submit a new GitHub repository to GitHunt, saving an entry to the database. The result might be:
 
@@ -31,20 +31,17 @@ The above mutation will submit a new GitHub repository to GitHunt, saving an ent
 }
 ```
 
-When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](cache-updates.html#dataIdFromObject), which in turn updates the UI automatically, so we often don't need to explicitly handle the results. In order for the client to correctly do this, we need to ensure we select the necessary fields in the result. One good strategy can be to simply ask for any fields that might have been affected by the mutation.
+When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](cache-updates.html#dataIdFromObject), which in turn updates the UI automatically, so we often don't need to explicitly handle the results. In order for the client to correctly do this, we need to ensure we select the necessary fields in the result. One good strategy can be to simply ask for any fields that might have been affected by the mutation. Alternatively, you can use [fragments](fragments.html) to share the fields between a query and a mutation that updates that query.
 
-<h2 id="basics">Basic Mutations</h2>
+<h2 id="basics">Basic mutations</h2>
 
-Using `graphql` with mutations makes it easy to bind actions to components. Unlike queries, which provide a complicated object with lots of metadata and methods, mutations provide only a simple function to the wrapped component, in the `mutate` prop.
+Using `graphql` with mutations makes it easy to bind actions to your components. Unlike queries, which provide a complicated object with lots of metadata and methods, mutations provide only a simple function to the wrapped component, in a prop called `mutate`.
 
 ```js
 import React, { Component, PropTypes } from 'react';
 import { gql, graphql } from 'react-apollo';
 
 class NewEntry extends Component { ... }
-NewEntry.propTypes = {
-  mutate: PropTypes.func.isRequired,
-};
 
 const submitRepository = gql`
   mutation submitRepository {
@@ -57,12 +54,21 @@ const submitRepository = gql`
 const NewEntryWithData = graphql(submitRepository)(NewEntry);
 ```
 
+If we were to write `propTypes` for the component above, they would look like:
+
+```js
+NewEntry.propTypes = {
+  mutate: PropTypes.func.isRequired,
+};
+```
+
 If you need more than one mutation on a component, you make a graphql container for each:
 
 ```js
-const NewEntryWithData =  graphql(submitNewUser, {name : 'newUserMutation'})(
-  graphql(submitRepository, {name: 'newRepositoryMutation'})(Component)
-)
+const ComponentWithMutations =
+  graphql(submitNewUser, {name : 'newUserMutation'})(
+    graphql(submitRepository, {name: 'newRepositoryMutation'})(Component)
+  )
 ```
 
 Note the use of the [`name` option on the `graphql()` call](higher-order-components.html#graphql-api) to name the prop that will receive the mutation function for each mutation (by default that name is 'mutate').

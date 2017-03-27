@@ -163,19 +163,20 @@ Passing the `skip` config completely bypasses the higher-order component, as if 
 
 <h2 id="graphql-props">Controlling child props</h2>
 
-By default, `graphql` will provide a `data` prop to the wrapped component with various information about the state of the query. We'll also see that [mutations](mutations.html) provide a callback on the `mutate` prop. Thus, it's possible to write your whole app just using these default prop names.
+By default, `graphql` used with a query will provide a `data` prop to the wrapped component with various information about the state of the query. We'll also see that [mutations](mutations.html) provide a callback on the `mutate` prop. It's possible to write your whole app just using these default prop names.
 
-If you want to decouple your UI components from Apollo and make them more reusable, you may want to modify these default props into your own custom objects and functions.
+However, if you want to decouple your UI components from Apollo and make them more reusable in different contexts, you may want to modify these default props and wrap them with your own custom objects and functions.
 
-<h3 id="graphql-name">Using `name`</h3>
+<h3 id="graphql-name">Changing the prop name</h3>
 
-If you want to change the name of the default `data` prop, but keep the exact same shape, you can use `name` option to the `graphql` container. This is especially useful for nested `graphql` containers, where the `data` prop would clash between them.
+If you want to change the name of the default `data` prop, but keep the exact same shape, you can use `name` option to the `graphql` container. This is especially useful when one component is using multiple queries via nested `graphql` containers, where the `data` prop would otherwise be overwritten.
 
 ```js
 import React, { Component, PropTypes } from 'react';
 import { gql, graphql } from 'react-apollo';
 
 class Profile extends Component { ... }
+
 Profile.propTypes = {
   CurrentUserForLayout: PropTypes.shape({
     loading: PropTypes.bool.isRequired,
@@ -198,7 +199,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 })(Profile);
 ```
 
-<h3 id="graphql-props-option">Using `props`</h3>
+<h3 id="graphql-props-option">Arbitrary transformation</h3>
 
 If you want complete control over the props of the child component, use the `props` option to map the query `data` object into any number of props that will be passed into the child:
 
@@ -239,6 +240,6 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 This style of usage leads to the greatest decoupling between your presentational component (`Profile`) and Apollo.
 
-* * *
+<h2 id="full-api">Full API</h2>
 
-For more information about all of the options and features supported by React Apollo for GraphQL queries be sure to review the [API reference on `graphql()` queries](api.html#queries).
+For more information about all of the options and features supported by React Apollo for GraphQL queries be sure to review the [API reference on `graphql()` queries](api-queries.html).

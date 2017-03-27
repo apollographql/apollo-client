@@ -4,17 +4,13 @@ sidebar_title: Introduction
 description: Apollo Client manages server-side GraphQL data in your React app so you don't have to.
 ---
 
-This is the official guide for using GraphQL in your React or React Native app using the [react-apollo](https://github.com/apollographql/react-apollo) package. React-Apollo is a convenient yet powerful way to bind GraphQL queries to your React components, so that you can focus on developing your UI while data fetching and management get out of the way.
+This is the official guide for using GraphQL in your React or React Native app using the [react-apollo](https://github.com/apollographql/react-apollo) package. React-Apollo is a convenient yet powerful way to bind GraphQL queries to your React components, so that you can focus on developing your UI while data fetching and management get out of the way. At the same time, it has all of the hooks and extension points for you to be fully in control.
 
-Follow the repositories on GitHub:
-
-- [React-Apollo](https://github.com/apollographql/react-apollo)
-- [Apollo Client](https://github.com/apollographql/apollo-client)
-- [This docs site](https://github.com/apollographql/react-docs)
+Follow the repositories on GitHub: [React-Apollo](https://github.com/apollographql/react-apollo), [Apollo Client](https://github.com/apollographql/apollo-client), and [this docs site](https://github.com/apollographql/react-docs).
 
 <h2 id="tutorials">Tutorials</h2>
 
-The best way to get started with Apollo in your React app is to do a quick tutorial, which will walk you through setting up a basic app and doing some GraphQL operations. Then, you can come back to this guide to dig into the details.
+The best way to get started with Apollo + React is to do a quick tutorial, which will walk you through setting up a basic app and doing some GraphQL operations. Then, you can come back to this guide to dig into the details.
 
 <h3>[Learn Apollo](https://www.learnapollo.com)</h3>
 

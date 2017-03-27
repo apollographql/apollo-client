@@ -1,7 +1,7 @@
 ---
 title: React Apollo
 sidebar_title: Introduction
-description: Apollo Client manages your server-side data in your React app so you don't have to.
+description: Apollo Client manages server-side GraphQL data in your React app so you don't have to.
 ---
 
 This is the official guide for using GraphQL in your React or React Native app using the [react-apollo](https://github.com/apollostack/react-apollo) package. React-Apollo is a convenient yet powerful way to bind GraphQL queries to your React components, so that you can focus on developing your UI while data fetching and management just gets out of the way.
@@ -17,8 +17,6 @@ This tutorial covers building the client side of a simple Pokedex app from start
 <h3 id="full-stack-graphql">[Full-Stack GraphQL + React tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc)</h3>
 
 This tutorial covers how to set up Apollo Client, how to write a simple server, and how to connect them together, and more parts are being produced almost every week. It's written by [Jonas Helfer](https://twitter.com/helferjs), the main developer behind React-Apollo.
-
-For a step-by-step hands-on tutorial you can also check out the [Learn Apollo](https://www.learnapollo.com) website by Graphcool.
 
 <h2 id="compatibility">Compatibility</h2>
 

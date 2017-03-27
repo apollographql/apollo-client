@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Make `QueryBatcher` more efficient and avoid `setInterval` leakage [PR #1498](https://github.com/apollographql/apollo-client/pull/1498).
+- Remove dependency on `graphql-tag/printer` per [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)
 
 ### 1.0.0-rc.7
 - Fix: `cachePolicy: cache-and-network` queries now dispatch `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)

@@ -1,5 +1,6 @@
 ---
-title: Server
+sidebar_title: Server
+title: "API: Server"
 ---
 
 `react-apollo` provides some utilities to aid in server side rendering and store hydration. To learn how to server side render in your app be sure to read the [recipe for server side rendering](server-side-rendering.html). The following is simply a reference for the APIs of the methods used in server side rendering and not a tutorial teaching you how to set it up.

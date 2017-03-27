@@ -1,5 +1,6 @@
 ---
-title: General
+sidebar_title: General
+title: "API: General"
 ---
 
 The API section is a complete reference of every single feature available in React Apollo. If you are just getting started with React Apollo then you should read "usage" articles starting at [Queries](queries.html) first, and come back to this API reference when you need to look up a particular method.

@@ -1,5 +1,6 @@
 ---
-title: "graphql: Mutations"
+sidebar_title: "graphql: Mutations"
+title: "API: graphql container with mutations"
 ---
 
 > This article is specifically about using mutations with the `graphql()` higher order component. To see options that apply to all operations, see the [general graphql container API docs](/react/api-graphql.html).

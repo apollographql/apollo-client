@@ -1,5 +1,6 @@
 ---
-title: "graphql: Queries"
+sidebar_title: "graphql: Queries"
+title: "API: graphql container with queries"
 ---
 
 > This article is specifically about using queries with the `graphql()` higher order component. To see options that apply to all operations, see the [general graphql container API docs](/react/api-graphql.html).

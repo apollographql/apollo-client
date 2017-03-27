@@ -1,5 +1,6 @@
 ---
-title: "graphql: Container"
+sidebar_title: "graphql: Container"
+title: "API: graphql container"
 ---
 
 <h2 id="graphql" title="graphql(...)">`graphql(query, [config])(component)`</h2>

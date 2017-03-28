@@ -2,15 +2,15 @@
 title: Subscriptions
 ---
 
-In addition to fetching data using queries and modifying data using mutations, the GraphQL spec also has a third operation type, called `subscription`.
+In addition to fetching data using queries and modifying data using mutations, the GraphQL spec will soon be gaining a third operation type, called `subscription`. You can [read the RFC on GitHub](https://github.com/facebook/graphql/blob/master/rfcs/Subscriptions.md). While minor changes in the specification might happen before it's finalized, you can use subscriptions today with Apollo.
 
-GraphQL Subscriptions is a way to push data from the server to the clients that choose to listen to real time messages from the server.  
+GraphQL subscriptions are a way to push data from the server to the clients that choose to listen to real time messages from the server. Subscriptions are similar to queries in that they specify a set of fields to be delivered to the client, but instead of immediately returning a single answer, a result is sent every time a particular event happens on the server.
 
-Subscriptions are similar to queries in that they specify the selection set (list of fields) that the client is requesting, but instead of immediately returning a single answer, a result is sent every time a specified event happens on the server.
+A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
-A common use-case for subscriptions is notifying the client side of changes based on events, for example the creation of a new object, updated fields and so on.
+<h2 id="overview">Overview</h2>
 
-GraphQL subscriptions have to be defined in the schema:
+GraphQL subscriptions have to be defined in the schema, just like queries and mutations:
 
 ```js
 type Subscription {
@@ -18,7 +18,7 @@ type Subscription {
 }
 ```
 
-A client can subscribe by sending a subscription query:
+On the client, subscription queries look just like any other kind of operation:
 
 ```js
 subscription onCommentAdded($repoFullName: String!){
@@ -42,24 +42,30 @@ The response sent to the client looks as follows:
 }
 ```
 
-In the above example, the subscription is expected to send a new result every time a comment is added on GitHunt for a specific repository. Note that the code above only defines the GraphQL subscription in the schema. Read [setting up subscriptions on the client](#subscriptions-client) and [setting up GraphQL subscriptions for the server](http://dev.apollodata.com/tools/graphql-subscriptions/index.html) to learn how to add subscriptions to your app.
+In the above example, the server is written to send a new result every time a comment is added on GitHunt for a specific repository. Note that the code above only defines the GraphQL subscription in the schema. Read [setting up subscriptions on the client](#subscriptions-client) and [setting up GraphQL subscriptions for the server](http://dev.apollodata.com/tools/graphql-subscriptions/index.html) to learn how to add subscriptions to your app.
 
-> Subscriptions are a good alternative to polling when the initial state is large, but the incremental change sets are small. The starting state can be fetched with a query and subsequently updated through a subscription.
+<h3 id="when-to-use">When to use subscriptions</h3>
 
+In most cases, intermittent polling or manual refetching are actually the best way to keep your client up to date. So when is a subscription the best option? Subscriptions are especially useful if:
 
-<h2 id="subscriptions-client">Setting up subscriptions on the client</h2>
+1. The initial state is large, but the incremental change sets are small. The starting state can be fetched with a query and subsequently updated through a subscription.
+2. You care about low-latency updates in the case of specific events, for example in the case of a chat application where users expect to receive new messages in a matter of seconds.
 
-To start using GraphQL subscriptions on the client with a Websocket transport, install `subscriptions-transport-ws` from npm:
+A future version of Apollo or GraphQL might include support for live queries, which would be a low-latency way to replace polling, but at this point general live queries in GraphQL are not yet possible outside of some relatively experimental setups.
+
+<h2 id="subscriptions-client">Client setup</h2>
+
+The most popular transport for GraphQL subscriptions today is [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws). This package is maintained by the Apollo community, but can be used with any client or server GraphQL implemenetation. In this article, we'll explain how to set it up on the client, but you'll also need a server implementation. You can [read about how to use subscriptions with a JavaScript server](/tools/graphql-server/subscriptions.html#setup), or enjoy subscriptions set up out of the box if you are using a GraphQL backend as a service like [Graphcool](https://www.graph.cool/docs/tutorials/worldchat-subscriptions-example-ui0eizishe/) or [Scaphold](https://scaphold.io/blog/2016/11/09/build-realtime-apps-with-subs.html).
+
+Let's look at how to add support for this transport to Apollo Client.
+
+First, install `subscriptions-transport-ws` from npm:
 
 ```shell
 npm install --save subscriptions-transport-ws
 ```
 
-> `subscriptions-transport-ws` is an transport implementation for subscriptions that works with any server or client, not only Apollo.
-
-> Read [here](/tools/graphql-server/subscriptions.html#setup) on how to setup GraphQL subscriptions on your server.
-
-Then, create a GraphQL subscriptions transport client (`SubscriptionClient`):
+Then, initialize a GraphQL subscriptions transport client:
 
 ```js
 import { SubscriptionClient } from 'subscriptions-transport-ws';
@@ -69,9 +75,10 @@ const wsClient = new SubscriptionClient(`http://localhost:5000/`, {
 });
 ```
 
-Then, extend your existing Apollo-Client network interface using the `addGraphQLSubscriptions` function:
+Then, extend your existing Apollo Client network interface using the `addGraphQLSubscriptions` function:
 
 ```js
+import { ApolloClient, createNetworkInterface } from 'react-apollo';
 import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
 
 // Create a normal network interface:
@@ -86,10 +93,12 @@ const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
 );
 
 // Finally, create your ApolloClient instance with the modified network interface
-const apolloClient = new ApolloClient({
+const client = new ApolloClient({
   networkInterface: networkInterfaceWithSubscriptions
 });
 ```
+
+Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.
 
 <h2 id="subscribe-to-more">subscribeToMore</h2>
 

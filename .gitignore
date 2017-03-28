@@ -40,3 +40,8 @@ npm
 
 # yarn
 yarn.lock
+
+# vim/Bash files
+*.un~
+*.swp
+*.swo

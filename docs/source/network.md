@@ -325,7 +325,7 @@ const authMiddleware = {
 
 const loggingAfterware = {
   applyBatchAfterware(res, next) {
-    console.log((res.responses);
+    console.log(res.responses);
     next();
   }
 }

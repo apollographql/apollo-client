@@ -489,6 +489,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       },
     };
 
+
     this.queryManager.startQuery<T>(
       this.queryId,
       this.options,

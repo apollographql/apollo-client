@@ -28,6 +28,10 @@ import {
   NetworkInterface,
 } from '../src/transport/networkInterface';
 
+import {
+  IntrospectionFragmentMatcher,
+} from '../src/data/fragmentMatcher';
+
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
 
@@ -588,6 +592,104 @@ describe('ObservableQuery', () => {
   });
 
   describe('currentResult', () => {
+
+    it('returns the same value as observableQuery.next got', (done) => {
+
+      const queryWithFragment = gql`
+        fragment MaleInfo on Man {
+          trouserSize
+          __typename
+        }
+
+        fragment FemaleInfo on Woman {
+          skirtSize
+          __typename
+        }
+
+        fragment PersonInfo on Person {
+          id
+          name
+          sex
+          ... on Man {
+              ...MaleInfo
+              __typename
+          }
+          ... on Woman {
+              ...FemaleInfo
+              __typename
+          }
+          __typename
+        }
+
+        {
+          people {
+            ...PersonInfo
+            __typename
+          }
+        }
+      `;
+
+      const peopleData = [
+          { id: 1, name: 'John Smith', sex: 'male', trouserSize: 6, __typename: 'Man' },
+          { id: 2, name: 'Sara Smith', sex: 'female', skirtSize: 4, __typename: 'Woman' },
+          { id: 3, name: 'Budd Deey', sex: 'male', trouserSize: 10, __typename: 'Man' },
+      ];
+
+      const dataOneWithTypename = {
+        people: peopleData.slice(0, 2),
+      };
+
+      const dataTwoWithTypename = {
+        people: peopleData.slice(0, 3),
+      };
+
+
+      const ni = mockNetworkInterface({
+        request: { query: queryWithFragment, variables },
+        result: { data: dataOneWithTypename },
+      }, {
+        request: { query: queryWithFragment, variables },
+        result: { data: dataTwoWithTypename },
+      });
+
+      const client = new ApolloClient({
+        networkInterface: ni,
+        fragmentMatcher: new IntrospectionFragmentMatcher({
+          introspectionQueryResultData: {
+            __schema: {
+              types: [{
+                kind: 'UNION',
+                name: 'Creature',
+                possibleTypes: [{ name: 'Person' }],
+              }],
+            },
+          },
+        }),
+      });
+
+      const observable = client.watchQuery({ query: queryWithFragment, variables, notifyOnNetworkStatusChange: true });
+
+      subscribeAndCount(done, observable, (count, result) => {
+        const { data, loading, networkStatus } = observable.currentResult();
+        try {
+          assert.deepEqual(result, { data, loading, networkStatus, stale: false });
+        } catch (e) {
+          done(e);
+        }
+
+        if (count === 1) {
+          observable.refetch();
+        }
+        if (count === 3) {
+          setTimeout(done, 5);
+        }
+        if (count > 3) {
+          done(new Error('Observable.next called too many times'));
+        }
+      });
+    });
+
+
     it('returns the current query status immediately', (done) => {
       const observable: ObservableQuery<any> = mockWatchQuery({
         request: { query, variables },

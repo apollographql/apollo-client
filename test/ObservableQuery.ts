@@ -630,17 +630,17 @@ describe('ObservableQuery', () => {
       `;
 
       const peopleData = [
-          { id: 1, name: 'John Smith', sex: "male", trouserSize: 6, __typename: 'Man' },
-          { id: 2, name: 'Sara Smith', sex: "female", skirtSize: 4, __typename: 'Woman' },
-          { id: 3, name: 'Budd Deey', sex: "male", trouserSize: 10, __typename: 'Man' },
+          { id: 1, name: 'John Smith', sex: 'male', trouserSize: 6, __typename: 'Man' },
+          { id: 2, name: 'Sara Smith', sex: 'female', skirtSize: 4, __typename: 'Woman' },
+          { id: 3, name: 'Budd Deey', sex: 'male', trouserSize: 10, __typename: 'Man' },
       ];
 
       const dataOneWithTypename = {
-        people: peopleData.slice(0,2),
+        people: peopleData.slice(0, 2),
       };
 
       const dataTwoWithTypename = {
-        people: peopleData.slice(0,3),
+        people: peopleData.slice(0, 3),
       };
 
 
@@ -667,18 +667,14 @@ describe('ObservableQuery', () => {
         }),
       });
 
-      console.log('gettin ready');
-
       const observable = client.watchQuery({ query: queryWithFragment, variables, notifyOnNetworkStatusChange: true });
 
       subscribeAndCount(done, observable, (count, result) => {
-        console.log('c', count);
         const { data, loading, networkStatus } = observable.currentResult();
         try {
           assert.deepEqual(result, { data, loading, networkStatus, stale: false });
-          console.log(networkStatus, 'good');
         } catch (e) {
-          done(e)
+          done(e);
         }
 
         if (count === 1) {

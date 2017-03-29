@@ -909,6 +909,7 @@ export class QueryManager {
       variables,
       config: this.reducerConfig,
       previousResult: lastResult ? lastResult.data : undefined,
+      fragmentMatcherFunction: this.fragmentMatcher.match,
     };
 
     try {

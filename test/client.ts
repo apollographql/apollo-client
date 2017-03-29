@@ -1023,7 +1023,7 @@ describe('client', () => {
           }],
         },
       },
-    })
+    });
 
     const client = new ApolloClient({
       networkInterface,

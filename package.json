@@ -65,7 +65,7 @@
     "@types/mocha": "^2.2.31",
     "@types/node": "^7.0.5",
     "@types/promises-a-plus": "0.0.27",
-    "@types/sinon": "^1.16.29",
+    "@types/sinon": "^2.1.0",
     "benchmark": "^2.1.3",
     "browserify": "^14.0.0",
     "chai": "^3.5.0",

@@ -437,3 +437,17 @@ export default graphql(gql`query { ... }`, {
   options: { pollInterval: 5000 },
 })(MyComponent);
 ```
+
+<h3 id="graphql-config-options-notifyOnNetworkStatusChange">`options.notifyOnNetworkStatusChange`</h3>
+
+Whether or not updates to the network status or network error should trigger re-rendering of your component.
+
+The default value is `false`.
+
+**Example:**
+
+```js
+export default graphql(gql`query { ... }`, {
+  options: { notifyOnNetworkStatusChange: true },
+})(MyComponent);
+```

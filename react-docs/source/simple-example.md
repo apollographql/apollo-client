@@ -1,6 +1,6 @@
 ---
 title: "Small Example: Sketch"
-description: A tiny app that implements one view from our GitHunt example app, that you can edit right from your browser.
+description: A tiny app that implements one view from our GitHunt example app, that you can run and edit right from your browser.
 ---
 
 The easiest way to see what Apollo Client can do for you is to try it for yourself. Below is a simple example of a single React Native view that uses Apollo Client to talk to our hosted example app, [GitHunt](example-schema.md). We've embedded it in the page with the [Sketch](https://blog.expo.io/sketch-a-playground-for-react-native-16b2401f44a2) editor from [Expo](https://expo.io/).

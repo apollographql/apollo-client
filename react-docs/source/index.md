@@ -16,7 +16,7 @@ If you're familiar with web development, but haven't tried GraphQL or Apollo bef
 
 Dive into a basic app that displays one view with React Native and Apollo. It's the app you saw on the home page of Apollo Client, but with some suggestions of how to interact with it, and the code explained in more detail.
 
-<h3 id="full-stack-graphql">[2. Full-Stack GraphQL + React tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc)</h3>
+<h3 id="full-stack-graphql" title="2. Full-Stack Tutorial">[2. Full-Stack GraphQL + React Tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc)</h3>
 
 This tutorial covers how to set up Apollo Client, how to write a simple server, and how to connect them together, and more parts are being produced almost every week. It's written by [Jonas Helfer](https://twitter.com/helferjs), the main developer behind React-Apollo.
 
@@ -30,9 +30,9 @@ Once you've done the interactive examples and tutorials, you're ready to dive in
 
 <h2 id="compatibility">Compatible tools</h2>
 
-The primary design point of Apollo Client is to work with any client or server architecture. The core maintainers focus on solving the hard problems around GraphQL caching, request management, and UI updating, and we want that to be available to anyone regardless of their technical requirements for other parts of the stack.
+The primary design point of Apollo Client is to work with the client or server tools you're already using. The maintainers and contributors focus on solving the hard problems around GraphQL caching, request management, and UI updating, and we want that to be available to anyone regardless of their technical requirements and preferences for other parts of the app.
 
-<h3 id="compatibility">The React toolbox</h3>
+<h3 id="react-toolbox">The React toolbox</h3>
 
 Apollo is specifically designed to work nicely with all of the tools used by today's React developers. Here are some in particular:
 

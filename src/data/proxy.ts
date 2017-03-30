@@ -338,6 +338,12 @@ export class TransactionDataProxy implements DataProxy {
     variables,
   }: DataProxyReadQueryOptions): QueryType {
     this.assertNotFinished();
+
+
+    if (this.reducerConfig.addTypename) {
+      query = addTypenameToDocument(query);
+    }
+
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
       store: this.data,
@@ -360,7 +366,11 @@ export class TransactionDataProxy implements DataProxy {
   }: DataProxyReadFragmentOptions): FragmentType | null {
     this.assertNotFinished();
     const { data } = this;
-    const query = getFragmentQueryDocument(fragment, fragmentName);
+    let query = getFragmentQueryDocument(fragment, fragmentName);
+
+    if (this.reducerConfig.addTypename) {
+      query = addTypenameToDocument(query);
+    }
 
     // If we could not find an item in the store with the provided id then we
     // just return `null`.
@@ -388,6 +398,11 @@ export class TransactionDataProxy implements DataProxy {
     variables,
   }: DataProxyWriteQueryOptions): void {
     this.assertNotFinished();
+
+    if (this.reducerConfig.addTypename) {
+      query = addTypenameToDocument(query);
+    }
+
     this.applyWrite({
       rootId: 'ROOT_QUERY',
       result: data,
@@ -409,10 +424,17 @@ export class TransactionDataProxy implements DataProxy {
     variables,
   }: DataProxyWriteFragmentOptions): void {
     this.assertNotFinished();
+
+    let query = getFragmentQueryDocument(fragment, fragmentName);
+
+    if (this.reducerConfig.addTypename) {
+      query = addTypenameToDocument(query);
+    }
+
     this.applyWrite({
       rootId: id,
       result: data,
-      document: getFragmentQueryDocument(fragment, fragmentName),
+      document: query,
       variables: variables || {},
     });
   }

@@ -8,6 +8,7 @@ import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
 import { FragmentMatcherInterface } from './fragmentMatcher';
+import { addTypenameToDocument } from '../queries/queryTransform';
 
 export interface DataProxyReadQueryOptions {
   /**
@@ -178,6 +179,11 @@ export class ReduxDataProxy implements DataProxy {
     query,
     variables,
   }: DataProxyReadQueryOptions): QueryType {
+
+    if (this.reducerConfig.addTypename) {
+      query = addTypenameToDocument(query);
+    }
+
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
       store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())),
@@ -197,13 +203,17 @@ export class ReduxDataProxy implements DataProxy {
     fragmentName,
     variables,
   }: DataProxyReadFragmentOptions): FragmentType | null {
-    const query = getFragmentQueryDocument(fragment, fragmentName);
+    let query = getFragmentQueryDocument(fragment, fragmentName);
     const data = getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState()));
 
     // If we could not find an item in the store with the provided id then we
     // just return `null`.
     if (typeof data[id] === 'undefined') {
       return null;
+    }
+
+    if (this.reducerConfig.addTypename) {
+      query = addTypenameToDocument(query);
     }
 
     return readQueryFromStore<FragmentType>({
@@ -224,6 +234,11 @@ export class ReduxDataProxy implements DataProxy {
     query,
     variables,
   }: DataProxyWriteQueryOptions): void {
+
+    if (this.reducerConfig.addTypename) {
+      query = addTypenameToDocument(query);
+    }
+
     this.store.dispatch({
       type: 'APOLLO_WRITE',
       writes: [{
@@ -245,12 +260,19 @@ export class ReduxDataProxy implements DataProxy {
     fragmentName,
     variables,
   }: DataProxyWriteFragmentOptions): void {
+
+    let document = getFragmentQueryDocument(fragment, fragmentName);
+
+    if (this.reducerConfig.addTypename) {
+      document = addTypenameToDocument(document);
+    }
+
     this.store.dispatch({
       type: 'APOLLO_WRITE',
       writes: [{
         rootId: id,
         result: data,
-        document: getFragmentQueryDocument(fragment, fragmentName),
+        document,
         variables: variables || {},
       }],
     });

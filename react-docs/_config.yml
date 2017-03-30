@@ -18,6 +18,7 @@ sidebar_categories:
     - initialization
     - simple-example
     - example-schema
+    - migration
   Usage:
     - queries
     - mutations

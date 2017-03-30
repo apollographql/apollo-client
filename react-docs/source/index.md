@@ -8,19 +8,27 @@ This is the official guide for using GraphQL in your React or React Native app u
 
 Follow the repositories on GitHub: [React-Apollo](https://github.com/apollographql/react-apollo), [Apollo Client](https://github.com/apollographql/apollo-client), and [this docs site](https://github.com/apollographql/react-docs).
 
-<h2 id="tutorials">Tutorials</h2>
+<h2 id="tutorials">Getting started</h2>
 
-The best way to get started with Apollo + React is to do a quick tutorial, which will walk you through setting up a basic app and doing some GraphQL operations. Then, you can come back to this guide to dig into the details.
+If you're familiar with web development, but haven't tried GraphQL or Apollo before, we've got you covered. Here's a set of small tutorials and examples you can look at, and in just a few hours you'll be well on your way to being an expert GraphQL developer! Or, you can jump right in to [installing the library](initialization.html).
 
-<h3>[Learn Apollo](https://www.learnapollo.com)</h3>
+<h3 id="simple-example">[1. Simple example](simple-example.html)</h3>
 
-This community-developed tutorial covers building the client side of a simple Pokedex app from start to finish. It's available for [React](https://www.learnapollo.com/tutorial-react/react-01), [React Native](https://www.learnapollo.com/tutorial-react-native/react-native-01), and other platforms. Learn Apollo is maintained by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform that lets you stand up a GraphQL server without writing any code.
+Dive into a basic app that displays one view with React Native and Apollo. It's the app you saw on the home page of Apollo Client, but with some suggestions of how to interact with it, and the code explained in more detail.
 
-<h3 id="full-stack-graphql">[Full-Stack GraphQL + React tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc)</h3>
+<h3 id="full-stack-graphql">[2. Full-Stack GraphQL + React tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc)</h3>
 
 This tutorial covers how to set up Apollo Client, how to write a simple server, and how to connect them together, and more parts are being produced almost every week. It's written by [Jonas Helfer](https://twitter.com/helferjs), the main developer behind React-Apollo.
 
-<h2 id="compatibility">Compatibility</h2>
+<h3 id="learn-apollo">[3. Learn Apollo](https://www.learnapollo.com)</h3>
+
+This community-developed tutorial covers building the client side of a simple Pokedex app from start to finish. It's available for [React](https://www.learnapollo.com/tutorial-react/react-01), [React Native](https://www.learnapollo.com/tutorial-react-native/react-native-01), and other platforms. Learn Apollo is maintained by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform that lets you stand up a GraphQL server without writing any code.
+
+<h3 id="usage-recipes">[4. Usage and recipes](queries.html)</h3>
+
+Once you've done the interactive examples and tutorials, you're ready to dive in deeper. We've tried to write this guide so that you can read it like a book and discover everything you can do with Apollo and GraphQL. In particular, check out the "Usage" section for basic functionality like queries and mutations, and the "Recipes" section for specific directions about how to accomplish more advanced goals like server-side rendering. If you run into anything, don't hesitate to ask a question on [Stack Overflow with the `apollo` tag](http://stackoverflow.com/questions/tagged/apollo), or on the [Apollo community Slack](http://dev.apollodata.com/#slack)!
+
+<h2 id="compatibility">Compatible tools</h2>
 
 The primary design point of Apollo Client is to work with any client or server architecture. The core maintainers focus on solving the hard problems around GraphQL caching, request management, and UI updating, and we want that to be available to anyone regardless of their technical requirements for other parts of the stack.
 

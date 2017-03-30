@@ -223,6 +223,7 @@ export default class ApolloClient implements DataProxy {
     this.reducerConfig = {
       dataIdFromObject,
       customResolvers,
+      addTypename,
     };
 
     this.watchQuery = this.watchQuery.bind(this);

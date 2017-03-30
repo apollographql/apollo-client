@@ -4,6 +4,11 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### 1.0.0-rc.9
+- Make imperative store operations respect addTypename [PR #1515](https://github.com/apollographql/apollo-client/issues/1515)
+- Fix bug that broke ObservableQuery.getCurrentResult for queries that used fragments [PR #1514](https://github.com/apollographql/apollo-client/issues/1514)
+
+
 ### 1.0.0-rc.8
 - Make `QueryBatcher` more efficient and avoid `setInterval` leakage [PR #1498](https://github.com/apollographql/apollo-client/pull/1498).
 - Remove dependency on `graphql-tag/printer` per [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)

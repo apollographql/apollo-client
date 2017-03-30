@@ -4,7 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
-### 1.0.0-rc.9
+### 1.0.0 and 1.0.0-rc.9
 - Make imperative store operations respect addTypename [PR #1515](https://github.com/apollographql/apollo-client/issues/1515)
 - Fix bug that broke ObservableQuery.getCurrentResult for queries that used fragments [PR #1514](https://github.com/apollographql/apollo-client/issues/1514)
 

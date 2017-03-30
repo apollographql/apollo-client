@@ -1,5 +1,5 @@
 ---
-title: "Example App: GitHunt"
+title: "Full Example: GitHunt"
 ---
 
 GitHunt is an application in the style of Product Hunt that shows a list of GitHub repositories, sorted by votes with attached comments. It can be a useful reference to see a lot of Apollo features in action, although it has a lot of functionality so the code is not simple for beginners.

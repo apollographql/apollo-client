@@ -16,6 +16,7 @@ sidebar_categories:
   null:
     - index
     - initialization
+    - simple-example
     - example-schema
   Usage:
     - queries

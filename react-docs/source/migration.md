@@ -1,7 +1,7 @@
 ---
 title: Migrating from 0.x to 1.0
-sidebar_title: Migration
-description: A guide for migrating from 0.x to 1.0.
+sidebar_title: Migrating to 1.0
+description: A short guide.
 ---
 
 Here are the main breaking changes between the 0.x and 1.0 versions of Apollo Client.

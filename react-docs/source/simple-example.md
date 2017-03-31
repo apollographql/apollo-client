@@ -117,7 +117,7 @@ function Feed({ data }) {
 }
 ```
 
-Finally, we get to the place that actually displays the items, the `FeedList` component. This consumes the `data` prop from Apollo, and maps over it to display list items. You can see that thanks to GraphQL, we go the data in exactly the shape that we expected.
+Finally, we get to the place that actually displays the items, the `FeedList` component. This consumes the `data` prop from Apollo, and maps over it to display list items. You can see that thanks to GraphQL, we got the data in exactly the shape that we expected.
 
 ```js
 function FeedList({ data }) {

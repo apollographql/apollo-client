@@ -1065,6 +1065,7 @@ export class QueryManager {
               variables,
               query: document,
               config: this.reducerConfig,
+              fragmentMatcherFunction: this.fragmentMatcher.match,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */

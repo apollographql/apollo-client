@@ -46,6 +46,7 @@ export function createStoreReducer(
       query: document,
       variables,
       returnPartialData: true,
+      fragmentMatcherFunction: config.fragmentMatcher,
       config,
     });
 

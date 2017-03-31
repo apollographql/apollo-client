@@ -224,6 +224,7 @@ export default class ApolloClient implements DataProxy {
       dataIdFromObject,
       customResolvers,
       addTypename,
+      fragmentMatcher: this.fragmentMatcher.match,
     };
 
     this.watchQuery = this.watchQuery.bind(this);

@@ -169,3 +169,13 @@ import { filter } from 'graphql-anywhere';
 ```
 
 The `filter()` function will grab exactly the fields from the `entry` that the fragment defines.
+
+<h3 id="importing-fragments">Importing Fragments</h3>
+
+When loading `.graphql` files with [graphql-tag/loader](https://github.com/apollographql/graphql-tag/blob/master/loader.js), we can include fragments using `import` statements. For example:
+
+```graphql
+#import "./someFragment.graphql"
+```
+
+Will make the contents of `someFragment.graphql` available to the current file. See the [Webpack Fragments](webpack.html#Fragments) section for additional details.

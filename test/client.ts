@@ -1126,7 +1126,7 @@ describe('client', () => {
 
     const sub = obs.subscribe({
       next() {
-        client.mutate({ mutation, updateQueries, update })
+        client.mutate({ mutation, updateQueries, update: updateSpy })
           .then(() => {
             assert.isTrue(reducerSpy.called);
             assert.isTrue(queryUpdaterSpy.called);

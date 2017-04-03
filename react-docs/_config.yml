@@ -37,6 +37,7 @@ sidebar_categories:
     - optimistic-ui
     - fragments
     - prefetching
+    - partial-data
     - react-native
     - redux
     - webpack

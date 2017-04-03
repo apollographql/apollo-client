@@ -350,6 +350,7 @@ export class TransactionDataProxy implements DataProxy {
       query,
       variables,
       config: this.reducerConfig,
+      fragmentMatcherFunction: this.reducerConfig.fragmentMatcher,
     });
   }
 
@@ -384,6 +385,7 @@ export class TransactionDataProxy implements DataProxy {
       query,
       variables,
       config: this.reducerConfig,
+      fragmentMatcherFunction: this.reducerConfig.fragmentMatcher,
     });
   }
 

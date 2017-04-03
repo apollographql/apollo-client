@@ -1035,7 +1035,7 @@ describe('client', () => {
     });
   });
 
-  it('should call updateQueries and reducer after mutation on query with inlined fragments on an Interface type', (done) => {
+  it('should call updateQueries, update and reducer after mutation on query with inlined fragments on an Interface type', (done) => {
     const query = gql`
       query items {
         items {
@@ -1119,15 +1119,18 @@ describe('client', () => {
     const updateQueries = {
       'items': queryUpdater,
     };
+    
+    const updateSpy = sinon.spy();
 
     const obs = client.watchQuery({ query, reducer });
 
     const sub = obs.subscribe({
       next() {
-        client.mutate({ mutation, updateQueries })
+        client.mutate({ mutation, updateQueries, update })
           .then(() => {
             assert.isTrue(reducerSpy.called);
             assert.isTrue(queryUpdaterSpy.called);
+            assert.isTrue(updateSpy.called);
             sub.unsubscribe();
             done();
           })

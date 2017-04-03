@@ -1119,7 +1119,7 @@ describe('client', () => {
     const updateQueries = {
       'items': queryUpdater,
     };
-    
+
     const updateSpy = sinon.spy();
 
     const obs = client.watchQuery({ query, reducer });

@@ -964,8 +964,6 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
       fragmentMatcher: {
-        ensureReady: () => Promise.resolve(),
-        canBypassInit: () => true,
         match: fancyFragmentMatcher,
       },
     });
@@ -1007,34 +1005,29 @@ describe('client', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query: fragmentMatcherIntrospectionQuery },
-        delay: 5, // we put a delay here to make really sure the client waits
-        result: {
-          data: {
-            __schema: {
-              types: [{
-                kind: 'INTERFACE',
-                name: 'Item',
-                possibleTypes: [{
-                  name: 'ColorItem',
-                }, {
-                  name: 'MonochromeItem',
-                }],
-              }],
-            },
-          },
-        },
-      },
-      {
         request: { query },
         result: { data: result },
       });
 
-    const fm = new IntrospectionFragmentMatcher();
+    const ifm = new IntrospectionFragmentMatcher({
+      introspectionQueryResultData: {
+        __schema: {
+          types: [{
+            kind: 'UNION',
+            name: 'Item',
+            possibleTypes: [{
+              name: 'ColorItem',
+            }, {
+              name: 'MonochromeItem',
+            }],
+          }],
+        },
+      },
+    });
 
     const client = new ApolloClient({
       networkInterface,
-      fragmentMatcher: fm,
+      fragmentMatcher: ifm,
     });
 
     return client.query({ query }).then((actualResult) => {

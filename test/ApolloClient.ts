@@ -41,6 +41,7 @@ describe('ApolloClient', () => {
                 },
               },
               'foo': {
+                __typename: 'Foo',
                 e: 4,
                 f: 5,
                 g: 6,
@@ -51,6 +52,7 @@ describe('ApolloClient', () => {
                 },
               },
               'bar': {
+                __typename: 'Bar',
                 i: 7,
                 j: 8,
                 k: 9,
@@ -62,15 +64,15 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(
         client.readQuery({ query: gql`{ a d { e } }` }),
-        { a: 1, d: { e: 4 } },
+        { a: 1, d: { e: 4, __typename: 'Foo' } },
       );
       assert.deepEqual(
         client.readQuery({ query: gql`{ a d { e h { i } } }` }),
-        { a: 1, d: { e: 4, h: { i: 7 } } },
+        { a: 1, d: { __typename: 'Foo', e: 4, h: { i: 7, __typename: 'Bar' } } },
       );
       assert.deepEqual(
         client.readQuery({ query: gql`{ a b c d { e f g h { i j k } } }` }),
-        { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
+        { a: 1, b: 2, c: 3, d: { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } } },
       );
     });
 
@@ -130,7 +132,7 @@ describe('ApolloClient', () => {
           apollo: {
             data: {
               'ROOT_QUERY': {
-                __typename: 'Type1',
+                __typename: 'Foo',
                 a: 1,
                 b: 2,
                 c: 3,
@@ -141,7 +143,7 @@ describe('ApolloClient', () => {
                 },
               },
               'foo': {
-                __typename: 'Type2',
+                __typename: 'Foo',
                 e: 4,
                 f: 5,
                 g: 6,
@@ -152,7 +154,7 @@ describe('ApolloClient', () => {
                 },
               },
               'bar': {
-                __typename: 'Type3',
+                __typename: 'Bar',
                 i: 7,
                 j: 8,
                 k: 9,
@@ -164,19 +166,19 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(
         client.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e h { i } }` }),
-        { e: 4, h: { i: 7 } },
+        { __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } },
       );
       assert.deepEqual(
         client.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } }` }),
-        { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+        { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } },
       );
       assert.deepEqual(
         client.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i }` }),
-        { i: 7 },
+        { __typename: 'Bar', i: 7 },
       );
       assert.deepEqual(
         client.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i j k }` }),
-        { i: 7, j: 8, k: 9 },
+        { __typename: 'Bar', i: 7, j: 8, k: 9 },
       );
       assert.deepEqual(
         client.readFragment({
@@ -184,7 +186,7 @@ describe('ApolloClient', () => {
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
           fragmentName: 'fragmentFoo',
         }),
-        { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+        { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } },
       );
       assert.deepEqual(
         client.readFragment({
@@ -192,7 +194,7 @@ describe('ApolloClient', () => {
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
           fragmentName: 'fragmentBar',
         }),
-        { i: 7, j: 8, k: 9 },
+        { __typename: 'Bar', i: 7, j: 8, k: 9 },
       );
     });
 
@@ -202,7 +204,7 @@ describe('ApolloClient', () => {
           apollo: {
             data: {
               'foo': {
-                __typename: 'Type1',
+                __typename: 'Foo',
                 'field({"literal":true,"value":42})': 1,
                 'field({"literal":false,"value":42})': 2,
               },
@@ -223,7 +225,7 @@ describe('ApolloClient', () => {
           literal: false,
           value: 42,
         },
-      }), { a: 1, b: 2 });
+      }), { __typename: 'Foo', a: 1, b: 2 });
     });
 
     it('will return null when an id that can’t be found is provided', () => {
@@ -232,7 +234,7 @@ describe('ApolloClient', () => {
         initialState: {
           apollo: {
             data: {
-              'bar': { __typename: 'Type1', a: 1, b: 2, c: 3 },
+              'bar': { __typename: 'Foo', a: 1, b: 2, c: 3 },
             },
           },
         },
@@ -241,7 +243,7 @@ describe('ApolloClient', () => {
         initialState: {
           apollo: {
             data: {
-              'foo': { __typename: 'Type1', a: 1, b: 2, c: 3 },
+              'foo': { __typename: 'Foo', a: 1, b: 2, c: 3 },
             },
           },
         },
@@ -249,7 +251,8 @@ describe('ApolloClient', () => {
 
       assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
-      assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), { a: 1, b: 2, c: 3 });
+      assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }),
+       { __typename: 'Foo', a: 1, b: 2, c: 3 });
     });
   });
 
@@ -606,7 +609,7 @@ describe('ApolloClient', () => {
           apollo: {
             data: {
               'foo': {
-                __typename: 'Type1',
+                __typename: 'Foo',
                 a: 1,
                 b: 2,
                 c: 3,
@@ -617,7 +620,7 @@ describe('ApolloClient', () => {
                 },
               },
               '$foo.bar': {
-                __typename: 'Type2',
+                __typename: 'Bar',
                 d: 4,
                 e: 5,
                 f: 6,
@@ -629,7 +632,7 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(
         client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
-        { a: 1, b: 2, c: 3, bar: { d: 4, e: 5, f: 6 } },
+        { __typename: 'Foo', a: 1, b: 2, c: 3, bar: { d: 4, e: 5, f: 6, __typename: 'Bar' } },
       );
 
       client.writeFragment({
@@ -640,34 +643,34 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(
         client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
-        { a: 7, b: 2, c: 3, bar: { d: 4, e: 5, f: 6 } },
+        { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 4, e: 5, f: 6 } },
       );
 
       client.writeFragment({
         id: 'foo',
         fragment: gql`fragment x on Foo { bar { d } }`,
-        data: { bar: { d: 8 } },
+        data: { __typename: 'Foo', bar: { __typename: 'Bar', d: 8 } },
       });
 
       assert.deepEqual(
         client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
-        { a: 7, b: 2, c: 3, bar: { d: 8, e: 5, f: 6 } },
+        { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 8, e: 5, f: 6 } },
       );
 
       client.writeFragment({
         id: '$foo.bar',
         fragment: gql`fragment y on Bar { e }`,
-        data: { __typename: 'Type2', e: 9 },
+        data: { __typename: 'Bar', e: 9 },
       });
 
       assert.deepEqual(
         client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
-        { a: 7, b: 2, c: 3, bar: { d: 8, e: 9, f: 6 } },
+        { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 8, e: 9, f: 6 } },
       );
 
       assert.deepEqual(client.store.getState().apollo.data, {
         'foo': {
-          __typename: 'Type1',
+          __typename: 'Foo',
           a: 7,
           b: 2,
           c: 3,
@@ -678,7 +681,7 @@ describe('ApolloClient', () => {
           },
         },
         '$foo.bar': {
-          __typename: 'Type2',
+          __typename: 'Bar',
           d: 8,
           e: 9,
           f: 6,
@@ -694,12 +697,12 @@ describe('ApolloClient', () => {
 
       client.writeQuery({
         query: gql`{ a b foo { c d bar { key e f } } }`,
-        data: { a: 1, b: 2, foo: { c: 3, d: 4, bar: { key: 'foobar', e: 5, f: 6 } } },
+        data: { a: 1, b: 2, foo: { __typename: 'Foo', c: 3, d: 4, bar: { key: 'foobar', __typename: 'Bar', e: 5, f: 6 } } },
       });
 
       assert.deepEqual(
         client.readQuery({ query: gql`{ a b foo { c d bar { key e f } } }` }),
-        { a: 1, b: 2, foo: { c: 3, d: 4, bar: { key: 'foobar', e: 5, f: 6 } } },
+        { a: 1, b: 2, foo: { __typename: 'Foo', c: 3, d: 4, bar: { __typename: 'Bar', key: 'foobar', e: 5, f: 6 } } },
       );
 
       assert.deepEqual(client.store.getState().apollo.data, {
@@ -713,6 +716,7 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.foo': {
+          __typename: 'Foo',
           c: 3,
           d: 4,
           bar: {
@@ -723,6 +727,7 @@ describe('ApolloClient', () => {
         },
         'foobar': {
           key: 'foobar',
+          __typename: 'Bar',
           e: 5,
           f: 6,
         },
@@ -845,10 +850,12 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.foo.bar': {
+          __typename: 'bar',
           e: 5,
           f: 6,
         },
         '$ROOT_QUERY.bar.foo': {
+          __typename: 'foo',
           k: 12,
           l: 13,
         },
@@ -887,6 +894,7 @@ describe('ApolloClient', () => {
         },
         'bar:foobar': {
           id: 'foobar',
+          __typename: 'bar',
           e: 5,
           f: 6,
         },
@@ -924,6 +932,7 @@ describe('ApolloClient', () => {
           },
         },
         'bar:foobar': {
+          __typename: 'bar',
           _id: 'foobar',
           e: 5,
           f: 6,
@@ -1059,6 +1068,7 @@ describe('ApolloClient', () => {
           },
         },
         'bar:foobar': {
+          __typename: 'bar',
           id: 'foobar',
           e: 5,
           f: 6,
@@ -1123,11 +1133,13 @@ describe('ApolloClient', () => {
           },
         },
         'bar:foobar': {
+          __typename: 'bar',
           id: 'foobar',
           e: 5,
           f: 6,
         },
         'foo:barfoo': {
+          __typename: 'foo',
           _id: 'barfoo',
           k: 12,
           l: 13,

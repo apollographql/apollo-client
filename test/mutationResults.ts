@@ -37,7 +37,7 @@ describe('mutation results', () => {
         }
       }
     }
-  `
+  `;
 
   const queryWithTypename = gql`
     query todoList {
@@ -348,7 +348,7 @@ describe('mutation results', () => {
           completed
         }
       }
-    `
+    `;
 
     const result2: any = {
       data: {

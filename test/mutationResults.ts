@@ -419,6 +419,7 @@ describe('mutation results', () => {
       }, {
         request: { query: mutation},
         result: mutationResult,
+        delay: 5,
       }, {
         request: { query: queryWithVars, variables: { id: 6 } },
         result: result6,
@@ -464,7 +465,7 @@ describe('mutation results', () => {
         subscription.unsubscribe();
 
         // The reducer should have been called twice
-        assert.equal(counter, 3);
+        assert.equal(counter, 4);
 
         // But there should be one more todo item than before, because variables only matched once
         assert.equal(newResult.data.todoList.todos.length, 4);

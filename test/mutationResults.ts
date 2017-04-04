@@ -13,33 +13,58 @@ import { ObservableQuery } from '../src/core/ObservableQuery';
 import gql from 'graphql-tag';
 
 describe('mutation results', () => {
+
   const query = gql`
     query todoList {
-      __typename
       todoList(id: 5) {
-        __typename
         id
         todos {
           id
-          __typename
           text
           completed
         }
         filteredTodos: todos(completed: true) {
           id
-          __typename
           text
           completed
         }
       }
       noIdList: todoList(id: 6) {
-        __typename
         id
         todos {
-          __typename
           text
           completed
         }
+      }
+    }
+  `
+
+  const queryWithTypename = gql`
+    query todoList {
+      todoList(id: 5) {
+        id
+        todos {
+          id
+          text
+          completed
+          __typename
+        }
+        filteredTodos: todos(completed: true) {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+      noIdList: todoList(id: 6) {
+        id
+        todos {
+          text
+          completed
+          __typename
+        }
+        __typename
       }
     }
   `;
@@ -192,7 +217,7 @@ describe('mutation results', () => {
 
   function setupObsHandle(...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
-      request: { query },
+      request: { query: queryWithTypename },
       result,
     }, ...mockedResponses);
 
@@ -215,7 +240,7 @@ describe('mutation results', () => {
 
   function setupDelayObsHandle(delay: number, ...mockedResponses: any[]) {
     networkInterface = mockNetworkInterface({
-      request: { query },
+      request: { query: queryWithTypename },
       result,
       delay,
     }, ...mockedResponses);
@@ -323,7 +348,7 @@ describe('mutation results', () => {
           completed
         }
       }
-    `;
+    `
 
     const result2: any = {
       data: {
@@ -688,7 +713,7 @@ describe('mutation results', () => {
       // The resolver doesn't actually run.
       function setupReducerObsHandle(...mockedResponses: any[]) {
         networkInterface = mockNetworkInterface({
-          request: { query },
+          request: { query: queryWithTypename },
           result,
           delay: 30,
         }, ...mockedResponses);
@@ -750,7 +775,7 @@ describe('mutation results', () => {
       it('does not swallow errors', done => {
         client = new ApolloClient({
           networkInterface: mockNetworkInterface({
-            request: { query },
+            request: { query: queryWithTypename },
             result,
           }),
         });
@@ -984,7 +1009,7 @@ describe('mutation results', () => {
         request: { query: mutation },
         result: {errors: [new Error('mock error')]},
       }, {
-        request: { query },
+        request: { query: queryWithTypename },
         result,
       });
 
@@ -1435,7 +1460,7 @@ describe('mutation results', () => {
         request: { query: mutation },
         result: {errors: [new Error('mock error')]},
       }, {
-        request: { query },
+        request: { query: queryWithTypename },
         result,
       });
 

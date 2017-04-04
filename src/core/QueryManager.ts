@@ -989,7 +989,7 @@ export class QueryManager {
       if (queryOptions.reducer) {
         return createStoreReducer(
           queryOptions.reducer,
-          queryOptions.query,
+          this.addTypename ? addTypenameToDocument(queryOptions.query) : queryOptions.query,
           query.variables || {},
           this.reducerConfig,
         );

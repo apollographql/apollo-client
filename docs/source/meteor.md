@@ -338,6 +338,36 @@ createApolloServer(req => ({
 });
 ```
 
+## Importing `.graphql` files
+
+An easy way to work with GraphQL is by importing `.graphql` files directly using the `import` syntax.
+
+```bash
+meteor add swydo:graphql
+```
+
+Instead of the `/imports/api/schema.js` file, create a `/imports/api/schema.graphql` file with the same content as before:
+
+```graphql
+type Query {
+  say: String
+}
+```
+
+One of the benefits you'll get right away is good highlighting by GitHub and your IDE!
+
+Now we can import the schema:
+
+```js
+import typeDefs from '/imports/api/schema.graphql';
+```
+
+Use `typeDefs` as before in the above examples. You can [pass it directly to `makeExecutableSchema`](https://github.com/apollographql/graphql-tools/pull/300) like before.
+
+The import syntax will also work for any other `.graphql` file besides your main schema. So you'll be able to import query, mutation and subscription files without needing to manually parse them with the [graphql-tag](https://github.com/apollographql/graphql-tag).
+
+For more benefits, see the [GrahpQL build plugin README](https://github.com/Swydo/meteor-graphql/blob/master/README.md#benefits).
+
 ## Blaze
 
 If you are looking to integrate Apollo with [Blaze](http://blazejs.org/), you can use the [swydo:blaze-apollo](https://github.com/Swydo/blaze-apollo) package:

@@ -42,7 +42,7 @@ And you have two Scenes:
 
 The query for the Series Overview would look like the following:
 ```graphql
-query seriesOverviewData() {
+query seriesOverviewData {
   series {
     id
     title
@@ -74,10 +74,14 @@ query seriesEpisodes($seriesId: Int!) {
 }
 ```
 
-By adding a customResolver for the `oneSeries` query. The data can be resolved instantly from the store without a server round trip.
+By adding a customResolver for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
 
 ```javascript
 import ApolloClient, { toIdValue } from 'apollo-client'
+
+// ... your NetworkInterface declaration
+// and also VERY important: Your dataIdFromObject declaration
+
 
 const client = new ApolloClient({
   networkInterface,
@@ -90,4 +94,72 @@ const client = new ApolloClient({
 })
 ```
 
+A component that implements the two queries could look like this:
+```jsx
+import React, { PropTypes, } from 'react'
+import { gql, graphql, compose, } from 'react-apollo'
 
+const QUERY_SERIES_DETAIL_SCENE = gql`
+  query seriesDetailData($seriesId: Int!) {
+    oneSeries(id: $seriesId) {
+      id
+      title
+      description
+      cover
+    }
+  }
+`
+
+const QUERY_SERIES_EPISODES = gql`
+  query seriesEpisodes($seriesId: Int!) {
+    episodes(seriesId: $seriesId) {
+      id
+      title
+      cover
+    }
+  }
+`
+const options = ({ seriesId, }) => ({ variables: { seriesId, }, })
+
+const withSeriesDetailData = graphql(QUERY_SERIES_DETAIL_SCENE, {
+  name: `seriesDetailData`,
+  options,
+})
+
+const withSeriesEpisodes = graphql(QUERY_SERIES_EPISODES, {
+  name: `episodesData`,
+  options,
+})
+
+const withData = compose(
+  withSeriesDetailData,
+  withSeriesEpisodes
+)
+
+function SeriesDetailScene({ seriesDetailData, episodesData }) {
+  return (
+    <div>
+      <h1>{seriesDetailData.loading ? `Loading...` : seriesDetailData.oneSeries.title}</h1>
+      <img src={seriesDetailData.loading ? `/dummy.jpg` : seriesDetailData.oneSeries.cover} />
+      <h2>Episodes</h2>
+      <ul>
+      {episodesData.loading ? <li>Loading...</li> : episodesData.episodes.map(episode => (
+        <li key={episode.id}>
+          <img src={episode.cover} />
+          <a href={`/episode/${episode.id}`}>{episode.title}</a>
+        </li>
+      ))}
+      </ul>
+    </div>
+  )
+}
+
+const SeriesDetailSceneWithData = withData(SeriesDetailScene)
+
+SeriesDetailSceneWithData.propTypes = {
+  seriesId: PropTypes.number.isRequired,
+}
+
+export default SeriesDetailScene
+
+```

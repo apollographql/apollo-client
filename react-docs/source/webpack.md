@@ -21,13 +21,15 @@ query CurrentUserForLayout {
 You can load this file adding a rule in your webpack config file:
 
 ```js
-loaders: [
-  {
-    test: /\.(graphql|gql)$/,
-    exclude: /node_modules/,
-    loader: 'graphql-tag/loader'
-  }
-]
+module: {
+  rules: [
+    {
+      test: /\.(graphql|gql)$/,
+      exclude: /node_modules/,
+      loader: 'graphql-tag/loader',
+    },
+  ],
+},
 ```
 
 As you can see, `.graphql` or `.gql` files will be parsed whenever imported:

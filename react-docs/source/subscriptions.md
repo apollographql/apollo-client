@@ -70,7 +70,7 @@ Then, initialize a GraphQL subscriptions transport client:
 ```js
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
-const wsClient = new SubscriptionClient(`http://localhost:5000/`, {
+const wsClient = new SubscriptionClient(`ws://localhost:5000/`, {
   reconnect: true
 });
 ```
@@ -214,7 +214,7 @@ In many cases it is necessary to authenticate clients before allowing them to re
 ```js
 import {SubscriptionClient} from 'subscriptions-transport-ws';
 
-const wsClient = new SubscriptionClient(`http://localhost:5000/`, {
+const wsClient = new SubscriptionClient(`ws://localhost:5000/`, {
     reconnect: true,
     connectionParams: {
         authToken: user.authToken,

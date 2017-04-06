@@ -526,10 +526,7 @@ export class QueryManager {
                                 return defaultValueObj;
                               });
 
-      options.variables = {
-        ...defaultValues,
-        ...options.variables,
-      };
+      options.variables = Object.assign({}, ...defaultValues, options.variables);
     }
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {

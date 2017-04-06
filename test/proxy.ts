@@ -1,11 +1,12 @@
 import { assert } from 'chai';
 import { createStore } from 'redux';
 import gql from 'graphql-tag';
-import { print } from 'graphql-tag/bundledPrinter';
+import { print } from 'graphql/language/printer';
 import { createApolloStore, ApolloReducerConfig } from '../src/store';
 import { ReduxDataProxy, TransactionDataProxy } from '../src/data/proxy';
 import { toIdValue } from '../src/data/storeUtils';
 import { HeuristicFragmentMatcher } from '../src/data/fragmentMatcher';
+import { addTypenameToDocument } from '../src/queries/queryTransform';
 
 describe('ReduxDataProxy', () => {
   function createDataProxy({
@@ -743,6 +744,7 @@ describe('TransactionDataProxy', () => {
           },
         },
         'foo': {
+          __typename: 'Foo',
           e: 4,
           f: 5,
           g: 6,
@@ -753,23 +755,24 @@ describe('TransactionDataProxy', () => {
           },
         },
         'bar': {
+          __typename: 'Bar',
           i: 7,
           j: 8,
           k: 9,
         },
-      }, {});
+      }, { addTypename: true });
 
       assert.deepEqual(
         proxy.readQuery({ query: gql`{ a d { e } }` }),
-        { a: 1, d: { e: 4 } },
+        { a: 1, d: { __typename: 'Foo', e: 4 } },
       );
       assert.deepEqual(
         proxy.readQuery({ query: gql`{ a d { e h { i } } }` }),
-        { a: 1, d: { e: 4, h: { i: 7 } } },
+        { a: 1, d: { __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } } },
       );
       assert.deepEqual(
         proxy.readQuery({ query: gql`{ a b c d { e f g h { i j k } } }` }),
-        { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
+        { a: 1, b: 2, c: 3, d: { __typename: 'Foo',  e: 4, f: 5, g: 6, h: { __typename: 'Bar',  i: 7, j: 8, k: 9 } } },
       );
     });
 
@@ -779,7 +782,7 @@ describe('TransactionDataProxy', () => {
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
         },
-      }, {});
+      }, { addTypename: true });
 
       assert.deepEqual(proxy.readQuery({
         query: gql`query ($literal: Boolean, $value: Int) {
@@ -799,6 +802,7 @@ describe('TransactionDataProxy', () => {
           __typename: 'Query',
         },
         foo: {
+          __typename: 'Foo',
           id: 'foo',
           a: 1,
           b: '2',
@@ -811,6 +815,7 @@ describe('TransactionDataProxy', () => {
             thing: (_, args) => toIdValue(args.id),
           },
         },
+        addTypename: true,
       });
 
       const queryResult = proxy.readQuery({
@@ -824,7 +829,7 @@ describe('TransactionDataProxy', () => {
       });
 
       assert.deepEqual(queryResult, {
-        thing: { a: 1, b: '2', c: null },
+        thing: {__typename: 'Foo', a: 1, b: '2', c: null },
       });
     });
   });
@@ -864,7 +869,6 @@ describe('TransactionDataProxy', () => {
     it('will read some deeply nested data from the store at any id', () => {
       const proxy = new TransactionDataProxy({
         'ROOT_QUERY': {
-          __typename: 'Type1',
           a: 1,
           b: 2,
           c: 3,
@@ -875,7 +879,7 @@ describe('TransactionDataProxy', () => {
           },
         },
         'foo': {
-          __typename: 'Type2',
+          __typename: 'Foo',
           e: 4,
           f: 5,
           g: 6,
@@ -886,28 +890,28 @@ describe('TransactionDataProxy', () => {
           },
         },
         'bar': {
-          __typename: 'Type3',
+          __typename: 'Bar',
           i: 7,
           j: 8,
           k: 9,
         },
-      }, {});
+      }, { addTypename: true });
 
       assert.deepEqual(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e h { i } }` }),
-        { e: 4, h: { i: 7 } },
+        { __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } },
       );
       assert.deepEqual(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } }` }),
-        { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+        { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } },
       );
       assert.deepEqual(
         proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i }` }),
-        { i: 7 },
+        { __typename: 'Bar', i: 7 },
       );
       assert.deepEqual(
         proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i j k }` }),
-        { i: 7, j: 8, k: 9 },
+        { __typename: 'Bar', i: 7, j: 8, k: 9 },
       );
       assert.deepEqual(
         proxy.readFragment({
@@ -915,7 +919,7 @@ describe('TransactionDataProxy', () => {
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
           fragmentName: 'fragmentFoo',
         }),
-        { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
+        { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } },
       );
       assert.deepEqual(
         proxy.readFragment({
@@ -923,18 +927,18 @@ describe('TransactionDataProxy', () => {
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
           fragmentName: 'fragmentBar',
         }),
-        { i: 7, j: 8, k: 9 },
+        { __typename: 'Bar', i: 7, j: 8, k: 9 },
       );
     });
 
     it('will read some data from the store with variables', () => {
       const proxy = new TransactionDataProxy({
         'foo': {
-          __typename: 'Type1',
+          __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
         },
-      }, {});
+      }, { addTypename: true });
 
       assert.deepEqual(proxy.readFragment({
         id: 'foo',
@@ -948,7 +952,7 @@ describe('TransactionDataProxy', () => {
           literal: false,
           value: 42,
         },
-      }), { a: 1, b: 2 });
+      }), { a: 1, b: 2, __typename: 'Foo' });
     });
 
     it('will return null when an id that can’t be found is provided', () => {
@@ -988,6 +992,7 @@ describe('TransactionDataProxy', () => {
             thing: (_, args) => toIdValue(args.id),
           },
         },
+        addTypename: true,
       });
 
       const queryResult = proxy.readFragment({
@@ -998,7 +1003,8 @@ describe('TransactionDataProxy', () => {
       });
 
       assert.deepEqual(queryResult, {
-        thing: { a: 1, b: '2', c: null },
+        __typename: 'Query',
+        thing: { __typename: 'Thing', a: 1, b: '2', c: null },
       });
     });
   });
@@ -1014,7 +1020,7 @@ describe('TransactionDataProxy', () => {
     });
 
     it('will create writes that get returned when finished', () => {
-      const proxy = new TransactionDataProxy({}, {});
+      const proxy = new TransactionDataProxy({}, { addTypename: true });
 
       proxy.writeQuery({
         data: { a: 1, b: 2, c: 3 },
@@ -1033,13 +1039,13 @@ describe('TransactionDataProxy', () => {
         {
           rootId: 'ROOT_QUERY',
           result: { a: 1, b: 2, c: 3 },
-          document: gql`{ a b c }`,
+          document: addTypenameToDocument(gql`{ a b c }`),
           variables: {},
         },
         {
           rootId: 'ROOT_QUERY',
           result: { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } },
-          document: gql`{ foo(id: $id) { d e bar { f g } } }`,
+          document: addTypenameToDocument(gql`{ foo(id: $id) { d e bar { f g } } }`),
           variables: { id: 7 },
         },
       ]);
@@ -1048,7 +1054,7 @@ describe('TransactionDataProxy', () => {
 
   describe('writeFragment', () => {
     it('will throw an error if the transaction has finished', () => {
-      const proxy: any = new TransactionDataProxy({}, {});
+      const proxy: any = new TransactionDataProxy({}, { addTypename: true });
       proxy.finish();
 
       assert.throws(() => {
@@ -1103,7 +1109,7 @@ describe('TransactionDataProxy', () => {
     it('will write data locally which will then be read back', () => {
       const data: any = {
         'foo': {
-          __typename: 'Type1',
+          __typename: 'Foo',
           a: 1,
           b: 2,
           c: 3,
@@ -1114,18 +1120,18 @@ describe('TransactionDataProxy', () => {
           },
         },
         '$foo.bar': {
-          __typename: 'Type2',
+          __typename: 'Bar',
           d: 4,
           e: 5,
           f: 6,
         },
       };
 
-      const proxy = new TransactionDataProxy(data, {});
+      const proxy = new TransactionDataProxy(data, { addTypename: true });
 
       assert.deepEqual(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
-        { a: 1, b: 2, c: 3, bar: { d: 4, e: 5, f: 6 } },
+        { __typename: 'Foo', a: 1, b: 2, c: 3, bar: { __typename: 'Bar', d: 4, e: 5, f: 6 } },
       );
 
       proxy.writeFragment({
@@ -1136,34 +1142,34 @@ describe('TransactionDataProxy', () => {
 
       assert.deepEqual(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
-        { a: 7, b: 2, c: 3, bar: { d: 4, e: 5, f: 6 } },
+        { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 4, e: 5, f: 6 } },
       );
 
       proxy.writeFragment({
         id: 'foo',
         fragment: gql`fragment x on Foo { bar { d } }`,
-        data: { bar: { d: 8 } },
+        data: { __typename: 'Foo', bar: { __typename: 'Bar', d: 8 } },
       });
 
       assert.deepEqual(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
-        { a: 7, b: 2, c: 3, bar: { d: 8, e: 5, f: 6 } },
+        { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 8, e: 5, f: 6 } },
       );
 
       proxy.writeFragment({
         id: '$foo.bar',
         fragment: gql`fragment y on Bar { e }`,
-        data: { __typename: 'Type2', e: 9 },
+        data: { __typename: 'Bar', e: 9 },
       });
 
       assert.deepEqual(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
-        { a: 7, b: 2, c: 3, bar: { d: 8, e: 9, f: 6 } },
+        { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 8, e: 9, f: 6 } },
       );
 
       assert.deepEqual((proxy as any).data, {
         'foo': {
-          __typename: 'Type1',
+          __typename: 'Foo',
           a: 7,
           b: 2,
           c: 3,
@@ -1174,7 +1180,7 @@ describe('TransactionDataProxy', () => {
           },
         },
         '$foo.bar': {
-          __typename: 'Type2',
+          __typename: 'Bar',
           d: 8,
           e: 9,
           f: 6,
@@ -1183,7 +1189,7 @@ describe('TransactionDataProxy', () => {
 
       assert.deepEqual(data, {
         'foo': {
-          __typename: 'Type1',
+          __typename: 'Foo',
           a: 1,
           b: 2,
           c: 3,
@@ -1194,7 +1200,7 @@ describe('TransactionDataProxy', () => {
           },
         },
         '$foo.bar': {
-          __typename: 'Type2',
+          __typename: 'Bar',
           d: 4,
           e: 5,
           f: 6,
@@ -1204,16 +1210,16 @@ describe('TransactionDataProxy', () => {
 
     it('will write data to a specific id', () => {
       const data = {};
-      const proxy = new TransactionDataProxy(data, { dataIdFromObject : (o: any) => o.id });
+      const proxy = new TransactionDataProxy(data, { dataIdFromObject : (o: any) => o.id, addTypename: true });
 
       proxy.writeQuery({
         query: gql`{ a b foo { c d bar { id e f } } }`,
-        data: { a: 1, b: 2, foo: { c: 3, d: 4, bar: { id: 'foobar', e: 5, f: 6 } } },
+        data: { a: 1, b: 2, foo: { __typename: 'Foo', c: 3, d: 4, bar: { __typename: 'Bar', id: 'foobar', e: 5, f: 6 } } },
       });
 
       assert.deepEqual(
         proxy.readQuery({ query: gql`{ a b foo { c d bar { id e f } } }` }),
-        { a: 1, b: 2, foo: { c: 3, d: 4, bar: { id: 'foobar', e: 5, f: 6 } } },
+        { a: 1, b: 2, foo: { __typename: 'Foo', c: 3, d: 4, bar: { __typename: 'Bar', id: 'foobar', e: 5, f: 6 } } },
       );
 
       assert.deepEqual((proxy as any).data, {
@@ -1227,6 +1233,7 @@ describe('TransactionDataProxy', () => {
           },
         },
         '$ROOT_QUERY.foo': {
+          __typename: 'Foo',
           c: 3,
           d: 4,
           bar: {
@@ -1236,6 +1243,7 @@ describe('TransactionDataProxy', () => {
           },
         },
         'foobar': {
+          __typename: 'Bar',
           id: 'foobar',
           e: 5,
           f: 6,

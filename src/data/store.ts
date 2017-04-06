@@ -163,6 +163,7 @@ export function data(
             query: query.document,
             variables: query.variables,
             returnPartialData: true,
+            fragmentMatcherFunction: config.fragmentMatcher,
             config,
           });
 

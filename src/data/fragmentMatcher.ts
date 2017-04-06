@@ -11,8 +11,6 @@ import {
 } from '../util/environment';
 
 export interface FragmentMatcherInterface {
-  canBypassInit: (query: DocumentNode) => boolean;
-  ensureReady(queryManager?: QueryManager): Promise<void>;
   match(idValue: IdValue, typeCondition: string, context: ReadStoreContext): boolean;
 }
 
@@ -37,7 +35,7 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
   private possibleTypesMap: PossibleTypesMap;
 
   constructor(options?: {
-    introspectionQueryResultData?: IntrospectionResultData, // XXX do we need a better type here?
+    introspectionQueryResultData?: IntrospectionResultData,
   }) {
     if (options && options.introspectionQueryResultData) {
       this.possibleTypesMap = this.parseIntrospectionResult(options.introspectionQueryResultData);
@@ -46,41 +44,8 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
       this.isReady = false;
     }
 
-    this.ensureReady = this.ensureReady.bind(this);
-    this.canBypassInit = this.canBypassInit.bind(this);
     this.match = this.match.bind(this);
   }
-
-  /**
-   * The init method has to get called before the match function can be used.
-   */
-  public ensureReady(queryManager: QueryManager): Promise<void> {
-    if (this.readyPromise) {
-      return this.readyPromise;
-    }
-
-    // XXX this is not terribly efficient, because it will store a whole bunch
-    // of type information in the store that we don't actually need.
-    // It would be much better if we could query only for unions and interfaces.
-    this.readyPromise = queryManager.query({ query: introspectionQuery })
-    .then( (res: any) => {
-      this.possibleTypesMap = this.parseIntrospectionResult(res.data as IntrospectionResultData);
-      this.isReady = true;
-      return;
-    })
-    .catch( (err: any) => {
-      // XXX I have a suspicion we may never get here even if introspection query fails
-      this.readyPromise = null; // so we may try again
-      throw err;
-    });
-
-    return this.readyPromise;
-  }
-
-  public canBypassInit(query: DocumentNode) {
-    return query === introspectionQuery;
-  }
-
 
   public match(idValue: IdValue, typeCondition: string, context: ReadStoreContext) {
     if (!this.isReady) {

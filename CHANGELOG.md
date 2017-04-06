@@ -5,6 +5,21 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Feature: support defaultValues for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
 
+### 1.0.2
+- Fix bug that caused reducer updates to fail because typename was not added automatically [PR #1540](https://github.com/apollographql/apollo-client/pull/1540)
+
+### 1.0.1
+- Fix bug that caused updateQueries to fail when fragments were present in query [#1527](https://github.com/apollographql/apollo-client/issues/1527)
+
+### 1.0.0 and 1.0.0-rc.9
+- Make imperative store operations respect addTypename [PR #1515](https://github.com/apollographql/apollo-client/issues/1515)
+- Fix bug that broke ObservableQuery.getCurrentResult for queries that used fragments [PR #1514](https://github.com/apollographql/apollo-client/issues/1514)
+
+
+### 1.0.0-rc.8
+- Make `QueryBatcher` more efficient and avoid `setInterval` leakage [PR #1498](https://github.com/apollographql/apollo-client/pull/1498).
+- Remove dependency on `graphql-tag/printer` per [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)
+
 ### 1.0.0-rc.7
 - Fix: `cachePolicy: cache-and-network` queries now dispatch `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
 - Fix: query deduplication no longer causes query errors to prevent subsequent successful execution of the same query  [PR #1481](https://github.com/apollographql/apollo-client/pull/1481)

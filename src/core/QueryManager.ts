@@ -82,7 +82,7 @@ import {
   ValueNode,
 } from 'graphql';
 
-import { print } from 'graphql-tag/bundledPrinter';
+import { print } from 'graphql/language/printer';
 
 import {
   readQueryFromStore,
@@ -357,6 +357,129 @@ export class QueryManager {
     });
   }
 
+
+  public fetchQuery<T>(
+    queryId: string,
+    options: WatchQueryOptions,
+    fetchType?: FetchType,
+
+    // This allows us to track if this is a query spawned by a `fetchMore`
+    // call for another query. We need this data to compute the `fetchMore`
+    // network status for the query this is fetching for.
+    fetchMoreForQueryId?: string,
+  ): Promise<ApolloQueryResult<T>> {
+
+    const {
+      variables = {},
+      metadata = null,
+      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
+    } = options;
+
+    const {
+      queryDoc,
+    } = this.transformQueryDocument(options);
+
+    const queryString = print(queryDoc);
+
+    let storeResult: any;
+    let needToFetch: boolean = fetchPolicy === 'network-only';
+
+    // If this is not a force fetch, we want to diff the query against the
+    // store before we fetch it from the network interface.
+    // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
+    if ( (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only')) {
+      const { isMissing, result } = diffQueryAgainstStore({
+        query: queryDoc,
+        store: this.reduxRootSelector(this.store.getState()).data,
+        variables,
+        returnPartialData: true,
+        fragmentMatcherFunction: this.fragmentMatcher.match,
+        config: this.reducerConfig,
+      });
+
+      // If we're in here, only fetch if we have missing fields
+      needToFetch = isMissing || fetchPolicy === 'cache-and-network';
+
+      storeResult = result;
+    }
+
+    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
+
+    const requestId = this.generateRequestId();
+
+
+    // Initialize query in store with unique requestId
+    this.queryDocuments[queryId] = queryDoc;
+    this.store.dispatch({
+      type: 'APOLLO_QUERY_INIT',
+      queryString,
+      document: queryDoc,
+      variables,
+      fetchPolicy,
+      queryId,
+      requestId,
+      // we store the old variables in order to trigger "loading new variables"
+      // state if we know we will go to the server
+      storePreviousVariables: shouldFetch,
+      isPoll: fetchType === FetchType.poll,
+      isRefetch: fetchType === FetchType.refetch,
+      fetchMoreForQueryId,
+      metadata,
+    });
+
+    // If there is no part of the query we need to fetch from the server (or,
+    // cachePolicy is cache-only), we just write the store result as the final result.
+    const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
+    if (shouldDispatchClientResult) {
+      this.store.dispatch({
+        type: 'APOLLO_QUERY_RESULT_CLIENT',
+        result: { data: storeResult },
+        variables,
+        document: queryDoc,
+        complete: !shouldFetch,
+        queryId,
+        requestId,
+      });
+    }
+
+    if (shouldFetch) {
+      const networkResult = this.fetchRequest({
+        requestId,
+        queryId,
+        document: queryDoc,
+        options,
+        fetchMoreForQueryId,
+      }).catch( error => {
+        // This is for the benefit of `refetch` promises, which currently don't get their errors
+        // through the store like watchQuery observers do
+        if (isApolloError(error)) {
+          throw error;
+        } else {
+          this.store.dispatch({
+            type: 'APOLLO_QUERY_ERROR',
+            error,
+            queryId,
+            requestId,
+            fetchMoreForQueryId,
+          });
+
+          this.removeFetchQueryPromise(requestId);
+
+          throw new ApolloError({
+            networkError: error,
+          });
+        };
+      });
+
+      if (fetchPolicy !== 'cache-and-network') {
+        return networkResult;
+      }
+    }
+    // If we have no query to send to the server, we should return the result
+    // found within the store.
+    return Promise.resolve({ data: storeResult });
+  }
+
   // Returns a query listener that will update the given observer based on the
   // results (or lack thereof) for a particular query.
   public queryListenerForObserver<T>(
@@ -593,24 +716,6 @@ export class QueryManager {
     return resPromise;
   }
 
-  public fetchQuery<T>(
-    queryId: string,
-    options: WatchQueryOptions,
-    fetchType?: FetchType,
-    fetchMoreForQueryId?: string,
-  ): Promise<ApolloQueryResult<T>> {
-
-    // putting this in front of the real fetchQuery function lets us make sure
-    // that the fragment matcher is initialized before we try to read from the store
-    if (this.fragmentMatcher.canBypassInit(options.query)) {
-      return this.fetchQueryAfterInit(queryId, options, fetchType, fetchMoreForQueryId);
-    }
-
-    return this.fragmentMatcher.ensureReady(this).then( () => {
-      return this.fetchQueryAfterInit(queryId, options, fetchType, fetchMoreForQueryId);
-    });
-  }
-
   public generateQueryId() {
     const queryId = this.idCounter.toString();
     this.idCounter++;
@@ -829,6 +934,7 @@ export class QueryManager {
       variables,
       config: this.reducerConfig,
       previousResult: lastResult ? lastResult.data : undefined,
+      fragmentMatcherFunction: this.fragmentMatcher.match,
     };
 
     try {
@@ -863,110 +969,6 @@ export class QueryManager {
       variables,
       document,
     };
-  }
-
-  /** This function runs fetchQuery without initializing the fragment matcher.
-   * We always want to initialize the fragment matcher, so this function should not be accessible outside.
-   * The only place we call this function from is within fetchQuery after initializing the fragment matcher.
-   */
-  private fetchQueryAfterInit<T>(
-    queryId: string,
-    options: WatchQueryOptions,
-    fetchType?: FetchType,
-
-    // This allows us to track if this is a query spawned by a `fetchMore`
-    // call for another query. We need this data to compute the `fetchMore`
-    // network status for the query this is fetching for.
-    fetchMoreForQueryId?: string,
-  ): Promise<ApolloQueryResult<T>> {
-
-    const {
-      variables = {},
-      metadata = null,
-      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
-    } = options;
-
-    const {
-      queryDoc,
-    } = this.transformQueryDocument(options);
-
-    const queryString = print(queryDoc);
-
-    let storeResult: any;
-    let needToFetch: boolean = fetchPolicy === 'network-only';
-
-    // If this is not a force fetch, we want to diff the query against the
-    // store before we fetch it from the network interface.
-    // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
-    if ( (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only')) {
-      const { isMissing, result } = diffQueryAgainstStore({
-        query: queryDoc,
-        store: this.reduxRootSelector(this.store.getState()).data,
-        variables,
-        returnPartialData: true,
-        fragmentMatcherFunction: this.fragmentMatcher.match,
-        config: this.reducerConfig,
-      });
-
-      // If we're in here, only fetch if we have missing fields
-      needToFetch = isMissing || fetchPolicy === 'cache-and-network';
-
-      storeResult = result;
-    }
-
-    const requestId = this.generateRequestId();
-    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
-
-    // Initialize query in store with unique requestId
-    this.queryDocuments[queryId] = queryDoc;
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_INIT',
-      queryString,
-      document: queryDoc,
-      variables,
-      fetchPolicy,
-      queryId,
-      requestId,
-      // we store the old variables in order to trigger "loading new variables"
-      // state if we know we will go to the server
-      storePreviousVariables: shouldFetch,
-      isPoll: fetchType === FetchType.poll,
-      isRefetch: fetchType === FetchType.refetch,
-      fetchMoreForQueryId,
-      metadata,
-    });
-
-    // If there is no part of the query we need to fetch from the server (or,
-    // cachePolicy is cache-only), we just write the store result as the final result.
-    const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
-    if (shouldDispatchClientResult) {
-      this.store.dispatch({
-        type: 'APOLLO_QUERY_RESULT_CLIENT',
-        result: { data: storeResult },
-        variables,
-        document: queryDoc,
-        complete: !shouldFetch,
-        queryId,
-        requestId,
-      });
-    }
-
-    if (shouldFetch) {
-      const networkResult = this.fetchRequest({
-        requestId,
-        queryId,
-        document: queryDoc,
-        options,
-        fetchMoreForQueryId,
-      });
-
-      if (fetchPolicy !== 'cache-and-network') {
-        return networkResult;
-      }
-    }
-    // If we have no query to send to the server, we should return the result
-    // found within the store.
-    return Promise.resolve({ data: storeResult });
   }
 
   // XXX: I think we just store this on the observable query at creation time
@@ -1012,7 +1014,7 @@ export class QueryManager {
       if (queryOptions.reducer) {
         return createStoreReducer(
           queryOptions.reducer,
-          queryOptions.query,
+          this.addTypename ? addTypenameToDocument(queryOptions.query) : queryOptions.query,
           query.variables || {},
           this.reducerConfig,
         );
@@ -1088,6 +1090,7 @@ export class QueryManager {
               variables,
               query: document,
               config: this.reducerConfig,
+              fragmentMatcherFunction: this.fragmentMatcher.match,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */
@@ -1104,25 +1107,7 @@ export class QueryManager {
           resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready, stale: false });
           return null;
         }).catch((error: Error) => {
-          // This is for the benefit of `refetch` promises, which currently don't get their errors
-          // through the store like watchQuery observers do
-          if (isApolloError(error)) {
-            reject(error);
-          } else {
-            this.store.dispatch({
-              type: 'APOLLO_QUERY_ERROR',
-              error,
-              queryId,
-              requestId,
-              fetchMoreForQueryId,
-            });
-
-            this.removeFetchQueryPromise(requestId);
-
-            reject(new ApolloError({
-              networkError: error,
-            }));
-          }
+          reject(error);
         });
     });
 

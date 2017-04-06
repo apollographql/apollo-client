@@ -30,7 +30,7 @@ import gql from 'graphql-tag';
 
 import {
   print,
-} from 'graphql-tag/bundledPrinter';
+} from 'graphql/language/printer';
 
 import { NetworkStatus } from '../src/queries/networkStatus';
 
@@ -1080,8 +1080,6 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
       fragmentMatcher: {
-        ensureReady: () => Promise.resolve(),
-        canBypassInit: () => true,
         match: fancyFragmentMatcher,
       },
     });
@@ -1123,38 +1121,140 @@ describe('client', () => {
 
     const networkInterface = mockNetworkInterface(
       {
-        request: { query: fragmentMatcherIntrospectionQuery },
-        delay: 5, // we put a delay here to make really sure the client waits
-        result: {
-          data: {
-            __schema: {
-              types: [{
-                kind: 'INTERFACE',
-                name: 'Item',
-                possibleTypes: [{
-                  name: 'ColorItem',
-                }, {
-                  name: 'MonochromeItem',
-                }],
-              }],
-            },
-          },
-        },
-      },
-      {
         request: { query },
         result: { data: result },
       });
 
-    const fm = new IntrospectionFragmentMatcher();
+    const ifm = new IntrospectionFragmentMatcher({
+      introspectionQueryResultData: {
+        __schema: {
+          types: [{
+            kind: 'UNION',
+            name: 'Item',
+            possibleTypes: [{
+              name: 'ColorItem',
+            }, {
+              name: 'MonochromeItem',
+            }],
+          }],
+        },
+      },
+    });
 
     const client = new ApolloClient({
       networkInterface,
-      fragmentMatcher: fm,
+      fragmentMatcher: ifm,
     });
 
     return client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
+    });
+  });
+
+  it('should call updateQueries, update and reducer after mutation on query with inlined fragments on an Interface type', (done) => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
+          __typename
+        }
+      }
+
+      fragment ItemFragment on Item {
+        id
+        ... on ColorItem {
+          color
+          __typename
+        }
+        __typename
+      }`;
+    const result = {
+      'items': [
+        {
+          '__typename': 'ColorItem',
+          'id': '27tlpoPeXm6odAxj3paGQP',
+          'color': 'red',
+        },
+        {
+          '__typename': 'MonochromeItem',
+          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+        },
+      ],
+    };
+
+    const mutation = gql`
+      mutation myMutationName {
+        fortuneCookie
+      }`;
+    const mutationResult = {
+      'fortuneCookie': 'The waiter spit in your food',
+    };
+
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query },
+        result: { data: result },
+      }, {
+        request: { query: mutation },
+        result: { data: mutationResult },
+      },
+    );
+
+    const ifm = new IntrospectionFragmentMatcher({
+      introspectionQueryResultData: {
+        __schema: {
+          types: [{
+            kind: 'UNION',
+            name: 'Item',
+            possibleTypes: [{
+              name: 'ColorItem',
+            }, {
+              name: 'MonochromeItem',
+            }],
+          }],
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      fragmentMatcher: ifm,
+    });
+
+    const reducerSpy = sinon.spy();
+    const reducer = (prev: any, action: any) => {
+      reducerSpy();
+      return prev;
+    };
+
+    const queryUpdaterSpy = sinon.spy();
+    const queryUpdater = (prev: any) => {
+      queryUpdaterSpy();
+      return prev;
+    };
+    const updateQueries = {
+      'items': queryUpdater,
+    };
+
+    const updateSpy = sinon.spy();
+
+    const obs = client.watchQuery({ query, reducer });
+
+    const sub = obs.subscribe({
+      next() {
+        client.mutate({ mutation, updateQueries, update: updateSpy })
+          .then(() => {
+            assert.isTrue(reducerSpy.called);
+            assert.isTrue(queryUpdaterSpy.called);
+            assert.isTrue(updateSpy.called);
+            sub.unsubscribe();
+            done();
+          })
+          .catch((err) => { done(err); });
+      },
+      error(err) {
+        done(err);
+      },
     });
   });
 

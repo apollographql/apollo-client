@@ -203,6 +203,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   public fetchMore(
     fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
   ): Promise<ApolloQueryResult<T>> {
+    if (!fetchMoreOptions.updateQuery) {
+      throw new Error('updateQuery option is required. This function defines how to update the query data with the new results.');
+    }
     return Promise.resolve()
       .then(() => {
         const qid = this.queryManager.generateQueryId();
@@ -485,6 +488,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         this.lastError = error;
       },
     };
+
 
     this.queryManager.startQuery<T>(
       this.queryId,

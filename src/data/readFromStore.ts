@@ -53,7 +53,7 @@ export type DiffResult = {
 export type ReadQueryOptions = {
   store: NormalizedCache,
   query: DocumentNode,
-  fragmentMatcherFunction?: FragmentMatcher, // optional because only queries with fragments require it.
+  fragmentMatcherFunction?: FragmentMatcher, // TODO make this required to prevent bugs
   variables?: Object,
   previousResult?: any,
   rootId?: string,

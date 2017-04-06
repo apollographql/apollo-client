@@ -44,22 +44,19 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
 
   public _middlewares: BatchMiddlewareInterface[];
   public _afterwares: BatchAfterwareInterface[];
-  private pollInterval: number;
   private batcher: QueryBatcher;
 
-  constructor(uri: string, pollInterval: number, fetchOpts: RequestInit) {
+  constructor(uri: string, batchInterval: number, fetchOpts: RequestInit) {
     super(uri, fetchOpts);
 
-    if (typeof pollInterval !== 'number') {
-      throw new Error(`pollInterval must be a number, got ${pollInterval}`);
+    if (typeof batchInterval !== 'number') {
+      throw new Error(`batchInterval must be a number, got ${batchInterval}`);
     }
 
-    this.pollInterval = pollInterval;
     this.batcher = new QueryBatcher({
+      batchInterval: batchInterval,
       batchFetchFunction: this.batchQuery.bind(this),
     });
-    this.batcher.start(this.pollInterval);
-    // XXX possible leak: when do we stop polling the queue?
   };
 
   public query(request: Request): Promise<ExecutionResult> {

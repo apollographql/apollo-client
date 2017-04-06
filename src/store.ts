@@ -190,4 +190,5 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   customResolvers?: CustomResolverMap;
   fragmentMatcher?: FragmentMatcher;
+  addTypename?: boolean,
 };

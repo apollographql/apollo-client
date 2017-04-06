@@ -633,21 +633,17 @@ export class QueryManager {
     // assign variable default values if supplied
     if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
       const defaultValues = queryDefinition.variableDefinitions
-                              .filter(({ defaultValue }) => defaultValue)
-                              .map(({ variable, defaultValue }) : { [key: string]: any } => {
-                                if (!defaultValue) {
-                                  return {}; // should never reach
-                                }
+        .filter(({ defaultValue }) => defaultValue)
+        .map(({ variable, defaultValue }) : { [key: string]: any } => {
+          const defaultValueObj: { [key: string]: any } = {};
+          valueToObjectRepresentation(
+            defaultValueObj,
+            variable.name,
+            defaultValue as ValueNode,
+          );
 
-                                const defaultValueObj: { [key: string]: any } = {};
-                                valueToObjectRepresentation(
-                                  defaultValueObj,
-                                  variable.name,
-                                  defaultValue,
-                                );
-
-                                return defaultValueObj;
-                              });
+          return defaultValueObj;
+        });
 
       options.variables = Object.assign({}, ...defaultValues, options.variables);
     }

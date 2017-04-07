@@ -425,7 +425,7 @@ export class QueryManager {
     });
 
     // If there is no part of the query we need to fetch from the server (or,
-    // cachePolicy is cache-only), we just write the store result as the final result.
+    // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
     if (shouldDispatchClientResult) {
       this.store.dispatch({

@@ -1209,7 +1209,7 @@ describe('mutation results', () => {
               assert.deepEqual(variables, { a: undefined, b: 2, c: 3 });
               return Promise.resolve({ data: { result: 'goodbye' } });
             case 3:
-              assert.equal(variables, undefined);
+              assert.deepEqual(variables, {});
               return Promise.resolve({ data: { result: 'moon' } });
             default:
               return Promise.reject(new Error('Too many network calls.'));
@@ -1247,6 +1247,61 @@ describe('mutation results', () => {
           'result({"a":1,"c":3})': 'world',
           'result({"b":2,"c":3})': 'goodbye',
           'result({})': 'moon',
+        },
+      });
+      done();
+    }).catch(done);
+  });
+
+  it('allows mutations with default values', done => {
+    let count = 0;
+
+    client = new ApolloClient({
+      addTypename: false,
+      networkInterface: {
+        query ({ variables }) {
+          switch (count++) {
+            case 0:
+              assert.deepEqual(variables, { a: 1, b: 'water' });
+              return Promise.resolve({ data: { result: 'hello' } });
+            case 1:
+              assert.deepEqual(variables, { a: 2, b: 'cheese', c: 3 });
+              return Promise.resolve({ data: { result: 'world' } });
+            case 2:
+              assert.deepEqual(variables, { a: 1, b: 'cheese', c: 3 });
+              return Promise.resolve({ data: { result: 'goodbye' } });
+            default:
+              return Promise.reject(new Error('Too many network calls.'));
+          }
+        },
+      },
+    });
+
+    const mutation = gql`
+      mutation ($a: Int = 1, $b: String = "cheese", $c: Int) {
+        result(a: $a, b: $b, c: $c)
+      }
+    `;
+
+    Promise.all([
+      client.mutate({
+        mutation,
+        variables: { a: 1, b: 'water' },
+      }),
+      client.mutate({
+        mutation,
+        variables: { a: 2, c: 3 },
+      }),
+      client.mutate({
+        mutation,
+        variables: { c: 3 },
+      }),
+    ]).then(() => {
+      assert.deepEqual(client.queryManager.getApolloState().data, {
+        ROOT_MUTATION: {
+          'result({"a":1,"b":"water"})': 'hello',
+          'result({"a":2,"b":"cheese","c":3})': 'world',
+          'result({"a":1,"b":"cheese","c":3})': 'goodbye',
         },
       });
       done();

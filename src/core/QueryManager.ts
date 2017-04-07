@@ -37,7 +37,10 @@ import {
 import {
   checkDocument,
   getQueryDefinition,
+  getOperationDefinition,
   getOperationName,
+  getDefaultValues,
+  getMutationDefinition,
 } from '../queries/getFromAST';
 
 import {
@@ -46,7 +49,6 @@ import {
 
 import {
   NormalizedCache,
-  valueToObjectRepresentation,
 } from '../data/storeUtils';
 
 import {
@@ -71,7 +73,6 @@ import maybeDeepFreeze from '../util/maybeDeepFreeze';
 import {
   ExecutionResult,
   DocumentNode,
-  NameNode,
   // TODO REFACTOR: do we still need this??
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
@@ -79,7 +80,6 @@ import {
   /* tslint:disable */
   SelectionSetNode,
   /* tslint:enable */
-  ValueNode,
 } from 'graphql';
 
 import { print } from 'graphql/language/printer';
@@ -258,7 +258,8 @@ export class QueryManager {
       mutation = addTypenameToDocument(mutation);
     }
 
-    checkDocument(mutation);
+    variables = Object.assign(getDefaultValues(getMutationDefinition(mutation)), variables);
+
     const mutationString = print(mutation);
     const request = {
       query: mutation,
@@ -632,20 +633,9 @@ export class QueryManager {
 
     // assign variable default values if supplied
     if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
-      const defaultValues = queryDefinition.variableDefinitions
-        .filter(({ defaultValue }) => defaultValue)
-        .map(({ variable, defaultValue }) : { [key: string]: any } => {
-          const defaultValueObj: { [key: string]: any } = {};
-          valueToObjectRepresentation(
-            defaultValueObj,
-            variable.name,
-            defaultValue as ValueNode,
-          );
+      const defaultValues = getDefaultValues(queryDefinition);
 
-          return defaultValueObj;
-        });
-
-      options.variables = Object.assign({}, ...defaultValues, options.variables);
+      options.variables = Object.assign(defaultValues, options.variables);
     }
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
@@ -835,13 +825,15 @@ export class QueryManager {
   ): Observable<any> {
     const {
       query,
-      variables,
     } = options;
     let transformedDoc = query;
     // Apply the query transformer if one has been provided.
     if (this.addTypename) {
       transformedDoc = addTypenameToDocument(transformedDoc);
     }
+
+    const variables = Object.assign({}, options.variables, getDefaultValues(getOperationDefinition(query)));
+
     const request: Request = {
       query: transformedDoc,
       variables,
@@ -871,7 +863,7 @@ export class QueryManager {
               document: transformedDoc,
               operationName: getOperationName(transformedDoc),
               result: { data: result },
-              variables: variables || {},
+              variables,
               subscriptionId: subId,
               extraReducers: this.getExtraReducers(),
             });

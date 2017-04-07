@@ -288,7 +288,7 @@ If you set your `interval` to 0 then that means no polling instead of executing 
 ```js
 class MyComponent extends Component {
   componentDidMount() {
-    // In this specific case you may want to use `options.pollInterval` isntead.
+    // In this specific case you may want to use `options.pollInterval` instead.
     this.props.data.startPolling(1000);
   }
 

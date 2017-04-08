@@ -426,7 +426,7 @@ export default graphql(gql`query { ... }`, {
 
 The interval in milliseconds at which you want to start polling. Whenever that number of milliseconds elapses your query will be executed using the network interface and another execution will be scheduled using the configured number of milliseconds.
 
-This option will start polling your query immeadiately when the component mounts. If you want to start and stop polling dynamically then you may use [`data.stopPolling`](#graphql-query-data-startPolling) and [`data.startPolling`](#graphql-query-data-stopPolling).
+This option will start polling your query immediately when the component mounts. If you want to start and stop polling dynamically then you may use [`data.stopPolling`](#graphql-query-data-startPolling) and [`data.startPolling`](#graphql-query-data-stopPolling).
 
 If you set `options.pollInterval` to 0 then that means no polling instead of executing a request every JavaScript event loop tick.
 

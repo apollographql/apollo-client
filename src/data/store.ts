@@ -156,7 +156,7 @@ export function data(
             return;
           }
 
-          
+
           // Read the current query result from the store.
           const { result: currentQueryResult, isMissing } = diffQueryAgainstStore({
             store: previousState,

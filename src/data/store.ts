@@ -149,7 +149,6 @@ export function data(
 
       // If this action wants us to update certain queries. Let’s do it!
       const { updateQueries } = constAction;
-
       if (updateQueries) {
         Object.keys(updateQueries).forEach(queryId => {
           const query = queries[queryId];
@@ -157,6 +156,7 @@ export function data(
             return;
           }
 
+          
           // Read the current query result from the store.
           const { result: currentQueryResult, isMissing } = diffQueryAgainstStore({
             store: previousState,

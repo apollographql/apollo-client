@@ -211,7 +211,6 @@ describe('optimistic mutation results', () => {
           });
 
           const dataInStore = client.queryManager.getDataWithOptimisticResults();
-
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated');
 

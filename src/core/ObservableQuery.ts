@@ -103,18 +103,29 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   public result(): Promise<ApolloQueryResult<T>> {
+    const that = this;
     return new Promise((resolve, reject) => {
-      const subscription = this.subscribe({
+      let subscription: (Subscription | null) = null;
+      const observer: Observer<ApolloQueryResult<T>> = {
         next(result) {
           resolve(result);
+
+          // Stop the query within the QueryManager if we can before
+          // this function returns.
+          const selectedObservers = that.observers.filter((obs: Observer<ApolloQueryResult<T>>) => obs !== observer);
+          if (selectedObservers.length === 0) {
+            that.queryManager.removeQuery(that.queryId);
+          }
+
           setTimeout(() => {
-            subscription.unsubscribe();
+            (subscription as Subscription).unsubscribe();
           }, 0);
         },
         error(error) {
           reject(error);
         },
-      });
+      };
+      subscription = that.subscribe(observer);
     });
   }
 

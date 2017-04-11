@@ -2787,7 +2787,7 @@ describe('QueryManager', () => {
     );
   });
 
-  it.skip('should return stale data when we orphan a real-id node in the store with a real-id node', () => {
+  it('should return stale data when we orphan a real-id node in the store with a real-id node', () => {
     const query1 = gql`
       query {
         author {

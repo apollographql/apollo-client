@@ -590,7 +590,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it.only('playground', (done) => {
+    it.only('manages a fulfillsVariables field', (done) => {
       const manager = mockQueryManager({
         request: { query, variables },
         result: { data: dataOne },
@@ -612,37 +612,46 @@ describe('ObservableQuery', () => {
         if (handleCount === 1) {
           assert.equal(result.networkStatus, NetworkStatus.loading);
           assert.equal(result.data, undefined);
+          assert.equal(result.fulfillsVariables, false);
         } else if (handleCount === 2) {
+          // Got the data for the first time
           assert.deepEqual(result.data, dataOne);
           observable.setVariables(differentVariables);
+          assert.equal(result.fulfillsVariables, true);
         } else if (handleCount === 3) {
           // status setVariables, but still returning the old data
           // while new data fetches
           assert.equal(result.networkStatus, NetworkStatus.setVariables);
           assert.deepEqual(result.data, dataOne);
+          assert.equal(result.fulfillsVariables, false);
         } else if (handleCount === 4) {
           // ??? it switches over to `loading` for a bit with stale: true
           // this doesn't make sense to me
           assert.equal(result.networkStatus, NetworkStatus.loading);
           assert.deepEqual(result.data, dataOne);
+          assert.equal(result.fulfillsVariables, false);
         } else if (handleCount === 5) {
           // Got the new data
           assert.equal(result.networkStatus, NetworkStatus.ready);
           assert.deepEqual(result.data, dataTwo);
           observable.setVariables(variables);
+          assert.equal(result.fulfillsVariables, true);
         } else if (handleCount === 6) {
           // Fetching the original data.
           // You'll get dataTwo for a moment...
           assert.equal(result.networkStatus, NetworkStatus.setVariables);
           assert.deepEqual(result.data, dataTwo);
+          assert.equal(result.fulfillsVariables, false);
         } else if (handleCount === 7) {
           // ...but then it switches over to `loading` with the data from the cache
           assert.equal(result.networkStatus, NetworkStatus.loading);
           assert.deepEqual(result.data, dataOne);
+          assert.equal(result.fulfillsVariables, true);
         } else if (handleCount === 8) {
           // And finally the loading is done and everything is good
           assert.equal(result.networkStatus, NetworkStatus.ready);
           assert.deepEqual(result.data, dataOne);
+          assert.equal(result.fulfillsVariables, true);
           done();
         }
       });

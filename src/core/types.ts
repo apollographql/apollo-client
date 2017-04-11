@@ -14,6 +14,7 @@ export type ApolloQueryResult<T> = {
   loading: boolean;
   networkStatus: NetworkStatus;
   stale: boolean;
+  fulfillsVariables: boolean;
 
   // This type is different from the GraphQLResult type because it doesn't include errors.
   // Those are thrown via the standard promise/observer catch mechanism.

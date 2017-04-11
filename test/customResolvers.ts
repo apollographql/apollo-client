@@ -50,6 +50,7 @@ describe('custom resolvers', () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         stale: false,
+        fulfillsVariables: true,
         data: {
           person: {
             __typename: 'Person',

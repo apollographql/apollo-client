@@ -741,7 +741,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (count, result) => {
         const { data, loading, networkStatus } = observable.currentResult();
         try {
-          assert.deepEqual(result, { data, loading, networkStatus, stale: false });
+          assert.deepEqual(result, { data, loading, networkStatus, stale: false, fulfillsVariables: true });
         } catch (e) {
           done(e);
         }
@@ -805,6 +805,7 @@ describe('ObservableQuery', () => {
             loading: false,
             networkStatus: 7,
             stale: false,
+            fulfillsVariables: true,
           });
           const observable = queryManager.watchQuery({
             query,
@@ -866,7 +867,7 @@ describe('ObservableQuery', () => {
 
           subscribeAndCount(done, observable, (handleCount, subResult) => {
             const { data, loading, networkStatus } = observable.currentResult();
-            assert.deepEqual(subResult, { data, loading, networkStatus, stale: false });
+            assert.deepEqual(subResult, { data, loading, networkStatus, stale: false, fulfillsVariables: !loading });
 
             if (handleCount === 1) {
               assert.deepEqual(subResult, {
@@ -874,6 +875,7 @@ describe('ObservableQuery', () => {
                 loading: false,
                 networkStatus: 7,
                 stale: false,
+                fulfillsVariables: true,
               });
               done();
             }
@@ -920,7 +922,7 @@ describe('ObservableQuery', () => {
 
         subscribeAndCount(done, observable, (count, result) => {
           const { data, loading, networkStatus } = observable.currentResult();
-          assert.deepEqual(result, { data, loading, networkStatus, stale: false });
+          assert.deepEqual(result, { data, loading, networkStatus, stale: false, fulfillsVariables: true });
 
           if (count === 1) {
             assert.deepEqual(result, {
@@ -928,6 +930,7 @@ describe('ObservableQuery', () => {
               loading: false,
               networkStatus: 7,
               stale: false,
+              fulfillsVariables: true,
             });
             queryManager.mutate({ mutation, optimisticResponse, updateQueries });
           } else if (count === 2) {

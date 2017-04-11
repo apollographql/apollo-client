@@ -590,7 +590,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it.only('manages a fulfillsVariables field', (done) => {
+    it('manages a fulfillsVariables field', (done) => {
       const manager = mockQueryManager({
         request: { query, variables },
         result: { data: dataOne },
@@ -656,6 +656,8 @@ describe('ObservableQuery', () => {
         }
       });
     });
+
+    it('should set fulfillsVariables to true if you call setVariables with the same variables');
   });
 
   describe('currentResult', () => {

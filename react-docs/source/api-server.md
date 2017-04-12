@@ -17,7 +17,7 @@ After executing `getDataFromTree` when you render with the [`react-dom/server` m
 
 If one of the queries fails the promise won’t reject until all of the queries have either resolved or rejected. At that point we will reject the promise returned from `getDataFromTree` with an error that has the property `error.queryErrors` which is an array of all the errors from the queries we executed. At that point you may decide to either render your tree anyway (if so, errored components will be in a loading state), or render an error page and do a full re-render on the client.
 
-For more information see the [recipe for server side rendering](#server-side-rendering.html).
+For more information see the [recipe for server side rendering](server-side-rendering.html).
 
 [`react-dom/server` methods]: https://facebook.github.io/react/docs/react-dom-server.html
 [`react-dom/server`’s `renderToString`]: https://facebook.github.io/react/docs/react-dom-server.html#rendertostring
@@ -50,7 +50,7 @@ import { renderToStringWithData } from 'react-apollo';
 
 This function calls [`getDataFromTree()`](#getDataFromTree) and when the promise returned by that function resolves it calls [`react-dom/server`’s `renderToString`][].
 
-For more information see the documentation for [`getDataFromTree()`](#getDataFromTree) or the [recipe for server side rendering](#server-side-rendering.html).
+For more information see the documentation for [`getDataFromTree()`](#getDataFromTree) or the [recipe for server side rendering](server-side-rendering.html).
 
 [`react-dom/server`’s `renderToString`]: https://facebook.github.io/react/docs/react-dom-server.html#rendertostring
 

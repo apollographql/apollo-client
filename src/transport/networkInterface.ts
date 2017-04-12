@@ -244,8 +244,9 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
       }))
       .then((responseAndOptions: ResponseAndOptions) => {
         const httpResponse = responseAndOptions.response as ParsedResponse;
-      
-        if (!httpResponse.ok) {
+        // Reserve status code 400 as a malformed GraphQL request, which we want to pass through
+        // to the client
+        if (!httpResponse.ok && httpResponse.status !== 400) {
           const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
           (httpError as any).response = httpResponse;
 
@@ -258,13 +259,8 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
 
           throw httpError;
         }
-        
-        return httpResponse.json().catch(() => {
-          const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
-          (httpError as any).response = httpResponse;
+        return httpResponse.body;
 
-          throw httpError;
-        });
       })
       .then((payload: ExecutionResult) => {
         if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {

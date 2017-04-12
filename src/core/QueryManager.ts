@@ -545,6 +545,7 @@ export class QueryManager {
               fragmentMatcherFunction: this.fragmentMatcher.match,
               previousResult: lastResult && lastResult.data,
             });
+            const fulfillsVariables = !queryStoreValue.previousVariables;
 
             let resultFromStore: ApolloQueryResult<T>;
 
@@ -557,7 +558,7 @@ export class QueryManager {
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
                 networkStatus: queryStoreValue.networkStatus,
                 stale: true,
-                fulfillsVariables: false,
+                fulfillsVariables,
               };
             } else {
               resultFromStore = {
@@ -565,7 +566,7 @@ export class QueryManager {
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
                 networkStatus: queryStoreValue.networkStatus,
                 stale: false,
-                fulfillsVariables: !queryStoreValue.previousVariables,
+                fulfillsVariables,
               };
             }
 

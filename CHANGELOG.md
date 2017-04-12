@@ -4,6 +4,9 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### 1.0.2
+- Fix bug that caused reducer updates to fail because typename was not added automatically [PR #1540](https://github.com/apollographql/apollo-client/pull/1540)
+
 ### 1.0.1
 - Fix bug that caused updateQueries to fail when fragments were present in query [#1527](https://github.com/apollographql/apollo-client/issues/1527)
 
@@ -17,7 +20,7 @@ Expect active development and potentially significant breaking changes in the `0
 - Remove dependency on `graphql-tag/printer` per [graphql-tag#54](https://github.com/apollographql/graphql-tag/issues/54)
 
 ### 1.0.0-rc.7
-- Fix: `cachePolicy: cache-and-network` queries now dispatch `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
+- Fix: `fetchPolicy: cache-and-network` queries now dispatch `APOLLO_QUERY_RESULT_CLIENT` [PR #1463](https://github.com/apollographql/apollo-client/pull/1463)
 - Fix: query deduplication no longer causes query errors to prevent subsequent successful execution of the same query  [PR #1481](https://github.com/apollographql/apollo-client/pull/1481)
 - Breaking: change default of notifyOnNetworkStatusChange back to false [PR #1482](https://github.com/apollographql/apollo-client/pull/1482)
 - Feature: add fragmentMatcher option to client and implement IntrospectionFragmentMatcher [PR #1483](https://github.com/apollographql/apollo-client/pull/1483)

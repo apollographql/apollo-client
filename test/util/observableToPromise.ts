@@ -94,7 +94,7 @@ export function observableToPromiseAndSubscription({
     promise,
     subscription,
   };
-};
+}
 
 export default function(
   options: Options,

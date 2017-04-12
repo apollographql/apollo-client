@@ -425,7 +425,7 @@ export class QueryManager {
     });
 
     // If there is no part of the query we need to fetch from the server (or,
-    // cachePolicy is cache-only), we just write the store result as the final result.
+    // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
     if (shouldDispatchClientResult) {
       this.store.dispatch({
@@ -465,7 +465,7 @@ export class QueryManager {
           throw new ApolloError({
             networkError: error,
           });
-        };
+        }
       });
 
       if (fetchPolicy !== 'cache-and-network') {
@@ -702,7 +702,7 @@ export class QueryManager {
       type: 'APOLLO_QUERY_STOP',
       queryId,
     });
-  };
+  }
 
   public getApolloState(): Store {
     return this.reduxRootSelector(this.store.getState());
@@ -882,7 +882,7 @@ export class QueryManager {
         _networkSubscriptionId: subId,
       } as Subscription;
     });
-  };
+  }
 
   public stopQuery(queryId: string) {
     // XXX in the future if we should cancel the request
@@ -989,7 +989,7 @@ export class QueryManager {
       if (queryOptions.reducer) {
         return createStoreReducer(
           queryOptions.reducer,
-          queryOptions.query,
+          this.addTypename ? addTypenameToDocument(queryOptions.query) : queryOptions.query,
           query.variables || {},
           this.reducerConfig,
         );

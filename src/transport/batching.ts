@@ -15,7 +15,7 @@ export interface QueryFetchRequest {
   promise?: Promise<ExecutionResult>;
   resolve?: (result: ExecutionResult) => void;
   reject?: (error: Error) => void;
-};
+}
 
 // QueryBatcher doesn't fire requests immediately. Requests that were enqueued within
 // a certain amount of time (configurable through `batchInterval`) will be batched together

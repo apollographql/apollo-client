@@ -259,7 +259,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does a network request if cachePolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', (done) => {
+    it('does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only', (done) => {
       let queryManager: QueryManager;
       let observable: ObservableQuery<any>;
       const testQuery = gql`

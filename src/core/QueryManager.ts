@@ -465,7 +465,7 @@ export class QueryManager {
           throw new ApolloError({
             networkError: error,
           });
-        };
+        }
       });
 
       if (fetchPolicy !== 'cache-and-network') {
@@ -702,7 +702,7 @@ export class QueryManager {
       type: 'APOLLO_QUERY_STOP',
       queryId,
     });
-  };
+  }
 
   public getApolloState(): Store {
     return this.reduxRootSelector(this.store.getState());
@@ -882,7 +882,7 @@ export class QueryManager {
         _networkSubscriptionId: subId,
       } as Subscription;
     });
-  };
+  }
 
   public stopQuery(queryId: string) {
     // XXX in the future if we should cancel the request

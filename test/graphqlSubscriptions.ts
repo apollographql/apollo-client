@@ -194,7 +194,7 @@ describe('GraphQL Subscriptions', () => {
     }) as any;
 
     // Subscribe again. Should also receive the same result.
-    obs.subscribe({
+    const resub = obs.subscribe({
       next(result) {
         assert.deepEqual(result, results[0].result);
         counter++;

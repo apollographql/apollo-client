@@ -4,6 +4,10 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 
+### 1.0.3
+- Fix: Remove usage of String.endsWith (not supported by IE) [PR #1583](https://github.com/apollographql/apollo-client/pull/1583)
+- Make reducerError contain information about which query caused it [PR #1538](https://github.com/apollographql/apollo-client/pull/1538)
+
 ### 1.0.2
 - Fix bug that caused reducer updates to fail because typename was not added automatically [PR #1540](https://github.com/apollographql/apollo-client/pull/1540)
 

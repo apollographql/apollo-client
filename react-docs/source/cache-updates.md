@@ -294,6 +294,22 @@ We recommend using the `reducer` option, except when there's a good reason to us
 
 Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is explained in full [here](http://dev.apollodata.com/core/read-and-write.html).
 
+```javascript
+import CommentAppQuery from '../queries/CommentAppQuery';
+
+mutate({
+  //... insert comment mutation
+  update: (proxy, { data: { createComment } }) => {
+    // Read the data from our cache for this query.
+    const data = proxy.readQuery({ query: CommentAppQuery });
+    // Add our comment from the mutation to the end.
+    data.comments.push(createComment);
+    // Write our data back to the cache.
+    proxy.writeQuery({ query: CommentAppQuery, data });
+  }
+})
+```
+
 <h2 id="fetchMore">Incremental loading: `fetchMore`</h2>
 
 `fetchMore` can be used to update the result of a query based on the data returned by another query. Most often, it is used to handle infinite-scroll pagination or other situations where you are loading more data when you already have some.

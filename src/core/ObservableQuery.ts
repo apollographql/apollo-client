@@ -181,7 +181,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     };
 
     if (this.options.fetchPolicy === 'cache-only') {
-      throw new Error('cache-only fetchPolicy option should not be used together with query refetch.');
+      return Promise.reject(new Error('cache-only fetchPolicy option should not be used together with query refetch.'));
     }
 
     // Update the existing options with new variables

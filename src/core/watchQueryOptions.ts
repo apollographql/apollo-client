@@ -94,7 +94,7 @@ export type SubscribeToMoreOptions = {
 export interface SubscriptionOptions {
   query: DocumentNode;
   variables?: { [key: string]: any };
-};
+}
 
 export interface MutationOptions {
   /**

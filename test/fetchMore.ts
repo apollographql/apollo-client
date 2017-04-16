@@ -223,7 +223,7 @@ describe('fetchMore on an observable query', () => {
     });
 
     return Promise.resolve(obsHandle);
-  };
+  }
 
   function unsetup() {
     sub.unsubscribe();

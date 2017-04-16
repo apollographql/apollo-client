@@ -17,7 +17,7 @@ function deepFreeze (o: any) {
   });
 
   return o;
-};
+}
 
 export default function maybeDeepFreeze(obj: any) {
   if (isDevelopment() || isTest()) {

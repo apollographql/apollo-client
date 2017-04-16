@@ -318,8 +318,8 @@ export class QueryManager {
 
           // If there was an error in our reducers, reject this promise!
           const { reducerError } = this.getApolloState();
-          if (reducerError) {
-            reject(reducerError);
+          if (reducerError && reducerError.mutationId === mutationId) {
+            reject(reducerError.error);
             return;
           }
 
@@ -465,7 +465,7 @@ export class QueryManager {
           throw new ApolloError({
             networkError: error,
           });
-        };
+        }
       });
 
       if (fetchPolicy !== 'cache-and-network') {
@@ -702,7 +702,7 @@ export class QueryManager {
       type: 'APOLLO_QUERY_STOP',
       queryId,
     });
-  };
+  }
 
   public getApolloState(): Store {
     return this.reduxRootSelector(this.store.getState());
@@ -882,7 +882,7 @@ export class QueryManager {
         _networkSubscriptionId: subId,
       } as Subscription;
     });
-  };
+  }
 
   public removeQuery(queryId: string) {
     delete this.queryListeners[queryId];
@@ -1076,9 +1076,9 @@ export class QueryManager {
           } catch (e) {}
           /* tslint:enable */
 
-          const {reducerError} = this.getApolloState();
-          if (!resultFromStore && reducerError) {
-            return Promise.reject(reducerError);
+          const { reducerError } = this.getApolloState();
+          if (reducerError && reducerError.queryId === queryId) {
+            return Promise.reject(reducerError.error);
           }
 
           // return a chainable promise

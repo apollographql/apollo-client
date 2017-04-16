@@ -124,7 +124,7 @@ export interface MutationErrorAction {
   type: 'APOLLO_MUTATION_ERROR';
   error: Error;
   mutationId: string;
-};
+}
 
 export function isMutationErrorAction(action: ApolloAction): action is MutationErrorAction {
   return action.type === 'APOLLO_MUTATION_ERROR';

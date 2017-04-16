@@ -184,7 +184,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
         ...(options.headers as { [headerName: string]: string }),
       },
     });
-  };
+  }
 
   public query(request: Request): Promise<ExecutionResult> {
     const options = { ...this._opts };
@@ -216,7 +216,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
           return payload as ExecutionResult;
         }
       });
-  };
+  }
 
   public use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface {
     middlewares.map((middleware) => {

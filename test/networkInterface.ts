@@ -509,7 +509,7 @@ function TestWare(
       next();
     },
   };
-};
+}
 
 // simulate afterware by altering variables and options
 function TestAfterWare(
@@ -525,4 +525,4 @@ function TestAfterWare(
       next();
     },
   };
-};
+}

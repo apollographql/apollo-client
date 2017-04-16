@@ -70,7 +70,7 @@ export interface DataProxyWriteQueryOptions {
    * Any variables that the GraphQL query may depend on.
    */
   variables?: Object;
-};
+}
 
 export interface DataProxyWriteFragmentOptions {
   /**

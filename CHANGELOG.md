@@ -3,6 +3,7 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+- Fix: query subscription is not skipped when there is a successful query after an error, even if data is the same as before the error occured. [PR #1601] (https://github.com/apollographql/apollo-client/pull/1601)
 
 ### 1.0.3
 - Fix: Remove usage of String.endsWith (not supported by IE) [PR #1583](https://github.com/apollographql/apollo-client/pull/1583)

@@ -3,7 +3,12 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
-- Feature: support defaultValues for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
+- Feature: support default values for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
+- Fix: Remove usage of Array.findIndex (not supported by IE) [PR #1585](https://github.com/apollographql/apollo-client/pull/1585)
+
+### 1.0.3
+- Fix: Remove usage of String.endsWith (not supported by IE) [PR #1583](https://github.com/apollographql/apollo-client/pull/1583)
+- Make reducerError contain information about which query caused it [PR #1538](https://github.com/apollographql/apollo-client/pull/1538)
 
 ### 1.0.2
 - Fix bug that caused reducer updates to fail because typename was not added automatically [PR #1540](https://github.com/apollographql/apollo-client/pull/1540)

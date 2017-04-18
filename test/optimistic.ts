@@ -135,7 +135,7 @@ describe('optimistic mutation results', () => {
     });
 
     return obsHandle.result();
-  };
+  }
 
   describe('error handling', () => {
     const mutation = gql`
@@ -1564,7 +1564,7 @@ describe('optimistic mutation - githunt comments', () => {
     });
 
     return obsHandle.result();
-  };
+  }
 
   const mutation = gql`
     mutation submitComment($repoFullName: String!, $commentContent: String!) {

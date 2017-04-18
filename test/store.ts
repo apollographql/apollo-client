@@ -5,6 +5,7 @@ import gql from 'graphql-tag';
 import {
   Store,
   createApolloStore,
+  ReducerError,
 } from '../src/store';
 
 describe('createApolloStore', () => {
@@ -231,7 +232,7 @@ describe('createApolloStore', () => {
       extraReducers: [() => { throw new Error('test!!!'); }],
     });
 
-    assert(/test!!!/.test(store.getState().apollo.reducerError));
+    assert(/test!!!/.test(store.getState().apollo.reducerError.error));
 
     const resetState = {
       queries: {},
@@ -254,7 +255,7 @@ describe('createApolloStore', () => {
           },
         },
       ],
-      reducerError: (null as Error | null),
+      reducerError: (null as ReducerError | null),
     };
 
     store.dispatch({

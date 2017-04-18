@@ -265,7 +265,7 @@ describe('mutation results', () => {
   function setup(...mockedResponses: any[]) {
     const obsHandle = setupObsHandle(...mockedResponses);
     return obsHandle.result();
-  };
+  }
 
   it('correctly primes cache for tests', () => {
     return setup()

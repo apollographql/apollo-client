@@ -145,5 +145,5 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     // difference, so for now, we just do our best to resolve the fragment but turn on partial data
     context.returnPartialData = true;
     return true;
-  };
+  }
 }

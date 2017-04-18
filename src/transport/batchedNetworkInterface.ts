@@ -10,6 +10,8 @@ import {
   RequestAndOptions,
   Request,
   printRequest,
+  ParsedResponse,
+  HTTPFetchNetworkInterface,
 } from './networkInterface';
 
 import {
@@ -32,7 +34,7 @@ export interface BatchRequestAndOptions {
 }
 
 export interface BatchResponseAndOptions {
-  responses: Response[];
+  responses: ParsedResponse[];
   options: RequestInit;
 }
 
@@ -77,8 +79,9 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
     return new Promise((resolve, reject) => {
       middlewarePromise.then((batchRequestAndOptions: BatchRequestAndOptions) => {
         return this.batchedFetchFromRemoteEndpoint(batchRequestAndOptions)
-          .then(result => {
-            const httpResponse = result as Response;
+          .then(response => HTTPFetchNetworkInterface.parseResponse(response))
+          .then(response => {
+            const httpResponse = response as ParsedResponse;
 
             if (!httpResponse.ok) {
               return this.applyBatchAfterwares({ responses: [httpResponse], options: batchRequestAndOptions })
@@ -90,8 +93,18 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
                   });
             }
 
+            if (!httpResponse.isJSON) {
+              return this.applyBatchAfterwares({ responses: [httpResponse], options: batchRequestAndOptions })
+                  .then(() => {
+                    const httpError = new Error('Network request failed to return valid JSON');
+                    (httpError as any).response = httpResponse;
+
+                    throw httpError;
+                  });
+            }
+
             // XXX can we be stricter with the type here?
-            return result.json() as any;
+            return response.body as any;
           })
           .then(responses => {
             if (typeof responses.map !== 'function') {
@@ -99,7 +112,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
             }
 
             type ResponseAndOptions = {
-              response: Response;
+              response: ParsedResponse;
               options: RequestInit;
             };
 

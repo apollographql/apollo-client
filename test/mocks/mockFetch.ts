@@ -8,6 +8,7 @@ export interface MockedIResponse {
   status: number;
   statusText?: string;
   json(): Promise<JSON>;
+  text(): Promise<String>;
 }
 
 export interface MockedFetchResponse {
@@ -27,6 +28,10 @@ export function createMockedIResponse(result: Object, options?: any): MockedIRes
     statusText,
     json() {
       return Promise.resolve(result);
+    },
+    text() {
+      const type = Object.prototype.toString.call(result);
+      return Promise.resolve(type === '[object Object]' || type === '[object Array]' ? JSON.stringify(result) : result);
     },
   };
 }

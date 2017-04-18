@@ -14,6 +14,7 @@ import {
 import {
   Request,
   printRequest,
+  HTTPFetchNetworkInterface,
 } from '../src/transport/networkInterface';
 
 import { BatchMiddlewareInterface } from '../src/transport/middleware';
@@ -221,18 +222,20 @@ describe('HTTPBatchedNetworkInterface', () => {
       const fakeForbiddenResponse = createMockedIResponse([], { status: 401, statusText: 'Unauthorized'});
       const fetchFunc = () => Promise.resolve(fakeForbiddenResponse);
 
-      assertRoundtrip({
-        requestResultPairs: [{
-          request: { query: authorQuery },
-          result: authorResult,
-        }],
-        fetchFunc,
-      }).then(() => {
-        done(new Error('An error should have been thrown'));
-      }).catch(err => {
-        assert.strictEqual(err.response, fakeForbiddenResponse, 'Incorrect response provided');
-        assert.equal(err.message, 'Network request failed with status 401 - "Unauthorized"', 'Incorrect message generated');
-        done();
+      HTTPFetchNetworkInterface.parseResponse(fakeForbiddenResponse as Response).then(parsedFakeForbiddenResponse => {
+        assertRoundtrip({
+          requestResultPairs: [{
+            request: { query: authorQuery },
+            result: authorResult,
+          }],
+          fetchFunc,
+        }).then(() => {
+          done(new Error('An error should have been thrown'));
+        }).catch(err => {
+          assert.deepEqual(err.response, parsedFakeForbiddenResponse, 'Incorrect response provided');
+          assert.equal(err.message, 'Network request failed with status 401 - "Unauthorized"', 'Incorrect message generated');
+          done();
+        }).catch(err => done(err));
       });
     });
 

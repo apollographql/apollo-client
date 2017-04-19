@@ -14,6 +14,10 @@ export type ApolloQueryResult<T> = {
   loading: boolean;
   networkStatus: NetworkStatus;
   stale: boolean;
+  /**
+   * True if the current data matches the most recent variables for the query, or if it's
+   * data from the query's previous variables
+   */
   fulfillsVariables: boolean;
 
   // This type is different from the GraphQLResult type because it doesn't include errors.

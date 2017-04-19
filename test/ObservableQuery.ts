@@ -656,8 +656,6 @@ describe('ObservableQuery', () => {
         }
       });
     });
-
-    it('should set fulfillsVariables to true if you call setVariables with the same variables');
   });
 
   describe('currentResult', () => {

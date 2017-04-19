@@ -884,11 +884,15 @@ export class QueryManager {
     });
   }
 
+  public removeQuery(queryId: string) {
+    delete this.queryListeners[queryId];
+    delete this.queryDocuments[queryId];
+  }
+
   public stopQuery(queryId: string) {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
-    delete this.queryListeners[queryId];
-    delete this.queryDocuments[queryId];
+    this.removeQuery(queryId);
     this.stopQueryInStore(queryId);
   }
 
@@ -1096,10 +1100,9 @@ export class QueryManager {
     // Warn if the query named does not exist (misnamed, or merely not yet fetched)
     if (refetchedQueries === undefined) {
       console.warn(`Warning: unknown query with name ${queryName} asked to refetch`);
+      return;
     } else {
-      refetchedQueries.forEach((queryId) => {
-        this.observableQueries[queryId].observableQuery.refetch();
-      });
+      return Promise.all(refetchedQueries.map((queryId) => this.observableQueries[queryId].observableQuery.refetch()));
     }
   }
 

@@ -240,7 +240,7 @@ describe('ObservableQuery', () => {
     });
 
 
-    it('if query is refetched, and an error is returned, a second refect without error will trigger the observer callback', (done) => {
+    it('if query is refetched, and an error is returned, a second refetch without error will trigger the observer callback', (done) => {
       const observable: ObservableQuery<any> = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },

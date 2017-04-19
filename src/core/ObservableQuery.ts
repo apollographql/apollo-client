@@ -453,7 +453,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
     const retQuerySubscription = {
       unsubscribe: () => {
-        if (this.observers.findIndex(el => el === observer) < 0 ) {
+        if (!this.observers.some(el => el === observer)) {
           // XXX can't unsubscribe if you've already unsubscribed...
           // for some reason unsubscribe gets called multiple times by some of the tests
           return;

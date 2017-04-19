@@ -37,6 +37,9 @@ export { getDataWithOptimisticResults };
 
 import {
   ApolloAction,
+  isQueryResultAction,
+  isMutationResultAction,
+  isSubscriptionResultAction,
 } from './actions';
 
 import {
@@ -49,12 +52,19 @@ import {
 
 import { assign } from './util/assign';
 
+export interface ReducerError {
+  error: Error;
+  queryId?: string;
+  mutationId?: string;
+  subscriptionId?: number;
+}
+
 export interface Store {
   data: NormalizedCache;
   queries: QueryStore;
   mutations: MutationStore;
   optimistic: OptimisticStore;
-  reducerError: Error | null;
+  reducerError: ReducerError | null;
 }
 
 /**
@@ -77,6 +87,20 @@ const crashReporter = (store: any) => (next: any) => (action: any) => {
     console.error(err.stack);
     throw err;
   }
+};
+
+const createReducerError = (error: Error, action: ApolloAction): ReducerError => {
+  const reducerError: ReducerError = { error };
+
+  if (isQueryResultAction(action)) {
+    reducerError.queryId = action.queryId;
+  } else if (isSubscriptionResultAction(action)) {
+    reducerError.subscriptionId = action.subscriptionId;
+  } else if (isMutationResultAction(action)) {
+    reducerError.mutationId = action.mutationId;
+  }
+
+  return reducerError;
 };
 
 export type ApolloReducer = (store: NormalizedCache, action: ApolloAction) => NormalizedCache;
@@ -123,7 +147,7 @@ export function createApolloReducer(config: ApolloReducerConfig): (state: Store,
     } catch (reducerError) {
       return {
         ...state,
-        reducerError,
+        reducerError: createReducerError(reducerError, action),
       };
     }
   };

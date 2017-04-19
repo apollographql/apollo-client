@@ -318,8 +318,8 @@ export class QueryManager {
 
           // If there was an error in our reducers, reject this promise!
           const { reducerError } = this.getApolloState();
-          if (reducerError) {
-            reject(reducerError);
+          if (reducerError && reducerError.mutationId === mutationId) {
+            reject(reducerError.error);
             return;
           }
 
@@ -465,7 +465,7 @@ export class QueryManager {
           throw new ApolloError({
             networkError: error,
           });
-        };
+        }
       });
 
       if (fetchPolicy !== 'cache-and-network') {
@@ -705,7 +705,7 @@ export class QueryManager {
       type: 'APOLLO_QUERY_STOP',
       queryId,
     });
-  };
+  }
 
   public getApolloState(): Store {
     return this.reduxRootSelector(this.store.getState());
@@ -885,13 +885,17 @@ export class QueryManager {
         _networkSubscriptionId: subId,
       } as Subscription;
     });
-  };
+  }
+
+  public removeQuery(queryId: string) {
+    delete this.queryListeners[queryId];
+    delete this.queryDocuments[queryId];
+  }
 
   public stopQuery(queryId: string) {
     // XXX in the future if we should cancel the request
     // so that it never tries to return data
-    delete this.queryListeners[queryId];
-    delete this.queryDocuments[queryId];
+    this.removeQuery(queryId);
     this.stopQueryInStore(queryId);
   }
 
@@ -1075,9 +1079,9 @@ export class QueryManager {
           } catch (e) {}
           /* tslint:enable */
 
-          const {reducerError} = this.getApolloState();
-          if (!resultFromStore && reducerError) {
-            return Promise.reject(reducerError);
+          const { reducerError } = this.getApolloState();
+          if (reducerError && reducerError.queryId === queryId) {
+            return Promise.reject(reducerError.error);
           }
 
           // return a chainable promise
@@ -1099,10 +1103,9 @@ export class QueryManager {
     // Warn if the query named does not exist (misnamed, or merely not yet fetched)
     if (refetchedQueries === undefined) {
       console.warn(`Warning: unknown query with name ${queryName} asked to refetch`);
+      return;
     } else {
-      refetchedQueries.forEach((queryId) => {
-        this.observableQueries[queryId].observableQuery.refetch();
-      });
+      return Promise.all(refetchedQueries.map((queryId) => this.observableQueries[queryId].observableQuery.refetch()));
     }
   }
 

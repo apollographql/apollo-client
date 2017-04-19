@@ -25,4 +25,4 @@ export default function subscribeAndCount(done: MochaDone, observable: Observabl
     error: done,
   });
   return subscription;
-};
+}

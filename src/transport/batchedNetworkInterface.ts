@@ -34,7 +34,7 @@ export interface BatchRequestAndOptions {
 export interface BatchResponseAndOptions {
   responses: Response[];
   options: RequestInit;
-};
+}
 
 // An implementation of the network interface that operates over HTTP and batches
 // together requests over the HTTP transport. Note that this implementation will only work correctly
@@ -57,7 +57,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
       batchInterval: batchInterval,
       batchFetchFunction: this.batchQuery.bind(this),
     });
-  };
+  }
 
   public query(request: Request): Promise<ExecutionResult> {
     // we just pass it through to the batcher.
@@ -212,7 +212,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
         ...(options.headers as { [headerName: string]: string }),
       },
     });
-  };
+  }
 }
 
 export interface BatchingNetworkInterfaceOptions {

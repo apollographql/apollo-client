@@ -297,17 +297,39 @@ Using `update` gives you full control over the cache, allowing you to make chang
 ```javascript
 import CommentAppQuery from '../queries/CommentAppQuery';
 
-mutate({
-  //... insert comment mutation
-  update: (proxy, { data: { createComment } }) => {
-    // Read the data from our cache for this query.
-    const data = proxy.readQuery({ query: CommentAppQuery });
-    // Add our comment from the mutation to the end.
-    data.comments.push(createComment);
-    // Write our data back to the cache.
-    proxy.writeQuery({ query: CommentAppQuery, data });
+const SUBMIT_COMMENT_MUTATION = gql`
+  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+      postedBy {
+        login
+        html_url
+      }
+      createdAt
+      content
+    }
   }
-})
+`;
+
+const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
+  props({ ownProps, mutate }) {
+    return {
+      submit({ repoFullName, commentContent }) {
+        return mutate({
+          variables: { repoFullName, commentContent },
+
+          update: (proxy, { data: { submitComment } }) => {
+            // Read the data from our cache for this query.
+            const data = proxy.readQuery({ query: CommentAppQuery });
+            // Add our comment from the mutation to the end.
+            data.comments.push(submitComment);
+            // Write our data back to the cache.
+            proxy.writeQuery({ query: CommentAppQuery, data });
+          },
+        });
+      },
+    };
+  },
+})(CommentsPage);
 ```
 
 <h2 id="fetchMore">Incremental loading: `fetchMore`</h2>

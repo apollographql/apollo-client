@@ -4,6 +4,7 @@ Expect active development and potentially significant breaking changes in the `0
 
 ### vNEXT
 - Fix: Remove usage of Array.findIndex (not supported by IE) [PR #1585](https://github.com/apollographql/apollo-client/pull/1585)
+- Feature: Add a new `fulfillsVariables` field to `ApolloQueryResult` to tell when old query results are being returned.
 
 ### 1.0.3
 - Fix: Remove usage of String.endsWith (not supported by IE) [PR #1583](https://github.com/apollographql/apollo-client/pull/1583)

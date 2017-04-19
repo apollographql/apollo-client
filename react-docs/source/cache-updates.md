@@ -290,6 +290,48 @@ The main difference between the two is where the update behavior is declared. Wi
 
 We recommend using the `reducer` option, except when there's a good reason to use `updateQueries` instead (eg. if it would make your app much easier to understand and maintain).
 
+<h3 id="directAccess">Direct Cache Access: `update`</h3>
+
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is explained in full [here](http://dev.apollodata.com/react/api-mutations.html#graphql-mutation-options-update).
+
+```javascript
+import CommentAppQuery from '../queries/CommentAppQuery';
+
+const SUBMIT_COMMENT_MUTATION = gql`
+  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+      postedBy {
+        login
+        html_url
+      }
+      createdAt
+      content
+    }
+  }
+`;
+
+const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
+  props({ ownProps, mutate }) {
+    return {
+      submit({ repoFullName, commentContent }) {
+        return mutate({
+          variables: { repoFullName, commentContent },
+
+          update: (proxy, { data: { submitComment } }) => {
+            // Read the data from our cache for this query.
+            const data = proxy.readQuery({ query: CommentAppQuery });
+            // Add our comment from the mutation to the end.
+            data.comments.push(submitComment);
+            // Write our data back to the cache.
+            proxy.writeQuery({ query: CommentAppQuery, data });
+          },
+        });
+      },
+    };
+  },
+})(CommentsPage);
+```
+
 <h2 id="fetchMore">Incremental loading: `fetchMore`</h2>
 
 `fetchMore` can be used to update the result of a query based on the data returned by another query. Most often, it is used to handle infinite-scroll pagination or other situations where you are loading more data when you already have some.

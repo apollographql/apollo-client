@@ -112,6 +112,14 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
           // Stop the query within the QueryManager if we can before
           // this function returns.
+          //
+          // We do this in order to prevent observers piling up within
+          // the QueryManager. Notice that we only fully unsubscribe
+          // from the subscription in a setTimeout(..., 0)  call. This call can
+          // actually be handled by the browser at a much later time. If queries
+          // are fired in the meantime, observers that should have been removed
+          // from the QueryManager will continue to fire, causing an unnecessary
+          // performance hit.
           const selectedObservers = that.observers.filter((obs: Observer<ApolloQueryResult<T>>) => obs !== observer);
           if (selectedObservers.length === 0) {
             that.queryManager.removeQuery(that.queryId);

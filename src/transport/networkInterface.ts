@@ -203,7 +203,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
         return httpResponse.json().catch((error) => {
           const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
           (httpError as any).response = httpResponse;
-          (httpError as any).error = error;
+          (httpError as any).parseError = error;
 
           throw httpError;
         });

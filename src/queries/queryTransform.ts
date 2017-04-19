@@ -39,7 +39,7 @@ function addTypenameToSelectionSet(
     selectionSet.selections.forEach((selection) => {
       // Must not add __typename if we're inside an introspection query
       if (selection.kind === 'Field') {
-        if (!selection.name.value.startsWith('__') && selection.selectionSet) {
+        if (selection.name.value.lastIndexOf('__', 0) !== 0 && selection.selectionSet) {
           addTypenameToSelectionSet(selection.selectionSet);
         }
       } else if (selection.kind === 'InlineFragment') {

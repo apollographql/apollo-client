@@ -296,7 +296,7 @@ export default class ApolloClient implements DataProxy {
     }
 
     return this.queryManager.watchQuery<T>(options);
-  };
+  }
 
   /**
    * This resolves a single query according to the options specified and returns a
@@ -323,7 +323,7 @@ export default class ApolloClient implements DataProxy {
     }
 
     return this.queryManager.query<T>(options);
-  };
+  }
 
   /**
    * This resolves a single mutation according to the options specified and returns a
@@ -336,7 +336,7 @@ export default class ApolloClient implements DataProxy {
     this.initStore();
 
     return this.queryManager.mutate<T>(options);
-  };
+  }
 
   public subscribe(options: SubscriptionOptions): Observable<any> {
     this.initStore();
@@ -467,7 +467,7 @@ export default class ApolloClient implements DataProxy {
         return result;
       },
     }));
-  };
+  }
 
   /**
    * Resets your entire store by clearing out your cache and then re-executing
@@ -489,7 +489,7 @@ export default class ApolloClient implements DataProxy {
     if (this.queryManager) {
       this.queryManager.resetStore();
     }
-  };
+  }
 
   public getInitialState(): { data: Object } {
     this.initStore();
@@ -523,7 +523,7 @@ export default class ApolloClient implements DataProxy {
       queryDeduplication: this.queryDeduplication,
       fragmentMatcher: this.fragmentMatcher,
     });
-  };
+  }
 
   /**
    * Initializes a data proxy for this client instance if one does not already

@@ -118,7 +118,7 @@ export {
   Subscription,
   SubscriptionOptions,
   ApolloStore,
-  ApolloClient
+  ApolloClient,
 };
 
 export default ApolloClient;

@@ -24,7 +24,7 @@ export type DoneFunction = () => void;
 export interface DescriptionObject {
   name: string;
   [other: string]: any;
-};
+}
 
 export type Nullable<T> = T | undefined;
 export type Description = DescriptionObject | string;
@@ -59,7 +59,7 @@ interface Scope {
   benchmark?: BenchmarkFunction;
   afterEach?: AfterEachFunction;
   afterAll?: AfterAllFunction;
-};
+}
 
 // Internal function that returns the current exposed functions
 // benchmark, setup, etc.

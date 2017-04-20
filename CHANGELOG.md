@@ -3,8 +3,10 @@
 Expect active development and potentially significant breaking changes in the `0.x` track. We'll try to be diligent about releasing a `1.0` version in a timely fashion (ideally within 3 to 6 months), to signal the start of a more stable API.
 
 ### vNEXT
+
+### 1.0.4
 - Fix: query subscription is not skipped when there is a successful query after an error, even if data is the same as before the error occured. [PR #1601] (https://github.com/apollographql/apollo-client/pull/1601)
-- ObservableQuery.refetch() returns a rejected Promise instead of throwing an Error when fetchPolicy === 'cache-only' [PR #1592](https://github.com/apollographql/apollo-client/pull/1592)
+- Fix: ObservableQuery.refetch() returns a rejected Promise instead of throwing an Error when fetchPolicy === 'cache-only' [PR #1592](https://github.com/apollographql/apollo-client/pull/1592)
 - Fix: Remove usage of Array.findIndex (not supported by IE) [PR #1585](https://github.com/apollographql/apollo-client/pull/1585)
 
 ### 1.0.3

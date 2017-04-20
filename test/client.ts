@@ -1309,9 +1309,7 @@ describe('client', () => {
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
-      defaultWatchQueryOptions: {
-        fetchPolicy: 'network-only',
-      },
+      defaultFetchPolicy: 'network-only',
     });
 
     // Run a query first to initialize the store

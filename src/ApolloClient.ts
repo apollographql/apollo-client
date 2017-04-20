@@ -61,7 +61,7 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  ModifiableWatchQueryOptions,
+  FetchPolicy,
 } from './core/watchQueryOptions';
 
 import {
@@ -133,7 +133,7 @@ export default class ApolloClient implements DataProxy {
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
-  public defaultWatchQueryOptions: ModifiableWatchQueryOptions;
+  public defaultFetchPolicy: FetchPolicy;
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
@@ -167,7 +167,7 @@ export default class ApolloClient implements DataProxy {
    *
    * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
    *
-   * @param defaultWatchQueryOptions Set default options for all query
+   * @param defaultFetchPolicy Set default fetch policy for all query
    */
 
   constructor(options: {
@@ -182,7 +182,7 @@ export default class ApolloClient implements DataProxy {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
     fragmentMatcher?: FragmentMatcherInterface,
-    defaultWatchQueryOptions?: ModifiableWatchQueryOptions,
+    defaultFetchPolicy?: FetchPolicy,
   } = {}) {
     let {
       dataIdFromObject,
@@ -198,7 +198,7 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools,
       fragmentMatcher,
       queryDeduplication = true,
-      defaultWatchQueryOptions = {},
+      defaultFetchPolicy = 'cache-first',
     } = options;
 
     if (typeof reduxRootSelector === 'function') {
@@ -221,7 +221,7 @@ export default class ApolloClient implements DataProxy {
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
-    this.defaultWatchQueryOptions = defaultWatchQueryOptions;
+    this.defaultFetchPolicy = defaultFetchPolicy;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.disableNetworkFetches = false, ssrForceFetchDelay);
@@ -294,14 +294,14 @@ export default class ApolloClient implements DataProxy {
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
-    options = {
-      ...this.defaultWatchQueryOptions,
-      ...options,
-    };
+    options.fetchPolicy = options.fetchPolicy || this.defaultFetchPolicy;
 
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options.fetchPolicy = 'cache-first';
+      options = {
+        ...options,
+        fetchPolicy: 'cache-first',
+      } as WatchQueryOptions;
     }
 
     return this.queryManager.watchQuery<T>(options);
@@ -319,10 +319,7 @@ export default class ApolloClient implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
-    options = {
-      ...this.defaultWatchQueryOptions,
-      ...options,
-    } as WatchQueryOptions;
+    options.fetchPolicy = options.fetchPolicy || this.defaultFetchPolicy;
 
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error('cache-and-network fetchPolicy can only be used with watchQuery');
@@ -330,7 +327,10 @@ export default class ApolloClient implements DataProxy {
 
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
-      options.fetchPolicy = 'cache-first';
+      options = {
+        ...options,
+        fetchPolicy: 'cache-first',
+      } as WatchQueryOptions;
     }
 
     return this.queryManager.query<T>(options);

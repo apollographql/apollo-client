@@ -239,6 +239,40 @@ describe('ObservableQuery', () => {
       });
     });
 
+
+    it('if query is refetched, and an error is returned, a second refetch without error will trigger the observer callback', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { errors: [error] },
+      }, {
+        request: { query, variables },
+        result: { data: dataOne },
+      });
+
+      let handleCount = 0;
+      observable.subscribe({
+        next: (result) => {
+          handleCount++;
+          if (handleCount === 1) {
+            assert.deepEqual(result.data, dataOne);
+            observable.refetch();
+          } else if (handleCount === 3) {
+            assert.deepEqual(result.data, dataOne);
+            done();
+          }
+        },
+        error: (err) => {
+          handleCount++;
+          assert.equal(handleCount, 2);
+          observable.refetch();
+        },
+      });
+    });
+
+
     it('does a network request if fetchPolicy becomes networkOnly', (done) => {
       const observable: ObservableQuery<any> = mockWatchQuery({
         request: { query, variables },

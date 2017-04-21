@@ -391,3 +391,97 @@ Template.hello.helpers({
   }
 });
 ```
+
+## Subscriptions
+
+You can also use GraphQL subscriptions with your Meteor app if you need to. Here is the code needed to enhance your network interface client-side and setting up things server-side.
+
+### Client
+```js
+import { ApolloClient } from 'apollo-client';
+import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
+import { getMeteorLoginToken, createMeteorNetworkInterface } from 'meteor/apollo';
+
+// "basic" Meteor network interface
+const networkInterface = createMeteorNetworkInterface();
+
+// create a websocket uri based on your app absolute url (ROOT_URL), ex: ws://localhost:3000
+const websocketUri = Meteor.absoluteUrl('subscriptions').replace(/^http/, 'ws'),
+   
+ // create a websocket client
+ const wsClient = new SubscriptionClient(websocketUri, {
+   reconnect: true,
+   // pass some extra information to the subscription, like the current user:
+   connectionParams: {
+     // getMeteorLoginToken = get the Meteor current user login token from local storage
+     meteorLoginToken: getMeteorLoginToken(),
+   },
+ });
+
+ // enhance the interface with graphql subscriptions
+ const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(networkInterface, wsClient);
+ 
+ // enjoy graphql subscriptions with Apollo Client
+ const client = new ApolloClient({ networkInterface: networkInterfaceWithSubscriptions });
+```
+
+### Server
+
+The same `context` is used for both the resolvers and the GraphQL subscriptions. This also means that [authentication in the websocket transport](http://dev.apollodata.com/tools/graphql-subscriptions/authentication.html) is configured out-of-the-box.
+
+Note that `PubSub` from `graphql-subscriptions` is not suitable for production. You should wire your `SubscriptionManager` with [Redis subscriptions](https://github.com/davidyaha/graphql-redis-subscriptions) or [MQTT subscriptions](https://github.com/davidyaha/graphql-mqtt-subscriptions) in case you want to use them in production apps.
+
+```js
+import { SubscriptionManager } from 'graphql-subscriptions';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { createApolloServer, addCurrentUserToContext } from 'meteor/apollo';
+ 
+// your executable schema
+const schema = ...
+ 
+// the context you use for your resolvers
+const context = ...
+ 
+// the pubsub mechanism of your choice, for instance:
+// - PubSub from graphql-subscriptions (not recommended for production)
+// - RedisPubSub from graphql-redis-subscriptions
+// - MQTTPubSub from graphql-mqtt-subscriptions
+const pubsub = ...
+ 
+// subscriptions path which fits witht the one you connect to on the client
+const subscriptionsPath = '/subscriptions';
+ 
+// start a graphql server with Express handling a possible Meteor current user
+createApolloServer({ 
+  schema,
+  context 
+});
+ 
+// create the subscription manager thanks to the schema & the pubsub mechanism
+const subscriptionManager = new SubscriptionManager({
+  schema,
+  pubsub,
+});
+ 
+// start up a subscription server
+new SubscriptionServer(
+  {
+    subscriptionManager,
+    // on connect subscription lifecycle event
+    onConnect: async (connectionParams, webSocket) => {
+      // if a meteor login token is passed to the connection params from the client, 
+      // add the current user to the subscription context
+      const subscriptionContext = connectionParams.meteorLoginToken
+        ? await addCurrentUserToContext(context, connectionParams.meteorLoginToken)
+        : context;
+
+      return subscriptionContext;
+    },
+  },
+  {
+    // bind the subscription server to Meteor WebApp
+    server: WebApp.httpServer,
+    path: subscriptionsPath,
+  }
+);
+```

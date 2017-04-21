@@ -6,13 +6,13 @@
     "version": "3.2.0"
   },
   "dependencies": {
-    "hexo": "3.3.1",
+    "hexo": "3.2.2",
     "hexo-generator-archive": "^0.1.2",
     "hexo-generator-category": "^0.1.2",
     "hexo-generator-index": "^0.2.0",
     "hexo-generator-tag": "^0.2.0",
-    "hexo-renderer-ejs": "^0.3.0",
-    "hexo-renderer-marked": "^0.3.0",
+    "hexo-renderer-ejs": "^0.2.0",
+    "hexo-renderer-marked": "^0.2.4",
     "hexo-renderer-less": "^0.2.0",
     "hexo-server": "^0.2.0",
     "hexo-typescript-api-box": "0.9.1",

@@ -177,11 +177,13 @@ function MyComponent({ data: { variables } }) {
 export default graphql(gql`query { ... }`)(MyComponent);
 ```
 
-<h3 id="graphql-query-data-refetch">`data.refetch()`</h3>
+<h3 id="graphql-query-data-refetch">`data.refetch(variables)`</h3>
 
 Forces your component to refetch the query you defined in the `graphql()` function. This method is helpful when you want to reload the data in your component, or retry a fetch after an error.
 
 `data.refetch` returns a promise that resolves with the new data fetched from your API once the query has finished executing. The promise will reject if the query failed.
+
+The `data.refetch` function takes a single `variables` object argument. The `variables` argument will replace `varialbes` used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`) option to refetch the query you defined in the `graphql()` function.
 
 **Example:**
 

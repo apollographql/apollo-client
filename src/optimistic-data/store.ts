@@ -54,9 +54,12 @@ export function optimistic(
   config: any,
 ): OptimisticStore {
   if (isMutationInitAction(action) && action.optimisticResponse) {
+    const optimisticResponse = typeof action.optimisticResponse === 'function'
+      ? action.optimisticResponse(action.variables)
+      : action.optimisticResponse;
     const fakeMutationResultAction: MutationResultAction = {
       type: 'APOLLO_MUTATION_RESULT',
-      result: { data: action.optimisticResponse },
+      result: { data: optimisticResponse },
       document: action.mutation,
       operationName: action.operationName,
       variables: action.variables,

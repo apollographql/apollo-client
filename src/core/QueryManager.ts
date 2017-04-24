@@ -832,7 +832,7 @@ export class QueryManager {
       transformedDoc = addTypenameToDocument(transformedDoc);
     }
 
-    const variables = Object.assign({}, options.variables, getDefaultValues(getOperationDefinition(query)));
+    const variables = Object.assign(getDefaultValues(getOperationDefinition(query)), options.variables);
 
     const request: Request = {
       query: transformedDoc,

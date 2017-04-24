@@ -158,6 +158,44 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes a query with default values', () => {
+    const query = gql`
+      query someBigQuery($stringArg: String = "This is a default string!", $intArg: Int, $floatArg: Float){
+        id,
+        stringField(arg: $stringArg),
+        numberField(intArg: $intArg, floatArg: $floatArg),
+        nullField
+      }
+    `;
+
+    const variables = {
+      intArg: 5,
+      floatArg: 3.14,
+    };
+
+    const result: any = {
+      id: 'abcd',
+      stringField: 'Heyo',
+      numberField: 5,
+      nullField: null,
+    };
+
+    const normalized = writeQueryToStore({
+      result,
+      query,
+      variables,
+    });
+
+    assert.deepEqual(normalized, {
+      'ROOT_QUERY': {
+        id: 'abcd',
+        nullField: null,
+        'numberField({"intArg":5,"floatArg":3.14})': 5,
+        'stringField({"arg":"This is a default string!"})': 'Heyo',
+      },
+    });
+  });
+
   it('properly normalizes a nested object with an ID', () => {
     const query = gql`
       {

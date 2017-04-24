@@ -104,38 +104,37 @@ describe('ApolloClient', () => {
   });
 
   it('will read some data from the store with default values', () => {
-      const client = new ApolloClient({
-        initialState: {
-          apollo: {
-            data: {
-              'ROOT_QUERY': {
-                'field({"literal":true,"value":-1})': 1,
-                'field({"literal":false,"value":42})': 2,
-              },
+    const client = new ApolloClient({
+      initialState: {
+        apollo: {
+          data: {
+            'ROOT_QUERY': {
+              'field({"literal":true,"value":-1})': 1,
+              'field({"literal":false,"value":42})': 2,
             },
           },
         },
-      });
-
-      assert.deepEqual(client.readQuery({
-        query: gql`query ($literal: Boolean, $value: Int = -1) {
-          a: field(literal: $literal, value: $value)
-        }`,
-        variables: {
-          literal: false,
-          value: 42,
-        },
-      }), { a: 2 });
-
-      assert.deepEqual(client.readQuery({
-        query: gql`query ($literal: Boolean, $value: Int = -1) {
-          a: field(literal: $literal, value: $value)
-        }`,
-        variables: {
-          literal: true,
-        },
-      }), { a: 1 });
+      },
     });
+
+    assert.deepEqual(client.readQuery({
+      query: gql`query ($literal: Boolean, $value: Int = -1) {
+        a: field(literal: $literal, value: $value)
+      }`,
+      variables: {
+        literal: false,
+        value: 42,
+      },
+    }), { a: 2 });
+
+    assert.deepEqual(client.readQuery({
+      query: gql`query ($literal: Boolean, $value: Int = -1) {
+        a: field(literal: $literal, value: $value)
+      }`,
+      variables: {
+        literal: true,
+      },
+    }), { a: 1 });
   });
 
   describe('readFragment', () => {
@@ -1223,3 +1222,4 @@ describe('ApolloClient', () => {
     });
   });
 });
+

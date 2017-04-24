@@ -5,6 +5,10 @@ Expect active development and potentially significant breaking changes in the `0
 ### vNEXT
 - Feature: support default values for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
 - ObservableQuery.refetch() returns a rejected Promise instead of throwing an Error when fetchPolicy === 'cache-only' [PR #1592](https://github.com/apollographql/apollo-client/pull/1592)
+
+### 1.0.4
+- Fix: query subscription is not skipped when there is a successful query after an error, even if data is the same as before the error occured. [PR #1601] (https://github.com/apollographql/apollo-client/pull/1601)
+- Fix: ObservableQuery.refetch() returns a rejected Promise instead of throwing an Error when fetchPolicy === 'cache-only' [PR #1592](https://github.com/apollographql/apollo-client/pull/1592)
 - Fix: Remove usage of Array.findIndex (not supported by IE) [PR #1585](https://github.com/apollographql/apollo-client/pull/1585)
 
 ### 1.0.3

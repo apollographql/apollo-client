@@ -489,6 +489,7 @@ export class QueryManager {
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
     let lastResult: ApolloQueryResult<T>;
+    let previouslyHadError: boolean = false;
     return (queryStoreValue: QueryStoreValue) => {
       // The query store value can be undefined in the event of a store
       // reset.
@@ -521,6 +522,7 @@ export class QueryManager {
             graphQLErrors: queryStoreValue.graphQLErrors,
             networkError: queryStoreValue.networkError,
           });
+          previouslyHadError = true;
           if (observer.error) {
             try {
               observer.error(apolloError);
@@ -584,7 +586,7 @@ export class QueryManager {
                   lastResult.data === resultFromStore.data
                 );
 
-              if (isDifferentResult) {
+              if (isDifferentResult || previouslyHadError) {
                 lastResult = resultFromStore;
                 try {
                   observer.next(maybeDeepFreeze(resultFromStore));
@@ -594,7 +596,9 @@ export class QueryManager {
                 }
               }
             }
+            previouslyHadError = false;
           } catch (error) {
+            previouslyHadError = true;
             if (observer.error) {
               observer.error(new ApolloError({
                 networkError: error,

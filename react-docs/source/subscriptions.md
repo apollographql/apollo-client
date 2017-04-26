@@ -222,4 +222,4 @@ const wsClient = new SubscriptionClient(`ws://localhost:5000/`, {
 });
 ```
 
-> You can use `connectionParams` for anything else you might need, not only authentication, and check its payload on the server side with [SubscriptionsServer](/tools/graphql-server/subscriptions.html#authentication).
+> You can use `connectionParams` for anything else you might need, not only authentication, and check its payload on the server side with [SubscriptionsServer](/tools/graphql-subscriptions/index.html).

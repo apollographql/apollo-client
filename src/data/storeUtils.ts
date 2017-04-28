@@ -47,7 +47,7 @@ function isEnumValue(value: ValueNode): value is EnumValueNode {
   return value.kind === 'EnumValue';
 }
 
-function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNode, variables?: Object) {
+export function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNode, variables?: Object) {
   if (isIntValue(value) || isFloatValue(value)) {
     argObj[name.value] = Number(value.value);
   } else if (isBooleanValue(value) || isStringValue(value)) {

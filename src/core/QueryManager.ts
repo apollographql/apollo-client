@@ -37,7 +37,10 @@ import {
 import {
   checkDocument,
   getQueryDefinition,
+  getOperationDefinition,
   getOperationName,
+  getDefaultValues,
+  getMutationDefinition,
 } from '../queries/getFromAST';
 
 import {
@@ -255,7 +258,8 @@ export class QueryManager {
       mutation = addTypenameToDocument(mutation);
     }
 
-    checkDocument(mutation);
+    variables = Object.assign(getDefaultValues(getMutationDefinition(mutation)), variables);
+
     const mutationString = print(mutation);
     const request = {
       query: mutation,
@@ -628,8 +632,15 @@ export class QueryManager {
     }
 
 
-    // Call just to get errors synchronously
-    getQueryDefinition(options.query);
+    // get errors synchronously
+    const queryDefinition = getQueryDefinition(options.query);
+
+    // assign variable default values if supplied
+    if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
+      const defaultValues = getDefaultValues(queryDefinition);
+
+      options.variables = Object.assign(defaultValues, options.variables);
+    }
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
       options.notifyOnNetworkStatusChange = false;
@@ -818,13 +829,15 @@ export class QueryManager {
   ): Observable<any> {
     const {
       query,
-      variables,
     } = options;
     let transformedDoc = query;
     // Apply the query transformer if one has been provided.
     if (this.addTypename) {
       transformedDoc = addTypenameToDocument(transformedDoc);
     }
+
+    const variables = Object.assign(getDefaultValues(getOperationDefinition(query)), options.variables);
+
     const request: Request = {
       query: transformedDoc,
       variables,
@@ -854,7 +867,7 @@ export class QueryManager {
               document: transformedDoc,
               operationName: getOperationName(transformedDoc),
               result: { data: result },
-              variables: variables || {},
+              variables,
               subscriptionId: subId,
               extraReducers: this.getExtraReducers(),
             });

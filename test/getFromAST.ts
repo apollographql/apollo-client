@@ -5,6 +5,7 @@ import {
   getMutationDefinition,
   createFragmentMap,
   FragmentMap,
+  getDefaultValues,
   getOperationName,
   getFragmentQueryDocument,
 } from '../src/queries/getFromAST';
@@ -330,6 +331,47 @@ describe('AST utility functions', () => {
           fragment baz on Baz { g h i ...foo ...bar }
         `),
       );
+    });
+  });
+
+  describe('getDefaultValues', () => {
+    it('will create an empty variable object if no default values are provided', () => {
+      const basicQuery = gql`
+        query people($first: Int, $second: String) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      assert.deepEqual(getDefaultValues(getQueryDefinition(basicQuery)), {});
+    });
+
+    it('will create a variable object based on the definition node with default values', () => {
+      const basicQuery = gql`
+        query people($first: Int = 1, $second: String!) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const complexMutation = gql`
+        mutation complexStuff($test: Input = {key1: ["value", "value2"], key2: {key3: 4}}) {
+          complexStuff(test: $test) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      assert.deepEqual(getDefaultValues(getQueryDefinition(basicQuery)), {first: 1});
+      assert.deepEqual(getDefaultValues(getMutationDefinition(complexMutation)), {test: {key1: ['value', 'value2'], key2: {key3: 4}}});
     });
   });
 });

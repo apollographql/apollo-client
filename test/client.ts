@@ -264,7 +264,123 @@ describe('client', () => {
       },
     };
 
-    clientRoundrip(query, data);
+    clientRoundtrip(query, data);
+  });
+
+  it('should allow for a single query with complex default variables to take place', (done) => {
+    const query = gql`
+      query stuff($test: Input = {key1: ["value", "value2"], key2: {key3: 4}}) {
+        allStuff(test: $test) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const result = {
+      allStuff: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+          {
+            name: 'Jabba The Hutt',
+          },
+        ],
+      },
+    };
+
+    const variables = {test: { key1: ['value', 'value2'], key2: { key3: 4 } } };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query, variables },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const basic = client.query({ query, variables }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+    });
+
+    const withDefault = client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+    });
+
+    Promise.all([basic, withDefault]).then(res => {
+      done();
+    });
+  });
+
+  it('should allow for a single query with default values that get overridden with variables', (done) => {
+    const query = gql`
+      query people($first: Int = 1) {
+        allPeople(first: $first) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const variables = { first: 1 };
+    const override = { first: 2 };
+
+    const result = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const overriddenResult = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+          {
+            name: 'Jabba The Hutt',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query, variables },
+      result: { data: result },
+    }, {
+      request: { query, variables: override },
+      result: { data: overriddenResult },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const basic = client.query({ query, variables }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+    });
+
+    const withDefault = client.query({ query }).then((actualResult) => {
+      return assert.deepEqual(actualResult.data, result);
+    });
+
+    const withOverride = client.query({ query, variables: override }).then((actualResult) => {
+      return assert.deepEqual(actualResult.data, overriddenResult);
+    });
+
+    Promise.all([basic, withDefault, withOverride]).then(res => {
+      done();
+    });
   });
 
   it('should allow fragments on root query', () => {
@@ -290,7 +406,7 @@ describe('client', () => {
       ],
     };
 
-    clientRoundrip(query, data);
+    clientRoundtrip(query, data);
   });
 
   it('should allow for a single query with existing store', () => {
@@ -2155,7 +2271,7 @@ describe('client', () => {
   });
 });
 
-function clientRoundrip(
+function clientRoundtrip(
   query: DocumentNode,
   data: ExecutionResult,
   variables?: any,

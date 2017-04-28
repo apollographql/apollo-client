@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Feature: support default values for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
 - New/fix: Pass http json parsing error to network interface afterware [PR #1596](https://github.com/apollographql/apollo-client/pull/1596)
 
 ### 1.0.4

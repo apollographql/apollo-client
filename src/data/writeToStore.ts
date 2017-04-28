@@ -1,5 +1,6 @@
 
 import {
+  getDefaultValues,
   getOperationDefinition,
   getQueryDefinition,
   FragmentMap,
@@ -73,6 +74,8 @@ export function writeQueryToStore({
 }): NormalizedCache {
   const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
 
+  variables = Object.assign(getDefaultValues(queryDefinition), variables);
+
   return writeSelectionSetToStore({
     dataId: 'ROOT_QUERY',
     result,
@@ -110,8 +113,11 @@ export function writeResultToStore({
 }): NormalizedCache {
 
   // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
-  const selectionSet = getOperationDefinition(document).selectionSet;
+  const operationDefinition = getOperationDefinition(document);
+  const selectionSet = operationDefinition.selectionSet;
   const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+
+  variables = Object.assign(getDefaultValues(operationDefinition), variables);
 
   return writeSelectionSetToStore({
     result,

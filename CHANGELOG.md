@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- New/fix: Pass http json parsing error to network interface afterware [PR #1596](https://github.com/apollographql/apollo-client/pull/1596)
 
 ### 1.0.4
 - Fix: query subscription is not skipped when there is a successful query after an error, even if data is the same as before the error occured. [PR #1601] (https://github.com/apollographql/apollo-client/pull/1601)

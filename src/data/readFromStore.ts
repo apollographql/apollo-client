@@ -20,6 +20,7 @@ import {
 } from './storeUtils';
 
 import {
+  getDefaultValues,
   getQueryDefinition,
 } from '../queries/getFromAST';
 
@@ -202,7 +203,9 @@ export function diffQueryAgainstStore({
   config,
 }: DiffQueryAgainstStoreOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
-  getQueryDefinition(query);
+  const queryDefinition = getQueryDefinition(query);
+
+  variables = Object.assign(getDefaultValues(queryDefinition), variables);
 
   const context: ReadStoreContext = {
     // Global settings

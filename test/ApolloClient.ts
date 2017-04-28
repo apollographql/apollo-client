@@ -103,6 +103,40 @@ describe('ApolloClient', () => {
     });
   });
 
+  it('will read some data from the store with default values', () => {
+    const client = new ApolloClient({
+      initialState: {
+        apollo: {
+          data: {
+            'ROOT_QUERY': {
+              'field({"literal":true,"value":-1})': 1,
+              'field({"literal":false,"value":42})': 2,
+            },
+          },
+        },
+      },
+    });
+
+    assert.deepEqual(client.readQuery({
+      query: gql`query ($literal: Boolean, $value: Int = -1) {
+        a: field(literal: $literal, value: $value)
+      }`,
+      variables: {
+        literal: false,
+        value: 42,
+      },
+    }), { a: 2 });
+
+    assert.deepEqual(client.readQuery({
+      query: gql`query ($literal: Boolean, $value: Int = -1) {
+        a: field(literal: $literal, value: $value)
+      }`,
+      variables: {
+        literal: true,
+      },
+    }), { a: 1 });
+  });
+
   describe('readFragment', () => {
     it('will throw an error when there is no fragment', () => {
       const client = new ApolloClient();
@@ -396,6 +430,46 @@ describe('ApolloClient', () => {
         'ROOT_QUERY': {
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
+        },
+      });
+    });
+
+    it('will write some data to the store with default values for variables', () => {
+      const client = new ApolloClient();
+
+      client.writeQuery({
+        data: {
+          a: 2,
+        },
+        query: gql`
+          query ($literal: Boolean, $value: Int = -1) {
+            a: field(literal: $literal, value: $value)
+          }
+        `,
+        variables: {
+          literal: true,
+          value: 42,
+        },
+      });
+
+      client.writeQuery({
+        data: {
+          a: 1,
+        },
+        query: gql`
+          query ($literal: Boolean, $value: Int = -1) {
+            a: field(literal: $literal, value: $value)
+          }
+        `,
+        variables: {
+          literal: false,
+        },
+      });
+
+      assert.deepEqual(client.store.getState().apollo.data, {
+        'ROOT_QUERY': {
+          'field({"literal":true,"value":42})': 2,
+          'field({"literal":false,"value":-1})': 1,
         },
       });
     });
@@ -1148,3 +1222,4 @@ describe('ApolloClient', () => {
     });
   });
 });
+

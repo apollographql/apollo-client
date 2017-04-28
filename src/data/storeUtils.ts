@@ -115,8 +115,8 @@ export function graphQLResultHasError(result: ExecutionResult) {
 }
 
 /**
- * This is a normalized representation of the Apollo query result cache. Briefly, it consists of
- * a flatten representation of query result trees.
+ * This is a normalized representation of the Apollo query result cache. It consists of
+ * a flattened representation of query result trees.
  */
 export interface NormalizedCache {
   [dataId: string]: StoreObject;
@@ -138,7 +138,9 @@ export interface JsonValue {
   json: any;
 }
 
-export type StoreValue = number | string | string[] | IdValue | JsonValue | null | undefined | void;
+export type ListValue = Array<null | IdValue>;
+
+export type StoreValue = number | string | string[] | IdValue  | ListValue | JsonValue | null | undefined | void;
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return (

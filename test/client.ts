@@ -1394,6 +1394,49 @@ describe('client', () => {
     });
   });
 
+  it('uses default query options - fetch policy', () => {
+    const query = gql`
+      query number {
+        myNumber {
+          n
+        }
+      }
+    `;
+
+    const firstFetch = {
+      myNumber: {
+        n: 1,
+      },
+    };
+    const secondFetch = {
+      myNumber: {
+        n: 2,
+      },
+    };
+
+    let networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data: firstFetch },
+    }, {
+      request: { query },
+      result: { data: secondFetch },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+      defaultFetchPolicy: 'network-only',
+    });
+
+    // Run a query first to initialize the store
+    return client.query({ query })
+      // then query for real
+      .then(() => client.query({ query }))
+      .then((result) => {
+        assert.deepEqual(result.data, { myNumber: { n: 2 } });
+      });
+  });
+
   describe('deprecated options', () => {
     const query = gql`
       query people {

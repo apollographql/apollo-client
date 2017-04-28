@@ -8,6 +8,9 @@ import {
 import {
   NormalizedCache,
   StoreObject,
+  IdValue,
+  StoreValue,
+  JsonValue,
 } from '../src/data/storeUtils';
 
 import {
@@ -129,7 +132,7 @@ describe('reading from the store', () => {
           id: 'abcde',
           generated: false,
         },
-      }) as StoreObject,
+      } as StoreObject),
       abcde: result.nestedObj,
     } as NormalizedCache;
 
@@ -187,7 +190,7 @@ describe('reading from the store', () => {
           id: 'abcde',
           generated: false,
         },
-      }) as StoreObject,
+      } as StoreObject),
       abcde: assign({}, result.nestedObj, {
         deepNestedObj: {
           type: 'id',
@@ -321,8 +324,8 @@ describe('reading from the store', () => {
     const store = {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
-          { type: 'id', generated: true, id: 'abcd.nestedArray.0' },
-          { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
+          { type: 'id', generated: true, id: 'abcd.nestedArray.0' } as IdValue,
+          { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
         ],
       }) as StoreObject,
       'abcd.nestedArray.0': result.nestedArray[0],
@@ -380,7 +383,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
-          { type: 'id', generated: true, id: 'abcd.nestedArray.1' },
+          { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
         ],
       }) as StoreObject,
       'abcd.nestedArray.1': result.nestedArray[1],
@@ -542,7 +545,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
-      }}) as StoreObject,
+      } as JsonValue }) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
@@ -577,7 +580,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
         type: 'json',
         json: result.simpleArray,
-      }}) as StoreObject,
+      } as JsonValue }) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
@@ -704,7 +707,7 @@ describe('reading from the store', () => {
           type: 'id',
           id: 'abcde',
           generated: false,
-        },
+        } as IdValue,
       }) as StoreObject,
       abcde: assign({}, data.nestedObj, {
         deepNestedObj: {

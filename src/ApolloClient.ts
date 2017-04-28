@@ -61,7 +61,6 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  FetchPolicy,
 } from './core/watchQueryOptions';
 
 import {
@@ -133,7 +132,6 @@ export default class ApolloClient implements DataProxy {
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
-  public defaultFetchPolicy: FetchPolicy;
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
@@ -166,8 +164,6 @@ export default class ApolloClient implements DataProxy {
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
-   *
-   * @param defaultFetchPolicy Set default fetch policy for all query
    */
 
   constructor(options: {
@@ -182,7 +178,6 @@ export default class ApolloClient implements DataProxy {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
     fragmentMatcher?: FragmentMatcherInterface,
-    defaultFetchPolicy?: FetchPolicy,
   } = {}) {
     let {
       dataIdFromObject,
@@ -198,7 +193,6 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools,
       fragmentMatcher,
       queryDeduplication = true,
-      defaultFetchPolicy = 'cache-first',
     } = options;
 
     if (typeof reduxRootSelector === 'function') {
@@ -221,7 +215,6 @@ export default class ApolloClient implements DataProxy {
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
-    this.defaultFetchPolicy = defaultFetchPolicy;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.disableNetworkFetches = false, ssrForceFetchDelay);
@@ -294,8 +287,6 @@ export default class ApolloClient implements DataProxy {
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
 
-    options.fetchPolicy = options.fetchPolicy || this.defaultFetchPolicy;
-
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = {
@@ -318,8 +309,6 @@ export default class ApolloClient implements DataProxy {
    */
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
-
-    options.fetchPolicy = options.fetchPolicy || this.defaultFetchPolicy;
 
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error('cache-and-network fetchPolicy can only be used with watchQuery');

@@ -54,6 +54,9 @@ social_links:
 # API keys
 apis:
   segment: wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg
+  docsearch:
+    apiKey: 768e823959d35bbd51e4b2439be13fb7
+    indexName: apollodata
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'

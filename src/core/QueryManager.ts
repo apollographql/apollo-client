@@ -1088,7 +1088,7 @@ export class QueryManager {
           // return a chainable promise
           this.removeFetchQueryPromise(requestId);
           resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready, stale: false });
-          return null;
+          return Promise.resolve();
         }).catch((error: Error) => {
           reject(error);
         });

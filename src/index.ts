@@ -2,6 +2,7 @@ import {
   Request,
   createNetworkInterface,
   NetworkInterface,
+  SubscriptionNetworkInterface,
   HTTPFetchNetworkInterface,
 } from './transport/networkInterface';
 
@@ -108,6 +109,7 @@ export {
 
   // Internal type definitions
   NetworkInterface,
+  SubscriptionNetworkInterface,
   HTTPFetchNetworkInterface,
   HTTPBatchedNetworkInterface,
   FetchPolicy,

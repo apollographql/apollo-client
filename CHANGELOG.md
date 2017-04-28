@@ -3,6 +3,9 @@
 ### vNEXT
 
 
+### 1.1.1
+- Fix: Remove ability to set default fetchPolicy, which broke polling queries [PR #1630](https://github.com/apollographql/apollo-client/pull/1630)
+
 ### 1.1.0
 - Feature: support default values for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
 - Fix: Pass http json parsing error to network interface afterware [PR #1596](https://github.com/apollographql/apollo-client/pull/1596)

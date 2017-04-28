@@ -1,8 +1,12 @@
 # Change log
 
 ### vNEXT
+
+
+### 1.1.0
 - Feature: support default values for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
-- New/fix: Pass http json parsing error to network interface afterware [PR #1596](https://github.com/apollographql/apollo-client/pull/1596)
+- Fix: Pass http json parsing error to network interface afterware [PR #1596](https://github.com/apollographql/apollo-client/pull/1596)
+- Feature: Add ability to set default fetchPolicy [PR #1597](https://github.com/apollographql/apollo-client/pull/1597)
 
 ### 1.0.4
 - Fix: query subscription is not skipped when there is a successful query after an error, even if data is the same as before the error occured. [PR #1601] (https://github.com/apollographql/apollo-client/pull/1601)

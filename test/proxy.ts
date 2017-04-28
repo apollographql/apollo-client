@@ -203,7 +203,7 @@ describe('ReduxDataProxy', () => {
                 },
               },
               'foo': {
-                __typename: 'Type2',
+                __typename: 'Foo',
                 e: 4,
                 f: 5,
                 g: 6,
@@ -214,7 +214,7 @@ describe('ReduxDataProxy', () => {
                 },
               },
               'bar': {
-                __typename: 'Type3',
+                __typename: 'Bar',
                 i: 7,
                 j: 8,
                 k: 9,
@@ -264,7 +264,7 @@ describe('ReduxDataProxy', () => {
           apollo: {
             data: {
               'foo': {
-                __typename: 'Type1',
+                __typename: 'Foo',
                 'field({"literal":true,"value":42})': 1,
                 'field({"literal":false,"value":42})': 2,
               },
@@ -294,7 +294,7 @@ describe('ReduxDataProxy', () => {
         initialState: {
           apollo: {
             data: {
-              'bar': { __typename: 'Type1', a: 1, b: 2, c: 3 },
+              'bar': { __typename: 'Bar', a: 1, b: 2, c: 3 },
             },
           },
         },
@@ -303,7 +303,7 @@ describe('ReduxDataProxy', () => {
         initialState: {
           apollo: {
             data: {
-              'foo': { __typename: 'Type1', a: 1, b: 2, c: 3 },
+              'foo': { __typename: 'Foo', a: 1, b: 2, c: 3 },
             },
           },
         },

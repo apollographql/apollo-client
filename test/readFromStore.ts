@@ -6,6 +6,10 @@ import {
 } from '../src/data/readFromStore';
 
 import {
+  withError,
+} from './util/wrap';
+
+import {
   NormalizedCache,
   StoreObject,
   IdValue,
@@ -295,51 +299,55 @@ describe('reading from the store', () => {
     });
   });
 
-  it('runs a nested query with proper fragment fields in arrays', () => {
-    const store = {
-      'ROOT_QUERY': {
-        __typename: 'Query',
-        nestedObj: { type: 'id', id: 'abcde', generated: false },
-      } as StoreObject,
-      abcde: {
-        id: 'abcde',
-        innerArray: [{ type: 'id', generated: true, id: 'abcde.innerArray.0' } as any],
-      } as StoreObject,
-      'abcde.innerArray.0': {
-        id: 'abcdef',
-        someField: 3,
-      } as StoreObject,
-    } as NormalizedCache;
+  it('runs a nested query with proper fragment fields in arrays', (done) => {
+    withError(() => {
+      const store = {
+        'ROOT_QUERY': {
+          __typename: 'Query',
+          nestedObj: { type: 'id', id: 'abcde', generated: false },
+        } as StoreObject,
+        abcde: {
+          id: 'abcde',
+          innerArray: [{ type: 'id', generated: true, id: 'abcde.innerArray.0' } as any],
+        } as StoreObject,
+        'abcde.innerArray.0': {
+          id: 'abcdef',
+          someField: 3,
+        } as StoreObject,
+      } as NormalizedCache;
 
-    const queryResult = readQueryFromStore({
-      store,
-      query: gql`
-        {
-          ... on DummyQuery {
-            nestedObj {
-              innerArray { id otherField }
+      const queryResult = readQueryFromStore({
+        store,
+        query: gql`
+          {
+            ... on DummyQuery {
+              nestedObj {
+                innerArray { id otherField }
+              }
+            }
+            ... on Query {
+              nestedObj {
+                innerArray { id someField }
+              }
+            }
+            ... on DummyQuery2 {
+              nestedObj {
+                innerArray { id otherField2 }
+              }
             }
           }
-          ... on Query {
-            nestedObj {
-              innerArray { id someField }
-            }
-          }
-          ... on DummyQuery2 {
-            nestedObj {
-              innerArray { id otherField2 }
-            }
-          }
-        }
-      `,
-      fragmentMatcherFunction,
-    });
+        `,
+        fragmentMatcherFunction,
+      });
 
-    assert.deepEqual(queryResult, {
-      nestedObj: {
-        innerArray: [{id: 'abcdef', someField: 3}],
-      },
-    });
+      assert.deepEqual(queryResult, {
+        nestedObj: {
+          innerArray: [{id: 'abcdef', someField: 3}],
+        },
+      });
+      done();
+    }, /IntrospectionFragmentMatcher/);
+
   });
 
   it('runs a nested query with an array without IDs', () => {

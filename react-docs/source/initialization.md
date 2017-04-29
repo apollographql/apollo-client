@@ -105,3 +105,83 @@ class MyComponent extends Component {
 ```
 
 In this guide, we won't use the decorator syntax to make the code more approachable, but any example can be converted to use a decorator instead.
+
+
+<h2 id="fragment-matcher">Using Fragments on unions and interfaces</h2>
+
+By default, Apollo Client doesn't require any knowledge of the GraphQL schema, which means it's very easy to set up and works with any server and supports even the largest schemas. However, as your usage of Apollo and GraphQL becomes more sophisitcated, you may start using fragments on interfaces or unions. Here's an example of a query that uses fragments on an interface:
+
+```
+query {
+  all_people {
+    ... on Character {
+      name
+    }
+    ... on Jedi {
+      side
+    }
+    ... on Droid {
+      model
+    }
+  }
+}
+          
+```
+
+In the query above, `all_people` returns a result of type `Character[]`. Both `Jedi` and `Droid` are possible concrete types of `Character`, but on the client there is no way to know that without having some information about the schema. By default, Apollo Client will use a heuristic fragment matcher, which assumes that a fragment matched if the result included all the fields in its selection set, and didn't match when any field was missing. This works in most cases, but it also means that Apollo Client cannot check the server response for you, and it cannot tell you when you're manually writing an invalid data into the store using `update`, `updateQuery`, `writeQuery`, etc.
+
+The section below explains how to pass the necessary schema knowledge to Apollo Client so unions and interfaces can be accurately matched and results validated before writing them into the store.
+
+To support result validation and accurate fragment matching on unions and interfaces, a special fragment matcher called the `IntrospectionFragmentMatcher` can be used. To set it up, follow the three steps below:
+
+1. Query your server / schema to obtain the necessary information about unions and interfaces:
+
+```graphql
+{
+  __schema {
+    types {
+      kind
+      name
+      possibleTypes {
+        name
+      }
+    }
+  }
+}
+```
+
+2. Create a new IntrospectionFragment matcher using the information just obtained (you can filter out any types that are not of kind INTERFACE or UNION if you like):
+
+
+```js
+import { IntrospectionFragmentMatcher } from 'react-apollo';
+
+const myFragmentMatcher = new IntrospectionFragmentMatcher({
+  introspectionQueryResultData: {
+    __schema: {
+      types: [
+        {
+          kind: "INTERFACE",
+          name: "Character",
+          possibleTypes: [
+            { name: "Jedi" },
+            { name: "Droid" },
+          ],
+        }, // this is just an example, put your own INTERFACE and UNION types here!
+      ],
+    },
+  }
+})
+```
+
+3. Pass the newly created `IntrospectionFragmentMatcher` to Apollo Client during construction:
+
+```js
+const client = new ApolloClient({
+  fragmentMatcher: myFragmentMatcher,
+});
+```
+
+If there are any changes related to union or interface types in your schema, you will have to update the fragment matcher accordingly. To keep this information automatically updated, we recommend setting up a build step that extracts the necessary information from the schema, and includes it as a JSON file in the client bundle, where it can be imported from when constructing the fragment matcher.
+
+(note: if anyone has set up a build step already, please consider making a PR to the docs here to share your instructions with the rest of the community!)

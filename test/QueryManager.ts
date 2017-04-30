@@ -2458,7 +2458,6 @@ describe('QueryManager', () => {
       const mockObservableQuery: ObservableQuery<any> = {
         refetch(variables: any): Promise<ExecutionResult> {
           refetchCount ++;
-          done();
           return null as never;
         },
         options,

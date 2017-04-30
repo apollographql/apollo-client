@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Feature+Fix: Introduce "standby" fetchPolicy to mark queries that are not currently active, but should be available for refetchQueries and updateQueries [PR #1636](https://github.com/apollographql/apollo-client/pull/1636)
 - Feature: Print a warning when heuristically matching fragments on interface/union [PR #1635](https://github.com/apollographql/apollo-client/pull/1635)
 
 ### 1.1.1

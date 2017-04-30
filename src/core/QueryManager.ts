@@ -501,6 +501,11 @@ export class QueryManager {
 
       const fetchPolicy = storedQuery ? storedQuery.observableQuery.options.fetchPolicy : options.fetchPolicy;
 
+      if (fetchPolicy === 'standby') {
+        // don't watch the store for queries on standby
+        return;
+      }
+
       const shouldNotifyIfLoading = queryStoreValue.previousVariables ||
                                     fetchPolicy === 'cache-only' || fetchPolicy === 'cache-and-network';
 

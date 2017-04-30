@@ -807,7 +807,7 @@ export class QueryManager {
 
       const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
 
-      if (fetchPolicy !== 'cache-only') {
+      if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });

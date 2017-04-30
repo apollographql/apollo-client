@@ -2471,8 +2471,39 @@ describe('QueryManager', () => {
       setTimeout(() => {
         assert.equal(refetchCount, 0);
         done();
-      }, 400);
+      }, 50);
 
+    });
+
+    it('should not call refetch on a standby Observable if the store is reset', (done) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const queryManager = createQueryManager({});
+      const options = assign({}) as WatchQueryOptions;
+      options.fetchPolicy = 'standby';
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery<any> = {
+        refetch(variables: any): Promise<ExecutionResult> {
+          refetchCount ++;
+          return null as never;
+        },
+        options,
+        queryManager: queryManager,
+      } as any as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.resetStore();
+      setTimeout(() => {
+        assert.equal(refetchCount, 0);
+        done();
+      }, 50);
     });
 
     it('should throw an error on an inflight query() if the store is reset', (done) => {

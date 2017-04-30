@@ -631,6 +631,9 @@ export class QueryManager {
       throw new Error('noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
     }
 
+    if (options.fetchPolicy === 'standby') {
+      throw new Error('client.watchQuery cannot be called with fetchPolicy set to "standby"');
+    }
 
     // get errors synchronously
     const queryDefinition = getQueryDefinition(options.query);

@@ -1646,7 +1646,16 @@ describe('client', () => {
         },
       });
     });
+  });
 
+  describe('standby fetchPolicy', () => {
+    it('cannot be applied during initial construction of a query', () => {
+      const client = new ApolloClient();
+      assert.throws(
+        () => client.watchQuery({ query: gql`{ abc }`, fetchPolicy: 'standby'}),
+        'client.watchQuery cannot be called with fetchPolicy set to "standby"',
+      );
+    });
   });
 
   describe('network-only fetchPolicy', () => {

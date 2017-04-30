@@ -404,7 +404,7 @@ export class QueryManager {
       storeResult = result;
     }
 
-    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
+    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
 
     const requestId = this.generateRequestId();
 

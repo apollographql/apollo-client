@@ -504,13 +504,14 @@ describe('ApolloClient', () => {
       });
 
       client.writeFragment({
-        data: { e: 4, h: { id: 'bar', i: 7 } },
+        data: { __typename: 'Foo', e: 4, h: { id: 'bar', i: 7 } },
         id: 'foo',
         fragment: gql`fragment fragmentFoo on Foo { e h { i } }`,
       });
 
       assert.deepEqual(client.store.getState().apollo.data, {
         'foo': {
+          __typename: 'Foo',
           e: 4,
           h: {
             type: 'id',
@@ -531,6 +532,7 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(client.store.getState().apollo.data, {
         'foo': {
+          __typename: 'Foo',
           e: 4,
           f: 5,
           g: 6,
@@ -555,6 +557,7 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(client.store.getState().apollo.data, {
         'foo': {
+          __typename: 'Foo',
           e: 4,
           f: 5,
           g: 6,
@@ -579,6 +582,7 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(client.store.getState().apollo.data, {
         'foo': {
+          __typename: 'Foo',
           e: 4,
           f: 5,
           g: 6,
@@ -604,6 +608,7 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(client.store.getState().apollo.data, {
         'foo': {
+          __typename: 'Foo',
           e: 4,
           f: 5,
           g: 6,
@@ -629,6 +634,7 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(client.store.getState().apollo.data, {
         'foo': {
+          __typename: 'Foo',
           e: 4,
           f: 5,
           g: 6,

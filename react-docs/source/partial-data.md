@@ -94,7 +94,7 @@ const client = new ApolloClient({
 })
 ```
 
-A component that implements the two queries could look like this:
+A component for the second scene that implements the two queries could look like this:
 ```jsx
 import React, { PropTypes, } from 'react'
 import { gql, graphql, compose, } from 'react-apollo'
@@ -163,3 +163,5 @@ SeriesDetailSceneWithData.propTypes = {
 export default SeriesDetailScene
 
 ```
+
+Unfortunately if the user would now visit the second scene without ever visiting the first scene this would result in two network requests (since the data for the first query is not in the store yet). By using a `BatchedNetworkInterface` those two queries can be send to the server in one network request.

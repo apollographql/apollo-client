@@ -11,7 +11,7 @@ import {
 } from '../util/environment';
 
 import {
-  warnOnce,
+  warnOnceInDevelopment,
 } from '../util/warnOnce';
 
 export interface FragmentMatcherInterface {
@@ -151,7 +151,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     // 2. A fragment on a matching interface or union
     // If it's 1, we don't want to return anything, if it's 2 we want to match. We can't tell the
     // difference, so we warn the user, but still try to match it (backcompat).
-    warnOnce(`You are using the simple (heuristic) fragment matcher, but your queries contain union or interface types.
+    warnOnceInDevelopment(`You are using the simple (heuristic) fragment matcher, but your queries contain union or interface types.
      Apollo Client will not be able to able to accurately map fragments.` +
      `To make this error go away, use the IntrospectionFragmentMatcher as described in the docs: ` +
      `http://dev.apollodata.com/react/initialization.html#fragment-matcher`, 'error');

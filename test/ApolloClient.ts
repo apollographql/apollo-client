@@ -525,7 +525,7 @@ describe('ApolloClient', () => {
       });
 
       client.writeFragment({
-        data: { f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
+        data: { __typename: 'Foo', f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
         id: 'foo',
         fragment: gql`fragment fragmentFoo on Foo { f g h { j k } }`,
       });
@@ -550,7 +550,7 @@ describe('ApolloClient', () => {
       });
 
       client.writeFragment({
-        data: { i: 10 },
+        data: { __typename: 'Bar', i: 10 },
         id: 'bar',
         fragment: gql`fragment fragmentBar on Bar { i }`,
       });
@@ -568,6 +568,7 @@ describe('ApolloClient', () => {
           },
         },
         'bar': {
+          __typename: 'Bar',
           i: 10,
           j: 8,
           k: 9,
@@ -575,7 +576,7 @@ describe('ApolloClient', () => {
       });
 
       client.writeFragment({
-        data: { j: 11, k: 12 },
+        data: { __typename: 'Bar', j: 11, k: 12 },
         id: 'bar',
         fragment: gql`fragment fragmentBar on Bar { j k }`,
       });
@@ -593,6 +594,7 @@ describe('ApolloClient', () => {
           },
         },
         'bar': {
+          __typename: 'Bar',
           i: 10,
           j: 11,
           k: 12,
@@ -600,7 +602,7 @@ describe('ApolloClient', () => {
       });
 
       client.writeFragment({
-        data: { e: 4, f: 5, g: 6, h: { id: 'bar', i: 7, j: 8, k: 9 } },
+        data: { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', id: 'bar', i: 7, j: 8, k: 9 } },
         id: 'foo',
         fragment: gql`fragment fooFragment on Foo { e f g h { i j k } } fragment barFragment on Bar { i j k }`,
         fragmentName: 'fooFragment',
@@ -619,6 +621,7 @@ describe('ApolloClient', () => {
           },
         },
         'bar': {
+          __typename: 'Bar',
           i: 7,
           j: 8,
           k: 9,
@@ -626,7 +629,7 @@ describe('ApolloClient', () => {
       });
 
       client.writeFragment({
-        data: { i: 10, j: 11, k: 12 },
+        data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
         id: 'bar',
         fragment: gql`fragment fooFragment on Foo { e f g h { i j k } } fragment barFragment on Bar { i j k }`,
         fragmentName: 'barFragment',
@@ -645,6 +648,7 @@ describe('ApolloClient', () => {
           },
         },
         'bar': {
+          __typename: 'Bar',
           i: 10,
           j: 11,
           k: 12,
@@ -657,6 +661,7 @@ describe('ApolloClient', () => {
 
       client.writeFragment({
         data: {
+          __typename: 'Foo',
           a: 1,
           b: 2,
         },
@@ -675,6 +680,7 @@ describe('ApolloClient', () => {
 
       assert.deepEqual(client.store.getState().apollo.data, {
         'foo': {
+          __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
         },
@@ -718,7 +724,7 @@ describe('ApolloClient', () => {
       client.writeFragment({
         id: 'foo',
         fragment: gql`fragment x on Foo { a }`,
-        data: { a: 7 },
+        data: { __typename: 'Foo', a: 7 },
       });
 
       assert.deepEqual(

@@ -869,6 +869,7 @@ describe('client', () => {
     const mutation = gql`
       mutation {
         starAuthor(id: 12) {
+          __typename
           author {
             ...authorDetails
           }
@@ -881,6 +882,7 @@ describe('client', () => {
     const result = {
       'starAuthor': {
         'author': {
+          __typename: 'Author',
           'firstName': 'John',
           'lastName': 'Smith',
         },

@@ -16,6 +16,10 @@ import {
 } from './storeUtils';
 
 import {
+  ReadStoreContext,
+} from '../data/readFromStore';
+
+import {
   OperationDefinitionNode,
   SelectionSetNode,
   FieldNode,
@@ -129,18 +133,26 @@ export function writeResultToStore({
 
   variables = Object.assign(getDefaultValues(operationDefinition), variables);
 
-  return writeSelectionSetToStore({
-    result,
-    dataId,
-    selectionSet,
-    context: {
-      store,
-      variables,
-      dataIdFromObject,
-      fragmentMap,
-      fragmentMatcherFunction,
-    },
-  });
+  try {
+    return writeSelectionSetToStore({
+      result,
+      dataId,
+      selectionSet,
+      context: {
+        store,
+        variables,
+        dataIdFromObject,
+        fragmentMap,
+        fragmentMatcherFunction,
+      },
+    });
+  } catch (e) {
+    // XXX is this too hacky?
+    const e2 = new Error(`Error writing result to store for query ${document.loc && document.loc.source.body}`);
+    e2.message += '/n' + e.message;
+    e2.stack = e.stack;
+    throw e2;
+  }
 }
 
 export function writeSelectionSetToStore({
@@ -171,7 +183,13 @@ export function writeSelectionSetToStore({
             field: selection,
             context,
           });
-        }
+        }/* else {
+          if (context.fragmentMatcherFunction) {
+            throw new Error(`Missing field ${resultFieldKey}`);
+          } else {
+            console.log('No fragment matcher provided');
+          }
+        } */
       }
     } else if (isInlineFragment(selection)) {
       if (included) {
@@ -198,7 +216,29 @@ export function writeSelectionSetToStore({
         }
       }
 
-      if (included) {
+      let matches = true;
+      if (context.fragmentMatcherFunction && fragment.typeCondition) {
+        // TODO we need to rewrite the fragment matchers for this to work properly and efficiently
+        // Right now we have to pretend that we're passing in an idValue and that there's a store
+        // on the context.
+        const idValue: IdValue = { type: 'id', id: 'self', generated: false };
+        const fakeContext: ReadStoreContext = {
+          store: { 'self': result },
+          returnPartialData: false,
+          hasMissingField: false,
+          customResolvers: {},
+        };
+        matches = context.fragmentMatcherFunction(
+          idValue,
+          fragment.typeCondition.name.value,
+          fakeContext,
+        );
+        if (fakeContext.returnPartialData) {
+          console.error('WARNING: heuristic fragment matching going on!');
+        }
+      }
+
+      if (included && matches) {
         writeSelectionSetToStore({
           result,
           selectionSet: fragment.selectionSet,

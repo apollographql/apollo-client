@@ -47,6 +47,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import {
+  isProduction,
+} from '../util/environment';
+
 class WriteError extends Error {
   public type = 'WriteError';
 }
@@ -192,7 +196,9 @@ export function writeSelectionSetToStore({
             // XXX We'd like to throw an error, but for backwards compatibility's sake
             // we just print a warning for the time being.
             //throw new WriteError(`Missing field ${resultFieldKey}`);
-            console.warn(`Missing field ${resultFieldKey}`);
+            if (!isProduction()) {
+              console.warn(`Missing field ${resultFieldKey}`);
+            }
           }
         }
       }

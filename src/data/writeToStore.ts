@@ -25,6 +25,10 @@ import {
 } from 'graphql';
 
 import {
+  FragmentMatcher,
+} from 'graphql-anywhere';
+
+import {
   NormalizedCache,
   StoreObject,
   IdValue,
@@ -64,6 +68,7 @@ export function writeQueryToStore({
   variables,
   dataIdFromObject,
   fragmentMap = {} as FragmentMap,
+  fragmentMatcherFunction,
 }: {
   result: Object,
   query: DocumentNode,
@@ -71,6 +76,7 @@ export function writeQueryToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   fragmentMap?: FragmentMap,
+  fragmentMatcherFunction?: FragmentMatcher,
 }): NormalizedCache {
   const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
 
@@ -85,6 +91,7 @@ export function writeQueryToStore({
       variables,
       dataIdFromObject,
       fragmentMap,
+      fragmentMatcherFunction,
     },
   });
 }
@@ -92,8 +99,9 @@ export function writeQueryToStore({
 export type WriteContext = {
   store: NormalizedCache;
   variables?: any;
-  dataIdFromObject?: IdGetter;
+  dataIdFromObject?: IdGetter
   fragmentMap?: FragmentMap;
+  fragmentMatcherFunction?: FragmentMatcher;
 };
 
 export function writeResultToStore({
@@ -103,6 +111,7 @@ export function writeResultToStore({
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject,
+  fragmentMatcherFunction,
 }: {
   dataId: string,
   result: any,
@@ -110,6 +119,7 @@ export function writeResultToStore({
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
+  fragmentMatcherFunction?: FragmentMatcher,
 }): NormalizedCache {
 
   // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
@@ -128,6 +138,7 @@ export function writeResultToStore({
       variables,
       dataIdFromObject,
       fragmentMap,
+      fragmentMatcherFunction,
     },
   });
 }

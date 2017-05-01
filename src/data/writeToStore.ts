@@ -152,13 +152,15 @@ export function writeSelectionSetToStore({
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
 
-      if (value !== undefined) {
-        writeFieldToStore({
-          dataId,
-          value,
-          field: selection,
-          context,
-        });
+      if (included) {
+        if (typeof value !== 'undefined') {
+          writeFieldToStore({
+            dataId,
+            value,
+            field: selection,
+            context,
+          });
+        }
       }
     } else if (isInlineFragment(selection)) {
       if (included) {

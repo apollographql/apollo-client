@@ -47,6 +47,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+class WriteError extends Error {
+  public type = 'WriteError';
+}
+
 /**
  * Writes the result of a query to the store.
  *
@@ -147,7 +151,7 @@ export function writeResultToStore({
       },
     });
   } catch (e) {
-    // XXX is this too hacky?
+    // XXX A bit hacky maybe ...
     const e2 = new Error(`Error writing result to store for query ${document.loc && document.loc.source.body}`);
     e2.message += '/n' + e.message;
     e2.stack = e.stack;
@@ -183,13 +187,16 @@ export function writeSelectionSetToStore({
             field: selection,
             context,
           });
-        }/* else {
+        } else {
+          console.log('MISSING FIELD', resultFieldKey);
           if (context.fragmentMatcherFunction) {
-            throw new Error(`Missing field ${resultFieldKey}`);
+            console.log('AFM');
+            //throw new WriteError(`Missing field ${resultFieldKey}`);
+            console.error(`Missing field ${resultFieldKey}`);
           } else {
             console.log('No fragment matcher provided');
           }
-        } */
+        }
       }
     } else {
       // This is not a field, so it must be a fragment, either inline or named
@@ -226,6 +233,10 @@ export function writeSelectionSetToStore({
         if (fakeContext.returnPartialData) {
           console.error('WARNING: heuristic fragment matching going on!');
         }
+      }
+
+      if (!matches) {
+        console.log('DOES NOT MATCH', fragment);
       }
 
       if (included && matches) {

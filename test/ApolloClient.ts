@@ -327,7 +327,7 @@ describe('ApolloClient', () => {
       const client = new ApolloClient();
 
       client.writeQuery({
-        data: { a: 1, d: { e: 4 } },
+        data: { a: 1, d: { __typename: 'D', e: 4 } },
         query: gql`{ a d { e } }`,
       });
 
@@ -341,12 +341,13 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.d': {
+          __typename: 'D',
           e: 4,
         },
       });
 
       client.writeQuery({
-        data: { a: 1, d: { h: { i: 7 } } },
+        data: { a: 1, d: { __typename: 'D', h: { __typename: 'H', i: 7 } } },
         query: gql`{ a d { h { i } } }`,
       });
 
@@ -360,6 +361,7 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.d': {
+          __typename: 'D',
           e: 4,
           h: {
             type: 'id',
@@ -368,12 +370,17 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.d.h': {
+          __typename: 'H',
           i: 7,
         },
       });
 
       client.writeQuery({
-        data: { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
+        data: { a: 1, b: 2, c: 3, d: {
+          __typename: 'D', e: 4, f: 5, g: 6, h: {
+            __typename: 'H', i: 7, j: 8, k: 9,
+          },
+        } },
         query: gql`{ a b c d { e f g h { i j k } } }`,
       });
 
@@ -389,6 +396,7 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.d': {
+          __typename: 'D',
           e: 4,
           f: 5,
           g: 6,
@@ -399,6 +407,7 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.d.h': {
+          __typename: 'H',
           i: 7,
           j: 8,
           k: 9,
@@ -504,7 +513,7 @@ describe('ApolloClient', () => {
       });
 
       client.writeFragment({
-        data: { __typename: 'Foo', e: 4, h: { id: 'bar', i: 7 } },
+        data: { __typename: 'Foo', e: 4, h: { __typename: 'Bar', id: 'bar', i: 7 } },
         id: 'foo',
         fragment: gql`fragment fragmentFoo on Foo { e h { i } }`,
       });
@@ -520,12 +529,13 @@ describe('ApolloClient', () => {
           },
         },
         'bar': {
+          __typename: 'Bar',
           i: 7,
         },
       });
 
       client.writeFragment({
-        data: { __typename: 'Foo', f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
+        data: { __typename: 'Foo', f: 5, g: 6, h: { __typename: 'Bar', id: 'bar', j: 8, k: 9 } },
         id: 'foo',
         fragment: gql`fragment fragmentFoo on Foo { f g h { j k } }`,
       });
@@ -543,6 +553,7 @@ describe('ApolloClient', () => {
           },
         },
         'bar': {
+          __typename: 'Bar',
           i: 7,
           j: 8,
           k: 9,
@@ -824,6 +835,7 @@ describe('ApolloClient', () => {
     it('will not use a default id getter if __typename is not present', () => {
       const client = new ApolloClient({
         initialState: { apollo: { data: {} } },
+        addTypename: false,
       });
 
       client.writeQuery({
@@ -891,13 +903,13 @@ describe('ApolloClient', () => {
       });
 
       client.writeQuery({
-        query: gql`{ a b foo { c d bar { id e f } } }`,
-        data: { a: 1, b: 2, foo: { c: 3, d: 4, bar: { __typename: 'bar', e: 5, f: 6 } } },
+        query: gql`{ a b foo { c d bar { e f } } }`,
+        data: { a: 1, b: 2, foo: { __typename: 'Foo', c: 3, d: 4, bar: { __typename: 'Bar', e: 5, f: 6 } } },
       });
 
       client.writeQuery({
-        query: gql`{ g h bar { i j foo { _id k l } } }`,
-        data: { g: 8, h: 9, bar: { i: 10, j: 11, foo: { __typename: 'foo', k: 12, l: 13 } } },
+        query: gql`{ g h bar { i j foo { k l } } }`,
+        data: { g: 8, h: 9, bar: { __typename: 'Bar', i: 10, j: 11, foo: { __typename: 'Foo', k: 12, l: 13 } } },
       });
 
       assert.deepEqual(client.store.getState().apollo.data, {
@@ -918,6 +930,7 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.foo': {
+          __typename: 'Foo',
           c: 3,
           d: 4,
           bar: {
@@ -927,6 +940,7 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.bar': {
+          __typename: 'Bar',
           i: 10,
           j: 11,
           foo: {
@@ -936,12 +950,12 @@ describe('ApolloClient', () => {
           },
         },
         '$ROOT_QUERY.foo.bar': {
-          __typename: 'bar',
+          __typename: 'Bar',
           e: 5,
           f: 6,
         },
         '$ROOT_QUERY.bar.foo': {
-          __typename: 'foo',
+          __typename: 'Foo',
           k: 12,
           l: 13,
         },

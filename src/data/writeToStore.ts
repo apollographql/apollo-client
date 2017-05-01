@@ -191,16 +191,6 @@ export function writeSelectionSetToStore({
           }
         } */
       }
-    } else if (isInlineFragment(selection)) {
-      if (included) {
-        // XXX what to do if this tries to write the same fields? Also, type conditions...
-        writeSelectionSetToStore({
-          result,
-          selectionSet: selection.selectionSet,
-          dataId,
-          context,
-        });
-      }
     } else {
       // This is not a field, so it must be a fragment, either inline or named
       let fragment: InlineFragmentNode | FragmentDefinitionNode;

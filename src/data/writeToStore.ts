@@ -188,13 +188,11 @@ export function writeSelectionSetToStore({
             context,
           });
         } else {
-          console.log('MISSING FIELD', resultFieldKey);
           if (context.fragmentMatcherFunction) {
-            console.log('AFM');
+            // XXX We'd like to throw an error, but for backwards compatibility's sake
+            // we just print a warning for the time being.
             //throw new WriteError(`Missing field ${resultFieldKey}`);
-            console.error(`Missing field ${resultFieldKey}`);
-          } else {
-            console.log('No fragment matcher provided');
+            console.warn(`Missing field ${resultFieldKey}`);
           }
         }
       }
@@ -233,10 +231,6 @@ export function writeSelectionSetToStore({
         if (fakeContext.returnPartialData) {
           console.error('WARNING: heuristic fragment matching going on!');
         }
-      }
-
-      if (!matches) {
-        console.log('DOES NOT MATCH', fragment);
       }
 
       if (included && matches) {

@@ -8,6 +8,9 @@ import {
 import { writeQueryToStore } from '../src/data/writeToStore';
 
 import gql from 'graphql-tag';
+import {
+  withError,
+} from './util/wrap';
 
 import {
   HeuristicFragmentMatcher,
@@ -87,76 +90,82 @@ describe('diffing queries against the store', () => {
     assert.deepEqual(store['1'], result.people_one);
   });
 
-  it('does not swallow errors other than field errors', () => {
-    const firstQuery = gql`
-      query {
-        person {
-          powers
-        }
-      }`;
-    const firstResult = {
-      person: {
-        powers: 'the force',
-      },
-    };
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
-    });
-    const unionQuery = gql`
-      query {
-        ...notARealFragment
-      }`;
-    assert.throws(() => {
-      diffQueryAgainstStore({
-        store,
-        query: unionQuery,
+  it('does not swallow errors other than field errors', (done) => {
+    withError( () => {
+      const firstQuery = gql`
+        query {
+          person {
+            powers
+          }
+        }`;
+      const firstResult = {
+        person: {
+          powers: 'the force',
+        },
+      };
+      const store = writeQueryToStore({
+        result: firstResult,
+        query: firstQuery,
       });
-    }, /No fragment/);
+      const unionQuery = gql`
+        query {
+          ...notARealFragment
+        }`;
+      assert.throws(() => {
+        diffQueryAgainstStore({
+          store,
+          query: unionQuery,
+        });
+      }, /No fragment/);
+      done();
+    }, /IntrospectionFragmentMatcher/);
   });
 
-  it('does not error on a correct query with union typed fragments', () => {
-    const firstQuery = gql`
-      query {
-        person {
-          __typename
-          firstName
-          lastName
-        }
-      }`;
-    const firstResult = {
-      person: {
-        __typename: 'Author',
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
-    });
-    const unionQuery = gql`
-      query {
-        person {
-          __typename
-          ... on Author {
+  it('does not error on a correct query with union typed fragments', (done) => {
+    withError(() => {
+      const firstQuery = gql`
+        query {
+          person {
+            __typename
             firstName
             lastName
           }
+        }`;
+      const firstResult = {
+        person: {
+          __typename: 'Author',
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const store = writeQueryToStore({
+        result: firstResult,
+        query: firstQuery,
+      });
+      const unionQuery = gql`
+        query {
+          person {
+            __typename
+            ... on Author {
+              firstName
+              lastName
+            }
 
-          ... on Jedi {
-            powers
+            ... on Jedi {
+              powers
+            }
           }
-        }
-      }`;
-    const { isMissing } = diffQueryAgainstStore({
-      store,
-      query: unionQuery,
-      returnPartialData: false,
-      fragmentMatcherFunction,
-    });
+        }`;
+      const { isMissing } = diffQueryAgainstStore({
+        store,
+        query: unionQuery,
+        returnPartialData: false,
+        fragmentMatcherFunction,
+      });
 
-    assert.isTrue(isMissing);
+      assert.isTrue(isMissing);
+      done();
+    }, /IntrospectionFragmentMatcher/);
   });
 
   it('does not error on a query with fields missing from all but one named fragment', () => {

@@ -1,7 +1,7 @@
 # Change log
 
 ### vNEXT
-
+- Feature: Print a warning when heuristically matching fragments on interface/union [PR #1635](https://github.com/apollographql/apollo-client/pull/1635)
 
 ### 1.1.1
 - Fix: Remove ability to set default fetchPolicy, which broke polling queries [PR #1630](https://github.com/apollographql/apollo-client/pull/1630)

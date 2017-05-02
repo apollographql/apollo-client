@@ -26,3 +26,19 @@ export function withWarning(func: Function, regex: RegExp) {
     console.warn = oldWarn;
   }
 }
+
+export function withError(func: Function, regex: RegExp) {
+  let message: string = null as never;
+  const oldError = console.error;
+
+  console.error = (m: string) => message = m;
+
+  try {
+    const result = func();
+    assert.match(message, regex);
+    return result;
+
+  } finally {
+    console.error = oldError;
+  }
+}

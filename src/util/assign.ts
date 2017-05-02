@@ -13,8 +13,14 @@ export function assign (
   target: { [key: string]: any },
   ...sources: Array<{ [key: string]: any }>,
 ): { [key: string]: any } {
-  sources.forEach(source => Object.keys(source).forEach(key => {
-    target[key] = source[key];
-  }));
+  sources.forEach(source => {
+
+      if (typeof(source) === 'undefined' || source === null) {
+        return;
+      }
+      Object.keys(source).forEach(key => {
+        target[key] = source[key];
+      });
+  });
   return target;
 }

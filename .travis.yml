@@ -10,6 +10,14 @@ install:
 
 script:
   - npm test
+
+    # run tests on current master of react-apollo
+  - npm link
+  - git clone https://github.com/apollographql/react-apollo
+  - cd react-apollo && npm link apollo-client && npm i && npm test
+    # end tests of react apollo
+
+    # run coverage and file size checks
   - npm run coverage
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error
   - npm run filesize

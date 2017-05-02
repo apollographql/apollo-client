@@ -312,6 +312,104 @@ describe('mutation results', () => {
     });
   });
 
+  it('should warn when the result fields don\'t match the query fields', (done) => {
+    let message: string = null as any;
+    const oldWarn = console.warn;
+    console.warn = (m: string) => message = m;
+
+    let handle: any;
+    let subscriptionHandle: Subscription;
+    let counter = 0;
+
+    const queryTodos = gql`
+      query todos {
+        todos {
+          id
+          name
+          description
+          __typename
+        }
+      }
+    `;
+
+    const queryTodosResult = {
+      data: {
+        todos: [{
+          id: '1',
+          name: 'Todo 1',
+          description: 'Description 1',
+          __typename: 'todos',
+        }],
+      },
+    };
+
+    const mutationTodo = gql`
+      mutation createTodo {
+        createTodo {
+          id
+          name
+          # missing field: description
+          __typename
+        }
+      }
+    `;
+
+    const mutationTodoResult = {
+      data: {
+        createTodo: {
+          id: '2',
+          name: 'Todo 2',
+          __typename: 'createTodo',
+        },
+      },
+    };
+
+    setup({
+      request: { query: queryTodos },
+      result: queryTodosResult,
+    }, {
+      request: { query: mutationTodo },
+      result: mutationTodoResult,
+    })
+    .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          handle = client.watchQuery({ query: queryTodos });
+          subscriptionHandle = handle.subscribe({
+            next(res: any) {
+              counter++;
+              resolve(res);
+            },
+          });
+        });
+      })
+      .then(() => {
+        return client.mutate({
+          mutation: mutationTodo,
+          updateQueries: {
+            todos: (prev, { mutationResult }) => {
+              const newTodo = (mutationResult as any).data.createTodo;
+
+              const newResults = {
+                todos: [
+                  ...(prev as any).todos,
+                  newTodo,
+                ],
+              };
+              return newResults;
+            },
+          },
+        });
+      }).then(() => {
+        subscriptionHandle.unsubscribe();
+
+        assert.match(message, /Missing field description/);
+        console.warn = oldWarn;
+
+        done();
+      });
+  });
+
   describe('result reducer', () => {
     const mutation = gql`
       mutation createTodo {

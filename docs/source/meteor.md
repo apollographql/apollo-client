@@ -111,7 +111,7 @@ export const resolvers = {
 
 ### Query batching
 
-`meteor/apollo` gives you a `BatchedNetworkInterface` by default thanks to `createMeteorNetworkInterface`. This interface is meant to reduce significantly the number of requests sent to the server.
+`meteor/apollo` gives you a `BatchedNetworkInterface` by default thanks to `createNetworkInterface`. This interface is meant to reduce significantly the number of requests sent to the server.
 
 In order to get the most out of it, you can attach a `dataloader` to every request to batch loading your queries (and cache them!).
 
@@ -138,14 +138,14 @@ The `customClientConfig` is an optional object that can have any [Apollo Client 
 Defining a `customClientConfig` object extends or replaces fields of the default configuration provided by the package. 
 
 The default configuration of the client is:
-- `networkInterface`: `createMeteorNetworkInterface()`, a pre-configured network interface. See below for more information.
+- `networkInterface`: `createNetworkInterface()`, a pre-configured network interface. See below for more information.
 - `ssrMode`: `Meteor.isServer`, enable server-side rendering mode by default if used server-side.
 
 The store is normalized by default with `__typename` + `_id` identifiers. See [store normalization](http://dev.apollodata.com/core/how-it-works.html#normalize) section for more information.
 
-### createMeteorNetworkInterface
+### createNetworkInterface
 
-`createMeteorNetworkInterface(customNetworkInterface = {})`
+`createNetworkInterface(customNetworkInterface = {})`
 
 `customNetworkInterface` is an optional object that replaces fields of the default configuration:
 - `uri`: `Meteor.absoluteUrl('graphql')`, points to the default GraphQL server endpoint, such as http://locahost:3000/graphql or https://www.my-app.com/graphql.
@@ -156,13 +156,13 @@ The store is normalized by default with `__typename` + `_id` identifiers. See [s
 
 Additionally, if the `useMeteorAccounts` is set to `true`, you can add to your `customNetworkInterface` a `loginToken` field while doing [server-side rendering](http://dev.apollodata.com/core/meteor.html#SSR) to handle the current user.
 
-`createMeteorNetworkInterface` example:
+`createNetworkInterface` example:
 
 ```js
 import ApolloClient from 'apollo-client'
-import { createMeteorNetworkInterface, meteorClientConfig } from 'meteor/apollo';
+import { createNetworkInterface, meteorClientConfig } from 'meteor/apollo';
 
-const networkInterface = createMeteorNetworkInterface({
+const networkInterface = createNetworkInterface({
   // use a batched network interface instead of a classic network interface
   batchingInterface: true, 
 });
@@ -257,9 +257,9 @@ app.use((req, res, next) => {
       console.error('ROUTER ERROR:', error); // eslint-disable-line no-console
       res.status(500);
     } else if (renderProps) {
-      // use createMeteorNetworkInterface to get a preconfigured network interface
+      // use createNetworkInterface to get a preconfigured network interface
       // #1 network interface can be used server-side thanks to polyfilled `fetch`
-      const networkInterface = createMeteorNetworkInterface({
+      const networkInterface = createNetworkInterface({
         opts: {
           credentials: 'same-origin',
           headers: req.headers,
@@ -400,10 +400,10 @@ You can also use GraphQL subscriptions with your Meteor app if you need to. Here
 ```js
 import { ApolloClient } from 'apollo-client';
 import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
-import { getMeteorLoginToken, createMeteorNetworkInterface } from 'meteor/apollo';
+import { getMeteorLoginToken, createNetworkInterface } from 'meteor/apollo';
 
 // "basic" Meteor network interface
-const networkInterface = createMeteorNetworkInterface();
+const networkInterface = createNetworkInterface();
 
 // create a websocket uri based on your app absolute url (ROOT_URL), ex: ws://localhost:3000
 const websocketUri = Meteor.absoluteUrl('subscriptions').replace(/^http/, 'ws'),

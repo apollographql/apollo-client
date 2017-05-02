@@ -9,6 +9,7 @@ import {
 } from '../transport/Deduplicator';
 
 import { isEqual } from '../util/isEqual';
+import { assign } from '../util/assign';
 
 import {
   QueryListener,
@@ -258,7 +259,7 @@ export class QueryManager {
       mutation = addTypenameToDocument(mutation);
     }
 
-    variables = Object.assign(getDefaultValues(getMutationDefinition(mutation)), variables);
+    variables = assign({}, getDefaultValues(getMutationDefinition(mutation)), variables);
 
     const mutationString = print(mutation);
     const request = {
@@ -647,7 +648,7 @@ export class QueryManager {
     if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
       const defaultValues = getDefaultValues(queryDefinition);
 
-      options.variables = Object.assign(defaultValues, options.variables);
+      options.variables = assign({}, defaultValues, options.variables);
     }
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
@@ -844,7 +845,7 @@ export class QueryManager {
       transformedDoc = addTypenameToDocument(transformedDoc);
     }
 
-    const variables = Object.assign(getDefaultValues(getOperationDefinition(query)), options.variables);
+    const variables = assign({}, getDefaultValues(getOperationDefinition(query)), options.variables);
 
     const request: Request = {
       query: transformedDoc,

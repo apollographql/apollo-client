@@ -22,9 +22,10 @@ import {
  * - cache-and-network: returns result from cache first (if it exists), then return network result once it's available
  * - cache-only: return result from cache if avaiable, fail otherwise.
  * - network-only: return result from network, fail if network call doesn't succeed.
+ * - standby: only for queries that aren't actively watched, but should be available for refetch and updateQueries.
  */
 
-export type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
+export type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only' | 'standby';
 
 /**
  * We can change these options to an ObservableQuery

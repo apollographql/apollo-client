@@ -1646,7 +1646,88 @@ describe('client', () => {
         },
       });
     });
+  });
 
+  describe('standby queries', () => {
+    // XXX queries can only be set to standby by setOptions. This is simply out of caution,
+    // not some fundamental reason. We just want to make sure they're not used in unanticipated ways.
+    // If there's a good use-case, the error and test could be removed.
+    it('cannot be started with watchQuery or query', () => {
+      const client = new ApolloClient();
+      assert.throws(
+        () => client.watchQuery({ query: gql`{ abc }`, fetchPolicy: 'standby'}),
+        'client.watchQuery cannot be called with fetchPolicy set to "standby"',
+      );
+    });
+
+    it('are not watching the store or notifying on updates', (done) => {
+      const query = gql`{ test }`;
+      const data = { test: 'ok' };
+      const data2 = { test: 'not ok' };
+
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data },
+      });
+
+      const client = new ApolloClient({ networkInterface });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
+
+      let handleCalled = false;
+      subscribeAndCount(done, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          obs.setOptions({ fetchPolicy: 'standby' }).then( () => {
+            client.writeQuery({ query, data: data2 });
+            // this write should be completely ignored by the standby query
+          });
+          setTimeout( () => {
+            if (!handleCalled) {
+              done();
+            }
+          }, 20);
+        }
+        if (handleCount === 2) {
+          handleCalled = true;
+          done(new Error('Handle should never be called on standby query'));
+        }
+      });
+    });
+
+    it('return the current result when coming out of standby', (done) => {
+      const query = gql`{ test }`;
+      const data = { test: 'ok' };
+      const data2 = { test: 'not ok' };
+
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data },
+      });
+
+      const client = new ApolloClient({ networkInterface });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
+
+      let handleCalled = false;
+      subscribeAndCount(done, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          obs.setOptions({ fetchPolicy: 'standby' }).then( () => {
+            client.writeQuery({ query, data: data2 });
+            // this write should be completely ignored by the standby query
+            setTimeout( () => {
+              obs.setOptions({ fetchPolicy: 'cache-first' });
+            }, 10);
+          });
+        }
+        if (handleCount === 2) {
+          handleCalled = true;
+          assert.deepEqual(result.data, data2);
+          done();
+        }
+      });
+    });
   });
 
   describe('network-only fetchPolicy', () => {

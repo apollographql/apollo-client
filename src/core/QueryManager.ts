@@ -404,7 +404,7 @@ export class QueryManager {
       storeResult = result;
     }
 
-    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
+    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
 
     const requestId = this.generateRequestId();
 
@@ -500,6 +500,11 @@ export class QueryManager {
       const storedQuery = this.observableQueries[queryId];
 
       const fetchPolicy = storedQuery ? storedQuery.observableQuery.options.fetchPolicy : options.fetchPolicy;
+
+      if (fetchPolicy === 'standby') {
+        // don't watch the store for queries on standby
+        return;
+      }
 
       const shouldNotifyIfLoading = queryStoreValue.previousVariables ||
                                     fetchPolicy === 'cache-only' || fetchPolicy === 'cache-and-network';
@@ -631,6 +636,9 @@ export class QueryManager {
       throw new Error('noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
     }
 
+    if (options.fetchPolicy === 'standby') {
+      throw new Error('client.watchQuery cannot be called with fetchPolicy set to "standby"');
+    }
 
     // get errors synchronously
     const queryDefinition = getQueryDefinition(options.query);
@@ -807,7 +815,7 @@ export class QueryManager {
 
       const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
 
-      if (fetchPolicy !== 'cache-only') {
+      if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
         this.observableQueries[queryId].observableQuery.refetch();
       }
     });

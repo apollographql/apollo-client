@@ -337,6 +337,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     // If fetchPolicy went from cache-only to something else, or from something else to network-only
     const tryFetch: boolean = (oldOptions.fetchPolicy !== 'network-only' && opts.fetchPolicy === 'network-only')
       || (oldOptions.fetchPolicy === 'cache-only' && opts.fetchPolicy !== 'cache-only')
+      || (oldOptions.fetchPolicy === 'standby' && opts.fetchPolicy !== 'standby')
       || false;
 
     return this.setVariables(this.options.variables, tryFetch);

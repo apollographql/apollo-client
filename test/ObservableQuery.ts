@@ -389,6 +389,108 @@ describe('ObservableQuery', () => {
         }
       });
     });
+
+    it('can set queries to standby and will not fetch when doing so', (done) => {
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<ExecutionResult> {
+          timesFired += 1;
+          return Promise.resolve({ data });
+        },
+      };
+      queryManager = createQueryManager({ networkInterface });
+      observable = queryManager.watchQuery({
+        query: testQuery,
+        fetchPolicy: 'cache-first',
+        notifyOnNetworkStatusChange: false,
+      });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          assert.equal(timesFired, 1);
+
+          setTimeout(() => {
+            observable.setOptions({fetchPolicy: 'standby'});
+          }, 0);
+          setTimeout(() => {
+            // make sure the query didn't get fired again.
+            assert.equal(timesFired, 1);
+            done();
+          }, 20);
+        } else if (handleCount === 2) {
+          assert(false, 'Handle should not be triggered on standby query');
+        }
+      });
+    });
+
+    it('will not fetch when setting a cache-only query to standby', (done) => {
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const networkInterface: NetworkInterface = {
+        query(request: Request): Promise<ExecutionResult> {
+          timesFired += 1;
+          return Promise.resolve({ data });
+        },
+      };
+      queryManager = createQueryManager({ networkInterface });
+
+      queryManager.query({ query: testQuery }).then( () => {
+        observable = queryManager.watchQuery({
+          query: testQuery,
+          fetchPolicy: 'cache-first',
+          notifyOnNetworkStatusChange: false,
+        });
+
+        subscribeAndCount(done, observable, (handleCount, result) => {
+          if (handleCount === 1) {
+            assert.deepEqual(result.data, data);
+            assert.equal(timesFired, 1);
+            setTimeout(() => {
+              observable.setOptions({fetchPolicy: 'standby'});
+            }, 0);
+            setTimeout(() => {
+              // make sure the query didn't get fired again.
+              assert.equal(timesFired, 1);
+              done();
+            }, 20);
+          } else if (handleCount === 2) {
+            assert(false, 'Handle should not be triggered on standby query');
+          }
+        });
+      });
+    });
   });
 
   describe('setVariables', () => {

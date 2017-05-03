@@ -58,9 +58,9 @@ class WriteError extends Error {
 /**
  * Writes the result of a query to the store.
  *
- * @param query The query document whose result we are writing to the store.
- *
  * @param result The result object returned for the query document.
+ *
+ * @param query The query document whose result we are writing to the store.
  *
  * @param store The {@link NormalizedCache} used by Apollo for the `data` portion of the store.
  *
@@ -72,6 +72,8 @@ class WriteError extends Error {
  *
  * @param fragmentMap A map from the name of a fragment to its fragment definition. These fragments
  * can be referenced within the query document.
+ *
+ * @param fragmentMatcherFunction A function to use for matching fragment conditions in GraphQL documents
  */
 export function writeQueryToStore({
   result,
@@ -111,14 +113,14 @@ export function writeQueryToStore({
 export type WriteContext = {
   store: NormalizedCache;
   variables?: any;
-  dataIdFromObject?: IdGetter
+  dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
   fragmentMatcherFunction?: FragmentMatcher;
 };
 
 export function writeResultToStore({
-  result,
   dataId,
+  result,
   document,
   store = {} as NormalizedCache,
   variables,

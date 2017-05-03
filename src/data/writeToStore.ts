@@ -39,6 +39,10 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import {
+  assign,
+} from '../util/assign';
+
 /**
  * Writes the result of a query to the store.
  *
@@ -74,7 +78,7 @@ export function writeQueryToStore({
 }): NormalizedCache {
   const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
 
-  variables = Object.assign(getDefaultValues(queryDefinition), variables);
+  variables = assign({}, getDefaultValues(queryDefinition), variables);
 
   return writeSelectionSetToStore({
     dataId: 'ROOT_QUERY',
@@ -117,7 +121,7 @@ export function writeResultToStore({
   const selectionSet = operationDefinition.selectionSet;
   const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
 
-  variables = Object.assign(getDefaultValues(operationDefinition), variables);
+  variables = assign({}, getDefaultValues(operationDefinition), variables);
 
   return writeSelectionSetToStore({
     result,

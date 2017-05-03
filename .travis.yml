@@ -12,8 +12,7 @@ script:
 
     # run tests on current master of react-apollo
   - npm link
-    # XXX remove specific branch once https://github.com/apollographql/apollo-client/pull/1644 and https://github.com/apollographql/react-apollo/pull/679 are merged
-  - git clone -b move-types https://github.com/apollographql/react-apollo
+  - git clone https://github.com/apollographql/react-apollo
   - cd react-apollo && npm link apollo-client && npm i && npm test && cd ../ && rm -rf react-apollo
     # end tests of react apollo
 

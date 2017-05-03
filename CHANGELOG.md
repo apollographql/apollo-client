@@ -1,6 +1,9 @@
 # Change log
 
 ### vNEXT
+- Fix: Replace more usage of Object.assign with util.assign to make it work in IE, previous fix was not complete [PR #1648](https://github.com/apollographql/apollo-client/pull/1648)
+
+### 1.1.2
 - Feature+Fix: Introduce "standby" fetchPolicy to mark queries that are not currently active, but should be available for refetchQueries and updateQueries [PR #1636](https://github.com/apollographql/apollo-client/pull/1636)
 - Feature: Print a warning when heuristically matching fragments on interface/union [PR #1635](https://github.com/apollographql/apollo-client/pull/1635)
 - Fix: Replace usage of Object.assign with util.assign to make it work in IE, make util.assign work with undefined and null sources as Object.assign does [PR #1643](https://github.com/apollographql/apollo-client/pull/1643)

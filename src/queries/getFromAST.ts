@@ -10,6 +10,8 @@ import {
   valueToObjectRepresentation,
 } from '../data/storeUtils';
 
+import { assign } from '../util/assign';
+
 export function getMutationDefinition(doc: DocumentNode): OperationDefinitionNode {
   checkDocument(doc);
 
@@ -250,7 +252,7 @@ export function getDefaultValues(definition: OperationDefinitionNode): { [key: s
         return defaultValueObj;
       });
 
-    return Object.assign({}, ...defaultValues);
+    return assign({}, ...defaultValues);
   }
 
   return {};

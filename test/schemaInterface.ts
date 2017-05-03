@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLSchema,
   GraphQLObjectType,
+  ExecutionResult,
 } from 'graphql';
 
 import gql from 'graphql-tag';
@@ -29,13 +30,13 @@ describe('createSchemaInterface', () => {
           type: GraphQLString,
           resolve() {
             return RESOLVE_SYNC;
-          }
+          },
         },
         async: {
           type: GraphQLString,
           resolve() {
             return Promise.resolve(RESOLVE_ASYNC);
-          }
+          },
         },
         variables: {
           type: GraphQLString,
@@ -44,19 +45,19 @@ describe('createSchemaInterface', () => {
           },
           resolve(obj, { text }) {
             return `${RESOLVE_VARIABLE} ${text}`;
-          }
+          },
         },
         context: {
           type: GraphQLString,
           resolve(obj, args, { text }) {
             return `${RESOLVE_CONTEXT} ${text}`;
-          }
+          },
         },
         rootvalue: {
           type: GraphQLString,
           resolve(obj, args, context, { fieldName }) {
             return `${RESOLVE_ROOT_VALUE} ${fieldName}`;
-          }
+          },
         },
       },
     }),
@@ -67,17 +68,17 @@ describe('createSchemaInterface', () => {
   });
 
   it('should resolve sync schema', () => {
-    const query = gql`{ sync }`;
+    const query = gql`{ result: sync }`;
     return client.query({ query })
-      .then(({ data: { sync = '' } = {} }) => {
-        expect(sync).to.equal(RESOLVE_SYNC);
+      .then(({ data: { result = '' } = {} }: ExecutionResult) => {
+        expect(result).to.equal(RESOLVE_SYNC);
       });
   });
 
   it('should resolve async schema', () => {
     const query = gql`{ result: async }`;
     return client.query({ query })
-      .then(({ data: { result = '' } = {} }) => {
+      .then(({ data: { result = '' } = {} }: ExecutionResult) => {
         expect(result).to.equal(RESOLVE_ASYNC);
       });
   });
@@ -92,7 +93,7 @@ describe('createSchemaInterface', () => {
       value: 'foo',
     };
     return client.query({ query, variables })
-      .then(({ data: { result = '' } = {} }) => {
+      .then(({ data: { result = '' } = {} }: ExecutionResult) => {
         expect(result).to.equal(`${RESOLVE_VARIABLE} foo`);
       });
   });
@@ -100,7 +101,7 @@ describe('createSchemaInterface', () => {
   it('should make context available', () => {
     const query = gql`{ result: context }`;
     return client.query({ query })
-      .then(({ data: { result = '' } = {} }) => {
+      .then(({ data: { result = '' } = {} }: ExecutionResult) => {
         expect(result).to.equal(`${RESOLVE_CONTEXT} bar`);
       });
   });
@@ -108,7 +109,7 @@ describe('createSchemaInterface', () => {
   it('should make root value available', () => {
     const query = gql`{ result: rootvalue }`;
     return client.query({ query })
-      .then(({ data: { result = '' } = {} }) => {
+      .then(({ data: { result = '' } = {} }: ExecutionResult) => {
         expect(result).to.equal(`${RESOLVE_ROOT_VALUE} rootvalue`);
       });
   });

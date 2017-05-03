@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix: Replace more usage of Object.assign with util.assign to make it work in IE, previous fix was not complete [PR #1648](https://github.com/apollographql/apollo-client/pull/1648)
 
 ### 1.1.2
 - Feature+Fix: Introduce "standby" fetchPolicy to mark queries that are not currently active, but should be available for refetchQueries and updateQueries [PR #1636](https://github.com/apollographql/apollo-client/pull/1636)

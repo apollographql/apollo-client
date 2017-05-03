@@ -36,7 +36,7 @@ type Query {
 }
 ```
 
-And you have two Scenes:
+And you have two Views:
 1. Series Overview: List of all Series with their description and cover
 2. Series DetailView: Detail View a Series with its description, cover and an episode list
 
@@ -94,12 +94,12 @@ const client = new ApolloClient({
 })
 ```
 
-A component for the second scene that implements the two queries could look like this:
+A component for the second view that implements the two queries could look like this:
 ```jsx
 import React, { PropTypes, } from 'react'
 import { gql, graphql, compose, } from 'react-apollo'
 
-const QUERY_SERIES_DETAIL_SCENE = gql`
+const QUERY_SERIES_DETAIL_VIEW = gql`
   query seriesDetailData($seriesId: Int!) {
     oneSeries(id: $seriesId) {
       id
@@ -121,7 +121,7 @@ const QUERY_SERIES_EPISODES = gql`
 `
 const options = ({ seriesId, }) => ({ variables: { seriesId, }, })
 
-const withSeriesDetailData = graphql(QUERY_SERIES_DETAIL_SCENE, {
+const withSeriesDetailData = graphql(QUERY_SERIES_DETAIL_VIEW, {
   name: `seriesDetailData`,
   options,
 })
@@ -136,7 +136,7 @@ const withData = compose(
   withSeriesEpisodes
 )
 
-function SeriesDetailScene({ seriesDetailData, episodesData }) {
+function SeriesDetailView({ seriesDetailData, episodesData }) {
   return (
     <div>
       <h1>{seriesDetailData.loading ? `Loading...` : seriesDetailData.oneSeries.title}</h1>
@@ -154,14 +154,14 @@ function SeriesDetailScene({ seriesDetailData, episodesData }) {
   )
 }
 
-const SeriesDetailSceneWithData = withData(SeriesDetailScene)
+const SeriesDetailViewWithData = withData(SeriesDetailView)
 
-SeriesDetailSceneWithData.propTypes = {
+SeriesDetailViewWithData.propTypes = {
   seriesId: PropTypes.number.isRequired,
 }
 
-export default SeriesDetailScene
+export default SeriesDetailView
 
 ```
 
-Unfortunately if the user would now visit the second scene without ever visiting the first scene this would result in two network requests (since the data for the first query is not in the store yet). By using a `BatchedNetworkInterface` those two queries can be send to the server in one network request.
+Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a `BatchedNetworkInterface` those two queries can be send to the server in one network request.

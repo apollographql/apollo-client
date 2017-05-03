@@ -33,6 +33,10 @@ import {
 } from '../util/isEqual';
 
 import {
+  assign,
+} from '../util/assign';
+
+import {
   isTest,
 } from '../util/environment';
 
@@ -205,7 +209,7 @@ export function diffQueryAgainstStore({
   // Throw the right validation error by trying to find a query in the document
   const queryDefinition = getQueryDefinition(query);
 
-  variables = Object.assign(getDefaultValues(queryDefinition), variables);
+  variables = assign({}, getDefaultValues(queryDefinition), variables);
 
   const context: ReadStoreContext = {
     // Global settings

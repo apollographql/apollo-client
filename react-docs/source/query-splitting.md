@@ -1,5 +1,5 @@
 ---
-title: Displaying Partial Data
+title: Query Splitting
 ---
 
 Prefetching is an easy way to make your applications UI feel faster. You can use mouse events to predict the data that could be needed.
@@ -11,7 +11,7 @@ An other way would be the splitting of huge queries into two smaller queries:
 - The first one could load data which is already in the store. This means that it can be displayed instantly.
 - The second query could load data which is not in the store yet and must be fetched from the server first.
 
-This solution gives you the benefit of not fetching too much data, as well as the possibility to show some partial result before the server response.
+This solution gives you the benefit of not fetching too much data, as well as the possibility to show some part of the views data before the server responds.
 
 Lets say you have the following schema:
 ```graphql
@@ -38,7 +38,7 @@ type Query {
 
 And you have two Views:
 1. Series Overview: List of all Series with their description and cover
-2. Series DetailView: Detail View a Series with its description, cover and an episode list
+2. Series DetailView: Detail View of a Series with its description, cover and a list of episodes
 
 The query for the Series Overview would look like the following:
 ```graphql
@@ -164,4 +164,4 @@ export default SeriesDetailView
 
 ```
 
-Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a `BatchedNetworkInterface` those two queries can be send to the server in one network request.
+Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedNetworkInterface`](/core/apollo-client-api.html#BatchedNetworkInterface) those two queries can be send to the server in one network request.

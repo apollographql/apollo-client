@@ -23,6 +23,8 @@ import {
 
 import {
   ObservableQuery,
+  FetchMoreOptions,
+  UpdateQueryOptions,
 } from './core/ObservableQuery';
 
 import {
@@ -34,6 +36,8 @@ import {
   MutationOptions,
   SubscriptionOptions,
   FetchPolicy,
+  FetchMoreQueryOptions,
+  SubscribeToMoreOptions,
 } from './core/watchQueryOptions';
 
 import {
@@ -121,6 +125,10 @@ export {
   SubscriptionOptions,
   ApolloStore,
   ApolloClient,
+  FetchMoreOptions,
+  UpdateQueryOptions,
+  FetchMoreQueryOptions,
+  SubscribeToMoreOptions,
 };
 
 export default ApolloClient;

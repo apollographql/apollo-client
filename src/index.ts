@@ -125,7 +125,7 @@ export {
   SubscriptionOptions,
   ApolloStore,
   ApolloClient,
-  FetchMoreOptions,
+  // FetchMoreOptions,
   UpdateQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,

@@ -56,4 +56,5 @@ import './cloneDeep';
 import './assign';
 import './environment';
 import './ApolloClient';
+import './schemaInterface';
 import './proxy';

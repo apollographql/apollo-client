@@ -488,7 +488,7 @@ describe('ApolloClient', () => {
     it('should warn when the data provided does not match the query shape', () => {
       const client = new ApolloClient();
 
-      withWarning(() => {
+      return withWarning(() => {
         client.writeQuery({
           data: {
             todos: [

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Feature: Warn before writing to store if result shape does not match query [#1638](https://github.com/apollographql/apollo-client/pull/1638)
 - Fix: Replace more usage of Object.assign with util.assign to make it work in IE, previous fix was not complete [PR #1648](https://github.com/apollographql/apollo-client/pull/1648)
 
 ### 1.1.2

@@ -1048,8 +1048,8 @@ export class QueryManager {
       variables,
     } = options;
     const request: Request = {
+      ...options,
       query: document,
-      variables,
       operationName: getOperationName(document),
     };
 

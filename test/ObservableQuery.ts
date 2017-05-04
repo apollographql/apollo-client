@@ -827,6 +827,8 @@ describe('ObservableQuery', () => {
 
 
     it('returns the current query status immediately', (done) => {
+      const oldWarn = console.warn;
+      console.warn = (m: string) => m;
       const observable: ObservableQuery<any> = mockWatchQuery({
         request: { query, variables },
         result: { data: dataOne },
@@ -841,6 +843,7 @@ describe('ObservableQuery', () => {
           partial: false,
         });
         done();
+        console.warn = oldWarn;
       });
 
       assert.deepEqual(observable.currentResult(), {
@@ -887,6 +890,8 @@ describe('ObservableQuery', () => {
     });
 
     it('returns errors from the store immediately', () => {
+      const oldWarn = console.warn;
+      console.warn = (m: string) => m;
       const queryManager = mockQueryManager({
         request: { query, variables },
         result: { errors: [error] },
@@ -905,6 +910,7 @@ describe('ObservableQuery', () => {
 
           assert.equal(currentResult.loading, false);
           assert.deepEqual(currentResult.error!.graphQLErrors, [error]);
+          console.warn = oldWarn;
         });
     });
 

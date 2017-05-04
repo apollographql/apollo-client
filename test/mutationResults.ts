@@ -12,6 +12,8 @@ import { ObservableQuery } from '../src/core/ObservableQuery';
 
 import gql from 'graphql-tag';
 
+import { withWarning } from './util/wrap';
+
 describe('mutation results', () => {
 
   const query = gql`
@@ -312,11 +314,7 @@ describe('mutation results', () => {
     });
   });
 
-  it('should warn when the result fields don\'t match the query fields', (done) => {
-    let message: string = null as any;
-    const oldWarn = console.warn;
-    console.warn = (m: string) => message = m;
-
+  it('should warn when the result fields don\'t match the query fields', () => {
     let handle: any;
     let subscriptionHandle: Subscription;
     let counter = 0;
@@ -364,50 +362,45 @@ describe('mutation results', () => {
       },
     };
 
-    setup({
-      request: { query: queryTodos },
-      result: queryTodosResult,
-    }, {
-      request: { query: mutationTodo },
-      result: mutationTodoResult,
-    })
-    .then(() => {
-        // we have to actually subscribe to the query to be able to update it
-        return new Promise( (resolve, reject) => {
-          handle = client.watchQuery({ query: queryTodos });
-          subscriptionHandle = handle.subscribe({
-            next(res: any) {
-              counter++;
-              resolve(res);
-            },
-          });
-        });
+    return withWarning(() => {
+      return setup({
+        request: { query: queryTodos },
+        result: queryTodosResult,
+      }, {
+        request: { query: mutationTodo },
+        result: mutationTodoResult,
       })
       .then(() => {
-        return client.mutate({
-          mutation: mutationTodo,
-          updateQueries: {
-            todos: (prev, { mutationResult }) => {
-              const newTodo = (mutationResult as any).data.createTodo;
+          // we have to actually subscribe to the query to be able to update it
+          return new Promise( (resolve, reject) => {
+            handle = client.watchQuery({ query: queryTodos });
+            subscriptionHandle = handle.subscribe({
+              next(res: any) {
+                counter++;
+                resolve(res);
+              },
+            });
+          });
+        })
+        .then(() => {
+          return client.mutate({
+            mutation: mutationTodo,
+            updateQueries: {
+              todos: (prev, { mutationResult }) => {
+                const newTodo = (mutationResult as any).data.createTodo;
 
-              const newResults = {
-                todos: [
-                  ...(prev as any).todos,
-                  newTodo,
-                ],
-              };
-              return newResults;
+                const newResults = {
+                  todos: [
+                    ...(prev as any).todos,
+                    newTodo,
+                  ],
+                };
+                return newResults;
+              },
             },
-          },
-        });
-      }).then(() => {
-        subscriptionHandle.unsubscribe();
-
-        assert.match(message, /Missing field description/);
-        console.warn = oldWarn;
-
-        done();
-      });
+          });
+        }).then(() => subscriptionHandle.unsubscribe());
+    }, /Missing field description/);
   });
 
   describe('result reducer', () => {

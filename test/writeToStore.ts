@@ -1113,7 +1113,7 @@ describe('writing to the store', () => {
     });
   });
 
-  describe('writeResultToStore', () => {
+  describe('writeResultToStore shape checking', () => {
     const query = gql`
       query {
         todos {
@@ -1162,7 +1162,7 @@ describe('writing to the store', () => {
       assert.deepEqual(newStore['2'], newData);
     });
 
-    it('should warn when receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
+    it('should warn when it receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
       const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
       const result = {
@@ -1188,7 +1188,7 @@ describe('writing to the store', () => {
     });
 
 
-    it('should warn when receives the wrong data inside a fragment (using an introspection matcher)', () => {
+    it('should warn when it receives the wrong data inside a fragment (using an introspection matcher)', () => {
       const fragmentMatcherFunction = new IntrospectionFragmentMatcher({
         introspectionQueryResultData: {
           __schema: {
@@ -1277,6 +1277,22 @@ describe('writing to the store', () => {
           fragmentMatcherFunction,
         });
       }, /Missing field date/);
+    });
+
+    it('should not warn if a field is null', () => {
+      const result = {
+        todos: null,
+      };
+
+      const newStore = writeResultToStore({
+        dataId: 'ROOT_QUERY',
+        result,
+        document: query,
+        dataIdFromObject: getIdField,
+        store: initialStore,
+      });
+
+      assert.deepEqual(newStore['ROOT_QUERY'], { todos: null });
     });
   });
 });

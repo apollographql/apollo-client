@@ -84,6 +84,8 @@ import {
   version,
 } from './version';
 
+import 'babel-polyfill';
+
 
 /**
  * This type defines a "selector" function that receives state from the Redux store

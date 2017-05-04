@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Include babel-polyfill so es6 methods (findIndex, startsWith, forEach, etc) do not break IE.
 
 ### 1.2.0
 - Feature: Warn before writing to store if result shape does not match query [#1638](https://github.com/apollographql/apollo-client/pull/1638)

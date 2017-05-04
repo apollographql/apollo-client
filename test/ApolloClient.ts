@@ -3,6 +3,8 @@ import gql from 'graphql-tag';
 import { Store } from '../src/store';
 import ApolloClient from '../src/ApolloClient';
 
+import { withWarning } from './util/wrap';
+
 describe('ApolloClient', () => {
   describe('readQuery', () => {
     it('will read some data from the store', () => {
@@ -482,6 +484,27 @@ describe('ApolloClient', () => {
         },
       });
     });
+
+    it('should warn when the data provided does not match the query shape', () => {
+      const client = new ApolloClient();
+
+      withWarning(() => {
+        client.writeQuery({
+          data: {
+            todos: [
+              {
+                id: '1',
+                name: 'Todo 1',
+                __typename: 'Todo',
+              },
+            ],
+          },
+          query: gql`
+            query { todos { id name description } }
+          `,
+        });
+      }, /Missing field description/);
+    });
   });
 
   describe('writeFragment', () => {
@@ -696,6 +719,18 @@ describe('ApolloClient', () => {
           'field({"literal":false,"value":42})': 2,
         },
       });
+    });
+
+    it('should warn when the data provided does not match the fragment shape', () => {
+      const client = new ApolloClient();
+
+      withWarning(() => {
+       client.writeFragment({
+          data: { __typename: 'Bar', i: 10 },
+          id: 'bar',
+          fragment: gql`fragment fragmentBar on Bar { i e }`,
+        });
+      }, /Missing field e/);
     });
   });
 

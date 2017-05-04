@@ -1175,7 +1175,7 @@ describe('writing to the store', () => {
         ],
       };
 
-      withWarning(() => {
+      return withWarning(() => {
         const newStore = writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,
@@ -1267,7 +1267,7 @@ describe('writing to the store', () => {
         ],
       };
 
-      withWarning(() => {
+      return withWarning(() => {
         const newStore = writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,

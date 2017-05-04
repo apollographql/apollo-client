@@ -724,7 +724,7 @@ describe('ApolloClient', () => {
     it('should warn when the data provided does not match the fragment shape', () => {
       const client = new ApolloClient();
 
-      withWarning(() => {
+      return withWarning(() => {
        client.writeFragment({
           data: { __typename: 'Bar', i: 10 },
           id: 'bar',

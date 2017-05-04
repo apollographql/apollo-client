@@ -2313,6 +2313,44 @@ describe('client', () => {
       fetchMock.restore();
     });
   });
+
+  it('should warn if server returns wrong data', () => {
+    const url = 'http://not-a-real-url.com';
+    const query = gql`
+      query {
+        todos {
+          id
+          name
+          description
+        }
+      }
+    `;
+    const result = {
+      data: {
+        todos: [
+          {
+            id: '1',
+            name: 'Todo 1',
+            price: 100,
+            __typename: 'Todo',
+          },
+        ],
+      },
+    };
+
+    fetchMock.post(url, () => {
+      return {
+        body: result,
+      };
+    });
+    const networkInterface = createNetworkInterface({ uri: url });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    return withWarning(() => client.query({ query }), /Missing field description/);
+  });
 });
 
 function clientRoundtrip(

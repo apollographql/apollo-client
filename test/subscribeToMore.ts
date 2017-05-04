@@ -52,7 +52,7 @@ describe('subscribeToMore', () => {
     request: {
       query: gql`
         subscription newValues {
-          notAnActualField
+          name
         }
       `,
     },
@@ -69,7 +69,7 @@ describe('subscribeToMore', () => {
     request: {
       query: gql`
         subscription newValues {
-          notAnActualField
+          name
         }
       `,
     },
@@ -165,7 +165,7 @@ describe('subscribeToMore', () => {
     obsHandle.subscribeToMore({
       document: gql`
         subscription newValues {
-          notAnActualField
+          name
         }
       `,
       updateQuery: (prev, { subscriptionData }) => {
@@ -217,7 +217,7 @@ describe('subscribeToMore', () => {
     obsHandle.subscribeToMore({
       document: gql`
         subscription newValues {
-          notAnActualField
+          name
         }
       `,
       updateQuery: (prev, { subscriptionData }) => {

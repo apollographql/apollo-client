@@ -533,7 +533,7 @@ describe('ReduxDataProxy', () => {
       });
 
       proxy.writeFragment({
-        data: { e: 4, h: { id: 'bar', i: 7 } },
+        data: { __typename: 'Foo', e: 4, h: { id: 'bar', i: 7 } },
         id: 'foo',
         fragment: gql`fragment fragmentFoo on Foo { e h { i } }`,
       });
@@ -551,9 +551,8 @@ describe('ReduxDataProxy', () => {
           i: 7,
         },
       });
-
       proxy.writeFragment({
-        data: { f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
+        data: { __typename: 'Foo', f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
         id: 'foo',
         fragment: gql`fragment fragmentFoo on Foo { f g h { j k } }`,
       });
@@ -577,7 +576,7 @@ describe('ReduxDataProxy', () => {
       });
 
       proxy.writeFragment({
-        data: { i: 10 },
+        data: { i: 10, __typename: 'Bar' },
         id: 'bar',
         fragment: gql`fragment fragmentBar on Bar { i }`,
       });
@@ -601,7 +600,7 @@ describe('ReduxDataProxy', () => {
       });
 
       proxy.writeFragment({
-        data: { j: 11, k: 12 },
+        data: { j: 11, k: 12, __typename: 'Bar' },
         id: 'bar',
         fragment: gql`fragment fragmentBar on Bar { j k }`,
       });
@@ -625,7 +624,7 @@ describe('ReduxDataProxy', () => {
       });
 
       proxy.writeFragment({
-        data: { e: 4, f: 5, g: 6, h: { id: 'bar', i: 7, j: 8, k: 9 } },
+        data: { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', id: 'bar', i: 7, j: 8, k: 9 } },
         id: 'foo',
         fragment: gql`fragment fooFragment on Foo { e f g h { i j k } } fragment barFragment on Bar { i j k }`,
         fragmentName: 'fooFragment',
@@ -650,7 +649,7 @@ describe('ReduxDataProxy', () => {
       });
 
       proxy.writeFragment({
-        data: { i: 10, j: 11, k: 12 },
+        data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
         id: 'bar',
         fragment: gql`fragment fooFragment on Foo { e f g h { i j k } } fragment barFragment on Bar { i j k }`,
         fragmentName: 'barFragment',

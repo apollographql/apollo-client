@@ -463,6 +463,7 @@ export class TransactionDataProxy implements DataProxy {
       variables: write.variables,
       store: this.data,
       dataIdFromObject: this.reducerConfig.dataIdFromObject || (() => null),
+      fragmentMatcherFunction: this.reducerConfig.fragmentMatcher,
     });
     this.writes.push(write);
   }

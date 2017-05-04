@@ -11,7 +11,7 @@ import {
 } from '../util/environment';
 
 import {
-  warnOnce,
+  warnOnceInDevelopment,
 } from '../util/warnOnce';
 
 export interface FragmentMatcherInterface {
@@ -123,9 +123,11 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
 
     if (! obj.__typename) {
       if (! haveWarned) {
-        console.warn(`You're using fragments in your queries, but don't have the addTypename:
-  true option set in Apollo Client. Please turn on that option so that we can accurately
-  match fragments.`);
+        console.warn(`You're using fragments in your queries, but either don't have the addTypename:
+  true option set in Apollo Client, or you are trying to write a fragment to the store without the __typename.
+   Please turn on the addTypename option and include __typename when writing fragments so that Apollo Client
+   can accurately match fragments.`);
+        console.warn('Could not find __typename on Fragment ', typeCondition, obj);
         console.warn(`DEPRECATION WARNING: using fragments without __typename is unsupported behavior ` +
           `and will be removed in future versions of Apollo client. You should fix this and set addTypename to true now.`);
 
@@ -149,7 +151,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     // 2. A fragment on a matching interface or union
     // If it's 1, we don't want to return anything, if it's 2 we want to match. We can't tell the
     // difference, so we warn the user, but still try to match it (backcompat).
-    warnOnce(`You are using the simple (heuristic) fragment matcher, but your queries contain union or interface types.
+    warnOnceInDevelopment(`You are using the simple (heuristic) fragment matcher, but your queries contain union or interface types.
      Apollo Client will not be able to able to accurately map fragments.` +
      `To make this error go away, use the IntrospectionFragmentMatcher as described in the docs: ` +
      `http://dev.apollodata.com/react/initialization.html#fragment-matcher`, 'error');

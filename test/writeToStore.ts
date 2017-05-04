@@ -2,7 +2,20 @@ import { assert } from 'chai';
 import { cloneDeep, assign, omit } from 'lodash';
 
 import {
+  SelectionNode,
+  FieldNode,
+  DefinitionNode,
+  OperationDefinitionNode,
+  ASTNode,
+} from 'graphql';
+
+import gql from 'graphql-tag';
+
+import { withWarning } from './util/wrap';
+
+import {
   writeQueryToStore,
+  writeResultToStore,
   writeSelectionSetToStore,
 } from '../src/data/writeToStore';
 
@@ -15,14 +28,14 @@ import {
 } from '../src/data/storeUtils';
 
 import {
-  SelectionNode,
-  FieldNode,
-  DefinitionNode,
-  OperationDefinitionNode,
-  ASTNode,
-} from 'graphql';
+  HeuristicFragmentMatcher,
+  IntrospectionFragmentMatcher,
+} from '../src/data/fragmentMatcher';
 
-import gql from 'graphql-tag';
+import {
+  getFragmentDefinitions,
+  createFragmentMap,
+} from '../src/queries/getFromAST';
 
 const getIdField = ({id}: {id: string}) => id;
 
@@ -1097,6 +1110,189 @@ describe('writing to the store', () => {
 
     Object.keys(store).forEach((field) => {
       assert.equal(store[field], newStore[field], 'references are the same');
+    });
+  });
+
+  describe('writeResultToStore shape checking', () => {
+    const query = gql`
+      query {
+        todos {
+          id
+          name
+          description
+        }
+      }
+    `;
+
+    const initialResult = {
+      todos: [{
+        id: '1',
+        name: 'Todo 1',
+        description: 'Description 1',
+      }],
+    };
+
+    const initialStore = writeQueryToStore({
+      query,
+      result: cloneDeep(initialResult),
+      dataIdFromObject: getIdField,
+    });
+
+    it('should write the result data without validating its shape when a fragment matcher is not provided', () => {
+      const newData = {
+        id: '2',
+        name: 'Todo 2',
+      };
+      const result = {
+        todos: [
+          ...initialResult.todos,
+          newData,
+        ],
+      };
+
+      const newStore = writeResultToStore({
+        dataId: 'ROOT_QUERY',
+        result,
+        document: query,
+        dataIdFromObject: getIdField,
+        store: initialStore,
+      });
+
+      assert.deepEqual(newStore['1'], initialStore['1']);
+      assert.deepEqual(newStore['2'], newData);
+    });
+
+    it('should warn when it receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
+      const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
+
+      const result = {
+        todos: [
+          ...initialResult.todos,
+          {
+            id: '2',
+            name: 'Todo 2',
+          },
+        ],
+      };
+
+      return withWarning(() => {
+        const newStore = writeResultToStore({
+          dataId: 'ROOT_QUERY',
+          result,
+          document: query,
+          store: initialStore,
+          dataIdFromObject: getIdField,
+          fragmentMatcherFunction,
+        });
+      }, /Missing field description/);
+    });
+
+
+    it('should warn when it receives the wrong data inside a fragment (using an introspection matcher)', () => {
+      const fragmentMatcherFunction = new IntrospectionFragmentMatcher({
+        introspectionQueryResultData: {
+          __schema: {
+            types: [
+              {
+                kind: 'UNION',
+                name: 'Todo',
+                possibleTypes: [
+                  { name: 'ShoppingCartItem' },
+                  { name: 'TaskItem' },
+                ],
+              },
+            ],
+          },
+        },
+      }).match;
+
+      const queryWithInterface = gql`
+        query {
+          todos {
+            id
+            name
+            description
+            ...TodoFragment
+          }
+        }
+
+        fragment TodoFragment on Todo {
+          ...on ShoppingCartItem {
+            price
+            __typename
+          }
+          ...on TaskItem {
+            date
+            __typename
+          }
+          __typename
+        }
+      `;
+
+      const initialResultWithInterface = {
+        todos: [
+          {
+            id: '1',
+            name: 'Todo 1',
+            description: 'Description 1',
+            price: 100,
+            __typename: 'ShoppingCartItem',
+          },
+        ],
+      };
+
+      const fragments = getFragmentDefinitions(queryWithInterface);
+      const store = writeQueryToStore({
+        query: queryWithInterface,
+        result: cloneDeep(initialResultWithInterface),
+        dataIdFromObject: getIdField,
+        fragmentMap: createFragmentMap(fragments),
+      });
+
+      const result = {
+        todos: [
+          {
+            id: '1',
+            name: 'Todo 1',
+            description: 'Description 1',
+            price: 100,
+            __typename: 'ShoppingCartItem',
+          },
+          {
+            id: '2',
+            name: 'Todo 2',
+            description: 'Description 2',
+            __typename: 'TaskItem',
+          },
+        ],
+      };
+
+      return withWarning(() => {
+        const newStore = writeResultToStore({
+          dataId: 'ROOT_QUERY',
+          result,
+          document: queryWithInterface,
+          store,
+          dataIdFromObject: getIdField,
+          fragmentMatcherFunction,
+        });
+      }, /Missing field date/);
+    });
+
+    it('should not warn if a field is null', () => {
+      const result = {
+        todos: null,
+      };
+
+      const newStore = writeResultToStore({
+        dataId: 'ROOT_QUERY',
+        result,
+        document: query,
+        dataIdFromObject: getIdField,
+        store: initialStore,
+      });
+
+      assert.deepEqual(newStore['ROOT_QUERY'], { todos: null });
     });
   });
 });

@@ -155,7 +155,7 @@ describe('network interface', () => {
     });
 
     it('should warn when the endpoint is passed as the first argument', () => {
-      withWarning(() => {
+      return withWarning(() => {
         createNetworkInterface('/graphql');
       }, /Passing the URI as the first argument to createNetworkInterface is deprecated/);
     });

@@ -190,7 +190,7 @@ describe('roundtrip', () => {
     });
 
     it('should resolve on union types with inline fragments without typenames with warning', () => {
-      withWarning(() => {
+      return withWarning(() => {
         storeRoundtrip(gql`
           query {
             all_people {

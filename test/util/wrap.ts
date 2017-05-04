@@ -17,14 +17,10 @@ export function withWarning(func: Function, regex: RegExp) {
 
   console.warn = (m: string) => message = m;
 
-  try {
-    const result = func();
+  return Promise.resolve(func()).then(() => {
     assert.match(message, regex);
-    return result;
-
-  } finally {
     console.warn = oldWarn;
-  }
+  });
 }
 
 export function withError(func: Function, regex: RegExp) {

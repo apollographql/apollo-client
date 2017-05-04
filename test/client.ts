@@ -870,6 +870,7 @@ describe('client', () => {
       mutation {
         starAuthor(id: 12) {
           author {
+            __typename
             ...authorDetails
           }
         }
@@ -881,6 +882,7 @@ describe('client', () => {
     const result = {
       'starAuthor': {
         'author': {
+          __typename: 'Author',
           'firstName': 'John',
           'lastName': 'Smith',
         },
@@ -1924,9 +1926,11 @@ describe('client', () => {
         }
       }`;
     const data = {
-      person: {
-        firstName: 'John',
-        lastName: 'Smith',
+      newPerson: {
+        person: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
       },
     };
     const errors = [ new Error('Some kind of GraphQL error.') ];
@@ -1940,9 +1944,11 @@ describe('client', () => {
     const mutatePromise = client.mutate({
       mutation,
       optimisticResponse: {
-        person: {
-          firstName: 'John*',
-          lastName: 'Smith*',
+        newPerson: {
+          person: {
+            firstName: 'John*',
+            lastName: 'Smith*',
+          },
         },
       },
     });
@@ -2306,6 +2312,44 @@ describe('client', () => {
       assert.equal(err.message, 'GraphQL error: Cannot query field "foo" on type "Post".');
       fetchMock.restore();
     });
+  });
+
+  it('should warn if server returns wrong data', () => {
+    const url = 'http://not-a-real-url.com';
+    const query = gql`
+      query {
+        todos {
+          id
+          name
+          description
+        }
+      }
+    `;
+    const result = {
+      data: {
+        todos: [
+          {
+            id: '1',
+            name: 'Todo 1',
+            price: 100,
+            __typename: 'Todo',
+          },
+        ],
+      },
+    };
+
+    fetchMock.post(url, () => {
+      return {
+        body: result,
+      };
+    });
+    const networkInterface = createNetworkInterface({ uri: url });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    return withWarning(() => client.query({ query }), /Missing field description/);
   });
 });
 

@@ -1206,7 +1206,7 @@ describe('writing to the store', () => {
         },
       }).match;
 
-      const queryWitInterface = gql`
+      const queryWithInterface = gql`
         query {
           todos {
             id
@@ -1229,7 +1229,7 @@ describe('writing to the store', () => {
         }
       `;
 
-      const initialResultWitInterface = {
+      const initialResultWithInterface = {
         todos: [
           {
             id: '1',
@@ -1241,10 +1241,10 @@ describe('writing to the store', () => {
         ],
       };
 
-      const fragments = getFragmentDefinitions(queryWitInterface);
+      const fragments = getFragmentDefinitions(queryWithInterface);
       const store = writeQueryToStore({
-        query: queryWitInterface,
-        result: cloneDeep(initialResultWitInterface),
+        query: queryWithInterface,
+        result: cloneDeep(initialResultWithInterface),
         dataIdFromObject: getIdField,
         fragmentMap: createFragmentMap(fragments),
       });
@@ -1271,7 +1271,7 @@ describe('writing to the store', () => {
         const newStore = writeResultToStore({
           dataId: 'ROOT_QUERY',
           result,
-          document: queryWitInterface,
+          document: queryWithInterface,
           store,
           dataIdFromObject: getIdField,
           fragmentMatcherFunction,

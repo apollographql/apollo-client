@@ -183,7 +183,7 @@ Forces your component to refetch the query you defined in the `graphql()` functi
 
 `data.refetch` returns a promise that resolves with the new data fetched from your API once the query has finished executing. The promise will reject if the query failed.
 
-The `data.refetch` function takes a single `variables` object argument. The `variables` argument will replace `varialbes` used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`) option to refetch the query you defined in the `graphql()` function.
+The `data.refetch` function takes a single `variables` object argument. The `variables` argument will replace `variables` used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`) option to refetch the query you defined in the `graphql()` function.
 
 **Example:**
 

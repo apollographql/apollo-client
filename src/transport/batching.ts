@@ -24,20 +24,24 @@ export class QueryBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   public queuedRequests: QueryFetchRequest[] = [];
 
-  private batchInterval: Number;
+  private batchInterval: number;
+  private batchMax: number;
 
   //This function is called to the queries in the queue to the server.
   private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
 
   constructor({
     batchInterval,
+    batchMax,
     batchFetchFunction,
   }: {
     batchInterval: number,
+    batchMax: number,
     batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>,
   }) {
     this.queuedRequests = [];
     this.batchInterval = batchInterval;
+    this.batchMax = batchMax;
     this.batchFetchFunction = batchFetchFunction;
   }
 
@@ -62,20 +66,20 @@ export class QueryBatcher {
   // Consumes the queue.
   // Returns a list of promises (one for each query).
   public consumeQueue(): (Promise<ExecutionResult> | undefined)[] | undefined {
-    const requests: Request[] = this.queuedRequests.map(
+    const queueSlice = this.queuedRequests.splice(0, this.batchMax);
+    const requests: Request[] = queueSlice.map(
       (queuedRequest) => queuedRequest.request,
     );
 
     const promises: (Promise<ExecutionResult> | undefined)[] = [];
     const resolvers: any[] = [];
     const rejecters: any[] = [];
-    this.queuedRequests.forEach((fetchRequest, index) => {
+    queueSlice.forEach((fetchRequest, index) => {
       promises.push(fetchRequest.promise);
       resolvers.push(fetchRequest.resolve);
       rejecters.push(fetchRequest.reject);
     });
 
-    this.queuedRequests = [];
     const batchedPromise = this.batchFetchFunction(requests);
 
     batchedPromise.then((results) => {
@@ -87,6 +91,11 @@ export class QueryBatcher {
         rejecters[index](error);
       });
     });
+
+    if (this.queuedRequests.length) {
+      promises.concat(this.consumeQueue());
+    }
+
     return promises;
   }
 

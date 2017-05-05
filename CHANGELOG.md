@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Feature: Expose `dataIdFromObject` in addition to `dataId` [PR #1663](https://github.com/apollographql/apollo-client/pull/1663)
 
 ### 1.2.0
 - Feature: Warn before writing to store if result shape does not match query [#1638](https://github.com/apollographql/apollo-client/pull/1638)

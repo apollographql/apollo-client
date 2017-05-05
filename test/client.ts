@@ -2025,6 +2025,7 @@ describe('client', () => {
     const networkInterface = createBatchingNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
+      batchMax: 5,
       opts: {},
     });
     Promise.all([
@@ -2086,6 +2087,7 @@ describe('client', () => {
     const networkInterface = createBatchingNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
+      batchMax: 5,
       opts: {},
     });
     Promise.all([
@@ -2166,6 +2168,7 @@ describe('client', () => {
     const networkInterface = createBatchingNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
+      batchMax: 5,
       opts: {},
     });
     Promise.all([
@@ -2179,6 +2182,101 @@ describe('client', () => {
     }).catch( e => {
       console.error(e);
     });
+  });
+
+  it('should limit the amount of queries in a batch according to the batchMax value', (done) => {
+    const firstQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }`;
+    const firstResult = {
+      data: {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      },
+      loading: false,
+    };
+    const secondQuery = gql`
+      query {
+        person {
+          name
+        }
+      }`;
+    const secondResult = {
+      data: {
+        person: {
+          name: 'Jane Smith',
+        },
+      },
+    };
+    const url = 'http://not-a-real-url.com';
+
+    const networkInterface = createBatchingNetworkInterface({
+      uri: 'http://fake-url.com',
+      batchInterval: 5,
+      batchMax: 1,
+      opts: {},
+    });
+
+    const oldFetch = fetch;
+    fetch = createMockFetch({
+      url,
+      opts: {
+        body: JSON.stringify([
+          {
+            query: print(firstQuery),
+          },
+        ]),
+        headers: {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      },
+      result: createMockedIResponse([firstResult]),
+    });
+
+    const firstFetch = networkInterface.query({ query: firstQuery });
+    firstFetch.then((results) => {
+      console.log('first results', results);
+      assert.deepEqual(results, [firstResult]);
+      fetch = oldFetch;
+    }).catch( e => {
+      console.error(e);
+    });
+
+    fetch = createMockFetch({
+      url,
+      opts: {
+        body: JSON.stringify([
+          {
+            query: print(secondQuery),
+          },
+        ]),
+        headers: {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      },
+      result: createMockedIResponse([secondResult]),
+    });
+
+    const secondFetch = networkInterface.query({ query: secondQuery });
+    secondFetch.then((results) => {
+      console.log('second results', results);
+      assert.deepEqual(results, [secondResult]);
+      fetch = oldFetch;
+    }).catch( e => {
+      console.error(e);
+    });
+
+    done();
   });
 
   it('should enable dev tools logging', () => {

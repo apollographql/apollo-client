@@ -47,7 +47,7 @@ describe('HTTPBatchedNetworkInterface', () => {
     opts?: RequestInit,
   }) => {
     const url = 'http://fake.com/graphql';
-    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, 10, opts);
+    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, 10, 10, opts);
 
     batchedNetworkInterface.use(middlewares);
     batchedNetworkInterface.useAfter(afterwares);
@@ -113,7 +113,7 @@ describe('HTTPBatchedNetworkInterface', () => {
   it('should construct itself correctly', () => {
     const url = 'http://notreal.com/graphql';
     const opts = {};
-    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, 10, opts);
+    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, 10, 10, opts);
     assert(batchedNetworkInterface);
     assert.equal(batchedNetworkInterface._uri, url);
     assert.deepEqual(batchedNetworkInterface._opts, opts);

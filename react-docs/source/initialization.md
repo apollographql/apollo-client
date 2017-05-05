@@ -109,7 +109,7 @@ In this guide, we won't use the decorator syntax to make the code more approacha
 
 <h2 id="fragment-matcher">Using Fragments on unions and interfaces</h2>
 
-By default, Apollo Client doesn't require any knowledge of the GraphQL schema, which means it's very easy to set up and works with any server and supports even the largest schemas. However, as your usage of Apollo and GraphQL becomes more sophisitcated, you may start using fragments on interfaces or unions. Here's an example of a query that uses fragments on an interface:
+By default, Apollo Client doesn't require any knowledge of the GraphQL schema, which means it's very easy to set up and works with any server and supports even the largest schemas. However, as your usage of Apollo and GraphQL becomes more sophisticated, you may start using fragments on interfaces or unions. Here's an example of a query that uses fragments on an interface:
 
 ```
 query {

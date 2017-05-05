@@ -56,6 +56,21 @@ describe('roundtrip', () => {
     });
   });
 
+   it('array with null values (#1551)', () => {
+    storeRoundtrip(gql`
+      {
+        list {
+          value
+        }
+      }
+    `, {
+      list: [
+        null,
+        { value: 1 },
+      ],
+    });
+  });
+
   it('enum arguments', () => {
     storeRoundtrip(gql`
       {

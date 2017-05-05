@@ -13,7 +13,7 @@ script:
     # run tests on current master of react-apollo
   - npm link
   - git clone https://github.com/apollographql/react-apollo
-    # - cd react-apollo && npm link apollo-client && npm i && npm test && cd ../ && rm -rf react-apollo
+  - cd react-apollo && npm link apollo-client && npm i && npm test && cd ../ && rm -rf react-apollo
     # end tests of react apollo
 
     # run coverage and file size checks

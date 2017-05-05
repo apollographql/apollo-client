@@ -214,7 +214,7 @@ export default class ApolloClient implements DataProxy {
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
-    this.dataIdFromObject = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
+    this.dataIdFromObject = this.dataId;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
 

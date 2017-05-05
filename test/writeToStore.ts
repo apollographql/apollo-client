@@ -1124,29 +1124,13 @@ describe('writing to the store', () => {
       }
     `;
 
-    const initialResult = {
-      todos: [{
-        id: '1',
-        name: 'Todo 1',
-        description: 'Description 1',
-      }],
-    };
-
-    const initialStore = writeQueryToStore({
-      query,
-      result: cloneDeep(initialResult),
-      dataIdFromObject: getIdField,
-    });
-
     it('should write the result data without validating its shape when a fragment matcher is not provided', () => {
-      const newData = {
-        id: '2',
-        name: 'Todo 2',
-      };
       const result = {
         todos: [
-          ...initialResult.todos,
-          newData,
+          {
+            id: '1',
+            name: 'Todo 1',
+          },
         ],
       };
 
@@ -1155,11 +1139,9 @@ describe('writing to the store', () => {
         result,
         document: query,
         dataIdFromObject: getIdField,
-        store: initialStore,
       });
 
-      assert.deepEqual(newStore['1'], initialStore['1']);
-      assert.deepEqual(newStore['2'], newData);
+      assert.deepEqual(newStore['1'], result.todos[0]);
     });
 
     it('should warn when it receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
@@ -1167,10 +1149,9 @@ describe('writing to the store', () => {
 
       const result = {
         todos: [
-          ...initialResult.todos,
           {
-            id: '2',
-            name: 'Todo 2',
+            id: '1',
+            name: 'Todo 1',
           },
         ],
       };
@@ -1180,10 +1161,11 @@ describe('writing to the store', () => {
           dataId: 'ROOT_QUERY',
           result,
           document: query,
-          store: initialStore,
           dataIdFromObject: getIdField,
           fragmentMatcherFunction,
         });
+
+        assert.deepEqual(newStore['1'], result.todos[0]);
       }, /Missing field description/);
     });
 
@@ -1229,40 +1211,13 @@ describe('writing to the store', () => {
         }
       `;
 
-      const initialResultWithInterface = {
-        todos: [
-          {
-            id: '1',
-            name: 'Todo 1',
-            description: 'Description 1',
-            price: 100,
-            __typename: 'ShoppingCartItem',
-          },
-        ],
-      };
-
-      const fragments = getFragmentDefinitions(queryWithInterface);
-      const store = writeQueryToStore({
-        query: queryWithInterface,
-        result: cloneDeep(initialResultWithInterface),
-        dataIdFromObject: getIdField,
-        fragmentMap: createFragmentMap(fragments),
-      });
-
       const result = {
         todos: [
           {
             id: '1',
             name: 'Todo 1',
             description: 'Description 1',
-            price: 100,
             __typename: 'ShoppingCartItem',
-          },
-          {
-            id: '2',
-            name: 'Todo 2',
-            description: 'Description 2',
-            __typename: 'TaskItem',
           },
         ],
       };
@@ -1272,11 +1227,12 @@ describe('writing to the store', () => {
           dataId: 'ROOT_QUERY',
           result,
           document: queryWithInterface,
-          store,
           dataIdFromObject: getIdField,
           fragmentMatcherFunction,
         });
-      }, /Missing field date/);
+
+        assert.deepEqual(newStore['1'], result.todos[0]);
+      }, /Missing field price/);
     });
 
     it('should not warn if a field is null', () => {
@@ -1289,7 +1245,6 @@ describe('writing to the store', () => {
         result,
         document: query,
         dataIdFromObject: getIdField,
-        store: initialStore,
       });
 
       assert.deepEqual(newStore['ROOT_QUERY'], { todos: null });

@@ -1201,6 +1201,24 @@ describe('QueryManager', () => {
     });
   });
 
+  it('can handle null values in arrays (#1551)', (done) => {
+    const query = gql`{ list { value } }`;
+    const data = { list: [ null, { value: 1 } ] };
+    const queryManager = mockQueryManager({
+      request: { query },
+      result: { data },
+    });
+    const observable = queryManager.watchQuery({ query });
+
+    observable.subscribe({
+      next: (result) => {
+        assert.deepEqual(result.data, data);
+        assert.deepEqual(observable.currentResult().data, data);
+        done();
+      },
+    });
+  });
+
   it('deepFreezes results in development mode', () => {
     const query = gql`{ stuff }`;
     const data = { stuff: 'wonderful' };

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix bug that caused results with null items in array to become empty on second read [#1661](https://github.com/apollographql/apollo-client/pull/1661)
 
 ### 1.2.0
 - Feature: Warn before writing to store if result shape does not match query [#1638](https://github.com/apollographql/apollo-client/pull/1638)

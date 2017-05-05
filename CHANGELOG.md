@@ -3,6 +3,7 @@
 ### vNEXT
 
 ### 1.2.1
+- Fix: Ensure polling queries do not poll during SSR [#1664](https://github.com/apollographql/apollo-client/pull/1664)
 - Fix: Ensure setVariables correctly sets options.variables [#1662](https://github.com/apollographql/apollo-client/pull/1662)
 - Fix bug that caused results with null items in array to become empty on second read [#1661](https://github.com/apollographql/apollo-client/pull/1661)
 

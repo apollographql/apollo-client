@@ -276,7 +276,7 @@ function addPreviousResultToIdValues (value: any, previousResult: any): any {
     if (Array.isArray(previousResult)) {
       previousResult.forEach(item => {
         // item can be null
-        if (item[ID_KEY]) {
+        if (item && item[ID_KEY]) {
           idToPreviousResult[item[ID_KEY]] = item;
         }
       });

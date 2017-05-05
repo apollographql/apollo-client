@@ -1208,14 +1208,14 @@ describe('QueryManager', () => {
       request: { query },
       result: { data },
     });
-    const observable = queryManager.watchQuery({ query })
+    const observable = queryManager.watchQuery({ query });
 
     observable.subscribe({
       next: (result) => {
         assert.deepEqual(result.data, data);
         assert.deepEqual(observable.currentResult().data, data);
         done();
-      }
+      },
     });
   });
 

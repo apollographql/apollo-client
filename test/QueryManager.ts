@@ -1711,6 +1711,7 @@ describe('QueryManager', () => {
   });
 
   describe('polling queries', () => {
+
     it('allows you to poll queries', () => {
       const query = gql`
         query fetchLuke($id: String) {
@@ -1735,6 +1736,7 @@ describe('QueryManager', () => {
           name: 'Luke Skywalker has a new name',
         },
       };
+
       const queryManager = mockQueryManager(
         {
           request: { query, variables },
@@ -1757,6 +1759,81 @@ describe('QueryManager', () => {
         (result) => assert.deepEqual(result.data, data2),
       );
 
+    });
+
+    it('does not poll during SSR', (done) => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '1',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface({
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        }),
+        store: createApolloStore(),
+        reduxRootSelector: defaultReduxRootSelector,
+        addTypename: false,
+        ssrMode: true,
+      });
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        pollInterval: 10,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      let count = 1;
+      let doneCalled = false;
+      const subHandle = observable.subscribe({
+        next: (result: any) => {
+          switch (count) {
+            case 1:
+              assert.deepEqual(result.data, data1);
+              setTimeout(() => {
+                subHandle.unsubscribe();
+                if (!doneCalled) {
+                  done();
+                }
+              }, 15);
+              count++;
+              break;
+            case 2:
+            default:
+              doneCalled = true;
+              done(new Error('Only expected one result, not multiple'));
+          }
+        },
+      });
     });
 
     it('should let you handle multiple polled queries and unsubscribe from one of them', (done) => {

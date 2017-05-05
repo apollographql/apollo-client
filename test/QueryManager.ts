@@ -2248,6 +2248,11 @@ describe('QueryManager', () => {
   });
 
   describe('store resets', () => {
+    it('returns a promise', done => {
+      const queryManager = createQueryManager({});
+      queryManager.resetStore().then(() => done());
+    });
+
     it('should change the store state to an empty state', () => {
       const queryManager = createQueryManager({});
 

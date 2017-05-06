@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Feature: Expose `dataIdFromObject` in addition to `dataId` [PR #1663](https://github.com/apollographql/apollo-client/pull/1663)
 
 ### 1.2.1
 - Fix: Ensure polling queries do not poll during SSR [#1664](https://github.com/apollographql/apollo-client/pull/1664)

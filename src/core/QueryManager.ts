@@ -132,6 +132,7 @@ export class QueryManager {
   public scheduler: QueryScheduler;
   public store: ApolloStore;
   public networkInterface: NetworkInterface;
+  public ssrMode: boolean;
 
   private addTypename: boolean;
   private deduplicator: Deduplicator;
@@ -177,6 +178,7 @@ export class QueryManager {
     fragmentMatcher,
     addTypename = true,
     queryDeduplication = false,
+    ssrMode = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -185,6 +187,7 @@ export class QueryManager {
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
     queryDeduplication?: boolean,
+    ssrMode?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -198,6 +201,7 @@ export class QueryManager {
     this.queryDocuments = {};
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
+    this.ssrMode = ssrMode;
 
     // XXX This logic is duplicated in ApolloClient.ts for two reasons:
     // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.

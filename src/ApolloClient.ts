@@ -128,7 +128,14 @@ export default class ApolloClient implements DataProxy {
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
   public disableNetworkFetches: boolean;
+  /**
+   * The dataIdFromObject function used by this client instance.
+   */
   public dataId: IdGetter | undefined;
+  /**
+   * The dataIdFromObject function used by this client instance.
+   */
+  public dataIdFromObject: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
@@ -214,6 +221,7 @@ export default class ApolloClient implements DataProxy {
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
+    this.dataIdFromObject = this.dataId;
     this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;

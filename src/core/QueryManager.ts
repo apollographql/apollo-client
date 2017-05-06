@@ -502,6 +502,10 @@ export class QueryManager {
         return;
       }
 
+      // XXX This is to fix a strange race condition that was the root cause of react-apollo/#170
+      // queryStoreValue was sometimes the old queryStoreValue and not what's currently in the store.
+      queryStoreValue = this.getApolloState().queries[queryId];
+
       const storedQuery = this.observableQueries[queryId];
 
       const fetchPolicy = storedQuery ? storedQuery.observableQuery.options.fetchPolicy : options.fetchPolicy;

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)
 - Feature: Expose `dataIdFromObject` in addition to `dataId` [PR #1663](https://github.com/apollographql/apollo-client/pull/1663)
 
 ### 1.2.1

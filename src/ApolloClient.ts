@@ -128,7 +128,13 @@ export default class ApolloClient implements DataProxy {
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
   public disableNetworkFetches: boolean;
+  /**
+   * Returns a object identifier given a particular result object.
+   */
   public dataId: IdGetter | undefined;
+  /**
+   * Returns a object identifier given a particular result object.
+   */
   public dataIdFromObject: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;

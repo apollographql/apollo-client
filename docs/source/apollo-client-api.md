@@ -17,6 +17,8 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ApolloClient.writeQuery %}
 {% tsapibox ApolloClient.writeFragment %}
 {% tsapibox ApolloClient.reducer %}
+{% tsapibox ApolloClient.dataId %}
+{% tsapibox ApolloClient.dataIdFromObject %}
 {% tsapibox ApolloClient.middleware %}
 {% tsapibox ApolloClient.initStore %}
 {% tsapibox ApolloClient.setStore %}

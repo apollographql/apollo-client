@@ -43,6 +43,17 @@ const client = new ApolloClient({
 
 These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.
 
+If you want to get this ID (for instance when using the [`readFragment` function](/core/apollo-client-api.html#ApolloClient\.readFragment)), you can use the `dataId` or `dataIdFromObject` functions from the `ApolloClient`
+```js
+const person = {
+  __typename: 'Person',
+  id: '1234',
+};
+
+dataId(person); // 'Person:1234'
+dataIdFromObject(person); // 'Person:1234'
+```
+
 <h3 id="automatic-updates">Automatic store updates</h3>
 
 Let's look at a case where just using the cache normalization results in the correct update to our store. Let's say we do the following query:

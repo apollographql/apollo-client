@@ -129,11 +129,11 @@ export default class ApolloClient implements DataProxy {
   public addTypename: boolean;
   public disableNetworkFetches: boolean;
   /**
-   * Returns a object identifier given a particular result object.
+   * The dataIdFromObject function used by this client instance.
    */
   public dataId: IdGetter | undefined;
   /**
-   * Returns a object identifier given a particular result object.
+   * The dataIdFromObject function used by this client instance.
    */
   public dataIdFromObject: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;

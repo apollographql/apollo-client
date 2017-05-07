@@ -35,13 +35,13 @@ describe('query cache', () => {
       users: [
         {
           id: 'user1',
-          name: 'User 1'
+          name: 'User 1',
         },
         {
           id: 'user2',
           name: 'User 2',
-        }
-      ]
+        },
+      ],
     },
   };
 
@@ -73,8 +73,8 @@ describe('query cache', () => {
               'generated': false,
               'id': 'user2',
               'type': 'id',
-            }
-          ]
+            },
+          ],
         },
         'user1': {
           'id': 'user1',
@@ -83,7 +83,7 @@ describe('query cache', () => {
         'user2': {
           'id': 'user2',
           'name': 'User 2',
-        }
+        },
       },
     },
   };
@@ -95,7 +95,7 @@ describe('query cache', () => {
       networkInterface,
       initialState,
       addTypename: false,
-      dataIdFromObject: (obj: any) => obj.id
+      dataIdFromObject: (obj: any) => obj.id,
     });
 
     return client.query({query, fetchPolicy: 'cache-only'})
@@ -115,9 +115,9 @@ describe('query cache', () => {
                 'account1': true,
                 'user1': true,
                 'user2': true,
-              }
-            }
-          }
+              },
+            },
+          },
         });
       });
   });
@@ -131,7 +131,7 @@ describe('query cache', () => {
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
-      dataIdFromObject: (obj: any) => obj.id
+      dataIdFromObject: (obj: any) => obj.id,
     });
 
     return client.query({query})
@@ -152,10 +152,10 @@ describe('query cache', () => {
                 'ROOT_QUERY.node({"id":"account1"})': true,
                 'account1': true,
                 'user1': true,
-                'user2': true
-              }
-            }
-          }
+                'user2': true,
+              },
+            },
+          },
         });
       });
   });

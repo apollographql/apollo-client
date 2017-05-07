@@ -143,8 +143,8 @@ export type ListValue = Array<null | IdValue>;
 export type StoreValue = number | string | string[] | IdValue  | ListValue | JsonValue | null | undefined | void;
 
 /**
- * This is a denormalized representation of the Apollo query result cache. We attempt to maintain denormalized query results in order to improve performance by
- * avoiding reassembly from the normalized cache every time a query result is needed.
+ * This is a denormalized representation of the Apollo query result cache. We attempt to maintain denormalized query results in order to
+ * improve performance by avoiding reassembly from the normalized cache every time a query result is needed.
  */
 export interface QueryCache {
   [queryId: string]: QueryCacheValue;
@@ -153,14 +153,14 @@ export interface QueryCache {
 export interface QueryCacheValue {
   result: any;
   // Keys in the normalized cache containing data for this cached query result
-  keys: { [id: string]: {}[] };
+  keys: {[id: string]: {}[]};
   variables?: Object;
   // Flag indicating whether this this cached query result is in-sync with the normalized cache or not
   dirty: boolean;
-  // Flag indicating whether this cached query result has been manually modified (through mutate's updateQueries). If this happens we do not update the keys of
-  // this cached query result and we cannot be 100% sure that it is in sync with the underlying normalized cache or that it even contains the necessary data.
-  // When modified is true we attempt to reassembly the result in QueryManager, but only when we have a chance of making a network query if the data is missing
-  // (i.e. a component is mounted).
+  // Flag indicating whether this cached query result has been manually modified (through mutate's updateQueries). If this happens we do
+  // not update the keys of this cached query result and we cannot be 100% sure that it is in sync with the underlying normalized cache or
+  // that it even contains the necessary data. When modified is true we attempt to reassembly the result in QueryManager, but only when we
+  // have a chance of making a network query if the data is missing (i.e. a component is mounted).
   modified: boolean;
 }
 

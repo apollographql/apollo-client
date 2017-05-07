@@ -2,7 +2,7 @@ import {
   NormalizedCache,
   Cache,
   QueryCache,
-  QueryCacheValue
+  QueryCacheValue,
 } from './storeUtils';
 
 import { omit } from 'lodash';
@@ -20,13 +20,14 @@ export function invalidateQueryCache({
   omitQueryIds?: string[],
 }): Cache {
   const updatedQueryIds = Object.keys(queryCache).filter(
-    queryId => (!omitQueryIds || omitQueryIds.indexOf(queryId) < 0) && (!updatedKeys || Object.keys(queryCache[queryId].keys).some(id => !!updatedKeys[id]))
+    queryId => (!omitQueryIds || omitQueryIds.indexOf(queryId) < 0) && (!updatedKeys || Object.keys(queryCache[queryId].keys).some(
+      id => !!updatedKeys[id])),
   );
 
   if (!updatedQueryIds.length) {
     return {
       data: store,
-      queryCache
+      queryCache,
     };
   }
 
@@ -38,7 +39,7 @@ export function invalidateQueryCache({
   return {
     data: store,
     queryCache: newQueryCache,
-  }
+  };
 }
 
 export function removeQueryFromCache({
@@ -53,8 +54,8 @@ export function removeQueryFromCache({
   return {
     data: store,
     queryCache: {
-      ...omit(queryCache, queryId)
-    }
+      ...omit(queryCache, queryId),
+    },
   };
 }
 
@@ -81,9 +82,11 @@ export function insertQueryIntoCache({
     throw new Error(`Trying to insert query ${queryId} into query cache but no query cache keys are specified`);
   }
 
-  const cache = updatedKeys && Object.keys(updatedKeys).length ? invalidateQueryCache({store, queryCache, updatedKeys, omitQueryIds: [queryId]}) : {
+  const cache = updatedKeys && Object.keys(updatedKeys).length ?
+    invalidateQueryCache({store, queryCache, updatedKeys, omitQueryIds: [queryId]}) :
+    {
       data: store,
-      queryCache
+      queryCache,
     };
 
   return {
@@ -96,8 +99,8 @@ export function insertQueryIntoCache({
         variables: variables,
         dirty: false,
         modified: modified,
-      }, cache.queryCache[queryId])
-    }
+      }, cache.queryCache[queryId]),
+    },
   };
 }
 
@@ -113,7 +116,7 @@ export function readQueryFromCache({
   allowModified?: boolean,
 }): {
   result: any,
-  modified: boolean
+  modified: boolean,
 } {
   const cachedQuery = queryCache[queryId];
   if (!cachedQuery) {
@@ -123,12 +126,13 @@ export function readQueryFromCache({
     };
   }
 
-  const result = !cachedQuery.dirty && (allowModified || !cachedQuery.modified) && isEqual(variables, cachedQuery.variables) ? cachedQuery.result : null;
+  const result = !cachedQuery.dirty && (allowModified || !cachedQuery.modified) && isEqual(variables,
+    cachedQuery.variables) ? cachedQuery.result : null;
 
   return {
     result: result,
     modified: cachedQuery.modified,
-  }
+  };
 }
 
 function mergeQueryCacheValue(newQueryCacheValue: QueryCacheValue, oldQueryCacheValue: QueryCacheValue): QueryCacheValue {
@@ -159,11 +163,11 @@ function mergeObject(target: any, source: any): any {
         const result = mergeObject(target[key], source[key]);
         if (result !== source[key]) {
           differingKey = true;
-        }
-        else {
-          // Normally result is not frozen as it's delivered from a network query. However, when it's constructed by data delivered to the user (e.g. in
-          // QueryManager when caching a result before delivered to the user or through extra reducers) it may be frozen. In this case we must clone the result
-          // so that we are able to preserve as much referential equality as possible when merging with the previous result.
+        } else {
+          // Normally result is not frozen as it's delivered from a network query. However, when it's constructed by data delivered to the
+          // user (e.g. in QueryManager when caching a result before delivered to the user or through extra reducers) it may be frozen. In
+          // this case we must clone the result so that we are able to preserve as much referential equality as possible when merging with
+          // the previous result.
 
           if (targetFrozen === null) {
             targetFrozen = Object.isFrozen(target);

@@ -43,7 +43,7 @@ import {
 } from '../util/environment';
 
 import {
-  readQueryFromCache
+  readQueryFromCache,
 } from './queryCache';
 
 /**
@@ -159,8 +159,7 @@ const readStoreResolver: Resolver = (
   if (queryCacheKeys) {
     if (objId === rootId) {
       queryCacheKeys[`${rootId}.${storeKeyName}`] = true;
-    }
-    else {
+    } else {
       queryCacheKeys[objId] = true;
     }
   }
@@ -221,7 +220,7 @@ function getReadStoreResolverWithQueryCacheKeys(queryCacheKeys: { [id: string]: 
     execInfo: ExecInfo,
   ) => {
     return (readStoreResolver as any)(fieldName, idValue, args, context, execInfo, queryCacheKeys, rootId);
-  }
+  };
 }
 
 /**
@@ -267,7 +266,7 @@ export function diffQueryAgainstStore({
         isMissing: false,
         wasCached: true,
         wasModified: modified,
-      }
+      };
     }
   }
 
@@ -276,7 +275,7 @@ export function diffQueryAgainstStore({
       result: null,
       isMissing: true,
       wasCached: false,
-    }
+    };
   }
 
   const context: ReadStoreContext = {

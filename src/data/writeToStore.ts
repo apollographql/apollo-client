@@ -59,11 +59,11 @@ import {
 
 import {
   insertQueryIntoCache,
-  invalidateQueryCache
+  invalidateQueryCache,
 } from './queryCache';
 
 import {
-  isEqual
+  isEqual,
 } from '../util/isEqual';
 
 class WriteError extends Error {
@@ -91,7 +91,7 @@ class WriteError extends Error {
  * @param fragmentMatcherFunction A function to use for matching fragment conditions in GraphQL documents
  *
  * @param queryCache The {@link QueryCache} use by Apollo for the `cache.queryCache` portion of the store.
-
+ *
  * @param queryId The id of the query currently being written, used for updating the query cache.
  */
 export function writeQueryToStore({
@@ -146,7 +146,7 @@ export function writeQueryToStore({
         store,
         queryCache,
         queryCacheKeys: queryCacheKeys as { [id: string]: any},
-        updatedKeys
+        updatedKeys,
       });
     }
 
@@ -222,7 +222,7 @@ export function writeResultToStore({
           store,
           queryCache,
           queryCacheKeys: queryCacheKeys as { [x: string]: any },
-          updatedKeys
+          updatedKeys,
         });
       }
 
@@ -470,15 +470,13 @@ function writeFieldToStore({
 
   if (!store[dataId] || store[dataId][storeFieldName] === undefined) {
     store[dataId] = newStoreObj;
-  }
-  else if (!isEqual(store[dataId][storeFieldName], storeValue)) {
+  } else if (!isEqual(store[dataId][storeFieldName], storeValue)) {
     store[dataId] = newStoreObj;
 
     if (context.updatedKeys) {
       if (dataId === 'ROOT_QUERY') {
         context.updatedKeys[`ROOT_QUERY.${storeFieldName}`] = true;
-      }
-      else {
+      } else {
         context.updatedKeys[dataId] = true;
       }
     }

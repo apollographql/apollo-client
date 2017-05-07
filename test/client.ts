@@ -519,8 +519,8 @@ describe('client', () => {
             keys: {
               'ROOT_QUERY.allPeople({"first":"1"}).people.0': true,
               'ROOT_QUERY.allPeople({"first":1})': true,
-            }
-          }
+            },
+          },
         },
       },
       queries: {

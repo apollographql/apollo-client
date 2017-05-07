@@ -72,7 +72,7 @@ import {
 
 import {
   QueryResultClientAction,
-  QueryCacheAction
+  QueryCacheAction,
 } from '../actions';
 
 import maybeDeepFreeze from '../util/maybeDeepFreeze';

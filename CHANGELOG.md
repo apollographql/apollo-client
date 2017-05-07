@@ -2,6 +2,15 @@
 
 ### vNEXT
 
+### 1.2.2
+- Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)
+- Feature: Expose `dataIdFromObject` in addition to `dataId` [PR #1663](https://github.com/apollographql/apollo-client/pull/1663)
+
+### 1.2.1
+- Fix: Ensure polling queries do not poll during SSR [#1664](https://github.com/apollographql/apollo-client/pull/1664)
+- Fix: Ensure setVariables correctly sets options.variables [#1662](https://github.com/apollographql/apollo-client/pull/1662)
+- Fix bug that caused results with null items in array to become empty on second read [#1661](https://github.com/apollographql/apollo-client/pull/1661)
+
 ### 1.2.0
 - Feature: Warn before writing to store if result shape does not match query [#1638](https://github.com/apollographql/apollo-client/pull/1638)
 - Fix: Replace more usage of Object.assign with util.assign to make it work in IE, previous fix was not complete [PR #1648](https://github.com/apollographql/apollo-client/pull/1648)

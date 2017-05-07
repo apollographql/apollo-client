@@ -34,6 +34,18 @@ export function isQueryResultAction(action: ApolloAction): action is QueryResult
   return action.type === 'APOLLO_QUERY_RESULT';
 }
 
+export interface QueryCacheAction {
+  type: 'APOLLO_QUERY_CACHE';
+  result: ExecutionResult;
+  variables: Object;
+  queryId: string;
+  queryCacheKeys: {[id: string]: any};
+}
+
+export function isQueryCacheAction(action: ApolloAction): action is QueryCacheAction {
+  return action.type === 'APOLLO_QUERY_CACHE';
+}
+
 export interface QueryErrorAction {
   type: 'APOLLO_QUERY_ERROR';
   error: Error;
@@ -68,9 +80,12 @@ export function isQueryInitAction(action: ApolloAction): action is QueryInitActi
 export interface QueryResultClientAction {
   type: 'APOLLO_QUERY_RESULT_CLIENT';
   result: ExecutionResult;
+  variables: Object;
   complete: boolean;
   queryId: string;
   requestId: number;
+  queryCacheKeys: { [id: string]: any };
+  shouldCache: boolean;
 }
 
 export function isQueryResultClientAction(action: ApolloAction): action is QueryResultClientAction {
@@ -135,6 +150,7 @@ export interface UpdateQueryResultAction {
   variables: any;
   document: DocumentNode;
   newResult: Object;
+  queryId: string;
 }
 
 export function isUpdateQueryResultAction(action: ApolloAction): action is UpdateQueryResultAction {
@@ -185,6 +201,7 @@ export type ApolloAction =
   QueryErrorAction |
   QueryInitAction |
   QueryResultClientAction |
+  QueryCacheAction |
   QueryStopAction |
   MutationInitAction |
   MutationResultAction |

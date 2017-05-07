@@ -36,7 +36,7 @@ describe('diffing queries against the store', () => {
     const store = writeQueryToStore({
       result,
       query,
-    });
+    }).data;
 
     assert.notOk(diffQueryAgainstStore({
       store,
@@ -69,7 +69,7 @@ describe('diffing queries against the store', () => {
       result,
       query: firstQuery,
       dataIdFromObject: getIdField,
-    });
+    }).data;
 
     const secondQuery = gql`
       {
@@ -106,7 +106,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         result: firstResult,
         query: firstQuery,
-      });
+      }).data;
       const unionQuery = gql`
         query {
           ...notARealFragment
@@ -141,7 +141,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         result: firstResult,
         query: firstQuery,
-      });
+      }).data;
       const unionQuery = gql`
         query {
           person {
@@ -187,7 +187,7 @@ describe('diffing queries against the store', () => {
     const store = writeQueryToStore({
       result: firstResult,
       query: firstQuery,
-    });
+    }).data;
     const unionQuery = gql`
       query {
         person {
@@ -230,7 +230,7 @@ describe('diffing queries against the store', () => {
     const store = writeQueryToStore({
       result: firstResult,
       query: firstQuery,
-    });
+    }).data;
     const unionQuery = gql`
       query {
         person {
@@ -277,7 +277,7 @@ describe('diffing queries against the store', () => {
     const store = writeQueryToStore({
       result: firstResult,
       query: firstQuery,
-    });
+    }).data;
 
     // Variants on a simple query with a missing field.
 
@@ -385,7 +385,7 @@ describe('diffing queries against the store', () => {
       query,
       result: queryResult,
       dataIdFromObject: ({ id }: { id: string }) => id,
-    });
+    }).data;
 
     const { result } = diffQueryAgainstStore({
       store,
@@ -423,7 +423,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         query,
         result: queryResult,
-      });
+      }).data;
 
       const previousResult = {
         a: { b: 1 },
@@ -456,7 +456,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         query,
         result: queryResult,
-      });
+      }).data;
 
       const previousResult = {
         a: { b: 1 },
@@ -492,7 +492,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         query,
         result: queryResult,
-      });
+      }).data;
 
       const previousResult = {
         a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
@@ -523,7 +523,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         query,
         result: queryResult,
-      });
+      }).data;
 
       const previousResult = {
         a: [{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }],
@@ -556,7 +556,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         query,
         result: queryResult,
-      });
+      }).data;
 
       const previousResult = {
         a: [[[[[{ b: 1.1 }, { b: 1.2 }, { b: 1.3 }]]]]],
@@ -589,7 +589,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         query,
         result: queryResult,
-      });
+      }).data;
 
       const previousResult = {
         a: [{ b: 1.1 }, { b: -1.2 }, { b: 1.3 }],
@@ -648,7 +648,7 @@ describe('diffing queries against the store', () => {
         query,
         result: queryResult,
         dataIdFromObject: ({ id }: { id: string }) => id,
-      });
+      }).data;
 
       const previousResult = {
         a: [
@@ -707,7 +707,7 @@ describe('diffing queries against the store', () => {
       const store = writeQueryToStore({
         query,
         result: queryResult,
-      });
+      }).data;
 
       const previousResult = {
         a: { b: 1, c: { x: 2, y: 3, z: 4 } },

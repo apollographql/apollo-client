@@ -13,6 +13,8 @@ import {
   isJsonValue,
   isIdValue,
   IdValue,
+  Cache,
+  QueryCache,
 } from './storeUtils';
 
 import {
@@ -40,6 +42,10 @@ import {
   isTest,
 } from '../util/environment';
 
+import {
+  readQueryFromCache
+} from './queryCache';
+
 /**
  * The key which the cache id for a given value is stored in the result object. This key is private
  * and should not be used by Apollo client users.
@@ -53,6 +59,9 @@ export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
 export type DiffResult = {
   result?: any;
   isMissing?: boolean;
+  wasCached?: boolean;
+  wasModified?: boolean;
+  queryCacheKeys?: { [id: string]: any };
 };
 
 export type ReadQueryOptions = {
@@ -63,6 +72,10 @@ export type ReadQueryOptions = {
   previousResult?: any,
   rootId?: string,
   config?: ApolloReducerConfig,
+  queryCache?: QueryCache,
+  queryId?: string,
+  returnOnlyQueryCacheData?: boolean,
+  allowModifiedQueryCache?: boolean,
 };
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
@@ -133,6 +146,8 @@ const readStoreResolver: Resolver = (
   args: any,
   context: ReadStoreContext,
   { resultKey }: ExecInfo,
+  queryCacheKeys?: { [id: string]: any },
+  rootId?: string,
 ) => {
   assertIdValue(idValue);
 
@@ -140,6 +155,15 @@ const readStoreResolver: Resolver = (
   const obj = context.store[objId];
   const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
   let fieldValue = (obj || {})[storeKeyName];
+
+  if (queryCacheKeys) {
+    if (objId === rootId) {
+      queryCacheKeys[`${rootId}.${storeKeyName}`] = true;
+    }
+    else {
+      queryCacheKeys[objId] = true;
+    }
+  }
 
   if (typeof fieldValue === 'undefined') {
     if (context.customResolvers && obj && (obj.__typename || objId === 'ROOT_QUERY')) {
@@ -188,13 +212,33 @@ const readStoreResolver: Resolver = (
   return fieldValue;
 };
 
+function getReadStoreResolverWithQueryCacheKeys(queryCacheKeys: { [id: string]: any }, rootId: string): Resolver {
+  return (
+    fieldName: string,
+    idValue: IdValueWithPreviousResult,
+    args: any,
+    context: ReadStoreContext,
+    execInfo: ExecInfo,
+  ) => {
+    return (readStoreResolver as any)(fieldName, idValue, args, context, execInfo, queryCacheKeys, rootId);
+  }
+}
+
 /**
  * Given a store and a query, return as much of the result as possible and
  * identify if any data was missing from the store.
  * @param  {DocumentNode} query A parsed GraphQL query document
  * @param  {Store} store The Apollo Client store object
+ * @param variables
  * @param  {any} previousResult The previous result returned by this function for the same query
- * @return {result: Object, isMissing: [boolean]}
+ * @param returnPartialData
+ * @param rootId
+ * @param fragmentMatcherFunction
+ * @param config
+ * @param queryCache
+ * @param queryId
+ * @param allowModifiedQueryCache
+ * @param returnOnlyQueryCacheData
  */
 export function diffQueryAgainstStore({
   store,
@@ -205,11 +249,35 @@ export function diffQueryAgainstStore({
   rootId = 'ROOT_QUERY',
   fragmentMatcherFunction,
   config,
+  queryCache,
+  queryId,
+  allowModifiedQueryCache,
+  returnOnlyQueryCacheData = false,
 }: DiffQueryAgainstStoreOptions): DiffResult {
   // Throw the right validation error by trying to find a query in the document
   const queryDefinition = getQueryDefinition(query);
 
   variables = assign({}, getDefaultValues(queryDefinition), variables);
+
+  if (queryId && queryCache) {
+    const {result, modified} = readQueryFromCache({ queryId, queryCache, variables, allowModified: allowModifiedQueryCache });
+    if (result) {
+      return {
+        result: result,
+        isMissing: false,
+        wasCached: true,
+        wasModified: modified,
+      }
+    }
+  }
+
+  if (returnOnlyQueryCacheData) {
+    return {
+      result: null,
+      isMissing: true,
+      wasCached: false,
+    }
+  }
 
   const context: ReadStoreContext = {
     // Global settings
@@ -227,7 +295,8 @@ export function diffQueryAgainstStore({
     previousResult,
   };
 
-  const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
+  const queryCacheKeys = {};
+  const result = graphqlAnywhere(getReadStoreResolverWithQueryCacheKeys(queryCacheKeys, rootId), query, rootIdValue, context, variables, {
     fragmentMatcher: fragmentMatcherFunction,
     resultMapper,
   });
@@ -235,6 +304,8 @@ export function diffQueryAgainstStore({
   return {
     result,
     isMissing: context.hasMissingField,
+    wasCached: false,
+    queryCacheKeys: queryCacheKeys,
   };
 }
 

@@ -2254,6 +2254,7 @@ describe('QueryManager', () => {
       queryManager.resetStore();
       const currentState = queryManager.getApolloState();
       const expectedState: any = {
+        cache: { data: {}, queryCache: {} },
         data: {},
         mutations: {},
         queries: {},

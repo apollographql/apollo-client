@@ -410,6 +410,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         newResult,
         variables,
         document,
+        queryId: this.queryId
       });
     }
   }

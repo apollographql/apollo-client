@@ -12,6 +12,7 @@ import {
 
 import {
   NormalizedCache,
+  Cache,
 } from './storeUtils';
 
 import {
@@ -37,17 +38,20 @@ export function createStoreReducer(
   document: DocumentNode,
   variables: Object,
   config: ApolloReducerConfig,
+  queryId: string,
 ): ApolloReducer {
 
-  return (store: NormalizedCache, action: ApolloAction) => {
+  return (store: Cache, action: ApolloAction) => {
 
     const { result, isMissing } = diffQueryAgainstStore({
-      store,
+      store: store.data,
       query: document,
       variables,
       returnPartialData: true,
       fragmentMatcherFunction: config.fragmentMatcher,
       config,
+      queryCache: store.queryCache,
+      queryId,
     });
 
     if (isMissing) {
@@ -69,11 +73,13 @@ export function createStoreReducer(
       return writeResultToStore({
         dataId: 'ROOT_QUERY',
         result: nextResult,
-        store,
+        store: store.data,
         document,
         variables,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMatcherFunction: config.fragmentMatcher,
+        queryCache: store.queryCache,
+        queryId,
       });
     }
     return store;

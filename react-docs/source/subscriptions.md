@@ -179,7 +179,7 @@ const withData = graphql(COMMENT_QUERY, {
 
                         return Object.assign({}, prev, {
                             entry: {
-                                comments: [newFeedItem, ...prev.entry.activities]
+                                comments: [newFeedItem, ...prev.entry.comments]
                             }
                         });
                     }

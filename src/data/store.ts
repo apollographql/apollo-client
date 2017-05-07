@@ -181,7 +181,7 @@ export function data(
     if (!constAction.result.errors) {
       const queryStoreValue = mutations[constAction.mutationId];
 
-      let newState = writeResultToStore({
+      let newState = !constAction.preventStoreUpdate ? writeResultToStore({
         result: constAction.result.data,
         dataId: 'ROOT_MUTATION',
         document: constAction.document,
@@ -191,7 +191,7 @@ export function data(
         dataIdFromObject: config.dataIdFromObject,
         fragmentMatcherFunction: config.fragmentMatcher,
         queryCache: previousState.queryCache,
-      });
+      }) : previousState;
 
       // If this action wants us to update certain queries. Let’s do it!
       const { updateQueries } = constAction;

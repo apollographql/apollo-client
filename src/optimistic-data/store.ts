@@ -77,6 +77,7 @@ export function optimistic(
       extraReducers: action.extraReducers,
       updateQueries: action.updateQueries,
       update: action.update,
+      preventStoreUpdate: action.preventStoreUpdate,
     };
 
     const optimisticData = getDataWithOptimisticResults({

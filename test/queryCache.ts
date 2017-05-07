@@ -8,40 +8,42 @@ import ApolloClient from '../src/ApolloClient'; import {cloneDeep} from '../src/
 
 describe('query cache', () => {
   const query = gql`
-      query account {
-          node(id: "account1") {
-              id
-              name
-              owner {
-                  id
-                  name
-              }
-              users {
-                  id
-                  name
-              }
-          }
+    query account {
+      node(id: "account1") {
+        id
+        name
+        owner {
+          id
+          name
+        }
+        users {
+          id
+          name
+        }
       }
+    }
   `;
 
   const data = {
-    node: {
-      id: 'account1',
-      name: 'Account 1',
-      owner: {
-        id: 'user1',
-        name: 'User 1',
-      },
-      users: [
-        {
+    data: {
+      node: {
+        id: 'account1',
+        name: 'Account 1',
+        owner: {
           id: 'user1',
           name: 'User 1',
         },
-        {
-          id: 'user2',
-          name: 'User 2',
-        },
-      ],
+        users: [
+          {
+            id: 'user1',
+            name: 'User 1',
+          },
+          {
+            id: 'user2',
+            name: 'User 2',
+          },
+        ],
+      },
     },
   };
 
@@ -100,7 +102,7 @@ describe('query cache', () => {
 
     return client.query({query, fetchPolicy: 'cache-only'})
       .then((result: any) => {
-        assert.deepEqual(result.data, data);
+        assert.deepEqual(result.data, data.data);
 
         assert.deepEqual(client.store.getState().apollo.cache, {
           data: initialState.apollo.data,
@@ -108,7 +110,7 @@ describe('query cache', () => {
             '1': {
               dirty: false,
               modified: false,
-              result: data,
+              result: data.data,
               variables: {},
               keys: {
                 'ROOT_QUERY.node({"id":"account1"})': true,
@@ -124,8 +126,8 @@ describe('query cache', () => {
 
   it('is inserted after requesting a query over the network', () => {
     const networkInterface = mockNetworkInterface({
-      request: {query},
-      result: {data},
+      request: { query },
+      result: data,
     });
 
     const client = new ApolloClient({
@@ -134,11 +136,9 @@ describe('query cache', () => {
       dataIdFromObject: (obj: any) => obj.id,
     });
 
-    return client.query({query})
+    return client.query({ query })
       .then((result: any) => {
-        assert.deepEqual(result.data, data);
-
-        const cache = client.store.getState().apollo.cache;
+        assert.deepEqual(result.data, data.data);
 
         assert.deepEqual(client.store.getState().apollo.cache, {
           data: initialState.apollo.data,
@@ -146,7 +146,7 @@ describe('query cache', () => {
             '1': {
               dirty: false,
               modified: false,
-              result: data,
+              result: data.data,
               variables: {},
               keys: {
                 'ROOT_QUERY.node({"id":"account1"})': true,
@@ -158,5 +158,156 @@ describe('query cache', () => {
           },
         });
       });
+  });
+
+  describe('with mutation and update queries', () => {
+    const mutation = gql`
+        mutation dummyMutation {
+            id
+        }
+    `;
+
+    const mutationResult = {
+      data: {
+        id: 'dummy'
+      }
+    };
+
+    const setupClient = (): ApolloClient => {
+      const networkInterface = mockNetworkInterface({
+        request: {query},
+        result: data,
+      }, {
+        request: {query: mutation},
+        result: mutationResult,
+      });
+
+      return new ApolloClient({
+        networkInterface,
+        addTypename: false,
+        dataIdFromObject: (obj: any) => obj.id,
+      });
+    };
+
+    it('is dirty with update store flag true', done => {
+      const expectedData = cloneDeep(initialState.apollo.data);
+      expectedData['ROOT_MUTATION'] = {id: 'dummy'};
+      expectedData['account1'].name = 'Account 1 (updated)';
+
+      const expectedResult = cloneDeep(data.data);
+      expectedResult.node.name = 'Account 1 (updated)';
+
+      let expectedCache = {
+        data: expectedData,
+        queryCache: {
+          '1': {
+            dirty: true,
+            modified: false,
+            result: expectedResult,
+            variables: {},
+            keys: {
+              'ROOT_QUERY.node({"id":"account1"})': true,
+              'account1': true,
+              'user1': true,
+              'user2': true,
+            },
+          },
+        }
+      };
+
+      const client = setupClient();
+
+      let c = 0;
+      client.watchQuery({query}).subscribe({
+        next: (result: any) => {
+          switch (c++) {
+            case 0:
+              assert.deepEqual(result.data, data.data);
+
+              client.mutate({
+                mutation,
+                updateQueries: {
+                  account: (prev: any) => {
+                    const newData = cloneDeep(prev);
+                    newData.node.name = 'Account 1 (updated)';
+                    return newData;
+                  },
+                }
+              }).then((result: any) => {
+                assert.deepEqual(client.store.getState().apollo.cache, expectedCache);
+              });
+              break;
+            case 1:
+              expectedCache.queryCache['1'].dirty = false;
+              assert.deepEqual(client.store.getState().apollo.cache, expectedCache);
+              done();
+              break;
+            default:
+              done(new Error('`next` was called to many times.'));
+          }
+        }
+      });
+    });
+
+    it('is not dirty and modified with update store flag false', done => {
+      const expectedData = cloneDeep(initialState.apollo.data);
+      expectedData['ROOT_MUTATION'] = {id: 'dummy'};
+
+      const expectedResult = cloneDeep(data.data);
+      expectedResult.node.name = 'Account 1 (updated)';
+
+      let expectedCache = {
+        data: expectedData,
+        queryCache: {
+          '1': {
+            dirty: false,
+            modified: true,
+            result: expectedResult,
+            variables: {},
+            keys: {
+              'ROOT_QUERY.node({"id":"account1"})': true,
+              'account1': true,
+              'user1': true,
+              'user2': true,
+            },
+          },
+        }
+      };
+
+      const client = setupClient();
+
+      let c = 0;
+      client.watchQuery({ query }).subscribe({
+        next: (result: any) => {
+          switch (c++) {
+            case 0:
+              assert.deepEqual(result.data, data.data);
+
+              client.mutate({
+                mutation,
+                updateQueries: {
+                  account: (prev: any, options: any) => {
+                    const newData = cloneDeep(prev);
+                    newData.node.name = 'Account 1 (updated)';
+
+                    options.updateStoreFlag = false;
+
+                    return newData;
+                  },
+                }
+              }).then((result: any) => {
+                assert.deepEqual(client.store.getState().apollo.cache, expectedCache);
+              });
+              break;
+            case 1:
+              assert.deepEqual(client.store.getState().apollo.cache, expectedCache);
+              done();
+              break;
+            default:
+              done(new Error('`next` was called to many times.'));
+          }
+        }
+      });
+    });
   });
 });

@@ -112,6 +112,7 @@ export interface MutationInitAction {
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
   update?: (proxy: DataProxy, mutationResult: Object) => void;
+  preventStoreUpdate?: boolean;
 }
 
 export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
@@ -129,6 +130,7 @@ export interface MutationResultAction {
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
   update?: (proxy: DataProxy, mutationResult: Object) => void;
+  preventStoreUpdate?: boolean;
 }
 
 export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {

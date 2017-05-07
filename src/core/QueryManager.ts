@@ -255,6 +255,7 @@ export class QueryManager {
     updateQueries: updateQueriesByName,
     refetchQueries = [],
     update: updateWithProxyFn,
+    preventStoreUpdate = false,
   }: {
     mutation: DocumentNode,
     variables?: Object,
@@ -262,6 +263,7 @@ export class QueryManager {
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
+    preventStoreUpdate?: boolean,
   }): Promise<ApolloQueryResult<T>> {
     const mutationId = this.generateQueryId();
 
@@ -299,6 +301,7 @@ export class QueryManager {
       extraReducers: this.getExtraReducers(),
       updateQueries,
       update: updateWithProxyFn,
+      preventStoreUpdate: preventStoreUpdate,
     });
 
     return new Promise((resolve, reject) => {
@@ -329,6 +332,7 @@ export class QueryManager {
             extraReducers: this.getExtraReducers(),
             updateQueries,
             update: updateWithProxyFn,
+            preventStoreUpdate,
           });
 
           // If there was an error in our reducers, reject this promise!

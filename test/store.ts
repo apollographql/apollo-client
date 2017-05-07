@@ -263,6 +263,7 @@ describe('createApolloStore', () => {
             extraReducers: undefined,
             updateQueries: undefined,
             update: undefined,
+            preventStoreUpdate: undefined,
           },
         },
       ],

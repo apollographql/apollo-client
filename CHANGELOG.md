@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Feature: Add `operationName` in Redux actions whenever that's possible [PR #1676](https://github.com/apollographql/apollo-client/pull/1676)
 
 ### 1.2.2
 - Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)

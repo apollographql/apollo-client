@@ -420,6 +420,7 @@ export class QueryManager {
       type: 'APOLLO_QUERY_INIT',
       queryString,
       document: queryDoc,
+      operationName: getOperationName(queryDoc),
       variables,
       fetchPolicy,
       queryId,

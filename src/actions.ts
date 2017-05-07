@@ -50,6 +50,7 @@ export interface QueryInitAction {
   type: 'APOLLO_QUERY_INIT';
   queryString: string;
   document: DocumentNode;
+  operationName: string;
   variables: Object;
   fetchPolicy: FetchPolicy;
   queryId: string;
@@ -134,6 +135,7 @@ export interface UpdateQueryResultAction {
   type: 'APOLLO_UPDATE_QUERY_RESULT';
   variables: any;
   document: DocumentNode;
+  operationName: string;
   newResult: Object;
 }
 
@@ -168,6 +170,7 @@ export interface DataWrite {
   rootId: string;
   result: any;
   document: DocumentNode;
+  operationName: string;
   variables: Object;
 }
 

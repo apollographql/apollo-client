@@ -377,6 +377,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       return this.result();
     } else {
       this.variables = newVariables;
+      this.options.variables = newVariables;
 
       // See comment above
       if (this.observers.length === 0) {

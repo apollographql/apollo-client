@@ -138,6 +138,7 @@ export class QueryManager {
   public scheduler: QueryScheduler;
   public store: ApolloStore;
   public networkInterface: NetworkInterface;
+  public ssrMode: boolean;
 
   private addTypename: boolean;
   private deduplicator: Deduplicator;
@@ -183,6 +184,7 @@ export class QueryManager {
     fragmentMatcher,
     addTypename = true,
     queryDeduplication = false,
+    ssrMode = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -191,6 +193,7 @@ export class QueryManager {
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
     queryDeduplication?: boolean,
+    ssrMode?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -204,6 +207,7 @@ export class QueryManager {
     this.queryDocuments = {};
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
+    this.ssrMode = ssrMode;
 
     // XXX This logic is duplicated in ApolloClient.ts for two reasons:
     // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.
@@ -514,6 +518,10 @@ export class QueryManager {
       if (!queryStoreValue) {
         return;
       }
+
+      // XXX This is to fix a strange race condition that was the root cause of react-apollo/#170
+      // queryStoreValue was sometimes the old queryStoreValue and not what's currently in the store.
+      queryStoreValue = this.getApolloState().queries[queryId];
 
       const storedQuery = this.observableQueries[queryId];
 

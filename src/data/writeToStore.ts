@@ -106,6 +106,7 @@ export function writeQueryToStore({
     selectionSet: queryDefinition.selectionSet,
     context: {
       store,
+      processedData: {},
       variables,
       dataIdFromObject,
       fragmentMap,
@@ -116,6 +117,7 @@ export function writeQueryToStore({
 
 export type WriteContext = {
   store: NormalizedCache;
+  processedData?: { [x: string]: FieldNode[] },
   variables?: any;
   dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
@@ -154,6 +156,7 @@ export function writeResultToStore({
       selectionSet,
       context: {
         store,
+        processedData: {},
         variables,
         dataIdFromObject,
         fragmentMap,
@@ -283,6 +286,24 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
   });
 }
 
+function isDataProcessed(dataId: string, field: FieldNode, processedData?: { [x: string]: FieldNode[] }): boolean {
+  if (!processedData) {
+    return false;
+  }
+
+  if (processedData[dataId]) {
+    if (processedData[dataId].indexOf(field) >= 0) {
+      return true;
+    } else {
+      processedData[dataId].push(field);
+    }
+  } else {
+    processedData[dataId] = [field];
+  }
+
+  return false;
+}
+
 function writeFieldToStore({
   field,
   value,
@@ -345,12 +366,14 @@ function writeFieldToStore({
       }
     }
 
-    writeSelectionSetToStore({
-      dataId: valueDataId,
-      result: value,
-      selectionSet: field.selectionSet,
-      context,
-    });
+    if (!isDataProcessed(valueDataId, field, context.processedData)) {
+      writeSelectionSetToStore({
+        dataId: valueDataId,
+        result: value,
+        selectionSet: field.selectionSet,
+        context,
+      });
+    }
 
     // We take the id and escape it (i.e. wrap it with an enclosing object).
     // This allows us to distinguish IDs from normal scalars.
@@ -423,12 +446,14 @@ function processArrayValue(
       }
     }
 
-    writeSelectionSetToStore({
-      dataId: itemDataId,
-      result: item,
-      selectionSet,
-      context,
-    });
+    if (!isDataProcessed(itemDataId, item, context.processedData)) {
+      writeSelectionSetToStore({
+        dataId: itemDataId,
+        result: item,
+        selectionSet,
+        context,
+      });
+    }
 
     const idStoreValue: IdValue = {
       type: 'id',

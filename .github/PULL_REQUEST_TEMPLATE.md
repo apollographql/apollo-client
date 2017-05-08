@@ -14,3 +14,4 @@ TODO:
 - [ ] Update CHANGELOG.md with your change
 - [ ] Add your name and email to the AUTHORS file (optional)
 - [ ] If this was a change that affects the external API, update the docs and post a link to the PR in the discussion
+- [ ] If this was a change that affects the external API used in GitHunt-React, update GitHunt-React and post a link to the PR in the discussion.

@@ -125,7 +125,52 @@ mutate({
 })
 ```
 
+
+<h3 id="directAccess">`update`</h3>
+
+Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is the recommended way of updating the cache after a query. It is explained in full [here](http://dev.apollodata.com/react/api-mutations.html#graphql-mutation-options-update).
+
+```javascript
+import CommentAppQuery from '../queries/CommentAppQuery';
+
+const SUBMIT_COMMENT_MUTATION = gql`
+  mutation submitComment($repoFullName: String!, $commentContent: String!) {
+    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
+      postedBy {
+        login
+        html_url
+      }
+      createdAt
+      content
+    }
+  }
+`;
+
+const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
+  props({ ownProps, mutate }) {
+    return {
+      submit({ repoFullName, commentContent }) {
+        return mutate({
+          variables: { repoFullName, commentContent },
+
+          update: (store, { data: { submitComment } }) => {
+            // Read the data from our cache for this query.
+            const data = store.readQuery({ query: CommentAppQuery });
+            // Add our comment from the mutation to the end.
+            data.comments.push(submitComment);
+            // Write our data back to the cache.
+            store.writeQuery({ query: CommentAppQuery, data });
+          },
+        });
+      },
+    };
+  },
+})(CommentsPage);
+```
+
 <h3 id="updateQueries">`updateQueries`</h3>
+
+**NOTE: We recommend using the more flexible `update` API instead of `updateQueries`. The `updateQueries` API may be deprecated in the future.**
 
 As its name suggests, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI will update automatically based on mutation results, as long as the object IDs in the result match up with the IDs you already have in your store. See the [`normalization`](#normalization) documentation above for more information about how to take advantage of this feature.
 
@@ -250,7 +295,9 @@ Once the mutation fires and the result arrives from the server (or, a result is 
 
 <h3 id="resultReducers">Query `reducer`</h3>
 
-While `updateQueries` can only be used to update other queries based on the result of a mutation, the `reducer` option is a way that lets you update the query result based on any Apollo action, including results of other queries, mutations or subscriptions. It acts just like a Redux reducer on the denormalized query result:
+**NOTE: We recommend using the more flexible `update` API instead of `reducer`. The `reducer` API may be deprecated in the future.**
+
+While `updateQueries` and `update` can only be used to update other queries based on the result of a mutation, the `reducer` option is a way that lets you update the query result based on any Apollo action, including results of other queries, mutations or subscriptions. It acts just like a Redux reducer on the denormalized query result:
 
 ```javascript
 import update from 'immutability-helper';
@@ -290,57 +337,12 @@ As you can see, the `reducer` option can be used to achieve the same goal as `up
 
 > It is not currently possible to respond to your custom Redux actions arriving from outside of Apollo in a result reducer. See [this thread](https://github.com/apollographql/apollo-client/issues/1013) for more information.
 
-**When should you use reducer vs. updateQueries vs. refetchQueries?**
+**When should you use update vs. reducer vs. updateQueries vs. refetchQueries?**
 
-`refetchQueries` should be used whenever the mutation result alone is not enough to infer all the changes to the cache. `refetchQueries` is also a very good option if an extra roundtrip and possible overfetching are not of concern for your application, which is often true during prototyping. Compared with `updateQueries` and `reducer`, `refetchQueries` is the easiest to write and maintain.
+`refetchQueries` should be used whenever the mutation result alone is not enough to infer all the changes to the cache. `refetchQueries` is also a very good option if an extra roundtrip and possible overfetching are not of concern for your application, which is often true during prototyping. Compared with `update`, `updateQueries` and `reducer`, `refetchQueries` is the easiest to write and maintain.
 
-`reducer` and `updateQueries` both provide similar functionality. While `reducer` is more flexible, updates based on mutations can usually be done equally well with `updateQueries`.
+`updateQueries`, `reducer` and `update` all provide similar functionality. They were introduced in that order and each tried to address shortcomings in the previous one. While all three APIs are currently availble, we strongly recommend using `update` wherever possible, as the other two APIs (`updateQueries` and `reducer`) may be deprecated in the future. We recommend `update` because its API is both the most powerful and easiest to understand of all three. The reason we are considering deprecating `reducer` and `updateQueries` is that they both depend on state internal to the client, which makes them harder to understand and maintain than `update`, without providing any extra functionality.
 
-The main difference between the two is where the update behavior is declared. With `reducer`, the update behavior is co-located with the query itself. That means the query needs to know what actions should lead to an updated result. With `updateQueries` it is the mutation's responsibility to update all the queries that may need to know about the results of this mutation.
-
-We recommend using the `reducer` option, except when there's a good reason to use `updateQueries` instead (eg. if it would make your app much easier to understand and maintain).
-
-<h3 id="directAccess">Direct Cache Access: `update`</h3>
-
-Using `update` gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. `update` is explained in full [here](http://dev.apollodata.com/react/api-mutations.html#graphql-mutation-options-update).
-
-```javascript
-import CommentAppQuery from '../queries/CommentAppQuery';
-
-const SUBMIT_COMMENT_MUTATION = gql`
-  mutation submitComment($repoFullName: String!, $commentContent: String!) {
-    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) {
-      postedBy {
-        login
-        html_url
-      }
-      createdAt
-      content
-    }
-  }
-`;
-
-const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
-  props({ ownProps, mutate }) {
-    return {
-      submit({ repoFullName, commentContent }) {
-        return mutate({
-          variables: { repoFullName, commentContent },
-
-          update: (proxy, { data: { submitComment } }) => {
-            // Read the data from our cache for this query.
-            const data = proxy.readQuery({ query: CommentAppQuery });
-            // Add our comment from the mutation to the end.
-            data.comments.push(submitComment);
-            // Write our data back to the cache.
-            proxy.writeQuery({ query: CommentAppQuery, data });
-          },
-        });
-      },
-    };
-  },
-})(CommentsPage);
-```
 
 <h2 id="fetchMore">Incremental loading: `fetchMore`</h2>
 

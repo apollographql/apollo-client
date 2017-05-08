@@ -51,7 +51,7 @@ We select `id` and `__typename` because that's what our `dataIdFromObject` uses 
 
 In the example above, we showed how to seamlessly edit an existing object in the store with an optimistic mutation result. However, many mutations don't just update an existing object in the store, but they insert a new one.
 
-In that case we need to specify how to integrate the new data into existing queries, and thus our UI. You can read in detail about how to do that in the article about [controlling the store](cache-updates.html)--in particular, we can use the `updateQueries` function to insert a result into an existing query's result set. `updateQueries` works exactly the same way for optimistic results and the real results returned from the server, so just like above we only need to add the `optimisticResponse` option.
+In that case we need to specify how to integrate the new data into existing queries, and thus our UI. You can read in detail about how to do that in the article about [controlling the store](cache-updates.html)--in particular, we can use the `update` function to insert a result into an existing query's result set. `update` works exactly the same way for optimistic results and the real results returned from the server, so just like above we only need to add the `optimisticResponse` option.
 
 Here is a concrete example from GitHunt, which inserts a comment into an existing list of comments.
 
@@ -60,6 +60,7 @@ import React from 'react';
 import { gql, graphql } from 'react-apollo';
 import update from 'immutability-helper';
 
+import CommentAppQuery from '../queries/CommentAppQuery';
 
 const SUBMIT_COMMENT_MUTATION = gql`
   mutation submitComment($repoFullName: String!, $commentContent: String!) {
@@ -89,19 +90,13 @@ const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
               content: commentContent,
             },
           },
-          updateQueries: {
-            // Would update the query that looks like:
-            // query CommentQuery { ... }
-            CommentQuery: (previousResult, { mutationResult }) => {
-              const newComment = mutationResult.data.submitComment;
-              return update(previousResult, {
-                entry: {
-                  comments: {
-                    $unshift: [newComment],
-                  },
-                },
-              });
-            },
+          update: (store, { data: { submitComment } }) => {
+            // Read the data from our cache for this query.
+            const data = store.readQuery({ query: CommentAppQuery });
+            // Add our comment from the mutation to the end.
+            data.comments.push(submitComment);
+            // Write our data back to the cache.
+            store.writeQuery({ query: CommentAppQuery, data });
           },
         });
       },

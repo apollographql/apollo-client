@@ -8,7 +8,7 @@ Here are the main breaking changes between the 0.x and 1.0 versions of Apollo Cl
 
 <h2 id="fetchMore">fetchMore</h2>
 
-The structure of `fetchMoreResult` has been changed. Previously `fetchMoreResult` used to contain `data` and `loading` fields, now `fetchMoreResult` is what `fetchMoreResult.data` used to be. This means your `updateQueries` function has to change as follows:
+The structure of `fetchMoreResult` has been changed. Previously `fetchMoreResult` used to contain `data` and `loading` fields, now `fetchMoreResult` is what `fetchMoreResult.data` used to be. This means your `updateQueries` function has to change as follows for `fetchMore`:
 
 ```js
 updateQuery: (prev, { fetchMoreResult }) => {

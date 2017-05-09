@@ -309,6 +309,8 @@ const networkInterface = createBatchingNetworkInterface({
   uri: 'localhost:3000',
   batchInterval: 10,
   opts: {
+   // Options to pass along to `fetch`
+  }
 });
 
 const token = 'first-token-value';

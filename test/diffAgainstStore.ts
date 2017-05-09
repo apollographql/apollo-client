@@ -90,8 +90,8 @@ describe('diffing queries against the store', () => {
     assert.deepEqual(store['1'], result.people_one);
   });
 
-  it('does not swallow errors other than field errors', (done) => {
-    withError( () => {
+  it('does not swallow errors other than field errors', () => {
+    return withError( () => {
       const firstQuery = gql`
         query {
           person {
@@ -117,7 +117,6 @@ describe('diffing queries against the store', () => {
           query: unionQuery,
         });
       }, /No fragment/);
-      done();
     }, /IntrospectionFragmentMatcher/);
   });
 

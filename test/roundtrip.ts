@@ -234,8 +234,8 @@ describe('roundtrip', () => {
 
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
-    it('should throw an error on two of the same inline fragment types', (done) => {
-      withError(() => {
+    it('should throw an error on two of the same inline fragment types', () => {
+      return withError(() => {
         assert.throws(() => {
           storeRoundtrip(gql`
             query {
@@ -259,8 +259,7 @@ describe('roundtrip', () => {
             ],
             });
         }, /Can\'t find field rank on object/);
-        done();
-       }, /IntrospectionFragmentMatcher/);
+      }, /IntrospectionFragmentMatcher/);
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', (done) => {

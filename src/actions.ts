@@ -69,6 +69,7 @@ export function isQueryInitAction(action: ApolloAction): action is QueryInitActi
 export interface QueryResultClientAction {
   type: 'APOLLO_QUERY_RESULT_CLIENT';
   result: ExecutionResult;
+  operationName: string;
   complete: boolean;
   queryId: string;
   requestId: number;

@@ -443,6 +443,7 @@ export class QueryManager {
         result: { data: storeResult },
         variables,
         document: queryDoc,
+        operationName: getOperationName(queryDoc),
         complete: !shouldFetch,
         queryId,
         requestId,

@@ -257,14 +257,14 @@ describe('roundtrip', () => {
                 side: 'bright',
               },
             ],
-            });
+          });
         }, /Can\'t find field rank on object/);
         done();
-       }, /IntrospectionFragmentMatcher/);
+      }, /IntrospectionFragmentMatcher/);
     });
 
-    it('should resolve fields it can on interface with non matching inline fragments', (done) => {
-      withError(() => {
+    it('should resolve fields it can on interface with non matching inline fragments', () => {
+      return withError(() => {
         storeRoundtrip(gql`
           query {
             dark_forces {
@@ -287,12 +287,11 @@ describe('roundtrip', () => {
             },
           ],
         });
-        done();
       }, /IntrospectionFragmentMatcher/);
     });
 
-    it('should resolve on union types with spread fragments', (done) => {
-      withError(() => {
+    it('should resolve on union types with spread fragments', () => {
+      return withError(() => {
         storeRoundtrip(gql`
           fragment jediFragment on Jedi {
             side
@@ -323,12 +322,11 @@ describe('roundtrip', () => {
             },
           ],
         });
-        done();
       }, /IntrospectionFragmentMatcher/);
     });
 
-    it('should work with a fragment on the actual interface or union', (done) => {
-      withError(() => {
+    it('should work with a fragment on the actual interface or union', () => {
+      return withError(() => {
         storeRoundtrip(gql`
           fragment jediFragment on Character {
             side
@@ -359,7 +357,6 @@ describe('roundtrip', () => {
             },
           ],
         });
-        done();
       }, /IntrospectionFragmentMatcher/);
     });
 

@@ -141,8 +141,8 @@ If you need more than one mutation on a component, you make a graphql container 
 
 ```js
 const ComponentWithMutations =
-  graphql(submitNewUser, {name : 'newUserMutation'})(
-    graphql(submitRepository, {name: 'newRepositoryMutation'})(Component)
+  graphql(submitNewUser, { name: 'newUserMutation' })(
+    graphql(submitRepository, { name: 'newRepositoryMutation' })(Component)
   )
 ```
 
@@ -154,8 +154,8 @@ If you want a better syntax for the above, consider using [`compose`](api-graphq
 import { compose } from 'react-apollo';
 
 const ComponentWithMutations = compose(
-  graphql(submitNewUser, {name : 'newUserMutation'}),
-  graphql(submitRepository, {name: 'newRepositoryMutation'})
+  graphql(submitNewUser, { name: 'newUserMutation' }),
+  graphql(submitRepository, { name: 'newRepositoryMutation' })
 )(Component);
 ```
 

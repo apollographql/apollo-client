@@ -286,7 +286,9 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
   });
 }
 
-function isDataProcessed(dataId: string, field: FieldNode, processedData?: { [x: string]: FieldNode[] }): boolean {
+function isDataProcessed(dataId: string,
+                         field: FieldNode|SelectionSetNode,
+                         processedData?: {[x: string]: (FieldNode|SelectionSetNode)[]}): boolean {
   if (!processedData) {
     return false;
   }
@@ -446,7 +448,7 @@ function processArrayValue(
       }
     }
 
-    if (!isDataProcessed(itemDataId, item, context.processedData)) {
+    if (!isDataProcessed(itemDataId, selectionSet, context.processedData)) {
       writeSelectionSetToStore({
         dataId: itemDataId,
         result: item,

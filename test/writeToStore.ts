@@ -613,6 +613,191 @@ describe('writing to the store', () => {
     });
   });
 
+  it('properly normalizes an object occurring in two different graphql paths', () => {
+    const query = gql`
+      {
+        id,
+        object1 {
+          id
+          stringField
+        }
+        object2 {
+          id
+          numberField
+        }
+      }
+    `;
+
+    const result: any = {
+      id: 'a',
+      object1: {
+        id: 'aa',
+        stringField: 'string',
+      },
+      object2: {
+        id: 'aa',
+        numberField: 1,
+      },
+    };
+
+    const normalized = writeQueryToStore({
+      query,
+      result: cloneDeep(result),
+      dataIdFromObject: getIdField,
+    });
+
+    assert.deepEqual(normalized, {
+      'ROOT_QUERY': {
+        id: 'a',
+        object1: {
+          type: 'id',
+          id: 'aa',
+          generated: false,
+        },
+        object2: {
+          type: 'id',
+          id: 'aa',
+          generated: false,
+        },
+      },
+      'aa': {
+        id: 'aa',
+        stringField: 'string',
+        numberField: 1,
+      },
+    });
+  });
+
+  it('properly normalizes an object occurring in two different graphql array paths', () => {
+    const query = gql`
+      {
+        id,
+        array1 {
+          id
+          stringField
+        }
+        array2 {
+          id
+          numberField
+        }
+      }
+    `;
+
+    const result: any = {
+      id: 'a',
+      array1: [{
+        id: 'aa',
+        stringField: 'string',
+      }],
+      array2: [{
+        id: 'aa',
+        numberField: 1,
+      }],
+    };
+
+    const normalized = writeQueryToStore({
+      query,
+      result: cloneDeep(result),
+      dataIdFromObject: getIdField,
+    });
+
+    assert.deepEqual(normalized, {
+      'ROOT_QUERY': {
+        id: 'a',
+        array1: [{
+          type: 'id',
+          id: 'aa',
+          generated: false,
+        }],
+        array2: [{
+          type: 'id',
+          id: 'aa',
+          generated: false,
+        }],
+      },
+      'aa': {
+        id: 'aa',
+        stringField: 'string',
+        numberField: 1,
+      },
+    });
+  });
+
+  it('normalizes an object once occurring in the same graphql array path twice', () => {
+    const query = gql`
+      {
+        id,
+        array1 {
+          id
+          stringField
+          obj {
+            id
+            numberField
+          }
+        }
+      }
+    `;
+
+    const result: any = {
+      id: 'a',
+      array1: [
+        {
+          id: 'aa',
+          stringField: 'string',
+          obj: {
+            id: 'aaa',
+            numberField: 1,
+          },
+        },
+        {
+          id: 'aa',
+          stringField: 'should get skipped',
+          obj: {
+            id: 'aaa',
+            numberField: 2,
+          },
+        },
+      ],
+    };
+
+    const normalized = writeQueryToStore({
+      query,
+      result: cloneDeep(result),
+      dataIdFromObject: getIdField,
+    });
+
+    assert.deepEqual(normalized, {
+      'ROOT_QUERY': {
+        id: 'a',
+        array1: [
+          {
+            type: 'id',
+            id: 'aa',
+            generated: false,
+          },
+          {
+            type: 'id',
+            id: 'aa',
+            generated: false,
+          },
+        ],
+      },
+      'aa': {
+        id: 'aa',
+        stringField: 'string',
+        obj: {
+          type: 'id',
+          id: 'aaa',
+          generated: false,
+        },
+      },
+      'aaa': {
+        id: 'aaa',
+        numberField: 1,
+      },
+    });
+  });
+
   it('merges nodes', () => {
     const query = gql`
       {

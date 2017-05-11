@@ -68,7 +68,7 @@ For example, if you wanted to key off of the `key` field for all of your data, y
 
 ```js
 var client = new ApolloClient({
-  dataFromObjectId: object => object.key
+  dataIdFromObject: object => object.key
 });
 ```
 
@@ -76,7 +76,7 @@ This also allows you to use different unique identifiers for different data type
 
 ```js
 var client = new ApolloClient({
-  dataFromObjectId: object => {
+  dataIdFromObject: object => {
     switch (object.__typename) {
       case 'foo': return object.key; // use `key` as the primary key
       case 'bar': return object.blah; // use `blah` as the priamry key

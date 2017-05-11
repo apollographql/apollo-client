@@ -613,7 +613,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('properly normalizes an object occurring in two different graphql paths', () => {
+  it('properly normalizes an object occurring in different graphql paths twice', () => {
     const query = gql`
       {
         id,
@@ -668,17 +668,25 @@ describe('writing to the store', () => {
     });
   });
 
-  it('properly normalizes an object occurring in two different graphql array paths', () => {
+  it('properly normalizes an object occurring in different graphql array paths twice', () => {
     const query = gql`
       {
         id,
         array1 {
           id
           stringField
+          obj {
+            id
+            stringField
+          }
         }
         array2 {
           id
-          numberField
+          stringField
+          obj {
+            id
+            numberField
+          }
         }
       }
     `;
@@ -688,10 +696,18 @@ describe('writing to the store', () => {
       array1: [{
         id: 'aa',
         stringField: 'string',
+        obj: {
+          id: 'aaa',
+          stringField: 'string',
+        },
       }],
       array2: [{
-        id: 'aa',
-        numberField: 1,
+        id: 'ab',
+        stringField: 'string2',
+        obj: {
+          id: 'aaa',
+          numberField: 1,
+        },
       }],
     };
 
@@ -711,19 +727,37 @@ describe('writing to the store', () => {
         }],
         array2: [{
           type: 'id',
-          id: 'aa',
+          id: 'ab',
           generated: false,
         }],
       },
       'aa': {
         id: 'aa',
         stringField: 'string',
+        obj: {
+          type: 'id',
+          id: 'aaa',
+          generated: false,
+        },
+      },
+      'ab': {
+        id: 'ab',
+        stringField: 'string2',
+        obj: {
+          type: 'id',
+          id: 'aaa',
+          generated: false,
+        },
+      },
+      'aaa': {
+        id: 'aaa',
+        stringField: 'string',
         numberField: 1,
       },
     });
   });
 
-  it('normalizes an object once occurring in the same graphql array path twice', () => {
+  it('preoprly normalizes an object occurring in the same graphql array path twice', () => {
     const query = gql`
       {
         id,
@@ -732,6 +766,7 @@ describe('writing to the store', () => {
           stringField
           obj {
             id
+            stringField
             numberField
           }
         }
@@ -746,14 +781,16 @@ describe('writing to the store', () => {
           stringField: 'string',
           obj: {
             id: 'aaa',
+            stringField: 'string',
             numberField: 1,
           },
         },
         {
-          id: 'aa',
-          stringField: 'should get skipped',
+          id: 'ab',
+          stringField: 'string2',
           obj: {
             id: 'aaa',
+            stringField: 'should not be written',
             numberField: 2,
           },
         },
@@ -777,7 +814,7 @@ describe('writing to the store', () => {
           },
           {
             type: 'id',
-            id: 'aa',
+            id: 'ab',
             generated: false,
           },
         ],
@@ -791,8 +828,18 @@ describe('writing to the store', () => {
           generated: false,
         },
       },
+      'ab': {
+        id: 'ab',
+        stringField: 'string2',
+        obj: {
+          type: 'id',
+          id: 'aaa',
+          generated: false,
+        },
+      },
       'aaa': {
         id: 'aaa',
+        stringField: 'string',
         numberField: 1,
       },
     });

@@ -1,10 +1,8 @@
 import {assert} from 'chai';
-import {HeuristicFragmentMatcher} from '../src/data/fragmentMatcher';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
-import mockQueryManager from './mocks/mockQueryManager';
 import gql from 'graphql-tag';
-import ApolloClient from '../src/ApolloClient'; import {cloneDeep} from '../src/util/cloneDeep';
-
+import ApolloClient from '../src/ApolloClient';
+import {cloneDeep} from '../src/util/cloneDeep';
 
 describe('query cache', () => {
   const query = gql`
@@ -169,8 +167,8 @@ describe('query cache', () => {
 
     const mutationResult = {
       data: {
-        id: 'dummy'
-      }
+        id: 'dummy',
+      },
     };
 
     const setupClient = (): ApolloClient => {
@@ -212,7 +210,7 @@ describe('query cache', () => {
               'user2': true,
             },
           },
-        }
+        },
       };
 
       const client = setupClient();
@@ -232,8 +230,8 @@ describe('query cache', () => {
                     newData.node.name = 'Account 1 (updated)';
                     return newData;
                   },
-                }
-              }).then((result: any) => {
+                },
+              }).then(() => {
                 assert.deepEqual(client.store.getState().apollo.cache, expectedCache);
               });
               break;
@@ -245,7 +243,7 @@ describe('query cache', () => {
             default:
               done(new Error('`next` was called to many times.'));
           }
-        }
+        },
       });
     });
 
@@ -271,7 +269,7 @@ describe('query cache', () => {
               'user2': true,
             },
           },
-        }
+        },
       };
 
       const client = setupClient();
@@ -294,8 +292,8 @@ describe('query cache', () => {
 
                     return newData;
                   },
-                }
-              }).then((result: any) => {
+                },
+              }).then(() => {
                 assert.deepEqual(client.store.getState().apollo.cache, expectedCache);
               });
               break;
@@ -306,7 +304,7 @@ describe('query cache', () => {
             default:
               done(new Error('`next` was called to many times.'));
           }
-        }
+        },
       });
     });
   });

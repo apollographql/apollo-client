@@ -2343,9 +2343,109 @@ describe('QueryManager', () => {
   });
 
   describe('store resets', () => {
-    it('returns a promise', done => {
-      const queryManager = createQueryManager({});
-      queryManager.resetStore().then(() => done());
+    it('returns a promise resolving when all queries have been refetched', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const dataChanged = {
+        author: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const query2 = gql`
+        query {
+          author2 {
+            firstName
+            lastName
+          }
+        }`;
+
+      const data2 = {
+        author2: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const data2Changed = {
+        author2: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const queryManager = createQueryManager({
+        networkInterface: mockNetworkInterface(
+          {
+            request: {query},
+            result: {data},
+          },
+          {
+            request: {query: query2},
+            result: {data: data2},
+          },
+          {
+            request: {query},
+            result: {data: dataChanged},
+          },
+          {
+            request: {query: query2},
+            result: {data: data2Changed},
+          },
+        ),
+      });
+
+      let count = 0;
+      queryManager.watchQuery<any>({ query })
+        .subscribe({
+          next: result => {
+            switch (++count) {
+              case 1:
+                assert.deepEqual(result.data, data);
+                break;
+              case 3:
+                assert.deepEqual(result.data, dataChanged);
+                break;
+              default:
+                done(new Error('`next` was called to many times.'));
+            }
+          },
+        });
+
+      queryManager.watchQuery<any>({ query: query2 })
+        .subscribe({
+          next: result => {
+            switch (++count) {
+              case 2:
+                assert.deepEqual(result.data, data2);
+                queryManager.resetStore().then(() => {
+                  if (count === 4) {
+                    done();
+                  }
+                });
+                break;
+              case 4:
+                assert.deepEqual(result.data, data2Changed);
+                break;
+              default:
+                done(new Error('`next` was called to many times.'));
+            }
+          },
+        });
     });
 
     it('should change the store state to an empty state', () => {

@@ -16,7 +16,7 @@
     "hexo-renderer-less": "^0.2.0",
     "hexo-server": "^0.2.0",
     "hexo-typescript-api-box": "0.9.1",
-    "typedoc": "^0.5.7"
+    "typedoc": "^0.7.0"
   },
   "devDependencies": {
     "hexo-s3-deploy": "^1.2.1"

@@ -2343,7 +2343,7 @@ describe('QueryManager', () => {
   });
 
   describe('store resets', () => {
-    it('returns a promise resolving when all queries have been refetched', done => {
+    it('returns a promise resolving when all queries have been refetched', () => {
       const query = gql`
         query {
           author {
@@ -2409,43 +2409,30 @@ describe('QueryManager', () => {
         ),
       });
 
-      let count = 0;
-      queryManager.watchQuery<any>({ query })
-        .subscribe({
-          next: result => {
-            switch (++count) {
-              case 1:
-                assert.deepEqual(result.data, data);
-                break;
-              case 3:
-                assert.deepEqual(result.data, dataChanged);
-                break;
-              default:
-                done(new Error('`next` was called to many times.'));
-            }
-          },
-        });
+      const observable = queryManager.watchQuery<any>({ query });
+      const observable2 = queryManager.watchQuery<any>({ query: query2 });
 
-      queryManager.watchQuery<any>({ query: query2 })
-        .subscribe({
-          next: result => {
-            switch (++count) {
-              case 2:
-                assert.deepEqual(result.data, data2);
-                queryManager.resetStore().then(() => {
-                  if (count === 4) {
-                    done();
-                  }
-                });
-                break;
-              case 4:
-                assert.deepEqual(result.data, data2Changed);
-                break;
-              default:
-                done(new Error('`next` was called to many times.'));
-            }
-          },
+      return Promise.all([
+        observableToPromise({ observable },
+          result => assert.deepEqual(result.data, data),
+        ),
+        observableToPromise({ observable: observable2 },
+          result => assert.deepEqual(result.data, data2),
+        ),
+      ]).then(() => {
+        observable.subscribe({ next: () => null });
+        observable2.subscribe({ next: () => null });
+
+        return queryManager.resetStore().then(() => {
+          const result = queryManager.getCurrentQueryResult(observable);
+          assert.isFalse(result.partial);
+          assert.deepEqual(result.data, dataChanged);
+
+          const result2 = queryManager.getCurrentQueryResult(observable2);
+          assert.isFalse(result2.partial);
+          assert.deepEqual(result2.data, data2Changed);
         });
+      });
     });
 
     it('should change the store state to an empty state', () => {

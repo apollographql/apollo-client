@@ -299,8 +299,8 @@ describe('reading from the store', () => {
     });
   });
 
-  it('runs a nested query with proper fragment fields in arrays', (done) => {
-    withError(() => {
+  it('runs a nested query with proper fragment fields in arrays', () => {
+    return withError(() => {
       const store = {
         'ROOT_QUERY': {
           __typename: 'Query',
@@ -345,9 +345,7 @@ describe('reading from the store', () => {
           innerArray: [{id: 'abcdef', someField: 3}],
         },
       });
-      done();
     }, /IntrospectionFragmentMatcher/);
-
   });
 
   it('runs a nested query with an array without IDs', () => {

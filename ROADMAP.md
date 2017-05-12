@@ -4,9 +4,10 @@ This is the high-level roadmap for Apollo Client that lists our priorities for t
 
 Currently, there are three high-level priorities:
 
-1. **Unified Apollo API for JS, iOS and Android**
-    * Apollo Store with imperative GraphQL interface (design in progress)
+1. **Pluggable store API**
+    * Apollo Store API with imperative GraphQL interface (design in progress)
     * Lower-level key-value store (design in progress)
+    * Alignment of store API between JavaScript, iOS and Android clients (design in progress)
     * React Native to native bridge (not started yet)
 
 2. **Live queries**

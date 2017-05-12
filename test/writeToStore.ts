@@ -757,7 +757,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('preoprly normalizes an object occurring in the same graphql array path twice', () => {
+  it('properly normalizes an object occurring in the same graphql array path twice', () => {
     const query = gql`
       {
         id,

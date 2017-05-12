@@ -5,7 +5,6 @@ import {
   QueryCacheValue,
 } from './storeUtils';
 
-import { omit } from 'lodash';
 import { isEqual } from '../util/isEqual';
 
 export function invalidateQueryCache({
@@ -51,11 +50,12 @@ export function removeQueryFromCache({
   store: NormalizedCache,
   queryCache: QueryCache,
 }): Cache {
+  const newQueryCache = { ...queryCache };
+  delete newQueryCache[queryId];
+
   return {
     data: store,
-    queryCache: {
-      ...omit(queryCache, queryId),
-    },
+    queryCache: newQueryCache,
   };
 }
 

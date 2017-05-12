@@ -275,7 +275,8 @@ function addPreviousResultToIdValues (value: any, previousResult: any): any {
     // using the private `ID_KEY` property that is added in `resultMapper`.
     if (Array.isArray(previousResult)) {
       previousResult.forEach(item => {
-        if (item[ID_KEY]) {
+        // item can be null
+        if (item && item[ID_KEY]) {
           idToPreviousResult[item[ID_KEY]] = item;
         }
       });

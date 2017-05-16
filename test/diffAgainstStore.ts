@@ -118,8 +118,8 @@ describe('diffing queries against the store', () => {
     }, /No fragment/);
   });
 
-  it('does not error on a correct query with union typed fragments', (done) => {
-    withError(() => {
+  it('does not error on a correct query with union typed fragments', () => {
+    return withError(() => {
       const firstQuery = gql`
         query {
           person {
@@ -161,7 +161,6 @@ describe('diffing queries against the store', () => {
       });
 
       assert.isTrue(isMissing);
-      done();
     }, /IntrospectionFragmentMatcher/);
   });
 

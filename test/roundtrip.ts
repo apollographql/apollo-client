@@ -256,7 +256,7 @@ describe('roundtrip', () => {
                 side: 'bright',
               },
             ],
-            });
+          });
         }, /Can\'t find field rank on object/);
     });
 

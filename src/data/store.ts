@@ -214,6 +214,7 @@ export function data(
             config,
             queryCache: previousState.queryCache,
             queryId,
+            allowModifiedQueryCache: true,
           });
 
           if (isMissing) {

@@ -205,6 +205,68 @@ networkInterface.use([exampleWare1])
   .use([exampleWare5]);
 ```
 
+<h2 id="websocket">GraphQL over WebSocket</h2>
+
+Another alternative for network interface is GraphQL over WebSocket, using [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws/). 
+
+You can the create WebSocket as full-transport, and pass all GraphQL operations over the WebSocket (`Query`, `Mutation` and `Subscription`), or use a hybrid network interface and execute `Query` and `Mutation` over HTTP, and only `Subscription` over the WebSocket.
+
+<h3 id="full-websocket">Full WebSocket</h3>
+
+To start with full WebSocket, use `subscriptions-transport-ws` and create your [GraphQL subscriptions server](/tools/#GraphQL-subscriptions).
+
+Then, configure you client side by creating an instance of `SubscriptionClient`, and use the created instance and your network interface:
+
+```js
+import { SubscriptionClient } from 'subscriptions-transport-ws';
+import ApolloClient from 'apollo-client';
+
+const GRAPHQL_ENDPOINT = 'ws://localhost:3000/graphql';
+
+const client = new SubscriptionClient(GRAPHQL_ENDPOINT, {
+  reconnect: true,
+});
+
+const apolloClient = new ApolloClient({
+    networkInterface: client,
+});
+```
+
+<h3 id="hybrid-websocket">Hybrid WebSocket</h3>
+
+To use WebSocket for subscriptions only, create your regular network interface for queries and mutation, and create an instanace of `SubscriptionClient`
+
+Then, use `addGraphQLSubscriptions` to combine the two into a single hybrid network interface:
+
+```js
+import {SubscriptionClient, addGraphQLSubscriptions} from 'subscriptions-transport-ws';
+import ApolloClient, {createNetworkInterface} from 'apollo-client';
+
+// Create regular NetworkInterface by using apollo-client's API:
+const networkInterface = createNetworkInterface({
+ uri: 'http://localhost:3000' // Your GraphQL endpoint
+});
+
+// Create WebSocket client
+const wsClient = new SubscriptionClient(`ws://localhost:5000/`, {
+    reconnect: true,
+    connectionParams: {
+        // Pass any arguments you want for initialization
+    }
+});
+
+// Extend the network interface with the WebSocket
+const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
+    networkInterface,
+    wsClient
+);
+
+// Finally, create your ApolloClient instance with the modified network interface
+const apolloClient = new ApolloClient({
+    networkInterface: networkInterfaceWithSubscriptions
+});
+```
+
 <h2 id="custom-network-interface">Custom network interface</h2>
 
 You can define a custom network interface and pass it to the Apollo Client to send your queries in a different way. You might want to do this for a variety of reasons:

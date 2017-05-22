@@ -105,7 +105,7 @@ React-Apollo includes a component for providing a client instance to a React com
 import { ApolloProvider } from 'react-apollo';
 ```
 
-Makes the GraphQL client available to any of your components enhanced by the `graphql()` fucntion. The `<ApolloProvider/>` component works the same as the [`react-redux` `<Provider/>` component][]. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql()`](#graphql) function, or the [`withApollo`](#withApollo) function. You may also provide your Redux store using the `<ApolloProvider/>` component in addition to providing your GraphQL client.
+Makes the GraphQL client available to any of your components enhanced by the `graphql()` function. The `<ApolloProvider/>` component works the same as the [`react-redux` `<Provider/>` component][]. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql()`](#graphql) function, or the [`withApollo`](#withApollo) function. You may also provide your Redux store using the `<ApolloProvider/>` component in addition to providing your GraphQL client.
 
 If you do not add this component to the root of your React tree then your components enhanced with Apollo capabilities will not be able to function.
 

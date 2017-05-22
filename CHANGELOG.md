@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Feature: Pass a function to `optimisticResponse` and it will be called with the `variables` passed to the mutation.
+
 ### 1.2.2
 - Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)
 - Feature: Expose `dataIdFromObject` in addition to `dataId` [PR #1663](https://github.com/apollographql/apollo-client/pull/1663)

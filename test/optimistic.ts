@@ -534,6 +534,8 @@ describe('optimistic mutation results', () => {
       }
     `;
 
+    const variables = { text: 'Optimistically generated from variables' };
+
     const mutationResult = {
       data: {
         __typename: 'Mutation',
@@ -559,7 +561,7 @@ describe('optimistic mutation results', () => {
     it('will use a passed variable in optimisticResponse', () => {
       let subscriptionHandle: Subscription;
       return setup({
-        request: { query: mutation },
+        request: { query: mutation, variables },
         result: mutationResult,
       })
       .then(() => {
@@ -574,7 +576,7 @@ describe('optimistic mutation results', () => {
       .then(() => {
         const promise = client.mutate({
           mutation,
-          variables: { text: 'Optimistically generated from variables' },
+          variables,
           optimisticResponse,
           update: (proxy, mResult: any) => {
             assert.equal(mResult.data.createTodo.id, '99');

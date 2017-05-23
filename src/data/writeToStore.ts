@@ -241,7 +241,7 @@ export function writeSelectionSetToStore({
           fakeContext,
         );
         if (fakeContext.returnPartialData) {
-          console.error('WARNING: heuristic fragment matching going on!');
+        //   console.error('WARNING: heuristic fragment matching going on!');
         }
       }
 

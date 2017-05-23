@@ -394,7 +394,7 @@ Template.hello.helpers({
 
 ## Subscriptions
 
-You can also use GraphQL subscriptions with your Meteor app if you need to. Here is the code needed to enhance your network interface client-side and setting up things server-side.
+You can also use GraphQL subscriptions with your Meteor app if you need to. The following code gives an example of a complete configuration that enables all the features of subscriptions in addition to base GraphQL.
 
 ### Client
 ```js
@@ -406,23 +406,23 @@ import { getMeteorLoginToken, createMeteorNetworkInterface } from 'meteor/apollo
 const networkInterface = createMeteorNetworkInterface();
 
 // create a websocket uri based on your app absolute url (ROOT_URL), ex: ws://localhost:3000
-const websocketUri = Meteor.absoluteUrl('subscriptions').replace(/^http/, 'ws'),
+const websocketUri = Meteor.absoluteUrl('subscriptions').replace(/^http/, 'ws');
    
- // create a websocket client
- const wsClient = new SubscriptionClient(websocketUri, {
-   reconnect: true,
-   // pass some extra information to the subscription, like the current user:
-   connectionParams: {
-     // getMeteorLoginToken = get the Meteor current user login token from local storage
-     meteorLoginToken: getMeteorLoginToken(),
-   },
- });
+// create a websocket client
+const wsClient = new SubscriptionClient(websocketUri, {
+  reconnect: true,
+  // pass some extra information to the subscription, like the current user:
+  connectionParams: {
+    // getMeteorLoginToken = get the Meteor current user login token from local storage
+    meteorLoginToken: getMeteorLoginToken(),
+  },
+});
 
- // enhance the interface with graphql subscriptions
- const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(networkInterface, wsClient);
- 
- // enjoy graphql subscriptions with Apollo Client
- const client = new ApolloClient({ networkInterface: networkInterfaceWithSubscriptions });
+// enhance the interface with graphql subscriptions
+const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(networkInterface, wsClient);
+
+// enjoy graphql subscriptions with Apollo Client
+const client = new ApolloClient({ networkInterface: networkInterfaceWithSubscriptions });
 ```
 
 ### Server
@@ -438,15 +438,15 @@ import { createApolloServer, addCurrentUserToContext } from 'meteor/apollo';
  
 // your executable schema
 const schema = ...
- 
-// the context you use for your resolvers
-const context = ...
+
+// any additional context you use for your resolvers, if any
+const context = {};
  
 // the pubsub mechanism of your choice, for instance:
 // - PubSub from graphql-subscriptions (not recommended for production)
 // - RedisPubSub from graphql-redis-subscriptions
 // - MQTTPubSub from graphql-mqtt-subscriptions
-const pubsub = ...
+const pubsub = new PubSub();
  
 // subscriptions path which fits witht the one you connect to on the client
 const subscriptionsPath = '/subscriptions';

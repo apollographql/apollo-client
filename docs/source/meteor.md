@@ -127,6 +127,10 @@ Here are some great resources to help you integrating query batching in your Met
 
 It is _strongly_ recommended to explictly specify the `ROOT_URL` environment variable of your deployment. The configuration of the Apollo client and GraphQL server provided by this package depends on a configured `ROOT_URL`. Read more about that in the [Meteor Guide](https://guide.meteor.com/deployment.html#custom-deployment).
 
+### Typings
+
+Your Meteor apps may rely on static typings with TypeScript. If so, it is recommended to use the [ambient TypeScript definition for this Atmosphere package](https://github.com/KeithGillette/Apollo-GraphQL-Meteor-Integration-Typings).
+
 ## API
 
 ### meteorClientConfig

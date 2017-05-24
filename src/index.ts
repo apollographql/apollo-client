@@ -12,6 +12,11 @@ import {
 } from './transport/batchedNetworkInterface';
 
 import {
+  createHybridNetworkInterface,
+  HTTPHybridNetworkInterface,
+} from './transport/hybridNetworkInterface';
+
+import {
   print,
 } from 'graphql/language/printer';
 
@@ -90,6 +95,7 @@ import {
 export {
   createNetworkInterface,
   createBatchingNetworkInterface,
+  createHybridNetworkInterface,
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,
@@ -118,6 +124,7 @@ export {
   SubscriptionNetworkInterface,
   HTTPFetchNetworkInterface,
   HTTPBatchedNetworkInterface,
+  HTTPHybridNetworkInterface,
   FetchPolicy,
   WatchQueryOptions,
   MutationOptions,

@@ -48,6 +48,7 @@ import './errors';
 import './mockNetworkInterface';
 import './graphqlSubscriptions';
 import './batchedNetworkInterface';
+import './hybridNetworkInterface';
 import './ObservableQuery';
 import './subscribeToMore';
 import './customResolvers';

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Feature: `createHybridNetworkInterface` creates a network interface that will use either HTTPBatchedNetworkInterface or HTTPFetchNetworkInterface depending on whether request.disableBatch is set [PR #1732](https://github.com/apollographql/apollo-client/pull/1732)
 
 ### 1.2.2
 - Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)

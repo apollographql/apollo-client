@@ -176,16 +176,16 @@ const client = new ApolloClient(meteorClientConfig({ networkInterface }));
 
 `createApolloServer` is used to create and configure an Express GraphQL server.
 
-`customOptions` is an object that can have any [GraphQL Server `options`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlOptions), used to enhance the GraphQL server run thanks to [`graphqlExpress`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlExpress).
+`customOptions` is an object that can have any [GraphQL Server `options`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlOptions), used to enhance the GraphQL server run thanks to [`graphqlExpress`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlExpress). Defining a `customOptions` object extends or replaces fields of the default configuration provided by the package:
 
-Defining a `customOptions` object extends or replaces fields of the default configuration provided by the package:
 - `context`: `{}`, ensure that a context object is defined for the resolvers.
 - `formatError`: a function used to format errors before returning them to clients.
 - `debug`: `Meteor.isDevelopment`, additional debug logging if execution errors occur in dev mode.
 
-It is on `customOptions` object that you pass a `schema` field created by `makeExecutableSchema` ([see usage](http://dev.apollodata.com/core/meteor.html#Server)).
+*This is the object that should have a `schema` entry created by [`makeExecutableSchema`](http://dev.apollodata.com/core/meteor.html#Server).*
 
 `customConfig` is an optional object that can be used to replace the configuration of how the Express server itself runs: 
+
 - `path`: [path](http://expressjs.com/en/api.html#app.use) of the GraphQL server. This is the endpoint where the queries & mutations are sent. Default: `/graphql`.
 - `configServer`: a function that is given to the express server for further configuration. You can for instance enable CORS with `createApolloServer({}, {configServer: expressServer => expressServer.use(cors())})`
 - `graphiql`: whether to enable [GraphiQL](https://github.com/graphql/graphiql). Default: `true` in development and `false` in production.

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix: Check if location source exists when rethrowing errors in `writeToStore`
 
 ### 1.2.2
 - Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)

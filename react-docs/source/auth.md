@@ -69,10 +69,14 @@ The server can use that header to authenticate the user and attach it to the Gra
 
 Since Apollo caches all of your query results, it's important to get rid of them when the login state changes.
 
-The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. Another option is to reload the page, which will have a similar effect.
+The easiest way to ensure that the UI and store state reflects the current user's permissions is to call `client.resetStore()` after your login or logout process has completed. This will cause the store to be cleared and all active queries to be refetched. The component has to be wrapped in `withApollo` higher order component to have direct access to `Apolloclient` through props.
+
+Another option is to reload the page, which will have a similar effect.
 
 
 ```js
+import { withApollo, graphql } from 'react-apollo';
+
 class Profile extends React.Component {
   constructor(props) {
     super(props);

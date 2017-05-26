@@ -252,7 +252,7 @@ export class QueryManager {
   }: {
     mutation: DocumentNode,
     variables?: Object,
-    optimisticResponse?: Object,
+    optimisticResponse?: Object | Function,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,

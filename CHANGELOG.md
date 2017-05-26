@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix bug that caused errors in `writeToStore` to be rethrown as uncaught errors [PR #1673](https://github.com/apollographql/apollo-client/pull/1673)
 
 ### 1.2.2
 - Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)

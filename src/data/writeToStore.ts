@@ -162,7 +162,7 @@ export function writeResultToStore({
     });
   } catch (e) {
     // XXX A bit hacky maybe ...
-    const e2 = new Error(`Error writing result to store for query ${document.loc && document.loc.source.body}`);
+    const e2 = new Error(`Error writing result to store for query ${document.loc && document.loc.source && document.loc.source.body}`);
     e2.message += '/n' + e.message;
     e2.stack = e.stack;
     throw e2;

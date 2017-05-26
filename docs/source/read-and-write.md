@@ -20,7 +20,7 @@ All of the methods we will discuss can be called from the `ApolloClient` class. 
 
 ```js
 import { ApolloClient } from 'apollo-client';
-import { gql } from 'graphql-tag';
+import gql from 'graphql-tag';
 
 const client = new ApolloClient({ ... });
 ```

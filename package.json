@@ -51,7 +51,7 @@
   "license": "MIT",
   "dependencies": {
     "graphql-anywhere": "^3.0.1",
-    "graphql": "^0.9.3",
+    "graphql": "^0.10.0",
     "graphql-tag": "^2.0.0",
     "redux": "^3.4.0",
     "symbol-observable": "^1.0.2",
@@ -91,7 +91,7 @@
     "sinon": "^2.1.0",
     "source-map-support": "^0.4.0",
     "tslint": "^5.1.0",
-    "typescript": "2.3.2",
+    "typescript": "2.3.3",
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",
     "webpack-bundle-analyzer": "^2.4.0"

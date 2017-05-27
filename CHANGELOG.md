@@ -1,8 +1,8 @@
 # Change log
 
 ### vNEXT
+- Make ApolloClient.resetStore() and QueryManager.resetStore() return a promise instead of void [PR #1674](https://github.com/apollographql/apollo-client/pull/1674)
 - Fix bug that caused errors in `writeToStore` to be rethrown as uncaught errors [PR #1673](https://github.com/apollographql/apollo-client/pull/1673)
-
 - Feature: Pass a function to `optimisticResponse` and it will be called with the `variables` passed to the mutation.
 
 ### 1.2.2

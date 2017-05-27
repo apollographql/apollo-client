@@ -1,5 +1,5 @@
 {
-  "name": "apollo-client",
+  "name": "@ck/apollo-client",
   "version": "1.2.2",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
@@ -95,6 +95,9 @@
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",
     "webpack-bundle-analyzer": "^2.4.0"
+  },
+  "publishConfig": {
+    "registry": "https://artifactory.corp.creditkarma.com:8443/artifactory/api/npm/npmck"
   },
   "optionalDependencies": {
     "@types/async": "^2.0.31",

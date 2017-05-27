@@ -341,14 +341,14 @@ As you can see, the `reducer` option can be used to achieve the same goal as `up
 
 `refetchQueries` should be used whenever the mutation result alone is not enough to infer all the changes to the cache. `refetchQueries` is also a very good option if an extra roundtrip and possible overfetching are not of concern for your application, which is often true during prototyping. Compared with `update`, `updateQueries` and `reducer`, `refetchQueries` is the easiest to write and maintain.
 
-`updateQueries`, `reducer` and `update` all provide similar functionality. They were introduced in that order and each tried to address shortcomings in the previous one. While all three APIs are currently availble, we strongly recommend using `update` wherever possible, as the other two APIs (`updateQueries` and `reducer`) may be deprecated in the future. We recommend `update` because its API is both the most powerful and easiest to understand of all three. The reason we are considering deprecating `reducer` and `updateQueries` is that they both depend on state internal to the client, which makes them harder to understand and maintain than `update`, without providing any extra functionality.
+`updateQueries`, `reducer` and `update` all provide similar functionality. They were introduced in that order and each tried to address shortcomings in the previous one. While all three APIs are currently available, we strongly recommend using `update` wherever possible, as the other two APIs (`updateQueries` and `reducer`) may be deprecated in the future. We recommend `update` because its API is both the most powerful and easiest to understand of all three. The reason we are considering deprecating `reducer` and `updateQueries` is that they both depend on state internal to the client, which makes them harder to understand and maintain than `update`, without providing any extra functionality.
 
 
 <h2 id="fetchMore">Incremental loading: `fetchMore`</h2>
 
 `fetchMore` can be used to update the result of a query based on the data returned by another query. Most often, it is used to handle infinite-scroll pagination or other situations where you are loading more data when you already have some.
 
-In our GitHunt example, we have a paginated feed that displays a list of GitHub respositories. When we hit the "Load More" button, we don't want Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.
+In our GitHunt example, we have a paginated feed that displays a list of GitHub repositories. When we hit the "Load More" button, we don't want Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.
 
 Let's see how to do that with the `fetchMore` method on a query:
 

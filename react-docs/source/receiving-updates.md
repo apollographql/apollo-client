@@ -42,7 +42,7 @@ const FeedEntries = gql`
 const FeedWithData = graphql(FeedEntries)(Feed);
 ```
 
-Suppose we have a "refresh" button somewhere on the page and when that button is clicked, the `onRefreshClicked` method is called on our component. We have the method `this.props.data.refetch`, which allows us to refetch the query associated with the `FeedCompoment`. This means that instead of resolving information about the `feed` field from the cache, the query will be forced to hit the server and update the cache with new results.
+Suppose we have a "refresh" button somewhere on the page and when that button is clicked, the `onRefreshClicked` method is called on our component. We have the method `this.props.data.refetch`, which allows us to refetch the query associated with the `Feed` component. This means that instead of resolving information about the `feed` field from the cache, the query will be forced to hit the server and update the cache with new results.
 
 If there's been some kind of update on the server (e.g. a new repository added to the feed), the Apollo Client store will get the update and the UI will re-render as necessary.
 

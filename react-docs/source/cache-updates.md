@@ -85,7 +85,7 @@ In some cases, just using `dataIdFromObject` is not enough for your application 
 
 <h3 id="refetchQueries">`refetchQueries`</h3>
 
-`refetchQueries` is the simplest way of updating the cache. With `refetchQueries` you can specify one or more queries that you want to run after a mutation completed in order to refetch the parts of the store that may have been affected by the mutation:
+`refetchQueries` is the simplest way of updating the cache. With `refetchQueries` you can specify one or more queries that you want to run after a mutation is completed in order to refetch the parts of the store that may have been affected by the mutation:
 
 ```javascript
 mutate({

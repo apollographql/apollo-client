@@ -521,6 +521,98 @@ describe('optimistic mutation results', () => {
     });
   });
 
+  describe('passing a function to optimisticResponse', () => {
+    const mutation = gql`
+      mutation createTodo ($text: String) {
+        createTodo (text: $text) {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const variables = { text: 'Optimistically generated from variables' };
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          id: '99',
+          __typename: 'Todo',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
+    const optimisticResponse = ({ text }: { text: string }) => ({
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '99',
+        text,
+        completed: true,
+      },
+    });
+
+    it('will use a passed variable in optimisticResponse', () => {
+      let subscriptionHandle: Subscription;
+      return setup({
+        request: { query: mutation, variables },
+        result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
+      })
+      .then(() => {
+        const promise = client.mutate({
+          mutation,
+          variables,
+          optimisticResponse,
+          update: (proxy, mResult: any) => {
+            assert.equal(mResult.data.createTodo.id, '99');
+
+            const id = 'TodoList5';
+            const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
+
+            const data: any = proxy.readFragment({ id, fragment });
+
+            proxy.writeFragment({
+              data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+              id, fragment,
+            });
+          },
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated from variables');
+
+        return promise;
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
+      });
+    });
+  });
+
   describe('optimistic updates using `updateQueries`', () => {
     const mutation = gql`
       mutation createTodo {

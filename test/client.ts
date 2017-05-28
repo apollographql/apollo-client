@@ -2185,41 +2185,39 @@ describe('client', () => {
   });
 
   it('should limit the amount of queries in a batch according to the batchMax value', (done) => {
-    const firstQuery = gql`
+    const authorQuery = gql`
       query {
         author {
           firstName
-          lastName
         }
       }`;
-    const firstResult = {
+    const authorResult = {
       data: {
         author: {
           firstName: 'John',
-          lastName: 'Smith',
         },
       },
-      loading: false,
     };
-    const secondQuery = gql`
+    const personQuery = gql`
       query {
         person {
           name
         }
       }`;
-    const secondResult = {
+    const personResult = {
       data: {
         person: {
           name: 'Jane Smith',
         },
       },
     };
+
     const url = 'http://not-a-real-url.com';
 
     const networkInterface = createBatchingNetworkInterface({
-      uri: 'http://fake-url.com',
+      uri: url,
       batchInterval: 5,
-      batchMax: 1,
+      batchMax: 2,
       opts: {},
     });
 
@@ -2228,9 +2226,8 @@ describe('client', () => {
       url,
       opts: {
         body: JSON.stringify([
-          {
-            query: print(firstQuery),
-          },
+          { query: print(authorQuery) },
+          { query: print(personQuery) },
         ]),
         headers: {
           Accept: '*/*',
@@ -2238,25 +2235,13 @@ describe('client', () => {
         },
         method: 'POST',
       },
-      result: createMockedIResponse([firstResult]),
-    });
-
-    const firstFetch = networkInterface.query({ query: firstQuery });
-    firstFetch.then((results) => {
-      console.log('first results', results);
-      assert.deepEqual(results, [firstResult]);
-      fetch = oldFetch;
-    }).catch( e => {
-      console.error(e);
-    });
-
-    fetch = createMockFetch({
+      result: createMockedIResponse([authorResult, personResult]),
+    }, {
       url,
       opts: {
         body: JSON.stringify([
-          {
-            query: print(secondQuery),
-          },
+          { query: print(authorQuery) },
+          { query: print(personQuery) },
         ]),
         headers: {
           Accept: '*/*',
@@ -2264,19 +2249,42 @@ describe('client', () => {
         },
         method: 'POST',
       },
-      result: createMockedIResponse([secondResult]),
+      result: createMockedIResponse([authorResult, personResult]),
+    }, {
+      url,
+      opts: {
+        body: JSON.stringify([
+          { query: print(authorQuery) },
+        ]),
+        headers: {
+          Accept: '*/*',
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      },
+      result: createMockedIResponse([authorResult]),
     });
 
-    const secondFetch = networkInterface.query({ query: secondQuery });
-    secondFetch.then((results) => {
-      console.log('second results', results);
-      assert.deepEqual(results, [secondResult]);
+    Promise.all([
+      networkInterface.query({ query: authorQuery }),
+      networkInterface.query({ query: personQuery }),
+      networkInterface.query({ query: authorQuery }),
+      networkInterface.query({ query: personQuery }),
+      networkInterface.query({ query: authorQuery }),
+    ]).then((results) => {
+      assert.deepEqual(results, [
+        authorResult,
+        personResult,
+        authorResult,
+        personResult,
+        authorResult,
+      ]);
       fetch = oldFetch;
+      done();
     }).catch( e => {
       console.error(e);
     });
 
-    done();
   });
 
   it('should enable dev tools logging', () => {

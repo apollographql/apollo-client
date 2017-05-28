@@ -60,25 +60,31 @@ export class QueryBatcher {
       this.scheduleQueueConsumption();
     }
 
+    // When amount of requests reaches `batchMax`, trigger the queue consumption without waiting on the `batchInterval`.
+    if (this.queuedRequests.length === this.batchMax) {
+        this.consumeQueue();
+    }
+
     return fetchRequest.promise;
   }
 
   // Consumes the queue.
   // Returns a list of promises (one for each query).
   public consumeQueue(): (Promise<ExecutionResult> | undefined)[] | undefined {
-    const queueSlice = this.queuedRequests.splice(0, this.batchMax);
-    const requests: Request[] = queueSlice.map(
+    const requests: Request[] = this.queuedRequests.map(
       (queuedRequest) => queuedRequest.request,
     );
 
     const promises: (Promise<ExecutionResult> | undefined)[] = [];
     const resolvers: any[] = [];
     const rejecters: any[] = [];
-    queueSlice.forEach((fetchRequest, index) => {
+    this.queuedRequests.forEach((fetchRequest, index) => {
       promises.push(fetchRequest.promise);
       resolvers.push(fetchRequest.resolve);
       rejecters.push(fetchRequest.reject);
     });
+
+    this.queuedRequests = [];
 
     const batchedPromise = this.batchFetchFunction(requests);
 
@@ -91,10 +97,6 @@ export class QueryBatcher {
         rejecters[index](error);
       });
     });
-
-    if (this.queuedRequests.length) {
-      promises.concat(this.consumeQueue());
-    }
 
     return promises;
   }

@@ -103,7 +103,9 @@ export class QueryBatcher {
 
   private scheduleQueueConsumption(): void {
     setTimeout(() => {
-      this.consumeQueue();
+      if (this.queuedRequests.length) {
+          this.consumeQueue();
+      }
     }, this.batchInterval);
   }
 }

@@ -46,6 +46,7 @@ import {
 } from '../src/core/QueryManager';
 
 import {
+  FragmentMatcherInterface,
   IntrospectionFragmentMatcher,
 } from '../src/data/fragmentMatcher';
 
@@ -249,7 +250,9 @@ describe('client', () => {
         allPeople(first: 1) {
           people {
             name
+            __typename
           }
+          __typename
         }
       }
     `;
@@ -259,15 +262,17 @@ describe('client', () => {
         people: [
           {
             name: 'Luke Skywalker',
+            __typename: 'Person',
           },
         ],
+        __typename: 'People',
       },
     };
 
-    clientRoundtrip(query, data);
+    return clientRoundtrip(query, data);
   });
 
-  it('should allow for a single query with complex default variables to take place', (done) => {
+  it('should allow for a single query with complex default variables to take place', () => {
     const query = gql`
       query stuff($test: Input = {key1: ["value", "value2"], key2: {key3: 4}}) {
         allStuff(test: $test) {
@@ -311,12 +316,10 @@ describe('client', () => {
       assert.deepEqual(actualResult.data, result);
     });
 
-    Promise.all([basic, withDefault]).then(res => {
-      done();
-    });
+    return Promise.all([basic, withDefault]);
   });
 
-  it('should allow for a single query with default values that get overridden with variables', (done) => {
+  it('should allow for a single query with default values that get overridden with variables', () => {
     const query = gql`
       query people($first: Int = 1) {
         allPeople(first: $first) {
@@ -378,35 +381,54 @@ describe('client', () => {
       return assert.deepEqual(actualResult.data, overriddenResult);
     });
 
-    Promise.all([basic, withDefault, withOverride]).then(res => {
-      done();
-    });
+    return Promise.all([basic, withDefault, withOverride]);
   });
 
   it('should allow fragments on root query', () => {
+    // The fragment should be used after the selected fields for the query.
+    // Otherwise, the results aren't merged.
+    // see: https://github.com/apollographql/apollo-client/issues/1479
     const query = gql`
       query {
-        ...QueryFragment
         records {
           id
+          __typename
         }
+        ...QueryFragment
       }
 
       fragment QueryFragment on Query {
         records {
           name
+          __typename
         }
+        __typename
       }
     `;
 
     const data = {
       records: [
-        { id: 1, name: 'One' },
-        { id: 2, name: 'Two' },
+        { id: 1, name: 'One', __typename: 'Record' },
+        { id: 2, name: 'Two', __typename: 'Record' },
       ],
+      __typename: 'Query',
     };
 
-    clientRoundtrip(query, data);
+    const ifm = new IntrospectionFragmentMatcher({
+      introspectionQueryResultData: {
+        __schema: {
+          types: [{
+            kind: 'UNION',
+            name: 'Query',
+            possibleTypes: [{
+              name: 'Record',
+            }],
+          }],
+        },
+      },
+    });
+
+    return clientRoundtrip(query, data, null, ifm);
   });
 
   it('should allow for a single query with existing store', () => {
@@ -763,7 +785,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to transform queries', (done) => {
+  it('should be able to transform queries', () => {
     const query = gql`
       query {
         author {
@@ -809,13 +831,12 @@ describe('client', () => {
       addTypename: true,
     });
 
-    client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, transformedResult);
-      done();
     });
   });
 
-  it('should be able to transform queries on network-only fetches', (done) => {
+  it('should be able to transform queries on network-only fetches', () => {
     const query = gql`
       query {
         author {
@@ -858,14 +879,13 @@ describe('client', () => {
       networkInterface,
       addTypename: true,
     });
-    client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
-      assert.deepEqual(actualResult.data, transformedResult);
-      done();
-    });
 
+    return client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, transformedResult);
+    });
   });
 
-  it('should handle named fragments on mutations', (done) => {
+  it('should handle named fragments on mutations', () => {
     const mutation = gql`
       mutation {
         starAuthor(id: 12) {
@@ -897,9 +917,9 @@ describe('client', () => {
       networkInterface,
       addTypename: false,
     });
-    client.mutate({ mutation }).then((actualResult) => {
+
+    return client.mutate({ mutation }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
-      done();
     });
   });
 
@@ -978,7 +998,7 @@ describe('client', () => {
     });
   });
 
-  it('should be able to handle named fragments', (done) => {
+  it('should be able to handle named fragments', () => {
     const query = gql`
       query {
         author {
@@ -1007,9 +1027,9 @@ describe('client', () => {
       networkInterface,
       addTypename: false,
     });
-    client.query({ query }).then((actualResult) => {
+
+    return client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
-      done();
     });
   });
 
@@ -1260,7 +1280,7 @@ describe('client', () => {
     });
   });
 
-  it('should send operationName along with the query to the server', (done) => {
+  it('should send operationName along with the query to the server', () => {
     const query = gql`
       query myQueryName {
         fortuneCookie
@@ -1278,13 +1298,13 @@ describe('client', () => {
       networkInterface,
       addTypename: false,
     });
-    client.query({ query }).then((actualResult) => {
+
+    return client.query({ query }).then((actualResult) => {
       assert.deepEqual(actualResult.data, data);
-      done();
     });
   });
 
-  it('should send operationName along with the mutation to the server', (done) => {
+  it('should send operationName along with the mutation to the server', () => {
     const mutation = gql`
       mutation myMutationName {
         fortuneCookie
@@ -1302,9 +1322,9 @@ describe('client', () => {
       networkInterface,
       addTypename: false,
     });
-    client.mutate({ mutation }).then((actualResult) => {
+
+    return client.mutate({ mutation }).then((actualResult) => {
       assert.deepEqual(actualResult.data, data);
-      done();
     });
   });
 
@@ -2384,50 +2404,39 @@ describe('client', () => {
   });
 
   it('should throw a GraphQL error', () => {
-    const url = 'http://not-a-real-url.com';
     const query = gql`
       query {
         posts {
           foo
+          __typename
         }
       }
     `;
-    const result = {
-      errors: [{
-        message: 'Cannot query field "foo" on type "Post".',
-        locations: [{
-          line: 1,
-          column: 1,
-        }],
-      }],
-    };
-
-    fetchMock.post(url, () => {
-      return {
-        status: 400,
-        body: result,
-      };
+    const errors: GraphQLError[] = [{
+      name: 'test',
+      message: 'Cannot query field "foo" on type "Post".',
+    }];
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { errors },
     });
-    const networkInterface = createNetworkInterface({ uri: url });
-
     const client = new ApolloClient({
       networkInterface,
     });
 
     return client.query({ query }).catch(err => {
       assert.equal(err.message, 'GraphQL error: Cannot query field "foo" on type "Post".');
-      fetchMock.restore();
     });
   });
 
   it('should warn if server returns wrong data', () => {
-    const url = 'http://not-a-real-url.com';
     const query = gql`
       query {
         todos {
           id
           name
           description
+          __typename
         }
       }
     `;
@@ -2443,14 +2452,10 @@ describe('client', () => {
         ],
       },
     };
-
-    fetchMock.post(url, () => {
-      return {
-        body: result,
-      };
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result,
     });
-    const networkInterface = createNetworkInterface({ uri: url });
-
     const client = new ApolloClient({
       networkInterface,
     });
@@ -2463,6 +2468,7 @@ function clientRoundtrip(
   query: DocumentNode,
   data: ExecutionResult,
   variables?: any,
+  fragmentMatcher?: FragmentMatcherInterface,
 ) {
   const networkInterface = mockNetworkInterface({
     request: { query: cloneDeep(query) },
@@ -2471,10 +2477,10 @@ function clientRoundtrip(
 
   const client = new ApolloClient({
     networkInterface,
+    fragmentMatcher,
   });
 
-  return client.query({ query, variables })
-    .then((result) => {
-      assert.deepEqual(result.data, data);
-    });
+  return client.query({ query, variables }).then((result) => {
+    assert.deepEqual(result.data, data);
+  });
 }

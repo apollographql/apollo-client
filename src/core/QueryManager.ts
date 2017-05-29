@@ -252,7 +252,7 @@ export class QueryManager {
   }: {
     mutation: DocumentNode,
     variables?: Object,
-    optimisticResponse?: Object,
+    optimisticResponse?: Object | Function,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
@@ -798,7 +798,7 @@ export class QueryManager {
     }
   }
 
-  public resetStore(): void {
+  public resetStore(): Promise<ApolloQueryResult<any>[]> {
     // Before we have sent the reset action to the store,
     // we can no longer rely on the results returned by in-flight
     // requests since these may depend on values that previously existed
@@ -821,15 +821,18 @@ export class QueryManager {
     // watched. If there is an existing query in flight when the store is reset,
     // the promise for it will be rejected and its results will not be written to the
     // store.
+    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
     Object.keys(this.observableQueries).forEach((queryId) => {
       const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
 
       const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
 
       if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
-        this.observableQueries[queryId].observableQuery.refetch();
+        observableQueryPromises.push(this.observableQueries[queryId].observableQuery.refetch());
       }
     });
+
+    return Promise.all(observableQueryPromises);
   }
 
   public startQuery<T>(queryId: string, options: WatchQueryOptions, listener: QueryListener) {

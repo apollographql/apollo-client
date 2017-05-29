@@ -117,7 +117,7 @@ export interface MutationOptions {
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: Object;
+  optimisticResponse?: Object | Function;
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to

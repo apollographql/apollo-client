@@ -90,39 +90,36 @@ describe('diffing queries against the store', () => {
     assert.deepEqual(store['1'], result.people_one);
   });
 
-  it('does not swallow errors other than field errors', (done) => {
-    withError( () => {
-      const firstQuery = gql`
-        query {
-          person {
-            powers
-          }
-        }`;
-      const firstResult = {
-        person: {
-          powers: 'the force',
-        },
-      };
-      const store = writeQueryToStore({
-        result: firstResult,
-        query: firstQuery,
+  it('does not swallow errors other than field errors', () => {
+    const firstQuery = gql`
+      query {
+        person {
+          powers
+        }
+      }`;
+    const firstResult = {
+      person: {
+        powers: 'the force',
+      },
+    };
+    const store = writeQueryToStore({
+      result: firstResult,
+      query: firstQuery,
+    });
+    const unionQuery = gql`
+      query {
+        ...notARealFragment
+      }`;
+    return assert.throws(() => {
+      diffQueryAgainstStore({
+        store,
+        query: unionQuery,
       });
-      const unionQuery = gql`
-        query {
-          ...notARealFragment
-        }`;
-      assert.throws(() => {
-        diffQueryAgainstStore({
-          store,
-          query: unionQuery,
-        });
-      }, /No fragment/);
-      done();
-    }, /IntrospectionFragmentMatcher/);
+    }, /No fragment/);
   });
 
-  it('does not error on a correct query with union typed fragments', (done) => {
-    withError(() => {
+  it('does not error on a correct query with union typed fragments', () => {
+    return withError(() => {
       const firstQuery = gql`
         query {
           person {
@@ -164,7 +161,6 @@ describe('diffing queries against the store', () => {
       });
 
       assert.isTrue(isMissing);
-      done();
     }, /IntrospectionFragmentMatcher/);
   });
 

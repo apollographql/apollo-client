@@ -303,7 +303,7 @@ This is the interface that an object should implement so that it can be used by 
 
 Represents a request passed to the network interface. Has the following properties:
 
-- `query: Object` AST of the query to send to the server. You can get stringify this value by using `print` function from `graphql-tag/printer` package.
+- `query: Object` AST of the query to send to the server. You can get stringify this value by using `print` function from `graphql/language/printer` package.
 - `variables: Object` The variables to send with the query.
 - `operationName: string` An optional parameter that will be included in error messages about this query.
 

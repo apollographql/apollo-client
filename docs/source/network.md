@@ -127,7 +127,7 @@ Each object must contain an `applyAfterware` method with the following parameter
 - `{ response }: object` An object containing the parsed HTTP response of a GraphQL fetch.
 - `next: function` This function pushes the HTTP response onward through the afterware.
 
-The response object is shaped as such:
+The shape of the response object is as follows:
 
 ```js
 interface ParsedResponse {

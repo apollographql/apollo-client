@@ -16,6 +16,9 @@ script:
   - cd react-apollo && npm link apollo-client && npm i && npm test && cd ../ && rm -rf react-apollo
     # end tests of react apollo
 
+    # test flow types (validity and use cases)
+  - npm run flow-check
+
     # run coverage and file size checks
   - npm run coverage
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error

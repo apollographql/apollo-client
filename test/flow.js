@@ -56,5 +56,5 @@ const observable = client2.watchQuery({ query });
 // $ExpectError
 const result: ApolloQueryResult<mixed> = observable.result();
 
-// $ExpectErro
+// $ExpectError
 const current: Promise<ApolloQueryResult<mixed>> = observable.currentResult();

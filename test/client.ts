@@ -1750,6 +1750,41 @@ describe('client', () => {
         }
       });
     });
+    it('does not return a result if fetchResults is false', (done) => {
+      const query = gql`{ test }`;
+      const data = { test: 'ok' };
+      const data2 = { test: 'not ok' };
+
+      const networkInterface = mockNetworkInterface({
+        request: { query },
+        result: { data },
+      });
+
+      const client = new ApolloClient({ networkInterface });
+
+      const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
+
+      let handleCalled = false;
+      subscribeAndCount(done, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, data);
+          obs.setOptions({ fetchPolicy: 'standby', fetchResults: false }).then( (res) => {
+            assert.equal(res, null);
+            client.writeQuery({ query, data: data2 });
+            // this write should be completely ignored by the standby query
+            setTimeout( () => {
+              obs.setOptions({ fetchPolicy: 'cache-first' });
+            }, 10);
+          });
+        }
+        if (handleCount === 2) {
+          handleCalled = true;
+          assert.deepEqual(result.data, data2);
+          done();
+        }
+      });
+    });
+
   });
 
   describe('network-only fetchPolicy', () => {

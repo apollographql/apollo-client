@@ -700,6 +700,30 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('does not rerun query if set to not refetch', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+      let errored = false;
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, dataOne);
+          observable.setVariables(variables, true, false);
+
+          // Nothing should happen, so we'll wait a moment to check that
+          setTimeout(() => !errored && done(), 10);
+        } else if (handleCount === 2) {
+          errored = true;
+          throw new Error('Observable callback should not fire twice');
+        }
+      });
+    });
+
     it('handles variables changing while a query is in-flight', (done) => {
       // The expected behavior is that the original variables are forgotten
       // and the query stays in loading state until the result for the new variables

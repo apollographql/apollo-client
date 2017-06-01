@@ -340,7 +340,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       || (oldOptions.fetchPolicy === 'standby' && opts.fetchPolicy !== 'standby')
       || false;
 
-    return this.setVariables(this.options.variables, tryFetch);
+    return this.setVariables(this.options.variables, tryFetch, opts.fetchResults);
   }
 
   /**
@@ -359,8 +359,11 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
    * @param tryFetch: Try and fetch new results even if the variables haven't
    * changed (we may still just hit the store, but if there's nothing in there
    * this will refetch)
+   *
+   * @param fetchResults: Option to ignore fetching results when updating variables
+   *
    */
-  public setVariables(variables: any, tryFetch: boolean = false): Promise<ApolloQueryResult<T>> {
+  public setVariables(variables: any, tryFetch: boolean = false, fetchResults = true): Promise<ApolloQueryResult<T>> {
     const newVariables = {
       ...this.variables,
       ...variables,
@@ -370,7 +373,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      if (this.observers.length === 0) {
+      if (this.observers.length === 0 || !fetchResults) {
         return new Promise((resolve) => resolve());
       }
 

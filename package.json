@@ -20,7 +20,7 @@
     "compile:coverage": "tsc -p tsconfig.coverage.json",
     "compile:test": "tsc -p tsconfig.test.json",
     "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/apollo.umd.js -o=./dist/index.js && npm run minify:browser",
-    "minify:browser": "uglifyjs --compress --mangle --screw-ie8 -o=./dist/index.min.js -- ./dist/index.js",
+    "minify:browser": "uglifyjs -c -m -o ./dist/index.min.js -- ./dist/index.js",
     "watch": "tsc -w",
     "watch:test": "tsc -p tsconfig.test.json -w",
     "bundle": "rollup -c",
@@ -92,6 +92,7 @@
     "source-map-support": "^0.4.0",
     "tslint": "^5.1.0",
     "typescript": "2.3.4",
+    "uglify-js": "^3.0.3",
     "uglify-js": "^2.6.2",
     "webpack": "^2.1.0-beta.28",
     "webpack-bundle-analyzer": "^2.4.0"

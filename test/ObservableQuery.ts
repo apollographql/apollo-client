@@ -505,9 +505,10 @@ describe('ObservableQuery', () => {
         if (handleCount !== 1) {
           return;
         }
-        observable.setOptions({ fetchPolicy: 'network-only' })
+        observable.setOptions({ fetchPolicy: 'cache-and-network', fetchResults: true })
           .then((res) => {
-            assert.deepEqual(res.data, dataTwo);
+            // returns dataOne from cache
+            assert.deepEqual(res.data, dataOne);
             done();
           });
       });
@@ -526,7 +527,7 @@ describe('ObservableQuery', () => {
         if (handleCount !== 1) {
           return;
         }
-        observable.setOptions({ fetchResults: false })
+        observable.setOptions({ fetchResults: false, fetchPolicy: 'standby' })
           .then((res) => {
             assert.equal(res, null);
             done();

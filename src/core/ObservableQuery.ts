@@ -29,11 +29,14 @@ import { tryFunctionOrLogError } from '../util/errorHandling';
 import { isEqual } from '../util/isEqual';
 import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
-
 import {
   NetworkStatus,
   isNetworkRequestInFlight,
  } from '../queries/networkStatus';
+
+import {
+  getOperationName,
+} from '../queries/getFromAST';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
@@ -411,6 +414,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         newResult,
         variables,
         document,
+        operationName: getOperationName(document),
       });
     }
   }

@@ -491,6 +491,49 @@ describe('ObservableQuery', () => {
         });
       });
     });
+    it('returns a promise which eventually returns data', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount !== 1) {
+          return;
+        }
+        observable.setOptions({ fetchPolicy: 'network-only' })
+          .then((res) => {
+            assert.deepEqual(res.data, dataTwo);
+            done();
+          });
+      });
+    });
+    it('can bypass looking up results if passed to options', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount !== 1) {
+          return;
+        }
+        observable.setOptions({ fetchResults: false })
+          .then((res) => {
+            assert.equal(res, null);
+            done();
+          });
+      });
+    });
+
   });
 
   describe('setVariables', () => {

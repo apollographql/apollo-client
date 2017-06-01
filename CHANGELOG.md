@@ -1,7 +1,7 @@
 # Change log
 
 ### vNEXT
-- Feature: Add `operationName` in Redux actions whenever that's possible [PR #1676](https://github.com/apollographql/apollo-client/pull/1676)
+- Feature: Add `operationName` to Redux actions where possible [PR #1676](https://github.com/apollographql/apollo-client/pull/1676)
 
 ### v1.3.0
 - Make ApolloClient.resetStore() and QueryManager.resetStore() return a promise instead of void [PR #1674](https://github.com/apollographql/apollo-client/pull/1674)

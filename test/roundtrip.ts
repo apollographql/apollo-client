@@ -442,7 +442,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
     query,
     variables,
     fragmentMap,
-  });
+  }).data;
 
   const reconstructedResult = readQueryFromStore({
     store,

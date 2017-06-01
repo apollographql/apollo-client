@@ -314,6 +314,44 @@ describe('mutation results', () => {
     });
   });
 
+  it('does not update store with preventStoreUpdate flag', () => {
+    const mutation = gql`
+      mutation setCompleted {
+        setCompleted(todoId: "3") {
+          id
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        setCompleted: {
+          __typename: 'Todo',
+          id: '3',
+          completed: true,
+        },
+      },
+    };
+
+    return setup({
+      request: { query: mutation },
+      result: mutationResult,
+    })
+    .then(() => {
+      return client.mutate({ mutation, optimisticResponse: mutationResult.data, preventStoreUpdate: true });
+    })
+    .then(() => {
+      return client.query({ query });
+    })
+    .then((newResult: any) => {
+      assert.isFalse(newResult.data.todoList.todos[0].completed);
+    });
+  });
+
   it('should warn when the result fields don\'t match the query fields', () => {
     let handle: any;
     let subscriptionHandle: Subscription;

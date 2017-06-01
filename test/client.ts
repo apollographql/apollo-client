@@ -182,6 +182,7 @@ describe('client', () => {
         apollo: {
           queries: {},
           mutations: {},
+          cache: { data: {}, queryCache: {} },
           data: {},
           optimistic: [],
           reducerError: null,
@@ -529,6 +530,21 @@ describe('client', () => {
     };
 
     const finalState = { apollo: assign({}, initialState.apollo, {
+      cache: {
+        data: initialState.apollo.data,
+        queryCache: {
+          '1': {
+            dirty: false,
+            modified: false,
+            variables: {},
+            result: data,
+            keys: {
+              'ROOT_QUERY.allPeople({"first":"1"}).people.0': true,
+              'ROOT_QUERY.allPeople({"first":1})': true,
+            },
+          },
+        },
+      },
       queries: {
         '1': {
           queryString: print(query),
@@ -555,7 +571,7 @@ describe('client', () => {
     return client.query({ query })
       .then((result) => {
         assert.deepEqual(result.data, data);
-        assert.deepEqual(finalState, client.store.getState());
+        assert.deepEqual(client.store.getState(), finalState);
       });
   });
 

@@ -50,6 +50,7 @@ import {
 
 import {
   NormalizedCache,
+  Cache,
 } from '../data/storeUtils';
 
 import {
@@ -68,6 +69,11 @@ import {
 import {
   isProduction,
 } from '../util/environment';
+
+import {
+  QueryResultClientAction,
+  QueryCacheAction,
+} from '../actions';
 
 import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
@@ -249,6 +255,7 @@ export class QueryManager {
     updateQueries: updateQueriesByName,
     refetchQueries = [],
     update: updateWithProxyFn,
+    preventStoreUpdate = false,
   }: {
     mutation: DocumentNode,
     variables?: Object,
@@ -256,6 +263,7 @@ export class QueryManager {
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
+    preventStoreUpdate?: boolean,
   }): Promise<ApolloQueryResult<T>> {
     const mutationId = this.generateQueryId();
 
@@ -293,6 +301,7 @@ export class QueryManager {
       extraReducers: this.getExtraReducers(),
       updateQueries,
       update: updateWithProxyFn,
+      preventStoreUpdate: preventStoreUpdate,
     });
 
     return new Promise((resolve, reject) => {
@@ -323,6 +332,7 @@ export class QueryManager {
             extraReducers: this.getExtraReducers(),
             updateQueries,
             update: updateWithProxyFn,
+            preventStoreUpdate,
           });
 
           // If there was an error in our reducers, reject this promise!
@@ -389,24 +399,33 @@ export class QueryManager {
 
     let storeResult: any;
     let needToFetch: boolean = fetchPolicy === 'network-only';
+    let cachableQueryKeys;
 
     // If this is not a force fetch, we want to diff the query against the
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
     if ( (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only')) {
-      const { isMissing, result } = diffQueryAgainstStore({
+      const cache = this.getApolloState().cache;
+
+      const { isMissing, result, wasCached, queryCacheKeys } = diffQueryAgainstStore({
         query: queryDoc,
-        store: this.reduxRootSelector(this.store.getState()).data,
+        store: cache.data,
         variables,
         returnPartialData: true,
         fragmentMatcherFunction: this.fragmentMatcher.match,
         config: this.reducerConfig,
+        queryCache: cache.queryCache,
+        queryId,
       });
 
       // If we're in here, only fetch if we have missing fields
       needToFetch = isMissing || fetchPolicy === 'cache-and-network';
 
       storeResult = result;
+
+      if (!wasCached && !isMissing) {
+        cachableQueryKeys = queryCacheKeys;
+      }
     }
 
     const shouldFetch = needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
@@ -445,7 +464,9 @@ export class QueryManager {
         complete: !shouldFetch,
         queryId,
         requestId,
-      });
+        queryCacheKeys: cachableQueryKeys,
+        shouldCache: !!cachableQueryKeys,
+      } as QueryResultClientAction);
     }
 
     if (shouldFetch) {
@@ -557,14 +578,30 @@ export class QueryManager {
           }
         } else {
           try {
-            const { result: data, isMissing } = diffQueryAgainstStore({
-              store: this.getDataWithOptimisticResults(),
+            const cache = this.getCacheWithOptimisticResults();
+
+            const { result: data, isMissing, wasCached, queryCacheKeys } = diffQueryAgainstStore({
+              store: cache.data,
               query: this.queryDocuments[queryId],
               variables: queryStoreValue.previousVariables || queryStoreValue.variables,
               config: this.reducerConfig,
               fragmentMatcherFunction: this.fragmentMatcher.match,
               previousResult: lastResult && lastResult.data,
+              queryCache: cache.queryCache,
+              queryId,
+              allowModifiedQueryCache: true,
             });
+
+            // Update query cache if not found but only if we are operating on real data and not optimistic
+            if (!wasCached && !isMissing && cache === this.getApolloState().cache) {
+              this.store.dispatch({
+                type: 'APOLLO_QUERY_CACHE',
+                result: {data},
+                variables: queryStoreValue.previousVariables || queryStoreValue.variables,
+                queryId,
+                queryCacheKeys,
+              } as QueryCacheAction);
+            }
 
             let resultFromStore: ApolloQueryResult<T>;
 
@@ -745,10 +782,14 @@ export class QueryManager {
   }
 
   public getInitialState(): { data: Object } {
-    return { data: this.getApolloState().data };
+    return { data: this.getApolloState().cache };
   }
 
   public getDataWithOptimisticResults(): NormalizedCache {
+    return this.getCacheWithOptimisticResults().data;
+  }
+
+  public getCacheWithOptimisticResults(): Cache {
     return getDataWithOptimisticResults(this.getApolloState());
   }
 
@@ -940,17 +981,21 @@ export class QueryManager {
 
     const lastResult = observableQuery.getLastResult();
 
-    const queryOptions = observableQuery.options;
+    // In case of an optimistic change, apply reducer on top of the
+    // results including previous optimistic updates. Otherwise, apply it
+    // on top of the real data only.
+    const cache = isOptimistic ? this.getCacheWithOptimisticResults() : this.getApolloState().cache;
+
     const readOptions: ReadQueryOptions = {
-      // In case of an optimistic change, apply reducer on top of the
-      // results including previous optimistic updates. Otherwise, apply it
-      // on top of the real data only.
-      store: isOptimistic ? this.getDataWithOptimisticResults() : this.getApolloState().data,
+      store: cache.data,
       query: document,
       variables,
       config: this.reducerConfig,
       previousResult: lastResult ? lastResult.data : undefined,
       fragmentMatcherFunction: this.fragmentMatcher.match,
+      queryCache: cache.queryCache,
+      queryId: observableQuery.queryId,
+      allowModifiedQueryCache: true,
     };
 
     try {
@@ -1033,6 +1078,7 @@ export class QueryManager {
           this.addTypename ? addTypenameToDocument(queryOptions.query) : queryOptions.query,
           query.variables || {},
           this.reducerConfig,
+          query.queryId,
         );
       }
       return null as never;
@@ -1098,15 +1144,19 @@ export class QueryManager {
 
           let resultFromStore: any;
           try {
+            const cache = this.getApolloState().cache;
+
             // ensure result is combined with data already in store
             // this will throw an error if there are missing fields in
             // the results if returnPartialData is false.
             resultFromStore = readQueryFromStore({
-              store: this.getApolloState().data,
+              store: cache.data,
               variables,
               query: document,
               config: this.reducerConfig,
               fragmentMatcherFunction: this.fragmentMatcher.match,
+              queryCache: cache.queryCache,
+              queryId,
             });
             // ensure multiple errors don't get thrown
             /* tslint:disable */

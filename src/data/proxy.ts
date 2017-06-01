@@ -186,7 +186,7 @@ export class ReduxDataProxy implements DataProxy {
 
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
-      store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())),
+      store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())).data,
       query,
       variables,
       fragmentMatcherFunction: this.fragmentMatcher.match,
@@ -204,7 +204,7 @@ export class ReduxDataProxy implements DataProxy {
     variables,
   }: DataProxyReadFragmentOptions): FragmentType | null {
     let query = getFragmentQueryDocument(fragment, fragmentName);
-    const data = getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState()));
+    const data = getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())).data;
 
     // If we could not find an item in the store with the provided id then we
     // just return `null`.

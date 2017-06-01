@@ -13,6 +13,8 @@ import {
   resultKeyNameFromField,
   isField,
   isInlineFragment,
+  QueryCache,
+  Cache,
 } from './storeUtils';
 
 import {
@@ -55,6 +57,15 @@ import {
   assign,
 } from '../util/assign';
 
+import {
+  insertQueryIntoCache,
+  invalidateQueryCache,
+} from './queryCache';
+
+import {
+  isEqual,
+} from '../util/isEqual';
+
 class WriteError extends Error {
   public type = 'WriteError';
 }
@@ -66,7 +77,7 @@ class WriteError extends Error {
  *
  * @param query The query document whose result we are writing to the store.
  *
- * @param store The {@link NormalizedCache} used by Apollo for the `data` portion of the store.
+ * @param store The {@link NormalizedCache} used by Apollo for the `cache.data` portion of the store.
  *
  * @param variables A map from the name of a variable to its value. These variables can be
  * referenced by the query document.
@@ -78,6 +89,10 @@ class WriteError extends Error {
  * can be referenced within the query document.
  *
  * @param fragmentMatcherFunction A function to use for matching fragment conditions in GraphQL documents
+ *
+ * @param queryCache The {@link QueryCache} use by Apollo for the `cache.queryCache` portion of the store.
+ *
+ * @param queryId The id of the query currently being written, used for updating the query cache.
  */
 export function writeQueryToStore({
   result,
@@ -87,6 +102,8 @@ export function writeQueryToStore({
   dataIdFromObject,
   fragmentMap = {} as FragmentMap,
   fragmentMatcherFunction,
+  queryCache,
+  queryId,
 }: {
   result: Object,
   query: DocumentNode,
@@ -95,12 +112,17 @@ export function writeQueryToStore({
   dataIdFromObject?: IdGetter,
   fragmentMap?: FragmentMap,
   fragmentMatcherFunction?: FragmentMatcher,
-}): NormalizedCache {
+  queryCache?: QueryCache,
+  queryId?: string,
+}): Cache {
   const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
 
   variables = assign({}, getDefaultValues(queryDefinition), variables);
 
-  return writeSelectionSetToStore({
+  const queryCacheKeys = queryCache && queryId ? {} : undefined;
+  const updatedKeys = queryCache ? {} : undefined;
+
+  store = writeSelectionSetToStore({
     dataId: 'ROOT_QUERY',
     result,
     selectionSet: queryDefinition.selectionSet,
@@ -110,8 +132,28 @@ export function writeQueryToStore({
       dataIdFromObject,
       fragmentMap,
       fragmentMatcherFunction,
+      queryCacheKeys,
+      updatedKeys,
     },
   });
+
+  if (queryCache) {
+    if (queryId) {
+      return insertQueryIntoCache({
+        queryId,
+        result,
+        variables,
+        store,
+        queryCache,
+        queryCacheKeys: queryCacheKeys as { [id: string]: any},
+        updatedKeys,
+      });
+    }
+
+    return invalidateQueryCache({ store, queryCache, updatedKeys });
+  }
+
+  return { data: store, queryCache: {} };
 }
 
 export type WriteContext = {
@@ -120,6 +162,8 @@ export type WriteContext = {
   dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
   fragmentMatcherFunction?: FragmentMatcher;
+  queryCacheKeys?: {[id: string]: any};
+  updatedKeys?: {[id: string]: any};
 };
 
 export function writeResultToStore({
@@ -130,6 +174,8 @@ export function writeResultToStore({
   variables,
   dataIdFromObject,
   fragmentMatcherFunction,
+  queryCache,
+  queryId,
 }: {
   dataId: string,
   result: any,
@@ -138,8 +184,9 @@ export function writeResultToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   fragmentMatcherFunction?: FragmentMatcher,
-}): NormalizedCache {
-
+  queryCache?: QueryCache,
+  queryId?: string,
+}): Cache {
   // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
   const operationDefinition = getOperationDefinition(document);
   const selectionSet = operationDefinition.selectionSet;
@@ -147,8 +194,11 @@ export function writeResultToStore({
 
   variables = assign({}, getDefaultValues(operationDefinition), variables);
 
+  const queryCacheKeys = queryCache && queryId ? {} : undefined;
+  const updatedKeys = queryCache ? {} : undefined;
+
   try {
-    return writeSelectionSetToStore({
+    store = writeSelectionSetToStore({
       result,
       dataId,
       selectionSet,
@@ -158,8 +208,28 @@ export function writeResultToStore({
         dataIdFromObject,
         fragmentMap,
         fragmentMatcherFunction,
+        queryCacheKeys,
+        updatedKeys,
       },
     });
+
+    if (queryCache) {
+      if (queryId) {
+        return insertQueryIntoCache({
+          queryId,
+          result,
+          variables,
+          store,
+          queryCache,
+          queryCacheKeys: queryCacheKeys as { [x: string]: any },
+          updatedKeys,
+        });
+      }
+
+      return invalidateQueryCache({ store, queryCache, updatedKeys });
+    }
+
+    return { data: store, queryCache: {} };
   } catch (e) {
     // XXX A bit hacky maybe ...
     const e2 = new Error(`Error writing result to store for query ${document.loc && document.loc.source && document.loc.source.body}`);
@@ -379,6 +449,14 @@ function writeFieldToStore({
         shouldMerge = true;
       }
     }
+
+    if (context.queryCacheKeys) {
+      context.queryCacheKeys[valueDataId] = true;
+    }
+  }
+
+  if (context.queryCacheKeys && dataId === 'ROOT_QUERY') {
+    context.queryCacheKeys[`ROOT_QUERY.${storeFieldName}`] = true;
   }
 
   const newStoreObj = {
@@ -390,8 +468,18 @@ function writeFieldToStore({
     mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);
   }
 
-  if (!store[dataId] || storeValue !== store[dataId][storeFieldName]) {
+  if (!store[dataId] || store[dataId][storeFieldName] === undefined) {
     store[dataId] = newStoreObj;
+  } else if (!isEqual(store[dataId][storeFieldName], storeValue)) {
+    store[dataId] = newStoreObj;
+
+    if (context.updatedKeys) {
+      if (dataId === 'ROOT_QUERY') {
+        context.updatedKeys[`ROOT_QUERY.${storeFieldName}`] = true;
+      } else {
+        context.updatedKeys[dataId] = true;
+      }
+    }
   }
 }
 
@@ -421,6 +509,10 @@ function processArrayValue(
         itemDataId = semanticId;
         generated = false;
       }
+    }
+
+    if (context.queryCacheKeys) {
+      context.queryCacheKeys[itemDataId] = true;
     }
 
     writeSelectionSetToStore({

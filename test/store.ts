@@ -21,6 +21,7 @@ describe('createApolloStore', () => {
       {
         queries: {},
         mutations: {},
+        cache: { data: {}, queryCache: {} },
         data: {},
         optimistic: [],
         reducerError: null,
@@ -38,6 +39,7 @@ describe('createApolloStore', () => {
       {
         queries: {},
         mutations: {},
+        cache: { data: {}, queryCache: {} },
         data: {},
         optimistic: [],
         reducerError: null,
@@ -61,6 +63,10 @@ describe('createApolloStore', () => {
 
     assert.deepEqual(store.getState(), {
       apollo: {
+        cache: {
+          data: initialState.apollo.data,
+          queryCache: {},
+        },
         queries: {},
         mutations: {},
         data: initialState.apollo.data,
@@ -118,6 +124,7 @@ describe('createApolloStore', () => {
     const emptyState: Store = {
       queries: { },
       mutations: { },
+      cache: { data: { }, queryCache: { } },
       data: { },
       optimistic: ([] as any[]),
       reducerError: null,
@@ -163,6 +170,7 @@ describe('createApolloStore', () => {
         },
       },
       mutations: {},
+      cache: { data: {}, queryCache: {} },
       data: {},
       optimistic: ([] as any[]),
       reducerError: null,
@@ -237,11 +245,14 @@ describe('createApolloStore', () => {
     const resetState = {
       queries: {},
       mutations: {},
+      cache: { data: {}, queryCache: {} },
       data: {},
       optimistic: [
         {
           data: {},
+          invalidatedQueryCacheIds: [],
           mutationId: '1',
+          queryCache: {},
           action: {
             type: 'APOLLO_MUTATION_RESULT',
             result: {data: {data: {incrementer: {counter: 1}}}},
@@ -252,6 +263,7 @@ describe('createApolloStore', () => {
             extraReducers: undefined,
             updateQueries: undefined,
             update: undefined,
+            preventStoreUpdate: undefined,
           },
         },
       ],

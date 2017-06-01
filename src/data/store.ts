@@ -6,6 +6,9 @@ import {
   isStoreResetAction,
   isSubscriptionResultAction,
   isWriteAction,
+  isQueryResultClientAction,
+  isQueryStopAction,
+  isQueryCacheAction,
 } from '../actions';
 
 import {
@@ -35,6 +38,8 @@ import {
 import {
   graphQLResultHasError,
   NormalizedCache,
+  Cache,
+  QueryCache,
 } from './storeUtils';
 
 import {
@@ -50,13 +55,19 @@ import {
   tryFunctionOrLogError,
 } from '../util/errorHandling';
 
+import {
+  insertQueryIntoCache,
+  invalidateQueryCache,
+  readQueryFromCache,
+} from './queryCache';
+
 export function data(
-  previousState: NormalizedCache = {},
+  previousState: Cache = { data: {}, queryCache: {} },
   action: ApolloAction,
   queries: QueryStore,
   mutations: MutationStore,
   config: ApolloReducerConfig,
-): NormalizedCache {
+): Cache {
   // XXX This is hopefully a temporary binding to get around
   // https://github.com/Microsoft/TypeScript/issues/7719
   const constAction = action;
@@ -77,9 +88,6 @@ export function data(
     if (! graphQLResultHasError(action.result)) {
       const queryStoreValue = queries[action.queryId];
 
-      // XXX use immutablejs instead of cloning
-      const clonedState = { ...previousState } as NormalizedCache;
-
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
       let newState = writeResultToStore({
@@ -87,9 +95,12 @@ export function data(
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
         document: action.document,
         variables: queryStoreValue.variables,
-        store: clonedState,
+        // XXX use immutablejs instead of cloning
+        store: {...previousState.data},
         dataIdFromObject: config.dataIdFromObject,
         fragmentMatcherFunction: config.fragmentMatcher,
+        queryCache: previousState.queryCache,
+        queryId: action.queryId,
       });
 
       // XXX each reducer gets the state from the previous reducer.
@@ -100,15 +111,46 @@ export function data(
         });
       }
 
-      return newState;
+      return compareState(previousState, newState);
     }
+  } else if (isQueryResultClientAction(action)) {
+    if (!action.shouldCache) {
+      return previousState;
+    }
+
+    let newState = insertQueryIntoCache({
+      queryId: action.queryId,
+      result: action.result.data,
+      variables: action.variables,
+      store: previousState.data,
+      queryCache: previousState.queryCache,
+      queryCacheKeys: action.queryCacheKeys,
+    });
+
+    return compareState(previousState, newState);
+  } else if (isQueryCacheAction(action)) {
+    let newState = insertQueryIntoCache({
+      queryId: action.queryId,
+      result: action.result.data,
+      variables: action.variables,
+      store: previousState.data,
+      queryCache: previousState.queryCache,
+      queryCacheKeys: action.queryCacheKeys,
+    });
+
+    return compareState(previousState, newState);
+  } else if (isQueryStopAction(action)) {
+    // TODO: Query cache is never cleared when queries are stopped, we want at least some queries to stay around
+
+    if (!previousState.queryCache[action.queryId]) {
+      return previousState;
+    }
+
+    return previousState;
   } else if (isSubscriptionResultAction(action)) {
     // the subscription interface should handle not sending us results we no longer subscribe to.
     // XXX I don't think we ever send in an object with errors, but we might in the future...
     if (! graphQLResultHasError(action.result)) {
-
-      // XXX use immutablejs instead of cloning
-      const clonedState = { ...previousState } as NormalizedCache;
 
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
@@ -117,9 +159,11 @@ export function data(
         dataId: 'ROOT_SUBSCRIPTION',
         document: action.document,
         variables: action.variables,
-        store: clonedState,
+        // XXX use immutablejs instead of cloning
+        store: { ...previousState.data },
         dataIdFromObject: config.dataIdFromObject,
         fragmentMatcherFunction: config.fragmentMatcher,
+        queryCache: previousState.queryCache,
       });
 
       // XXX each reducer gets the state from the previous reducer.
@@ -137,21 +181,22 @@ export function data(
     if (!constAction.result.errors) {
       const queryStoreValue = mutations[constAction.mutationId];
 
-      // XXX use immutablejs instead of cloning
-      const clonedState = { ...previousState } as NormalizedCache;
-
-      let newState = writeResultToStore({
+      let newState = !constAction.preventStoreUpdate ? writeResultToStore({
         result: constAction.result.data,
         dataId: 'ROOT_MUTATION',
         document: constAction.document,
         variables: queryStoreValue.variables,
-        store: clonedState,
+        // XXX use immutablejs instead of cloning
+        store: {...previousState.data},
         dataIdFromObject: config.dataIdFromObject,
         fragmentMatcherFunction: config.fragmentMatcher,
-      });
+        queryCache: previousState.queryCache,
+      }) : previousState;
 
       // If this action wants us to update certain queries. Let’s do it!
       const { updateQueries } = constAction;
+      const modifiedQueryCacheIds: { [x: string]: any } = {};
+
       if (updateQueries) {
         Object.keys(updateQueries).forEach(queryId => {
           const query = queries[queryId];
@@ -159,15 +204,17 @@ export function data(
             return;
           }
 
-
           // Read the current query result from the store.
           const { result: currentQueryResult, isMissing } = diffQueryAgainstStore({
-            store: previousState,
+            store: previousState.data,
             query: query.document,
             variables: query.variables,
             returnPartialData: true,
             fragmentMatcherFunction: config.fragmentMatcher,
             config,
+            queryCache: previousState.queryCache,
+            queryId,
+            allowModifiedQueryCache: true,
           });
 
           if (isMissing) {
@@ -176,24 +223,45 @@ export function data(
 
           const reducer = updateQueries[queryId];
 
-          // Run our reducer using the current query result and the mutation result.
-          const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, {
+          const options = {
             mutationResult: constAction.result,
             queryName: getOperationName(query.document),
             queryVariables: query.variables,
-          }));
+            updateStoreFlag: true,
+          };
 
-          // Write the modified result back into the store if we got a new result.
+          // Run our reducer using the current query result and the mutation result.
+          const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, options));
+
           if (nextQueryResult) {
-            newState = writeResultToStore({
-              result: nextQueryResult,
-              dataId: 'ROOT_QUERY',
-              document: query.document,
-              variables: query.variables,
-              store: newState,
-              dataIdFromObject: config.dataIdFromObject,
-              fragmentMatcherFunction: config.fragmentMatcher,
-            });
+            // Write the modified result back into the store if we got a new result and the user didn't tell us explicitly not to write it
+            // to the store...
+            if (options.updateStoreFlag) {
+              newState = writeResultToStore({
+                result: nextQueryResult,
+                dataId: 'ROOT_QUERY',
+                document: query.document,
+                variables: query.variables,
+                store: newState.data,
+                dataIdFromObject: config.dataIdFromObject,
+                fragmentMatcherFunction: config.fragmentMatcher,
+                queryCache: newState.queryCache,
+                queryId,
+              });
+            } else {
+              // ...otherwise only update the query cache
+              modifiedQueryCacheIds[queryId] = true;
+
+              newState = insertQueryIntoCache({
+                queryId,
+                result: nextQueryResult,
+                variables: query.variables,
+                store: newState.data,
+                queryCache: newState.queryCache,
+                queryCacheKeys: newState.queryCache[queryId].keys,
+                modified: true,
+              });
+            }
           }
         });
       }
@@ -204,7 +272,7 @@ export function data(
       if (constAction.update) {
         const update = constAction.update;
         const proxy = new TransactionDataProxy(
-          newState,
+          newState.data,
           config,
         );
         tryFunctionOrLogError(() => update(proxy, constAction.result));
@@ -216,6 +284,11 @@ export function data(
           mutations,
           config,
         );
+
+        // Revert dirty marking of any cached query results that were modified by updateQueries
+        Object.keys(modifiedQueryCacheIds).forEach(queryId => {
+          newState.queryCache[queryId].dirty = false;
+        });
       }
 
       // XXX each reducer gets the state from the previous reducer.
@@ -226,14 +299,14 @@ export function data(
         });
       }
 
-      return newState;
+      return compareState(previousState, newState);
     }
   } else if (isUpdateQueryResultAction(constAction)) {
-    return replaceQueryResults(previousState, constAction, config) as NormalizedCache;
+    return compareState(previousState, replaceQueryResults(previousState, constAction, config));
   } else if (isStoreResetAction(action)) {
     // If we are resetting the store, we no longer need any of the data that is currently in
     // the store so we can just throw it all away.
-    return {};
+    return compareState(previousState, invalidateQueryCache({store: {}, queryCache: previousState.queryCache, updatedKeys: null}));
   } else if (isWriteAction(action)) {
     // Simply write our result to the store for this action for all of the
     // writes that were specified.
@@ -243,13 +316,28 @@ export function data(
         dataId: write.rootId,
         document: write.document,
         variables: write.variables,
-        store: currentState,
+        store: { ...currentState.data },
         dataIdFromObject: config.dataIdFromObject,
         fragmentMatcherFunction: config.fragmentMatcher,
+        queryCache: currentState.queryCache,
       }),
-      { ...previousState } as NormalizedCache,
+      previousState,
     );
   }
 
   return previousState;
+}
+
+function compareState(previousState: Cache, newState: Cache): Cache {
+  if (!newState.data) {
+    newState.data = {};
+  }
+  if (!newState.queryCache) {
+    newState.queryCache = {};
+  }
+
+  if (newState.data === previousState.data && newState.queryCache === previousState.queryCache) {
+    return previousState;
+  }
+  return newState;
 }

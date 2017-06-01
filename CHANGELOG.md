@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Feature: A query cache storing denormalized query results leading to better performance [PR #1673](https://github.com/apollographql/apollo-client/pull/1673)
 - Make ApolloClient.resetStore() and QueryManager.resetStore() return a promise instead of void [PR #1674](https://github.com/apollographql/apollo-client/pull/1674)
 - Fix bug that caused errors in `writeToStore` to be rethrown as uncaught errors [PR #1673](https://github.com/apollographql/apollo-client/pull/1673)
 - Feature: Pass a function to `optimisticResponse` and it will be called with the `variables` passed to the mutation [PR #1720](https://github.com/apollographql/apollo-client/pull/1720)

@@ -232,6 +232,7 @@ declare module "apollo-client" {
     },
     pollInterval?: number,
     fetchPolicy?: FetchPolicy,
+    fetchResults?: boolean,
     notifyOnNetworkStatusChange?: boolean,
     reducer?: OperationResultReducer,
   }

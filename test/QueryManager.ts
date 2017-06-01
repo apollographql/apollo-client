@@ -2343,6 +2343,98 @@ describe('QueryManager', () => {
   });
 
   describe('store resets', () => {
+    it('returns a promise resolving when all queries have been refetched', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const dataChanged = {
+        author: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const query2 = gql`
+        query {
+          author2 {
+            firstName
+            lastName
+          }
+        }`;
+
+      const data2 = {
+        author2: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const data2Changed = {
+        author2: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const queryManager = createQueryManager({
+        networkInterface: mockNetworkInterface(
+          {
+            request: {query},
+            result: {data},
+          },
+          {
+            request: {query: query2},
+            result: {data: data2},
+          },
+          {
+            request: {query},
+            result: {data: dataChanged},
+          },
+          {
+            request: {query: query2},
+            result: {data: data2Changed},
+          },
+        ),
+      });
+
+      const observable = queryManager.watchQuery<any>({ query });
+      const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+      return Promise.all([
+        observableToPromise({ observable },
+          result => assert.deepEqual(result.data, data),
+        ),
+        observableToPromise({ observable: observable2 },
+          result => assert.deepEqual(result.data, data2),
+        ),
+      ]).then(() => {
+        observable.subscribe({ next: () => null });
+        observable2.subscribe({ next: () => null });
+
+        return queryManager.resetStore().then(() => {
+          const result = queryManager.getCurrentQueryResult(observable);
+          assert.isFalse(result.partial);
+          assert.deepEqual(result.data, dataChanged);
+
+          const result2 = queryManager.getCurrentQueryResult(observable2);
+          assert.isFalse(result2.partial);
+          assert.deepEqual(result2.data, data2Changed);
+        });
+      });
+    });
+
     it('should change the store state to an empty state', () => {
       const queryManager = createQueryManager({});
 

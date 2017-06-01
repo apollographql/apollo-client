@@ -241,7 +241,7 @@ export function getDefaultValues(definition: OperationDefinitionNode): { [key: s
   if (definition.variableDefinitions && definition.variableDefinitions.length) {
     const defaultValues = definition.variableDefinitions
       .filter(({ defaultValue }) => defaultValue)
-      .map(({ variable, defaultValue }) : { [key: string]: any } => {
+      .map(({ variable, defaultValue }): { [key: string]: any } => {
         const defaultValueObj: { [key: string]: any } = {};
         valueToObjectRepresentation(
           defaultValueObj,

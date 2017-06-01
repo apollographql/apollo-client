@@ -1,6 +1,9 @@
 # Change log
 
 ### vNEXT
+- Feature: Add `operationName` to Redux actions where possible [PR #1676](https://github.com/apollographql/apollo-client/pull/1676)
+
+### v1.3.0
 - Make ApolloClient.resetStore() and QueryManager.resetStore() return a promise instead of void [PR #1674](https://github.com/apollographql/apollo-client/pull/1674)
 - Fix bug that caused errors in `writeToStore` to be rethrown as uncaught errors [PR #1673](https://github.com/apollographql/apollo-client/pull/1673)
 - Feature: Pass a function to `optimisticResponse` and it will be called with the `variables` passed to the mutation [PR #1720](https://github.com/apollographql/apollo-client/pull/1720)

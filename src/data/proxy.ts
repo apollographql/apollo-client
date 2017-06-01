@@ -3,7 +3,7 @@ import { ApolloStore, Store, ApolloReducerConfig } from '../store';
 import { DataWrite } from '../actions';
 import { IdGetter } from '../core/types';
 import { NormalizedCache } from '../data/storeUtils';
-import { getFragmentQueryDocument } from '../queries/getFromAST';
+import {getFragmentQueryDocument, getOperationName} from '../queries/getFromAST';
 import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
@@ -245,6 +245,7 @@ export class ReduxDataProxy implements DataProxy {
         rootId: 'ROOT_QUERY',
         result: data,
         document: query,
+        operationName: getOperationName(query),
         variables: variables || {},
       }],
     });
@@ -273,6 +274,7 @@ export class ReduxDataProxy implements DataProxy {
         rootId: id,
         result: data,
         document,
+        operationName: getOperationName(document),
         variables: variables || {},
       }],
     });
@@ -409,6 +411,7 @@ export class TransactionDataProxy implements DataProxy {
       rootId: 'ROOT_QUERY',
       result: data,
       document: query,
+      operationName: getOperationName(query),
       variables: variables || {},
     });
   }
@@ -437,6 +440,7 @@ export class TransactionDataProxy implements DataProxy {
       rootId: id,
       result: data,
       document: query,
+      operationName: getOperationName(query),
       variables: variables || {},
     });
   }

@@ -42,6 +42,7 @@ social_links:
 # API keys
 apis:
   segment: wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg
+  gtm: GTM-PNFDVBB
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'

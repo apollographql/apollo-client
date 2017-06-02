@@ -522,16 +522,18 @@ describe('ObservableQuery', () => {
         result: { data: dataTwo },
       });
 
-
+      let errored = false;
       subscribeAndCount(done, observable, (handleCount, result) => {
-        if (handleCount !== 1) {
-          return;
+        if (handleCount === 1) {
+          observable.setOptions({ fetchResults: false, fetchPolicy: 'standby' })
+            .then((res) => {
+              assert.equal(res, null);
+              setTimeout(() => !errored && done(), 5);
+            });
+        } else if (handleCount > 1) {
+          errored = true;
+          throw new Error('Handle should not be called twice');
         }
-        observable.setOptions({ fetchResults: false, fetchPolicy: 'standby' })
-          .then((res) => {
-            assert.equal(res, null);
-            done();
-          });
       });
     });
 

@@ -229,7 +229,7 @@ data.fetchMore({
 
 This function will set up a subscription, triggering updates whenever the server sends a subscription publication. This requires subscriptions to be set up on the server to properly work. Check out the [subscriptions guide](http://dev.apollodata.com/react/receiving-updates.html#Subscriptions) and the [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and [graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions) for more information on getting this set up.
 
-This function returns a `Subscription` object which can be used to unsubscribe later.
+This function returns an `unsubscribe` function handler which can be used to unsubscribe later.
 
 A common practice is to wrap the `subscribeToMore` call within `componentWillReceiveProps` and perform the subscription after the original query has completed. To ensure the subscription isn't created multiple times, you can attach it to the component instance. See the example for more details.
 
@@ -244,20 +244,20 @@ In order to update the query's store with the result of the subscription, you mu
 
 ```js
 class SubscriptionComponent extends Component {
-  constructor(props){
-    super(props);
-    this.subscription = null;
-    ...
-  }
   componentWillReceiveProps(nextProps) {
-    // Check if props have changed and, if necessary, stop the subscription
-    if (this.props.subscriptionParam !== nextProps.subscriptionParam) {
-      this.subscription.unsubscribe();
-      this.subscription = null;
-    }
-    // Subscribe or re-subscribe
-    if (!this.subscription && !nextProps.data.loading) {
-      this.systemsSub = nextProps.data.subscribeToMore({
+    if(!nextProps.data.loading) {
+      // Check for existing subscription
+      if (this.unsubscribe) {
+        // Check if props have changed and, if necessary, stop the subscription    
+        if (this.props.subscriptionParam !== nextProps.subscriptionParam) {
+          this.unsubscribe();     
+        } else {
+          return;
+        }
+      }
+    
+      // Subscribe
+      this.unsubscribe = nextProps.data.subscribeToMore({
         document: gql`subscription {...}`,
         updateQuery: (previousResult, { subscriptionData, variables }) => {
           // Perform updates on previousResult with subscriptionData

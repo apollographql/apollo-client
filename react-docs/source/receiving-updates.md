@@ -93,10 +93,10 @@ class Feed extends Component {
   // ...
   componentWillReceiveProps(newProps) {
     if (!newProps.data.loading) {
-      if (this.subscription) {
+      if (this.unsubscribe) {
         if (newProps.data.feed !== this.props.data.feed) {
           // if the feed has changed, we need to unsubscribe before resubscribing
-          this.subscription.unsubscribe();
+          this.unsubscribe();
         } else {
           // we already have an active subscription with the right params
           return;
@@ -105,7 +105,7 @@ class Feed extends Component {
 
       const entryIds = newProps.data.feed.map(item => item.id);
 
-      this.subscription = newProps.data.subscribeToMore({
+      this.unsubscribe = newProps.data.subscribeToMore({
         document: SUBSCRIPTION_QUERY,
         variables: { entryIds },
 
@@ -136,6 +136,7 @@ class Feed extends Component {
 In the example above, we keep the scores of all entries in the Feed component updated by making a subscription that lists all the ids of the feed entries currently displayed in the component. Every time a score is updated, the server will send a single response which contains an entry id and the new score.
 
 `subscribeToMore` is a convenient way to update the result of a single query with a subscription. The `updateQuery` function passed to `subscribeToMore` runs every time a new subscription result arrives, and it's responsible for updating the query result.
+`subscribeToMore` returns unsubscribe handler. 
 
 The `subscribeToMore` subscription is stopped automatically when its dependent query is stopped, so we don't need to unsubscribe manually. We do however need to unsubscribe manually if the props changed and we need to make a new subscription with different variables.
 

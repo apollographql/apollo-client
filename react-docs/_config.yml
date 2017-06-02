@@ -57,6 +57,7 @@ apis:
   docsearch:
     apiKey: 768e823959d35bbd51e4b2439be13fb7
     indexName: apollodata
+  gtm: GTM-PNFDVBB
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'

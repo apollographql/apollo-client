@@ -267,7 +267,7 @@ export default graphql(gql`mutation { ... }`, {
 
 <h3 id="graphql-mutation-options-updateQueries">`options.updateQueries`</h3>
 
-**Note: We recommend using [update](./#graphql-mutation-options-update) instead of `updateQueries`.**
+**Note: We recommend using [update](#graphql-mutation-options-update) instead of `updateQueries`.**
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.updateQueries` function.
 

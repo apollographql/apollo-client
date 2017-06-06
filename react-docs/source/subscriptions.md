@@ -143,7 +143,9 @@ export const CommentsPageWithData = withData(CommentsPage);
 
 Now, let's add the subscription.
 
-Add a function called `subscribeToNewComments` that will subscribe using `subscribeToMore` and update the query's store with the new data using `updateQuery`:
+Add a function called `subscribeToNewComments` that will subscribe using `subscribeToMore` and update the query's store with the new data using `updateQuery`.
+
+Note that the `updateQuery` callback must return an object of the same shape as the initial query data, otherwise the new data won't be merged. Here the new comment is pushed in the `comments` list of the `entry`:
 
 ```js
 const COMMENTS_SUBSCRIPTION = gql`

@@ -316,7 +316,7 @@ This represents a result that comes back from the GraphQL server.
 
 <h3 id="CustomNetworkInterfaceExample">Example</h3>
 
-To illustrate how you would define your own custom network interface, this is a code example of a <i>HybridNetworkInterface</i>. What this custom network interface does is batch requests by default, but allows a programmer to opt certain queries out of the batch queue and have those make direct requests. This might be valuable for particularly urgent requests that shouldn't be batched with slower queries and delayed by the batch interval poll time.
+To illustrate how you would define your own custom network interface, this is a code example of a <i>HybridNetworkInterface</i>. What this custom network interface does is batch requests by default, but allows a programmer to opt certain queries out of the batch queue and make direct requests instead. This might be valuable for particularly urgent requests that shouldn't be batched with slower queries and delayed by the batch interval poll time.
 
 ```
 /* @flow */

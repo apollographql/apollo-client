@@ -297,9 +297,9 @@ All you need to do is create a `NetworkInterface` and pass it to the `ApolloClie
 
 This is the interface that an object should implement so that it can be used by the Apollo Client to make queries.
 
-- `query(request: GraphQLRequest): Promise<GraphQLResult>` This function on your network interface is pretty self-explanatory - it takes a GraphQL request object, and should return a promise for a GraphQL result. The promise should be rejected in the case of a network error.
+- `query(request: Request): Promise<ExecutionResult>` This function on your network interface is pretty self-explanatory - it takes a GraphQL request object, and should return a promise for a GraphQL result. The promise should be rejected in the case of a network error.
 
-<h3 id="GraphQLRequest"><i>interface</i> GraphQLRequest</h3>
+<h3 id="Request"><i>interface</i> Request</h3>
 
 Represents a request passed to the network interface. Has the following properties:
 
@@ -307,12 +307,65 @@ Represents a request passed to the network interface. Has the following properti
 - `variables: Object` The variables to send with the query.
 - `operationName: string` An optional parameter that will be included in error messages about this query.
 
-<h3 id="GraphQLResult"><i>interface</i> GraphQLResult</h3>
+<h3 id="ExecutionResult"><i>interface</i> ExecutionResult</h3>
 
 This represents a result that comes back from the GraphQL server.
 
 - `data: any` This is the actual data returned by the server.
 - `errors: Array` This is an array of errors returned by the server.
+
+<h3 id="CustomNetworkInterfaceExample">Example</h3>
+
+To illustrate how you would define your own custom network interface, this is a code example of a <i>HybridNetworkInterface</i>. What this custom network interface does is batch requests by default, but allows a programmer to opt certain queries out of the batch queue and have those make direct requests. This might be valuable for particularly urgent requests that shouldn't be batched with slower queries and delayed by the batch interval poll time.
+
+```
+/* @flow */
+import {
+  createBatchingNetworkInterface,
+  createNetworkInterface,
+  HTTPBatchedNetworkInterface,
+  HTTPFetchNetworkInterface,
+  Request,
+} from 'apollo-client';
+
+import { ExecutionResult } from 'graphql';
+
+export class HTTPHybridNetworkInterface {
+  batchedInterface: HTTPBatchedNetworkInterface;
+  networkInterface: HTTPFetchNetworkInterface;
+
+  constructor(opts: Object) {
+    this.batchedInterface = createBatchingNetworkInterface(opts);
+    this.networkInterface = createNetworkInterface(opts);
+  }
+
+  query(request: Request): Promise<ExecutionResult> {
+    if (request.variables && request.variables.__disableBatch) {
+      return this.networkInterface.query(request);
+    } else {
+      return this.batchedInterface.query(request);
+    }
+  }
+
+  use(middlewares: Array<*>) {
+    this.networkInterface.use(middlewares);
+    this.batchedInterface.use(middlewares);
+    return this;
+  }
+
+  useAfter(afterwares: Array<*>) {
+    this.networkInterface.useAfter(afterwares);
+    this.batchedInterface.useAfter(afterwares);
+    return this;
+  }
+}
+
+export function createHybridNetworkInterface(opts: Object) {
+  return new HTTPHybridNetworkInterface(opts);
+}
+```
+
+You can pass arbitrary data into your network interface using variables. In this example, any request can be made to skip the batch by setting the variable `__disableBatch` on the request.
 
 <h2 id="query-batching">Query batching</h2>
 

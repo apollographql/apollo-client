@@ -5,7 +5,7 @@
 ### v1.4.0
 - Feature: Add `operationName` to Redux actions where possible [PR #1676](https://github.com/apollographql/apollo-client/pull/1676)
 - Feature: Allow an observer to not be created when setting variables[PR #1752](https://github.com/apollographql/apollo-client/pull/1752)
-- Feature: Added support flow flow typechecking [PR #1688](https://github.com/apollographql/apollo-client/pull/1688)
+- Feature: Added support for flow typechecking [PR #1688](https://github.com/apollographql/apollo-client/pull/1688)
 
 ### v1.3.0
 - Make ApolloClient.resetStore() and QueryManager.resetStore() return a promise instead of void [PR #1674](https://github.com/apollographql/apollo-client/pull/1674)

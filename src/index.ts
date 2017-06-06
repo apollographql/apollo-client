@@ -12,6 +12,11 @@ import {
 } from './transport/batchedNetworkInterface';
 
 import {
+  createSchemaInterface,
+  SchemaInterface,
+} from './transport/schemaInterface';
+
+import {
   print,
 } from 'graphql/language/printer';
 
@@ -90,6 +95,7 @@ import {
 export {
   createNetworkInterface,
   createBatchingNetworkInterface,
+  createSchemaInterface,
   createApolloStore,
   createApolloReducer,
   readQueryFromStore,
@@ -118,6 +124,7 @@ export {
   SubscriptionNetworkInterface,
   HTTPFetchNetworkInterface,
   HTTPBatchedNetworkInterface,
+  SchemaInterface,
   FetchPolicy,
   WatchQueryOptions,
   MutationOptions,

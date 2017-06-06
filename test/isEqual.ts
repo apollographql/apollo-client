@@ -55,4 +55,10 @@ describe('isEqual', () => {
     assert(!isEqual({ x: { a: 1, b: 2, c: 3 } }, { x: { a: 1, b: 2 } }));
     assert(!isEqual({ x: { a: 1, b: 2 } }, { x: { a: 1, b: 2, c: 3 } }));
   });
+
+  it('should correctly compare dates', () => {
+    assert(isEqual(new Date(2017, 5, 16), new Date(2017, 5, 16)), 'Date objects referencing identical times are equal');
+    assert(!isEqual(new Date(2016, 4, 15), new Date(2017, 5, 16)), 'Date objects referencing different times are not equal');
+    assert(!isEqual(new Date('Curly'), new Date('Curly')), 'Invalid dates are not equal');
+  });
 });

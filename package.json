@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@types/benchmark": "^1.0.30",
-    "@types/chai": "3.4.35",
+    "@types/chai": "4.0.0",
     "@types/chai-as-promised": "0.0.31",
     "@types/lodash": "^4.14.62",
     "@types/mocha": "^2.2.31",

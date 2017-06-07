@@ -23,7 +23,11 @@ import mockWatchQuery from './mocks/mockWatchQuery';
 import mockNetworkInterface, {
   ParsedRequest,
 } from './mocks/mockNetworkInterface';
-import { ObservableQuery } from '../src/core/ObservableQuery';
+import {
+  ObservableQuery,
+  ApolloCurrentResult,
+} from '../src/core/ObservableQuery';
+import { ApolloQueryResult } from '../src/core/types';
 import {
   NetworkInterface,
 } from '../src/transport/networkInterface';
@@ -904,7 +908,7 @@ describe('ObservableQuery', () => {
       });
 
       subscribeAndCount(done, observable, () => {
-        assert.deepEqual(observable.currentResult(), {
+        assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
           data: dataOne,
           loading: false,
           networkStatus: 7,
@@ -913,14 +917,14 @@ describe('ObservableQuery', () => {
         done();
       });
 
-      assert.deepEqual(observable.currentResult(), {
+      assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
         loading: true,
         data: {},
         networkStatus: 1,
         partial: true,
       });
       setTimeout(wrap(done, () => {
-        assert.deepEqual(observable.currentResult(), {
+        assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
           loading: true,
           data: {},
           networkStatus: 1,
@@ -947,7 +951,7 @@ describe('ObservableQuery', () => {
             query,
             variables,
           });
-          assert.deepEqual(observable.currentResult(), {
+          assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
             data: dataOne,
             loading: false,
             networkStatus: 7,
@@ -994,7 +998,7 @@ describe('ObservableQuery', () => {
             variables,
             fetchPolicy: 'network-only',
           });
-          assert.deepEqual(observable.currentResult(), {
+          assert.deepEqual<ApolloCurrentResult<any>>(observable.currentResult(), {
             data: dataOne,
             loading: true,
             networkStatus: 1,
@@ -1006,7 +1010,7 @@ describe('ObservableQuery', () => {
             assert.deepEqual(subResult, { data, loading, networkStatus, stale: false });
 
             if (handleCount === 1) {
-              assert.deepEqual(subResult, {
+              assert.deepEqual<ApolloQueryResult<any>>(subResult, {
                 data: dataTwo,
                 loading: false,
                 networkStatus: 7,
@@ -1060,7 +1064,7 @@ describe('ObservableQuery', () => {
           assert.deepEqual(result, { data, loading, networkStatus, stale: false });
 
           if (count === 1) {
-            assert.deepEqual(result, {
+            assert.deepEqual<ApolloQueryResult<any>>(result, {
               data: dataOne,
               loading: false,
               networkStatus: 7,

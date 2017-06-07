@@ -495,6 +495,52 @@ describe('ObservableQuery', () => {
         });
       });
     });
+    it('returns a promise which eventually returns data', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount !== 1) {
+          return;
+        }
+        observable.setOptions({ fetchPolicy: 'cache-and-network', fetchResults: true })
+          .then((res) => {
+            // returns dataOne from cache
+            assert.deepEqual(res.data, dataOne);
+            done();
+          });
+      });
+    });
+    it('can bypass looking up results if passed to options', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+      let errored = false;
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          observable.setOptions({ fetchResults: false, fetchPolicy: 'standby' })
+            .then((res) => {
+              assert.equal(res, null);
+              setTimeout(() => !errored && done(), 5);
+            });
+        } else if (handleCount > 1) {
+          errored = true;
+          throw new Error('Handle should not be called twice');
+        }
+      });
+    });
+
   });
 
   describe('setVariables', () => {
@@ -694,6 +740,30 @@ describe('ObservableQuery', () => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, dataOne);
           observable.setVariables(variables);
+
+          // Nothing should happen, so we'll wait a moment to check that
+          setTimeout(() => !errored && done(), 10);
+        } else if (handleCount === 2) {
+          errored = true;
+          throw new Error('Observable callback should not fire twice');
+        }
+      });
+    });
+
+    it('does not rerun query if set to not refetch', (done) => {
+      const observable: ObservableQuery<any> = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      }, {
+        request: { query, variables },
+        result: { data: dataTwo },
+      });
+
+      let errored = false;
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          assert.deepEqual(result.data, dataOne);
+          observable.setVariables(variables, true, false);
 
           // Nothing should happen, so we'll wait a moment to check that
           setTimeout(() => !errored && done(), 10);

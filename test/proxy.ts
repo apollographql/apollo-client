@@ -8,6 +8,7 @@ import { toIdValue } from '../src/data/storeUtils';
 import { HeuristicFragmentMatcher } from '../src/data/fragmentMatcher';
 import { addTypenameToDocument } from '../src/queries/queryTransform';
 import { DataWrite } from '../src/actions';
+import {getOperationName} from '../src/queries/getFromAST';
 
 describe('ReduxDataProxy', () => {
   function createDataProxy({
@@ -1039,17 +1040,21 @@ describe('TransactionDataProxy', () => {
 
       const writes = proxy.finish();
 
+      const document1 = addTypenameToDocument(gql`{ a b c }`);
+      const document2 = addTypenameToDocument(gql`{ foo(id: $id) { d e bar { f g } } }`);
       assert.deepEqual<DataWrite[]>(writes, [
         {
           rootId: 'ROOT_QUERY',
           result: { a: 1, b: 2, c: 3 },
-          document: addTypenameToDocument(gql`{ a b c }`),
+          document: document1,
+          operationName: getOperationName(document1),
           variables: {},
         },
         {
           rootId: 'ROOT_QUERY',
           result: { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } },
-          document: addTypenameToDocument(gql`{ foo(id: $id) { d e bar { f g } } }`),
+          document: document2,
+          operationName: getOperationName(document2),
           variables: { id: 7 },
         },
       ]);
@@ -1089,7 +1094,7 @@ describe('TransactionDataProxy', () => {
       const writes = proxy.finish();
 
       assert.equal(writes.length, 2);
-      assert.deepEqual(Object.keys(writes[0]), ['rootId', 'result', 'document', 'variables']);
+      assert.deepEqual(Object.keys(writes[0]), ['rootId', 'result', 'document', 'operationName', 'variables']);
       assert.equal(writes[0].rootId, 'foo');
       assert.deepEqual(writes[0].result, { a: 1, b: 2, c: 3 });
       assert.deepEqual(writes[0].variables, {});
@@ -1097,7 +1102,7 @@ describe('TransactionDataProxy', () => {
         { ...fragment1 }
         fragment fragment1 on Foo { a b c }
       `));
-      assert.deepEqual(Object.keys(writes[1]), ['rootId', 'result', 'document', 'variables']);
+      assert.deepEqual(Object.keys(writes[1]), ['rootId', 'result', 'document', 'operationName', 'variables']);
       assert.equal(writes[1].rootId, 'bar');
       assert.deepEqual(writes[1].result, { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } });
       assert.deepEqual<Object>(writes[1].variables, { id: 7 });

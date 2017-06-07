@@ -22,9 +22,9 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.readQuery({ query: gql`{ a }` }), { a: 1 });
-      assert.deepEqual(client.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
-      assert.deepEqual(client.readQuery({ query: gql`{ a b c }` }), { a: 1, b: 2, c: 3 });
+      assert.deepEqual<{}>(client.readQuery({ query: gql`{ a }` }), { a: 1 });
+      assert.deepEqual<{}>(client.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
+      assert.deepEqual<{}>(client.readQuery({ query: gql`{ a b c }` }), { a: 1, b: 2, c: 3 });
     });
 
     it('will read some deeply nested data from the store', () => {
@@ -64,15 +64,15 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         client.readQuery({ query: gql`{ a d { e } }` }),
         { a: 1, d: { e: 4, __typename: 'Foo' } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         client.readQuery({ query: gql`{ a d { e h { i } } }` }),
         { a: 1, d: { __typename: 'Foo', e: 4, h: { i: 7, __typename: 'Bar' } } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         client.readQuery({ query: gql`{ a b c d { e f g h { i j k } } }` }),
         { a: 1, b: 2, c: 3, d: { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } } },
       );
@@ -92,7 +92,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.readQuery({
+      assert.deepEqual<{}>(client.readQuery({
         query: gql`query ($literal: Boolean, $value: Int) {
           a: field(literal: true, value: 42)
           b: field(literal: $literal, value: $value)
@@ -119,7 +119,7 @@ describe('ApolloClient', () => {
       },
     });
 
-    assert.deepEqual(client.readQuery({
+    assert.deepEqual<{}>(client.readQuery({
       query: gql`query ($literal: Boolean, $value: Int = -1) {
         a: field(literal: $literal, value: $value)
       }`,
@@ -129,7 +129,7 @@ describe('ApolloClient', () => {
       },
     }), { a: 2 });
 
-    assert.deepEqual(client.readQuery({
+    assert.deepEqual<{}>(client.readQuery({
       query: gql`query ($literal: Boolean, $value: Int = -1) {
         a: field(literal: $literal, value: $value)
       }`,
@@ -200,23 +200,23 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e h { i } }` }),
         { __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } }` }),
         { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i }` }),
         { __typename: 'Bar', i: 7 },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i j k }` }),
         { __typename: 'Bar', i: 7, j: 8, k: 9 },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({
           id: 'foo',
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
@@ -224,7 +224,7 @@ describe('ApolloClient', () => {
         }),
         { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({
           id: 'bar',
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
@@ -249,7 +249,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.readFragment({
+      assert.deepEqual<{} | null>(client.readFragment({
         id: 'foo',
         fragment: gql`
           fragment foo on Foo {
@@ -287,7 +287,7 @@ describe('ApolloClient', () => {
 
       assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
-      assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }),
+      assert.deepEqual<{} | null>(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }),
        { __typename: 'Foo', a: 1, b: 2, c: 3 });
     });
   });
@@ -762,7 +762,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
         { __typename: 'Foo', a: 1, b: 2, c: 3, bar: { d: 4, e: 5, f: 6, __typename: 'Bar' } },
       );
@@ -773,7 +773,7 @@ describe('ApolloClient', () => {
         data: { __typename: 'Foo', a: 7 },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
         { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 4, e: 5, f: 6 } },
       );
@@ -784,7 +784,7 @@ describe('ApolloClient', () => {
         data: { __typename: 'Foo', bar: { __typename: 'Bar', d: 8 } },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
         { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 8, e: 5, f: 6 } },
       );
@@ -795,7 +795,7 @@ describe('ApolloClient', () => {
         data: { __typename: 'Bar', e: 9 },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
         { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 8, e: 9, f: 6 } },
       );
@@ -832,7 +832,7 @@ describe('ApolloClient', () => {
         data: { a: 1, b: 2, foo: { __typename: 'foo', c: 3, d: 4, bar: { key: 'foobar', __typename: 'bar', e: 5, f: 6 } } },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         client.readQuery({ query: gql`{ a b foo { c d bar { key e f } } }` }),
         { a: 1, b: 2, foo: { __typename: 'foo', c: 3, d: 4, bar: { __typename: 'bar', key: 'foobar', e: 5, f: 6 } } },
       );

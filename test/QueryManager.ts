@@ -1323,6 +1323,78 @@ describe('QueryManager', () => {
     });
   });
 
+  it('supports noFetch fetching only cached data with fragments', () => {
+    const cachedQuery = gql`
+      query query {
+        allPeople: allPeople(page: 1) {
+          name
+          __typename
+          ... on human {
+            age
+            __typename
+          }
+          ... on nonhuman {
+            species
+            __typename
+          }
+        }
+      }
+    `;
+
+    const query = gql`
+      query query {
+        allPeople: allPeople(page: 1) {
+          name
+          ... on human {
+            age
+          }
+          ... on nonhuman {
+            species
+          }
+        }
+      }
+    `;
+
+    const data1 = {
+      allPeople: [
+        {
+          name: 'Luke Skywalker',
+          age: 50,
+          __typename: 'human',
+        },
+        {
+          name: 'Yoda',
+          species: 'Yodan',
+          __typename: 'nonhuman',
+        },
+      ]
+    };
+
+    const queryManager = createQueryManager({
+      networkInterface: mockNetworkInterface({
+        request: { query: cachedQuery },
+        result: { data: data1 },
+      }),
+      addTypename: true,
+    });
+
+    // First, prime the cache
+    return queryManager.query({
+      query: cachedQuery,
+    }).then(() => {
+      const handle = queryManager.watchQuery({
+        query,
+        noFetch: true,
+      });
+
+      return handle.result().then((result) => {
+        assert.equal(result.data.length, 2);
+        assert.equal(result.data[0]['luke'].name, 'Luke Skywalker');
+        assert.equal(result.data[0]['luke'].age, 50);
+      });
+    });
+  });
+
   it('runs a mutation', () => {
     return assertMutationRoundtrip({
       mutation: gql`

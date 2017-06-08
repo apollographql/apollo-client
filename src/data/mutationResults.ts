@@ -5,7 +5,7 @@ import {
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer = (previousResult: Object, options: {
   mutationResult: Object,
-  queryName: Object,
+  queryName: string | null,
   queryVariables: Object,
 }) => Object;
 

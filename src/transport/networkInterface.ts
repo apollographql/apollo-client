@@ -33,7 +33,7 @@ export interface Request {
   debugName?: string;
   query?: DocumentNode;
   variables?: Object;
-  operationName?: string;
+  operationName?: string | null;
   [additionalKey: string]: any;
 }
 
@@ -43,7 +43,7 @@ export interface PrintedRequest {
   debugName?: string;
   query?: string;
   variables?: Object;
-  operationName?: string;
+  operationName?: string | null;
 }
 
 export interface NetworkInterface {

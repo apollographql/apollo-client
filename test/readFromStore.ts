@@ -70,7 +70,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
     });
@@ -107,7 +107,7 @@ describe('reading from the store', () => {
       variables,
     });
 
-    assert.deepEqual(result, {
+    assert.deepEqual<{}>(result, {
       id: 'abcd',
       nullField: null,
       numberField: 5,
@@ -148,7 +148,7 @@ describe('reading from the store', () => {
       variables,
     });
 
-    assert.deepEqual(result, {
+    assert.deepEqual<{}>(result, {
       id: 'abcd',
       nullField: null,
       numberField: 5,
@@ -196,7 +196,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedObj: {
@@ -281,7 +281,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
@@ -340,7 +340,7 @@ describe('reading from the store', () => {
         fragmentMatcherFunction,
       });
 
-      assert.deepEqual(queryResult, {
+      assert.deepEqual<{}>(queryResult, {
         nestedObj: {
           innerArray: [{id: 'abcdef', someField: 3}],
         },
@@ -394,7 +394,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -451,7 +451,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -507,7 +507,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -572,7 +572,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedObj: null,
@@ -607,7 +607,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: ['one', 'two', 'three'],
@@ -642,7 +642,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: [null, 'two', 'three'],
@@ -681,7 +681,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
       computedField: 'This is a string!5bit',
@@ -719,7 +719,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
       computedField: 'This is a string!5bit',
@@ -783,7 +783,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    assert.deepEqual(queryResult1, {
+    assert.deepEqual<{}>(queryResult1, {
       stringField: 'This is a string too!',
       numberField: 6,
       nullField: null,
@@ -806,7 +806,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    assert.deepEqual(queryResult2, {
+    assert.deepEqual<{}>(queryResult2, {
       stringField: 'This is a deep string',
       numberField: 7,
       nullField: null,

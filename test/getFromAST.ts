@@ -211,6 +211,15 @@ describe('AST utility functions', () => {
     assert.equal(operationName, 'nameOfMutation');
   });
 
+  it('should return null if the query does not have an operation name', () => {
+    const query = gql`
+      {
+        fortuneCookie
+      }`;
+    const operationName = getOperationName(query);
+    assert.equal(operationName, null);
+  });
+
   it('should throw if type definitions found in document', () => {
     const queryWithTypeDefination = gql`
       fragment authorDetails on Author {

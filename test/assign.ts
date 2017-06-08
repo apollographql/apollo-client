@@ -23,8 +23,8 @@ describe('assign', () => {
     assert.strictEqual(assign(source2, { b: 2 }, { c: 3 }), source2);
     assert.strictEqual(assign(source3, { b: 2 }, { c: 3 }, { d: 4 }), source3);
 
-    assert.deepEqual(source1, { a: 1, b: 2 });
-    assert.deepEqual(source2, { a: 1, b: 2, c: 3 });
-    assert.deepEqual(source3, { a: 1, b: 2, c: 3, d: 4 });
+    assert.deepEqual<{}>(source1, { a: 1, b: 2 });
+    assert.deepEqual<{}>(source2, { a: 1, b: 2, c: 3 });
+    assert.deepEqual<{}>(source3, { a: 1, b: 2, c: 3, d: 4 });
   });
 });

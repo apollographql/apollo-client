@@ -140,7 +140,7 @@ export interface JsonValue {
 
 export type ListValue = Array<null | IdValue>;
 
-export type StoreValue = number | string | string[] | IdValue  | ListValue | JsonValue | null | undefined | void;
+export type StoreValue = number | string | string[] | IdValue  | ListValue | JsonValue | null | undefined | void | Object;
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return (

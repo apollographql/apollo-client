@@ -49,6 +49,11 @@ export interface ModifiableWatchQueryOptions {
   fetchPolicy?: FetchPolicy;
 
   /**
+   * Wether or not to fetch results
+   */
+  fetchResults?: boolean;
+
+  /**
    * Whether or not updates to the network status should trigger next on the observer of this query
    */
   notifyOnNetworkStatusChange?: boolean;

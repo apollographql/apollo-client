@@ -8,6 +8,8 @@ import {
   ReducerError,
 } from '../src/store';
 
+import {getOperationName} from '../src/queries/getFromAST';
+
 describe('createApolloStore', () => {
   it('does not require any arguments', () => {
     const store = createApolloStore();
@@ -177,6 +179,7 @@ describe('createApolloStore', () => {
       queryId: 'test.0',
       queryString: '',
       document: queryDocument,
+      operationName: getOperationName(queryDocument),
       variables: {},
       fetchPolicy: 'cache-first',
       requestId: 1,

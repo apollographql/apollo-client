@@ -7,6 +7,8 @@ import { ReduxDataProxy, TransactionDataProxy } from '../src/data/proxy';
 import { toIdValue } from '../src/data/storeUtils';
 import { HeuristicFragmentMatcher } from '../src/data/fragmentMatcher';
 import { addTypenameToDocument } from '../src/queries/queryTransform';
+import { DataWrite } from '../src/actions';
+import {getOperationName} from '../src/queries/getFromAST';
 
 describe('ReduxDataProxy', () => {
   function createDataProxy({
@@ -40,9 +42,9 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readQuery({ query: gql`{ a }` }), { a: 1 });
-      assert.deepEqual(proxy.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
-      assert.deepEqual(proxy.readQuery({ query: gql`{ a b c }` }), { a: 1, b: 2, c: 3 });
+      assert.deepEqual<{}>(proxy.readQuery({ query: gql`{ a }` }), { a: 1 });
+      assert.deepEqual<{}>(proxy.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
+      assert.deepEqual<{}>(proxy.readQuery({ query: gql`{ a b c }` }), { a: 1, b: 2, c: 3 });
     });
 
     it('will read some deeply nested data from the store', () => {
@@ -80,15 +82,15 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         proxy.readQuery({ query: gql`{ a d { e } }` }),
         { a: 1, d: { e: 4 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         proxy.readQuery({ query: gql`{ a d { e h { i } } }` }),
         { a: 1, d: { e: 4, h: { i: 7 } } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         proxy.readQuery({ query: gql`{ a b c d { e f g h { i j k } } }` }),
         { a: 1, b: 2, c: 3, d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } } },
       );
@@ -131,7 +133,7 @@ describe('ReduxDataProxy', () => {
         `,
       });
 
-      assert.deepEqual(queryResult, {
+      assert.deepEqual<{}>(queryResult, {
         thing: { a: 1, b: '2', c: null },
       });
     });
@@ -150,7 +152,7 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readQuery({
+      assert.deepEqual<{}>(proxy.readQuery({
         query: gql`query ($literal: Boolean, $value: Int) {
           a: field(literal: true, value: 42)
           b: field(literal: $literal, value: $value)
@@ -224,23 +226,23 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e h { i } }` }),
         { e: 4, h: { i: 7 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } }` }),
         { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i }` }),
         { i: 7 },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i j k }` }),
         { i: 7, j: 8, k: 9 },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({
           id: 'foo',
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
@@ -248,7 +250,7 @@ describe('ReduxDataProxy', () => {
         }),
         { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({
           id: 'bar',
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
@@ -273,7 +275,7 @@ describe('ReduxDataProxy', () => {
         },
       });
 
-      assert.deepEqual(proxy.readFragment({
+      assert.deepEqual<{} | null>(proxy.readFragment({
         id: 'foo',
         fragment: gql`
           fragment foo on Foo {
@@ -311,7 +313,9 @@ describe('ReduxDataProxy', () => {
 
       assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
-      assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), { a: 1, b: 2, c: 3 });
+      assert.deepEqual<{} | null>(
+        client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }),
+        { a: 1, b: 2, c: 3 });
     });
 
     it('will read data using custom resolvers', () => {
@@ -353,7 +357,7 @@ describe('ReduxDataProxy', () => {
         }`,
       });
 
-      assert.deepEqual(queryResult, {
+      assert.deepEqual<{} | null>(queryResult, {
         thing: { a: 1, b: '2', c: null },
       });
     });
@@ -725,9 +729,9 @@ describe('TransactionDataProxy', () => {
         },
       }, {});
 
-      assert.deepEqual(proxy.readQuery({ query: gql`{ a }` }), { a: 1 });
-      assert.deepEqual(proxy.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
-      assert.deepEqual(proxy.readQuery({ query: gql`{ a b c }` }), { a: 1, b: 2, c: 3 });
+      assert.deepEqual<{} | null>(proxy.readQuery({ query: gql`{ a }` }), { a: 1 });
+      assert.deepEqual<{} | null>(proxy.readQuery({ query: gql`{ b c }` }), { b: 2, c: 3 });
+      assert.deepEqual<{} | null>(proxy.readQuery({ query: gql`{ a b c }` }), { a: 1, b: 2, c: 3 });
     });
 
     it('will read some deeply nested data from the store', () => {
@@ -761,15 +765,15 @@ describe('TransactionDataProxy', () => {
         },
       }, { addTypename: true });
 
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         proxy.readQuery({ query: gql`{ a d { e } }` }),
         { a: 1, d: { __typename: 'Foo', e: 4 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         proxy.readQuery({ query: gql`{ a d { e h { i } } }` }),
         { a: 1, d: { __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{}>(
         proxy.readQuery({ query: gql`{ a b c d { e f g h { i j k } } }` }),
         { a: 1, b: 2, c: 3, d: { __typename: 'Foo',  e: 4, f: 5, g: 6, h: { __typename: 'Bar',  i: 7, j: 8, k: 9 } } },
       );
@@ -783,7 +787,7 @@ describe('TransactionDataProxy', () => {
         },
       }, { addTypename: true });
 
-      assert.deepEqual(proxy.readQuery({
+      assert.deepEqual<{}>(proxy.readQuery({
         query: gql`query ($literal: Boolean, $value: Int) {
           a: field(literal: true, value: 42)
           b: field(literal: $literal, value: $value)
@@ -827,7 +831,7 @@ describe('TransactionDataProxy', () => {
         `,
       });
 
-      assert.deepEqual(queryResult, {
+      assert.deepEqual<{}>(queryResult, {
         thing: {__typename: 'Foo', a: 1, b: '2', c: null },
       });
     });
@@ -896,23 +900,23 @@ describe('TransactionDataProxy', () => {
         },
       }, { addTypename: true });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e h { i } }` }),
         { __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } }` }),
         { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i }` }),
         { __typename: 'Bar', i: 7 },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'bar', fragment: gql`fragment fragmentBar on Bar { i j k }` }),
         { __typename: 'Bar', i: 7, j: 8, k: 9 },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({
           id: 'foo',
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
@@ -920,7 +924,7 @@ describe('TransactionDataProxy', () => {
         }),
         { __typename: 'Foo', e: 4, f: 5, g: 6, h: { __typename: 'Bar', i: 7, j: 8, k: 9 } },
       );
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({
           id: 'bar',
           fragment: gql`fragment fragmentFoo on Foo { e f g h { i j k } } fragment fragmentBar on Bar { i j k }`,
@@ -939,7 +943,7 @@ describe('TransactionDataProxy', () => {
         },
       }, { addTypename: true });
 
-      assert.deepEqual(proxy.readFragment({
+      assert.deepEqual<{} | null>(proxy.readFragment({
         id: 'foo',
         fragment: gql`
           fragment foo on Foo {
@@ -965,7 +969,9 @@ describe('TransactionDataProxy', () => {
 
       assert.equal(client1.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
       assert.equal(client2.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), null);
-      assert.deepEqual(client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }), { a: 1, b: 2, c: 3 });
+      assert.deepEqual<{} | null>(
+        client3.readFragment({ id: 'foo', fragment: gql`fragment fooFragment on Foo { a b c }` }),
+        { a: 1, b: 2, c: 3 });
     });
 
     it('will read data using custom resolvers', () => {
@@ -1001,7 +1007,7 @@ describe('TransactionDataProxy', () => {
         }`,
       });
 
-      assert.deepEqual(queryResult, {
+      assert.deepEqual<{} | null>(queryResult, {
         __typename: 'Query',
         thing: { __typename: 'Thing', a: 1, b: '2', c: null },
       });
@@ -1034,17 +1040,21 @@ describe('TransactionDataProxy', () => {
 
       const writes = proxy.finish();
 
-      assert.deepEqual(writes, [
+      const document1 = addTypenameToDocument(gql`{ a b c }`);
+      const document2 = addTypenameToDocument(gql`{ foo(id: $id) { d e bar { f g } } }`);
+      assert.deepEqual<DataWrite[]>(writes, [
         {
           rootId: 'ROOT_QUERY',
           result: { a: 1, b: 2, c: 3 },
-          document: addTypenameToDocument(gql`{ a b c }`),
+          document: document1,
+          operationName: getOperationName(document1),
           variables: {},
         },
         {
           rootId: 'ROOT_QUERY',
           result: { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } },
-          document: addTypenameToDocument(gql`{ foo(id: $id) { d e bar { f g } } }`),
+          document: document2,
+          operationName: getOperationName(document2),
           variables: { id: 7 },
         },
       ]);
@@ -1084,7 +1094,7 @@ describe('TransactionDataProxy', () => {
       const writes = proxy.finish();
 
       assert.equal(writes.length, 2);
-      assert.deepEqual(Object.keys(writes[0]), ['rootId', 'result', 'document', 'variables']);
+      assert.deepEqual(Object.keys(writes[0]), ['rootId', 'result', 'document', 'operationName', 'variables']);
       assert.equal(writes[0].rootId, 'foo');
       assert.deepEqual(writes[0].result, { a: 1, b: 2, c: 3 });
       assert.deepEqual(writes[0].variables, {});
@@ -1092,10 +1102,10 @@ describe('TransactionDataProxy', () => {
         { ...fragment1 }
         fragment fragment1 on Foo { a b c }
       `));
-      assert.deepEqual(Object.keys(writes[1]), ['rootId', 'result', 'document', 'variables']);
+      assert.deepEqual(Object.keys(writes[1]), ['rootId', 'result', 'document', 'operationName', 'variables']);
       assert.equal(writes[1].rootId, 'bar');
       assert.deepEqual(writes[1].result, { foo: { d: 4, e: 5, bar: { f: 6, g: 7 } } });
-      assert.deepEqual(writes[1].variables, { id: 7 });
+      assert.deepEqual<Object>(writes[1].variables, { id: 7 });
       assert.equal(print(writes[1].document), print(gql`
         { ...fragment2 }
         fragment fragment1 on Foo { a b c }
@@ -1128,7 +1138,7 @@ describe('TransactionDataProxy', () => {
 
       const proxy = new TransactionDataProxy(data, { addTypename: true });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
         { __typename: 'Foo', a: 1, b: 2, c: 3, bar: { __typename: 'Bar', d: 4, e: 5, f: 6 } },
       );
@@ -1139,7 +1149,7 @@ describe('TransactionDataProxy', () => {
         data: { a: 7 },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
         { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 4, e: 5, f: 6 } },
       );
@@ -1150,7 +1160,7 @@ describe('TransactionDataProxy', () => {
         data: { __typename: 'Foo', bar: { __typename: 'Bar', d: 8 } },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
         { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 8, e: 5, f: 6 } },
       );
@@ -1161,7 +1171,7 @@ describe('TransactionDataProxy', () => {
         data: { __typename: 'Bar', e: 9 },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readFragment({ id: 'foo', fragment: gql`fragment x on Foo { a b c bar { d e f } }` }),
         { __typename: 'Foo', a: 7, b: 2, c: 3, bar: { __typename: 'Bar', d: 8, e: 9, f: 6 } },
       );
@@ -1216,7 +1226,7 @@ describe('TransactionDataProxy', () => {
         data: { a: 1, b: 2, foo: { __typename: 'Foo', c: 3, d: 4, bar: { __typename: 'Bar', id: 'foobar', e: 5, f: 6 } } },
       });
 
-      assert.deepEqual(
+      assert.deepEqual<{} | null>(
         proxy.readQuery({ query: gql`{ a b foo { c d bar { id e f } } }` }),
         { a: 1, b: 2, foo: { __typename: 'Foo', c: 3, d: 4, bar: { __typename: 'Bar', id: 'foobar', e: 5, f: 6 } } },
       );

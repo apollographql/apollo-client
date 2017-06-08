@@ -1802,7 +1802,7 @@ describe('client', () => {
         // then query for real
         .then(() => client.query({ query, fetchPolicy: 'network-only' }))
         .then((result) => {
-          assert.deepEqual(result.data, { myNumber: { n: 2 } });
+          assert.deepEqual<{}>(result.data, { myNumber: { n: 2 } });
         });
     });
 
@@ -1820,10 +1820,10 @@ describe('client', () => {
         // then query for real
         .then(() => client.query(options))
         .then((result) => {
-          assert.deepEqual(result.data, { myNumber: { n: 1 } });
+          assert.deepEqual<{}>(result.data, { myNumber: { n: 1 } });
 
           // Test that options weren't mutated, issue #339
-          assert.deepEqual(options, { query, fetchPolicy: 'network-only' });
+          assert.deepEqual<WatchQueryOptions>(options, { query, fetchPolicy: 'network-only' });
         });
     });
 
@@ -1845,14 +1845,14 @@ describe('client', () => {
           return promise;
         })
         .then((result) => {
-          assert.deepEqual(result.data, { myNumber: { n: 1 } });
+          assert.deepEqual<{}>(result.data, { myNumber: { n: 1 } });
           clock.tick(100);
           const promise = client.query({ query, fetchPolicy: 'network-only' });
           clock.tick(0);
           return promise;
         })
         .then((result) => {
-          assert.deepEqual(result.data, { myNumber: { n: 2 } });
+          assert.deepEqual<{}>(result.data, { myNumber: { n: 2 } });
         });
       clock.tick(0);
       return outerPromise;
@@ -2052,7 +2052,7 @@ describe('client', () => {
       networkInterface.query({ query: firstQuery }),
       networkInterface.query({ query: secondQuery }),
     ]).then((results) => {
-      assert.deepEqual(results, [firstResult, secondResult]);
+      assert.deepEqual<[ExecutionResult]>(results, [firstResult, secondResult]);
       fetch = oldFetch;
       done();
     }).catch( e => {
@@ -2196,7 +2196,7 @@ describe('client', () => {
       new Promise( (resolve, reject) =>
         setTimeout(() => resolve(networkInterface.query({ query: secondQuery })), 10)),
     ]).then((results) => {
-      assert.deepEqual(results, [firstResult, secondResult]);
+      assert.deepEqual<[ExecutionResult]>(results, [firstResult, secondResult]);
       fetch = oldFetch;
       done();
     }).catch( e => {

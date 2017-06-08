@@ -50,6 +50,7 @@ export interface QueryInitAction {
   type: 'APOLLO_QUERY_INIT';
   queryString: string;
   document: DocumentNode;
+  operationName: string;
   variables: Object;
   fetchPolicy: FetchPolicy;
   queryId: string;
@@ -68,6 +69,7 @@ export function isQueryInitAction(action: ApolloAction): action is QueryInitActi
 export interface QueryResultClientAction {
   type: 'APOLLO_QUERY_RESULT_CLIENT';
   result: ExecutionResult;
+  operationName: string;
   complete: boolean;
   queryId: string;
   requestId: number;
@@ -134,6 +136,7 @@ export interface UpdateQueryResultAction {
   type: 'APOLLO_UPDATE_QUERY_RESULT';
   variables: any;
   document: DocumentNode;
+  operationName: string;
   newResult: Object;
 }
 
@@ -168,6 +171,7 @@ export interface DataWrite {
   rootId: string;
   result: any;
   document: DocumentNode;
+  operationName: string;
   variables: Object;
 }
 

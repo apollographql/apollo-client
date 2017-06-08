@@ -25,6 +25,7 @@ import {
 
 import {
   NormalizedCache,
+  StoreObject,
 } from '../src/data/storeUtils';
 
 import {
@@ -57,7 +58,7 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    assert.deepEqual(writeQueryToStore({
+    assert.deepEqual<NormalizedCache>(writeQueryToStore({
       query,
       result: cloneDeep(result),
     }), {
@@ -238,12 +239,12 @@ describe('writing to the store', () => {
       },
     };
 
-    assert.deepEqual(writeQueryToStore({
+    assert.deepEqual<NormalizedCache>(writeQueryToStore({
       query,
       result: cloneDeep(result),
       dataIdFromObject: getIdField,
     }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
+      'ROOT_QUERY': assign<{}>({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
           id: result.nestedObj.id,
@@ -281,7 +282,7 @@ describe('writing to the store', () => {
       },
     };
 
-    assert.deepEqual(writeQueryToStore({
+    assert.deepEqual<NormalizedCache>(writeQueryToStore({
       query,
       result: cloneDeep(result),
     }), {
@@ -323,7 +324,7 @@ describe('writing to the store', () => {
       },
     };
 
-    assert.deepEqual(writeQueryToStore({
+    assert.deepEqual<NormalizedCache>(writeQueryToStore({
       query,
       result: cloneDeep(result),
     }), {
@@ -375,7 +376,7 @@ describe('writing to the store', () => {
       ],
     };
 
-    assert.deepEqual(writeQueryToStore({
+    assert.deepEqual<NormalizedCache>(writeQueryToStore({
       query,
       result: cloneDeep(result),
       dataIdFromObject: getIdField,
@@ -424,12 +425,12 @@ describe('writing to the store', () => {
       ],
     };
 
-    assert.deepEqual(writeQueryToStore({
+    assert.deepEqual<NormalizedCache>(writeQueryToStore({
       query,
       result: cloneDeep(result),
       dataIdFromObject: getIdField,
     }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
+      'ROOT_QUERY': assign<{}>({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           { type: 'id', id: result.nestedArray[0].id, generated: false },
           null,
@@ -478,7 +479,7 @@ describe('writing to the store', () => {
       result: cloneDeep(result),
     });
 
-    assert.deepEqual(normalized, {
+    assert.deepEqual<NormalizedCache>(normalized, {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.0` },
@@ -525,7 +526,7 @@ describe('writing to the store', () => {
       result: cloneDeep(result),
     });
 
-    assert.deepEqual(normalized, {
+    assert.deepEqual<NormalizedCache>(normalized, {
       'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
@@ -561,8 +562,8 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), {
+    assert.deepEqual<NormalizedCache>(normalized, {
+      'ROOT_QUERY': assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           'json': [
@@ -599,8 +600,8 @@ describe('writing to the store', () => {
       result: cloneDeep(result),
     });
 
-    assert.deepEqual(normalized, {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), {
+    assert.deepEqual<NormalizedCache>(normalized, {
+      'ROOT_QUERY': assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           json: [
@@ -655,7 +656,7 @@ describe('writing to the store', () => {
       dataIdFromObject: getIdField,
     });
 
-    assert.deepEqual(store2, {
+    assert.deepEqual<NormalizedCache>(store2, {
       'ROOT_QUERY': assign({}, result, result2),
     });
   });
@@ -684,7 +685,7 @@ describe('writing to the store', () => {
       nestedObj: null,
     };
 
-    assert.deepEqual(writeQueryToStore({
+    assert.deepEqual<NormalizedCache>(writeQueryToStore({
       query,
       result: cloneDeep(result),
     }), {
@@ -711,7 +712,7 @@ describe('writing to the store', () => {
       },
     };
 
-    assert.deepEqual(writeQueryToStore({
+    assert.deepEqual<NormalizedCache>(writeQueryToStore({
       query,
       result: cloneDeep(result),
     }), {
@@ -837,7 +838,7 @@ describe('writing to the store', () => {
 
     mutation.definitions.map((def: OperationDefinitionNode) => {
       if (isOperationDefinition(def)) {
-        assert.deepEqual(writeSelectionSetToStore({
+        assert.deepEqual<NormalizedCache>(writeSelectionSetToStore({
           dataId: '5',
           selectionSet: def.selectionSet,
           result: cloneDeep(result),
@@ -899,7 +900,7 @@ describe('writing to the store', () => {
         },
         '$ROOT_QUERY.author': data.author,
       };
-      assert.deepEqual(writeQueryToStore({
+      assert.deepEqual<NormalizedCache>(writeQueryToStore({
         result: data,
         query,
       }), expStore);
@@ -935,7 +936,7 @@ describe('writing to the store', () => {
           __typename: data.author.__typename,
         },
       };
-      assert.deepEqual(writeQueryToStore({
+      assert.deepEqual<NormalizedCache>(writeQueryToStore({
         result: data,
         query,
         dataIdFromObject,
@@ -977,7 +978,7 @@ describe('writing to the store', () => {
           },
         },
       };
-      assert.deepEqual(writeQueryToStore({
+      assert.deepEqual<NormalizedCache>(writeQueryToStore({
         result: data,
         query,
         dataIdFromObject,
@@ -1054,14 +1055,14 @@ describe('writing to the store', () => {
       query: queryWithoutId,
       dataIdFromObject,
     });
-    assert.deepEqual(storeWithoutId, expStoreWithoutId);
+    assert.deepEqual<NormalizedCache>(storeWithoutId, expStoreWithoutId);
     const storeWithId = writeQueryToStore({
       result: dataWithId,
       query: queryWithId,
       store: storeWithoutId,
       dataIdFromObject,
     });
-    assert.deepEqual(storeWithId, expStoreWithId);
+    assert.deepEqual<NormalizedCache>(storeWithId, expStoreWithId);
   });
 
   it('does not swallow errors other than field errors', () => {
@@ -1141,7 +1142,7 @@ describe('writing to the store', () => {
         dataIdFromObject: getIdField,
       });
 
-      assert.deepEqual(newStore['1'], result.todos[0]);
+      assert.deepEqual<StoreObject>(newStore['1'], result.todos[0]);
     });
 
     it('should warn when it receives the wrong data with non-union fragments (using an heuristic matcher)', () => {
@@ -1165,7 +1166,7 @@ describe('writing to the store', () => {
           fragmentMatcherFunction,
         });
 
-        assert.deepEqual(newStore['1'], result.todos[0]);
+        assert.deepEqual<StoreObject>(newStore['1'], result.todos[0]);
       }, /Missing field description/);
     });
 

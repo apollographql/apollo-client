@@ -76,14 +76,14 @@ declare module "apollo-client" {
     debugName?: string,
     query?: DocumentNode,
     variables?: Object,
-    operationName?: string,
+    operationName?: string | null,
   }
 
   declare export interface PrintedRequest {
     debugName?: string,
     query?: string,
     variables?: Object,
-    operationName?: string,
+    operationName?: string | null,
   }
 
   declare export interface SubscriptionNetworkInterface {
@@ -356,7 +356,7 @@ declare module "apollo-client" {
     previousResult: Object,
     options: {
       mutationResult: Object,
-      queryName: Object,
+      queryName: string | null,
       queryVariables: Object,
     },
   ) => Object;
@@ -585,7 +585,7 @@ declare module "apollo-client" {
     result: ExecutionResult,
     queryId: string,
     document: DocumentNode,
-    operationName: string,
+    operationName: string | null,
     requestId: number,
     fetchMoreForQueryId?: string,
     extraReducers?: ApolloReducer[],
@@ -651,7 +651,7 @@ declare module "apollo-client" {
     mutationString: string,
     mutation: DocumentNode,
     variables: Object,
-    operationName: string,
+    operationName: string | null,
     mutationId: string,
     optimisticResponse: Object | void,
     extraReducers?: ApolloReducer[],
@@ -665,7 +665,7 @@ declare module "apollo-client" {
     type: "APOLLO_MUTATION_RESULT",
     result: ExecutionResult,
     document: DocumentNode,
-    operationName: string,
+    operationName: string | null,
     variables: Object,
     mutationId: string,
     extraReducers?: ApolloReducer[],
@@ -699,7 +699,7 @@ declare module "apollo-client" {
     subscriptionId: number,
     variables: Object,
     document: DocumentNode,
-    operationName: string,
+    operationName: string | null,
     extraReducers?: ApolloReducer[],
   }
 

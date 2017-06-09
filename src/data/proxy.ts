@@ -368,6 +368,11 @@ export class TransactionDataProxy implements DataProxy {
     variables,
   }: DataProxyReadFragmentOptions): FragmentType | null {
     this.assertNotFinished();
+
+    if (!fragment) {
+      throw new Error('fragment option is required. Please pass a GraphQL fragment to readFragment.');
+    }
+
     const { data } = this;
     let query = getFragmentQueryDocument(fragment, fragmentName);
 
@@ -429,6 +434,10 @@ export class TransactionDataProxy implements DataProxy {
     variables,
   }: DataProxyWriteFragmentOptions): void {
     this.assertNotFinished();
+
+    if (!fragment) {
+      throw new Error('fragment option is required. Please pass a GraphQL fragment to writeFragment.');
+    }
 
     let query = getFragmentQueryDocument(fragment, fragmentName);
 

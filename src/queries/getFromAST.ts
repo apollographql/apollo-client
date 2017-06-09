@@ -59,8 +59,8 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   });
 }
 
-export function getOperationName(doc: DocumentNode): string {
-  let res: string = '';
+export function getOperationName(doc: DocumentNode): string | null {
+  let res: string | null = null;
   doc.definitions.forEach((definition) => {
     if (definition.kind === 'OperationDefinition' && definition.name) {
       res = definition.name.value;

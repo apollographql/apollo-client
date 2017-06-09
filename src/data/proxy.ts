@@ -434,7 +434,7 @@ export class TransactionDataProxy implements DataProxy {
     variables,
   }: DataProxyWriteFragmentOptions): void {
     this.assertNotFinished();
-    
+
     if (!fragment) {
       throw new Error('fragment option is required. Please pass a GraphQL fragment to writeFragment.');
     }

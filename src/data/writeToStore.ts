@@ -211,9 +211,9 @@ export function writeSelectionSetToStore({
           if (context.fragmentMatcherFunction) {
             // XXX We'd like to throw an error, but for backwards compatibility's sake
             // we just print a warning for the time being.
-            //throw new WriteError(`Missing field ${resultFieldKey}`);
+            //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
             if (!isProduction()) {
-              console.warn(`Missing field ${resultFieldKey}`);
+              console.warn(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
             }
           }
         }

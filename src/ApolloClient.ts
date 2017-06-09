@@ -4,6 +4,7 @@ import {
 } from './transport/networkInterface';
 
 import {
+  ExecutionResult,
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
@@ -342,7 +343,7 @@ export default class ApolloClient implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
+  public mutate<T>(options: MutationOptions): Promise<ExecutionResult> {
     this.initStore();
 
     return this.queryManager.mutate<T>(options);

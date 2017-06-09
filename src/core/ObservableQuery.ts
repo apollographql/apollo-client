@@ -267,7 +267,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           const queryVariables = variables;
           return reducer(
             previousResult, {
-              fetchMoreResult: data,
+              fetchMoreResult: data as Object,
               queryVariables,
             });
         };

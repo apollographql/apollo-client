@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 1.4.2
+- Improved error messages for writeToStore, readFragment and writeFragment [PR #1766](https://github.com/apollographql/apollo-client/pull/1766), [PR #1722](https://github.com/apollographql/apollo-client/pull/1722)
+
 ### 1.4.1
 - Fix: broken edge case when setting up fragment matching with Typescript by fixing types on `IntrospectionResultData` [PR #1763](https://github.com/apollographql/apollo-client/pull/1763)
 - Fix: getOperationName now returns null when no operation name can be found in the document [PR #1769](https://github.com/apollographql/apollo-client/pull/1769)

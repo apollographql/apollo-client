@@ -275,8 +275,8 @@ describe('optimistic mutation results', () => {
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.notProperty(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-          assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+          (<any>assert).notDeepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
         });
       });
 
@@ -286,8 +286,9 @@ describe('optimistic mutation results', () => {
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.property(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+          // <any> can be removed once @types/chai adds deepInclude
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
           assert.equal((dataInStore['Todo99'] as any).text, expectedText1);
           assert.equal((dataInStore['Todo66'] as any).text, expectedText2);
         }
@@ -443,8 +444,8 @@ describe('optimistic mutation results', () => {
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.notProperty(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-          assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+          (<any>assert).notDeepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
         });
       });
 
@@ -454,8 +455,8 @@ describe('optimistic mutation results', () => {
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.property(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
           assert.equal((dataInStore['Todo99'] as any).text, expectedText1);
           assert.equal((dataInStore['Todo66'] as any).text, expectedText2);
         }
@@ -851,8 +852,8 @@ describe('optimistic mutation results', () => {
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
         assert.notProperty(dataInStore, 'Todo99');
         assert.property(dataInStore, 'Todo66');
-        assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-        assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+        (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+        (<any>assert).notDeepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
       });
     });
 
@@ -1206,8 +1207,8 @@ describe('optimistic mutation results', () => {
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
         assert.notProperty(dataInStore, 'Todo99');
         assert.property(dataInStore, 'Todo66');
-        assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-        assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+        (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+        (<any>assert).notDeepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
       });
     });
 

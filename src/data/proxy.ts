@@ -370,7 +370,7 @@ export class TransactionDataProxy implements DataProxy {
     this.assertNotFinished();
 
     if (!fragment) {
-      throw new Error('fragment option is required. You must specifiy your GraphQL document in the fragment option.');
+      throw new Error('fragment option is required. Please pass a GraphQL fragment to readFragment.');
     }
 
     const { data } = this;
@@ -434,6 +434,10 @@ export class TransactionDataProxy implements DataProxy {
     variables,
   }: DataProxyWriteFragmentOptions): void {
     this.assertNotFinished();
+    
+    if (!fragment) {
+      throw new Error('fragment option is required. Please pass a GraphQL fragment to writeFragment.');
+    }
 
     let query = getFragmentQueryDocument(fragment, fragmentName);
 

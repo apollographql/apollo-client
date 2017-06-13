@@ -26,6 +26,7 @@ import {
 import {
   NormalizedCache,
   StoreObject,
+  IdValue,
 } from '../src/data/storeUtils';
 
 import {
@@ -1250,5 +1251,64 @@ describe('writing to the store', () => {
 
       assert.deepEqual(newStore['ROOT_QUERY'], { todos: null });
     });
+  });
+
+  it('throws when trying to write an object without id that was previously queried with id', () => {
+    const store = {
+      'ROOT_QUERY': assign({}, {
+        __typename: 'Query',
+        item: {
+          type: 'id',
+          id: 'abcd',
+          generated: false,
+        } as IdValue,
+      }) as StoreObject,
+      abcd: assign({}, {
+        id: 'abcd',
+        __typename: 'Item',
+        stringField: 'This is a string!',
+      }) as StoreObject,
+    } as NormalizedCache;
+
+    assert.throws(() => {
+      writeQueryToStore({
+        store,
+        result: {
+          item: {
+            __typename: 'Item',
+            stringField: 'This is still a string!',
+          },
+        },
+        query: gql`
+          query {
+            item {
+              stringField
+            }
+          }
+        `,
+        dataIdFromObject: getIdField,
+      });
+    }, /stringField(.|\n)*abcd/g);
+
+    assert.throws(() => {
+      writeResultToStore({
+        store,
+        result: {
+          item: {
+            __typename: 'Item',
+            stringField: 'This is still a string!',
+          },
+        },
+        dataId: 'ROOT_QUERY',
+        document: gql`
+          query {
+            item {
+              stringField
+            }
+          }
+        `,
+        dataIdFromObject: getIdField,
+      });
+    }, /stringField(.|\n)*abcd/g);
   });
 });

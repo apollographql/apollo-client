@@ -851,6 +851,11 @@ describe('TransactionDataProxy', () => {
       const proxy = new TransactionDataProxy({}, {});
 
       assert.throws(() => {
+        // Note: TypeScript is too helpful and fails compilation if fragment is missing
+        // Need to work around this to show what JavaScript users would be confronted with
+        proxy.readFragment(<any>{ id: 'x' });
+      }, 'fragment option is required. Please pass a GraphQL fragment to readFragment.');
+      assert.throws(() => {
         proxy.readFragment({ id: 'x', fragment: gql`query { a b c }` });
       }, 'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.');
       assert.throws(() => {

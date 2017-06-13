@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/src/index.js",
@@ -69,8 +69,8 @@
     "@types/sinon": "^2.1.0",
     "benchmark": "^2.1.3",
     "browserify": "^14.3.0",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
+    "chai": "^4.0.2",
+    "chai-as-promised": "^7.0.0",
     "colors": "^1.1.2",
     "concurrently": "^3.1.0",
     "es6-promise": "^4.0.4",

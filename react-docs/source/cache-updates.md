@@ -92,7 +92,7 @@ mutate({
   //... insert comment mutation
   refetchQueries: [{
     query: gql`
-      query updateCache($repoFullName: String!) {
+      query updateCache($repoName: String!) {
         entry(repoFullName: $repoName) {
           id
           comments {

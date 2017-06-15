@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Gave `batchInterval` a default value (10 ms) [PR #1793](https://github.com/apollographql/apollo-client/pull/1793)
+
 ### 1.4.2
 - Improved error messages for writeToStore, readFragment and writeFragment [PR #1766](https://github.com/apollographql/apollo-client/pull/1766), [PR #1722](https://github.com/apollographql/apollo-client/pull/1722)
 

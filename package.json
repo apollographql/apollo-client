@@ -75,7 +75,7 @@
     "concurrently": "^3.1.0",
     "es6-promise": "^4.0.4",
     "fetch-mock": "^5.10.0",
-    "flow-bin": "^0.47.0",
+    "flow-bin": "^0.48.0",
     "grunt": "1.0.1",
     "grunt-tslint": "^5.0.1",
     "gzip-size": "^3.0.0",

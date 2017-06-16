@@ -51,6 +51,38 @@ function addTypenameToSelectionSet(
   }
 }
 
+function removeConnectionDirectiveFromSelectionSet(
+  selectionSet: SelectionSetNode,
+  isRoot = false,
+) {
+  if (selectionSet.selections) {
+    selectionSet.selections.forEach((selection) => {
+
+      if (selection.kind === 'Field' && selection as FieldNode && selection.directives) {
+        selection.directives = selection.directives.filter((directive) => {
+          if (directive.arguments) {
+            return !directive.arguments.some((arg) => arg.name.value === 'key') && directive.name.value === 'connection';
+          } else {
+            return false;
+          }
+        });
+      }
+    });
+
+    selectionSet.selections.forEach((selection) => {
+      if (selection.kind === 'Field') {
+        if (selection.selectionSet) {
+          removeConnectionDirectiveFromSelectionSet(selection.selectionSet);
+        }
+      } else if (selection.kind === 'InlineFragment') {
+        if (selection.selectionSet) {
+          removeConnectionDirectiveFromSelectionSet(selection.selectionSet);
+        }
+      }
+    });
+  }
+}
+
 export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
@@ -58,6 +90,18 @@ export function addTypenameToDocument(doc: DocumentNode) {
   docClone.definitions.forEach((definition: DefinitionNode) => {
     const isRoot = definition.kind === 'OperationDefinition';
     addTypenameToSelectionSet((definition as OperationDefinitionNode).selectionSet, isRoot);
+  });
+
+  return docClone;
+}
+
+export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
+  checkDocument(doc);
+  const docClone = cloneDeep(doc);
+
+  docClone.definitions.forEach((definition: DefinitionNode) => {
+    const isRoot = definition.kind === 'OperationDefinition';
+    removeConnectionDirectiveFromSelectionSet((definition as OperationDefinitionNode).selectionSet, isRoot);
   });
 
   return docClone;

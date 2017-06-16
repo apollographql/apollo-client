@@ -1311,4 +1311,62 @@ describe('writing to the store', () => {
       });
     }, /stringField(.|\n)*abcd/g);
   });
+
+  it('properly handles the connection directive', () => {
+    const store: NormalizedCache = {};
+
+    writeQueryToStore({
+      query: gql`
+        {
+          books(skip: 0, limit: 2) @connection(key: "abc") {
+            name
+          }
+        }
+      `,
+      result: {
+        books: [
+          {
+            name: 'abcd',
+          },
+        ],
+      },
+      store,
+    });
+
+    writeQueryToStore({
+      query: gql`
+        {
+          books(skip: 2, limit: 4) @connection(key: "abc") {
+            name
+          }
+        }
+      `,
+      result: {
+        books: [
+          {
+            name: 'efgh',
+          },
+        ],
+      },
+      store,
+    });
+
+    assert.deepEqual<NormalizedCache>(
+      store,
+      {
+        'ROOT_QUERY': {
+          'abc': [
+            {
+              'generated': true,
+              'id': 'ROOT_QUERY.abc.0',
+              'type': 'id',
+            },
+          ],
+        },
+        'ROOT_QUERY.abc.0': {
+          'name': 'efgh',
+        },
+      },
+    );
+  });
 });

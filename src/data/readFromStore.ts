@@ -16,7 +16,7 @@ import {
 } from './storeUtils';
 
 import {
-  storeKeyNameFromFieldNameAndArgs,
+  getStoreKeyName,
 } from './storeUtils';
 
 import {
@@ -132,13 +132,13 @@ const readStoreResolver: Resolver = (
   idValue: IdValueWithPreviousResult,
   args: any,
   context: ReadStoreContext,
-  { resultKey }: ExecInfo,
+  { resultKey, directives }: ExecInfo,
 ) => {
   assertIdValue(idValue);
 
   const objId = idValue.id;
   const obj = context.store[objId];
-  const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
+  const storeKeyName = getStoreKeyName(fieldName, directives, args);
   let fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {

@@ -46,6 +46,7 @@ import {
 
 import {
   addTypenameToDocument,
+  removeConnectionDirectiveFromDocument,
 } from '../queries/queryTransform';
 
 import {
@@ -135,6 +136,7 @@ export class QueryManager {
   public ssrMode: boolean;
 
   private addTypename: boolean;
+  private removeConnectionDirective: boolean;
   private deduplicator: Deduplicator;
   private reduxRootSelector: ApolloStateSelector;
   private reducerConfig: ApolloReducerConfig;
@@ -177,6 +179,7 @@ export class QueryManager {
     reducerConfig = { mutationBehaviorReducers: {} },
     fragmentMatcher,
     addTypename = true,
+    removeConnectionDirective = true,
     queryDeduplication = false,
     ssrMode = false,
   }: {
@@ -186,6 +189,7 @@ export class QueryManager {
     fragmentMatcher?: FragmentMatcherInterface,
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
+    removeConnectionDirective?: boolean,
     queryDeduplication?: boolean,
     ssrMode?: boolean,
   }) {
@@ -200,6 +204,7 @@ export class QueryManager {
     this.queryListeners = {};
     this.queryDocuments = {};
     this.addTypename = addTypename;
+    this.removeConnectionDirective = removeConnectionDirective;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
 
@@ -1017,6 +1022,10 @@ export class QueryManager {
     // Apply the query transformer if one has been provided
     if (this.addTypename) {
       queryDoc = addTypenameToDocument(queryDoc);
+    }
+
+    if (this.removeConnectionDirective) {
+      queryDoc = removeConnectionDirectiveFromDocument(queryDoc);
     }
 
     return {

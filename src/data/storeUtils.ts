@@ -74,19 +74,40 @@ export function valueToObjectRepresentation(argObj: any, name: NameNode, value: 
 }
 
 export function storeKeyNameFromField(field: FieldNode, variables?: Object): string {
-  if (field.arguments && field.arguments.length) {
-    const argObj: Object = {};
+  let directivesObj: any = null;
+  if (field.directives) {
+    directivesObj = {};
+    field.directives.forEach((directive) => {
+      directivesObj[directive.name.value] = {};
 
-    field.arguments.forEach(({name, value}) => valueToObjectRepresentation(
-      argObj, name, value, variables));
-
-    return storeKeyNameFromFieldNameAndArgs(field.name.value, argObj);
+      if (directive.arguments) {
+        directive.arguments.forEach((({name, value}) => valueToObjectRepresentation(
+          directivesObj[directive.name.value], name, value, variables)));
+      }
+    });
   }
 
-  return field.name.value;
+  let argObj: any = null;
+  if (field.arguments && field.arguments.length) {
+    argObj = {};
+    field.arguments.forEach(({name, value}) => valueToObjectRepresentation(
+      argObj, name, value, variables));
+  }
+
+  return getStoreKeyName(field.name.value, directivesObj, argObj);
 }
 
-export function storeKeyNameFromFieldNameAndArgs(fieldName: string, args?: Object): string {
+export type Directives = {
+    [fieldName: string]: {
+        [argName: string]: any;
+    };
+};
+
+export function getStoreKeyName(fieldName: string, directives?: Directives, args?: Object): string {
+  if (directives && directives['connection'] && directives['connection']['key']) {
+    return directives['connection']['key'];
+  }
+
   if (args) {
     const stringifiedArgs: string = JSON.stringify(args);
 

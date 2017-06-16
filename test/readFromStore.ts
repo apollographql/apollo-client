@@ -812,4 +812,43 @@ describe('reading from the store', () => {
       nullField: null,
     });
   });
+
+  it('properly handles the connection directive', () => {
+    const store: NormalizedCache = {
+      'ROOT_QUERY': {
+        'abc': [
+          {
+            'generated': true,
+            'id': 'ROOT_QUERY.abc.0',
+            'type': 'id',
+          },
+        ],
+      },
+      'ROOT_QUERY.abc.0': {
+        'name': 'efgh',
+      },
+    };
+
+    const queryResult = readQueryFromStore({
+      store,
+      query: gql`
+        {
+          books(skip: 0, limit: 2) @connection(key: "abc") {
+            name
+          }
+        }
+      `,
+    });
+
+    assert.deepEqual<{}>(
+      queryResult,
+      {
+        'books': [
+          {
+            'name': 'efgh',
+          },
+        ],
+      },
+    );
+  });
 });

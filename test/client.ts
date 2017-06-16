@@ -550,6 +550,7 @@ describe('client', () => {
       networkInterface,
       initialState,
       addTypename: false,
+      removeConnectionDirective: false,
     });
 
     return client.query({ query })
@@ -2553,6 +2554,86 @@ describe('client', () => {
     });
 
     return withWarning(() => client.query({ query }), /Missing field description/);
+  });
+
+  it('should remove the connection directive', () => {
+    const query = gql`
+      {
+        books(skip: 0, limit: 2) @connection(key: "abc") {
+          name
+        }
+      }`;
+
+    const transformedQuery = gql`
+      {
+        books(skip: 0, limit: 2) {
+          name
+          __typename
+        }
+      }`;
+
+    const result = {
+      'books': [
+        {
+          'name': 'abcd',
+          '__typename': 'Book',
+        },
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query: transformedQuery },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+    });
+
+    return client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+    });
+  });
+
+  it('should not remove the connection directive if there are no arguments', () => {
+    const query = gql`
+      {
+        books(skip: 0, limit: 2) @connection {
+          name
+        }
+      }`;
+
+    const transformedQuery = gql`
+      {
+        books(skip: 0, limit: 2) @connection {
+          name
+          __typename
+        }
+      }`;
+
+    const result = {
+      'books': [
+        {
+          'name': 'abcd',
+          '__typename': 'Book',
+        },
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query: transformedQuery },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+    });
+
+    return client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+    });
   });
 });
 

@@ -1,5 +1,4 @@
 export default {
-  
   entry: 'lib/src/index.js',
   dest: 'lib/apollo.umd.js',
   format: 'umd',

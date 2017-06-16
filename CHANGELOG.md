@@ -5,6 +5,8 @@
 ### 1.5.0
 - `batchInterval` now has a default value of 10 ms [PR #1793](https://github.com/apollographql/apollo-client/pull/1793)
 - Added `batchMax` to allow you to limit the amount of queries in one batch. [PR #1659](https://github.com/apollographql/apollo-client/pull/1659)
+- the `@connection(key: ...)` directive can now be used to specify the key to use
+for the Apollo store and is removed by default when sending queries to the server [PR #1801](https://github.com/apollographql/apollo-client/pull/1801)
 
 ### 1.4.2
 - Improved error messages for writeToStore, readFragment and writeFragment [PR #1766](https://github.com/apollographql/apollo-client/pull/1766), [PR #1722](https://github.com/apollographql/apollo-client/pull/1722)

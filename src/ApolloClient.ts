@@ -85,7 +85,6 @@ import {
   version,
 } from './version';
 
-
 /**
  * This type defines a "selector" function that receives state from the Redux store
  * and returns the part of it that is managed by ApolloClient
@@ -273,10 +272,8 @@ export default class ApolloClient implements DataProxy {
         }
       }
     }
-
     this.version = version;
   }
-
   /**
    * This watches the results of the query according to the options specified and
    * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and

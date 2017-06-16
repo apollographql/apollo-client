@@ -46,7 +46,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
   public _afterwares: BatchAfterwareInterface[];
   private batcher: QueryBatcher;
 
-  constructor(uri: string, batchInterval: number, fetchOpts: RequestInit) {
+  constructor(uri: string, batchInterval: number = 10, fetchOpts: RequestInit) {
     super(uri, fetchOpts);
 
     if (typeof batchInterval !== 'number') {

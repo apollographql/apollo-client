@@ -128,6 +128,15 @@ describe('HTTPBatchedNetworkInterface', () => {
     assert(batchedNetworkInterface.batchQuery);
   });
 
+
+  it('should have a default value of 10ms for batchInterval', () => {
+    const url = 'http://notreal.com/graphql';
+    const opts = {};
+    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, undefined, opts);
+    const queryBatcher = batchedNetworkInterface['batcher'];
+    assert.equal(queryBatcher['batchInterval'], 10);
+  });
+
   it('should correctly return the result for a single request', () => {
     return assertRoundtrip({
       requestResultPairs: [{

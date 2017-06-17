@@ -256,7 +256,7 @@ export class QueryManager {
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
-  }): Promise<ApolloQueryResult<T>> {
+  }): Promise<ExecutionResult> {
     const mutationId = this.generateQueryId();
 
     if (this.addTypename) {
@@ -295,7 +295,7 @@ export class QueryManager {
       update: updateWithProxyFn,
     });
 
-    return new Promise((resolve, reject) => {
+    return new Promise<ExecutionResult>((resolve, reject) => {
       this.networkInterface.query(request)
         .then((result) => {
           if (result.errors) {
@@ -346,7 +346,7 @@ export class QueryManager {
 
 
           delete this.queryDocuments[mutationId];
-          resolve(<ApolloQueryResult<T>>result);
+          resolve(result);
         })
         .catch((err) => {
           this.store.dispatch({
@@ -373,7 +373,7 @@ export class QueryManager {
     // call for another query. We need this data to compute the `fetchMore`
     // network status for the query this is fetching for.
     fetchMoreForQueryId?: string,
-  ): Promise<ApolloQueryResult<T>> {
+  ): Promise<ExecutionResult> {
 
     const {
       variables = {},
@@ -485,7 +485,7 @@ export class QueryManager {
     }
     // If we have no query to send to the server, we should return the result
     // found within the store.
-    return Promise.resolve({ data: storeResult });
+    return Promise.resolve<ExecutionResult>({ data: storeResult });
   }
 
   // Returns a query listener that will update the given observer based on the

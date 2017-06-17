@@ -46,15 +46,30 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
   public _afterwares: BatchAfterwareInterface[];
   private batcher: QueryBatcher;
 
-  constructor(uri: string, batchInterval: number, fetchOpts: RequestInit) {
+  constructor({
+    uri,
+    batchInterval,
+    batchMax = 0,
+    fetchOpts,
+  }: {
+    uri: string,
+    batchInterval: number,
+    batchMax?: number,
+    fetchOpts: RequestInit,
+  }) {
     super(uri, fetchOpts);
 
     if (typeof batchInterval !== 'number') {
       throw new Error(`batchInterval must be a number, got ${batchInterval}`);
     }
 
+    if (typeof batchMax !== 'number') {
+      throw new Error(`batchMax must be a number, got ${batchMax}`);
+    }
+
     this.batcher = new QueryBatcher({
       batchInterval: batchInterval,
+      batchMax: batchMax,
       batchFetchFunction: this.batchQuery.bind(this),
     });
   }
@@ -218,6 +233,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
 export interface BatchingNetworkInterfaceOptions {
   uri: string;
   batchInterval: number;
+  batchMax?: number;
   opts?: RequestInit;
 }
 
@@ -225,5 +241,10 @@ export function createBatchingNetworkInterface(options: BatchingNetworkInterface
   if (! options) {
     throw new Error('You must pass an options argument to createNetworkInterface.');
   }
-  return new HTTPBatchedNetworkInterface(options.uri, options.batchInterval, options.opts || {});
+  return new HTTPBatchedNetworkInterface({
+    uri: options.uri,
+    batchInterval: options.batchInterval,
+    batchMax: options.batchMax,
+    fetchOpts: options.opts || {},
+  });
 }

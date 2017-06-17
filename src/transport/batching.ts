@@ -24,20 +24,24 @@ export class QueryBatcher {
   // Queue on which the QueryBatcher will operate on a per-tick basis.
   public queuedRequests: QueryFetchRequest[] = [];
 
-  private batchInterval: Number;
+  private batchInterval: number;
+  private batchMax: number;
 
   //This function is called to the queries in the queue to the server.
   private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
 
   constructor({
     batchInterval,
+    batchMax = 0,
     batchFetchFunction,
   }: {
     batchInterval: number,
+    batchMax?: number,
     batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>,
   }) {
     this.queuedRequests = [];
     this.batchInterval = batchInterval;
+    this.batchMax = batchMax;
     this.batchFetchFunction = batchFetchFunction;
   }
 
@@ -54,6 +58,11 @@ export class QueryBatcher {
     // The first enqueued request triggers the queue consumption after `batchInterval` milliseconds.
     if (this.queuedRequests.length === 1) {
       this.scheduleQueueConsumption();
+    }
+
+    // When amount of requests reaches `batchMax`, trigger the queue consumption without waiting on the `batchInterval`.
+    if (this.queuedRequests.length === this.batchMax) {
+        this.consumeQueue();
     }
 
     return fetchRequest.promise;
@@ -92,7 +101,9 @@ export class QueryBatcher {
 
   private scheduleQueueConsumption(): void {
     setTimeout(() => {
-      this.consumeQueue();
+      if (this.queuedRequests.length) {
+        this.consumeQueue();
+      }
     }, this.batchInterval);
   }
 }

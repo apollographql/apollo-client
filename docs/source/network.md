@@ -372,7 +372,7 @@ You can pass arbitrary data into your network interface using variables. In this
 
 Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. Batching works only with server that support batched queries (for example [graphql-server](https://github.com/apollostack/graphql-server)). Batched requests to servers that don't support batching will fail.
 
-To use batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object (the same as `createNetworkInterface`) with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server.
+To use batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object (the same as `createNetworkInterface`) with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server. You can also provide the `batchMax` option to define the maximum amount of queries you want in one batch. When left empty this will send all queries within the `batchInterval` in one batch. 
 
 <h3 id="BatchingExample">Query batching example</h3>
 
@@ -384,6 +384,7 @@ import ApolloClient, { createBatchingNetworkInterface } from 'apollo-client';
 const batchingNetworkInterface = createBatchingNetworkInterface({
   uri: 'localhost:3000',
   batchInterval: 10,
+  batchMax: 10,
   opts: {
     // Options to pass along to `fetch`
   }

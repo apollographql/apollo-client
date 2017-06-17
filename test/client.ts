@@ -2045,7 +2045,6 @@ describe('client', () => {
     const networkInterface = createBatchingNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
-      batchMax: 5,
       opts: {},
     });
     Promise.all([
@@ -2107,7 +2106,6 @@ describe('client', () => {
     const networkInterface = createBatchingNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
-      batchMax: 5,
       opts: {},
     });
     Promise.all([
@@ -2188,7 +2186,6 @@ describe('client', () => {
     const networkInterface = createBatchingNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
-      batchMax: 5,
       opts: {},
     });
     Promise.all([

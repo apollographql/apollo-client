@@ -16,7 +16,6 @@ describe('QueryBatcher', () => {
     assert.doesNotThrow(() => {
       const querySched = new QueryBatcher({
         batchInterval: 10,
-        batchMax: 10,
         batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
       });
       querySched.consumeQueue();
@@ -26,7 +25,6 @@ describe('QueryBatcher', () => {
   it('should not do anything when faced with an empty queue', () => {
     const batcher = new QueryBatcher({
       batchInterval: 10,
-      batchMax: 10,
       batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
 
@@ -38,7 +36,6 @@ describe('QueryBatcher', () => {
   it('should be able to add to the queue', () => {
     const batcher = new QueryBatcher({
       batchInterval: 10,
-      batchMax: 10,
       batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
 
@@ -87,7 +84,6 @@ describe('QueryBatcher', () => {
     );
     const batcher = new QueryBatcher({
       batchInterval: 10,
-      batchMax: 10,
       batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
     });
     const request: Request = {
@@ -97,7 +93,6 @@ describe('QueryBatcher', () => {
     it('should be able to consume from a queue containing a single query', (done) => {
       const myBatcher = new QueryBatcher({
         batchInterval: 10,
-        batchMax: 10,
         batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
       });
 
@@ -128,7 +123,6 @@ describe('QueryBatcher', () => {
 
       const myBatcher = new QueryBatcher({
         batchInterval: 10,
-        batchMax: 10,
         batchFetchFunction: NI.batchQuery.bind(NI),
       });
       myBatcher.enqueueRequest(request);
@@ -154,7 +148,6 @@ describe('QueryBatcher', () => {
         );
       const myBatcher = new QueryBatcher({
         batchInterval: 10,
-        batchMax: 10,
         batchFetchFunction: NI.batchQuery.bind(NI),
       });
       const promise = myBatcher.enqueueRequest(request);
@@ -169,7 +162,6 @@ describe('QueryBatcher', () => {
   it('should work when single query', (done) => {
     const batcher = new QueryBatcher({
       batchInterval: 10,
-      batchMax: 10,
       batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
     const query = gql`
@@ -193,7 +185,6 @@ describe('QueryBatcher', () => {
   it('should correctly batch multiple queries', (done) => {
     const batcher = new QueryBatcher({
       batchInterval: 10,
-      batchMax: 10,
       batchFetchFunction: networkInterface.batchQuery.bind(networkInterface),
     });
     const query = gql`
@@ -242,7 +233,6 @@ describe('QueryBatcher', () => {
     );
     const batcher = new QueryBatcher({
       batchInterval: 10,
-      batchMax: 10,
       batchFetchFunction: myNetworkInterface.batchQuery.bind(myNetworkInterface),
     });
     const promise = batcher.enqueueRequest(request);

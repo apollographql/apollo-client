@@ -32,11 +32,11 @@ export class QueryBatcher {
 
   constructor({
     batchInterval,
-    batchMax,
+    batchMax = 0,
     batchFetchFunction,
   }: {
     batchInterval: number,
-    batchMax: number,
+    batchMax?: number,
     batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>,
   }) {
     this.queuedRequests = [];
@@ -104,7 +104,7 @@ export class QueryBatcher {
   private scheduleQueueConsumption(): void {
     setTimeout(() => {
       if (this.queuedRequests.length) {
-          this.consumeQueue();
+        this.consumeQueue();
       }
     }, this.batchInterval);
   }

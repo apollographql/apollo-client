@@ -2289,7 +2289,13 @@ describe('client', () => {
       networkInterface.query({ query: personQuery }),
       networkInterface.query({ query: authorQuery }),
     ]).then((results) => {
-      assert.deepEqual(results, [
+      assert.deepEqual<[
+        ExecutionResult,
+        ExecutionResult,
+        ExecutionResult,
+        ExecutionResult,
+        ExecutionResult
+      ]>(results, [
         authorResult,
         personResult,
         authorResult,
@@ -2304,107 +2310,6 @@ describe('client', () => {
 
   });
 
-  it('should limit the amount of queries in a batch according to the batchMax value', (done) => {
-    const authorQuery = gql`
-      query {
-        author {
-          firstName
-        }
-      }`;
-    const authorResult = {
-      data: {
-        author: {
-          firstName: 'John',
-        },
-      },
-    };
-    const personQuery = gql`
-      query {
-        person {
-          name
-        }
-      }`;
-    const personResult = {
-      data: {
-        person: {
-          name: 'Jane Smith',
-        },
-      },
-    };
-
-    const url = 'http://not-a-real-url.com';
-
-    const networkInterface = createBatchingNetworkInterface({
-      uri: url,
-      batchInterval: 5,
-      batchMax: 2,
-      opts: {},
-    });
-
-    const oldFetch = fetch;
-    fetch = createMockFetch({
-      url,
-      opts: {
-        body: JSON.stringify([
-          { query: print(authorQuery) },
-          { query: print(personQuery) },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      },
-      result: createMockedIResponse([authorResult, personResult]),
-    }, {
-      url,
-      opts: {
-        body: JSON.stringify([
-          { query: print(authorQuery) },
-          { query: print(personQuery) },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      },
-      result: createMockedIResponse([authorResult, personResult]),
-    }, {
-      url,
-      opts: {
-        body: JSON.stringify([
-          { query: print(authorQuery) },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      },
-      result: createMockedIResponse([authorResult]),
-    });
-
-    Promise.all([
-      networkInterface.query({ query: authorQuery }),
-      networkInterface.query({ query: personQuery }),
-      networkInterface.query({ query: authorQuery }),
-      networkInterface.query({ query: personQuery }),
-      networkInterface.query({ query: authorQuery }),
-    ]).then((results) => {
-      assert.deepEqual(results, [
-        authorResult,
-        personResult,
-        authorResult,
-        personResult,
-        authorResult,
-      ]);
-      fetch = oldFetch;
-      done();
-    }).catch( e => {
-      console.error(e);
-    });
-  });
   it('should not limit the amount of queries in a batch when batchMax is not set', (done) => {
     const authorQuery = gql`
       query {
@@ -2474,7 +2379,13 @@ describe('client', () => {
       networkInterface.query({ query: personQuery }),
       networkInterface.query({ query: authorQuery }),
     ]).then((results) => {
-      assert.deepEqual(results, [
+     assert.deepEqual<[
+        ExecutionResult,
+        ExecutionResult,
+        ExecutionResult,
+        ExecutionResult,
+        ExecutionResult
+      ]>(results, [
         authorResult,
         personResult,
         authorResult,

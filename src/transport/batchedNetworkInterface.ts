@@ -48,12 +48,12 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
 
   constructor({
     uri,
-    batchInterval,
+    batchInterval = 10,
     batchMax = 0,
     fetchOpts,
   }: {
     uri: string,
-    batchInterval: number,
+    batchInterval?: number,
     batchMax?: number,
     fetchOpts: RequestInit,
   }) {
@@ -232,7 +232,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
 
 export interface BatchingNetworkInterfaceOptions {
   uri: string;
-  batchInterval: number;
+  batchInterval?: number;
   batchMax?: number;
   opts?: RequestInit;
 }

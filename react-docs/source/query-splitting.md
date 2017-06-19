@@ -30,9 +30,8 @@ type Episode {
 }
 
 type Query {
-  series: [Series]!
-  oneSeries(id: Int!): Series!
-  episodes(seriesId: Int!): [Episode]!
+  series: [Series!]!
+  oneSeries(id: Int): Series
 }
 ```
 
@@ -66,10 +65,13 @@ query seriesDetailData($seriesId: Int!) {
 
 ```graphql
 query seriesEpisodes($seriesId: Int!) {
-  episodes(seriesId: $seriesId) {
+  oneSeries(id: $seriesId) {
     id
-    title
-    cover
+    episodes {
+      id
+      title
+      cover
+    }
   }
 }
 ```
@@ -112,10 +114,13 @@ const QUERY_SERIES_DETAIL_VIEW = gql`
 
 const QUERY_SERIES_EPISODES = gql`
   query seriesEpisodes($seriesId: Int!) {
-    episodes(seriesId: $seriesId) {
+    oneSeries(id: $seriesId) {
       id
-      title
-      cover
+      episodes {
+        id
+        title
+        cover
+      }
     }
   }
 `
@@ -127,7 +132,7 @@ const withSeriesDetailData = graphql(QUERY_SERIES_DETAIL_VIEW, {
 })
 
 const withSeriesEpisodes = graphql(QUERY_SERIES_EPISODES, {
-  name: `episodesData`,
+  name: `seriesWithEpisodesData`,
   options,
 })
 
@@ -136,14 +141,23 @@ const withData = compose(
   withSeriesEpisodes
 )
 
-function SeriesDetailView({ seriesDetailData, episodesData }) {
+function SeriesDetailView({ 
+  seriesDetailData: {
+    loading: seriesLoading,
+    oneSeries,
+  },
+  seriesWithEpisodesData: { 
+    loading: episodesLoading,
+    oneSeries: { episodes } = {},
+  }
+}) {
   return (
     <div>
-      <h1>{seriesDetailData.loading ? `Loading...` : seriesDetailData.oneSeries.title}</h1>
-      <img src={seriesDetailData.loading ? `/dummy.jpg` : seriesDetailData.oneSeries.cover} />
+      <h1>{seriesLoading ? `Loading...` : oneSeries.title}</h1>
+      <img src={seriesLoading ? `/dummy.jpg` : oneSeries.cover} />
       <h2>Episodes</h2>
       <ul>
-      {episodesData.loading ? <li>Loading...</li> : episodesData.episodes.map(episode => (
+      {episodesLoading ? <li>Loading...</li> : episodes.map(episode => (
         <li key={episode.id}>
           <img src={episode.cover} />
           <a href={`/episode/${episode.id}`}>{episode.title}</a>

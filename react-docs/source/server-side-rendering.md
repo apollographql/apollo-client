@@ -94,9 +94,9 @@ app.use((req, res) => {
         uri: 'http://localhost:3010',
         opts: {
           credentials: 'same-origin',
-          // transfer request headers to networkInterface so that they're accessible to proxy server
-          // Addresses this issue: https://github.com/matthew-andrews/isomorphic-fetch/issues/83
-          headers: req.headers,
+          headers: {
+            cookie: req.header('Cookie'),
+          },
         },
       }),
     });

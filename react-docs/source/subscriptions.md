@@ -83,7 +83,7 @@ import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-trans
 
 // Create a normal network interface:
 const networkInterface = createNetworkInterface({
-  uri: 'http://localhost:3000'
+  uri: 'http://localhost:3000/graphql'
 });
 
 // Extend the network interface with the WebSocket

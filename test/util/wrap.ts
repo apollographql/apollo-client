@@ -17,9 +17,10 @@ export function withWarning(func: Function, regex: RegExp) {
 
   console.warn = (m: string) => message = m;
 
-  return Promise.resolve(func()).then(() => {
+  return Promise.resolve(func()).then((val) => {
     assert.match(message, regex);
     console.warn = oldWarn;
+    return val;
   });
 }
 

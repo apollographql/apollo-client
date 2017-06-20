@@ -550,7 +550,6 @@ describe('client', () => {
       networkInterface,
       initialState,
       addTypename: false,
-      removeConnectionDirective: false,
     });
 
     return client.query({ query })
@@ -2556,7 +2555,7 @@ describe('client', () => {
     return withWarning(() => client.query({ query }), /Missing field description/);
   });
 
-  it('should remove the connection directive', () => {
+  it('should run queries that include the connection directive', () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -2566,7 +2565,7 @@ describe('client', () => {
 
     const transformedQuery = gql`
       {
-        books(skip: 0, limit: 2) {
+        books(skip: 0, limit: 2) @connection(key: "abc") {
           name
           __typename
         }
@@ -2588,7 +2587,6 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      addTypename: true,
     });
 
     return client.query({ query }).then((actualResult) => {
@@ -2596,7 +2594,7 @@ describe('client', () => {
     });
   });
 
-  it('should not remove the connection directive if there are no arguments', () => {
+  it('should run queries that include the connection directive even if there are no arguments', () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection {
@@ -2628,7 +2626,6 @@ describe('client', () => {
 
     const client = new ApolloClient({
       networkInterface,
-      addTypename: true,
     });
 
     return client.query({ query }).then((actualResult) => {
@@ -2636,6 +2633,57 @@ describe('client', () => {
     });
   });
 });
+
+it('should run queries that include the connection directive', () => {
+    const query = gql`
+      {
+        books(skip: 0, limit: 2) @connection(key: "abc") {
+          name
+        }
+      }`;
+
+    const transformedQuery = gql`
+      {
+        books(skip: 0, limit: 2) @connection(key: "abc") {
+          name
+          __typename
+        }
+      }`;
+
+    const result = {
+      'books': [
+        {
+          'name': 'abcd',
+          '__typename': 'Book',
+        },
+      ],
+    };
+
+    const networkInterface = mockNetworkInterface({
+      request: { query: transformedQuery },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    return client.query({ query }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+      assert.deepEqual(client.store.getState().apollo.data, {
+        'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
+        'ROOT_QUERY': {
+          abc: [
+            {
+              'generated': true,
+              'id': 'ROOT_QUERY.abc.0',
+              'type': 'id',
+            },
+          ],
+        },
+      });
+    });
+  });
 
 function clientRoundtrip(
   query: DocumentNode,

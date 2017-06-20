@@ -51,20 +51,20 @@ function addTypenameToSelectionSet(
   }
 }
 
-function removeConnectionDirectiveFromSelectionSet(
-  selectionSet: SelectionSetNode,
-  isRoot = false,
-) {
+function removeConnectionDirectiveFromSelectionSet(selectionSet: SelectionSetNode) {
   if (selectionSet.selections) {
     selectionSet.selections.forEach((selection) => {
-
       if (selection.kind === 'Field' && selection as FieldNode && selection.directives) {
         selection.directives = selection.directives.filter((directive) => {
-          if (directive.arguments) {
-            return !directive.arguments.some((arg) => arg.name.value === 'key') && directive.name.value === 'connection';
-          } else {
-            return false;
+          const willRemove = directive.name.value === 'connection';
+          if (willRemove) {
+            if (!directive.arguments || !directive.arguments.some((arg) => arg.name.value === 'key')) {
+              console.warn('Removing an @connection directive even though it does not have a key. ' +
+                'You may want to use the key parameter to specify a store key.');
+            }
           }
+
+          return !willRemove;
         });
       }
     });
@@ -100,8 +100,7 @@ export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
-    const isRoot = definition.kind === 'OperationDefinition';
-    removeConnectionDirectiveFromSelectionSet((definition as OperationDefinitionNode).selectionSet, isRoot);
+    removeConnectionDirectiveFromSelectionSet((definition as OperationDefinitionNode).selectionSet);
   });
 
   return docClone;

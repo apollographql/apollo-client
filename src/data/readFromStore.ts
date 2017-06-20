@@ -138,7 +138,7 @@ const readStoreResolver: Resolver = (
 
   const objId = idValue.id;
   const obj = context.store[objId];
-  const storeKeyName = getStoreKeyName(fieldName, directives, args);
+  const storeKeyName = getStoreKeyName(fieldName, args, directives);
   let fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {

@@ -17,6 +17,10 @@ import {
   BatchAfterwareInterface,
 } from './afterware';
 
+import {
+  removeConnectionDirectiveFromDocument,
+} from '../queries/queryTransform';
+
 /**
  * This is an interface that describes an GraphQL document to be sent
  * to the server.
@@ -192,6 +196,12 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
     return this.applyMiddlewares({
       request,
       options,
+    }).then((rao) => {
+      if (rao.request.query) {
+        rao.request.query = removeConnectionDirectiveFromDocument(rao.request.query);
+      }
+
+      return rao;
     }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
       .then(response => this.applyAfterwares({
         response: response as Response,

@@ -56,6 +56,26 @@ describe('network interface', () => {
     }
   `;
 
+  const simpleQueryWithConnection = gql`
+    query people {
+      allPeople(first: 1) @connection(key: "people") {
+        people {
+          name
+        }
+      }
+    }
+  `;
+
+  const simpleQueryWithConnectionButNoKey = gql`
+    query people {
+      allPeople(first: 1) @connection {
+        people {
+          name
+        }
+      }
+    }
+  `;
+
   const simpleResult = {
     data: {
       allPeople: {
@@ -481,6 +501,44 @@ describe('network interface', () => {
         assert.equal(err.response.status, 503);
         assert.equal(err.message, 'Network request failed with status 503 - "Service Unavailable"');
       });
+    });
+  });
+
+  describe('transforming queries', () => {
+    it('should remove the @connection directive', () => {
+      const swapi = createNetworkInterface({ uri: swapiUrl });
+
+      const simpleRequestWithConnection = {
+        query: simpleQueryWithConnection,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequestWithConnection),
+        simpleResult,
+      );
+    });
+
+    it('should remove the @connection directive even with no key but warn the user', () => {
+      const swapi = createNetworkInterface({ uri: swapiUrl });
+
+      const simpleRequestWithConnectionButNoKey = {
+        query: simpleQueryWithConnectionButNoKey,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      const expected = 'Removing an @connection directive even though it does not have a ' +
+        'key. You may want to use the key parameter to specify a store key.';
+
+      return assert.eventually.deepEqual(
+        withWarning(
+          () => swapi.query(simpleRequestWithConnectionButNoKey),
+          new RegExp(expected),
+        ),
+        simpleResult,
+      );
     });
   });
 });

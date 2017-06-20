@@ -94,16 +94,16 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
       argObj, name, value, variables));
   }
 
-  return getStoreKeyName(field.name.value, directivesObj, argObj);
+  return getStoreKeyName(field.name.value, argObj, directivesObj);
 }
 
 export type Directives = {
-    [fieldName: string]: {
+    [directiveName: string]: {
         [argName: string]: any;
     };
 };
 
-export function getStoreKeyName(fieldName: string, directives?: Directives, args?: Object): string {
+export function getStoreKeyName(fieldName: string, args?: Object, directives?: Directives): string {
   if (directives && directives['connection'] && directives['connection']['key']) {
     return directives['connection']['key'];
   }

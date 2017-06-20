@@ -127,7 +127,6 @@ export default class ApolloClient implements DataProxy {
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
-  public removeConnectionDirective: boolean;
   public disableNetworkFetches: boolean;
   /**
    * The dataIdFromObject function used by this client instance.
@@ -183,7 +182,6 @@ export default class ApolloClient implements DataProxy {
     ssrMode?: boolean,
     ssrForceFetchDelay?: number
     addTypename?: boolean,
-    removeConnectionDirective?: boolean,
     customResolvers?: CustomResolverMap,
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
@@ -199,7 +197,6 @@ export default class ApolloClient implements DataProxy {
       ssrMode = false,
       ssrForceFetchDelay = 0,
       addTypename = true,
-      removeConnectionDirective = true,
       customResolvers,
       connectToDevTools,
       fragmentMatcher,
@@ -222,11 +219,10 @@ export default class ApolloClient implements DataProxy {
     this.networkInterface = networkInterface ? networkInterface :
       createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
-    this.removeConnectionDirective = removeConnectionDirective;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
     this.dataIdFromObject = this.dataId;
-    this.fieldWithArgs = (fieldName, args) => getStoreKeyName(fieldName, undefined, args);
+    this.fieldWithArgs = getStoreKeyName;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
 
@@ -529,7 +525,6 @@ export default class ApolloClient implements DataProxy {
       reduxRootSelector: reduxRootSelector,
       store,
       addTypename: this.addTypename,
-      removeConnectionDirective: this.removeConnectionDirective,
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
       fragmentMatcher: this.fragmentMatcher,

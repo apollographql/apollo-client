@@ -64,7 +64,7 @@
     "@types/chai-as-promised": "0.0.31",
     "@types/lodash": "4.14.65",
     "@types/mocha": "^2.2.31",
-    "@types/node": "7.0.32",
+    "@types/node": "8.0.1",
     "@types/promises-a-plus": "0.0.27",
     "@types/sinon": "^2.1.0",
     "benchmark": "^2.1.3",

@@ -2555,7 +2555,7 @@ describe('client', () => {
     return withWarning(() => client.query({ query }), /Missing field description/);
   });
 
-  it('should run queries that include the connection directive', () => {
+  it('runs a query with the connection directive and writes it to the store key defined in the directive', () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {
@@ -2594,7 +2594,7 @@ describe('client', () => {
     });
   });
 
-  it('should run queries that include the connection directive even if there are no arguments', () => {
+  it('should not remove the connection directive at the store level', () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection {
@@ -2634,7 +2634,7 @@ describe('client', () => {
   });
 });
 
-it('should run queries that include the connection directive', () => {
+it('should run a query with the connection directive and write the result to the store key defined in the directive', () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection(key: "abc") {

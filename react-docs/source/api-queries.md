@@ -220,7 +220,7 @@ data.fetchMore({
       ...previousResult,
       // Add the new feed data to the end of the old feed data.
       feed: [...previousResult.feed, ...fetchMoreResult.feed],
-    },
+    };
   },
 });
 ```

@@ -228,10 +228,15 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     if (!fetchMoreOptions.updateQuery) {
       throw new Error('updateQuery option is required. This function defines how to update the query data with the new results.');
     }
+
+    let previous: any;
+
     return Promise.resolve()
       .then(() => {
         const qid = this.queryManager.generateQueryId();
         let combinedOptions: any = null;
+
+        previous = this.currentResult().data;
 
         if (fetchMoreOptions.query) {
           // fetch a new query
@@ -265,8 +270,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           // TODO REFACTOR: reached max recursion depth (figuratively) when renaming queryVariables.
           // Continue renaming to variables further down when we have time.
           const queryVariables = variables;
+
           return reducer(
-            previousResult, {
+            previous, {
               fetchMoreResult: data as Object,
               queryVariables,
             });

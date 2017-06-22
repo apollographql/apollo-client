@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+### 1.5.0
 - `batchInterval` now has a default value of 10 ms [PR #1793](https://github.com/apollographql/apollo-client/pull/1793)
 - Added `batchMax` to allow you to limit the amount of queries in one batch. [PR #1659](https://github.com/apollographql/apollo-client/pull/1659)
 

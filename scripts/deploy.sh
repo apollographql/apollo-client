@@ -52,7 +52,9 @@ node -e "var package = require('./package.json'); \
 # Copy few more files to ./npm
 cp README.md npm/
 cp LICENSE npm/
-cp index.js.flow npm/
+cp src/index.js.flow npm/
+cp src/index.js.flow npm/apollo.umd.js.flow
+cp -R flow-typed npm/
 
 echo 'deploying to npm...'
 cd npm && npm publish --tag next && git push --tags

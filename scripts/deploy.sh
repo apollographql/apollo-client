@@ -53,7 +53,9 @@ node -e "var package = require('./package.json'); \
 cp README.md npm/
 cp LICENSE npm/
 cp src/index.js.flow npm/
+# please keep this in sync with the filename used in package.main
 cp src/index.js.flow npm/apollo.umd.js.flow
+# flow typings, there is only redux used in index.js.flow
 cp -R flow-typed npm/
 
 echo 'deploying to npm...'

@@ -1096,24 +1096,28 @@ export class QueryManager {
           }
 
           return result;
-        }).then(() => {
-
+        }).then((result) => {
           let resultFromStore: any;
-          try {
-            // ensure result is combined with data already in store
-            // this will throw an error if there are missing fields in
-            // the results if returnPartialData is false.
-            resultFromStore = readQueryFromStore({
-              store: this.getApolloState().data,
-              variables,
-              query: document,
-              config: this.reducerConfig,
-              fragmentMatcherFunction: this.fragmentMatcher.match,
-            });
-            // ensure multiple errors don't get thrown
-            /* tslint:disable */
-          } catch (e) {}
-          /* tslint:enable */
+
+          if (fetchMoreForQueryId) {
+            resultFromStore = result.data;
+          } else {
+            try {
+              // ensure result is combined with data already in store
+              // this will throw an error if there are missing fields in
+              // the results if returnPartialData is false.
+              resultFromStore = readQueryFromStore({
+                store: this.getApolloState().data,
+                variables,
+                query: document,
+                config: this.reducerConfig,
+                fragmentMatcherFunction: this.fragmentMatcher.match,
+              });
+              // ensure multiple errors don't get thrown
+              /* tslint:disable */
+            } catch (e) {}
+            /* tslint:enable */
+          }
 
           const { reducerError } = this.getApolloState();
           if (reducerError && reducerError.queryId === queryId) {

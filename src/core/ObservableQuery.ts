@@ -228,9 +228,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     if (!fetchMoreOptions.updateQuery) {
       throw new Error('updateQuery option is required. This function defines how to update the query data with the new results.');
     }
-
-    const previous = this.result();
-
     return Promise.resolve()
       .then(() => {
         const qid = this.queryManager.generateQueryId();
@@ -258,23 +255,18 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           query: combinedOptions.query,
           fetchPolicy: 'network-only',
         } as WatchQueryOptions;
-
         return this.queryManager.fetchQuery(qid, combinedOptions, FetchType.normal, this.queryId);
-      }).then((fetchMoreResult) => {
-        return previous.then((prev) => {
-          return {prev, fetchMoreResult};
-        });
-      }).then(({prev, fetchMoreResult}) => {
+      })
+      .then((fetchMoreResult) => {
         const { data } = fetchMoreResult;
         const reducer = fetchMoreOptions.updateQuery;
-
         const mapFn = (previousResult: any, { variables }: {variables: any }) => {
+
           // TODO REFACTOR: reached max recursion depth (figuratively) when renaming queryVariables.
           // Continue renaming to variables further down when we have time.
           const queryVariables = variables;
-
           return reducer(
-            prev.data, {
+            previousResult, {
               fetchMoreResult: data as Object,
               queryVariables,
             });

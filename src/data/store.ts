@@ -69,7 +69,8 @@ export function data(
     // Ignore results from old requests
     // XXX this means that if you have a refetch interval which is shorter than your roundtrip time,
     // your query will be in the loading state forever!
-    if (action.requestId < queries[action.queryId].lastRequestId) {
+    // do not write to the store if this is for fetchMore
+    if (action.requestId < queries[action.queryId].lastRequestId || action.fetchMoreForQueryId) {
       return previousState;
     }
 

@@ -11,12 +11,20 @@ import type {
   NameNode,
 } from "graphql";
 
-type RequestInit = RequestOptions;
-
 import type { Middleware } from "redux";
 
+export interface Request {
+  // causes flow errors
+  // property `$key` of Request. Indexable signature not found in
+  // property `$value` of Request. Indexable signature not found in
+  // [additionalKey: string]: any,
+  debugName?: string,
+  query?: DocumentNode,
+  variables?: Object,
+  operationName?: string | null,
+}
+
 declare export class NetworkInterface {
-  [others: string]: any,
   query(request: Request): Promise<ExecutionResult>,
 }
 
@@ -26,7 +34,7 @@ export interface BatchedNetworkInterface {
 
 export interface MiddlewareRequest {
   request: Request,
-  options: RequestInit,
+  options: RequestOptions,
 }
 
 export interface MiddlewareInterface {
@@ -39,7 +47,7 @@ export interface MiddlewareInterface {
 
 export interface BatchMiddlewareRequest {
   requests: Request[],
-  options: RequestInit,
+  options: RequestOptions,
 }
 
 export interface BatchMiddlewareInterface {
@@ -51,7 +59,7 @@ export interface BatchMiddlewareInterface {
 }
 export interface AfterwareResponse {
   response: Response,
-  options: RequestInit,
+  options: RequestOptions,
 }
 
 export interface AfterwareInterface {
@@ -64,7 +72,7 @@ export interface AfterwareInterface {
 
 export interface BatchAfterwareResponse {
   responses: Response[],
-  options: RequestInit,
+  options: RequestOptions,
 }
 
 export interface BatchAfterwareInterface {
@@ -73,13 +81,6 @@ export interface BatchAfterwareInterface {
     response: BatchAfterwareResponse,
     next: Function,
   ): any,
-}
-export interface Request {
-  [additionalKey: string]: any,
-  debugName?: string,
-  query?: DocumentNode,
-  variables?: Object,
-  operationName?: string | null,
 }
 
 export interface PrintedRequest {
@@ -106,7 +107,7 @@ export type NetworkAfterware =
 
 declare export class HTTPNetworkInterface extends NetworkInterface {
   _uri: string,
-  _opts: RequestInit,
+  _opts: RequestOptions,
   _middlewares: NetworkMiddleware,
   _afterwares: NetworkAfterware,
   use(middlewares: NetworkMiddleware): HTTPNetworkInterface,
@@ -115,18 +116,19 @@ declare export class HTTPNetworkInterface extends NetworkInterface {
 
 export interface BatchRequestAndOptions {
   requests: Request[],
-  options: RequestInit,
+  options: RequestOptions,
 }
 
 export interface BatchResponseAndOptions {
   responses: Response[],
-  options: RequestInit,
+  options: RequestOptions,
 }
 
 export interface BatchingNetworkInterfaceOptions {
   uri: string,
   batchInterval: number,
-  opts?: RequestInit,
+  // compatibility with NetworkInterfaceOptions
+  opts?: ?RequestOptions,
 }
 
 declare export function createBatchingNetworkInterface(
@@ -140,7 +142,7 @@ declare export class HTTPBatchedNetworkInterface
   constructor(
     uri: string,
     batchInterval: number,
-    fetchOpts: RequestInit,
+    fetchOpts: RequestOptions,
   ): this,
   query(request: Request): Promise<ExecutionResult>,
   batchQuery(requests: Request[]): Promise<ExecutionResult[]>,
@@ -156,17 +158,20 @@ declare export class HTTPBatchedNetworkInterface
 
 export interface RequestAndOptions {
   request: Request,
-  options: RequestInit,
+  options: RequestOptions,
 }
 
 export interface ResponseAndOptions {
   response: Response,
-  options: RequestInit,
+  options: RequestOptions,
 }
 
 export interface NetworkInterfaceOptions {
-  uri?: string,
-  opts?: RequestInit,
+  // compatibility with BatchNetworkInrfaceOptions
+  // also network interfaces throws an error in case you haven't provide an uri
+  // in this case is right to fail typecheck too
+  uri: string,
+  opts?: ?RequestOptions,
 }
 
 declare export function printRequest(request: Request): PrintedRequest;
@@ -180,8 +185,8 @@ declare export class BaseNetworkInterface extends NetworkInterface {
   _middlewares: NetworkMiddleware,
   _afterwares: NetworkAfterware,
   _uri: string,
-  _opts: RequestInit,
-  constructor(uri: string | void, opts?: RequestInit): this,
+  _opts: RequestOptions,
+  constructor(uri: string | void, opts?: RequestOptions): this,
   query(request: Request): Promise<ExecutionResult>,
 }
 

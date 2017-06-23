@@ -10,14 +10,13 @@
 */
 
 // @flow
-import ApolloClient, { createNetworkInterface, ApolloError } from "apollo-client";
-import type { ApolloQueryResult } from "apollo-client";
+import ApolloClient, { createNetworkInterface, ApolloError } from "../src";
+import type { ApolloQueryResult } from "../src";
 import type { DocumentNode } from "graphql";
 import gql from "graphql-tag";
 
 const query: DocumentNode = gql`{ foo }`;
 const mutation: DocumentNode = gql`mutation { foo }`;
-
 
 // common errors
 

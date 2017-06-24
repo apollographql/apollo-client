@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "hexo": {
-    "version": "3.2.0"
+    "version": "3.2.2"
   },
   "dependencies": {
     "hexo": "3.2.2",
@@ -23,7 +23,7 @@
   },
   "scripts": {
     "postinstall": "cd code && npm install && npm uninstall typescript && npm install typescript@2.1.6",
-    "build": "cd code; typedoc --json ../docs.json",
+    "build": "cd code; typedoc --json ../docs.json --ignoreCompilerErrors",
     "prestart": "npm run build",
     "start": "hexo serve",
     "predeploy": "npm run build",

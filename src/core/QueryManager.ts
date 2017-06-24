@@ -1100,6 +1100,8 @@ export class QueryManager {
           let resultFromStore: any;
 
           if (fetchMoreForQueryId) {
+            // XXX We don't write fetchMore results to the store because this would overwrite
+            // the original result in case an @connection directive is used.
             resultFromStore = result.data;
           } else {
             try {

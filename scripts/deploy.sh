@@ -55,4 +55,4 @@ cp LICENSE npm/
 cp index.js.flow npm/
 
 echo 'deploying to npm...'
-cd npm && npm publish --tag next && git push --tags
+cd npm && npm publish && git push --tags

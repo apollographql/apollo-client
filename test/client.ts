@@ -246,7 +246,6 @@ describe('client', () => {
   });
 
   it('should allow for a single query to take place', () => {
-
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -688,7 +687,6 @@ describe('client', () => {
   });
 
   it('should return GraphQL errors correctly for a single query with an observable enabled network interface', (done) => {
-
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -724,8 +722,6 @@ describe('client', () => {
   });
 
   it('should pass a network error correctly on a query with observable network interface', (done) => {
-
-
     const query = gql`
       query people {
         allPeople(first: 1) {

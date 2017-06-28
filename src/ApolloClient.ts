@@ -216,7 +216,7 @@ export default class ApolloClient implements DataProxy {
       this.fragmentMatcher = fragmentMatcher;
     }
 
-    if ( networkInterface && typeof networkInterface.request === 'function') {
+    if ( networkInterface && typeof (<ObservableNetworkInterface>networkInterface).request === 'function') {
       this.networkInterface = {
         ...networkInterface,
         query: (request) => new Promise<ExecutionResult>((resolve, reject) => {

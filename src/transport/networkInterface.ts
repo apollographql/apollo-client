@@ -58,7 +58,6 @@ export interface NetworkInterface {
 }
 
 export interface ObservableNetworkInterface {
-  [others: string]: any;
   request(request: Request): Observable<ExecutionResult>;
 }
 

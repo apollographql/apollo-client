@@ -122,58 +122,34 @@ export class MockNetworkInterface implements NetworkInterface {
 }
 
 export class MockObservableNetworkInterface implements ObservableNetworkInterface {
-  private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
+  private mockNetworkInterface: MockNetworkInterface;
 
   constructor(mockedResponses: MockedResponse[]) {
-    mockedResponses.forEach((mockedResponse) => {
-      this.addMockedResponse(mockedResponse);
-    });
+    this.mockNetworkInterface = new MockNetworkInterface(mockedResponses);
   }
 
   public addMockedResponse(mockedResponse: MockedResponse) {
-    const key = requestToKey(mockedResponse.request);
-    let mockedResponses = this.mockedResponsesByKey[key];
-    if (!mockedResponses) {
-      mockedResponses = [];
-      this.mockedResponsesByKey[key] = mockedResponses;
-    }
-    mockedResponses.push(mockedResponse);
+    this.mockNetworkInterface.addMockedResponse(mockedResponse);
   }
 
   public request(request: Request) {
     return new Observable<ExecutionResult>(({ next: onNext, error: onError, complete: onComplete }: Observer<ExecutionResult>) => {
-      const parsedRequest: ParsedRequest = {
-        query: request.query,
-        variables: request.variables,
-        debugName: request.debugName,
-      };
+      const result = this.mockNetworkInterface.query(request);
 
-      const key = requestToKey(parsedRequest);
-      const responses = this.mockedResponsesByKey[key];
-      if (!responses || responses.length === 0) {
-        throw new Error(`No more mocked responses for query: ${print(request.query)}, variables: ${JSON.stringify(request.variables)}`);
-      }
-
-      const { result, error, delay } = responses.shift()!;
-
-      if (!result && !error) {
-        throw new Error(`Mocked response should contain either result or error: ${key}`);
-      }
-
-      setTimeout(() => {
-        if (error) {
-          if (onError) {
-            onError(error);
-          }
-        } else {
-          if (onNext) {
-            onNext(<ExecutionResult>result);
-          }
-          if (onComplete) {
-            onComplete();
-          }
+      result.then((data) => {
+        if (onNext) {
+          onNext(data);
         }
-      }, delay ? delay : 0);
+        if (onComplete) {
+          onComplete();
+        }
+      })
+      .catch((error) => {
+        if (onError) {
+          onError(error);
+        }
+      });
+
       return () => void 0;
     });
   }

@@ -248,14 +248,14 @@ class SubscriptionComponent extends Component {
     if(!nextProps.data.loading) {
       // Check for existing subscription
       if (this.unsubscribe) {
-        // Check if props have changed and, if necessary, stop the subscription    
+        // Check if props have changed and, if necessary, stop the subscription
         if (this.props.subscriptionParam !== nextProps.subscriptionParam) {
-          this.unsubscribe();     
+          this.unsubscribe();
         } else {
           return;
         }
       }
-    
+
       // Subscribe
       this.unsubscribe = nextProps.data.subscribeToMore({
         document: gql`subscription {...}`,
@@ -360,7 +360,7 @@ An object or function that returns an object of options that are used to configu
 
 If `config.options` is a function then it will take the component’s props as its first argument.
 
-The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](#graphql-config-options).
+The options available for use  in this object depend on the operation type you pass in as the first argument to `graphql()`. The references below will document which options are availble when your operation is a query. To see what other options are available for different operations, see the generic documentation for [`config.options`](api-graphql.html#graphql-config-options).
 
 **Example:**
 

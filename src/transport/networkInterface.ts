@@ -21,6 +21,8 @@ import {
   removeConnectionDirectiveFromDocument,
 } from '../queries/queryTransform';
 
+import { Observable } from '../util/Observable';
+
 /**
  * This is an interface that describes an GraphQL document to be sent
  * to the server.
@@ -53,6 +55,11 @@ export interface PrintedRequest {
 export interface NetworkInterface {
   [others: string]: any;
   query(request: Request): Promise<ExecutionResult>;
+}
+
+export interface ObservableNetworkInterface {
+  [others: string]: any;
+  request(request: Request): Observable<ExecutionResult>;
 }
 
 export interface BatchedNetworkInterface extends NetworkInterface {

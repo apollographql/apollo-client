@@ -1,5 +1,6 @@
 import {
   NetworkInterface,
+  ObservableNetworkInterface,
   BatchedNetworkInterface,
   Request,
   SubscriptionNetworkInterface,
@@ -14,12 +15,23 @@ import {
   print,
 } from 'graphql/language/printer';
 
+import {
+  Observable,
+  Observer,
+} from '../../src/util/Observable';
+
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server
 export default function mockNetworkInterface(
   ...mockedResponses: MockedResponse[],
 ): NetworkInterface {
   return new MockNetworkInterface(mockedResponses);
+}
+
+export function mockObservableNetworkInterface(
+  ...mockedResponses: MockedResponse[],
+): ObservableNetworkInterface {
+  return new MockObservableNetworkInterface(mockedResponses);
 }
 
 export function mockSubscriptionNetworkInterface(
@@ -108,6 +120,65 @@ export class MockNetworkInterface implements NetworkInterface {
     });
   }
 }
+
+export class MockObservableNetworkInterface implements ObservableNetworkInterface {
+  private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
+
+  constructor(mockedResponses: MockedResponse[]) {
+    mockedResponses.forEach((mockedResponse) => {
+      this.addMockedResponse(mockedResponse);
+    });
+  }
+
+  public addMockedResponse(mockedResponse: MockedResponse) {
+    const key = requestToKey(mockedResponse.request);
+    let mockedResponses = this.mockedResponsesByKey[key];
+    if (!mockedResponses) {
+      mockedResponses = [];
+      this.mockedResponsesByKey[key] = mockedResponses;
+    }
+    mockedResponses.push(mockedResponse);
+  }
+
+  public request(request: Request) {
+    return new Observable<ExecutionResult>(({ next: onNext, error: onError, complete: onComplete }: Observer<ExecutionResult>) => {
+      const parsedRequest: ParsedRequest = {
+        query: request.query,
+        variables: request.variables,
+        debugName: request.debugName,
+      };
+
+      const key = requestToKey(parsedRequest);
+      const responses = this.mockedResponsesByKey[key];
+      if (!responses || responses.length === 0) {
+        throw new Error(`No more mocked responses for query: ${print(request.query)}, variables: ${JSON.stringify(request.variables)}`);
+      }
+
+      const { result, error, delay } = responses.shift()!;
+
+      if (!result && !error) {
+        throw new Error(`Mocked response should contain either result or error: ${key}`);
+      }
+
+      setTimeout(() => {
+        if (error) {
+          if (onError) {
+            onError(error);
+          }
+        } else {
+          if (onNext) {
+            onNext(<ExecutionResult>result);
+          }
+          if (onComplete) {
+            onComplete();
+          }
+        }
+      }, delay ? delay : 0);
+      return () => void 0;
+    });
+  }
+}
+
 
 export class MockSubscriptionNetworkInterface extends MockNetworkInterface implements SubscriptionNetworkInterface {
   public mockedSubscriptionsByKey: { [key: string ]: MockedSubscription[] } = {};

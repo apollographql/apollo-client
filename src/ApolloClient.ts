@@ -1,5 +1,6 @@
 import {
   NetworkInterface,
+  ObservableNetworkInterface,
   createNetworkInterface,
 } from './transport/networkInterface';
 
@@ -175,7 +176,7 @@ export default class ApolloClient implements DataProxy {
    */
 
   constructor(options: {
-    networkInterface?: NetworkInterface,
+    networkInterface?: NetworkInterface | ObservableNetworkInterface,
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
@@ -215,9 +216,25 @@ export default class ApolloClient implements DataProxy {
       this.fragmentMatcher = fragmentMatcher;
     }
 
+    if ( networkInterface && typeof networkInterface.request === 'function') {
+      this.networkInterface = {
+        ...networkInterface,
+        query: (request) => new Promise<ExecutionResult>((resolve, reject) => {
+          const subscription = (networkInterface as ObservableNetworkInterface)
+          .request(request)
+          .subscribe({
+            next: resolve,
+            error: reject,
+            complete: () => subscription.unsubscribe(),
+          });
+        }),
+      };
+    } else {
+      this.networkInterface = networkInterface ? <NetworkInterface>networkInterface :
+        createNetworkInterface({ uri: '/graphql' });
+    }
+
     this.initialState = initialState ? initialState : {};
-    this.networkInterface = networkInterface ? networkInterface :
-      createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;

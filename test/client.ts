@@ -64,6 +64,7 @@ import {
 } from '../src/transport/batchedNetworkInterface';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
+import { mockObservableNetworkInterface } from './mocks/mockNetworkInterface';
 
 import {
   getFragmentDefinitions,
@@ -245,6 +246,7 @@ describe('client', () => {
   });
 
   it('should allow for a single query to take place', () => {
+
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -270,6 +272,49 @@ describe('client', () => {
     };
 
     return clientRoundtrip(query, data);
+  });
+
+  it('should allow a single query with an observable enabled network interface', (done) => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+            __typename
+          }
+          __typename
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+            __typename: 'Person',
+          },
+        ],
+        __typename: 'People',
+      },
+    };
+
+    const variables = { first: 1 };
+
+    const networkInterface = mockObservableNetworkInterface({
+      request: { query, variables },
+      result: { data },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    const basic = client.query({ query, variables }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, data);
+      done();
+    });
   });
 
   it('should allow for a single query with complex default variables to take place', () => {
@@ -639,6 +684,83 @@ describe('client', () => {
     return client.query({ query })
       .catch((error: ApolloError) => {
         assert.deepEqual(error.graphQLErrors, errors);
+      });
+  });
+
+  it('should return GraphQL errors correctly for a single query with an observable enabled network interface', (done) => {
+
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const errors: GraphQLError[] = [
+      {
+        name: 'test',
+        message: 'Syntax Error GraphQL request (8:9) Expected Name, found EOF',
+      },
+    ];
+
+    const networkInterface = mockObservableNetworkInterface({
+      request: { query },
+      result: { errors },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    client.query({ query })
+      .catch((error: ApolloError) => {
+        assert.deepEqual(error.graphQLErrors, errors);
+        done();
+      });
+  });
+
+  it('should pass a network error correctly on a query with observable network interface', (done) => {
+
+
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      person: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+
+    const networkError = new Error('Some kind of network error.');
+
+    const networkInterface = mockObservableNetworkInterface({
+      request: { query },
+      result: { data },
+      error: networkError,
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    client.query({ query })
+      .catch((error: ApolloError) => {
+        assert(error.networkError);
+        assert.deepEqual(error.networkError!.message, networkError.message);
+        done();
       });
   });
 

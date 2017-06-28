@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 1.6.1
+- Pin @types/node to 8.0.2 to avoid breaking type update
+
 ### 1.6.0
 - the `@connection(key: ...)` directive can now be used to specify the key to use
 for the Apollo store and is removed by default when sending queries to the server [PR #1801](https://github.com/apollographql/apollo-client/pull/1801)

@@ -104,7 +104,7 @@ Lets go through all of the properties that may live on your `config` object.
 
 `config.options` is an object or a function that allows you to define the specific behavior your component should use in handling your GraphQL data.
 
-The specific options available for configuration depend on the operation you pass as the first argument to `graphql()`. There are options specific to [queries](#graphql-query-options) and [mutations](#graphql-mutation-options).
+The specific options available for configuration depend on the operation you pass as the first argument to `graphql()`. There are options specific to [queries](api-queries.html#graphql-query-options) and [mutations](api-mutations.html#graphql-mutation-options).
 
 You can define `config.options` as a plain object, or you can compute your options from a function that takes the component’s props as an argument.
 

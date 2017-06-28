@@ -2,6 +2,10 @@
 
 ### vNEXT
 
+### 1.7.0
+- adapter that converts a network interface that returns an Observable into promised network interface
+[PR #1840](https://github.com/apollographql/apollo-client/pull/1840)
+
 ### 1.6.1
 - Pin @types/node to 8.0.2 to avoid breaking type update
 

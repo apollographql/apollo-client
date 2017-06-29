@@ -222,3 +222,20 @@ const CommentsWithData = graphql(CommentsQuery, {
   },
 })(Feed);
 ```
+
+<h2 id="connection-directive">The `@connection` directive</h2>
+When using paginated queries, results from individual queries can become scattered in the store, as query parameters are used to determine the default store key but often change with pagination. This is problematic for imperative store updates, as there is no stable store key for updates to target. To direct Apollo Client to use a stable store key for paginated queries, you can use the `@connection` directive to specify a store key for parts of your queries. For example, if we wanted to have a stable store key for the feed query earlier, we could adjust our query to use the `@connection` directive:
+```
+const FEED_QUERY = gql`
+  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+    currentUser {
+      login
+    }
+    feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed") {
+      id
+      # ...
+    }
+  }
+`;```
+
+This would result in the accumulated feed in every query or `fetchMore` being placed in the store under the `feed` key, which we could later use of imperative store updates.

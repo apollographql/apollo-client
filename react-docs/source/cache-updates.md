@@ -410,6 +410,25 @@ Here, the `fetchMore` query is the same as the query associated with the compone
 
 Although `fetchMore` is often used for pagination, there are many other cases in which it is applicable. For example, suppose you have a list of items (say, a collaborative todo list) and you have a way to fetch items that have been updated after a certain time. Then, you don't have to refetch the whole todo list to get updates: you can just incorporate the newly added items with `fetchMore`, as long as your `updateQuery` function correctly merges the new results.
 
+<h3 id="connection-directive">The `@connection` directive</h3>
+By default, the result of a `fetchMore` will be stored in the cache according to the query run and its parameters. Because parameters usually change between calls to `fetchMore`, this means that the results of each `fetchMore` will be placed in a different location in the store. This can be confusing when using imperative store updates, as there is no stable location in the cache for `fetchMore` results.
+
+To have a stable cache location for query results, Apollo Client 1.6 introduced the `@connection` directive, which can be used to specify a custom store key for results. To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the key parameter to specify the store key
+
+```
+query query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+  currentUser {
+    login
+  }
+  
+  feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed") {
+    ...FeedEntry
+  }
+}
+```
+
+With the above query, even with multiple `fetchMore`s, the results of each feed update will always result in the `feed` key in the store being updated with the latest accumulated values.
+
 <h2 id="cacheRedirect">Cache redirects with `customResolvers`</h2>
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:

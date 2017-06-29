@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+
 ### 1.7.0
 - Add support for network interfaces that return observables [PR #1840](https://github.com/apollographql/apollo-client/pull/1840)
 

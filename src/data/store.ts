@@ -53,8 +53,6 @@ import {
 export function data(
   previousState: NormalizedCache = {},
   action: ApolloAction,
-  queries: QueryStore,
-  mutations: MutationStore,
   config: ApolloReducerConfig,
 ): NormalizedCache {
   // XXX This is hopefully a temporary binding to get around
@@ -62,22 +60,8 @@ export function data(
   const constAction = action;
 
   if (isQueryResultAction(action)) {
-    if (!queries[action.queryId]) {
-      return previousState;
-    }
-
-    // Ignore results from old requests
-    // XXX this means that if you have a refetch interval which is shorter than your roundtrip time,
-    // your query will be in the loading state forever!
-    // do not write to the store if this is for fetchMore
-    if (action.requestId < queries[action.queryId].lastRequestId || action.fetchMoreForQueryId) {
-      return previousState;
-    }
-
     // XXX handle partial result due to errors
     if (! graphQLResultHasError(action.result)) {
-      const queryStoreValue = queries[action.queryId];
-
       // XXX use immutablejs instead of cloning
       const clonedState = { ...previousState } as NormalizedCache;
 
@@ -87,7 +71,7 @@ export function data(
         result: action.result.data,
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
         document: action.document,
-        variables: queryStoreValue.variables,
+        variables: action.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMatcherFunction: config.fragmentMatcher,
@@ -136,8 +120,6 @@ export function data(
   } else if (isMutationResultAction(constAction)) {
     // Incorporate the result from this mutation into the store
     if (!constAction.result.errors) {
-      const queryStoreValue = mutations[constAction.mutationId];
-
       // XXX use immutablejs instead of cloning
       const clonedState = { ...previousState } as NormalizedCache;
 
@@ -145,7 +127,7 @@ export function data(
         result: constAction.result.data,
         dataId: 'ROOT_MUTATION',
         document: constAction.document,
-        variables: queryStoreValue.variables,
+        variables: constAction.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
         fragmentMatcherFunction: config.fragmentMatcher,
@@ -154,12 +136,8 @@ export function data(
       // If this action wants us to update certain queries. Let’s do it!
       const { updateQueries } = constAction;
       if (updateQueries) {
-        Object.keys(updateQueries).forEach(queryId => {
-          const query = queries[queryId];
-          if (!query) {
-            return;
-          }
-
+        Object.keys(updateQueries).filter(id => updateQueries[id]).forEach(queryId => {
+          const { query, reducer } = updateQueries[queryId];
 
           // Read the current query result from the store.
           const { result: currentQueryResult, isMissing } = diffQueryAgainstStore({
@@ -174,8 +152,6 @@ export function data(
           if (isMissing) {
             return;
           }
-
-          const reducer = updateQueries[queryId];
 
           // Run our reducer using the current query result and the mutation result.
           const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, {
@@ -213,8 +189,6 @@ export function data(
         newState = data(
           newState,
           { type: 'APOLLO_WRITE', writes },
-          queries,
-          mutations,
           config,
         );
       }

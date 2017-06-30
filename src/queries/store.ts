@@ -35,7 +35,6 @@ export type QueryStoreValue = {
   networkStatus: NetworkStatus;
   networkError: Error | null;
   graphQLErrors: GraphQLError[];
-  lastRequestId: number;
   metadata: any;
 };
 
@@ -101,7 +100,6 @@ export function queries(
       networkError: null,
       graphQLErrors: [],
       networkStatus: newNetworkStatus,
-      lastRequestId: action.requestId,
       metadata: action.metadata,
     };
 
@@ -131,11 +129,6 @@ export function queries(
       return previousState;
     }
 
-    // Ignore results from old requests
-    if (action.requestId < previousState[action.queryId].lastRequestId) {
-      return previousState;
-    }
-
     const newState = { ...previousState } as QueryStore;
     const resultHasGraphQLErrors = graphQLResultHasError(action.result);
 
@@ -160,11 +153,6 @@ export function queries(
     return newState;
   } else if (isQueryErrorAction(action)) {
     if (!previousState[action.queryId]) {
-      return previousState;
-    }
-
-    // Ignore results from old requests
-    if (action.requestId < previousState[action.queryId].lastRequestId) {
       return previousState;
     }
 

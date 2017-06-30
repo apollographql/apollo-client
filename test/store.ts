@@ -154,7 +154,6 @@ describe('createApolloStore', () => {
       queries: {
         'test.0': {
           'graphQLErrors': [],
-          'lastRequestId': 1,
           'networkStatus': 1,
           'networkError': null,
           'previousVariables': null,

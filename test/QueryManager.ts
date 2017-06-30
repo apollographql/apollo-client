@@ -2442,7 +2442,6 @@ describe('QueryManager', () => {
       const currentState = queryManager.getApolloState();
       const expectedState: any = {
         data: {},
-        mutations: {},
         queries: {},
         optimistic: [],
         reducerError: null,

@@ -182,7 +182,6 @@ describe('client', () => {
       {
         apollo: {
           queries: {},
-          mutations: {},
           data: {},
           optimistic: [],
           reducerError: null,
@@ -588,7 +587,6 @@ describe('client', () => {
           metadata: null,
         },
       },
-      mutations: {},
       reducerError: null,
     }) };
 

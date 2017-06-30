@@ -22,7 +22,6 @@ describe('createApolloStore', () => {
       store.getState()['apollo'],
       {
         queries: {},
-        mutations: {},
         data: {},
         optimistic: [],
         reducerError: null,
@@ -39,7 +38,6 @@ describe('createApolloStore', () => {
       store.getState()['test'],
       {
         queries: {},
-        mutations: {},
         data: {},
         optimistic: [],
         reducerError: null,
@@ -64,7 +62,6 @@ describe('createApolloStore', () => {
     assert.deepEqual(store.getState(), {
       apollo: {
         queries: {},
-        mutations: {},
         data: initialState.apollo.data,
         optimistic: initialState.apollo.optimistic,
         reducerError: null,
@@ -119,7 +116,6 @@ describe('createApolloStore', () => {
 
     const emptyState: Store = {
       queries: { },
-      mutations: { },
       data: { },
       optimistic: ([] as any[]),
       reducerError: null,
@@ -163,7 +159,6 @@ describe('createApolloStore', () => {
           'metadata': null,
         },
       },
-      mutations: {},
       data: {},
       optimistic: ([] as any[]),
       reducerError: null,
@@ -238,7 +233,6 @@ describe('createApolloStore', () => {
 
     const resetState = {
       queries: {},
-      mutations: {},
       data: {},
       optimistic: [
         {

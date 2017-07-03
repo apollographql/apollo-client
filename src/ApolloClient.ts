@@ -1,5 +1,6 @@
 import {
   NetworkInterface,
+  ObservableNetworkInterface,
   createNetworkInterface,
 } from './transport/networkInterface';
 
@@ -65,7 +66,7 @@ import {
 } from './core/watchQueryOptions';
 
 import {
-  storeKeyNameFromFieldNameAndArgs,
+  getStoreKeyName,
 } from './data/storeUtils';
 
 import {
@@ -175,7 +176,7 @@ export default class ApolloClient implements DataProxy {
    */
 
   constructor(options: {
-    networkInterface?: NetworkInterface,
+    networkInterface?: NetworkInterface | ObservableNetworkInterface,
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
@@ -215,14 +216,30 @@ export default class ApolloClient implements DataProxy {
       this.fragmentMatcher = fragmentMatcher;
     }
 
+    if ( networkInterface && typeof (<ObservableNetworkInterface>networkInterface).request === 'function') {
+      this.networkInterface = {
+        ...networkInterface,
+        query: (request) => new Promise<ExecutionResult>((resolve, reject) => {
+          const subscription = (networkInterface as ObservableNetworkInterface)
+          .request(request)
+          .subscribe({
+            next: resolve,
+            error: reject,
+            complete: () => subscription.unsubscribe(),
+          });
+        }),
+      };
+    } else {
+      this.networkInterface = networkInterface ? <NetworkInterface>networkInterface :
+        createNetworkInterface({ uri: '/graphql' });
+    }
+
     this.initialState = initialState ? initialState : {};
-    this.networkInterface = networkInterface ? networkInterface :
-      createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
     this.dataIdFromObject = this.dataId;
-    this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.fieldWithArgs = getStoreKeyName;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
 

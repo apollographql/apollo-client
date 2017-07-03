@@ -51,6 +51,38 @@ function addTypenameToSelectionSet(
   }
 }
 
+function removeConnectionDirectiveFromSelectionSet(selectionSet: SelectionSetNode) {
+  if (selectionSet.selections) {
+    selectionSet.selections.forEach((selection) => {
+      if (selection.kind === 'Field' && selection as FieldNode && selection.directives) {
+        selection.directives = selection.directives.filter((directive) => {
+          const willRemove = directive.name.value === 'connection';
+          if (willRemove) {
+            if (!directive.arguments || !directive.arguments.some((arg) => arg.name.value === 'key')) {
+              console.warn('Removing an @connection directive even though it does not have a key. ' +
+                'You may want to use the key parameter to specify a store key.');
+            }
+          }
+
+          return !willRemove;
+        });
+      }
+    });
+
+    selectionSet.selections.forEach((selection) => {
+      if (selection.kind === 'Field') {
+        if (selection.selectionSet) {
+          removeConnectionDirectiveFromSelectionSet(selection.selectionSet);
+        }
+      } else if (selection.kind === 'InlineFragment') {
+        if (selection.selectionSet) {
+          removeConnectionDirectiveFromSelectionSet(selection.selectionSet);
+        }
+      }
+    });
+  }
+}
+
 export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
   const docClone = cloneDeep(doc);
@@ -58,6 +90,17 @@ export function addTypenameToDocument(doc: DocumentNode) {
   docClone.definitions.forEach((definition: DefinitionNode) => {
     const isRoot = definition.kind === 'OperationDefinition';
     addTypenameToSelectionSet((definition as OperationDefinitionNode).selectionSet, isRoot);
+  });
+
+  return docClone;
+}
+
+export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
+  checkDocument(doc);
+  const docClone = cloneDeep(doc);
+
+  docClone.definitions.forEach((definition: DefinitionNode) => {
+    removeConnectionDirectiveFromSelectionSet((definition as OperationDefinitionNode).selectionSet);
   });
 
   return docClone;

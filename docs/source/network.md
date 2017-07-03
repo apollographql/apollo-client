@@ -124,23 +124,8 @@ It is possible to use afterware with the network interface created via `createNe
 In order to do so, you must pass an array of objects into the interface created with `createNetworkInterface()`.
 Each object must contain an `applyAfterware` method with the following parameters:
 
-- `{ response }: object` An object containing the parsed HTTP response of a GraphQL fetch.
+- `{ response }: object` An object containing the HTTP response of a GraphQL fetch.
 - `next: function` This function pushes the HTTP response onward through the afterware.
-
-The shape of the response object is as follows:
-
-```js
-interface ParsedResponse {
-  ok: Boolean;
-  isJSON: Boolean;
-  body: Object | Array<Object>;
-  rawBody: String | null;
-  headers: Object;
-  status: Number;
-  statusText: String;
-  url: String;
-}
-```
 
 The following example demonstrates how to implement an afterware function.
 It can be done either by providing the required object directly to `.useAfter()`
@@ -223,7 +208,7 @@ networkInterface.use([exampleWare1])
 
 <h2 id="websocket">GraphQL over WebSocket</h2>
 
-Another alternative for network interface is GraphQL over WebSocket, using [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws/). 
+Another alternative for network interface is GraphQL over WebSocket, using [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws/).
 
 You can the create WebSocket as full-transport, and pass all GraphQL operations over the WebSocket (`Query`, `Mutation` and `Subscription`), or use a hybrid network interface and execute `Query` and `Mutation` over HTTP, and only `Subscription` over the WebSocket.
 
@@ -372,7 +357,7 @@ You can pass arbitrary data into your network interface using variables. In this
 
 Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. Batching works only with server that support batched queries (for example [graphql-server](https://github.com/apollostack/graphql-server)). Batched requests to servers that don't support batching will fail.
 
-To use batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object (the same as `createNetworkInterface`) with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server. You can also provide the `batchMax` option to define the maximum amount of queries you want in one batch. When left empty this will send all queries within the `batchInterval` in one batch. 
+To use batching, simply pass a `BatchedNetworkInterface` to the `ApolloClient` constructor. You can do so by using  `createBatchingNetworkInterface` instead of `createNetworkInterface`. `createBatchingNetworkInterface` takes a single options object (the same as `createNetworkInterface`) with an additional `batchInterval` option, which determines how long the network interface batches up queries before sending them to the server. You can also provide the `batchMax` option to define the maximum amount of queries you want in one batch. When left empty this will send all queries within the `batchInterval` in one batch.
 
 <h3 id="BatchingExample">Query batching example</h3>
 
@@ -427,7 +412,7 @@ const apolloClient = new ApolloClient({
   queryDeduplication: true,
 });
  ```
- 
+
  Query deduplication can be useful if many components display the same data, but you don't want to fetch that data from the server many times. It works by comparing a query to all queries currently in flight. If an identical query is currently in flight, the new query will be mapped to the same promise and resolved when the currently in-flight query returns.
 
  <h2 id="query-batch-wares">Middleware and Afterware for batching network interfaces</h2>

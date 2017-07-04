@@ -205,7 +205,7 @@ const CommentPageWithData = graphql(submitComment, {
           content: commentContent,
         },
       },
-    });
+    }),
   }),
 })(CommentPage);
 ```

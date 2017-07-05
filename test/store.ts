@@ -21,7 +21,6 @@ describe('createApolloStore', () => {
     assert.deepEqual(
       store.getState()['apollo'],
       {
-        queries: {},
         data: {},
         optimistic: [],
         reducerError: null,
@@ -37,7 +36,6 @@ describe('createApolloStore', () => {
     assert.deepEqual(
       store.getState()['test'],
       {
-        queries: {},
         data: {},
         optimistic: [],
         reducerError: null,
@@ -61,7 +59,6 @@ describe('createApolloStore', () => {
 
     assert.deepEqual(store.getState(), {
       apollo: {
-        queries: {},
         data: initialState.apollo.data,
         optimistic: initialState.apollo.optimistic,
         reducerError: null,
@@ -115,7 +112,6 @@ describe('createApolloStore', () => {
     };
 
     const emptyState: Store = {
-      queries: { },
       data: { },
       optimistic: ([] as any[]),
       reducerError: null,
@@ -147,18 +143,6 @@ describe('createApolloStore', () => {
     };
 
     const emptyState: Store = {
-      queries: {
-        'test.0': {
-          'graphQLErrors': [],
-          'networkStatus': 1,
-          'networkError': null,
-          'previousVariables': null,
-          'queryString': '',
-          'document': queryDocument,
-          'variables': {},
-          'metadata': null,
-        },
-      },
       data: {},
       optimistic: ([] as any[]),
       reducerError: null,
@@ -232,7 +216,6 @@ describe('createApolloStore', () => {
     assert(/test!!!/.test(store.getState().apollo.reducerError.error));
 
     const resetState = {
-      queries: {},
       data: {},
       optimistic: [
         {

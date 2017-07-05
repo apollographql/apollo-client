@@ -1,6 +1,10 @@
 export class MutationStore {
   private store: {[mutationId: string]: MutationStoreValue} = {};
 
+  public getStore(): {[mutationId: string]: MutationStoreValue} {
+    return this.store;
+  }
+
   public get(mutationId: string): MutationStoreValue {
     return this.store[mutationId];
   }

@@ -301,8 +301,8 @@ describe('HTTPBatchedNetworkInterface', () => {
 
   it('middleware should be able to modify requests/options', () => {
     const changeMiddleware: BatchMiddlewareInterface = {
-      applyBatchMiddleware({ options }, next) {
-        (options as any).headers['Content-Length'] = '18';
+      applyBatchMiddleware({ options: opts }, next) {
+        (opts as any).headers['Content-Length'] = '18';
         next();
       },
     };

@@ -105,7 +105,17 @@ export type Directives = {
 
 export function getStoreKeyName(fieldName: string, args?: Object, directives?: Directives): string {
   if (directives && directives['connection'] && directives['connection']['key']) {
-    return directives['connection']['key'];
+    const filterKeys = directives['connection']['filter'] ? (directives['connection']['filter'] as string[]) : [];
+    filterKeys.sort();
+
+    const queryArgs = args as {[key: string]: any};
+
+    if (filterKeys.length > 0) {
+      const filterExtra = filterKeys.map((key) => `${key}:${JSON.stringify(queryArgs[key])}`).reduce((a, b) => `${a}_${b}`);
+      return directives['connection']['key'] + '_' + filterExtra;
+    } else {
+      return directives['connection']['key'];
+    }
   }
 
   if (args) {

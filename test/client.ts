@@ -2810,6 +2810,52 @@ it('should run a query with the connection directive and write the result to the
     });
   });
 
+  it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => {
+    const query = gql`
+      query books($order: string) {
+        books(skip: 0, limit: 2, order: $order) @connection(key: "abc", filter: ["order"]) {
+          name
+          __typename
+        }
+      }`;
+
+    const result = {
+      'books': [
+        {
+          'name': 'abcd',
+          '__typename': 'Book',
+        },
+      ],
+    };
+
+    const variables = {order: 'popularity'};
+
+    const networkInterface = mockNetworkInterface({
+      request: { query: query, variables },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    return client.query({ query, variables }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+      assert.deepEqual(client.store.getState().apollo.data, {
+        'ROOT_QUERY.abc_order:"popularity".0': { name: 'abcd', __typename: 'Book' },
+        'ROOT_QUERY': {
+          'abc_order:"popularity"': [
+            {
+              'generated': true,
+              'id': 'ROOT_QUERY.abc_order:"popularity".0',
+              'type': 'id',
+            },
+          ],
+        },
+      });
+    });
+  });
+
 function clientRoundtrip(
   query: DocumentNode,
   data: ExecutionResult,

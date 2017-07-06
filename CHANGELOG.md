@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Add the `filter` argument to the `@connection` directive so that custom store keys can include query arguments [PR #1862](https://github.com/apollographql/apollo-client/pull/1862)
 - Add support for flow typecheck to work out of the box (without any configuration) [PR #1820](https://github.com/apollographql/apollo-client/pull/1820)
 - Remove the dependency on the query and mutation store from the data reducer. Apollo actions sent to Redux now contain additional information that was originally pulled from the query and mutation stores [PR #1845](https://github.com/apollographql/apollo-client/pull/1845)
 - Fix: Avoiding reprocessing of identical data when writing to the store [PR #1675](https://github.com/apollographql/apollo-client/pull/1675)

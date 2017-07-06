@@ -3,7 +3,7 @@ title: "Small Example: Snack"
 description: A tiny app that implements one view from our GitHunt example app, that you can run and edit right from your browser.
 ---
 
-The easiest way to see what Apollo Client and GraphQL can do for you is to try them for yourself. Below is a simple example of a single React Native view that uses Apollo Client to talk to our hosted example app, [GitHunt](example-schema.md). We've embedded it in the page with the [Snack](https://blog.expo.io/sketch-a-playground-for-react-native-16b2401f44a2) editor from [Expo](https://expo.io/).
+The easiest way to see what Apollo Client and GraphQL can do for you is to try them for yourself. Below is a simple example of a single React Native view that uses Apollo Client to talk to our hosted example app, [GitHunt](example-schema.html). We've embedded it in the page with the [Snack](https://blog.expo.io/sketch-a-playground-for-react-native-16b2401f44a2) editor from [Expo](https://expo.io/).
 
 <div data-snack-id="HkhGxRFhe" data-snack-platform="ios" data-snack-preview="true" style="overflow:hidden;background:#fafafa;border:1px solid rgba(0,0,0,.16);border-radius:4px;height:514px;width:100%"></div>
 <script async src="https://snack.expo.io/embed.js"></script>

@@ -327,9 +327,9 @@ export class HTTPHybridNetworkInterface {
   query(request: Request): Promise<ExecutionResult> {
     if (request.variables && request.variables.__disableBatch) {
       return this.networkInterface.query(request);
-    } else {
-      return this.batchedInterface.query(request);
     }
+    
+    return this.batchedInterface.query(request);
   }
 
   use(middlewares: Array<*>) {

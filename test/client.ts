@@ -2842,12 +2842,12 @@ it('should run a query with the connection directive and write the result to the
     return client.query({ query, variables }).then((actualResult) => {
       assert.deepEqual(actualResult.data, result);
       assert.deepEqual(client.store.getState().apollo.data, {
-        'ROOT_QUERY.abc_order:"popularity".0': { name: 'abcd', __typename: 'Book' },
+        'ROOT_QUERY.abc({"order":"popularity"}).0': { name: 'abcd', __typename: 'Book' },
         'ROOT_QUERY': {
-          'abc_order:"popularity"': [
+          'abc({"order":"popularity"})': [
             {
               'generated': true,
-              'id': 'ROOT_QUERY.abc_order:"popularity".0',
+              'id': 'ROOT_QUERY.abc({"order":"popularity"}).0',
               'type': 'id',
             },
           ],

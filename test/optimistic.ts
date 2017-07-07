@@ -318,9 +318,9 @@ describe('optimistic mutation results', () => {
             updateQueries,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Optimistically generated 2');
-            const mutationsState = client.store.getState().apollo.mutations;
-            assert.equal(mutationsState['5'].loading, false);
-            assert.equal(mutationsState['6'].loading, true);
+            const latestState = client.store.getState().apollo.mutations;
+            assert.equal(latestState['5'].loading, false);
+            assert.equal(latestState['6'].loading, true);
 
             return res;
           });
@@ -331,9 +331,9 @@ describe('optimistic mutation results', () => {
             updateQueries,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
-            const mutationsState = client.store.getState().apollo.mutations;
-            assert.equal(mutationsState[5].loading, false);
-            assert.equal(mutationsState[6].loading, false);
+            const latestState = client.store.getState().apollo.mutations;
+            assert.equal(latestState[5].loading, false);
+            assert.equal(latestState[6].loading, false);
 
             return res;
           });
@@ -486,9 +486,9 @@ describe('optimistic mutation results', () => {
             update,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Optimistically generated 2');
-            const mutationsState = client.store.getState().apollo.mutations;
-            assert.equal(mutationsState['5'].loading, false);
-            assert.equal(mutationsState['6'].loading, true);
+            const latestState = client.store.getState().apollo.mutations;
+            assert.equal(latestState['5'].loading, false);
+            assert.equal(latestState['6'].loading, true);
 
             return res;
           });
@@ -499,9 +499,9 @@ describe('optimistic mutation results', () => {
             update,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
-            const mutationsState = client.store.getState().apollo.mutations;
-            assert.equal(mutationsState[5].loading, false);
-            assert.equal(mutationsState[6].loading, false);
+            const latestState = client.store.getState().apollo.mutations;
+            assert.equal(latestState[5].loading, false);
+            assert.equal(latestState[6].loading, false);
 
             return res;
           });
@@ -753,10 +753,10 @@ describe('optimistic mutation results', () => {
           optimisticResponse,
           updateQueries,
         }).then((res) => {
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
-          assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
-          assert.equal((dataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
-          assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+          const currentDataInStore = client.queryManager.getDataWithOptimisticResults();
+          assert.equal((currentDataInStore['TodoList5'] as any).todos.length, 5);
+          assert.equal((currentDataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
+          assert.equal((currentDataInStore['Todo66'] as any).text, 'Optimistically generated 2');
           return res;
         });
 
@@ -1105,10 +1105,10 @@ describe('optimistic mutation results', () => {
           optimisticResponse,
           update,
         }).then((res) => {
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
-          assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
-          assert.equal((dataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
-          assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+          const currentDataInStore = client.queryManager.getDataWithOptimisticResults();
+          assert.equal((currentDataInStore['TodoList5'] as any).todos.length, 5);
+          assert.equal((currentDataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
+          assert.equal((currentDataInStore['Todo66'] as any).text, 'Optimistically generated 2');
           return res;
         });
 

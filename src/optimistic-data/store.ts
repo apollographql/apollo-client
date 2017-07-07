@@ -117,8 +117,6 @@ function getOptimisticDataPatch (
   const optimisticData = data(
     previousData,
     optimisticAction,
-    queries,
-    mutations,
     config,
   );
 

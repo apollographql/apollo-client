@@ -19,11 +19,16 @@ import {
   FetchPolicy,
 } from './core/watchQueryOptions';
 
+import {
+  QueryStoreValue,
+} from './queries/store';
+
 export type QueryResultAction = {
   type: 'APOLLO_QUERY_RESULT';
   result: ExecutionResult;
   queryId: string;
   document: DocumentNode;
+  variables: Object;
   operationName: string | null;
   requestId: number;
   fetchMoreForQueryId?: string;
@@ -88,6 +93,13 @@ export function isQueryStopAction(action: ApolloAction): action is QueryStopActi
   return action.type === 'APOLLO_QUERY_STOP';
 }
 
+// contains both the original value of a query and a reducer to transform
+// the query during an update
+export type QueryWithUpdater = {
+  reducer: MutationQueryReducer,
+  query: QueryStoreValue,
+};
+
 export interface MutationInitAction {
   type: 'APOLLO_MUTATION_INIT';
   mutationString: string;
@@ -97,7 +109,7 @@ export interface MutationInitAction {
   mutationId: string;
   optimisticResponse: Object | Function | undefined;
   extraReducers?: ApolloReducer[];
-  updateQueries?: { [queryId: string]: MutationQueryReducer };
+  updateQueries?: { [queryId: string]: QueryWithUpdater };
   update?: (proxy: DataProxy, mutationResult: Object) => void;
 }
 
@@ -114,7 +126,7 @@ export interface MutationResultAction {
   variables: Object;
   mutationId: string;
   extraReducers?: ApolloReducer[];
-  updateQueries?: { [queryId: string]: MutationQueryReducer };
+  updateQueries?: { [queryId: string]: QueryWithUpdater };
   update?: (proxy: DataProxy, mutationResult: Object) => void;
 }
 

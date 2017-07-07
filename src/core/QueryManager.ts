@@ -95,6 +95,10 @@ import {
 } from '../data/readFromStore';
 
 import {
+  QueryWithUpdater,
+} from  '../actions';
+
+import {
   MutationQueryReducersMap,
   MutationQueryReducer,
 } from '../data/mutationResults';
@@ -169,6 +173,8 @@ export class QueryManager {
   // generally used to refetches for refetchQueries and to update mutation results through
   // updateQueries.
   private queryIdsByName: { [queryName: string]: string[] };
+
+  private lastRequestId: { [queryId: string]: number } = {};
 
   constructor({
     networkInterface,
@@ -279,12 +285,20 @@ export class QueryManager {
     this.queryDocuments[mutationId] = mutation;
 
     // Create a map of update queries by id to the query instead of by name.
-    const updateQueries: { [queryId: string]: MutationQueryReducer } = {};
-    if (updateQueriesByName) {
-      Object.keys(updateQueriesByName).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
-        updateQueries[queryId] = updateQueriesByName[queryName];
-      }));
-    }
+    const generateUpdateQueriesInfo: () => { [queryId: string]: QueryWithUpdater } = () => {
+      const ret:  { [queryId: string]: QueryWithUpdater } = {};
+
+      if (updateQueriesByName) {
+        Object.keys(updateQueriesByName).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
+          ret[queryId] = {
+            reducer: updateQueriesByName[queryName],
+            query: this.getApolloState().queries[queryId],
+          };
+        }));
+      }
+
+      return ret;
+    };
 
     this.store.dispatch({
       type: 'APOLLO_MUTATION_INIT',
@@ -295,7 +309,7 @@ export class QueryManager {
       mutationId,
       optimisticResponse,
       extraReducers: this.getExtraReducers(),
-      updateQueries,
+      updateQueries: generateUpdateQueriesInfo(),
       update: updateWithProxyFn,
     });
 
@@ -325,7 +339,7 @@ export class QueryManager {
             operationName: getOperationName(mutation),
             variables: variables || {},
             extraReducers: this.getExtraReducers(),
-            updateQueries,
+            updateQueries: generateUpdateQueriesInfo(),
             update: updateWithProxyFn,
           });
 
@@ -438,6 +452,8 @@ export class QueryManager {
       metadata,
     });
 
+    this.lastRequestId[queryId] = requestId;
+
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
@@ -467,13 +483,15 @@ export class QueryManager {
         if (isApolloError(error)) {
           throw error;
         } else {
-          this.store.dispatch({
-            type: 'APOLLO_QUERY_ERROR',
-            error,
-            queryId,
-            requestId,
-            fetchMoreForQueryId,
-          });
+          if (requestId >= (this.lastRequestId[queryId] || 1)) {
+            this.store.dispatch({
+              type: 'APOLLO_QUERY_ERROR',
+              error,
+              queryId,
+              requestId,
+              fetchMoreForQueryId,
+            });
+          }
 
           this.removeFetchQueryPromise(requestId);
 
@@ -1075,20 +1093,23 @@ export class QueryManager {
 
       this.deduplicator.query(request, this.queryDeduplication)
         .then((result: ExecutionResult) => {
-
           const extraReducers = this.getExtraReducers();
 
-          // XXX handle multiple ApolloQueryResults
-          this.store.dispatch({
-            type: 'APOLLO_QUERY_RESULT',
-            document,
-            operationName: getOperationName(document),
-            result,
-            queryId,
-            requestId,
-            fetchMoreForQueryId,
-            extraReducers,
-          });
+          // default the lastRequestId to 1
+          if (requestId >= (this.lastRequestId[queryId] || 1)) {
+            // XXX handle multiple ApolloQueryResults
+            this.store.dispatch({
+              type: 'APOLLO_QUERY_RESULT',
+              document,
+              variables: variables ? variables : {},
+              operationName: getOperationName(document),
+              result,
+              queryId,
+              requestId,
+              fetchMoreForQueryId,
+              extraReducers,
+            });
+          }
 
           this.removeFetchQueryPromise(requestId);
 

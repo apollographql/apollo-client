@@ -257,6 +257,10 @@ export class QueryManager {
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
   }): Promise<ExecutionResult> {
+    if (!mutation) {
+      throw new Error('mutation option is required. You must specify your GraphQL document in the mutation option.');
+    }
+
     const mutationId = this.generateQueryId();
 
     if (this.addTypename) {

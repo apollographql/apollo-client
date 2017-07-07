@@ -245,6 +245,14 @@ describe('client', () => {
     }, 'You must wrap the query string in a "gql" tag.');
   });
 
+  it('should throw an error if mutation option is missing', () => {
+    const client = new ApolloClient();
+
+    assert.throws(() => {
+      client.mutate({ query: gql`{ a }` } as any);
+    }, 'mutation option is required. You must specify your GraphQL document in the mutation option.');
+  });
+
   it('should allow for a single query to take place', () => {
     const query = gql`
       query people {
@@ -581,7 +589,6 @@ describe('client', () => {
           networkStatus: NetworkStatus.ready,
           networkError: null,
           graphQLErrors: [],
-          lastRequestId: 2,
           previousVariables: null,
           metadata: null,
         },

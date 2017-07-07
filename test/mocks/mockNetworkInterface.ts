@@ -1,5 +1,6 @@
 import {
   NetworkInterface,
+  ObservableNetworkInterface,
   BatchedNetworkInterface,
   Request,
   SubscriptionNetworkInterface,
@@ -14,12 +15,23 @@ import {
   print,
 } from 'graphql/language/printer';
 
+import {
+  Observable,
+  Observer,
+} from '../../src/util/Observable';
+
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server
 export default function mockNetworkInterface(
   ...mockedResponses: MockedResponse[],
 ): NetworkInterface {
   return new MockNetworkInterface(mockedResponses);
+}
+
+export function mockObservableNetworkInterface(
+  ...mockedResponses: MockedResponse[],
+): ObservableNetworkInterface {
+  return new MockObservableNetworkInterface(mockedResponses);
 }
 
 export function mockSubscriptionNetworkInterface(
@@ -108,6 +120,41 @@ export class MockNetworkInterface implements NetworkInterface {
     });
   }
 }
+
+export class MockObservableNetworkInterface implements ObservableNetworkInterface {
+  private mockNetworkInterface: MockNetworkInterface;
+
+  constructor(mockedResponses: MockedResponse[]) {
+    this.mockNetworkInterface = new MockNetworkInterface(mockedResponses);
+  }
+
+  public addMockedResponse(mockedResponse: MockedResponse) {
+    this.mockNetworkInterface.addMockedResponse(mockedResponse);
+  }
+
+  public request(request: Request) {
+    return new Observable<ExecutionResult>(({ next: onNext, error: onError, complete: onComplete }: Observer<ExecutionResult>) => {
+      const result = this.mockNetworkInterface.query(request);
+
+      result.then((data) => {
+        if (onNext) {
+          onNext(data);
+        }
+        if (onComplete) {
+          onComplete();
+        }
+      })
+      .catch((error) => {
+        if (onError) {
+          onError(error);
+        }
+      });
+
+      return () => void 0;
+    });
+  }
+}
+
 
 export class MockSubscriptionNetworkInterface extends MockNetworkInterface implements SubscriptionNetworkInterface {
   public mockedSubscriptionsByKey: { [key: string ]: MockedSubscription[] } = {};

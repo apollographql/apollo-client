@@ -59,6 +59,16 @@ class WriteError extends Error {
   public type = 'WriteError';
 }
 
+function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
+  // XXX A bit hacky maybe ...
+  const enhancedError = new WriteError(`Error writing result to store for query ${
+    document.loc && document.loc.source && document.loc.source.body
+  }`);
+  enhancedError.message += '/n' + error.message;
+  enhancedError.stack = error.stack;
+  return enhancedError;
+}
+
 /**
  * Writes the result of a query to the store.
  *
@@ -100,19 +110,23 @@ export function writeQueryToStore({
 
   variables = assign({}, getDefaultValues(queryDefinition), variables);
 
-  return writeSelectionSetToStore({
-    dataId: 'ROOT_QUERY',
-    result,
-    selectionSet: queryDefinition.selectionSet,
-    context: {
-      store,
-      processedData: {},
-      variables,
-      dataIdFromObject,
-      fragmentMap,
-      fragmentMatcherFunction,
-    },
-  });
+  try {
+    return writeSelectionSetToStore({
+      dataId: 'ROOT_QUERY',
+      result,
+      selectionSet: queryDefinition.selectionSet,
+      context: {
+        store,
+        processedData: {},
+        variables,
+        dataIdFromObject,
+        fragmentMap,
+        fragmentMatcherFunction,
+      },
+    });
+  } catch (e) {
+    throw enhanceErrorWithDocument(e, query);
+  }
 }
 
 export type WriteContext = {
@@ -164,11 +178,7 @@ export function writeResultToStore({
       },
     });
   } catch (e) {
-    // XXX A bit hacky maybe ...
-    const e2 = new Error(`Error writing result to store for query ${document.loc && document.loc.source.body}`);
-    e2.message += '/n' + e.message;
-    e2.stack = e.stack;
-    throw e2;
+    throw enhanceErrorWithDocument(e, document);
   }
 }
 
@@ -204,9 +214,9 @@ export function writeSelectionSetToStore({
           if (context.fragmentMatcherFunction) {
             // XXX We'd like to throw an error, but for backwards compatibility's sake
             // we just print a warning for the time being.
-            //throw new WriteError(`Missing field ${resultFieldKey}`);
+            //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
             if (!isProduction()) {
-              console.warn(`Missing field ${resultFieldKey}`);
+              console.warn(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
             }
           }
         }

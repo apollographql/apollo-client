@@ -54,6 +54,7 @@ import {
 
 import {
   getQueryDefinition,
+  getMutationDefinition,
   getFragmentDefinitions,
   FragmentMap,
   createFragmentMap,
@@ -98,6 +99,7 @@ export {
   NetworkStatus,
   ApolloError,
   getQueryDefinition,
+  getMutationDefinition,
   getFragmentDefinitions,
   FragmentMap,
   Request,

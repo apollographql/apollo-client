@@ -24,7 +24,7 @@ export type QueryResultAction = {
   result: ExecutionResult;
   queryId: string;
   document: DocumentNode;
-  operationName: string;
+  operationName: string | null;
   requestId: number;
   fetchMoreForQueryId?: string;
   extraReducers?: ApolloReducer[];
@@ -50,6 +50,7 @@ export interface QueryInitAction {
   type: 'APOLLO_QUERY_INIT';
   queryString: string;
   document: DocumentNode;
+  operationName: string | null;
   variables: Object;
   fetchPolicy: FetchPolicy;
   queryId: string;
@@ -68,6 +69,7 @@ export function isQueryInitAction(action: ApolloAction): action is QueryInitActi
 export interface QueryResultClientAction {
   type: 'APOLLO_QUERY_RESULT_CLIENT';
   result: ExecutionResult;
+  operationName: string | null;
   complete: boolean;
   queryId: string;
   requestId: number;
@@ -91,9 +93,9 @@ export interface MutationInitAction {
   mutationString: string;
   mutation: DocumentNode;
   variables: Object;
-  operationName: string;
+  operationName: string | null;
   mutationId: string;
-  optimisticResponse: Object | undefined;
+  optimisticResponse: Object | Function | undefined;
   extraReducers?: ApolloReducer[];
   updateQueries?: { [queryId: string]: MutationQueryReducer };
   update?: (proxy: DataProxy, mutationResult: Object) => void;
@@ -108,7 +110,7 @@ export interface MutationResultAction {
   type: 'APOLLO_MUTATION_RESULT';
   result: ExecutionResult;
   document: DocumentNode;
-  operationName: string;
+  operationName: string | null;
   variables: Object;
   mutationId: string;
   extraReducers?: ApolloReducer[];
@@ -134,6 +136,7 @@ export interface UpdateQueryResultAction {
   type: 'APOLLO_UPDATE_QUERY_RESULT';
   variables: any;
   document: DocumentNode;
+  operationName: string | null;
   newResult: Object;
 }
 
@@ -156,7 +159,7 @@ export interface SubscriptionResultAction {
   subscriptionId: number;
   variables: Object;
   document: DocumentNode;
-  operationName: string;
+  operationName: string | null;
   extraReducers?: ApolloReducer[];
 }
 
@@ -168,6 +171,7 @@ export interface DataWrite {
   rootId: string;
   result: any;
   document: DocumentNode;
+  operationName: string | null;
   variables: Object;
 }
 

@@ -275,8 +275,8 @@ describe('optimistic mutation results', () => {
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.notProperty(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-          assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+          (<any>assert).notDeepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
         });
       });
 
@@ -286,8 +286,9 @@ describe('optimistic mutation results', () => {
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.property(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+          // <any> can be removed once @types/chai adds deepInclude
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
           assert.equal((dataInStore['Todo99'] as any).text, expectedText1);
           assert.equal((dataInStore['Todo66'] as any).text, expectedText2);
         }
@@ -317,9 +318,9 @@ describe('optimistic mutation results', () => {
             updateQueries,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Optimistically generated 2');
-            const mutationsState = client.store.getState().apollo.mutations;
-            assert.equal(mutationsState['5'].loading, false);
-            assert.equal(mutationsState['6'].loading, true);
+            const latestState = client.store.getState().apollo.mutations;
+            assert.equal(latestState['5'].loading, false);
+            assert.equal(latestState['6'].loading, true);
 
             return res;
           });
@@ -330,9 +331,9 @@ describe('optimistic mutation results', () => {
             updateQueries,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
-            const mutationsState = client.store.getState().apollo.mutations;
-            assert.equal(mutationsState[5].loading, false);
-            assert.equal(mutationsState[6].loading, false);
+            const latestState = client.store.getState().apollo.mutations;
+            assert.equal(latestState[5].loading, false);
+            assert.equal(latestState[6].loading, false);
 
             return res;
           });
@@ -443,8 +444,8 @@ describe('optimistic mutation results', () => {
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.notProperty(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-          assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+          (<any>assert).notDeepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
         });
       });
 
@@ -454,8 +455,8 @@ describe('optimistic mutation results', () => {
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.property(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-          assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+          (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
           assert.equal((dataInStore['Todo99'] as any).text, expectedText1);
           assert.equal((dataInStore['Todo66'] as any).text, expectedText2);
         }
@@ -485,9 +486,9 @@ describe('optimistic mutation results', () => {
             update,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Optimistically generated 2');
-            const mutationsState = client.store.getState().apollo.mutations;
-            assert.equal(mutationsState['5'].loading, false);
-            assert.equal(mutationsState['6'].loading, true);
+            const latestState = client.store.getState().apollo.mutations;
+            assert.equal(latestState['5'].loading, false);
+            assert.equal(latestState['6'].loading, true);
 
             return res;
           });
@@ -498,9 +499,9 @@ describe('optimistic mutation results', () => {
             update,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
-            const mutationsState = client.store.getState().apollo.mutations;
-            assert.equal(mutationsState[5].loading, false);
-            assert.equal(mutationsState[6].loading, false);
+            const latestState = client.store.getState().apollo.mutations;
+            assert.equal(latestState[5].loading, false);
+            assert.equal(latestState[6].loading, false);
 
             return res;
           });
@@ -517,6 +518,98 @@ describe('optimistic mutation results', () => {
           subscriptionHandle.unsubscribe();
           checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
         });
+      });
+    });
+  });
+
+  describe('passing a function to optimisticResponse', () => {
+    const mutation = gql`
+      mutation createTodo ($text: String) {
+        createTodo (text: $text) {
+          id
+          text
+          completed
+          __typename
+        }
+        __typename
+      }
+    `;
+
+    const variables = { text: 'Optimistically generated from variables' };
+
+    const mutationResult = {
+      data: {
+        __typename: 'Mutation',
+        createTodo: {
+          id: '99',
+          __typename: 'Todo',
+          text: 'This one was created with a mutation.',
+          completed: true,
+        },
+      },
+    };
+
+    const optimisticResponse = ({ text }: { text: string }) => ({
+      __typename: 'Mutation',
+      createTodo: {
+        __typename: 'Todo',
+        id: '99',
+        text,
+        completed: true,
+      },
+    });
+
+    it('will use a passed variable in optimisticResponse', () => {
+      let subscriptionHandle: Subscription;
+      return setup({
+        request: { query: mutation, variables },
+        result: mutationResult,
+      })
+      .then(() => {
+        // we have to actually subscribe to the query to be able to update it
+        return new Promise( (resolve, reject) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res) { resolve(res); },
+          });
+        });
+      })
+      .then(() => {
+        const promise = client.mutate({
+          mutation,
+          variables,
+          optimisticResponse,
+          update: (proxy, mResult: any) => {
+            assert.equal(mResult.data.createTodo.id, '99');
+
+            const id = 'TodoList5';
+            const fragment = gql`fragment todoList on TodoList { todos { id text completed __typename } }`;
+
+            const data: any = proxy.readFragment({ id, fragment });
+
+            proxy.writeFragment({
+              data: { ...data, todos: [mResult.data.createTodo, ...data.todos] },
+              id, fragment,
+            });
+          },
+        });
+
+        const dataInStore = client.queryManager.getDataWithOptimisticResults();
+        assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
+        assert.equal((dataInStore['Todo99'] as any).text, 'Optimistically generated from variables');
+
+        return promise;
+      })
+      .then(() => {
+        return client.query({ query });
+      })
+      .then((newResult: any) => {
+        subscriptionHandle.unsubscribe();
+        // There should be one more todo item than before
+        assert.equal(newResult.data.todoList.todos.length, 4);
+
+        // Since we used `prepend` it should be at the front
+        assert.equal(newResult.data.todoList.todos[0].text, 'This one was created with a mutation.');
       });
     });
   });
@@ -660,10 +753,10 @@ describe('optimistic mutation results', () => {
           optimisticResponse,
           updateQueries,
         }).then((res) => {
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
-          assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
-          assert.equal((dataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
-          assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+          const currentDataInStore = client.queryManager.getDataWithOptimisticResults();
+          assert.equal((currentDataInStore['TodoList5'] as any).todos.length, 5);
+          assert.equal((currentDataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
+          assert.equal((currentDataInStore['Todo66'] as any).text, 'Optimistically generated 2');
           return res;
         });
 
@@ -759,8 +852,8 @@ describe('optimistic mutation results', () => {
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
         assert.notProperty(dataInStore, 'Todo99');
         assert.property(dataInStore, 'Todo66');
-        assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-        assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+        (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+        (<any>assert).notDeepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
       });
     });
 
@@ -1012,10 +1105,10 @@ describe('optimistic mutation results', () => {
           optimisticResponse,
           update,
         }).then((res) => {
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
-          assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
-          assert.equal((dataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
-          assert.equal((dataInStore['Todo66'] as any).text, 'Optimistically generated 2');
+          const currentDataInStore = client.queryManager.getDataWithOptimisticResults();
+          assert.equal((currentDataInStore['TodoList5'] as any).todos.length, 5);
+          assert.equal((currentDataInStore['Todo99'] as any).text, 'This one was created with a mutation.');
+          assert.equal((currentDataInStore['Todo66'] as any).text, 'Optimistically generated 2');
           return res;
         });
 
@@ -1114,8 +1207,8 @@ describe('optimistic mutation results', () => {
         assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
         assert.notProperty(dataInStore, 'Todo99');
         assert.property(dataInStore, 'Todo66');
-        assert.include((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
-        assert.notInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
+        (<any>assert).deepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo66'));
+        (<any>assert).notDeepInclude((dataInStore['TodoList5'] as any).todos, realIdValue('Todo99'));
       });
     });
 

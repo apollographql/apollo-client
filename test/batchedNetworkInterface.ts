@@ -47,7 +47,11 @@ describe('HTTPBatchedNetworkInterface', () => {
     opts?: RequestInit,
   }) => {
     const url = 'http://fake.com/graphql';
-    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, 10, opts);
+    const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
+      uri: url,
+      batchInterval: 10,
+      fetchOpts: opts,
+    });
 
     batchedNetworkInterface.use(middlewares);
     batchedNetworkInterface.useAfter(afterwares);
@@ -113,11 +117,27 @@ describe('HTTPBatchedNetworkInterface', () => {
   it('should construct itself correctly', () => {
     const url = 'http://notreal.com/graphql';
     const opts = {};
-    const batchedNetworkInterface = new HTTPBatchedNetworkInterface(url, 10, opts);
+    const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
+      uri: url,
+      batchInterval: 10,
+      fetchOpts: opts,
+    });
     assert(batchedNetworkInterface);
     assert.equal(batchedNetworkInterface._uri, url);
     assert.deepEqual(batchedNetworkInterface._opts, opts);
     assert(batchedNetworkInterface.batchQuery);
+  });
+
+
+  it('should have a default value of 10ms for batchInterval', () => {
+    const url = 'http://notreal.com/graphql';
+    const opts = {};
+    const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
+      uri: url,
+      fetchOpts: opts,
+    });
+    const queryBatcher = batchedNetworkInterface['batcher'];
+    assert.equal(queryBatcher['batchInterval'], 10);
   });
 
   it('should correctly return the result for a single request', () => {
@@ -281,8 +301,8 @@ describe('HTTPBatchedNetworkInterface', () => {
 
   it('middleware should be able to modify requests/options', () => {
     const changeMiddleware: BatchMiddlewareInterface = {
-      applyBatchMiddleware({ options }, next) {
-        (options as any).headers['Content-Length'] = '18';
+      applyBatchMiddleware({ options: opts }, next) {
+        (opts as any).headers['Content-Length'] = '18';
         next();
       },
     };

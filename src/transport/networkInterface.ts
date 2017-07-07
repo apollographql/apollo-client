@@ -17,6 +17,12 @@ import {
   BatchAfterwareInterface,
 } from './afterware';
 
+import {
+  removeConnectionDirectiveFromDocument,
+} from '../queries/queryTransform';
+
+import { Observable } from '../util/Observable';
+
 /**
  * This is an interface that describes an GraphQL document to be sent
  * to the server.
@@ -33,7 +39,7 @@ export interface Request {
   debugName?: string;
   query?: DocumentNode;
   variables?: Object;
-  operationName?: string;
+  operationName?: string | null;
   [additionalKey: string]: any;
 }
 
@@ -43,12 +49,16 @@ export interface PrintedRequest {
   debugName?: string;
   query?: string;
   variables?: Object;
-  operationName?: string;
+  operationName?: string | null;
 }
 
 export interface NetworkInterface {
   [others: string]: any;
   query(request: Request): Promise<ExecutionResult>;
+}
+
+export interface ObservableNetworkInterface {
+  request(request: Request): Observable<ExecutionResult>;
 }
 
 export interface BatchedNetworkInterface extends NetworkInterface {
@@ -192,6 +202,12 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
     return this.applyMiddlewares({
       request,
       options,
+    }).then((rao) => {
+      if (rao.request.query) {
+        rao.request.query = removeConnectionDirectiveFromDocument(rao.request.query);
+      }
+
+      return rao;
     }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
       .then(response => this.applyAfterwares({
         response: response as Response,

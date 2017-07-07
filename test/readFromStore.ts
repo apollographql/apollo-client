@@ -70,7 +70,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
     });
@@ -107,7 +107,7 @@ describe('reading from the store', () => {
       variables,
     });
 
-    assert.deepEqual(result, {
+    assert.deepEqual<{}>(result, {
       id: 'abcd',
       nullField: null,
       numberField: 5,
@@ -148,7 +148,7 @@ describe('reading from the store', () => {
       variables,
     });
 
-    assert.deepEqual(result, {
+    assert.deepEqual<{}>(result, {
       id: 'abcd',
       nullField: null,
       numberField: 5,
@@ -196,7 +196,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedObj: {
@@ -281,7 +281,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nullField: null,
@@ -299,8 +299,8 @@ describe('reading from the store', () => {
     });
   });
 
-  it('runs a nested query with proper fragment fields in arrays', (done) => {
-    withError(() => {
+  it('runs a nested query with proper fragment fields in arrays', () => {
+    return withError(() => {
       const store = {
         'ROOT_QUERY': {
           __typename: 'Query',
@@ -340,14 +340,12 @@ describe('reading from the store', () => {
         fragmentMatcherFunction,
       });
 
-      assert.deepEqual(queryResult, {
+      assert.deepEqual<{}>(queryResult, {
         nestedObj: {
           innerArray: [{id: 'abcdef', someField: 3}],
         },
       });
-      done();
     }, /IntrospectionFragmentMatcher/);
-
   });
 
   it('runs a nested query with an array without IDs', () => {
@@ -396,7 +394,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -453,7 +451,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -509,7 +507,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedArray: [
@@ -574,7 +572,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       nestedObj: null,
@@ -609,7 +607,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: ['one', 'two', 'three'],
@@ -644,7 +642,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: 'This is a string!',
       numberField: 5,
       simpleArray: [null, 'two', 'three'],
@@ -683,7 +681,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
       computedField: 'This is a string!5bit',
@@ -721,7 +719,7 @@ describe('reading from the store', () => {
     });
 
     // The result of the query shouldn't contain __data_id fields
-    assert.deepEqual(queryResult, {
+    assert.deepEqual<{}>(queryResult, {
       stringField: result['stringField'],
       numberField: result['numberField'],
       computedField: 'This is a string!5bit',
@@ -785,7 +783,7 @@ describe('reading from the store', () => {
       `,
     });
 
-    assert.deepEqual(queryResult1, {
+    assert.deepEqual<{}>(queryResult1, {
       stringField: 'This is a string too!',
       numberField: 6,
       nullField: null,
@@ -808,10 +806,49 @@ describe('reading from the store', () => {
       `,
     });
 
-    assert.deepEqual(queryResult2, {
+    assert.deepEqual<{}>(queryResult2, {
       stringField: 'This is a deep string',
       numberField: 7,
       nullField: null,
     });
+  });
+
+  it('properly handles the connection directive', () => {
+    const store: NormalizedCache = {
+      'ROOT_QUERY': {
+        'abc': [
+          {
+            'generated': true,
+            'id': 'ROOT_QUERY.abc.0',
+            'type': 'id',
+          },
+        ],
+      },
+      'ROOT_QUERY.abc.0': {
+        'name': 'efgh',
+      },
+    };
+
+    const queryResult = readQueryFromStore({
+      store,
+      query: gql`
+        {
+          books(skip: 0, limit: 2) @connection(key: "abc") {
+            name
+          }
+        }
+      `,
+    });
+
+    assert.deepEqual<{}>(
+      queryResult,
+      {
+        'books': [
+          {
+            'name': 'efgh',
+          },
+        ],
+      },
+    );
   });
 });

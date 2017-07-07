@@ -49,6 +49,11 @@ export interface ModifiableWatchQueryOptions {
   fetchPolicy?: FetchPolicy;
 
   /**
+   * Wether or not to fetch results
+   */
+  fetchResults?: boolean;
+
+  /**
    * Whether or not updates to the network status should trigger next on the observer of this query
    */
   notifyOnNetworkStatusChange?: boolean;
@@ -117,7 +122,7 @@ export interface MutationOptions {
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: Object;
+  optimisticResponse?: Object | Function;
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to

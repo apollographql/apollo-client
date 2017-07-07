@@ -1,9 +1,11 @@
 import {
   NetworkInterface,
+  ObservableNetworkInterface,
   createNetworkInterface,
 } from './transport/networkInterface';
 
 import {
+  ExecutionResult,
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
@@ -64,7 +66,7 @@ import {
 } from './core/watchQueryOptions';
 
 import {
-  storeKeyNameFromFieldNameAndArgs,
+  getStoreKeyName,
 } from './data/storeUtils';
 
 import {
@@ -83,7 +85,6 @@ import {
 import {
   version,
 } from './version';
-
 
 /**
  * This type defines a "selector" function that receives state from the Redux store
@@ -175,7 +176,7 @@ export default class ApolloClient implements DataProxy {
    */
 
   constructor(options: {
-    networkInterface?: NetworkInterface,
+    networkInterface?: NetworkInterface | ObservableNetworkInterface,
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
@@ -215,14 +216,30 @@ export default class ApolloClient implements DataProxy {
       this.fragmentMatcher = fragmentMatcher;
     }
 
+    if ( networkInterface && typeof (<ObservableNetworkInterface>networkInterface).request === 'function') {
+      this.networkInterface = {
+        ...networkInterface,
+        query: (request) => new Promise<ExecutionResult>((resolve, reject) => {
+          const subscription = (networkInterface as ObservableNetworkInterface)
+          .request(request)
+          .subscribe({
+            next: resolve,
+            error: reject,
+            complete: () => subscription.unsubscribe(),
+          });
+        }),
+      };
+    } else {
+      this.networkInterface = networkInterface ? <NetworkInterface>networkInterface :
+        createNetworkInterface({ uri: '/graphql' });
+    }
+
     this.initialState = initialState ? initialState : {};
-    this.networkInterface = networkInterface ? networkInterface :
-      createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
     this.dataIdFromObject = this.dataId;
-    this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.fieldWithArgs = getStoreKeyName;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
 
@@ -272,10 +289,8 @@ export default class ApolloClient implements DataProxy {
         }
       }
     }
-
     this.version = version;
   }
-
   /**
    * This watches the results of the query according to the options specified and
    * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and
@@ -342,7 +357,7 @@ export default class ApolloClient implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
+  public mutate<T>(options: MutationOptions): Promise<ExecutionResult> {
     this.initStore();
 
     return this.queryManager.mutate<T>(options);
@@ -495,10 +510,8 @@ export default class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore() {
-    if (this.queryManager) {
-      this.queryManager.resetStore();
-    }
+  public resetStore(): Promise<ApolloQueryResult<any>[]>|null {
+    return this.queryManager ? this.queryManager.resetStore() : null;
   }
 
   public getInitialState(): { data: Object } {

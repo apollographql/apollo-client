@@ -1291,13 +1291,13 @@ describe('mutation results', () => {
         query ({ variables }) {
           switch (count++) {
             case 0:
-              assert.deepEqual(variables, { a: 1, b: 2 });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 2 });
               return Promise.resolve({ data: { result: 'hello' } });
             case 1:
-              assert.deepEqual(variables, { a: 1, c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, c: 3 });
               return Promise.resolve({ data: { result: 'world' } });
             case 2:
-              assert.deepEqual(variables, { a: undefined, b: 2, c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: undefined, b: 2, c: 3 });
               return Promise.resolve({ data: { result: 'goodbye' } });
             case 3:
               assert.deepEqual(variables, {});
@@ -1353,13 +1353,13 @@ describe('mutation results', () => {
         query ({ variables }) {
           switch (count++) {
             case 0:
-              assert.deepEqual(variables, { a: 1, b: 'water' });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 'water' });
               return Promise.resolve({ data: { result: 'hello' } });
             case 1:
-              assert.deepEqual(variables, { a: 2, b: 'cheese', c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: 2, b: 'cheese', c: 3 });
               return Promise.resolve({ data: { result: 'world' } });
             case 2:
-              assert.deepEqual(variables, { a: 1, b: 'cheese', c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 'cheese', c: 3 });
               return Promise.resolve({ data: { result: 'goodbye' } });
             default:
               return Promise.reject(new Error('Too many network calls.'));
@@ -1408,13 +1408,13 @@ describe('mutation results', () => {
         query ({ variables }) {
           switch (count++) {
             case 0:
-              assert.deepEqual(variables, { a: 1, b: 2, c: null });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 2, c: null });
               return Promise.resolve({ data: { result: 'hello' } });
             case 1:
-              assert.deepEqual(variables, { a: 1, b: null, c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: null, c: 3 });
               return Promise.resolve({ data: { result: 'world' } });
             case 2:
-              assert.deepEqual(variables, { a: null, b: null, c: null });
+              assert.deepEqual<Object | undefined>(variables, { a: null, b: null, c: null });
               return Promise.resolve({ data: { result: 'moon' } });
             default:
               return Promise.reject(new Error('Too many network calls.'));

@@ -69,7 +69,8 @@ export function data(
     // Ignore results from old requests
     // XXX this means that if you have a refetch interval which is shorter than your roundtrip time,
     // your query will be in the loading state forever!
-    if (action.requestId < queries[action.queryId].lastRequestId) {
+    // do not write to the store if this is for fetchMore
+    if (action.requestId < queries[action.queryId].lastRequestId || action.fetchMoreForQueryId) {
       return previousState;
     }
 
@@ -89,6 +90,7 @@ export function data(
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
+        fragmentMatcherFunction: config.fragmentMatcher,
       });
 
       // XXX each reducer gets the state from the previous reducer.
@@ -118,6 +120,7 @@ export function data(
         variables: action.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
+        fragmentMatcherFunction: config.fragmentMatcher,
       });
 
       // XXX each reducer gets the state from the previous reducer.
@@ -145,6 +148,7 @@ export function data(
         variables: queryStoreValue.variables,
         store: clonedState,
         dataIdFromObject: config.dataIdFromObject,
+        fragmentMatcherFunction: config.fragmentMatcher,
       });
 
       // If this action wants us to update certain queries. Let’s do it!
@@ -189,6 +193,7 @@ export function data(
               variables: query.variables,
               store: newState,
               dataIdFromObject: config.dataIdFromObject,
+              fragmentMatcherFunction: config.fragmentMatcher,
             });
           }
         });
@@ -241,6 +246,7 @@ export function data(
         variables: write.variables,
         store: currentState,
         dataIdFromObject: config.dataIdFromObject,
+        fragmentMatcherFunction: config.fragmentMatcher,
       }),
       { ...previousState } as NormalizedCache,
     );

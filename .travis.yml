@@ -1,7 +1,6 @@
 language: node_js
 node_js:
   - "6"
-  - "4"
 
 install:
   - npm install -g coveralls
@@ -10,6 +9,11 @@ install:
 
 script:
   - npm test
+
+    # test flow types (validity and use cases)
+  - npm run flow-check
+  
+    # run coverage and file size checks
   - npm run coverage
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error
   - npm run filesize

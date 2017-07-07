@@ -16,7 +16,7 @@ import {
 } from './storeUtils';
 
 import {
-  storeKeyNameFromFieldNameAndArgs,
+  getStoreKeyName,
 } from './storeUtils';
 
 import {
@@ -31,6 +31,10 @@ import {
 import {
   isEqual,
 } from '../util/isEqual';
+
+import {
+  assign,
+} from '../util/assign';
 
 import {
   isTest,
@@ -128,13 +132,13 @@ const readStoreResolver: Resolver = (
   idValue: IdValueWithPreviousResult,
   args: any,
   context: ReadStoreContext,
-  { resultKey }: ExecInfo,
+  { resultKey, directives }: ExecInfo,
 ) => {
   assertIdValue(idValue);
 
   const objId = idValue.id;
   const obj = context.store[objId];
-  const storeKeyName = storeKeyNameFromFieldNameAndArgs(fieldName, args);
+  const storeKeyName = getStoreKeyName(fieldName, args, directives);
   let fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
@@ -205,7 +209,7 @@ export function diffQueryAgainstStore({
   // Throw the right validation error by trying to find a query in the document
   const queryDefinition = getQueryDefinition(query);
 
-  variables = Object.assign(getDefaultValues(queryDefinition), variables);
+  variables = assign({}, getDefaultValues(queryDefinition), variables);
 
   const context: ReadStoreContext = {
     // Global settings
@@ -271,7 +275,8 @@ function addPreviousResultToIdValues (value: any, previousResult: any): any {
     // using the private `ID_KEY` property that is added in `resultMapper`.
     if (Array.isArray(previousResult)) {
       previousResult.forEach(item => {
-        if (item[ID_KEY]) {
+        // item can be null
+        if (item && item[ID_KEY]) {
           idToPreviousResult[item[ID_KEY]] = item;
         }
       });

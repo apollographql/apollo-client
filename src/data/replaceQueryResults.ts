@@ -32,5 +32,6 @@ export function replaceQueryResults(state: NormalizedCache, {
     document,
     store: clonedState,
     dataIdFromObject: config.dataIdFromObject,
+    fragmentMatcherFunction: config.fragmentMatcher,
   });
 }

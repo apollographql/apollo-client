@@ -1,9 +1,11 @@
 import {
   NetworkInterface,
+  ObservableNetworkInterface,
   createNetworkInterface,
 } from './transport/networkInterface';
 
 import {
+  ExecutionResult,
   // We need to import this here to allow TypeScript to include it in the definition file even
   // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
   // We need to disable the linter here because TSLint rightfully complains that this is unused.
@@ -61,11 +63,10 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
-  FetchPolicy,
 } from './core/watchQueryOptions';
 
 import {
-  storeKeyNameFromFieldNameAndArgs,
+  getStoreKeyName,
 } from './data/storeUtils';
 
 import {
@@ -84,7 +85,6 @@ import {
 import {
   version,
 } from './version';
-
 
 /**
  * This type defines a "selector" function that receives state from the Redux store
@@ -129,15 +129,22 @@ export default class ApolloClient implements DataProxy {
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
   public disableNetworkFetches: boolean;
+  /**
+   * The dataIdFromObject function used by this client instance.
+   */
   public dataId: IdGetter | undefined;
+  /**
+   * The dataIdFromObject function used by this client instance.
+   */
+  public dataIdFromObject: IdGetter | undefined;
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
-  public defaultFetchPolicy: FetchPolicy;
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
   private fragmentMatcher: FragmentMatcherInterface;
+  private ssrMode: boolean;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -166,12 +173,10 @@ export default class ApolloClient implements DataProxy {
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
-   *
-   * @param defaultFetchPolicy Set default fetch policy for all query
    */
 
   constructor(options: {
-    networkInterface?: NetworkInterface,
+    networkInterface?: NetworkInterface | ObservableNetworkInterface,
     reduxRootSelector?: string | ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
@@ -182,7 +187,6 @@ export default class ApolloClient implements DataProxy {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
     fragmentMatcher?: FragmentMatcherInterface,
-    defaultFetchPolicy?: FetchPolicy,
   } = {}) {
     let {
       dataIdFromObject,
@@ -198,7 +202,6 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools,
       fragmentMatcher,
       queryDeduplication = true,
-      defaultFetchPolicy = 'cache-first',
     } = options;
 
     if (typeof reduxRootSelector === 'function') {
@@ -213,15 +216,32 @@ export default class ApolloClient implements DataProxy {
       this.fragmentMatcher = fragmentMatcher;
     }
 
+    if ( networkInterface && typeof (<ObservableNetworkInterface>networkInterface).request === 'function') {
+      this.networkInterface = {
+        ...networkInterface,
+        query: (request) => new Promise<ExecutionResult>((resolve, reject) => {
+          const subscription = (networkInterface as ObservableNetworkInterface)
+          .request(request)
+          .subscribe({
+            next: resolve,
+            error: reject,
+            complete: () => subscription.unsubscribe(),
+          });
+        }),
+      };
+    } else {
+      this.networkInterface = networkInterface ? <NetworkInterface>networkInterface :
+        createNetworkInterface({ uri: '/graphql' });
+    }
+
     this.initialState = initialState ? initialState : {};
-    this.networkInterface = networkInterface ? networkInterface :
-      createNetworkInterface({ uri: '/graphql' });
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject = dataIdFromObject || defaultDataIdFromObject;
-    this.fieldWithArgs = storeKeyNameFromFieldNameAndArgs;
+    this.dataIdFromObject = this.dataId;
+    this.fieldWithArgs = getStoreKeyName;
     this.queryDeduplication = queryDeduplication;
-    this.defaultFetchPolicy = defaultFetchPolicy;
+    this.ssrMode = ssrMode;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.disableNetworkFetches = false, ssrForceFetchDelay);
@@ -269,10 +289,8 @@ export default class ApolloClient implements DataProxy {
         }
       }
     }
-
     this.version = version;
   }
-
   /**
    * This watches the results of the query according to the options specified and
    * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and
@@ -293,8 +311,6 @@ export default class ApolloClient implements DataProxy {
    */
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initStore();
-
-    options.fetchPolicy = options.fetchPolicy || this.defaultFetchPolicy;
 
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
@@ -319,8 +335,6 @@ export default class ApolloClient implements DataProxy {
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
     this.initStore();
 
-    options.fetchPolicy = options.fetchPolicy || this.defaultFetchPolicy;
-
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error('cache-and-network fetchPolicy can only be used with watchQuery');
     }
@@ -343,7 +357,7 @@ export default class ApolloClient implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>> {
+  public mutate<T>(options: MutationOptions): Promise<ExecutionResult> {
     this.initStore();
 
     return this.queryManager.mutate<T>(options);
@@ -496,10 +510,8 @@ export default class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore() {
-    if (this.queryManager) {
-      this.queryManager.resetStore();
-    }
+  public resetStore(): Promise<ApolloQueryResult<any>[]>|null {
+    return this.queryManager ? this.queryManager.resetStore() : null;
   }
 
   public getInitialState(): { data: Object } {
@@ -533,6 +545,7 @@ export default class ApolloClient implements DataProxy {
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,
       fragmentMatcher: this.fragmentMatcher,
+      ssrMode: this.ssrMode,
     });
   }
 

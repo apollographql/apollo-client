@@ -1,8 +1,64 @@
 # Change log
 
 ### vNEXT
+
+
+### 1.7.0
+- Add support for network interfaces that return observables [PR #1840](https://github.com/apollographql/apollo-client/pull/1840)
+
+### 1.6.1
+- Pin @types/node to 8.0.2 to avoid breaking type update
+
+### 1.6.0
+- the `@connection(key: ...)` directive can now be used to specify the key to use
+for the Apollo store and is removed by default when sending queries to the server [PR #1801](https://github.com/apollographql/apollo-client/pull/1801)
+
+### 1.5.0
+- `batchInterval` now has a default value of 10 ms [PR #1793](https://github.com/apollographql/apollo-client/pull/1793)
+- Added `batchMax` to allow you to limit the amount of queries in one batch. [PR #1659](https://github.com/apollographql/apollo-client/pull/1659)
+
+### 1.4.2
+- Improved error messages for writeToStore, readFragment and writeFragment [PR #1766](https://github.com/apollographql/apollo-client/pull/1766), [PR #1722](https://github.com/apollographql/apollo-client/pull/1722)
+
+### 1.4.1
+- Fix: broken edge case when setting up fragment matching with Typescript by fixing types on `IntrospectionResultData` [PR #1763](https://github.com/apollographql/apollo-client/pull/1763)
+- Fix: getOperationName now returns null when no operation name can be found in the document [PR #1769](https://github.com/apollographql/apollo-client/pull/1769)
+
+### v1.4.0
+- Feature: Add `operationName` to Redux actions where possible [PR #1676](https://github.com/apollographql/apollo-client/pull/1676)
+- Feature: Allow an observer to not be created when setting variables[PR #1752](https://github.com/apollographql/apollo-client/pull/1752)
+- Feature: Added support for flow typechecking [PR #1688](https://github.com/apollographql/apollo-client/pull/1688)
+
+### v1.3.0
+- Make ApolloClient.resetStore() and QueryManager.resetStore() return a promise instead of void [PR #1674](https://github.com/apollographql/apollo-client/pull/1674)
+- Fix bug that caused errors in `writeToStore` to be rethrown as uncaught errors [PR #1673](https://github.com/apollographql/apollo-client/pull/1673)
+- Feature: Pass a function to `optimisticResponse` and it will be called with the `variables` passed to the mutation [PR #1720](https://github.com/apollographql/apollo-client/pull/1720)
+
+### 1.2.2
+- Fix: Remove race condition in queryListenerFromObserver [PR #1670](https://github.com/apollographql/apollo-client/pull/1670)
+- Feature: Expose `dataIdFromObject` in addition to `dataId` [PR #1663](https://github.com/apollographql/apollo-client/pull/1663)
+
+### 1.2.1
+- Fix: Ensure polling queries do not poll during SSR [#1664](https://github.com/apollographql/apollo-client/pull/1664)
+- Fix: Ensure setVariables correctly sets options.variables [#1662](https://github.com/apollographql/apollo-client/pull/1662)
+- Fix bug that caused results with null items in array to become empty on second read [#1661](https://github.com/apollographql/apollo-client/pull/1661)
+
+### 1.2.0
+- Feature: Warn before writing to store if result shape does not match query [#1638](https://github.com/apollographql/apollo-client/pull/1638)
+- Fix: Replace more usage of Object.assign with util.assign to make it work in IE, previous fix was not complete [PR #1648](https://github.com/apollographql/apollo-client/pull/1648)
+
+### 1.1.2
+- Feature+Fix: Introduce "standby" fetchPolicy to mark queries that are not currently active, but should be available for refetchQueries and updateQueries [PR #1636](https://github.com/apollographql/apollo-client/pull/1636)
+- Feature: Print a warning when heuristically matching fragments on interface/union [PR #1635](https://github.com/apollographql/apollo-client/pull/1635)
+- Fix: Replace usage of Object.assign with util.assign to make it work in IE, make util.assign work with undefined and null sources as Object.assign does [PR #1643](https://github.com/apollographql/apollo-client/pull/1643)
+
+### 1.1.1
+- Fix: Remove ability to set default fetchPolicy, which broke polling queries [PR #1630](https://github.com/apollographql/apollo-client/pull/1630)
+
+### 1.1.0
 - Feature: support default values for query variables [PR #1492](https://github.com/apollographql/apollo-client/pull/1492)
-- New/fix: Pass http json parsing error to network interface afterware [PR #1596](https://github.com/apollographql/apollo-client/pull/1596)
+- Fix: Pass http json parsing error to network interface afterware [PR #1596](https://github.com/apollographql/apollo-client/pull/1596)
+- Feature: Add ability to set default fetchPolicy [PR #1597](https://github.com/apollographql/apollo-client/pull/1597)
 
 ### 1.0.4
 - Fix: query subscription is not skipped when there is a successful query after an error, even if data is the same as before the error occured. [PR #1601] (https://github.com/apollographql/apollo-client/pull/1601)

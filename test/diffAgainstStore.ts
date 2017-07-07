@@ -8,6 +8,9 @@ import {
 import { writeQueryToStore } from '../src/data/writeToStore';
 
 import gql from 'graphql-tag';
+import {
+  withError,
+} from './util/wrap';
 
 import {
   HeuristicFragmentMatcher,
@@ -107,7 +110,7 @@ describe('diffing queries against the store', () => {
       query {
         ...notARealFragment
       }`;
-    assert.throws(() => {
+    return assert.throws(() => {
       diffQueryAgainstStore({
         store,
         query: unionQuery,
@@ -116,47 +119,49 @@ describe('diffing queries against the store', () => {
   });
 
   it('does not error on a correct query with union typed fragments', () => {
-    const firstQuery = gql`
-      query {
-        person {
-          __typename
-          firstName
-          lastName
-        }
-      }`;
-    const firstResult = {
-      person: {
-        __typename: 'Author',
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
-    const store = writeQueryToStore({
-      result: firstResult,
-      query: firstQuery,
-    });
-    const unionQuery = gql`
-      query {
-        person {
-          __typename
-          ... on Author {
+    return withError(() => {
+      const firstQuery = gql`
+        query {
+          person {
+            __typename
             firstName
             lastName
           }
+        }`;
+      const firstResult = {
+        person: {
+          __typename: 'Author',
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const store = writeQueryToStore({
+        result: firstResult,
+        query: firstQuery,
+      });
+      const unionQuery = gql`
+        query {
+          person {
+            __typename
+            ... on Author {
+              firstName
+              lastName
+            }
 
-          ... on Jedi {
-            powers
+            ... on Jedi {
+              powers
+            }
           }
-        }
-      }`;
-    const { isMissing } = diffQueryAgainstStore({
-      store,
-      query: unionQuery,
-      returnPartialData: false,
-      fragmentMatcherFunction,
-    });
+        }`;
+      const { isMissing } = diffQueryAgainstStore({
+        store,
+        query: unionQuery,
+        returnPartialData: false,
+        fragmentMatcherFunction,
+      });
 
-    assert.isTrue(isMissing);
+      assert.isTrue(isMissing);
+    }, /IntrospectionFragmentMatcher/);
   });
 
   it('does not error on a query with fields missing from all but one named fragment', () => {

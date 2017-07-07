@@ -13,7 +13,7 @@ import {
 
 import gql from 'graphql-tag';
 
-import { withWarning } from './util/wrap';
+import { withWarning, withError } from './util/wrap';
 
 import {
   HeuristicFragmentMatcher,
@@ -52,6 +52,21 @@ describe('roundtrip', () => {
           { value: 3 },
           { value: 4 },
         ],
+      ],
+    });
+  });
+
+   it('array with null values (#1551)', () => {
+    storeRoundtrip(gql`
+      {
+        list {
+          value
+        }
+      }
+    `, {
+      list: [
+        null,
+        { value: 1 },
       ],
     });
   });
@@ -190,7 +205,7 @@ describe('roundtrip', () => {
     });
 
     it('should resolve on union types with inline fragments without typenames with warning', () => {
-      withWarning(() => {
+      return withWarning(() => {
         storeRoundtrip(gql`
           query {
             all_people {
@@ -218,8 +233,9 @@ describe('roundtrip', () => {
     });
 
     // XXX this test is weird because it assumes the server returned an incorrect result
+    // However, the user may have written this result with client.writeQuery.
     it('should throw an error on two of the same inline fragment types', () => {
-      assert.throws(() => {
+      return assert.throws(() => {
         storeRoundtrip(gql`
           query {
             all_people {
@@ -240,99 +256,105 @@ describe('roundtrip', () => {
               side: 'bright',
             },
           ],
-          });
+        });
       }, /Can\'t find field rank on object/);
     });
 
     it('should resolve fields it can on interface with non matching inline fragments', () => {
-      storeRoundtrip(gql`
-        query {
-          dark_forces {
-            __typename
-            name
-            ... on Droid {
-              model
+      return withError(() => {
+        storeRoundtrip(gql`
+          query {
+            dark_forces {
+              __typename
+              name
+              ... on Droid {
+                model
+              }
             }
-          }
-        }`, {
-        dark_forces: [
-          {
-            __typename: 'Droid',
-            name: '8t88',
-            model: '88',
-          },
-          {
-            __typename: 'Darth',
-            name: 'Anakin Skywalker',
-          },
-        ],
-      });
+          }`, {
+          dark_forces: [
+            {
+              __typename: 'Droid',
+              name: '8t88',
+              model: '88',
+            },
+            {
+              __typename: 'Darth',
+              name: 'Anakin Skywalker',
+            },
+          ],
+        });
+      }, /IntrospectionFragmentMatcher/);
     });
 
     it('should resolve on union types with spread fragments', () => {
-      storeRoundtrip(gql`
-        fragment jediFragment on Jedi {
-          side
-        }
-
-        fragment droidFragment on Droid {
-          model
-        }
-
-        query {
-          all_people {
-            __typename
-            name
-            ...jediFragment
-            ...droidFragment
+      return withError(() => {
+        storeRoundtrip(gql`
+          fragment jediFragment on Jedi {
+            side
           }
-        }`, {
-        all_people: [
-          {
-            __typename: 'Jedi',
-            name: 'Luke Skywalker',
-            side: 'bright',
-          },
-          {
-            __typename: 'Droid',
-            name: 'R2D2',
-            model: 'astromech',
-          },
-        ],
-      });
+
+          fragment droidFragment on Droid {
+            model
+          }
+
+          query {
+            all_people {
+              __typename
+              name
+              ...jediFragment
+              ...droidFragment
+            }
+          }`, {
+          all_people: [
+            {
+              __typename: 'Jedi',
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+            {
+              __typename: 'Droid',
+              name: 'R2D2',
+              model: 'astromech',
+            },
+          ],
+        });
+      }, /IntrospectionFragmentMatcher/);
     });
 
     it('should work with a fragment on the actual interface or union', () => {
-      storeRoundtrip(gql`
-        fragment jediFragment on Character {
-          side
-        }
-
-        fragment droidFragment on Droid {
-          model
-        }
-
-        query {
-          all_people {
-            name
-            __typename
-            ...jediFragment
-            ...droidFragment
+      return withError(() => {
+        storeRoundtrip(gql`
+          fragment jediFragment on Character {
+            side
           }
-        }`, {
-        all_people: [
-          {
-            __typename: 'Jedi',
-            name: 'Luke Skywalker',
-            side: 'bright',
-          },
-          {
-            __typename: 'Droid',
-            name: 'R2D2',
-            model: 'astromech',
-          },
-        ],
-      });
+
+          fragment droidFragment on Droid {
+            model
+          }
+
+          query {
+            all_people {
+              name
+              __typename
+              ...jediFragment
+              ...droidFragment
+            }
+          }`, {
+          all_people: [
+            {
+              __typename: 'Jedi',
+              name: 'Luke Skywalker',
+              side: 'bright',
+            },
+            {
+              __typename: 'Droid',
+              name: 'R2D2',
+              model: 'astromech',
+            },
+          ],
+        });
+      }, /IntrospectionFragmentMatcher/);
     });
 
     it('should throw on error on two of the same spread fragment types', () => {

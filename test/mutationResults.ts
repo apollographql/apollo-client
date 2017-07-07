@@ -12,6 +12,8 @@ import { ObservableQuery } from '../src/core/ObservableQuery';
 
 import gql from 'graphql-tag';
 
+import { withWarning } from './util/wrap';
+
 describe('mutation results', () => {
 
   const query = gql`
@@ -310,6 +312,95 @@ describe('mutation results', () => {
     .then((newResult: any) => {
       assert.isTrue(newResult.data.todoList.todos[0].completed);
     });
+  });
+
+  it('should warn when the result fields don\'t match the query fields', () => {
+    let handle: any;
+    let subscriptionHandle: Subscription;
+    let counter = 0;
+
+    const queryTodos = gql`
+      query todos {
+        todos {
+          id
+          name
+          description
+          __typename
+        }
+      }
+    `;
+
+    const queryTodosResult = {
+      data: {
+        todos: [{
+          id: '1',
+          name: 'Todo 1',
+          description: 'Description 1',
+          __typename: 'todos',
+        }],
+      },
+    };
+
+    const mutationTodo = gql`
+      mutation createTodo {
+        createTodo {
+          id
+          name
+          # missing field: description
+          __typename
+        }
+      }
+    `;
+
+    const mutationTodoResult = {
+      data: {
+        createTodo: {
+          id: '2',
+          name: 'Todo 2',
+          __typename: 'createTodo',
+        },
+      },
+    };
+
+    return withWarning(() => {
+      return setup({
+        request: { query: queryTodos },
+        result: queryTodosResult,
+      }, {
+        request: { query: mutationTodo },
+        result: mutationTodoResult,
+      })
+      .then(() => {
+          // we have to actually subscribe to the query to be able to update it
+          return new Promise( (resolve, reject) => {
+            handle = client.watchQuery({ query: queryTodos });
+            subscriptionHandle = handle.subscribe({
+              next(res: any) {
+                counter++;
+                resolve(res);
+              },
+            });
+          });
+        })
+        .then(() => {
+          return client.mutate({
+            mutation: mutationTodo,
+            updateQueries: {
+              todos: (prev, { mutationResult }) => {
+                const newTodo = (mutationResult as any).data.createTodo;
+
+                const newResults = {
+                  todos: [
+                    ...(prev as any).todos,
+                    newTodo,
+                  ],
+                };
+                return newResults;
+              },
+            },
+          });
+        }).then(() => subscriptionHandle.unsubscribe());
+    }, /Missing field description/);
   });
 
   describe('result reducer', () => {
@@ -1200,13 +1291,13 @@ describe('mutation results', () => {
         query ({ variables }) {
           switch (count++) {
             case 0:
-              assert.deepEqual(variables, { a: 1, b: 2 });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 2 });
               return Promise.resolve({ data: { result: 'hello' } });
             case 1:
-              assert.deepEqual(variables, { a: 1, c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, c: 3 });
               return Promise.resolve({ data: { result: 'world' } });
             case 2:
-              assert.deepEqual(variables, { a: undefined, b: 2, c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: undefined, b: 2, c: 3 });
               return Promise.resolve({ data: { result: 'goodbye' } });
             case 3:
               assert.deepEqual(variables, {});
@@ -1262,13 +1353,13 @@ describe('mutation results', () => {
         query ({ variables }) {
           switch (count++) {
             case 0:
-              assert.deepEqual(variables, { a: 1, b: 'water' });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 'water' });
               return Promise.resolve({ data: { result: 'hello' } });
             case 1:
-              assert.deepEqual(variables, { a: 2, b: 'cheese', c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: 2, b: 'cheese', c: 3 });
               return Promise.resolve({ data: { result: 'world' } });
             case 2:
-              assert.deepEqual(variables, { a: 1, b: 'cheese', c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 'cheese', c: 3 });
               return Promise.resolve({ data: { result: 'goodbye' } });
             default:
               return Promise.reject(new Error('Too many network calls.'));
@@ -1317,13 +1408,13 @@ describe('mutation results', () => {
         query ({ variables }) {
           switch (count++) {
             case 0:
-              assert.deepEqual(variables, { a: 1, b: 2, c: null });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 2, c: null });
               return Promise.resolve({ data: { result: 'hello' } });
             case 1:
-              assert.deepEqual(variables, { a: 1, b: null, c: 3 });
+              assert.deepEqual<Object | undefined>(variables, { a: 1, b: null, c: 3 });
               return Promise.resolve({ data: { result: 'world' } });
             case 2:
-              assert.deepEqual(variables, { a: null, b: null, c: null });
+              assert.deepEqual<Object | undefined>(variables, { a: null, b: null, c: null });
               return Promise.resolve({ data: { result: 'moon' } });
             default:
               return Promise.reject(new Error('Too many network calls.'));

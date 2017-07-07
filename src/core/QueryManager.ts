@@ -9,6 +9,7 @@ import {
 } from '../transport/Deduplicator';
 
 import { isEqual } from '../util/isEqual';
+import { assign } from '../util/assign';
 
 import {
   QueryListener,
@@ -131,6 +132,7 @@ export class QueryManager {
   public scheduler: QueryScheduler;
   public store: ApolloStore;
   public networkInterface: NetworkInterface;
+  public ssrMode: boolean;
 
   private addTypename: boolean;
   private deduplicator: Deduplicator;
@@ -176,6 +178,7 @@ export class QueryManager {
     fragmentMatcher,
     addTypename = true,
     queryDeduplication = false,
+    ssrMode = false,
   }: {
     networkInterface: NetworkInterface,
     store: ApolloStore,
@@ -184,6 +187,7 @@ export class QueryManager {
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
     queryDeduplication?: boolean,
+    ssrMode?: boolean,
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -197,6 +201,7 @@ export class QueryManager {
     this.queryDocuments = {};
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
+    this.ssrMode = ssrMode;
 
     // XXX This logic is duplicated in ApolloClient.ts for two reasons:
     // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.
@@ -247,18 +252,18 @@ export class QueryManager {
   }: {
     mutation: DocumentNode,
     variables?: Object,
-    optimisticResponse?: Object,
+    optimisticResponse?: Object | Function,
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
-  }): Promise<ApolloQueryResult<T>> {
+  }): Promise<ExecutionResult> {
     const mutationId = this.generateQueryId();
 
     if (this.addTypename) {
       mutation = addTypenameToDocument(mutation);
     }
 
-    variables = Object.assign(getDefaultValues(getMutationDefinition(mutation)), variables);
+    variables = assign({}, getDefaultValues(getMutationDefinition(mutation)), variables);
 
     const mutationString = print(mutation);
     const request = {
@@ -290,7 +295,7 @@ export class QueryManager {
       update: updateWithProxyFn,
     });
 
-    return new Promise((resolve, reject) => {
+    return new Promise<ExecutionResult>((resolve, reject) => {
       this.networkInterface.query(request)
         .then((result) => {
           if (result.errors) {
@@ -341,7 +346,7 @@ export class QueryManager {
 
 
           delete this.queryDocuments[mutationId];
-          resolve(<ApolloQueryResult<T>>result);
+          resolve(result);
         })
         .catch((err) => {
           this.store.dispatch({
@@ -368,7 +373,7 @@ export class QueryManager {
     // call for another query. We need this data to compute the `fetchMore`
     // network status for the query this is fetching for.
     fetchMoreForQueryId?: string,
-  ): Promise<ApolloQueryResult<T>> {
+  ): Promise<ExecutionResult> {
 
     const {
       variables = {},
@@ -404,7 +409,7 @@ export class QueryManager {
       storeResult = result;
     }
 
-    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only';
+    const shouldFetch = needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
 
     const requestId = this.generateRequestId();
 
@@ -415,6 +420,7 @@ export class QueryManager {
       type: 'APOLLO_QUERY_INIT',
       queryString,
       document: queryDoc,
+      operationName: getOperationName(queryDoc),
       variables,
       fetchPolicy,
       queryId,
@@ -437,6 +443,7 @@ export class QueryManager {
         result: { data: storeResult },
         variables,
         document: queryDoc,
+        operationName: getOperationName(queryDoc),
         complete: !shouldFetch,
         queryId,
         requestId,
@@ -478,7 +485,7 @@ export class QueryManager {
     }
     // If we have no query to send to the server, we should return the result
     // found within the store.
-    return Promise.resolve({ data: storeResult });
+    return Promise.resolve<ExecutionResult>({ data: storeResult });
   }
 
   // Returns a query listener that will update the given observer based on the
@@ -497,9 +504,18 @@ export class QueryManager {
         return;
       }
 
+      // XXX This is to fix a strange race condition that was the root cause of react-apollo/#170
+      // queryStoreValue was sometimes the old queryStoreValue and not what's currently in the store.
+      queryStoreValue = this.getApolloState().queries[queryId];
+
       const storedQuery = this.observableQueries[queryId];
 
       const fetchPolicy = storedQuery ? storedQuery.observableQuery.options.fetchPolicy : options.fetchPolicy;
+
+      if (fetchPolicy === 'standby') {
+        // don't watch the store for queries on standby
+        return;
+      }
 
       const shouldNotifyIfLoading = queryStoreValue.previousVariables ||
                                     fetchPolicy === 'cache-only' || fetchPolicy === 'cache-and-network';
@@ -633,6 +649,9 @@ export class QueryManager {
       throw new Error('noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.');
     }
 
+    if (options.fetchPolicy === 'standby') {
+      throw new Error('client.watchQuery cannot be called with fetchPolicy set to "standby"');
+    }
 
     // get errors synchronously
     const queryDefinition = getQueryDefinition(options.query);
@@ -641,7 +660,7 @@ export class QueryManager {
     if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
       const defaultValues = getDefaultValues(queryDefinition);
 
-      options.variables = Object.assign(defaultValues, options.variables);
+      options.variables = assign({}, defaultValues, options.variables);
     }
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
@@ -781,7 +800,7 @@ export class QueryManager {
     }
   }
 
-  public resetStore(): void {
+  public resetStore(): Promise<ApolloQueryResult<any>[]> {
     // Before we have sent the reset action to the store,
     // we can no longer rely on the results returned by in-flight
     // requests since these may depend on values that previously existed
@@ -804,15 +823,18 @@ export class QueryManager {
     // watched. If there is an existing query in flight when the store is reset,
     // the promise for it will be rejected and its results will not be written to the
     // store.
+    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
     Object.keys(this.observableQueries).forEach((queryId) => {
       const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
 
       const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
 
-      if (fetchPolicy !== 'cache-only') {
-        this.observableQueries[queryId].observableQuery.refetch();
+      if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
+        observableQueryPromises.push(this.observableQueries[queryId].observableQuery.refetch());
       }
     });
+
+    return Promise.all(observableQueryPromises);
   }
 
   public startQuery<T>(queryId: string, options: WatchQueryOptions, listener: QueryListener) {
@@ -838,7 +860,7 @@ export class QueryManager {
       transformedDoc = addTypenameToDocument(transformedDoc);
     }
 
-    const variables = Object.assign(getDefaultValues(getOperationDefinition(query)), options.variables);
+    const variables = assign({}, getDefaultValues(getOperationDefinition(query)), options.variables);
 
     const request: Request = {
       query: transformedDoc,
@@ -1076,24 +1098,30 @@ export class QueryManager {
           }
 
           return result;
-        }).then(() => {
-
+        }).then((result) => {
           let resultFromStore: any;
-          try {
-            // ensure result is combined with data already in store
-            // this will throw an error if there are missing fields in
-            // the results if returnPartialData is false.
-            resultFromStore = readQueryFromStore({
-              store: this.getApolloState().data,
-              variables,
-              query: document,
-              config: this.reducerConfig,
-              fragmentMatcherFunction: this.fragmentMatcher.match,
-            });
-            // ensure multiple errors don't get thrown
-            /* tslint:disable */
-          } catch (e) {}
-          /* tslint:enable */
+
+          if (fetchMoreForQueryId) {
+            // XXX We don't write fetchMore results to the store because this would overwrite
+            // the original result in case an @connection directive is used.
+            resultFromStore = result.data;
+          } else {
+            try {
+              // ensure result is combined with data already in store
+              // this will throw an error if there are missing fields in
+              // the results if returnPartialData is false.
+              resultFromStore = readQueryFromStore({
+                store: this.getApolloState().data,
+                variables,
+                query: document,
+                config: this.reducerConfig,
+                fragmentMatcherFunction: this.fragmentMatcher.match,
+              });
+              // ensure multiple errors don't get thrown
+              /* tslint:disable */
+            } catch (e) {}
+            /* tslint:enable */
+          }
 
           const { reducerError } = this.getApolloState();
           if (reducerError && reducerError.queryId === queryId) {

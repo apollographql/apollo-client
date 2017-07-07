@@ -16,6 +16,10 @@ import {
 } from './storeUtils';
 
 import {
+  ReadStoreContext,
+} from '../data/readFromStore';
+
+import {
   OperationDefinitionNode,
   SelectionSetNode,
   FieldNode,
@@ -23,6 +27,10 @@ import {
   InlineFragmentNode,
   FragmentDefinitionNode,
 } from 'graphql';
+
+import {
+  FragmentMatcher,
+} from 'graphql-anywhere';
 
 import {
   NormalizedCache,
@@ -39,12 +47,34 @@ import {
   shouldInclude,
 } from '../queries/directives';
 
+import {
+  isProduction,
+} from '../util/environment';
+
+import {
+  assign,
+} from '../util/assign';
+
+class WriteError extends Error {
+  public type = 'WriteError';
+}
+
+function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
+  // XXX A bit hacky maybe ...
+  const enhancedError = new WriteError(`Error writing result to store for query ${
+    document.loc && document.loc.source && document.loc.source.body
+  }`);
+  enhancedError.message += '/n' + error.message;
+  enhancedError.stack = error.stack;
+  return enhancedError;
+}
+
 /**
  * Writes the result of a query to the store.
  *
- * @param query The query document whose result we are writing to the store.
- *
  * @param result The result object returned for the query document.
+ *
+ * @param query The query document whose result we are writing to the store.
  *
  * @param store The {@link NormalizedCache} used by Apollo for the `data` portion of the store.
  *
@@ -56,6 +86,8 @@ import {
  *
  * @param fragmentMap A map from the name of a fragment to its fragment definition. These fragments
  * can be referenced within the query document.
+ *
+ * @param fragmentMatcherFunction A function to use for matching fragment conditions in GraphQL documents
  */
 export function writeQueryToStore({
   result,
@@ -64,6 +96,7 @@ export function writeQueryToStore({
   variables,
   dataIdFromObject,
   fragmentMap = {} as FragmentMap,
+  fragmentMatcherFunction,
 }: {
   result: Object,
   query: DocumentNode,
@@ -71,22 +104,28 @@ export function writeQueryToStore({
   variables?: Object,
   dataIdFromObject?: IdGetter,
   fragmentMap?: FragmentMap,
+  fragmentMatcherFunction?: FragmentMatcher,
 }): NormalizedCache {
   const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
 
-  variables = Object.assign(getDefaultValues(queryDefinition), variables);
+  variables = assign({}, getDefaultValues(queryDefinition), variables);
 
-  return writeSelectionSetToStore({
-    dataId: 'ROOT_QUERY',
-    result,
-    selectionSet: queryDefinition.selectionSet,
-    context: {
-      store,
-      variables,
-      dataIdFromObject,
-      fragmentMap,
-    },
-  });
+  try {
+    return writeSelectionSetToStore({
+      dataId: 'ROOT_QUERY',
+      result,
+      selectionSet: queryDefinition.selectionSet,
+      context: {
+        store,
+        variables,
+        dataIdFromObject,
+        fragmentMap,
+        fragmentMatcherFunction,
+      },
+    });
+  } catch (e) {
+    throw enhanceErrorWithDocument(e, query);
+  }
 }
 
 export type WriteContext = {
@@ -94,15 +133,17 @@ export type WriteContext = {
   variables?: any;
   dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
+  fragmentMatcherFunction?: FragmentMatcher;
 };
 
 export function writeResultToStore({
-  result,
   dataId,
+  result,
   document,
   store = {} as NormalizedCache,
   variables,
   dataIdFromObject,
+  fragmentMatcherFunction,
 }: {
   dataId: string,
   result: any,
@@ -110,6 +151,7 @@ export function writeResultToStore({
   store?: NormalizedCache,
   variables?: Object,
   dataIdFromObject?: IdGetter,
+  fragmentMatcherFunction?: FragmentMatcher,
 }): NormalizedCache {
 
   // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
@@ -117,19 +159,24 @@ export function writeResultToStore({
   const selectionSet = operationDefinition.selectionSet;
   const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
 
-  variables = Object.assign(getDefaultValues(operationDefinition), variables);
+  variables = assign({}, getDefaultValues(operationDefinition), variables);
 
-  return writeSelectionSetToStore({
-    result,
-    dataId,
-    selectionSet,
-    context: {
-      store,
-      variables,
-      dataIdFromObject,
-      fragmentMap,
-    },
-  });
+  try {
+    return writeSelectionSetToStore({
+      result,
+      dataId,
+      selectionSet,
+      context: {
+        store,
+        variables,
+        dataIdFromObject,
+        fragmentMap,
+        fragmentMatcherFunction,
+      },
+    });
+  } catch (e) {
+    throw enhanceErrorWithDocument(e, document);
+  }
 }
 
 export function writeSelectionSetToStore({
@@ -152,23 +199,24 @@ export function writeSelectionSetToStore({
       const resultFieldKey: string = resultKeyNameFromField(selection);
       const value: any = result[resultFieldKey];
 
-      if (value !== undefined) {
-        writeFieldToStore({
-          dataId,
-          value,
-          field: selection,
-          context,
-        });
-      }
-    } else if (isInlineFragment(selection)) {
       if (included) {
-        // XXX what to do if this tries to write the same fields? Also, type conditions...
-        writeSelectionSetToStore({
-          result,
-          selectionSet: selection.selectionSet,
-          dataId,
-          context,
-        });
+        if (typeof value !== 'undefined') {
+          writeFieldToStore({
+            dataId,
+            value,
+            field: selection,
+            context,
+          });
+        } else {
+          if (context.fragmentMatcherFunction) {
+            // XXX We'd like to throw an error, but for backwards compatibility's sake
+            // we just print a warning for the time being.
+            //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
+            if (!isProduction()) {
+              console.warn(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
+            }
+          }
+        }
       }
     } else {
       // This is not a field, so it must be a fragment, either inline or named
@@ -185,7 +233,29 @@ export function writeSelectionSetToStore({
         }
       }
 
-      if (included) {
+      let matches = true;
+      if (context.fragmentMatcherFunction && fragment.typeCondition) {
+        // TODO we need to rewrite the fragment matchers for this to work properly and efficiently
+        // Right now we have to pretend that we're passing in an idValue and that there's a store
+        // on the context.
+        const idValue: IdValue = { type: 'id', id: 'self', generated: false };
+        const fakeContext: ReadStoreContext = {
+          store: { 'self': result },
+          returnPartialData: false,
+          hasMissingField: false,
+          customResolvers: {},
+        };
+        matches = context.fragmentMatcherFunction(
+          idValue,
+          fragment.typeCondition.name.value,
+          fakeContext,
+        );
+        if (fakeContext.returnPartialData) {
+          console.error('WARNING: heuristic fragment matching going on!');
+        }
+      }
+
+      if (included && matches) {
         writeSelectionSetToStore({
           result,
           selectionSet: fragment.selectionSet,

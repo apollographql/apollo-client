@@ -1201,6 +1201,24 @@ describe('QueryManager', () => {
     });
   });
 
+  it('can handle null values in arrays (#1551)', (done) => {
+    const query = gql`{ list { value } }`;
+    const data = { list: [ null, { value: 1 } ] };
+    const queryManager = mockQueryManager({
+      request: { query },
+      result: { data },
+    });
+    const observable = queryManager.watchQuery({ query });
+
+    observable.subscribe({
+      next: (result) => {
+        assert.deepEqual(result.data, data);
+        assert.deepEqual(observable.currentResult().data, data);
+        done();
+      },
+    });
+  });
+
   it('deepFreezes results in development mode', () => {
     const query = gql`{ stuff }`;
     const data = { stuff: 'wonderful' };
@@ -1693,6 +1711,7 @@ describe('QueryManager', () => {
   });
 
   describe('polling queries', () => {
+
     it('allows you to poll queries', () => {
       const query = gql`
         query fetchLuke($id: String) {
@@ -1717,6 +1736,7 @@ describe('QueryManager', () => {
           name: 'Luke Skywalker has a new name',
         },
       };
+
       const queryManager = mockQueryManager(
         {
           request: { query, variables },
@@ -1739,6 +1759,81 @@ describe('QueryManager', () => {
         (result) => assert.deepEqual(result.data, data2),
       );
 
+    });
+
+    it('does not poll during SSR', (done) => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '1',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+
+      const queryManager = new QueryManager({
+        networkInterface: mockNetworkInterface({
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        }),
+        store: createApolloStore(),
+        reduxRootSelector: defaultReduxRootSelector,
+        addTypename: false,
+        ssrMode: true,
+      });
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        pollInterval: 10,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      let count = 1;
+      let doneCalled = false;
+      const subHandle = observable.subscribe({
+        next: (result: any) => {
+          switch (count) {
+            case 1:
+              assert.deepEqual(result.data, data1);
+              setTimeout(() => {
+                subHandle.unsubscribe();
+                if (!doneCalled) {
+                  done();
+                }
+              }, 15);
+              count++;
+              break;
+            case 2:
+            default:
+              doneCalled = true;
+              done(new Error('Only expected one result, not multiple'));
+          }
+        },
+      });
     });
 
     it('should let you handle multiple polled queries and unsubscribe from one of them', (done) => {
@@ -2248,6 +2343,98 @@ describe('QueryManager', () => {
   });
 
   describe('store resets', () => {
+    it('returns a promise resolving when all queries have been refetched', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const dataChanged = {
+        author: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const query2 = gql`
+        query {
+          author2 {
+            firstName
+            lastName
+          }
+        }`;
+
+      const data2 = {
+        author2: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const data2Changed = {
+        author2: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const queryManager = createQueryManager({
+        networkInterface: mockNetworkInterface(
+          {
+            request: {query},
+            result: {data},
+          },
+          {
+            request: {query: query2},
+            result: {data: data2},
+          },
+          {
+            request: {query},
+            result: {data: dataChanged},
+          },
+          {
+            request: {query: query2},
+            result: {data: data2Changed},
+          },
+        ),
+      });
+
+      const observable = queryManager.watchQuery<any>({ query });
+      const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+      return Promise.all([
+        observableToPromise({ observable },
+          result => assert.deepEqual(result.data, data),
+        ),
+        observableToPromise({ observable: observable2 },
+          result => assert.deepEqual(result.data, data2),
+        ),
+      ]).then(() => {
+        observable.subscribe({ next: () => null });
+        observable2.subscribe({ next: () => null });
+
+        return queryManager.resetStore().then(() => {
+          const result = queryManager.getCurrentQueryResult(observable);
+          assert.isFalse(result.partial);
+          assert.deepEqual(result.data, dataChanged);
+
+          const result2 = queryManager.getCurrentQueryResult(observable2);
+          assert.isFalse(result2.partial);
+          assert.deepEqual(result2.data, data2Changed);
+        });
+      });
+    });
+
     it('should change the store state to an empty state', () => {
       const queryManager = createQueryManager({});
 
@@ -2458,7 +2645,6 @@ describe('QueryManager', () => {
       const mockObservableQuery: ObservableQuery<any> = {
         refetch(variables: any): Promise<ExecutionResult> {
           refetchCount ++;
-          done();
           return null as never;
         },
         options,
@@ -2471,8 +2657,39 @@ describe('QueryManager', () => {
       setTimeout(() => {
         assert.equal(refetchCount, 0);
         done();
-      }, 400);
+      }, 50);
 
+    });
+
+    it('should not call refetch on a standby Observable if the store is reset', (done) => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }`;
+      const queryManager = createQueryManager({});
+      const options = assign({}) as WatchQueryOptions;
+      options.fetchPolicy = 'standby';
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery<any> = {
+        refetch(variables: any): Promise<ExecutionResult> {
+          refetchCount ++;
+          return null as never;
+        },
+        options,
+        queryManager: queryManager,
+      } as any as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.resetStore();
+      setTimeout(() => {
+        assert.equal(refetchCount, 0);
+        done();
+      }, 50);
     });
 
     it('should throw an error on an inflight query() if the store is reset', (done) => {

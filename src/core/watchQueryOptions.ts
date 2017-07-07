@@ -22,9 +22,10 @@ import {
  * - cache-and-network: returns result from cache first (if it exists), then return network result once it's available
  * - cache-only: return result from cache if avaiable, fail otherwise.
  * - network-only: return result from network, fail if network call doesn't succeed.
+ * - standby: only for queries that aren't actively watched, but should be available for refetch and updateQueries.
  */
 
-export type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
+export type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only' | 'standby';
 
 /**
  * We can change these options to an ObservableQuery
@@ -46,6 +47,11 @@ export interface ModifiableWatchQueryOptions {
    * Specifies the {@link FetchPolicy} to be used for this query
    */
   fetchPolicy?: FetchPolicy;
+
+  /**
+   * Wether or not to fetch results
+   */
+  fetchResults?: boolean;
 
   /**
    * Whether or not updates to the network status should trigger next on the observer of this query
@@ -116,7 +122,7 @@ export interface MutationOptions {
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: Object;
+  optimisticResponse?: Object | Function;
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to

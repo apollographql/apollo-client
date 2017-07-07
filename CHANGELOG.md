@@ -2,6 +2,7 @@
 
 ### vNEXT
 - Add support for flow typecheck to work out of the box (without any configuration) [PR #1820](https://github.com/apollographql/apollo-client/pull/1820)
+- Fix: Avoiding reprocessing of identical data when writing to the store [PR #1675](https://github.com/apollographql/apollo-client/pull/1675)
 
 ### 1.7.0
 - Add support for network interfaces that return observables [PR #1840](https://github.com/apollographql/apollo-client/pull/1840)

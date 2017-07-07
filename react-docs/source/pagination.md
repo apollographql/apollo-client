@@ -224,18 +224,19 @@ const CommentsWithData = graphql(CommentsQuery, {
 ```
 
 <h2 id="connection-directive">The `@connection` directive</h2>
-When using paginated queries, results from individual queries can become scattered in the store, as query parameters are used to determine the default store key but often change with pagination. This is problematic for imperative store updates, as there is no stable store key for updates to target. To direct Apollo Client to use a stable store key for paginated queries, you can use the `@connection` directive to specify a store key for parts of your queries. For example, if we wanted to have a stable store key for the feed query earlier, we could adjust our query to use the `@connection` directive:
+When using paginated queries, results from accumulated queries can be hard to find in the store, as the parameters passed to the query are used to determine the default store key but are usually not known outside the piece of code that executes the query. This is problematic for imperative store updates, as there is no stable store key for updates to target. To direct Apollo Client to use a stable store key for paginated queries, you can use the optional `@connection` directive to specify a store key for parts of your queries. For example, if we wanted to have a stable store key for the feed query earlier, we could adjust our query to use the `@connection` directive:
 ```
 const FEED_QUERY = gql`
   query Feed($type: FeedType!, $offset: Int, $limit: Int) {
     currentUser {
       login
     }
-    feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed") {
+    feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed", filter: ["type"]) {
       id
       # ...
     }
   }
-`;```
+`;
+```
 
-This would result in the accumulated feed in every query or `fetchMore` being placed in the store under the `feed` key, which we could later use of imperative store updates.
+This would result in the accumulated feed in every query or `fetchMore` being placed in the store under the `feed` key, which we could later use of imperative store updates. In this example, we also use the `@connection` directive's optional `filter` argument, which allows us to include some arguments of the query in the store key. In this case, we want to include the `type` query argument in the store key, which results in multiple store values that accumulate pages from each type of feed.

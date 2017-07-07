@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix: Avoiding reprocessing of identical data when writing to the store [PR #1675](https://github.com/apollographql/apollo-client/pull/1675)
 
 
 ### 1.7.0

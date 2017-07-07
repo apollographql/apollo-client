@@ -110,12 +110,7 @@ export function getStoreKeyName(fieldName: string, args?: Object, directives?: D
 
     const queryArgs = args as {[key: string]: any};
 
-    if (filterKeys.length > 0) {
-      const filterExtra = filterKeys.map((key) => `${key}:${JSON.stringify(queryArgs[key])}`).reduce((a, b) => `${a}_${b}`);
-      return directives['connection']['key'] + '_' + filterExtra;
-    } else {
-      return directives['connection']['key'];
-    }
+    return [directives['connection']['key'], ...filterKeys.map((key) => `${key}:${JSON.stringify(queryArgs[key])}`)].join('_');
   }
 
   if (args) {

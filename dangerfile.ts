@@ -46,7 +46,7 @@ const createLink = (href: string, text: string): string =>
 const raiseIssueAboutPaths = (
   type: Function,
   paths: string[],
-  codeToInclude: string,
+  codeToInclude: string
 ) => {
   if (paths.length > 0) {
     const files = linkableFiles(paths);
@@ -61,7 +61,7 @@ const raiseIssueAboutPaths = (
 const someoneAssigned = danger.github.pr.assignee;
 if (someoneAssigned === null) {
   warn(
-    'Please assign someone to merge this PR, and optionally include people who should review.',
+    'Please assign someone to merge this PR, and optionally include people who should review.'
   );
 }
 
@@ -80,7 +80,7 @@ if (pr.body.length === 0) {
 const hasAppChanges = modifiedAppFiles.length > 0;
 
 const testChanges = modifiedAppFiles.filter(
-  filepath => filepath.includes('__tests__') || filepath.includes('test'),
+  filepath => filepath.includes('__tests__') || filepath.includes('test')
 );
 const hasTestChanges = testChanges.length > 0;
 
@@ -96,7 +96,7 @@ if (danger.github.pr.additions + danger.github.pr.deletions > bigPRThreshold) {
 // Warn if there are library changes, but not tests
 if (hasAppChanges && !hasTestChanges) {
   warn(
-    "There are library changes, but not tests. That's OK as long as you're refactoring existing code",
+    "There are library changes, but not tests. That's OK as long as you're refactoring existing code"
   );
 }
 
@@ -114,5 +114,6 @@ raiseIssueAboutPaths(fail, onlyTestFiles, 'an `only` was left in the test');
 
 // Politely ask for their name in the authors file
 message('Please add your name and email to the AUTHORS file (optional)');
-message(' If this was a change that affects the external API, please update the docs and post a link to the PR in the discussion')
-
+message(
+  'If this was a change that affects the external API, please update the docs and post a link to the PR in the discussion'
+);

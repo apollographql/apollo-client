@@ -38,10 +38,13 @@ describe('diffing queries against the store', () => {
       query,
     });
 
-    assert.notOk(diffQueryAgainstStore({
+    const { isMissing, missingFields } = diffQueryAgainstStore({
       store,
       query,
-    }).isMissing);
+    });
+
+    assert.notOk(isMissing);
+    assert.equal(missingFields.length, 0);
   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
@@ -205,6 +208,40 @@ describe('diffing queries against the store', () => {
     });
 
     assert.isTrue(isMissing);
+  });
+
+  it('returns missing fields info when fields are missing', () => {
+    const firstQuery = gql`
+      query {
+        a { b }
+      }`;
+
+    const firstResult = {
+      a: {
+        b: 1,
+      },
+    };
+
+    const store = writeQueryToStore({
+      result: firstResult,
+      query: firstQuery,
+    });
+
+    const secondQuery = gql`
+      query {
+        a { b c }
+      }`;
+
+    const { isMissing, missingFields } = diffQueryAgainstStore({
+      store,
+      query: secondQuery,
+    });
+
+    assert.isTrue(isMissing);
+    assert.equal(missingFields[0].storeKeyName, 'c');
+    assert.equal(missingFields[0].objId, '$ROOT_QUERY.a');
+    assert.equal(missingFields[0].fieldName, 'c');
+    assert.equal(missingFields[0].args, null);
   });
 
   it('throws an error on a query with fields missing from matching named fragments', () => {

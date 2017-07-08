@@ -1,9 +1,9 @@
-Thanks for filing an issue on Apollo Client!
+### Thanks for filing an issue on Apollo Client!
 
 To make things easier for you and for a maintiner or contributor to help out, here are a few useful resources!
 
 ### Contributing to Apollo
-If this is your first time contributing to Apollo, one of our friendly bots will ask for you to sign the CLA. After that, take a look at the [contributor guide](https://github.com/apollographql/apollo-client/blob/master/CONTRIBUTING.md!
+If this is your first time contributing to Apollo, one of our friendly bots will ask for you to sign the CLA. After that, take a look at the [contributor guide](https://github.com/apollographql/apollo-client/blob/master/CONTRIBUTING.md)!
 
 ### Creating a reproduction:
 - You can create a reproduction using [this template](https://codesandbox.io/s/7361K9q6w) on codesandbox, or try it locally using [the apollo error template](https://github.com/apollographql/react-apollo-error-template)

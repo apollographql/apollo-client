@@ -229,7 +229,7 @@ export type SubscribeToMoreOptions = {
   onError?: (error: Error) => void,
 };
 
-export type MutationUpdaterFn = (
+export type MutationUpdaterFn<T = { [key: string]: any }> = (
   proxy: DataProxy,
   mutationResult: Object,
 ) => void;
@@ -264,13 +264,13 @@ export interface SubscriptionOptions {
   },
 }
 
-export interface MutationOptions {
+export interface MutationOptions<T = { [key: string]: any}> {
   mutation: DocumentNode,
   variables?: Object,
   optimisticResponse?: Object,
-  updateQueries?: MutationQueryReducersMap,
+  updateQueries?: MutationQueryReducersMap<T>,
   refetchQueries?: string[] | PureQueryOptions[],
-  update?: MutationUpdaterFn,
+  update?: MutationUpdaterFn<T>,
 }
 
 export type QueryListener = (
@@ -369,8 +369,8 @@ export type MutationQueryReducer = (
   },
 ) => Object;
 
-export type MutationQueryReducersMap = {
-  [queryName: string]: MutationQueryReducer,
+export type MutationQueryReducersMap<T = { [key: string]: any}> = {
+  [queryName: string]: MutationQueryReducer<T>,
 };
 
 export type OperationResultReducer = (
@@ -1013,7 +1013,7 @@ declare export class QueryManager {
       mutation: DocumentNode,
       variables?: Object,
       optimisticResponse?: Object,
-      updateQueries?: MutationQueryReducersMap,
+      updateQueries?: MutationQueryReducersMap<T>,
       refetchQueries?: string[] | PureQueryOptions[],
       update?: (proxy: DataProxy, mutationResult: Object) => void,
     },
@@ -1113,7 +1113,7 @@ declare export class ApolloClient extends DataProxy {
   ): this,
   watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T>,
   query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>>,
-  mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>>,
+  mutate<T>(options: MutationOptions<T>): Promise<ApolloQueryResult<T>>,
   subscribe(options: SubscriptionOptions): Observable<any>,
   readQuery<T>(options: DataProxyReadQueryOptions): T,
   readFragment<T>(options: DataProxyReadFragmentOptions): T | null,

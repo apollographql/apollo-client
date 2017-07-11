@@ -357,7 +357,7 @@ export default class ApolloClient implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T>(options: MutationOptions): Promise<ExecutionResult> {
+  public mutate<T>(options: MutationOptions<T>): Promise<ExecutionResult> {
     this.initStore();
 
     return this.queryManager.mutate<T>(options);

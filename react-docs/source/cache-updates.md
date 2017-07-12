@@ -410,6 +410,43 @@ Here, the `fetchMore` query is the same as the query associated with the compone
 
 Although `fetchMore` is often used for pagination, there are many other cases in which it is applicable. For example, suppose you have a list of items (say, a collaborative todo list) and you have a way to fetch items that have been updated after a certain time. Then, you don't have to refetch the whole todo list to get updates: you can just incorporate the newly added items with `fetchMore`, as long as your `updateQuery` function correctly merges the new results.
 
+<h3 id="connection-directive">The `@connection` directive</h3>
+By default, the result of a `fetchMore` will be stored in the cache according to the initial query executed and its parameters. Due to this behavior, it can be hard to know the location in the cache to run an imperative update on if the variables from the initial query are not known, which often happens if we are running store updates from a different place than where the queries are executed.
+
+To have a stable cache location for query results, Apollo Client 1.6 introduced the `@connection` directive, which can be used to specify a custom store key for results. To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+
+```
+const query = gql`query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+  feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed", filter: ["type"]) {
+    ...FeedEntry
+  }
+}`
+```
+
+With the above query, even with multiple `fetchMore`s, the results of each feed update will always result in the `feed` key in the store being updated with the latest accumulated values. In this example, we also use the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key, which results in multiple store values that accumulate queries from each type of feed.
+
+Now that we have a stable store key, we can easily use `writeQuery` to perform a store update, in this case clearing out the feed.
+
+```
+client.writeQuery({
+  query: gql`
+    query Feed($type: FeedType!) {
+      feed(type: $type) @connection(key: "feed", filter: ["type"]) {
+        id
+      }
+    }
+  `,
+  variables: {
+    type: "top",
+  },
+  data: {
+    feed: [],
+  },
+});
+```
+
+Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
+
 <h2 id="cacheRedirect">Cache redirects with `customResolvers`</h2>
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:

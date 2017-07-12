@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Update to TypeScript 2.4.1 [PR #1892](https://github.com/apollographql/apollo-client/pull/1892)
+
 ### 1.8.0
 - Add the `filter` argument to the `@connection` directive so that custom store keys can include query arguments [PR #1862](https://github.com/apollographql/apollo-client/pull/1862)
 - Add support for flow typecheck to work out of the box (without any configuration) [PR #1820](https://github.com/apollographql/apollo-client/pull/1820)

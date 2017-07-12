@@ -180,7 +180,7 @@ export class QueryManager {
     networkInterface,
     store,
     reduxRootSelector,
-    reducerConfig = { mutationBehaviorReducers: {} },
+    reducerConfig = {},
     fragmentMatcher,
     addTypename = true,
     queryDeduplication = false,
@@ -732,7 +732,7 @@ export class QueryManager {
     options.notifyOnNetworkStatusChange = false;
 
     const requestId = this.idCounter;
-    const resPromise = new Promise((resolve, reject) => {
+    const resPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, resPromise, resolve, reject);
 
       return this.watchQuery<T>(options, false).result().then((result) => {

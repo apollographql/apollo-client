@@ -147,7 +147,7 @@ describe('MockSubscriptionNetworkInterface', () => {
         },
       },
       (error, result) => {
-        assert.deepEqual(result, result1.result);
+        assert.deepEqual(result, result1.result.data);
         done();
       },
     );
@@ -172,7 +172,7 @@ describe('MockSubscriptionNetworkInterface', () => {
         },
       },
       (error, result) => {
-        assert.deepEqual(result, result1.result);
+        assert.deepEqual(result, result1.result.data);
         done();
       },
     );
@@ -206,7 +206,7 @@ describe('MockSubscriptionNetworkInterface', () => {
       setTimeout(() => {
         assert.deepEqual(
           allResults,
-          [result1.result, result2.result, result3.result, result4.result],
+          [result1.result.data, result2.result.data, result3.result.data, result4.result.data],
         );
         done();
       }, 50);

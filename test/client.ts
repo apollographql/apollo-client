@@ -273,7 +273,7 @@ describe('client', () => {
       },
     };
 
-    return clientRoundtrip(query, data);
+    return clientRoundtrip(query, { data });
   });
 
   it('should allow a single query with an observable enabled network interface', (done) => {
@@ -475,7 +475,7 @@ describe('client', () => {
       },
     });
 
-    return clientRoundtrip(query, data, null, ifm);
+    return clientRoundtrip(query, { data }, null, ifm);
   });
 
   it('should allow for a single query with existing store', () => {
@@ -2859,7 +2859,7 @@ function clientRoundtrip(
 ) {
   const networkInterface = mockNetworkInterface({
     request: { query: cloneDeep(query) },
-    result: { data },
+    result: data,
   });
 
   const client = new ApolloClient({
@@ -2868,6 +2868,6 @@ function clientRoundtrip(
   });
 
   return client.query({ query, variables }).then((result) => {
-    assert.deepEqual(result.data, data);
+    assert.deepEqual(result.data, data.data);
   });
 }

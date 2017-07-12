@@ -31,10 +31,10 @@ export type QueryStoreValue = {
   queryString: string;
   document: DocumentNode;
   variables: Object;
-  previousVariables: Object | null;
+  previousVariables?: Object | null;
   networkStatus: NetworkStatus;
-  networkError: Error | null;
-  graphQLErrors: GraphQLError[];
+  networkError?: Error | null;
+  graphQLErrors?: GraphQLError[];
   metadata: any;
 };
 

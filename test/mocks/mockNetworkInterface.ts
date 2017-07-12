@@ -218,7 +218,7 @@ export class MockSubscriptionNetworkInterface extends MockNetworkInterface imple
       }
       const response = subscription.results!.shift()!;
       setTimeout(() => {
-        handler(response.error, response.result);
+        handler(response.error, response.result ? response.result.data : undefined);
       }, response.delay ? response.delay : 0);
     } else {
       throw new Error('Network interface does not have subscription associated with this id.');

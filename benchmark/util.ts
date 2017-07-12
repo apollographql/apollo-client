@@ -90,7 +90,7 @@ export const group = (groupFn: GroupFunction) => {
   } = {};
 
   let afterEachFn: Nullable<AfterEachCallbackFunction> = undefined;
-  scope.afterEach = (afterEachFnArg: AfterAllCallbackFunction) => {
+  scope.afterEach = (afterEachFnArg: AfterEachCallbackFunction) => {
     afterEachFn = afterEachFnArg;
   };
 

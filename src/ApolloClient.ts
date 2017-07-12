@@ -174,7 +174,7 @@ export default class ApolloClient implements DataProxy {
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
-   * 
+   *
    * @param reduxRootKey If you’d like to use a different root key for the client reducer
    */
 
@@ -190,7 +190,7 @@ export default class ApolloClient implements DataProxy {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
     fragmentMatcher?: FragmentMatcherInterface,
-    reduxRootKey?: string
+    reduxRootKey?: string,
   } = {}) {
     let {
       dataIdFromObject,
@@ -206,7 +206,7 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools,
       fragmentMatcher,
       queryDeduplication = true,
-      reduxRootKey
+      reduxRootKey,
     } = options;
 
     if (typeof reduxRootSelector === 'function') {
@@ -247,7 +247,7 @@ export default class ApolloClient implements DataProxy {
     this.fieldWithArgs = getStoreKeyName;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
-    this.reduxRootKey = reduxRootKey || reduxRootKey !== "" ? reduxRootKey : DEFAULT_REDUX_ROOT_KEY;
+    this.reduxRootKey = reduxRootKey || reduxRootKey !== '' ? reduxRootKey : DEFAULT_REDUX_ROOT_KEY;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.disableNetworkFetches = false, ssrForceFetchDelay);

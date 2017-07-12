@@ -140,7 +140,7 @@ export default class ApolloClient implements DataProxy {
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
-  public reduxRootKey: string;
+  public reduxRootKey: string | undefined;
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;

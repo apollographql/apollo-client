@@ -423,11 +423,19 @@ const query = gql`query Feed($type: FeedType!, $offset: Int, $limit: Int) {
 }`
 ```
 
-With the above query, even with multiple `fetchMore`s, the results of each feed update will always result in the `feed` key in the store being updated with the latest accumulated values. In this example, we also use the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key, which results in multiple store values that accumulate queries from each type of feed. Now that we have a stable store key, we can easily use `writeQuery` to perform a store update, in this case clearing out the feed.
+With the above query, even with multiple `fetchMore`s, the results of each feed update will always result in the `feed` key in the store being updated with the latest accumulated values. In this example, we also use the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key, which results in multiple store values that accumulate queries from each type of feed.
+
+Now that we have a stable store key, we can easily use `writeQuery` to perform a store update, in this case clearing out the feed.
 
 ```
 client.writeQuery({
-  query,
+  query: gql`
+    query Feed($type: FeedType!) {
+      feed(type: $type) @connection(key: "feed", filter: ["type"]) {
+        id
+      }
+    }
+  `,
   variables: {
     type: "top",
   },
@@ -436,6 +444,8 @@ client.writeQuery({
   },
 });
 ```
+
+Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
 
 <h2 id="cacheRedirect">Cache redirects with `customResolvers`</h2>
 

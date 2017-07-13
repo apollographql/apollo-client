@@ -31,6 +31,7 @@ lib
 test-lib
 dist
 npm
+!flow-typed/npm
 
 # webstorm
 .idea/
@@ -40,3 +41,6 @@ npm
 
 # yarn
 yarn.lock
+
+# npm
+package-lock.json

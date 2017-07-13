@@ -209,11 +209,6 @@ describe('client', () => {
     );
   });
 
-  it('should not allow passing reduxRootSelector as a string', () => {
-    const reduxRootSelector = 'testApollo';
-    assert.throws( () => new ApolloClient({ reduxRootSelector }));
-  });
-
   it('should throw an error if "reduxRootSelector" is provided and the client tries to create the store', () => {
     const reduxRootSelector = (state: any) => state.testApollo;
     const client = new ApolloClient({
@@ -243,6 +238,14 @@ describe('client', () => {
     assert.throws(() => {
       client.query({ query: '{ a }' } as any);
     }, 'You must wrap the query string in a "gql" tag.');
+  });
+
+  it('should throw an error if mutation option is missing', () => {
+    const client = new ApolloClient();
+
+    assert.throws(() => {
+      client.mutate({ query: gql`{ a }` } as any);
+    }, 'mutation option is required. You must specify your GraphQL document in the mutation option.');
   });
 
   it('should allow for a single query to take place', () => {
@@ -581,7 +584,6 @@ describe('client', () => {
           networkStatus: NetworkStatus.ready,
           networkError: null,
           graphQLErrors: [],
-          lastRequestId: 2,
           previousVariables: null,
           metadata: null,
         },
@@ -2795,6 +2797,52 @@ it('should run a query with the connection directive and write the result to the
             {
               'generated': true,
               'id': 'ROOT_QUERY.abc.0',
+              'type': 'id',
+            },
+          ],
+        },
+      });
+    });
+  });
+
+  it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => {
+    const query = gql`
+      query books($order: string) {
+        books(skip: 0, limit: 2, order: $order) @connection(key: "abc", filter: ["order"]) {
+          name
+          __typename
+        }
+      }`;
+
+    const result = {
+      'books': [
+        {
+          'name': 'abcd',
+          '__typename': 'Book',
+        },
+      ],
+    };
+
+    const variables = {order: 'popularity'};
+
+    const networkInterface = mockNetworkInterface({
+      request: { query: query, variables },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      networkInterface,
+    });
+
+    return client.query({ query, variables }).then((actualResult) => {
+      assert.deepEqual(actualResult.data, result);
+      assert.deepEqual(client.store.getState().apollo.data, {
+        'ROOT_QUERY.abc({"order":"popularity"}).0': { name: 'abcd', __typename: 'Book' },
+        'ROOT_QUERY': {
+          'abc({"order":"popularity"})': [
+            {
+              'generated': true,
+              'id': 'ROOT_QUERY.abc({"order":"popularity"}).0',
               'type': 'id',
             },
           ],

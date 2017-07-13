@@ -1,8 +1,4 @@
 import {
-  ExecutionResult,
-} from 'graphql';
-
-import {
   ModifiableWatchQueryOptions,
   WatchQueryOptions,
   FetchMoreQueryOptions,

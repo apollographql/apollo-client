@@ -1021,7 +1021,7 @@ declare export class QueryManager {
       refetchQueries?: string[] | PureQueryOptions[],
       update?: (proxy: DataProxy, mutationResult: Object) => void,
     },
-  ): Promise<ApolloQueryResult<T>>,
+  ): Promise<ApolloExecutionResult<T>>,
   fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
@@ -1117,7 +1117,7 @@ declare export class ApolloClient extends DataProxy {
   ): this,
   watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T>,
   query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>>,
-  mutate<T>(options: MutationOptions<T>): Promise<ApolloQueryResult<T>>,
+  mutate<T>(options: MutationOptions<T>): Promise<ApolloExecutionResult<T>>,
   subscribe(options: SubscriptionOptions): Observable<any>,
   readQuery<T>(options: DataProxyReadQueryOptions): T,
   readFragment<T>(options: DataProxyReadFragmentOptions): T | null,

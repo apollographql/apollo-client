@@ -1,2 +1,1 @@
 export const version = 'local';
-

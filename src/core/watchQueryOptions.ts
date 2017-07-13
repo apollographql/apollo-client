@@ -14,6 +14,7 @@ import {
 
 import {
   PureQueryOptions,
+  ApolloExecutionResult,
 } from './types';
 
 /**
@@ -163,4 +164,4 @@ export interface MutationOptions<T = { [key: string]: any}> {
 }
 
 // Add a level of indirection for `typedoc`.
-export type MutationUpdaterFn<T = { [key: string]: any}> = (proxy: DataProxy, mutationResult: T) => void;
+export type MutationUpdaterFn<T = { [key: string]: any}> = (proxy: DataProxy, mutationResult: ApolloExecutionResult<T>) => void;

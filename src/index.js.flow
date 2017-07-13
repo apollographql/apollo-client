@@ -231,7 +231,7 @@ export type SubscribeToMoreOptions = {
 
 export type MutationUpdaterFn<T = { [key: string]: any }> = (
   proxy: DataProxy,
-  mutationResult: Object,
+  mutationResult: ApolloExecutionResult<T>,
 ) => void;
 
 export interface ModifiableWatchQueryOptions {
@@ -289,6 +289,10 @@ export type ApolloQueryResult<T> = {
   loading: boolean,
   networkStatus: NetworkStatus,
   stale: boolean,
+};
+
+export type ApolloExecutionResult<T = { [key: string]: any }> = {
+  data: T;
 };
 
 export type IdGetter = (value: Object) => string | null | void;
@@ -360,10 +364,10 @@ declare export function toIdValue(id: string, generated?: boolean): IdValue;
 
 declare export function isJsonValue(jsonObject: StoreValue): JsonValue;
 
-export type MutationQueryReducer = (
+export type MutationQueryReducer<T> = (
   previousResult: Object,
   options: {
-    mutationResult: Object,
+    mutationResult: ApolloExecutionResult<T>,
     queryName: string | null,
     queryVariables: Object,
   },

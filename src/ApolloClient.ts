@@ -140,6 +140,7 @@ export default class ApolloClient implements DataProxy {
   public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
+  public reduxRootKey: string | undefined;
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
@@ -173,6 +174,8 @@ export default class ApolloClient implements DataProxy {
    * with identical parameters (query, variables, operationName) is already in flight.
    *
    * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
+   *
+   * @param reduxRootKey If you’d like to use a different root key for the client reducer
    */
 
   constructor(options: {
@@ -187,6 +190,7 @@ export default class ApolloClient implements DataProxy {
     connectToDevTools?: boolean,
     queryDeduplication?: boolean,
     fragmentMatcher?: FragmentMatcherInterface,
+    reduxRootKey?: string,
   } = {}) {
     let {
       dataIdFromObject,
@@ -202,6 +206,7 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools,
       fragmentMatcher,
       queryDeduplication = true,
+      reduxRootKey,
     } = options;
 
     if (typeof reduxRootSelector === 'function') {
@@ -242,6 +247,7 @@ export default class ApolloClient implements DataProxy {
     this.fieldWithArgs = getStoreKeyName;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
+    this.reduxRootKey = reduxRootKey || reduxRootKey !== '' ? reduxRootKey : DEFAULT_REDUX_ROOT_KEY;
 
     if (ssrForceFetchDelay) {
       setTimeout(() => this.disableNetworkFetches = false, ssrForceFetchDelay);
@@ -475,7 +481,7 @@ export default class ApolloClient implements DataProxy {
 
     // If we don't have a store already, initialize a default one
     this.setStore(createApolloStore({
-      reduxRootKey: DEFAULT_REDUX_ROOT_KEY,
+      reduxRootKey: this.reduxRootKey,
       initialState: this.initialState,
       config: this.reducerConfig,
       logger: (store: any) => (next: any) => (action: any) => {

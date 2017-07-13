@@ -272,7 +272,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
             });
         };
         this.updateQuery(mapFn);
-        return fetchMoreResult;
+        return fetchMoreResult as ApolloQueryResult<T>;
       });
   }
 

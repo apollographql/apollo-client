@@ -4,6 +4,7 @@ import {
   applyMiddleware,
   combineReducers,
   Middleware,
+  Action,
 } from 'redux';
 
 import {
@@ -103,9 +104,10 @@ const createReducerError = (error: Error, action: ApolloAction): ReducerError =>
   return reducerError;
 };
 
+// Reducer
 export type ApolloReducer = (store: NormalizedCache, action: ApolloAction) => NormalizedCache;
 
-export function createApolloReducer(config: ApolloReducerConfig): (state: Store, action: ApolloAction) => Store {
+export function createApolloReducer(config: ApolloReducerConfig): (state: Store, action: ApolloAction | Action) => Store {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
     try {
       const newState: Store = {

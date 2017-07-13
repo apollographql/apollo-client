@@ -124,6 +124,7 @@ export default class ApolloClient implements DataProxy {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
   public reduxRootSelector: ApolloStateSelector | null;
+  public reduxRootKey: string;
   public initialState: any;
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
@@ -153,8 +154,9 @@ export default class ApolloClient implements DataProxy {
    * to a GraphQL spec-compliant server.
    *
    * @param reduxRootSelector A "selector" function that receives state from the Redux store
-   * and returns the part of it that is managed by ApolloClient.
-   * This option should only be used if the store is created outside of the client.
+   * and returns the part of it that is managed by ApolloClient or a string which will give a custom
+   * name in the store for the apollo sub state.
+   * The "selector" function option should only be used if the store is created outside of the client.
    *
    * @param initialState The initial state assigned to the store.
    *
@@ -206,8 +208,10 @@ export default class ApolloClient implements DataProxy {
 
     if (typeof reduxRootSelector === 'function') {
       this.reduxRootSelector = reduxRootSelector;
+    } else if (typeof reduxRootSelector === 'string') {
+      this.reduxRootKey = reduxRootSelector;
     } else if (typeof reduxRootSelector !== 'undefined') {
-      throw new Error('"reduxRootSelector" must be a function.');
+      throw new Error('"reduxRootSelector" must be a function or a string.');
     }
 
     if (typeof fragmentMatcher === 'undefined') {
@@ -475,7 +479,7 @@ export default class ApolloClient implements DataProxy {
 
     // If we don't have a store already, initialize a default one
     this.setStore(createApolloStore({
-      reduxRootKey: DEFAULT_REDUX_ROOT_KEY,
+      reduxRootKey: this.reduxRootKey ? this.reduxRootKey : DEFAULT_REDUX_ROOT_KEY,
       initialState: this.initialState,
       config: this.reducerConfig,
       logger: (store: any) => (next: any) => (action: any) => {

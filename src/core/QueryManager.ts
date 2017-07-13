@@ -20,6 +20,7 @@ import {
 } from './types';
 
 import {
+  QueryStore,
   QueryStoreValue,
 } from '../queries/store';
 
@@ -137,12 +138,15 @@ import {
 import { ObservableQuery } from './ObservableQuery';
 
 export class QueryManager {
+  public static EMIT_REDUX_ACTIONS = true;
+
   public pollingTimers: {[queryId: string]: any};
   public scheduler: QueryScheduler;
   public store: ApolloStore;
   public networkInterface: NetworkInterface;
   public ssrMode: boolean;
   public mutationStore: MutationStore = new MutationStore();
+  public queryStore: QueryStore = new QueryStore();
 
   private addTypename: boolean;
   private deduplicator: Deduplicator;
@@ -181,6 +185,8 @@ export class QueryManager {
   private queryIdsByName: { [queryName: string]: string[] };
 
   private lastRequestId: { [queryId: string]: number } = {};
+
+  private disableBroadcasting = false;
 
   constructor({
     networkInterface,
@@ -298,7 +304,7 @@ export class QueryManager {
         Object.keys(updateQueriesByName).forEach(queryName => (this.queryIdsByName[queryName] || []).forEach(queryId => {
           ret[queryId] = {
             reducer: updateQueriesByName[queryName],
-            query: this.getApolloState().queries[queryId],
+            query: this.queryStore.get(queryId),
           };
         }));
       }
@@ -446,23 +452,40 @@ export class QueryManager {
 
     // Initialize query in store with unique requestId
     this.queryDocuments[queryId] = queryDoc;
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_INIT',
+
+    this.queryStore.initQuery({
+      queryId,
       queryString,
       document: queryDoc,
-      operationName: getOperationName(queryDoc),
-      variables,
-      fetchPolicy,
-      queryId,
-      requestId,
-      // we store the old variables in order to trigger "loading new variables"
-      // state if we know we will go to the server
       storePreviousVariables: shouldFetch,
+      variables,
       isPoll: fetchType === FetchType.poll,
       isRefetch: fetchType === FetchType.refetch,
-      fetchMoreForQueryId,
       metadata,
+      fetchMoreForQueryId,
     });
+
+    this.broadcastQueries();
+
+    if (QueryManager.EMIT_REDUX_ACTIONS) {
+      this.store.dispatch({
+        type: 'APOLLO_QUERY_INIT',
+        queryString,
+        document: queryDoc,
+        operationName: getOperationName(queryDoc),
+        variables,
+        fetchPolicy,
+        queryId,
+        requestId,
+        // we store the old variables in order to trigger "loading new variables"
+        // state if we know we will go to the server
+        storePreviousVariables: shouldFetch,
+        isPoll: fetchType === FetchType.poll,
+        isRefetch: fetchType === FetchType.refetch,
+        fetchMoreForQueryId,
+        metadata,
+      });
+    }
 
     this.lastRequestId[queryId] = requestId;
 
@@ -470,16 +493,21 @@ export class QueryManager {
     // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult = !shouldFetch || fetchPolicy === 'cache-and-network';
     if (shouldDispatchClientResult) {
-      this.store.dispatch({
-        type: 'APOLLO_QUERY_RESULT_CLIENT',
-        result: { data: storeResult },
-        variables,
-        document: queryDoc,
-        operationName: getOperationName(queryDoc),
-        complete: !shouldFetch,
-        queryId,
-        requestId,
-      });
+      this.queryStore.markQueryResultClient(queryId, !shouldFetch);
+      this.broadcastQueries();
+
+      if (QueryManager.EMIT_REDUX_ACTIONS) {
+        this.store.dispatch({
+          type: 'APOLLO_QUERY_RESULT_CLIENT',
+          result: { data: storeResult },
+          variables,
+          document: queryDoc,
+          operationName: getOperationName(queryDoc),
+          complete: !shouldFetch,
+          queryId,
+          requestId,
+        });
+      }
     }
 
     if (shouldFetch) {
@@ -496,13 +524,18 @@ export class QueryManager {
           throw error;
         } else {
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
-            this.store.dispatch({
-              type: 'APOLLO_QUERY_ERROR',
-              error,
-              queryId,
-              requestId,
-              fetchMoreForQueryId,
-            });
+            if (QueryManager.EMIT_REDUX_ACTIONS) {
+              this.store.dispatch({
+                type: 'APOLLO_QUERY_ERROR',
+                error,
+                queryId,
+                requestId,
+                fetchMoreForQueryId,
+              });
+            }
+
+            this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
+            this.broadcastQueries();
           }
 
           this.removeFetchQueryPromise(requestId);
@@ -540,7 +573,7 @@ export class QueryManager {
 
       // XXX This is to fix a strange race condition that was the root cause of react-apollo/#170
       // queryStoreValue was sometimes the old queryStoreValue and not what's currently in the store.
-      queryStoreValue = this.getApolloState().queries[queryId];
+      queryStoreValue = this.queryStore.get(queryId);
 
       const storedQuery = this.observableQueries[queryId];
 
@@ -766,10 +799,15 @@ export class QueryManager {
   }
 
   public stopQueryInStore(queryId: string) {
-    this.store.dispatch({
-      type: 'APOLLO_QUERY_STOP',
-      queryId,
-    });
+    this.queryStore.stopQuery(queryId);
+    this.broadcastQueries();
+
+    if (QueryManager.EMIT_REDUX_ACTIONS) {
+      this.store.dispatch({
+        type: 'APOLLO_QUERY_STOP',
+        queryId,
+      });
+    }
   }
 
   public getApolloState(): Store {
@@ -844,6 +882,8 @@ export class QueryManager {
       reject(new Error('Store reset while query was in flight.'));
     });
 
+    this.queryStore.reset(Object.keys(this.observableQueries));
+
     this.store.dispatch({
       type: 'APOLLO_STORE_RESET',
       observableQueryIds: Object.keys(this.observableQueries),
@@ -859,7 +899,7 @@ export class QueryManager {
     // store.
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
     Object.keys(this.observableQueries).forEach((queryId) => {
-      const storeQuery = this.reduxRootSelector(this.store.getState()).queries[queryId];
+      const storeQuery = this.queryStore.get(queryId);
 
       const fetchPolicy = this.observableQueries[queryId].observableQuery.options.fetchPolicy;
 
@@ -1111,6 +1151,8 @@ export class QueryManager {
 
           // default the lastRequestId to 1
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
+            this.disableBroadcasting = true;
+
             // XXX handle multiple ApolloQueryResults
             this.store.dispatch({
               type: 'APOLLO_QUERY_RESULT',
@@ -1123,6 +1165,14 @@ export class QueryManager {
               fetchMoreForQueryId,
               extraReducers,
             });
+
+            this.disableBroadcasting = false;
+
+            const { reducerError } = this.getApolloState();
+            if (!reducerError || reducerError.queryId !== queryId) {
+              this.queryStore.markQueryResult(queryId, result, fetchMoreForQueryId);
+              this.broadcastQueries();
+            }
           }
 
           this.removeFetchQueryPromise(requestId);
@@ -1191,7 +1241,10 @@ export class QueryManager {
   }
 
   private broadcastQueries() {
-    const queries = this.getApolloState().queries;
+    if (this.disableBroadcasting) {
+      return;
+    }
+
     Object.keys(this.queryListeners).forEach((queryId: string) => {
       const listeners = this.queryListeners[queryId];
       // XXX due to an unknown race condition listeners can sometimes be undefined here.
@@ -1202,7 +1255,7 @@ export class QueryManager {
           // it's possible for the listener to be undefined if the query is being stopped
           // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
           if (listener) {
-            const queryStoreValue = queries[queryId];
+            const queryStoreValue = this.queryStore.get(queryId);
             listener(queryStoreValue);
           }
         });

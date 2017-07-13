@@ -1,3 +1,5 @@
+import debounce from 'lodash/debounce';
+
 import {
   NetworkInterface,
   SubscriptionNetworkInterface,
@@ -150,6 +152,7 @@ export class QueryManager {
   // mutations and subscriptions as well.
   private queryListeners: { [queryId: string]: QueryListener[] };
   private queryDocuments: { [queryId: string]: DocumentNode };
+  private mutationDebouncers: { [mutationNameAndDebounceDuration: string]: Function };
 
   private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
 
@@ -205,6 +208,7 @@ export class QueryManager {
     this.pollingTimers = {};
     this.queryListeners = {};
     this.queryDocuments = {};
+    this.mutationDebouncers = {};
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
@@ -255,6 +259,7 @@ export class QueryManager {
     updateQueries: updateQueriesByName,
     refetchQueries = [],
     update: updateWithProxyFn,
+    debounceTime,
   }: {
     mutation: DocumentNode,
     variables?: Object,
@@ -262,6 +267,7 @@ export class QueryManager {
     updateQueries?: MutationQueryReducersMap,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
+    debounceTime?: number,
   }): Promise<ExecutionResult> {
     if (!mutation) {
       throw new Error('mutation option is required. You must specify your GraphQL document in the mutation option.');
@@ -313,72 +319,33 @@ export class QueryManager {
       update: updateWithProxyFn,
     });
 
-    return new Promise<ExecutionResult>((resolve, reject) => {
-      this.networkInterface.query(request)
-        .then((result) => {
-          if (result.errors) {
-            const error = new ApolloError({
-              graphQLErrors: result.errors,
-            });
-            this.store.dispatch({
-              type: 'APOLLO_MUTATION_ERROR',
-              error,
-              mutationId,
-            });
+    if (debounceTime) {
+      const debounceId = mutationString + debounceTime;
+      let debouncer = this.mutationDebouncers[debounceId];
+      if (!debouncer) {
+        debouncer = debounce(this.executeMutationRequest.bind(this), debounceTime);
+        this.mutationDebouncers[debounceId] = debouncer;
+      }
+      return debouncer(
+          request,
+          mutationId,
+          mutation,
+          variables,
+          generateUpdateQueriesInfo,
+          updateWithProxyFn,
+          refetchQueries,
+      );
+    }
 
-            delete this.queryDocuments[mutationId];
-            reject(error);
-            return;
-          }
-
-          this.store.dispatch({
-            type: 'APOLLO_MUTATION_RESULT',
-            result,
-            mutationId,
-            document: mutation,
-            operationName: getOperationName(mutation),
-            variables: variables || {},
-            extraReducers: this.getExtraReducers(),
-            updateQueries: generateUpdateQueriesInfo(),
-            update: updateWithProxyFn,
-          });
-
-          // If there was an error in our reducers, reject this promise!
-          const { reducerError } = this.getApolloState();
-          if (reducerError && reducerError.mutationId === mutationId) {
-            reject(reducerError.error);
-            return;
-          }
-
-          if (typeof refetchQueries[0] === 'string') {
-            (refetchQueries as string[]).forEach((name) => { this.refetchQueryByName(name); });
-          } else {
-            (refetchQueries as PureQueryOptions[]).forEach( pureQuery => {
-              this.query({
-                query: pureQuery.query,
-                variables: pureQuery.variables,
-                fetchPolicy: 'network-only',
-              });
-            });
-          }
-
-
-          delete this.queryDocuments[mutationId];
-          resolve(result);
-        })
-        .catch((err) => {
-          this.store.dispatch({
-            type: 'APOLLO_MUTATION_ERROR',
-            error: err,
-            mutationId,
-          });
-
-          delete this.queryDocuments[mutationId];
-          reject(new ApolloError({
-            networkError: err,
-          }));
-        });
-    });
+    return this.executeMutationRequest(
+        request,
+        mutationId,
+        mutation,
+        variables,
+        generateUpdateQueriesInfo,
+        updateWithProxyFn,
+        refetchQueries,
+    );
   }
 
 
@@ -1009,6 +976,85 @@ export class QueryManager {
       variables,
       document,
     };
+  }
+
+  private executeMutationRequest(
+      request: Request,
+      mutationId: string,
+      mutation: DocumentNode,
+      variables: Object | undefined,
+      generateUpdateQueriesInfo: () => { [p: string]: QueryWithUpdater },
+      updateWithProxyFn: ((proxy: DataProxy, mutationResult: Object) => void) | undefined,
+      refetchQueries: string[] | PureQueryOptions[],
+  ) {
+    return new Promise<ExecutionResult>((resolve, reject) => {
+      this.networkInterface.query(request)
+          .then((result) => {
+            if (result.errors) {
+              const error = new ApolloError({
+                graphQLErrors: result.errors,
+              });
+              this.store.dispatch({
+                type: 'APOLLO_MUTATION_ERROR',
+                error,
+                mutationId,
+              });
+
+              delete this.queryDocuments[mutationId];
+              reject(error);
+              return;
+            }
+
+            this.store.dispatch({
+              type: 'APOLLO_MUTATION_RESULT',
+              result,
+              mutationId,
+              document: mutation,
+              operationName: getOperationName(mutation),
+              variables: variables || {},
+              extraReducers: this.getExtraReducers(),
+              updateQueries: generateUpdateQueriesInfo(),
+              update: updateWithProxyFn,
+            });
+
+            // If there was an error in our reducers, reject this promise!
+            const {reducerError} = this.getApolloState();
+            if (reducerError && reducerError.mutationId === mutationId) {
+              reject(reducerError.error);
+              return;
+            }
+
+            if (typeof refetchQueries[0] === 'string') {
+              (refetchQueries as string[]).forEach((name) => {
+                this.refetchQueryByName(name);
+              });
+            } else {
+              (refetchQueries as PureQueryOptions[]).forEach(pureQuery => {
+                this.query({
+                  query: pureQuery.query,
+                  variables: pureQuery.variables,
+                  fetchPolicy: 'network-only',
+                });
+              });
+            }
+
+
+            delete this.queryDocuments[mutationId];
+            resolve(result);
+          })
+          .catch((err) => {
+            this.store.dispatch({
+              type: 'APOLLO_MUTATION_ERROR',
+              error: err,
+              mutationId,
+            });
+
+            delete this.queryDocuments[mutationId];
+            reject(new ApolloError({
+              networkError: err,
+            }));
+          });
+    });
   }
 
   // XXX: I think we just store this on the observable query at creation time

@@ -271,6 +271,7 @@ export interface MutationOptions {
   updateQueries?: MutationQueryReducersMap,
   refetchQueries?: string[] | PureQueryOptions[],
   update?: MutationUpdaterFn,
+  debounceTime?: number,
 }
 
 export type QueryListener = (

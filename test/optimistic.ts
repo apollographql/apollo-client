@@ -328,9 +328,9 @@ describe('optimistic mutation results', () => {
             updateQueries,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Optimistically generated 2');
-            const latestState = client.store.getState().apollo.mutations;
-            assert.equal(latestState['5'].loading, false);
-            assert.equal(latestState['6'].loading, true);
+            const latestState = client.queryManager.mutationStore;
+            assert.equal(latestState.get('5').loading, false);
+            assert.equal(latestState.get('6').loading, true);
 
             return res;
           });
@@ -341,16 +341,16 @@ describe('optimistic mutation results', () => {
             updateQueries,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
-            const latestState = client.store.getState().apollo.mutations;
-            assert.equal(latestState[5].loading, false);
-            assert.equal(latestState[6].loading, false);
+            const latestState = client.queryManager.mutationStore;
+            assert.equal(latestState.get('5').loading, false);
+            assert.equal(latestState.get('6').loading, false);
 
             return res;
           });
 
-          const mutationsState = client.store.getState().apollo.mutations;
-          assert.equal(mutationsState[5].loading, true);
-          assert.equal(mutationsState[6].loading, true);
+          const mutationsState = client.queryManager.mutationStore;
+          assert.equal(mutationsState.get('5').loading, true);
+          assert.equal(mutationsState.get('6').loading, true);
 
           checkBothMutationsAreApplied('Optimistically generated', 'Optimistically generated 2');
 
@@ -496,9 +496,9 @@ describe('optimistic mutation results', () => {
             update,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Optimistically generated 2');
-            const latestState = client.store.getState().apollo.mutations;
-            assert.equal(latestState['5'].loading, false);
-            assert.equal(latestState['6'].loading, true);
+            const latestState = client.queryManager.mutationStore;
+            assert.equal(latestState.get('5').loading, false);
+            assert.equal(latestState.get('6').loading, true);
 
             return res;
           });
@@ -509,16 +509,16 @@ describe('optimistic mutation results', () => {
             update,
           }).then((res) => {
             checkBothMutationsAreApplied('This one was created with a mutation.', 'Second mutation.');
-            const latestState = client.store.getState().apollo.mutations;
-            assert.equal(latestState[5].loading, false);
-            assert.equal(latestState[6].loading, false);
+            const latestState = client.queryManager.mutationStore;
+            assert.equal(latestState.get('5').loading, false);
+            assert.equal(latestState.get('6').loading, false);
 
             return res;
           });
 
-          const mutationsState = client.store.getState().apollo.mutations;
-          assert.equal(mutationsState[5].loading, true);
-          assert.equal(mutationsState[6].loading, true);
+          const mutationsState = client.queryManager.mutationStore;
+          assert.equal(mutationsState.get('5').loading, true);
+          assert.equal(mutationsState.get('6').loading, true);
 
           checkBothMutationsAreApplied('Optimistically generated', 'Optimistically generated 2');
 

@@ -1,6 +1,8 @@
 # Change log
 
 ### vNEXT
+- Remove query tracking from the Redux store. Query status tracking is now handled outside of Redux in the QueryStore class. [PR #1859](https://github.com/apollographql/apollo-client/pull/1859)
+- Remove mutation tracking from the Redux store. Mutation status tracking is now handled outside of Redux in the MutationStore class. [PR #1846](https://github.com/apollographql/apollo-client/pull/1846)
 
 ### 1.8.1
 - Use generic types for store updating functions in mutations [PR #1882](https://github.com/apollographql/apollo-client/pull/1882)

@@ -1,5 +1,6 @@
 import {
   mockSubscriptionNetworkInterface,
+  MockedSubscription,
 } from './mocks/mockNetworkInterface';
 
 import {
@@ -24,21 +25,13 @@ import {
 
 describe('GraphQL Subscriptions', () => {
   const results = ['Dahivat Pandya', 'Vyacheslav Kim', 'Changping Chen', 'Amanda Liu'].map(
-    name => ({ result: { user: { name: name } }, delay: 10 }),
+    name => ({ result: { data: { user: { name: name } }}, delay: 10 }),
   );
 
-  let sub1: any;
+  let sub1: MockedSubscription;
   let options: any;
-  let watchQueryOptions: any;
-  let sub2: any;
   let defaultOptions: any;
-  let defaultSub1: any;
-  let commentsQuery: any;
-  let commentsVariables: any;
-  let commentsSub: any;
-  let commentsResult: any;
-  let commentsResultMore: any;
-  let commentsWatchQueryOptions: any;
+  let defaultSub1: MockedSubscription;
   beforeEach(() => {
 
     sub1 = {
@@ -98,79 +91,6 @@ describe('GraphQL Subscriptions', () => {
         }
       `,
     };
-
-    watchQueryOptions = {
-      query: gql`
-        query UserInfo($name: String) {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
-      variables: {
-        name: 'Changping Chen',
-      },
-    };
-
-    commentsQuery = gql`
-      query Comment($repoName: String!) {
-        entry(repoFullName: $repoName) {
-          comments {
-            text
-          }
-        }
-      }
-    `;
-
-    commentsSub = gql`
-      subscription getNewestComment($repoName: String!) {
-        getNewestComment(repoName: $repoName) {
-          text
-        }
-      }`;
-
-    commentsVariables = {
-      repoName: 'org/repo',
-    };
-
-    commentsWatchQueryOptions = {
-      query: commentsQuery,
-      variables: commentsVariables,
-    };
-
-    commentsResult = {
-      data: {
-        entry: {
-          comments: [],
-        },
-      },
-    };
-
-    commentsResultMore = {
-      result: {
-        entry: {
-          comments: [],
-        },
-      },
-    };
-
-    for (let i = 1; i <= 10; i++) {
-      commentsResult.data.entry.comments.push({ text: `comment ${i}` });
-    }
-
-    for (let i = 11; i < 12; i++) {
-      commentsResultMore.result.entry.comments.push({ text: `comment ${i}` });
-    }
-
-    sub2 = {
-      request: {
-        query: commentsSub,
-        variables: commentsVariables,
-      },
-      id: 0,
-      results: [commentsResultMore],
-    };
-
   });
 
 
@@ -184,7 +104,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = client.subscribe(defaultOptions).subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result);
+        assert.deepEqual(result, results[0].result.data);
 
         // Test unsubscribing
         sub.unsubscribe();
@@ -210,7 +130,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = client.subscribe(options).subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result);
+        assert.deepEqual(result, results[0].result.data);
 
         // Test unsubscribing
         sub.unsubscribe();
@@ -241,7 +161,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = obs.subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result);
+        assert.deepEqual(result, results[0].result.data);
         counter++;
         if (counter === 2) {
           done();
@@ -252,7 +172,7 @@ describe('GraphQL Subscriptions', () => {
     // Subscribe again. Should also receive the same result.
     const resub = obs.subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result);
+        assert.deepEqual(result, results[0].result.data);
         counter++;
         if (counter === 2) {
           done();
@@ -276,7 +196,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
-        assert.deepEqual(result, results[numResults].result);
+        assert.deepEqual(result, results[numResults].result.data);
         numResults++;
         if (numResults === 4) {
           done();
@@ -336,7 +256,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
-        assert.deepEqual(result, results[numResults].result);
+        assert.deepEqual(result, results[numResults].result.data);
         numResults++;
         if (numResults === 4) {
           // once for itself, four times for the subscription results.

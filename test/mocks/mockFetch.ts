@@ -7,7 +7,7 @@ export interface MockedIResponse {
   ok: boolean;
   status: number;
   statusText?: string;
-  json(): Promise<JSON>;
+  json(): Promise<Object>;
 }
 
 export interface MockedFetchResponse {
@@ -26,7 +26,7 @@ export function createMockedIResponse(result: Object, options?: any): MockedIRes
     status,
     statusText,
     json() {
-      return Promise.resolve(result);
+      return Promise.resolve<Object>(result);
     },
   };
 }

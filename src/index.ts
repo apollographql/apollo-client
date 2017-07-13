@@ -76,6 +76,7 @@ import ApolloClient from './ApolloClient';
 
 import {
   ApolloQueryResult,
+  ApolloExecutionResult,
 } from './core/types';
 
 import {
@@ -104,6 +105,7 @@ export {
   FragmentMap,
   Request,
   ApolloQueryResult,
+  ApolloExecutionResult,
   toIdValue,
 
   IntrospectionFragmentMatcher,

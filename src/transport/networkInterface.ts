@@ -281,7 +281,7 @@ export function createNetworkInterface(
   if (typeof uriOrInterfaceOpts === 'string') {
     console.warn(`Passing the URI as the first argument to createNetworkInterface is deprecated \
 as of Apollo Client 0.5. Please pass it as the "uri" property of the network interface options.`);
-    opts = secondArgOpts;
+    opts = secondArgOpts.opts;
     uri = uriOrInterfaceOpts;
   } else {
     opts = uriOrInterfaceOpts.opts;

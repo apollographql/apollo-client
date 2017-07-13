@@ -96,7 +96,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
             const httpResponse = result as Response;
 
             if (!httpResponse.ok) {
-              return this.applyBatchAfterwares({ responses: [httpResponse], options: batchRequestAndOptions })
+              return this.applyBatchAfterwares({ responses: [httpResponse], options: batchRequestAndOptions.options })
                   .then(() => {
                     const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
                     (httpError as any).response = httpResponse;
@@ -121,9 +121,9 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
             this.applyBatchAfterwares({
               responses,
               options: batchRequestAndOptions.options,
-            }).then((responseAndOptions: BatchResponseAndOptions) => {
+            }).then((responseAndOptions) => {
               // In a batch response, the response is actually an Array of responses, refine it.
-              resolve(responseAndOptions.responses);
+              resolve(responseAndOptions.responses as any);
             }).catch((error: Error) => {
               reject(error);
             });

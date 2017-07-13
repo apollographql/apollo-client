@@ -172,6 +172,16 @@ describe('optimistic mutation results', () => {
       }),
     };
 
+    interface IOptimisticResponse {
+      __typename: string;
+      createTodo: {
+        __typename: string,
+        id: string,
+        text: string,
+        completed: boolean,
+      };
+    }
+
     const optimisticResponse = {
       __typename: 'Mutation',
       createTodo: {
@@ -628,6 +638,16 @@ describe('optimistic mutation results', () => {
       }
     `;
 
+    type IMutationResult = {
+      __typename: string;
+      createTodo: {
+        id: string;
+        __typename: string;
+        text: string;
+        completed: boolean;
+      };
+    };
+
     const mutationResult = {
       data: {
         __typename: 'Mutation',
@@ -741,13 +761,17 @@ describe('optimistic mutation results', () => {
       .then(() => {
         const updateQueries = {
           todoList: (prev, options) => {
-            const mResult = options.mutationResult as any;
+            const mResult = options.mutationResult;
 
-            const state = cloneDeep(prev) as any;
-            state.todoList.todos.unshift(mResult.data.createTodo);
+            const state = cloneDeep<any>(prev);
+
+            if (mResult.data) {
+              state.todoList.todos.unshift(mResult.data.createTodo);
+            }
+
             return state;
           },
-        } as MutationQueryReducersMap;
+        } as MutationQueryReducersMap<IMutationResult>;
         const promise = client.mutate({
           mutation,
           optimisticResponse,
@@ -815,13 +839,17 @@ describe('optimistic mutation results', () => {
       .then(() => {
         const updateQueries = {
           todoList: (prev, options) => {
-            const mResult = options.mutationResult as any;
+            const mResult = options.mutationResult;
 
-            const state = cloneDeep(prev) as any;
-            state.todoList.todos.unshift(mResult.data.createTodo);
+            const state = cloneDeep<any>(prev);
+
+            if (mResult.data) {
+              state.todoList.todos.unshift(mResult.data.createTodo);
+            }
+
             return state;
           },
-        } as MutationQueryReducersMap;
+        } as MutationQueryReducersMap<IMutationResult>;
         const promise = client.mutate({
           mutation,
           optimisticResponse,
@@ -893,13 +921,17 @@ describe('optimistic mutation results', () => {
 
       const updateQueries = {
         todoList: (prev, options) => {
-          const mResult = options.mutationResult as any;
+          const mResult = options.mutationResult;
 
-          const state = cloneDeep(prev) as any;
-          state.todoList.todos.unshift(mResult.data.createTodo);
+          const state = cloneDeep<any>(prev);
+
+          if (mResult.data) {
+            state.todoList.todos.unshift(mResult.data.createTodo);
+          }
+
           return state;
         },
-      } as MutationQueryReducersMap;
+      } as MutationQueryReducersMap<IMutationResult>;
 
       client = new ApolloClient({
         networkInterface,
@@ -1678,6 +1710,17 @@ describe('optimistic mutation - githunt comments', () => {
     }
   `;
 
+  type IMutationResult = {
+    __typename: string;
+    submitComment: {
+      __typename: string;
+      postedBy: {
+        __typename: string;
+        login: string;
+        html_url: string;
+      };
+    };
+  };
   const mutationResult = {
     data: {
       __typename: 'Mutation',
@@ -1689,12 +1732,16 @@ describe('optimistic mutation - githunt comments', () => {
   };
   const updateQueries = {
     Comment: (prev, { mutationResult: mutationResultArg }) => {
-      const newComment = (mutationResultArg as any).data.submitComment;
-      const state = cloneDeep(prev);
-      (state as any).entry.comments.unshift(newComment);
-      return state;
+      if (mutationResultArg.data) {
+        const newComment = mutationResultArg.data.submitComment;
+        const state = cloneDeep<any>(prev);
+        state.entry.comments.unshift(newComment);
+        return state;
+      }
+
+      return prev;
     },
-  } as MutationQueryReducersMap;
+  } as MutationQueryReducersMap<IMutationResult>;
   const optimisticResponse = {
     __typename: 'Mutation',
     submitComment: {

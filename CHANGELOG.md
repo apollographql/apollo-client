@@ -1,7 +1,7 @@
 # Change log
 
 ### vNEXT
-
+- Use generic types for store updating functions in mutations [PR #1882](https://github.com/apollographql/apollo-client/pull/1882)
 - Update to TypeScript 2.4.1 [PR #1892](https://github.com/apollographql/apollo-client/pull/1892)
 
 ### 1.8.0

@@ -96,7 +96,7 @@ export function isQueryStopAction(action: ApolloAction): action is QueryStopActi
 // contains both the original value of a query and a reducer to transform
 // the query during an update
 export type QueryWithUpdater = {
-  reducer: MutationQueryReducer,
+  reducer: MutationQueryReducer<Object>,
   query: QueryStoreValue,
 };
 

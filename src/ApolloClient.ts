@@ -124,7 +124,6 @@ export default class ApolloClient implements DataProxy {
   public networkInterface: NetworkInterface;
   public store: ApolloStore;
   public reduxRootSelector: ApolloStateSelector | null;
-  public reduxRootKey: string;
   public initialState: any;
   public queryManager: QueryManager;
   public reducerConfig: ApolloReducerConfig;
@@ -179,7 +178,7 @@ export default class ApolloClient implements DataProxy {
 
   constructor(options: {
     networkInterface?: NetworkInterface | ObservableNetworkInterface,
-    reduxRootSelector?: string | ApolloStateSelector,
+    reduxRootSelector?: ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
     ssrMode?: boolean,
@@ -208,8 +207,6 @@ export default class ApolloClient implements DataProxy {
 
     if (typeof reduxRootSelector === 'function') {
       this.reduxRootSelector = reduxRootSelector;
-    } else if (typeof reduxRootSelector === 'string') {
-      this.reduxRootKey = reduxRootSelector;
     } else if (typeof reduxRootSelector !== 'undefined') {
       throw new Error('"reduxRootSelector" must be a function or a string.');
     }
@@ -479,7 +476,7 @@ export default class ApolloClient implements DataProxy {
 
     // If we don't have a store already, initialize a default one
     this.setStore(createApolloStore({
-      reduxRootKey: this.reduxRootKey ? this.reduxRootKey : DEFAULT_REDUX_ROOT_KEY,
+      reduxRootKey: DEFAULT_REDUX_ROOT_KEY,
       initialState: this.initialState,
       config: this.reducerConfig,
       logger: (store: any) => (next: any) => (action: any) => {

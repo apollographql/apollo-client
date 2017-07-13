@@ -209,11 +209,6 @@ describe('client', () => {
     );
   });
 
-  it('should not allow passing reduxRootSelector as a string', () => {
-    const reduxRootSelector = 'testApollo';
-    assert.throws( () => new ApolloClient({ reduxRootSelector }));
-  });
-
   it('should throw an error if "reduxRootSelector" is provided and the client tries to create the store', () => {
     const reduxRootSelector = (state: any) => state.testApollo;
     const client = new ApolloClient({

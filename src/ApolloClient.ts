@@ -153,9 +153,8 @@ export default class ApolloClient implements DataProxy {
    * to a GraphQL spec-compliant server.
    *
    * @param reduxRootSelector A "selector" function that receives state from the Redux store
-   * and returns the part of it that is managed by ApolloClient or a string which will give a custom
-   * name in the store for the apollo sub state.
-   * The "selector" function option should only be used if the store is created outside of the client.
+   * and returns the part of it that is managed by ApolloClient.
+   * This option should only be used if the store is created outside of the client.
    *
    * @param initialState The initial state assigned to the store.
    *
@@ -208,7 +207,7 @@ export default class ApolloClient implements DataProxy {
     if (typeof reduxRootSelector === 'function') {
       this.reduxRootSelector = reduxRootSelector;
     } else if (typeof reduxRootSelector !== 'undefined') {
-      throw new Error('"reduxRootSelector" must be a function or a string.');
+      throw new Error('"reduxRootSelector" must be a function.');
     }
 
     if (typeof fragmentMatcher === 'undefined') {

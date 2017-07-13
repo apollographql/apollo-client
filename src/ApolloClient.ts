@@ -177,7 +177,7 @@ export default class ApolloClient implements DataProxy {
 
   constructor(options: {
     networkInterface?: NetworkInterface | ObservableNetworkInterface,
-    reduxRootSelector?: string | ApolloStateSelector,
+    reduxRootSelector?: ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
     ssrMode?: boolean,

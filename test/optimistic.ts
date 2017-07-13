@@ -1732,10 +1732,14 @@ describe('optimistic mutation - githunt comments', () => {
   };
   const updateQueries = {
     Comment: (prev, { mutationResult: mutationResultArg }) => {
-      const newComment = mutationResultArg.data.submitComment;
-      const state = cloneDeep<any>(prev);
-      state.entry.comments.unshift(newComment);
-      return state;
+      if (mutationResultArg.data) {
+        const newComment = mutationResultArg.data.submitComment;
+        const state = cloneDeep<any>(prev);
+        state.entry.comments.unshift(newComment);
+        return state;
+      }
+
+      return prev;
     },
   } as MutationQueryReducersMap<IMutationResult>;
   const optimisticResponse = {

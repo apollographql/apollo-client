@@ -14,6 +14,7 @@ import { assign } from '../util/assign';
 import {
   QueryListener,
   ApolloQueryResult,
+  ApolloExecutionResult,
   PureQueryOptions,
   FetchType,
 } from './types';
@@ -262,7 +263,7 @@ export class QueryManager {
     updateQueries?: MutationQueryReducersMap<T>,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
-  }): Promise<ExecutionResult> {
+  }): Promise<ApolloExecutionResult<T>> {
     if (!mutation) {
       throw new Error('mutation option is required. You must specify your GraphQL document in the mutation option.');
     }
@@ -313,7 +314,7 @@ export class QueryManager {
       update: updateWithProxyFn,
     });
 
-    return new Promise<ExecutionResult>((resolve, reject) => {
+    return new Promise<ApolloExecutionResult<T>>((resolve, reject) => {
       this.networkInterface.query(request)
         .then((result) => {
           if (result.errors) {
@@ -364,7 +365,7 @@ export class QueryManager {
 
 
           delete this.queryDocuments[mutationId];
-          resolve(result);
+          resolve(result as ApolloExecutionResult<T>);
         })
         .catch((err) => {
           this.store.dispatch({

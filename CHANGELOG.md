@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Migrated the cache away from Redux in preparation for the generic store API [PR 1907](https://github.com/apollographql/apollo-client/pull/1907)
 - Fix issue with fetchMore not merging results correctly when the @connection directive is used [PR #1915](https://github.com/apollographql/apollo-client/pull/1915)
 - added prettier to manage formatting of project [PR #1904](https://github.com/apollographql/apollo-client/pull/1904)
 - Replace use of `Object` with `Record<string, any>` in mutation types

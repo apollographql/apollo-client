@@ -1,4 +1,4 @@
-export function getEnv(): string {
+export function getEnv(): string | undefined {
   if (typeof process !== 'undefined' && process.env.NODE_ENV) {
     return process.env.NODE_ENV;
   }

@@ -1,9 +1,14 @@
 import { assert } from 'chai';
 
-import { isEnv, isProduction, isDevelopment, isTest } from '../src/util/environment';
+import {
+  isEnv,
+  isProduction,
+  isDevelopment,
+  isTest,
+} from '../src/util/environment';
 
 describe('environment', () => {
-  let keepEnv: string;
+  let keepEnv: string | undefined;
 
   beforeEach(() => {
     // save the NODE_ENV
@@ -17,15 +22,10 @@ describe('environment', () => {
 
   describe('isEnv', () => {
     it(`should match when there's a value`, () => {
-      [
-        'production',
-        'development',
-        'test',
-      ]
-        .forEach(env => {
-          process.env.NODE_ENV = env;
-          assert.isTrue(isEnv(env));
-        });
+      ['production', 'development', 'test'].forEach(env => {
+        process.env.NODE_ENV = env;
+        assert.isTrue(isEnv(env));
+      });
     });
 
     it(`should treat no proces.env.NODE_ENV as it'd be in development`, () => {

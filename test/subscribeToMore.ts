@@ -28,7 +28,7 @@ describe('subscribeToMore', () => {
   const req1 = { request: { query }, result };
 
   const results = ['Dahivat Pandya', 'Amanda Liu'].map(
-    name => ({ result: { name: name }, delay: 10 }),
+    name => ({ result: { data: { name: name } }, delay: 10 }),
   );
 
   const sub1 = {
@@ -45,7 +45,7 @@ describe('subscribeToMore', () => {
 
   const results2 = [
     { error: new Error('You cant touch this'), delay: 10 },
-    { result: { name: 'Amanda Liu' }, delay: 10 },
+    { result: { data: { name: 'Amanda Liu' } }, delay: 10 },
   ];
 
   const sub2 = {
@@ -62,7 +62,7 @@ describe('subscribeToMore', () => {
 
   const results3 = [
     { error: new Error('You cant touch this'), delay: 10 },
-    { result: { name: 'Amanda Liu' }, delay: 10 },
+    { result: { data: { name: 'Amanda Liu' }}, delay: 10 },
   ];
 
   const sub3 = {
@@ -78,7 +78,7 @@ describe('subscribeToMore', () => {
   };
 
   const results4 = ['Vyacheslav Kim', 'Changping Chen'].map(
-    name => ({ result: { name: name }, delay: 10 }),
+    name => ({ result: { data: { name: name }}, delay: 10 }),
   );
 
   const sub4 = {

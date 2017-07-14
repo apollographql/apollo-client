@@ -34,7 +34,7 @@ export function observableToPromiseAndSubscription({
 ): { promise: Promise<any[]>, subscription: Subscription } {
 
   let subscription: Subscription = null as never;
-  const promise = new Promise((resolve, reject) => {
+  const promise = new Promise<any[]>((resolve, reject) => {
     let errorIndex = 0;
     let cbIndex = 0;
     const results: any[] = [];

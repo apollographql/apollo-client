@@ -229,9 +229,9 @@ export type SubscribeToMoreOptions = {
   onError?: (error: Error) => void,
 };
 
-export type MutationUpdaterFn = (
+export type MutationUpdaterFn<T = { [key: string]: any }> = (
   proxy: DataProxy,
-  mutationResult: Object,
+  mutationResult: ApolloExecutionResult<T>,
 ) => void;
 
 export interface ModifiableWatchQueryOptions {
@@ -264,13 +264,13 @@ export interface SubscriptionOptions {
   },
 }
 
-export interface MutationOptions {
+export interface MutationOptions<T = { [key: string]: any}> {
   mutation: DocumentNode,
   variables?: Object,
   optimisticResponse?: Object,
-  updateQueries?: MutationQueryReducersMap,
+  updateQueries?: MutationQueryReducersMap<T>,
   refetchQueries?: string[] | PureQueryOptions[],
-  update?: MutationUpdaterFn,
+  update?: MutationUpdaterFn<T>,
 }
 
 export type QueryListener = (
@@ -289,6 +289,10 @@ export type ApolloQueryResult<T> = {
   loading: boolean,
   networkStatus: NetworkStatus,
   stale: boolean,
+};
+
+export type ApolloExecutionResult<T = { [key: string]: any }> = {
+  data: T;
 };
 
 export type IdGetter = (value: Object) => string | null | void;
@@ -360,17 +364,17 @@ declare export function toIdValue(id: string, generated?: boolean): IdValue;
 
 declare export function isJsonValue(jsonObject: StoreValue): JsonValue;
 
-export type MutationQueryReducer = (
+export type MutationQueryReducer<T> = (
   previousResult: Object,
   options: {
-    mutationResult: Object,
+    mutationResult: ApolloExecutionResult<T>,
     queryName: string | null,
     queryVariables: Object,
   },
 ) => Object;
 
-export type MutationQueryReducersMap = {
-  [queryName: string]: MutationQueryReducer,
+export type MutationQueryReducersMap<T = { [key: string]: any}> = {
+  [queryName: string]: MutationQueryReducer<T>,
 };
 
 export type OperationResultReducer = (
@@ -654,6 +658,11 @@ export interface QueryStopAction {
   queryId: string,
 }
 
+export type QueryWithUpdater = {
+  reducer: MutationQueryReducer<Object>,
+  query: QueryStoreValue,
+};
+
 export interface MutationInitAction {
   type: "APOLLO_MUTATION_INIT",
   mutationString: string,
@@ -664,7 +673,7 @@ export interface MutationInitAction {
   optimisticResponse: Object | void,
   extraReducers?: ApolloReducer[],
   updateQueries?: {
-    [queryId: string]: MutationQueryReducer,
+    [queryId: string]: QueryWithUpdater,
   },
   update?: (proxy: DataProxy, mutationResult: Object) => void,
 }
@@ -678,7 +687,7 @@ export interface MutationResultAction {
   mutationId: string,
   extraReducers?: ApolloReducer[],
   updateQueries?: {
-    [queryId: string]: MutationQueryReducer,
+    [queryId: string]: QueryWithUpdater,
   },
   update?: (proxy: DataProxy, mutationResult: Object) => void,
 }
@@ -1013,11 +1022,11 @@ declare export class QueryManager {
       mutation: DocumentNode,
       variables?: Object,
       optimisticResponse?: Object,
-      updateQueries?: MutationQueryReducersMap,
+      updateQueries?: MutationQueryReducersMap<T>,
       refetchQueries?: string[] | PureQueryOptions[],
       update?: (proxy: DataProxy, mutationResult: Object) => void,
     },
-  ): Promise<ApolloQueryResult<T>>,
+  ): Promise<ApolloExecutionResult<T>>,
   fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
@@ -1113,7 +1122,7 @@ declare export class ApolloClient extends DataProxy {
   ): this,
   watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T>,
   query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>>,
-  mutate<T>(options: MutationOptions): Promise<ApolloQueryResult<T>>,
+  mutate<T>(options: MutationOptions<T>): Promise<ApolloExecutionResult<T>>,
   subscribe(options: SubscriptionOptions): Observable<any>,
   readQuery<T>(options: DataProxyReadQueryOptions): T,
   readFragment<T>(options: DataProxyReadFragmentOptions): T | null,

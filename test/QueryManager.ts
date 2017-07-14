@@ -2442,8 +2442,6 @@ describe('QueryManager', () => {
       const currentState = queryManager.getApolloState();
       const expectedState: any = {
         data: {},
-        mutations: {},
-        queries: {},
         optimistic: [],
         reducerError: null,
       };
@@ -2997,7 +2995,7 @@ describe('QueryManager', () => {
       (result) => {
         assert.deepEqual(result.data, data);
         assert.deepEqual(
-          queryManager.getApolloState().queries[observable.queryId].metadata,
+          queryManager.queryStore.get(observable.queryId).metadata,
           { foo: 'bar' },
         );
       },

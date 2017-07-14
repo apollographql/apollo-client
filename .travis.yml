@@ -8,11 +8,12 @@ install:
   - npm install
 
 script:
+  - npm run danger
   - npm test
 
     # test flow types (validity and use cases)
   - npm run flow-check
-  
+
     # run coverage and file size checks
   - npm run coverage
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error

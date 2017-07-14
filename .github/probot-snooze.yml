@@ -1,0 +1,4 @@
+# Default length (in days) to snooze an item if no date is specified
+defaultSnoozeDuration: 7,
+labelName : 'revist',
+labelColor : 'ededed'

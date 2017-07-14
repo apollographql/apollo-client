@@ -1,13 +1,10 @@
 import { DocumentNode } from 'graphql';
 import { ApolloStore, Store, ApolloReducerConfig } from '../store';
+import { DataStore } from '../data/store';
 import { DataWrite } from '../actions';
 import { IdGetter } from '../core/types';
 import { NormalizedCache } from '../data/storeUtils';
-import {
-  getFragmentQueryDocument,
-  getOperationName,
-} from '../queries/getFromAST';
-import { getDataWithOptimisticResults } from '../optimistic-data/store';
+import {getFragmentQueryDocument, getOperationName} from '../queries/getFromAST';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
 import { FragmentMatcherInterface } from './fragmentMatcher';
@@ -154,7 +151,7 @@ export class ReduxDataProxy implements DataProxy {
   /**
    * The Redux store that we read and write to.
    */
-  private store: ApolloStore;
+  private store: DataStore;
 
   /**
    * A function that selects the Apollo state from Redux state.
@@ -166,7 +163,7 @@ export class ReduxDataProxy implements DataProxy {
   private fragmentMatcher: FragmentMatcherInterface;
 
   constructor(
-    store: ApolloStore,
+    store: DataStore,
     reduxRootSelector: (state: any) => Store,
     fragmentMatcher: FragmentMatcherInterface,
     reducerConfig: ApolloReducerConfig,
@@ -190,9 +187,7 @@ export class ReduxDataProxy implements DataProxy {
 
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
-      store: getDataWithOptimisticResults(
-        this.reduxRootSelector(this.store.getState()),
-      ),
+      store: this.store.getDataWithOptimisticResults(),
       query,
       variables,
       fragmentMatcherFunction: this.fragmentMatcher.match,
@@ -210,9 +205,7 @@ export class ReduxDataProxy implements DataProxy {
     variables,
   }: DataProxyReadFragmentOptions): FragmentType | null {
     let query = getFragmentQueryDocument(fragment, fragmentName);
-    const data = getDataWithOptimisticResults(
-      this.reduxRootSelector(this.store.getState()),
-    );
+    const data = this.store.getDataWithOptimisticResults();
 
     // If we could not find an item in the store with the provided id then we
     // just return `null`.
@@ -246,18 +239,13 @@ export class ReduxDataProxy implements DataProxy {
       query = addTypenameToDocument(query);
     }
 
-    this.store.dispatch({
-      type: 'APOLLO_WRITE',
-      writes: [
-        {
-          rootId: 'ROOT_QUERY',
-          result: data,
-          document: query,
-          operationName: getOperationName(query),
-          variables: variables || {},
-        },
-      ],
-    });
+    this.store.executeWrites([{
+      rootId: 'ROOT_QUERY',
+      result: data,
+      document: query,
+      operationName: getOperationName(query),
+      variables: variables || {},
+    }]);
   }
 
   /**
@@ -276,18 +264,13 @@ export class ReduxDataProxy implements DataProxy {
       document = addTypenameToDocument(document);
     }
 
-    this.store.dispatch({
-      type: 'APOLLO_WRITE',
-      writes: [
-        {
-          rootId: id,
-          result: data,
-          document,
-          operationName: getOperationName(document),
-          variables: variables || {},
-        },
-      ],
-    });
+    this.store.executeWrites([{
+      rootId: id,
+      result: data,
+      document,
+      operationName: getOperationName(document),
+      variables: variables || {},
+    }]);
   }
 }
 

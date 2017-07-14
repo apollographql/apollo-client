@@ -569,7 +569,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
         },
@@ -585,7 +585,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -604,7 +604,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 4,
           b: 5,
@@ -628,7 +628,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           d: {
@@ -657,7 +657,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           d: {
@@ -718,7 +718,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -769,7 +769,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
@@ -809,7 +809,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 2,
           'field({"literal":false,"value":-1})': 1,
@@ -936,7 +936,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -972,7 +972,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1002,7 +1002,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1033,7 +1033,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1083,7 +1083,7 @@ describe('ApolloClient', () => {
         fragmentName: 'fooFragment',
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1127,7 +1127,7 @@ describe('ApolloClient', () => {
         fragmentName: 'barFragment',
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1170,7 +1170,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         foo: {
           __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
@@ -1357,7 +1357,7 @@ describe('ApolloClient', () => {
         },
       );
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         foo: {
           __typename: 'Foo',
           a: 7,
@@ -1442,7 +1442,7 @@ describe('ApolloClient', () => {
         },
       );
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1523,7 +1523,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1630,7 +1630,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1713,7 +1713,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1775,7 +1775,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1833,7 +1833,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1889,7 +1889,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1972,7 +1972,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -2081,7 +2081,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.store.getState().apollo.data, {
+      assert.deepEqual(client.queryManager.dataStore.getStore(), {
         ROOT_QUERY: {
           a: 1,
           b: 2,

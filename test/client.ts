@@ -159,8 +159,6 @@ describe('client', () => {
 
     assert.deepEqual(client.store.getState(), {
       apollo: {
-        data: {},
-        optimistic: [],
         reducerError: null,
       },
     });
@@ -593,7 +591,7 @@ describe('client', () => {
 
     return client.query({ query }).then(result => {
       assert.deepEqual(result.data, data);
-      assert.deepEqual(finalState, client.store.getState());
+      assert.deepEqual(finalState.apollo.data, client.queryManager.dataStore.getStore());
     });
   });
 
@@ -1706,35 +1704,7 @@ describe('client', () => {
 
       return client.query({ query }).then(result => {
         assert.deepEqual(result.data, data);
-        assert.deepEqual(client.store.getState()['apollo'].data['1'], {
-          id: '1',
-          name: 'Luke Skywalker',
-        });
-      });
-    });
-
-    it('for existing store', () => {
-      const networkInterface = mockNetworkInterface({
-        request: { query },
-        result: { data },
-      });
-
-      const client = new ApolloClient({
-        networkInterface,
-        dataIdFromObject: (obj: { id: any }) => obj.id,
-        addTypename: false,
-      });
-
-      const store = createStore(
-        combineReducers({
-          apollo: client.reducer() as any,
-        }),
-        applyMiddleware(client.middleware()),
-      );
-
-      return client.query({ query }).then(result => {
-        assert.deepEqual(result.data, data);
-        assert.deepEqual((store.getState() as any)['apollo'].data['1'], {
+        assert.deepEqual(client.queryManager.dataStore.getStore()['1'], {
           id: '1',
           name: 'Luke Skywalker',
         });
@@ -2195,13 +2165,13 @@ describe('client', () => {
         },
       },
     });
-    assert.equal(client.store.getState().apollo.optimistic.length, 1);
+    assert.equal(client.queryManager.dataStore.getOptimisticQueue().length, 1);
     mutatePromise
       .then(result => {
         done(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
-        assert.equal(client.store.getState().apollo.optimistic.length, 0);
+        assert.equal(client.queryManager.dataStore.getOptimisticQueue().length, 0);
         done();
       });
   });
@@ -2953,9 +2923,9 @@ it('should run a query with the connection directive and write the result to the
     networkInterface,
   });
 
-  return client.query({ query }).then(actualResult => {
+  return client.query({ query }).then((actualResult) => {
     assert.deepEqual(actualResult.data, result);
-    assert.deepEqual(client.store.getState().apollo.data, {
+    assert.deepEqual(client.queryManager.dataStore.getStore(), {
       'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
       ROOT_QUERY: {
         abc: [
@@ -3001,19 +2971,16 @@ it('should run a query with the connection directive and filter arguments and wr
     networkInterface,
   });
 
-  return client.query({ query, variables }).then(actualResult => {
+  return client.query({ query, variables }).then((actualResult) => {
     assert.deepEqual(actualResult.data, result);
-    assert.deepEqual(client.store.getState().apollo.data, {
-      'ROOT_QUERY.abc({"order":"popularity"}).0': {
-        name: 'abcd',
-        __typename: 'Book',
-      },
-      ROOT_QUERY: {
+    assert.deepEqual(client.queryManager.dataStore.getStore(), {
+      'ROOT_QUERY.abc({"order":"popularity"}).0': { name: 'abcd', __typename: 'Book' },
+      'ROOT_QUERY': {
         'abc({"order":"popularity"})': [
           {
-            generated: true,
-            id: 'ROOT_QUERY.abc({"order":"popularity"}).0',
-            type: 'id',
+            'generated': true,
+            'id': 'ROOT_QUERY.abc({"order":"popularity"}).0',
+            'type': 'id',
           },
         ],
       },

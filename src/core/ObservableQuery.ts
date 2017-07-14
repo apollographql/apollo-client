@@ -457,6 +457,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         document,
         operationName: getOperationName(document),
       });
+
+      this.queryManager.dataStore.markUpdateQueryResult(document, variables, newResult);
+      this.queryManager.broadcastQueries();
     }
   }
 

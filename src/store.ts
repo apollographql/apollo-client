@@ -9,8 +9,6 @@ import {
 
 import { FragmentMatcher } from 'graphql-anywhere';
 
-import { data } from './data/store';
-
 import { NormalizedCache } from './data/storeUtils';
 
 import { QueryStore } from './queries/store';
@@ -19,13 +17,6 @@ import {
   // mutations,
   MutationStore,
 } from './mutations/store';
-
-import {
-  optimistic,
-  OptimisticStore,
-  getDataWithOptimisticResults,
-} from './optimistic-data/store';
-export { getDataWithOptimisticResults };
 
 import {
   ApolloAction,
@@ -48,8 +39,6 @@ export interface ReducerError {
 }
 
 export interface Store {
-  data: NormalizedCache;
-  optimistic: OptimisticStore;
   reducerError: ReducerError | null;
 }
 
@@ -104,9 +93,6 @@ export function createApolloReducer(
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
     try {
       const newState: Store = {
-        data: data(state.data, action, config),
-        optimistic: [] as any,
-
         reducerError: null,
       };
 
@@ -118,18 +104,8 @@ export function createApolloReducer(
       // APOLLO_MUTATION_INIT action to simulate
       // the APOLLO_MUTATION_RESULT action. That's
       // why we pass in newState
-      newState.optimistic = optimistic(
-        state.optimistic,
-        action,
-        newState,
-        config,
-      );
 
-      if (
-        state.data === newState.data &&
-        state.optimistic === newState.optimistic &&
-        state.reducerError === newState.reducerError
-      ) {
+      if (state.reducerError === newState.reducerError) {
         return state;
       }
 

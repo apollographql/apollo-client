@@ -15,8 +15,6 @@ describe('createApolloStore', () => {
   it('has a default root key', () => {
     const store = createApolloStore();
     assert.deepEqual(store.getState()['apollo'], {
-      data: {},
-      optimistic: [],
       reducerError: null,
     });
   });
@@ -27,8 +25,6 @@ describe('createApolloStore', () => {
     });
 
     assert.deepEqual(store.getState()['test'], {
-      data: {},
-      optimistic: [],
       reducerError: null,
     });
   });
@@ -49,8 +45,6 @@ describe('createApolloStore', () => {
 
     assert.deepEqual(store.getState(), {
       apollo: {
-        data: initialState.apollo.data,
-        optimistic: initialState.apollo.optimistic,
         reducerError: null,
       },
     });
@@ -106,8 +100,6 @@ describe('createApolloStore', () => {
     };
 
     const emptyState: Store = {
-      data: {},
-      optimistic: [] as any[],
       reducerError: null,
     };
 
@@ -141,8 +133,6 @@ describe('createApolloStore', () => {
     };
 
     const emptyState: Store = {
-      data: {},
-      optimistic: [] as any[],
       reducerError: null,
     };
 
@@ -171,79 +161,5 @@ describe('createApolloStore', () => {
     });
 
     assert.deepEqual(store.getState().apollo, emptyState);
-  });
-
-  it("can't crash the reducer", () => {
-    const initialState = {
-      apollo: {
-        data: {},
-        optimistic: [] as any[],
-        reducerError: null as Error | null,
-      },
-    };
-
-    const store = createApolloStore({
-      initialState,
-    });
-
-    // Try to crash the store with a bad behavior update
-    const mutationString = `mutation Increment { incrementer { counter } }`;
-    const mutation = gql`${mutationString}`;
-    const variables = {};
-
-    store.dispatch({
-      type: 'APOLLO_MUTATION_INIT',
-      mutationString,
-      mutation,
-      variables,
-      operationName: 'Increment',
-      mutationId: '1',
-      optimisticResponse: { data: { incrementer: { counter: 1 } } },
-    });
-
-    store.dispatch({
-      type: 'APOLLO_MUTATION_RESULT',
-      result: { data: { incrementer: { counter: 1 } } },
-      document: mutation,
-      operationName: 'Increment',
-      variables,
-      mutationId: '1',
-      extraReducers: [
-        () => {
-          throw new Error('test!!!');
-        },
-      ],
-    });
-
-    assert(/test!!!/.test(store.getState().apollo.reducerError.error));
-
-    const resetState = {
-      data: {},
-      optimistic: [
-        {
-          data: {},
-          mutationId: '1',
-          action: {
-            type: 'APOLLO_MUTATION_RESULT',
-            result: { data: { data: { incrementer: { counter: 1 } } } },
-            document: mutation,
-            operationName: 'Increment',
-            variables: {},
-            mutationId: '1',
-            extraReducers: undefined,
-            updateQueries: undefined,
-            update: undefined,
-          },
-        },
-      ],
-      reducerError: null as ReducerError | null,
-    };
-
-    store.dispatch({
-      type: 'APOLLO_STORE_RESET',
-      observableQueryIds: ['test.0'],
-    });
-
-    assert.deepEqual(store.getState().apollo, resetState);
   });
 });

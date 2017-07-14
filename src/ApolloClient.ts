@@ -562,6 +562,8 @@ export default class ApolloClient implements DataProxy {
       queryDeduplication: this.queryDeduplication,
       fragmentMatcher: this.fragmentMatcher,
       ssrMode: this.ssrMode,
+      initialDataStore: (this.initialState && this.initialState[DEFAULT_REDUX_ROOT_KEY]
+        && this.initialState[DEFAULT_REDUX_ROOT_KEY].data) ? this.initialState[DEFAULT_REDUX_ROOT_KEY].data : {},
     });
   }
 
@@ -574,7 +576,7 @@ export default class ApolloClient implements DataProxy {
     if (!this.proxy) {
       this.initStore();
       this.proxy = new ReduxDataProxy(
-        this.store,
+        this.queryManager.dataStore,
         this.reduxRootSelector || defaultReduxRootSelector,
         this.fragmentMatcher,
         this.reducerConfig,

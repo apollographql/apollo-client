@@ -18,7 +18,7 @@ const filesOnly = (file: string) =>
 
 // Custom subsets of known files
 const modifiedAppFiles = modified
-  .filter(p => includes(p, 'src/'))
+  .filter(p => includes(p, 'src/') || includes(p, 'test/'))
   .filter(p => filesOnly(p) && typescriptOnly(p));
 
 // Takes a list of file paths, and converts it into clickable links
@@ -96,9 +96,6 @@ if (!isBot) {
   ) {
     warn(':exclamation: Big PR');
   }
-
-  // XXX add in License header
-  // https://github.com/facebook/jest/blob/master/dangerfile.js#L58
 
   // Warn if there are library changes, but not tests
   if (hasAppChanges && !hasTestChanges) {

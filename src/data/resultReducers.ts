@@ -1,31 +1,16 @@
-import {
-  DocumentNode,
-} from 'graphql';
+import { DocumentNode } from 'graphql';
 
-import {
-  diffQueryAgainstStore,
-} from './readFromStore';
+import { diffQueryAgainstStore } from './readFromStore';
 
-import {
-  writeResultToStore,
-} from './writeToStore';
+import { writeResultToStore } from './writeToStore';
 
-import {
-  NormalizedCache,
-} from './storeUtils';
+import { NormalizedCache } from './storeUtils';
 
-import {
-  ApolloReducer,
-  ApolloReducerConfig,
-} from '../store';
+import { ApolloReducer, ApolloReducerConfig } from '../store';
 
-import {
-  ApolloAction,
-} from '../actions';
+import { ApolloAction } from '../actions';
 
-import {
-  OperationResultReducer,
-} from './mutationResults';
+import { OperationResultReducer } from './mutationResults';
 
 /**
  * This function takes a result reducer and all other necessary information to obtain a proper
@@ -38,9 +23,7 @@ export function createStoreReducer(
   variables: Object,
   config: ApolloReducerConfig,
 ): ApolloReducer {
-
   return (store: NormalizedCache, action: ApolloAction) => {
-
     const { result, isMissing } = diffQueryAgainstStore({
       store,
       query: document,

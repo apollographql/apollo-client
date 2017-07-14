@@ -5,8 +5,8 @@ import { NetworkStatus } from '../queries/networkStatus';
 export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 
 export type PureQueryOptions = {
-  query: DocumentNode,
-  variables?: { [key: string]: any};
+  query: DocumentNode;
+  variables?: { [key: string]: any };
 };
 
 export type ApolloQueryResult<T> = {

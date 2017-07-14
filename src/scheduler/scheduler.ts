@@ -8,14 +8,9 @@
 // At the moment, the QueryScheduler implements the one-polling-instance-at-a-time logic and
 // adds queries to the QueryBatcher queue.
 
-import {
-  QueryManager,
-} from '../core/QueryManager';
+import { QueryManager } from '../core/QueryManager';
 
-import {
-  FetchType,
-  QueryListener,
-} from '../core/types';
+import { FetchType, QueryListener } from '../core/types';
 
 import { ObservableQuery } from '../core/ObservableQuery';
 
@@ -42,11 +37,7 @@ export class QueryScheduler {
   // Map going from polling interval widths to polling timers.
   private pollingTimers: { [interval: number]: any };
 
-  constructor({
-    queryManager,
-  }: {
-    queryManager: QueryManager;
-  }) {
+  constructor({ queryManager }: { queryManager: QueryManager }) {
     this.queryManager = queryManager;
     this.pollingTimers = {};
     this.inFlightQueries = {};
@@ -58,16 +49,26 @@ export class QueryScheduler {
     const queries = this.queryManager.queryStore;
 
     // XXX we do this because some legacy tests use a fake queryId. We should rewrite those tests
-    return queries.get(queryId) && queries.get(queryId).networkStatus !== NetworkStatus.ready;
+    return (
+      queries.get(queryId) &&
+      queries.get(queryId).networkStatus !== NetworkStatus.ready
+    );
   }
 
-  public fetchQuery<T>(queryId: string, options: WatchQueryOptions, fetchType: FetchType) {
+  public fetchQuery<T>(
+    queryId: string,
+    options: WatchQueryOptions,
+    fetchType: FetchType,
+  ) {
     return new Promise((resolve, reject) => {
-      this.queryManager.fetchQuery<T>(queryId, options, fetchType).then((result) => {
-        resolve(result);
-      }).catch((error) => {
-        reject(error);
-      });
+      this.queryManager
+        .fetchQuery<T>(queryId, options, fetchType)
+        .then(result => {
+          resolve(result);
+        })
+        .catch(error => {
+          reject(error);
+        });
     });
   }
 
@@ -77,7 +78,9 @@ export class QueryScheduler {
     listener?: QueryListener,
   ): string {
     if (!options.pollInterval) {
-      throw new Error('Attempted to start a polling query without a polling interval.');
+      throw new Error(
+        'Attempted to start a polling query without a polling interval.',
+      );
     }
 
     if (this.queryManager.ssrMode) {
@@ -107,7 +110,9 @@ export class QueryScheduler {
     // 1. remove queries that have stopped polling
     // 2. call fetchQueries for queries that are polling and not in flight.
     // TODO: refactor this to make it cleaner
-    this.intervalQueries[interval] = this.intervalQueries[interval].filter((queryId) => {
+    this.intervalQueries[interval] = this.intervalQueries[
+      interval
+    ].filter(queryId => {
       // If queryOptions can't be found from registeredQueries, it means that this queryId
       // is no longer registered and should be removed from the list of queries firing on this
       // interval.
@@ -137,16 +142,24 @@ export class QueryScheduler {
   // Adds a query on a particular interval to this.intervalQueries and then fires
   // that query with all the other queries executing on that interval. Note that the query id
   // and query options must have been added to this.registeredQueries before this function is called.
-  public addQueryOnInterval<T>(queryId: string, queryOptions: WatchQueryOptions) {
+  public addQueryOnInterval<T>(
+    queryId: string,
+    queryOptions: WatchQueryOptions,
+  ) {
     const interval = queryOptions.pollInterval;
 
     if (!interval) {
-      throw new Error(`A poll interval is required to start polling query with id '${queryId}'.`);
+      throw new Error(
+        `A poll interval is required to start polling query with id '${queryId}'.`,
+      );
     }
 
     // If there are other queries on this interval, this query will just fire with those
     // and we don't need to create a new timer.
-    if (this.intervalQueries.hasOwnProperty(interval.toString()) && this.intervalQueries[interval].length > 0) {
+    if (
+      this.intervalQueries.hasOwnProperty(interval.toString()) &&
+      this.intervalQueries[interval].length > 0
+    ) {
       this.intervalQueries[interval].push(queryId);
     } else {
       this.intervalQueries[interval] = [queryId];
@@ -158,9 +171,13 @@ export class QueryScheduler {
   }
 
   // Used only for unit testing.
-  public registerPollingQuery<T>(queryOptions: WatchQueryOptions): ObservableQuery<T> {
+  public registerPollingQuery<T>(
+    queryOptions: WatchQueryOptions,
+  ): ObservableQuery<T> {
     if (!queryOptions.pollInterval) {
-      throw new Error('Attempted to register a non-polling query with the scheduler.');
+      throw new Error(
+        'Attempted to register a non-polling query with the scheduler.',
+      );
     }
     return new ObservableQuery<T>({
       scheduler: this,

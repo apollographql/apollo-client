@@ -19,15 +19,9 @@ import {
   writeSelectionSetToStore,
 } from '../src/data/writeToStore';
 
-import {
-  storeKeyNameFromField,
-} from '../src/data/storeUtils';
+import { storeKeyNameFromField } from '../src/data/storeUtils';
 
-import {
-  NormalizedCache,
-  StoreObject,
-  IdValue,
-} from '../src/data/storeUtils';
+import { NormalizedCache, StoreObject, IdValue } from '../src/data/storeUtils';
 
 import {
   HeuristicFragmentMatcher,
@@ -39,15 +33,15 @@ import {
   createFragmentMap,
 } from '../src/queries/getFromAST';
 
-const getIdField = ({id}: {id: string}) => id;
+const getIdField = ({ id }: { id: string }) => id;
 
 describe('writing to the store', () => {
   it('properly normalizes a trivial item', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
+        id
+        stringField
+        numberField
         nullField
       }
     `;
@@ -59,20 +53,23 @@ describe('writing to the store', () => {
       nullField: null,
     };
 
-    assert.deepEqual<NormalizedCache>(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': result,
-    });
+    assert.deepEqual<NormalizedCache>(
+      writeQueryToStore({
+        query,
+        result: cloneDeep(result),
+      }),
+      {
+        ROOT_QUERY: result,
+      },
+    );
   });
 
   it('properly normalizes an aliased field', () => {
     const query = gql`
       {
-        id,
-        aliasedField: stringField,
-        numberField,
+        id
+        aliasedField: stringField
+        numberField
         nullField
       }
     `;
@@ -90,7 +87,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'abcd',
         stringField: 'This is a string!',
         numberField: 5,
@@ -102,10 +99,10 @@ describe('writing to the store', () => {
   it('properly normalizes a aliased fields with arguments', () => {
     const query = gql`
       {
-        id,
-        aliasedField1: stringField(arg: 1),
-        aliasedField2: stringField(arg: 2),
-        numberField,
+        id
+        aliasedField1: stringField(arg: 1)
+        aliasedField2: stringField(arg: 2)
+        numberField
         nullField
       }
     `;
@@ -124,7 +121,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'abcd',
         'stringField({"arg":1})': 'The arg was 1!',
         'stringField({"arg":2})': 'The arg was 2!',
@@ -137,9 +134,9 @@ describe('writing to the store', () => {
   it('properly normalizes a query with variables', () => {
     const query = gql`
       {
-        id,
-        stringField(arg: $stringArg),
-        numberField(intArg: $intArg, floatArg: $floatArg),
+        id
+        stringField(arg: $stringArg)
+        numberField(intArg: $intArg, floatArg: $floatArg)
         nullField
       }
     `;
@@ -164,7 +161,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
         'numberField({"intArg":5,"floatArg":3.14})': 5,
@@ -175,10 +172,14 @@ describe('writing to the store', () => {
 
   it('properly normalizes a query with default values', () => {
     const query = gql`
-      query someBigQuery($stringArg: String = "This is a default string!", $intArg: Int, $floatArg: Float){
-        id,
-        stringField(arg: $stringArg),
-        numberField(intArg: $intArg, floatArg: $floatArg),
+      query someBigQuery(
+        $stringArg: String = "This is a default string!"
+        $intArg: Int
+        $floatArg: Float
+      ) {
+        id
+        stringField(arg: $stringArg)
+        numberField(intArg: $intArg, floatArg: $floatArg)
         nullField
       }
     `;
@@ -202,7 +203,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
         'numberField({"intArg":5,"floatArg":3.14})': 5,
@@ -214,14 +215,14 @@ describe('writing to the store', () => {
   it('properly normalizes a nested object with an ID', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         nestedObj {
-          id,
-          stringField,
-          numberField,
+          id
+          stringField
+          numberField
           nullField
         }
       }
@@ -240,32 +241,35 @@ describe('writing to the store', () => {
       },
     };
 
-    assert.deepEqual<NormalizedCache>(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      dataIdFromObject: getIdField,
-    }), {
-      'ROOT_QUERY': assign<{}>({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: {
-          type: 'id',
-          id: result.nestedObj.id,
-          generated: false,
-        },
+    assert.deepEqual<NormalizedCache>(
+      writeQueryToStore({
+        query,
+        result: cloneDeep(result),
+        dataIdFromObject: getIdField,
       }),
-      [result.nestedObj.id]: result.nestedObj,
-    });
+      {
+        ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedObj')), {
+          nestedObj: {
+            type: 'id',
+            id: result.nestedObj.id,
+            generated: false,
+          },
+        }),
+        [result.nestedObj.id]: result.nestedObj,
+      },
+    );
   });
 
   it('properly normalizes a nested object without an ID', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         nestedObj {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nullField
         }
       }
@@ -283,31 +287,34 @@ describe('writing to the store', () => {
       },
     };
 
-    assert.deepEqual<NormalizedCache>(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: {
-          type: 'id',
-          id: `$ROOT_QUERY.nestedObj`,
-          generated: true,
-        },
+    assert.deepEqual<NormalizedCache>(
+      writeQueryToStore({
+        query,
+        result: cloneDeep(result),
       }),
-      [`$ROOT_QUERY.nestedObj`]: result.nestedObj,
-    });
+      {
+        ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
+          nestedObj: {
+            type: 'id',
+            id: `$ROOT_QUERY.nestedObj`,
+            generated: true,
+          },
+        }),
+        [`$ROOT_QUERY.nestedObj`]: result.nestedObj,
+      },
+    );
   });
 
   it('properly normalizes a nested object with arguments but without an ID', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         nestedObj(arg: "val") {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nullField
         }
       }
@@ -325,32 +332,35 @@ describe('writing to the store', () => {
       },
     };
 
-    assert.deepEqual<NormalizedCache>(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
-        'nestedObj({"arg":"val"})': {
-          type: 'id',
-          id: `$ROOT_QUERY.nestedObj({"arg":"val"})`,
-          generated: true,
-        },
+    assert.deepEqual<NormalizedCache>(
+      writeQueryToStore({
+        query,
+        result: cloneDeep(result),
       }),
-      [`$ROOT_QUERY.nestedObj({"arg":"val"})`]: result.nestedObj,
-    });
+      {
+        ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
+          'nestedObj({"arg":"val"})': {
+            type: 'id',
+            id: `$ROOT_QUERY.nestedObj({"arg":"val"})`,
+            generated: true,
+          },
+        }),
+        [`$ROOT_QUERY.nestedObj({"arg":"val"})`]: result.nestedObj,
+      },
+    );
   });
 
   it('properly normalizes a nested array with IDs', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         nestedArray {
-          id,
-          stringField,
-          numberField,
+          id
+          stringField
+          numberField
           nullField
         }
       }
@@ -377,34 +387,37 @@ describe('writing to the store', () => {
       ],
     };
 
-    assert.deepEqual<NormalizedCache>(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      dataIdFromObject: getIdField,
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: result.nestedArray.map((obj: any) => ({
-          type: 'id',
-          id: obj.id,
-          generated: false,
-        })),
+    assert.deepEqual<NormalizedCache>(
+      writeQueryToStore({
+        query,
+        result: cloneDeep(result),
+        dataIdFromObject: getIdField,
       }),
-      [result.nestedArray[0].id]: result.nestedArray[0],
-      [result.nestedArray[1].id]: result.nestedArray[1],
-    });
+      {
+        ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
+          nestedArray: result.nestedArray.map((obj: any) => ({
+            type: 'id',
+            id: obj.id,
+            generated: false,
+          })),
+        }),
+        [result.nestedArray[0].id]: result.nestedArray[0],
+        [result.nestedArray[1].id]: result.nestedArray[1],
+      },
+    );
   });
 
   it('properly normalizes a nested array with IDs and a null', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         nestedArray {
-          id,
-          stringField,
-          numberField,
+          id
+          stringField
+          numberField
           nullField
         }
       }
@@ -426,31 +439,34 @@ describe('writing to the store', () => {
       ],
     };
 
-    assert.deepEqual<NormalizedCache>(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-      dataIdFromObject: getIdField,
-    }), {
-      'ROOT_QUERY': assign<{}>({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          { type: 'id', id: result.nestedArray[0].id, generated: false },
-          null,
-        ],
+    assert.deepEqual<NormalizedCache>(
+      writeQueryToStore({
+        query,
+        result: cloneDeep(result),
+        dataIdFromObject: getIdField,
       }),
-      [result.nestedArray[0].id]: result.nestedArray[0],
-    });
+      {
+        ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'nestedArray')), {
+          nestedArray: [
+            { type: 'id', id: result.nestedArray[0].id, generated: false },
+            null,
+          ],
+        }),
+        [result.nestedArray[0].id]: result.nestedArray[0],
+      },
+    );
   });
 
   it('properly normalizes a nested array without IDs', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         nestedArray {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nullField
         }
       }
@@ -481,7 +497,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual<NormalizedCache>(normalized, {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.0` },
           { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.1` },
@@ -495,13 +511,13 @@ describe('writing to the store', () => {
   it('properly normalizes a nested array without IDs and a null item', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         nestedArray {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nullField
         }
       }
@@ -528,7 +544,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual<NormalizedCache>(normalized, {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
           { type: 'id', generated: true, id: `ROOT_QUERY.nestedArray.1` },
@@ -541,10 +557,10 @@ describe('writing to the store', () => {
   it('properly normalizes an array of non-objects', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         simpleArray
       }
     `;
@@ -564,10 +580,10 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual<NormalizedCache>(normalized, {
-      'ROOT_QUERY': assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
+      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
-          'json': [
+          json: [
             result.simpleArray[0],
             result.simpleArray[1],
             result.simpleArray[2],
@@ -580,10 +596,10 @@ describe('writing to the store', () => {
   it('properly normalizes an array of non-objects with null', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         simpleArray
       }
     `;
@@ -602,7 +618,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual<NormalizedCache>(normalized, {
-      'ROOT_QUERY': assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
+      ROOT_QUERY: assign<{}>({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           json: [
@@ -618,7 +634,7 @@ describe('writing to the store', () => {
   it('properly normalizes an object occurring in different graphql paths twice', () => {
     const query = gql`
       {
-        id,
+        id
         object1 {
           id
           stringField
@@ -649,7 +665,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'a',
         object1: {
           type: 'id',
@@ -662,7 +678,7 @@ describe('writing to the store', () => {
           generated: false,
         },
       },
-      'aa': {
+      aa: {
         id: 'aa',
         stringField: 'string',
         numberField: 1,
@@ -673,7 +689,7 @@ describe('writing to the store', () => {
   it('properly normalizes an object occurring in different graphql array paths twice', () => {
     const query = gql`
       {
-        id,
+        id
         array1 {
           id
           stringField
@@ -695,22 +711,26 @@ describe('writing to the store', () => {
 
     const result: any = {
       id: 'a',
-      array1: [{
-        id: 'aa',
-        stringField: 'string',
-        obj: {
-          id: 'aaa',
+      array1: [
+        {
+          id: 'aa',
           stringField: 'string',
+          obj: {
+            id: 'aaa',
+            stringField: 'string',
+          },
         },
-      }],
-      array2: [{
-        id: 'ab',
-        stringField: 'string2',
-        obj: {
-          id: 'aaa',
-          numberField: 1,
+      ],
+      array2: [
+        {
+          id: 'ab',
+          stringField: 'string2',
+          obj: {
+            id: 'aaa',
+            numberField: 1,
+          },
         },
-      }],
+      ],
     };
 
     const normalized = writeQueryToStore({
@@ -720,20 +740,24 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'a',
-        array1: [{
-          type: 'id',
-          id: 'aa',
-          generated: false,
-        }],
-        array2: [{
-          type: 'id',
-          id: 'ab',
-          generated: false,
-        }],
+        array1: [
+          {
+            type: 'id',
+            id: 'aa',
+            generated: false,
+          },
+        ],
+        array2: [
+          {
+            type: 'id',
+            id: 'ab',
+            generated: false,
+          },
+        ],
       },
-      'aa': {
+      aa: {
         id: 'aa',
         stringField: 'string',
         obj: {
@@ -742,7 +766,7 @@ describe('writing to the store', () => {
           generated: false,
         },
       },
-      'ab': {
+      ab: {
         id: 'ab',
         stringField: 'string2',
         obj: {
@@ -751,7 +775,7 @@ describe('writing to the store', () => {
           generated: false,
         },
       },
-      'aaa': {
+      aaa: {
         id: 'aaa',
         stringField: 'string',
         numberField: 1,
@@ -762,7 +786,7 @@ describe('writing to the store', () => {
   it('properly normalizes an object occurring in the same graphql array path twice', () => {
     const query = gql`
       {
-        id,
+        id
         array1 {
           id
           stringField
@@ -806,7 +830,7 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual(normalized, {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'a',
         array1: [
           {
@@ -821,7 +845,7 @@ describe('writing to the store', () => {
           },
         ],
       },
-      'aa': {
+      aa: {
         id: 'aa',
         stringField: 'string',
         obj: {
@@ -830,7 +854,7 @@ describe('writing to the store', () => {
           generated: false,
         },
       },
-      'ab': {
+      ab: {
         id: 'ab',
         stringField: 'string2',
         obj: {
@@ -839,7 +863,7 @@ describe('writing to the store', () => {
           generated: false,
         },
       },
-      'aaa': {
+      aaa: {
         id: 'aaa',
         stringField: 'string',
         numberField: 1,
@@ -850,8 +874,8 @@ describe('writing to the store', () => {
   it('merges nodes', () => {
     const query = gql`
       {
-        id,
-        numberField,
+        id
+        numberField
         nullField
       }
     `;
@@ -870,8 +894,8 @@ describe('writing to the store', () => {
 
     const query2 = gql`
       {
-        id,
-        stringField,
+        id
+        stringField
         nullField
       }
     `;
@@ -890,21 +914,21 @@ describe('writing to the store', () => {
     });
 
     assert.deepEqual<NormalizedCache>(store2, {
-      'ROOT_QUERY': assign({}, result, result2),
+      ROOT_QUERY: assign({}, result, result2),
     });
   });
 
   it('properly normalizes a nested object that returns null', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
-        nullField,
+        id
+        stringField
+        numberField
+        nullField
         nestedObj {
-          id,
-          stringField,
-          numberField,
+          id
+          stringField
+          numberField
           nullField
         }
       }
@@ -918,14 +942,17 @@ describe('writing to the store', () => {
       nestedObj: null,
     };
 
-    assert.deepEqual<NormalizedCache>(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: null,
+    assert.deepEqual<NormalizedCache>(
+      writeQueryToStore({
+        query,
+        result: cloneDeep(result),
       }),
-    });
+      {
+        ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
+          nestedObj: null,
+        }),
+      },
+    );
   });
 
   it('properly normalizes an object with an ID when no extension is passed', () => {
@@ -945,59 +972,100 @@ describe('writing to the store', () => {
       },
     };
 
-    assert.deepEqual<NormalizedCache>(writeQueryToStore({
-      query,
-      result: cloneDeep(result),
-    }), {
-      'ROOT_QUERY': {
-        'people_one({"id":"5"})': {
-          type: 'id',
-          id: '$ROOT_QUERY.people_one({"id":"5"})',
-          generated: true,
+    assert.deepEqual<NormalizedCache>(
+      writeQueryToStore({
+        query,
+        result: cloneDeep(result),
+      }),
+      {
+        ROOT_QUERY: {
+          'people_one({"id":"5"})': {
+            type: 'id',
+            id: '$ROOT_QUERY.people_one({"id":"5"})',
+            generated: true,
+          },
+        },
+        '$ROOT_QUERY.people_one({"id":"5"})': {
+          id: 'abcd',
+          stringField: 'This is a string!',
         },
       },
-      '$ROOT_QUERY.people_one({"id":"5"})': {
-        'id': 'abcd',
-        'stringField': 'This is a string!',
-      },
-    });
+    );
   });
 
   it('consistently serialize different types of input when passed inlined or as variable', () => {
     const testData = [
       {
-        mutation: gql`mutation mut($in: Int!) { mut(inline: 5, variable: $in) { id } }`,
+        mutation: gql`
+          mutation mut($in: Int!) {
+            mut(inline: 5, variable: $in) {
+              id
+            }
+          }
+        `,
         variables: { in: 5 },
         expected: 'mut({"inline":5,"variable":5})',
       },
       {
-        mutation: gql`mutation mut($in: Float!) { mut(inline: 5.5, variable: $in) { id } }`,
+        mutation: gql`
+          mutation mut($in: Float!) {
+            mut(inline: 5.5, variable: $in) {
+              id
+            }
+          }
+        `,
         variables: { in: 5.5 },
         expected: 'mut({"inline":5.5,"variable":5.5})',
       },
       {
-        mutation: gql`mutation mut($in: String!) { mut(inline: "abc", variable: $in) { id } }`,
+        mutation: gql`
+          mutation mut($in: String!) {
+            mut(inline: "abc", variable: $in) {
+              id
+            }
+          }
+        `,
         variables: { in: 'abc' },
         expected: 'mut({"inline":"abc","variable":"abc"})',
       },
       {
-        mutation: gql`mutation mut($in: Array!) { mut(inline: [1, 2], variable: $in) { id } }`,
+        mutation: gql`
+          mutation mut($in: Array!) {
+            mut(inline: [1, 2], variable: $in) {
+              id
+            }
+          }
+        `,
         variables: { in: [1, 2] },
         expected: 'mut({"inline":[1,2],"variable":[1,2]})',
       },
       {
-        mutation: gql`mutation mut($in: Object!) { mut(inline: {a: 1}, variable: $in) { id } }`,
+        mutation: gql`
+          mutation mut($in: Object!) {
+            mut(inline: { a: 1 }, variable: $in) {
+              id
+            }
+          }
+        `,
         variables: { in: { a: 1 } },
         expected: 'mut({"inline":{"a":1},"variable":{"a":1}})',
       },
       {
-        mutation: gql`mutation mut($in: Boolean!) { mut(inline: true, variable: $in) { id } }`,
+        mutation: gql`
+          mutation mut($in: Boolean!) {
+            mut(inline: true, variable: $in) {
+              id
+            }
+          }
+        `,
         variables: { in: true },
         expected: 'mut({"inline":true,"variable":true})',
       },
     ];
 
-    function isOperationDefinition(definition: DefinitionNode): definition is OperationDefinitionNode {
+    function isOperationDefinition(
+      definition: DefinitionNode,
+    ): definition is OperationDefinitionNode {
       return definition.kind === 'OperationDefinition';
     }
 
@@ -1005,41 +1073,41 @@ describe('writing to the store', () => {
       return selection.kind === 'Field';
     }
 
-    testData.forEach((data) => {
-      data.mutation.definitions.forEach((definition: OperationDefinitionNode) => {
-        if (isOperationDefinition(definition)) {
-          definition.selectionSet.selections.forEach((selection) => {
-            if (isField(selection)) {
-              assert.equal(storeKeyNameFromField(selection, data.variables), data.expected);
-            }
-          });
-        }
-      });
+    testData.forEach(data => {
+      data.mutation.definitions.forEach(
+        (definition: OperationDefinitionNode) => {
+          if (isOperationDefinition(definition)) {
+            definition.selectionSet.selections.forEach(selection => {
+              if (isField(selection)) {
+                assert.equal(
+                  storeKeyNameFromField(selection, data.variables),
+                  data.expected,
+                );
+              }
+            });
+          }
+        },
+      );
     });
   });
 
   it('properly normalizes a mutation with object or array parameters and variables', () => {
     const mutation = gql`
-      mutation some_mutation(
-          $nil: ID,
-          $in: Object
-        ) {
+      mutation some_mutation($nil: ID, $in: Object) {
         some_mutation(
           input: {
-            id: "5",
-            arr: [1,{a:"b"}],
-            obj: {a:"b"},
-            num: 5.5,
-            nil: $nil,
+            id: "5"
+            arr: [1, { a: "b" }]
+            obj: { a: "b" }
+            num: 5.5
+            nil: $nil
             bo: true
-          },
+          }
         ) {
-          id,
+          id
         }
-        some_mutation_with_variables(
-          input: $in,
-        ) {
-          id,
+        some_mutation_with_variables(input: $in) {
+          id
         }
       }
     `;
@@ -1065,36 +1133,41 @@ describe('writing to the store', () => {
       },
     };
 
-    function isOperationDefinition(value: ASTNode): value is OperationDefinitionNode {
+    function isOperationDefinition(
+      value: ASTNode,
+    ): value is OperationDefinitionNode {
       return value.kind === 'OperationDefinition';
     }
 
     mutation.definitions.map((def: OperationDefinitionNode) => {
       if (isOperationDefinition(def)) {
-        assert.deepEqual<NormalizedCache>(writeSelectionSetToStore({
-          dataId: '5',
-          selectionSet: def.selectionSet,
-          result: cloneDeep(result),
-          context: {
-            store: {},
-            variables,
-            dataIdFromObject: () => '5',
-          },
-        }), {
-          '5': {
-            'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
-              type: 'id',
-              id: '5',
-              generated: false,
+        assert.deepEqual<NormalizedCache>(
+          writeSelectionSetToStore({
+            dataId: '5',
+            selectionSet: def.selectionSet,
+            result: cloneDeep(result),
+            context: {
+              store: {},
+              variables,
+              dataIdFromObject: () => '5',
             },
-            'some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
-              type: 'id',
-              id: '5',
-              generated: false,
+          }),
+          {
+            '5': {
+              'some_mutation({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
+                type: 'id',
+                id: '5',
+                generated: false,
+              },
+              'some_mutation_with_variables({"input":{"id":"5","arr":[1,{"a":"b"}],"obj":{"a":"b"},"num":5.5,"nil":null,"bo":true}})': {
+                type: 'id',
+                id: '5',
+                generated: false,
+              },
+              id: 'id',
             },
-            'id': 'id',
           },
-        });
+        );
       } else {
         throw 'No operation definition found';
       }
@@ -1116,7 +1189,8 @@ describe('writing to the store', () => {
             firstName
             lastName
           }
-        }`;
+        }
+      `;
       const data = {
         author: {
           firstName: 'John',
@@ -1133,10 +1207,13 @@ describe('writing to the store', () => {
         },
         '$ROOT_QUERY.author': data.author,
       };
-      assert.deepEqual<NormalizedCache>(writeQueryToStore({
-        result: data,
-        query,
-      }), expStore);
+      assert.deepEqual<NormalizedCache>(
+        writeQueryToStore({
+          result: data,
+          query,
+        }),
+        expStore,
+      );
     });
 
     it('should correctly escape real ids', () => {
@@ -1147,7 +1224,8 @@ describe('writing to the store', () => {
             id
             __typename
           }
-        }`;
+        }
+      `;
       const data = {
         author: {
           firstName: 'John',
@@ -1169,11 +1247,14 @@ describe('writing to the store', () => {
           __typename: data.author.__typename,
         },
       };
-      assert.deepEqual<NormalizedCache>(writeQueryToStore({
-        result: data,
-        query,
-        dataIdFromObject,
-      }), expStore);
+      assert.deepEqual<NormalizedCache>(
+        writeQueryToStore({
+          result: data,
+          query,
+          dataIdFromObject,
+        }),
+        expStore,
+      );
     });
 
     it('should correctly escape json blobs', () => {
@@ -1184,7 +1265,8 @@ describe('writing to the store', () => {
             id
             __typename
           }
-        }`;
+        }
+      `;
       const data = {
         author: {
           info: {
@@ -1211,11 +1293,14 @@ describe('writing to the store', () => {
           },
         },
       };
-      assert.deepEqual<NormalizedCache>(writeQueryToStore({
-        result: data,
-        query,
-        dataIdFromObject,
-      }), expStore);
+      assert.deepEqual<NormalizedCache>(
+        writeQueryToStore({
+          result: data,
+          query,
+          dataIdFromObject,
+        }),
+        expStore,
+      );
     });
   });
 
@@ -1246,7 +1331,8 @@ describe('writing to the store', () => {
           firstName
           lastName
         }
-      }`;
+      }
+    `;
     const queryWithId = gql`
       query {
         author {
@@ -1254,14 +1340,15 @@ describe('writing to the store', () => {
           id
           __typename
         }
-      }`;
+      }
+    `;
     const expStoreWithoutId = {
       '$ROOT_QUERY.author': {
         firstName: 'John',
         lastName: 'Smith',
       },
       ROOT_QUERY: {
-        'author': {
+        author: {
           type: 'id',
           id: '$ROOT_QUERY.author',
           generated: true,
@@ -1269,7 +1356,7 @@ describe('writing to the store', () => {
       },
     };
     const expStoreWithId = {
-      'Author__129': {
+      Author__129: {
         firstName: 'John',
         lastName: 'Smith',
         id: '129',
@@ -1303,7 +1390,8 @@ describe('writing to the store', () => {
       query {
         ...notARealFragment
         fortuneCookie
-      }`;
+      }
+    `;
     const result: any = {
       fortuneCookie: 'Star Wars unit tests are boring',
     };
@@ -1318,9 +1406,9 @@ describe('writing to the store', () => {
   it('does not change object references if the value is the same', () => {
     const query = gql`
       {
-        id,
-        stringField,
-        numberField,
+        id
+        stringField
+        numberField
         nullField
       }
     `;
@@ -1342,7 +1430,7 @@ describe('writing to the store', () => {
       store: assign({}, store) as NormalizedCache,
     });
 
-    Object.keys(store).forEach((field) => {
+    Object.keys(store).forEach(field => {
       assert.equal(store[field], newStore[field], 'references are the same');
     });
   });
@@ -1403,7 +1491,6 @@ describe('writing to the store', () => {
       }, /Missing field description/);
     });
 
-
     it('should warn when it receives the wrong data inside a fragment (using an introspection matcher)', () => {
       const fragmentMatcherFunction = new IntrospectionFragmentMatcher({
         introspectionQueryResultData: {
@@ -1433,11 +1520,11 @@ describe('writing to the store', () => {
         }
 
         fragment TodoFragment on Todo {
-          ...on ShoppingCartItem {
+          ... on ShoppingCartItem {
             price
             __typename
           }
-          ...on TaskItem {
+          ... on TaskItem {
             date
             __typename
           }
@@ -1487,19 +1574,25 @@ describe('writing to the store', () => {
 
   it('throws when trying to write an object without id that was previously queried with id', () => {
     const store = {
-      'ROOT_QUERY': assign({}, {
-        __typename: 'Query',
-        item: {
-          type: 'id',
+      ROOT_QUERY: assign(
+        {},
+        {
+          __typename: 'Query',
+          item: {
+            type: 'id',
+            id: 'abcd',
+            generated: false,
+          } as IdValue,
+        },
+      ) as StoreObject,
+      abcd: assign(
+        {},
+        {
           id: 'abcd',
-          generated: false,
-        } as IdValue,
-      }) as StoreObject,
-      abcd: assign({}, {
-        id: 'abcd',
-        __typename: 'Item',
-        stringField: 'This is a string!',
-      }) as StoreObject,
+          __typename: 'Item',
+          stringField: 'This is a string!',
+        },
+      ) as StoreObject,
     } as NormalizedCache;
 
     assert.throws(() => {
@@ -1583,22 +1676,19 @@ describe('writing to the store', () => {
       store,
     });
 
-    assert.deepEqual<NormalizedCache>(
-      store,
-      {
-        'ROOT_QUERY': {
-          'abc': [
-            {
-              'generated': true,
-              'id': 'ROOT_QUERY.abc.0',
-              'type': 'id',
-            },
-          ],
-        },
-        'ROOT_QUERY.abc.0': {
-          'name': 'efgh',
-        },
+    assert.deepEqual<NormalizedCache>(store, {
+      ROOT_QUERY: {
+        abc: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.abc.0',
+            type: 'id',
+          },
+        ],
       },
-    );
+      'ROOT_QUERY.abc.0': {
+        name: 'efgh',
+      },
+    });
   });
 });

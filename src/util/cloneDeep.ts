@@ -1,7 +1,7 @@
 /**
  * Deeply clones a value to create a new instance.
  */
-export function cloneDeep <T>(value: T): T {
+export function cloneDeep<T>(value: T): T {
   // If the value is an array, create a new array where every item has been cloned.
   if (Array.isArray(value)) {
     return value.map(item => cloneDeep(item)) as any;

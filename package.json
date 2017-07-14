@@ -28,7 +28,9 @@
     "bundle": "rollup -c",
     "postcompile": "npm run bundle",
     "prepublish": "npm run compile",
+    "lint-fix": "prettier --trailing-comma all --single-quote --write \"{src,test,benchmark}/**/*.ts*\"",
     "lint": "grunt tslint",
+    "lint-staged": "lint-staged",
     "precoverage": "npm run compile:coverage",
     "coverage": "COV=1 istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
@@ -51,6 +53,10 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     }
   },
+  "lint-staged": {
+    "*.ts*": ["prettier --trailing-comma all --single-quote --write", "git add"]
+  },
+  "pre-commit": "lint-staged",
   "keywords": [
     "ecmascript",
     "es2015",
@@ -95,10 +101,13 @@
     "gzip-size": "^3.0.0",
     "isomorphic-fetch": "^2.2.1",
     "istanbul": "^0.4.5",
+    "lint-staged": "^4.0.1",
     "lodash": "^4.17.1",
     "minimist": "^1.2.0",
     "mocha": "^3.0.0",
     "nodemon": "^1.11.0",
+    "pre-commit": "^1.2.2",
+    "prettier": "^1.5.2",
     "pretty-bytes": "^4.0.0",
     "remap-istanbul": "0.8.0",
     "request": "^2.75.0",

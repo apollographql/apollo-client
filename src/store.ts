@@ -7,21 +7,13 @@ import {
   Action,
 } from 'redux';
 
-import {
-  FragmentMatcher,
-} from 'graphql-anywhere';
+import { FragmentMatcher } from 'graphql-anywhere';
 
-import {
-  data,
-} from './data/store';
+import { data } from './data/store';
 
-import {
-  NormalizedCache,
-} from './data/storeUtils';
+import { NormalizedCache } from './data/storeUtils';
 
-import {
-  QueryStore,
-} from './queries/store';
+import { QueryStore } from './queries/store';
 
 import {
   // mutations,
@@ -42,13 +34,9 @@ import {
   isSubscriptionResultAction,
 } from './actions';
 
-import {
-  IdGetter,
-} from './core/types';
+import { IdGetter } from './core/types';
 
-import {
-  CustomResolverMap,
-} from './data/readFromStore';
+import { CustomResolverMap } from './data/readFromStore';
 
 import { assign } from './util/assign';
 
@@ -87,7 +75,10 @@ const crashReporter = (store: any) => (next: any) => (action: any) => {
   }
 };
 
-const createReducerError = (error: Error, action: ApolloAction): ReducerError => {
+const createReducerError = (
+  error: Error,
+  action: ApolloAction,
+): ReducerError => {
   const reducerError: ReducerError = { error };
 
   if (isQueryResultAction(action)) {
@@ -102,9 +93,14 @@ const createReducerError = (error: Error, action: ApolloAction): ReducerError =>
 };
 
 // Reducer
-export type ApolloReducer = (store: NormalizedCache, action: ApolloAction) => NormalizedCache;
+export type ApolloReducer = (
+  store: NormalizedCache,
+  action: ApolloAction,
+) => NormalizedCache;
 
-export function createApolloReducer(config: ApolloReducerConfig): (state: Store, action: ApolloAction | Action) => Store {
+export function createApolloReducer(
+  config: ApolloReducerConfig,
+): (state: Store, action: ApolloAction | Action) => Store {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
     try {
       const newState: Store = {
@@ -129,9 +125,11 @@ export function createApolloReducer(config: ApolloReducerConfig): (state: Store,
         config,
       );
 
-      if (state.data === newState.data &&
-      state.optimistic === newState.optimistic &&
-      state.reducerError === newState.reducerError) {
+      if (
+        state.data === newState.data &&
+        state.optimistic === newState.optimistic &&
+        state.reducerError === newState.reducerError
+      ) {
         return state;
       }
 
@@ -145,19 +143,21 @@ export function createApolloReducer(config: ApolloReducerConfig): (state: Store,
   };
 }
 
-export function createApolloStore({
-  reduxRootKey = 'apollo',
-  initialState,
-  config = {},
-  reportCrashes = true,
-  logger,
-}: {
-  reduxRootKey?: string,
-  initialState?: any,
-  config?: ApolloReducerConfig,
-  reportCrashes?: boolean,
-  logger?: Middleware,
-} = {}): ApolloStore {
+export function createApolloStore(
+  {
+    reduxRootKey = 'apollo',
+    initialState,
+    config = {},
+    reportCrashes = true,
+    logger,
+  }: {
+    reduxRootKey?: string;
+    initialState?: any;
+    config?: ApolloReducerConfig;
+    reportCrashes?: boolean;
+    logger?: Middleware;
+  } = {},
+): ApolloStore {
   const enhancers: any[] = [];
   const middlewares: Middleware[] = [];
 
@@ -187,12 +187,22 @@ export function createApolloStore({
   // Note: The below checks are what make it OK for QueryManager to start from 0 when generating
   // new query IDs. If we let people rehydrate query state for some reason, we would need to make
   // sure newly generated IDs don't overlap with old queries.
-  if ( initialState && initialState[reduxRootKey] && initialState[reduxRootKey]['queries']) {
+  if (
+    initialState &&
+    initialState[reduxRootKey] &&
+    initialState[reduxRootKey]['queries']
+  ) {
     throw new Error('Apollo initial state may not contain queries, only data');
   }
 
-  if ( initialState && initialState[reduxRootKey] && initialState[reduxRootKey]['mutations']) {
-    throw new Error('Apollo initial state may not contain mutations, only data');
+  if (
+    initialState &&
+    initialState[reduxRootKey] &&
+    initialState[reduxRootKey]['mutations']
+  ) {
+    throw new Error(
+      'Apollo initial state may not contain mutations, only data',
+    );
   }
 
   return createStore(
@@ -206,5 +216,5 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   customResolvers?: CustomResolverMap;
   fragmentMatcher?: FragmentMatcher;
-  addTypename?: boolean,
+  addTypename?: boolean;
 };

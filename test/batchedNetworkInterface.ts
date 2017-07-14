@@ -6,15 +6,9 @@ import * as sinon from 'sinon';
 
 import { HTTPBatchedNetworkInterface } from '../src/transport/batchedNetworkInterface';
 
-import {
-  createMockFetch,
-  createMockedIResponse,
-} from './mocks/mockFetch';
+import { createMockFetch, createMockedIResponse } from './mocks/mockFetch';
 
-import {
-  Request,
-  printRequest,
-} from '../src/transport/networkInterface';
+import { Request, printRequest } from '../src/transport/networkInterface';
 
 import { BatchMiddlewareInterface } from '../src/transport/middleware';
 import { BatchAfterwareInterface } from '../src/transport/afterware';
@@ -38,13 +32,13 @@ describe('HTTPBatchedNetworkInterface', () => {
     opts = {},
   }: {
     requestResultPairs: {
-      request: Request,
-      result: ExecutionResult,
+      request: Request;
+      result: ExecutionResult;
     }[];
     fetchFunc?: any;
     middlewares?: BatchMiddlewareInterface[];
     afterwares?: BatchAfterwareInterface[];
-    opts?: RequestInit,
+    opts?: RequestInit;
   }) => {
     const url = 'http://fake.com/graphql';
     const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
@@ -63,21 +57,27 @@ describe('HTTPBatchedNetworkInterface', () => {
       resultList.push(result);
     });
 
-    fetch = fetchFunc || createMockFetch({
-      url,
-      opts: merge({
-        body: JSON.stringify(printedRequests),
-        headers:  {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      }, opts),
-      result: createMockedIResponse(resultList),
-    });
+    fetch =
+      fetchFunc ||
+      createMockFetch({
+        url,
+        opts: merge(
+          {
+            body: JSON.stringify(printedRequests),
+            headers: {
+              Accept: '*/*',
+              'Content-Type': 'application/json',
+            },
+            method: 'POST',
+          },
+          opts,
+        ),
+        result: createMockedIResponse(resultList),
+      });
 
-    return batchedNetworkInterface.batchQuery(requestResultPairs.map(({ request }) => request))
-      .then((results) => {
+    return batchedNetworkInterface
+      .batchQuery(requestResultPairs.map(({ request }) => request))
+      .then(results => {
         assert.deepEqual(results, resultList);
       });
   };
@@ -89,7 +89,8 @@ describe('HTTPBatchedNetworkInterface', () => {
         firstName
         lastName
       }
-    }`;
+    }
+  `;
 
   const authorResult = {
     data: {
@@ -105,7 +106,8 @@ describe('HTTPBatchedNetworkInterface', () => {
       person {
         name
       }
-    }`;
+    }
+  `;
   const personResult = {
     data: {
       person: {
@@ -128,7 +130,6 @@ describe('HTTPBatchedNetworkInterface', () => {
     assert(batchedNetworkInterface.batchQuery);
   });
 
-
   it('should have a default value of 10ms for batchInterval', () => {
     const url = 'http://notreal.com/graphql';
     const opts = {};
@@ -142,10 +143,12 @@ describe('HTTPBatchedNetworkInterface', () => {
 
   it('should correctly return the result for a single request', () => {
     return assertRoundtrip({
-      requestResultPairs: [{
-        request: { query: authorQuery },
-        result: authorResult,
-      }],
+      requestResultPairs: [
+        {
+          request: { query: authorQuery },
+          result: authorResult,
+        },
+      ],
     });
   });
 
@@ -178,15 +181,16 @@ describe('HTTPBatchedNetworkInterface', () => {
           result: personResult,
         },
       ],
-      middlewares: [{
-        applyBatchMiddleware(req, next) {
-          middlewareCallCounter();
+      middlewares: [
+        {
+          applyBatchMiddleware(req, next) {
+            middlewareCallCounter();
 
-          next();
+            next();
+          },
         },
-      }],
-    })
-    .then(() => {
+      ],
+    }).then(() => {
       assert.equal(middlewareCallCounter.callCount, 1);
     });
   });
@@ -205,58 +209,80 @@ describe('HTTPBatchedNetworkInterface', () => {
           result: personResult,
         },
       ],
-      afterwares: [{
-        applyBatchAfterware({ responses }, next) {
-          afterwareCallCounter();
+      afterwares: [
+        {
+          applyBatchAfterware({ responses }, next) {
+            afterwareCallCounter();
 
-          next();
+            next();
+          },
         },
-      }],
-    })
-    .then(() => {
+      ],
+    }).then(() => {
       assert.equal(afterwareCallCounter.callCount, 1);
     });
   });
 
   describe('errors', () => {
-    it('should return errors thrown by fetch', (done) => {
+    it('should return errors thrown by fetch', done => {
       const err = new Error('Error of some kind thrown by fetch.');
-      const fetchFunc = () => { throw err; };
+      const fetchFunc = () => {
+        throw err;
+      };
       assertRoundtrip({
-        requestResultPairs: [{
-          request: { query: authorQuery },
-          result: authorResult,
-        }],
+        requestResultPairs: [
+          {
+            request: { query: authorQuery },
+            result: authorResult,
+          },
+        ],
         fetchFunc,
-      }).then(() => {
-        done(new Error('Assertion passed when it should not have.'));
-      }).catch((error) => {
-        assert(error);
-        assert.deepEqual(error, err);
-        done();
-      });
+      })
+        .then(() => {
+          done(new Error('Assertion passed when it should not have.'));
+        })
+        .catch(error => {
+          assert(error);
+          assert.deepEqual(error, err);
+          done();
+        });
     });
 
-    it('should throw an error with the response when a non-200 response is received', (done) => {
-      const fakeForbiddenResponse = createMockedIResponse([], { status: 401, statusText: 'Unauthorized'});
+    it('should throw an error with the response when a non-200 response is received', done => {
+      const fakeForbiddenResponse = createMockedIResponse([], {
+        status: 401,
+        statusText: 'Unauthorized',
+      });
       const fetchFunc = () => Promise.resolve(fakeForbiddenResponse);
 
       assertRoundtrip({
-        requestResultPairs: [{
-          request: { query: authorQuery },
-          result: authorResult,
-        }],
+        requestResultPairs: [
+          {
+            request: { query: authorQuery },
+            result: authorResult,
+          },
+        ],
         fetchFunc,
-      }).then(() => {
-        done(new Error('An error should have been thrown'));
-      }).catch(err => {
-        assert.strictEqual(err.response, fakeForbiddenResponse, 'Incorrect response provided');
-        assert.equal(err.message, 'Network request failed with status 401 - "Unauthorized"', 'Incorrect message generated');
-        done();
-      });
+      })
+        .then(() => {
+          done(new Error('An error should have been thrown'));
+        })
+        .catch(err => {
+          assert.strictEqual(
+            err.response,
+            fakeForbiddenResponse,
+            'Incorrect response provided',
+          );
+          assert.equal(
+            err.message,
+            'Network request failed with status 401 - "Unauthorized"',
+            'Incorrect message generated',
+          );
+          done();
+        });
     });
 
-    it('should return errors thrown by middleware', (done) => {
+    it('should return errors thrown by middleware', done => {
       const err = new Error('Error of some kind thrown by middleware.');
       const errorMiddleware: BatchMiddlewareInterface = {
         applyBatchMiddleware() {
@@ -264,20 +290,24 @@ describe('HTTPBatchedNetworkInterface', () => {
         },
       };
       assertRoundtrip({
-        requestResultPairs: [{
-          request: { query: authorQuery },
-          result: authorResult,
-        }],
-        middlewares: [ errorMiddleware ],
-      }).then(() => {
-        done(new Error('Returned a result when it should not have.'));
-      }).catch((error) => {
-        assert.deepEqual(error, err);
-        done();
-      });
+        requestResultPairs: [
+          {
+            request: { query: authorQuery },
+            result: authorResult,
+          },
+        ],
+        middlewares: [errorMiddleware],
+      })
+        .then(() => {
+          done(new Error('Returned a result when it should not have.'));
+        })
+        .catch(error => {
+          assert.deepEqual(error, err);
+          done();
+        });
     });
 
-    it('should return errors thrown by afterware', (done) => {
+    it('should return errors thrown by afterware', done => {
       const err = new Error('Error of some kind thrown by afterware.');
       const errorAfterware: BatchAfterwareInterface = {
         applyBatchAfterware() {
@@ -285,17 +315,21 @@ describe('HTTPBatchedNetworkInterface', () => {
         },
       };
       assertRoundtrip({
-        requestResultPairs: [{
-          request: { query: authorQuery },
-          result: authorResult,
-        }],
-        afterwares: [ errorAfterware ],
-      }).then(() => {
-        done(new Error('Returned a result when it should not have.'));
-      }).catch((error) => {
-        assert.deepEqual(error, err);
-        done();
-      });
+        requestResultPairs: [
+          {
+            request: { query: authorQuery },
+            result: authorResult,
+          },
+        ],
+        afterwares: [errorAfterware],
+      })
+        .then(() => {
+          done(new Error('Returned a result when it should not have.'));
+        })
+        .catch(error => {
+          assert.deepEqual(error, err);
+          done();
+        });
     });
   });
 
@@ -312,12 +346,14 @@ describe('HTTPBatchedNetworkInterface', () => {
     };
     const options = { headers: customHeaders };
     return assertRoundtrip({
-      requestResultPairs: [{
-        request: { query: authorQuery },
-        result: authorResult,
-      }],
+      requestResultPairs: [
+        {
+          request: { query: authorQuery },
+          result: authorResult,
+        },
+      ],
       opts: options,
-      middlewares: [ changeMiddleware ],
+      middlewares: [changeMiddleware],
     });
   });
 
@@ -328,10 +364,12 @@ describe('HTTPBatchedNetworkInterface', () => {
     };
     const options = { method: 'GET', headers: customHeaders };
     return assertRoundtrip({
-      requestResultPairs: [{
-        request: { query: authorQuery },
-        result: authorResult,
-      }],
+      requestResultPairs: [
+        {
+          request: { query: authorQuery },
+          result: authorResult,
+        },
+      ],
       opts: options,
     });
   });
@@ -357,36 +395,55 @@ describe('HTTPBatchedNetworkInterface', () => {
 
     it('executes afterware when valid responses given back', done => {
       assertRoundtrip({
-        requestResultPairs: [{
-          request: { query: authorQuery },
-          result: authorResult,
-        }],
+        requestResultPairs: [
+          {
+            request: { query: authorQuery },
+            result: authorResult,
+          },
+        ],
         afterwares: testAfterwares,
-      }).then(() => {
-        assert.equal(afterwareStub.callCount, testAfterwares.length, 'Afterwares provided were not invoked');
-        done();
-      }).catch(err => {
-        done(err);
-      });
+      })
+        .then(() => {
+          assert.equal(
+            afterwareStub.callCount,
+            testAfterwares.length,
+            'Afterwares provided were not invoked',
+          );
+          done();
+        })
+        .catch(err => {
+          done(err);
+        });
     });
 
     it('executes afterware when an invalid response is given back', done => {
-      const fakeForbiddenResponse = createMockedIResponse([], { status: 401, statusText: 'Unauthorized'});
+      const fakeForbiddenResponse = createMockedIResponse([], {
+        status: 401,
+        statusText: 'Unauthorized',
+      });
       const fetchFunc = () => Promise.resolve(fakeForbiddenResponse);
 
       assertRoundtrip({
-        requestResultPairs: [{
-          request: { query: authorQuery },
-          result: authorResult,
-        }],
+        requestResultPairs: [
+          {
+            request: { query: authorQuery },
+            result: authorResult,
+          },
+        ],
         fetchFunc,
         afterwares: testAfterwares,
-      }).then(() => {
-        done(new Error('The networkInterface did not reject as expected'));
-      }).catch(err => {
-        assert.equal(afterwareStub.callCount, testAfterwares.length, 'Afterwares provided were not invoked');
-        done();
-      });
+      })
+        .then(() => {
+          done(new Error('The networkInterface did not reject as expected'));
+        })
+        .catch(err => {
+          assert.equal(
+            afterwareStub.callCount,
+            testAfterwares.length,
+            'Afterwares provided were not invoked',
+          );
+          done();
+        });
     });
   });
 });

@@ -3,13 +3,9 @@ const { assert } = chai;
 import * as sinon from 'sinon';
 import * as fetchMock from 'fetch-mock';
 
-import ApolloClient, {
-  printAST,
-} from '../src';
+import ApolloClient, { printAST } from '../src';
 
-import {
-  disableFragmentWarnings as graphqlTagDisableFragmentWarnings,
-} from 'graphql-tag';
+import { disableFragmentWarnings as graphqlTagDisableFragmentWarnings } from 'graphql-tag';
 
 import {
   GraphQLError,
@@ -18,19 +14,13 @@ import {
   FragmentDefinitionNode,
 } from 'graphql';
 
-import {
-  rootReducer as todosReducer,
-} from './fixtures/redux-todomvc';
+import { rootReducer as todosReducer } from './fixtures/redux-todomvc';
 
-import {
-  Store,
-} from '../src/store';
+import { Store } from '../src/store';
 
 import gql from 'graphql-tag';
 
-import {
-  print,
-} from 'graphql/language/printer';
+import { print } from 'graphql/language/printer';
 
 import { NetworkStatus } from '../src/queries/networkStatus';
 
@@ -41,9 +31,7 @@ import {
   applyMiddleware,
 } from 'redux';
 
-import {
-  QueryManager,
-} from '../src/core/QueryManager';
+import { QueryManager } from '../src/core/QueryManager';
 
 import {
   FragmentMatcherInterface,
@@ -59,25 +47,16 @@ import {
   NetworkInterface,
 } from '../src/transport/networkInterface';
 
-import {
-  createBatchingNetworkInterface,
-} from '../src/transport/batchedNetworkInterface';
+import { createBatchingNetworkInterface } from '../src/transport/batchedNetworkInterface';
 
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import { mockObservableNetworkInterface } from './mocks/mockNetworkInterface';
 
-import {
-  getFragmentDefinitions,
-} from '../src/queries/getFromAST';
+import { getFragmentDefinitions } from '../src/queries/getFromAST';
 
-import {
-  createMockFetch,
-  createMockedIResponse,
-} from './mocks/mockFetch';
+import { createMockFetch, createMockedIResponse } from './mocks/mockFetch';
 
-import {
-  WatchQueryOptions,
-} from '../src/core/watchQueryOptions';
+import { WatchQueryOptions } from '../src/core/watchQueryOptions';
 
 import subscribeAndCount from './util/subscribeAndCount';
 
@@ -126,14 +105,16 @@ describe('client', () => {
     assert.isDefined(client.store.getState().apollo);
   });
 
-
   it('can allow passing in a network interface', () => {
     const networkInterface = createNetworkInterface({ uri: 'swapi' });
     const client = new ApolloClient({
       networkInterface,
     });
 
-    assert.equal((client.networkInterface as HTTPNetworkInterface)._uri, networkInterface._uri);
+    assert.equal(
+      (client.networkInterface as HTTPNetworkInterface)._uri,
+      networkInterface._uri,
+    );
   });
 
   it('can allow passing in a store', () => {
@@ -142,7 +123,7 @@ describe('client', () => {
     const store: ReduxStore<any> = createStore(
       combineReducers({
         todos: todosReducer,
-        apollo: client.reducer()as any,
+        apollo: client.reducer() as any,
       }),
       applyMiddleware(client.middleware()),
     );
@@ -166,10 +147,9 @@ describe('client', () => {
       assert.equal(
         error.message,
         'Existing store does not use apolloReducer. Please make sure the store ' +
-        'is properly configured and "reduxRootSelector" is correctly specified.',
+          'is properly configured and "reduxRootSelector" is correctly specified.',
       );
     }
-
   });
 
   it('has a top level key by default', () => {
@@ -177,16 +157,13 @@ describe('client', () => {
 
     client.initStore();
 
-    assert.deepEqual(
-      client.store.getState(),
-      {
-        apollo: {
-          data: {},
-          optimistic: [],
-          reducerError: null,
-        },
+    assert.deepEqual(client.store.getState(), {
+      apollo: {
+        data: {},
+        optimistic: [],
+        reducerError: null,
       },
-    );
+    });
   });
 
   it('should allow passing in a selector function for apollo state', () => {
@@ -197,13 +174,15 @@ describe('client', () => {
 
     // shouldn't throw
     createStore(
-        combineReducers({
+      combineReducers(
+        {
           testApollo: client.reducer(),
-        } as any),
-        // here "client.setStore(store)" will be called internally,
-        // this method throws if "reduxRootSelector" or "reduxRootKey"
-        // are not configured properly
-        applyMiddleware(client.middleware()),
+        } as any,
+      ),
+      // here "client.setStore(store)" will be called internally,
+      // this method throws if "reduxRootSelector" or "reduxRootKey"
+      // are not configured properly
+      applyMiddleware(client.middleware()),
     );
   });
 
@@ -218,8 +197,8 @@ describe('client', () => {
       assert.fail();
     } catch (error) {
       assert.equal(
-          error.message,
-          'Cannot initialize the store because "reduxRootSelector" is provided. ' +
+        error.message,
+        'Cannot initialize the store because "reduxRootSelector" is provided. ' +
           'reduxRootSelector should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
           `Please remove that option from ApolloClient constructor.`,
@@ -231,7 +210,13 @@ describe('client', () => {
     const client = new ApolloClient();
 
     assert.throws(() => {
-      client.query(gql`{ a }` as any);
+      client.query(
+        gql`
+          {
+            a
+          }
+        ` as any,
+      );
     }, 'query option is required. You must specify your GraphQL document in the query option.');
     assert.throws(() => {
       client.query({ query: '{ a }' } as any);
@@ -242,7 +227,15 @@ describe('client', () => {
     const client = new ApolloClient();
 
     assert.throws(() => {
-      client.mutate({ query: gql`{ a }` } as any);
+      client.mutate(
+        {
+          query: gql`
+            {
+              a
+            }
+          `,
+        } as any,
+      );
     }, 'mutation option is required. You must specify your GraphQL document in the mutation option.');
   });
 
@@ -274,7 +267,7 @@ describe('client', () => {
     return clientRoundtrip(query, { data });
   });
 
-  it('should allow a single query with an observable enabled network interface', (done) => {
+  it('should allow a single query with an observable enabled network interface', done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -311,7 +304,7 @@ describe('client', () => {
       addTypename: false,
     });
 
-    const basic = client.query({ query, variables }).then((actualResult) => {
+    const basic = client.query({ query, variables }).then(actualResult => {
       assert.deepEqual(actualResult.data, data);
       done();
     });
@@ -319,7 +312,9 @@ describe('client', () => {
 
   it('should allow for a single query with complex default variables to take place', () => {
     const query = gql`
-      query stuff($test: Input = {key1: ["value", "value2"], key2: {key3: 4}}) {
+      query stuff(
+        $test: Input = { key1: ["value", "value2"], key2: { key3: 4 } }
+      ) {
         allStuff(test: $test) {
           people {
             name
@@ -341,7 +336,9 @@ describe('client', () => {
       },
     };
 
-    const variables = {test: { key1: ['value', 'value2'], key2: { key3: 4 } } };
+    const variables = {
+      test: { key1: ['value', 'value2'], key2: { key3: 4 } },
+    };
 
     const networkInterface = mockNetworkInterface({
       request: { query, variables },
@@ -353,11 +350,11 @@ describe('client', () => {
       addTypename: false,
     });
 
-    const basic = client.query({ query, variables }).then((actualResult) => {
+    const basic = client.query({ query, variables }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
 
-    const withDefault = client.query({ query }).then((actualResult) => {
+    const withDefault = client.query({ query }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
 
@@ -401,30 +398,35 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query, variables },
-      result: { data: result },
-    }, {
-      request: { query, variables: override },
-      result: { data: overriddenResult },
-    });
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query, variables },
+        result: { data: result },
+      },
+      {
+        request: { query, variables: override },
+        result: { data: overriddenResult },
+      },
+    );
 
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
     });
 
-    const basic = client.query({ query, variables }).then((actualResult) => {
+    const basic = client.query({ query, variables }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
 
-    const withDefault = client.query({ query }).then((actualResult) => {
+    const withDefault = client.query({ query }).then(actualResult => {
       return assert.deepEqual(actualResult.data, result);
     });
 
-    const withOverride = client.query({ query, variables: override }).then((actualResult) => {
-      return assert.deepEqual(actualResult.data, overriddenResult);
-    });
+    const withOverride = client
+      .query({ query, variables: override })
+      .then(actualResult => {
+        return assert.deepEqual(actualResult.data, overriddenResult);
+      });
 
     return Promise.all([basic, withDefault, withOverride]);
   });
@@ -462,13 +464,17 @@ describe('client', () => {
     const ifm = new IntrospectionFragmentMatcher({
       introspectionQueryResultData: {
         __schema: {
-          types: [{
-            kind: 'UNION',
-            name: 'Query',
-            possibleTypes: [{
-              name: 'Record',
-            }],
-          }],
+          types: [
+            {
+              kind: 'UNION',
+              name: 'Query',
+              possibleTypes: [
+                {
+                  name: 'Record',
+                },
+              ],
+            },
+          ],
         },
       },
     });
@@ -515,14 +521,12 @@ describe('client', () => {
       applyMiddleware(client.middleware()),
     );
 
-    return client.query({ query })
-      .then((result) => {
-        assert.deepEqual(result.data, data);
-      });
+    return client.query({ query }).then(result => {
+      assert.deepEqual(result.data, data);
+    });
   });
 
   it('store can be rehydrated from the server', () => {
-
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -555,11 +559,13 @@ describe('client', () => {
             name: 'Luke Skywalker',
           },
           'ROOT_QUERY.allPeople({"first":1})': {
-            people: [ {
-              type: 'id',
-              generated: true,
-              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
-            } ],
+            people: [
+              {
+                type: 'id',
+                generated: true,
+                id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
+              },
+            ],
           },
           ROOT_QUERY: {
             'allPeople({"first":1})': {
@@ -573,9 +579,11 @@ describe('client', () => {
       },
     };
 
-    const finalState = { apollo: assign({}, initialState.apollo, {
-      reducerError: null,
-    }) };
+    const finalState = {
+      apollo: assign({}, initialState.apollo, {
+        reducerError: null,
+      }),
+    };
 
     const client = new ApolloClient({
       networkInterface,
@@ -583,11 +591,10 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ query })
-      .then((result) => {
-        assert.deepEqual(result.data, data);
-        assert.deepEqual(finalState, client.store.getState());
-      });
+    return client.query({ query }).then(result => {
+      assert.deepEqual(result.data, data);
+      assert.deepEqual(finalState, client.store.getState());
+    });
   });
 
   it('allows for a single query with existing store and custom key', () => {
@@ -627,19 +634,17 @@ describe('client', () => {
     createStore(
       combineReducers({
         todos: todosReducer,
-        test: client.reducer()as any,
+        test: client.reducer() as any,
       }),
       applyMiddleware(client.middleware()),
     );
 
-    return client.query({ query })
-      .then((result: any) => {
-        assert.deepEqual(result.data, data);
-      });
+    return client.query({ query }).then((result: any) => {
+      assert.deepEqual(result.data, data);
+    });
   });
 
   it('should return errors correctly for a single query', () => {
-
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -667,13 +672,12 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ query })
-      .catch((error: ApolloError) => {
-        assert.deepEqual(error.graphQLErrors, errors);
-      });
+    return client.query({ query }).catch((error: ApolloError) => {
+      assert.deepEqual(error.graphQLErrors, errors);
+    });
   });
 
-  it('should return GraphQL errors correctly for a single query with an observable enabled network interface', (done) => {
+  it('should return GraphQL errors correctly for a single query with an observable enabled network interface', done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -701,14 +705,13 @@ describe('client', () => {
       addTypename: false,
     });
 
-    client.query({ query })
-      .catch((error: ApolloError) => {
-        assert.deepEqual(error.graphQLErrors, errors);
-        done();
-      });
+    client.query({ query }).catch((error: ApolloError) => {
+      assert.deepEqual(error.graphQLErrors, errors);
+      done();
+    });
   });
 
-  it('should pass a network error correctly on a query with observable network interface', (done) => {
+  it('should pass a network error correctly on a query with observable network interface', done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -739,15 +742,14 @@ describe('client', () => {
       addTypename: false,
     });
 
-    client.query({ query })
-      .catch((error: ApolloError) => {
-        assert(error.networkError);
-        assert.deepEqual(error.networkError!.message, networkError.message);
-        done();
-      });
+    client.query({ query }).catch((error: ApolloError) => {
+      assert(error.networkError);
+      assert.deepEqual(error.networkError!.message, networkError.message);
+      done();
+    });
   });
 
-  it('should surface errors in observer.next as uncaught', (done) => {
+  it('should surface errors in observer.next as uncaught', done => {
     const expectedError = new Error('this error should not reach the store');
     const listeners = process.listeners('uncaughtException');
     const oldHandler = listeners[listeners.length - 1];
@@ -772,7 +774,7 @@ describe('client', () => {
       }
     `;
 
-  const data = {
+    const data = {
       allPeople: {
         people: [
           {
@@ -801,7 +803,7 @@ describe('client', () => {
     });
   });
 
-  it('should surfaces errors in observer.error as uncaught', (done) => {
+  it('should surfaces errors in observer.error as uncaught', done => {
     const expectedError = new Error('this error should not reach the store');
     const listeners = process.listeners('uncaughtException');
     const oldHandler = listeners[listeners.length - 1];
@@ -829,7 +831,7 @@ describe('client', () => {
 
     const networkInterface = mockNetworkInterface({
       request: { query },
-      result: { },
+      result: {},
     });
 
     const client = new ApolloClient({
@@ -848,8 +850,7 @@ describe('client', () => {
     });
   });
 
-  it('should allow for subscribing to a request', (done) => {
-
+  it('should allow for subscribing to a request', done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -860,7 +861,7 @@ describe('client', () => {
       }
     `;
 
-   const data = {
+    const data = {
       allPeople: {
         people: [
           {
@@ -897,7 +898,8 @@ describe('client', () => {
           firstName
           lastName
         }
-      }`;
+      }
+    `;
     const transformedQuery = gql`
       query {
         author {
@@ -905,38 +907,40 @@ describe('client', () => {
           lastName
           __typename
         }
-      }`;
+      }
+    `;
 
     const result = {
-      'author': {
-        'firstName': 'John',
-        'lastName': 'Smith',
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
       },
     };
     const transformedResult = {
-      'author': {
-        'firstName': 'John',
-        'lastName': 'Smith',
-        '__typename': 'Author',
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        __typename: 'Author',
       },
     };
 
     const networkInterface = mockNetworkInterface(
-    {
-      request: { query },
-      result: { data: result },
-    },
-    {
-      request: { query: transformedQuery },
-      result: { data: transformedResult },
-    });
+      {
+        request: { query },
+        result: { data: result },
+      },
+      {
+        request: { query: transformedQuery },
+        result: { data: transformedResult },
+      },
+    );
 
     const client = new ApolloClient({
       networkInterface,
       addTypename: true,
     });
 
-    return client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then(actualResult => {
       assert.deepEqual(actualResult.data, transformedResult);
     });
   });
@@ -948,7 +952,8 @@ describe('client', () => {
           firstName
           lastName
         }
-      }`;
+      }
+    `;
     const transformedQuery = gql`
       query {
         author {
@@ -956,38 +961,42 @@ describe('client', () => {
           lastName
           __typename
         }
-      }`;
+      }
+    `;
     const result = {
-      'author': {
-        'firstName': 'John',
-        'lastName': 'Smith',
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
       },
     };
     const transformedResult = {
-      'author': {
-        'firstName': 'John',
-        'lastName': 'Smith',
-        '__typename': 'Author',
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        __typename: 'Author',
       },
     };
     const networkInterface = mockNetworkInterface(
-    {
-      request: { query },
-      result: { data: result },
-    },
-    {
-      request: { query: transformedQuery },
-      result: { data: transformedResult },
-    });
+      {
+        request: { query },
+        result: { data: result },
+      },
+      {
+        request: { query: transformedQuery },
+        result: { data: transformedResult },
+      },
+    );
 
     const client = new ApolloClient({
       networkInterface,
       addTypename: true,
     });
 
-    return client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
-      assert.deepEqual(actualResult.data, transformedResult);
-    });
+    return client
+      .query({ fetchPolicy: 'network-only', query })
+      .then(actualResult => {
+        assert.deepEqual(actualResult.data, transformedResult);
+      });
   });
 
   it('should handle named fragments on mutations', () => {
@@ -1000,30 +1009,31 @@ describe('client', () => {
           }
         }
       }
+
       fragment authorDetails on Author {
         firstName
         lastName
-      }`;
+      }
+    `;
     const result = {
-      'starAuthor': {
-        'author': {
+      starAuthor: {
+        author: {
           __typename: 'Author',
-          'firstName': 'John',
-          'lastName': 'Smith',
+          firstName: 'John',
+          lastName: 'Smith',
         },
       },
     };
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query: mutation },
-        result: { data: result },
-      });
+    const networkInterface = mockNetworkInterface({
+      request: { query: mutation },
+      result: { data: result },
+    });
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
     });
 
-    return client.mutate({ mutation }).then((actualResult) => {
+    return client.mutate({ mutation }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
   });
@@ -1034,17 +1044,19 @@ describe('client', () => {
         firstName
         lastName
       }
+
       query {
         author {
           __typename
           ...authorDetails
         }
-      }`;
+      }
+    `;
     const result = {
-      'author': {
+      author: {
         __typename: 'Author',
-        'firstName': 'John',
-        'lastName': 'Smith',
+        firstName: 'John',
+        lastName: 'Smith',
       },
     };
 
@@ -1058,9 +1070,11 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ fetchPolicy: 'network-only', query }).then((actualResult) => {
-      assert.deepEqual(actualResult.data, result);
-    });
+    return client
+      .query({ fetchPolicy: 'network-only', query })
+      .then(actualResult => {
+        assert.deepEqual(actualResult.data, result);
+      });
   });
 
   it('should be able to handle named fragments with multiple fragments', () => {
@@ -1072,24 +1086,26 @@ describe('client', () => {
           ...moreDetails
         }
       }
+
       fragment authorDetails on Author {
         firstName
         lastName
       }
+
       fragment moreDetails on Author {
         address
-      }`;
+      }
+    `;
     const result = {
-      'author' : {
+      author: {
         __typename: 'Author',
-        'firstName': 'John',
-        'lastName': 'Smith',
-        'address': '1337 10th St.',
+        firstName: 'John',
+        lastName: 'Smith',
+        address: '1337 10th St.',
       },
     };
 
-    const networkInterface = mockNetworkInterface(
-    {
+    const networkInterface = mockNetworkInterface({
       request: { query },
       result: { data: result },
     });
@@ -1098,7 +1114,7 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
   });
@@ -1111,20 +1127,21 @@ describe('client', () => {
           ...authorDetails
         }
       }
+
       fragment authorDetails on Author {
         firstName
         lastName
-      }`;
+      }
+    `;
     const result = {
-      'author' : {
+      author: {
         __typename: 'Author',
-        'firstName': 'John',
-        'lastName': 'Smith',
+        firstName: 'John',
+        lastName: 'Smith',
       },
     };
 
-    const networkInterface = mockNetworkInterface(
-    {
+    const networkInterface = mockNetworkInterface({
       request: { query },
       result: { data: result },
     });
@@ -1133,7 +1150,7 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
   });
@@ -1154,36 +1171,35 @@ describe('client', () => {
           color
           __typename
         }
-      }`;
+      }
+    `;
     const result = {
-      'items': [
+      items: [
         {
-          '__typename': 'ColorItem',
-          'id': '27tlpoPeXm6odAxj3paGQP',
-          'color': 'red',
+          __typename: 'ColorItem',
+          id: '27tlpoPeXm6odAxj3paGQP',
+          color: 'red',
         },
         {
-          '__typename': 'MonochromeItem',
-          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+          __typename: 'MonochromeItem',
+          id: '1t3iFLsHBm4c4RjOMdMgOO',
         },
       ],
     };
-
 
     const fancyFragmentMatcher = (
       idValue: any, // TODO types, please.
       typeCondition: string,
       context: any,
     ): boolean => {
-
       const obj = context.store[idValue.id];
 
-      if (! obj) {
+      if (!obj) {
         return false;
       }
 
-      const implementingTypesMap: {[key: string]: string[]} = {
-        'Item': ['ColorItem', 'MonochromeItem'],
+      const implementingTypesMap: { [key: string]: string[] } = {
+        Item: ['ColorItem', 'MonochromeItem'],
       };
 
       if (obj.__typename === typeCondition) {
@@ -1198,9 +1214,7 @@ describe('client', () => {
       return false;
     };
 
-
-    const networkInterface = mockNetworkInterface(
-    {
+    const networkInterface = mockNetworkInterface({
       request: { query },
       result: { data: result },
     });
@@ -1231,39 +1245,44 @@ describe('client', () => {
           __typename
         }
         __typename
-      }`;
+      }
+    `;
     const result = {
-      'items': [
+      items: [
         {
-          '__typename': 'ColorItem',
-          'id': '27tlpoPeXm6odAxj3paGQP',
-          'color': 'red',
+          __typename: 'ColorItem',
+          id: '27tlpoPeXm6odAxj3paGQP',
+          color: 'red',
         },
         {
-          '__typename': 'MonochromeItem',
-          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+          __typename: 'MonochromeItem',
+          id: '1t3iFLsHBm4c4RjOMdMgOO',
         },
       ],
     };
 
-    const networkInterface = mockNetworkInterface(
-      {
-        request: { query },
-        result: { data: result },
-      });
+    const networkInterface = mockNetworkInterface({
+      request: { query },
+      result: { data: result },
+    });
 
     const ifm = new IntrospectionFragmentMatcher({
       introspectionQueryResultData: {
         __schema: {
-          types: [{
-            kind: 'UNION',
-            name: 'Item',
-            possibleTypes: [{
-              name: 'ColorItem',
-            }, {
-              name: 'MonochromeItem',
-            }],
-          }],
+          types: [
+            {
+              kind: 'UNION',
+              name: 'Item',
+              possibleTypes: [
+                {
+                  name: 'ColorItem',
+                },
+                {
+                  name: 'MonochromeItem',
+                },
+              ],
+            },
+          ],
         },
       },
     });
@@ -1273,12 +1292,12 @@ describe('client', () => {
       fragmentMatcher: ifm,
     });
 
-    return client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
   });
 
-  it('should call updateQueries, update and reducer after mutation on query with inlined fragments on an Interface type', (done) => {
+  it('should call updateQueries, update and reducer after mutation on query with inlined fragments on an Interface type', done => {
     const query = gql`
       query items {
         items {
@@ -1294,17 +1313,18 @@ describe('client', () => {
           __typename
         }
         __typename
-      }`;
+      }
+    `;
     const result = {
-      'items': [
+      items: [
         {
-          '__typename': 'ColorItem',
-          'id': '27tlpoPeXm6odAxj3paGQP',
-          'color': 'red',
+          __typename: 'ColorItem',
+          id: '27tlpoPeXm6odAxj3paGQP',
+          color: 'red',
         },
         {
-          '__typename': 'MonochromeItem',
-          'id': '1t3iFLsHBm4c4RjOMdMgOO',
+          __typename: 'MonochromeItem',
+          id: '1t3iFLsHBm4c4RjOMdMgOO',
         },
       ],
     };
@@ -1312,16 +1332,18 @@ describe('client', () => {
     const mutation = gql`
       mutation myMutationName {
         fortuneCookie
-      }`;
+      }
+    `;
     const mutationResult = {
-      'fortuneCookie': 'The waiter spit in your food',
+      fortuneCookie: 'The waiter spit in your food',
     };
 
     const networkInterface = mockNetworkInterface(
       {
         request: { query },
         result: { data: result },
-      }, {
+      },
+      {
         request: { query: mutation },
         result: { data: mutationResult },
       },
@@ -1330,15 +1352,20 @@ describe('client', () => {
     const ifm = new IntrospectionFragmentMatcher({
       introspectionQueryResultData: {
         __schema: {
-          types: [{
-            kind: 'UNION',
-            name: 'Item',
-            possibleTypes: [{
-              name: 'ColorItem',
-            }, {
-              name: 'MonochromeItem',
-            }],
-          }],
+          types: [
+            {
+              kind: 'UNION',
+              name: 'Item',
+              possibleTypes: [
+                {
+                  name: 'ColorItem',
+                },
+                {
+                  name: 'MonochromeItem',
+                },
+              ],
+            },
+          ],
         },
       },
     });
@@ -1360,7 +1387,7 @@ describe('client', () => {
       return prev;
     };
     const updateQueries = {
-      'items': queryUpdater,
+      items: queryUpdater,
     };
 
     const updateSpy = sinon.spy();
@@ -1369,7 +1396,8 @@ describe('client', () => {
 
     const sub = obs.subscribe({
       next() {
-        client.mutate({ mutation, updateQueries, update: updateSpy })
+        client
+          .mutate({ mutation, updateQueries, update: updateSpy })
           .then(() => {
             assert.isTrue(reducerSpy.called);
             assert.isTrue(queryUpdaterSpy.called);
@@ -1377,7 +1405,9 @@ describe('client', () => {
             sub.unsubscribe();
             done();
           })
-          .catch((err) => { done(err); });
+          .catch(err => {
+            done(err);
+          });
       },
       error(err) {
         done(err);
@@ -1389,9 +1419,10 @@ describe('client', () => {
     const query = gql`
       query myQueryName {
         fortuneCookie
-      }`;
+      }
+    `;
     const data = {
-      'fortuneCookie': 'The waiter spit in your food',
+      fortuneCookie: 'The waiter spit in your food',
     };
     const networkInterface: NetworkInterface = {
       query(request: Request): Promise<ExecutionResult> {
@@ -1404,7 +1435,7 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then(actualResult => {
       assert.deepEqual(actualResult.data, data);
     });
   });
@@ -1413,9 +1444,10 @@ describe('client', () => {
     const mutation = gql`
       mutation myMutationName {
         fortuneCookie
-      }`;
+      }
+    `;
     const data = {
-      'fortuneCookie': 'The waiter spit in your food',
+      fortuneCookie: 'The waiter spit in your food',
     };
     const networkInterface: NetworkInterface = {
       query(request: Request): Promise<ExecutionResult> {
@@ -1428,7 +1460,7 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return client.mutate({ mutation }).then((actualResult) => {
+    return client.mutate({ mutation }).then(actualResult => {
       assert.deepEqual(actualResult.data, data);
     });
   });
@@ -1439,7 +1471,8 @@ describe('client', () => {
         author {
           name
         }
-      }`;
+      }
+    `;
     const data = {
       author: {
         name: 'Jonas',
@@ -1453,15 +1486,17 @@ describe('client', () => {
 
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
-    const networkInterface = mockNetworkInterface({
-      request: { query: queryDoc },
-      result: { data },
-      delay: 10,
-    },
-    {
-      request: { query: queryDoc },
-      result: { data: data2 },
-    });
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc },
+        result: { data: data2 },
+      },
+    );
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
@@ -1484,7 +1519,8 @@ describe('client', () => {
         author {
           name
         }
-      }`;
+      }
+    `;
     const data = {
       author: {
         name: 'Jonas',
@@ -1498,15 +1534,17 @@ describe('client', () => {
 
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
-    const networkInterface = mockNetworkInterface({
-      request: { query: queryDoc },
-      result: { data },
-      delay: 10,
-    },
-    {
-      request: { query: queryDoc },
-      result: { data: data2 },
-    });
+    const networkInterface = mockNetworkInterface(
+      {
+        request: { query: queryDoc },
+        result: { data },
+        delay: 10,
+      },
+      {
+        request: { query: queryDoc },
+        result: { data: data2 },
+      },
+    );
     const client = new ApolloClient({
       networkInterface,
       addTypename: false,
@@ -1562,7 +1600,7 @@ describe('client', () => {
     const orig = client.store.dispatch;
     let actionEmitted = false;
 
-    client.store.dispatch = (action) => {
+    client.store.dispatch = action => {
       if (action.type === 'APOLLO_QUERY_INIT') {
         actionEmitted = true;
       }
@@ -1570,7 +1608,7 @@ describe('client', () => {
       orig(action);
     };
 
-    const queryPromise = client.query({ query }).then((result) => {
+    const queryPromise = client.query({ query }).then(result => {
       assert.deepEqual(result.data, data);
     });
 
@@ -1590,62 +1628,44 @@ describe('client', () => {
 
     it('errors when returnPartialData is used on query', () => {
       const client = new ApolloClient();
-      assert.throws(
-        () => {
-          client.query({ query, returnPartialData: true } as WatchQueryOptions );
-        },
-        /returnPartialData/,
-      );
+      assert.throws(() => {
+        client.query({ query, returnPartialData: true } as WatchQueryOptions);
+      }, /returnPartialData/);
     });
 
     it('errors when noFetch is used on query', () => {
       const client = new ApolloClient();
-      assert.throws(
-        () => {
-          client.query({ query, noFetch: true } as WatchQueryOptions );
-        },
-        /noFetch/,
-      );
+      assert.throws(() => {
+        client.query({ query, noFetch: true } as WatchQueryOptions);
+      }, /noFetch/);
     });
 
     it('errors when forceFetch is used on query', () => {
       const client = new ApolloClient();
-      assert.throws(
-        () => {
-          client.query({ query, forceFetch: true } as WatchQueryOptions );
-        },
-        /forceFetch/,
-      );
+      assert.throws(() => {
+        client.query({ query, forceFetch: true } as WatchQueryOptions);
+      }, /forceFetch/);
     });
 
     it('errors when returnPartialData is used on watchQuery', () => {
       const client = new ApolloClient();
-      assert.throws(
-        () => {
-          client.query({ query, returnPartialData: true } as WatchQueryOptions );
-        },
-        /returnPartialData/,
-      );
+      assert.throws(() => {
+        client.query({ query, returnPartialData: true } as WatchQueryOptions);
+      }, /returnPartialData/);
     });
 
     it('errors when noFetch is used on watchQuery', () => {
       const client = new ApolloClient();
-      assert.throws(
-        () => {
-          client.query({ query, noFetch: true } as WatchQueryOptions );
-        },
-        /noFetch/,
-      );
+      assert.throws(() => {
+        client.query({ query, noFetch: true } as WatchQueryOptions);
+      }, /noFetch/);
     });
 
     it('errors when forceFetch is used on watchQuery', () => {
       const client = new ApolloClient();
-      assert.throws(
-        () => {
-          client.query({ query, forceFetch: true } as WatchQueryOptions );
-        },
-        /forceFetch/,
-      );
+      assert.throws(() => {
+        client.query({ query, forceFetch: true } as WatchQueryOptions);
+      }, /forceFetch/);
     });
   });
 
@@ -1684,16 +1704,13 @@ describe('client', () => {
         addTypename: false,
       });
 
-      return client.query({ query })
-        .then((result) => {
-          assert.deepEqual(result.data, data);
-          assert.deepEqual(client.store.getState()['apollo'].data['1'],
-            {
-              id: '1',
-              name: 'Luke Skywalker',
-            },
-          );
+      return client.query({ query }).then(result => {
+        assert.deepEqual(result.data, data);
+        assert.deepEqual(client.store.getState()['apollo'].data['1'], {
+          id: '1',
+          name: 'Luke Skywalker',
         });
+      });
     });
 
     it('for existing store', () => {
@@ -1710,22 +1727,18 @@ describe('client', () => {
 
       const store = createStore(
         combineReducers({
-          apollo: client.reducer()as any,
+          apollo: client.reducer() as any,
         }),
         applyMiddleware(client.middleware()),
       );
 
-
-      return client.query({ query })
-        .then((result) => {
-          assert.deepEqual(result.data, data);
-          assert.deepEqual((store.getState() as any)['apollo'].data['1'],
-            {
-              id: '1',
-              name: 'Luke Skywalker',
-            },
-          );
+      return client.query({ query }).then(result => {
+        assert.deepEqual(result.data, data);
+        assert.deepEqual((store.getState() as any)['apollo'].data['1'], {
+          id: '1',
+          name: 'Luke Skywalker',
         });
+      });
     });
   });
 
@@ -1752,14 +1765,12 @@ describe('client', () => {
     // Test that cache-and-network can only be used on watchQuery, not query.
     it('errors when being used on query', () => {
       const client = new ApolloClient();
-      assert.throws(
-        () => {
-          client.query({ query, fetchPolicy: 'cache-and-network' });
-        },
-      );
+      assert.throws(() => {
+        client.query({ query, fetchPolicy: 'cache-and-network' });
+      });
     });
 
-    it('fetches from cache first, then network', (done) => {
+    it('fetches from cache first, then network', done => {
       const networkInterface = mockNetworkInterface({
         request: { query },
         result: { data: networkFetch },
@@ -1774,7 +1785,10 @@ describe('client', () => {
         data: initialData,
       });
 
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+      const obs = client.watchQuery({
+        query,
+        fetchPolicy: 'cache-and-network',
+      });
 
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
@@ -1786,7 +1800,7 @@ describe('client', () => {
       });
     });
 
-    it('does not fail if cache entry is not present', (done) => {
+    it('does not fail if cache entry is not present', done => {
       const networkInterface = mockNetworkInterface({
         request: { query },
         result: { data: networkFetch },
@@ -1796,7 +1810,10 @@ describe('client', () => {
         addTypename: false,
       });
 
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+      const obs = client.watchQuery({
+        query,
+        fetchPolicy: 'cache-and-network',
+      });
 
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
@@ -1810,23 +1827,26 @@ describe('client', () => {
       });
     });
 
-    it('fails if network request fails', (done) => {
+    it('fails if network request fails', done => {
       const networkInterface = mockNetworkInterface(); // no queries = no replies.
       const client = new ApolloClient({
         networkInterface,
         addTypename: false,
       });
 
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-and-network'});
+      const obs = client.watchQuery({
+        query,
+        fetchPolicy: 'cache-and-network',
+      });
 
       let count = 0;
       obs.subscribe({
-        next: (result) => {
+        next: result => {
           assert.equal(result.data, undefined);
           assert(result.loading);
           count++;
-         },
-        error: (e) => {
+        },
+        error: e => {
           assert.match(e.message, /No more mocked responses/);
           assert.equal(count, 1); // make sure next was called.
           done();
@@ -1842,13 +1862,25 @@ describe('client', () => {
     it('cannot be started with watchQuery or query', () => {
       const client = new ApolloClient();
       assert.throws(
-        () => client.watchQuery({ query: gql`{ abc }`, fetchPolicy: 'standby'}),
+        () =>
+          client.watchQuery({
+            query: gql`
+              {
+                abc
+              }
+            `,
+            fetchPolicy: 'standby',
+          }),
         'client.watchQuery cannot be called with fetchPolicy set to "standby"',
       );
     });
 
-    it('are not watching the store or notifying on updates', (done) => {
-      const query = gql`{ test }`;
+    it('are not watching the store or notifying on updates', done => {
+      const query = gql`
+        {
+          test
+        }
+      `;
       const data = { test: 'ok' };
       const data2 = { test: 'not ok' };
 
@@ -1865,11 +1897,11 @@ describe('client', () => {
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, data);
-          obs.setOptions({ fetchPolicy: 'standby' }).then( () => {
+          obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
           });
-          setTimeout( () => {
+          setTimeout(() => {
             if (!handleCalled) {
               done();
             }
@@ -1882,8 +1914,12 @@ describe('client', () => {
       });
     });
 
-    it('return the current result when coming out of standby', (done) => {
-      const query = gql`{ test }`;
+    it('return the current result when coming out of standby', done => {
+      const query = gql`
+        {
+          test
+        }
+      `;
       const data = { test: 'ok' };
       const data2 = { test: 'not ok' };
 
@@ -1900,10 +1936,10 @@ describe('client', () => {
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
           assert.deepEqual(result.data, data);
-          obs.setOptions({ fetchPolicy: 'standby' }).then( () => {
+          obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
-            setTimeout( () => {
+            setTimeout(() => {
               obs.setOptions({ fetchPolicy: 'cache-first' });
             }, 10);
           });
@@ -1937,17 +1973,19 @@ describe('client', () => {
       },
     };
 
-
     let networkInterface: any;
     let clock: any;
     beforeEach(() => {
-      networkInterface = mockNetworkInterface({
-        request: { query },
-        result: { data: firstFetch },
-      }, {
-        request: { query },
-        result: { data: secondFetch },
-      });
+      networkInterface = mockNetworkInterface(
+        {
+          request: { query },
+          result: { data: firstFetch },
+        },
+        {
+          request: { query },
+          result: { data: secondFetch },
+        },
+      );
     });
 
     afterEach(() => {
@@ -1963,12 +2001,15 @@ describe('client', () => {
       });
 
       // Run a query first to initialize the store
-      return client.query({ query })
-        // then query for real
-        .then(() => client.query({ query, fetchPolicy: 'network-only' }))
-        .then((result) => {
-          assert.deepEqual<{}>(result.data, { myNumber: { n: 2 } });
-        });
+      return (
+        client
+          .query({ query })
+          // then query for real
+          .then(() => client.query({ query, fetchPolicy: 'network-only' }))
+          .then(result => {
+            assert.deepEqual<{}>(result.data, { myNumber: { n: 2 } });
+          })
+      );
     });
 
     it('can be disabled with ssrMode', () => {
@@ -1981,15 +2022,21 @@ describe('client', () => {
       const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
 
       // Run a query first to initialize the store
-      return client.query({ query })
-        // then query for real
-        .then(() => client.query(options))
-        .then((result) => {
-          assert.deepEqual<{}>(result.data, { myNumber: { n: 1 } });
+      return (
+        client
+          .query({ query })
+          // then query for real
+          .then(() => client.query(options))
+          .then(result => {
+            assert.deepEqual<{}>(result.data, { myNumber: { n: 1 } });
 
-          // Test that options weren't mutated, issue #339
-          assert.deepEqual<WatchQueryOptions>(options, { query, fetchPolicy: 'network-only' });
-        });
+            // Test that options weren't mutated, issue #339
+            assert.deepEqual<WatchQueryOptions>(options, {
+              query,
+              fetchPolicy: 'network-only',
+            });
+          })
+      );
     });
 
     it('can temporarily be disabled with ssrForceFetchDelay', () => {
@@ -2002,21 +2049,22 @@ describe('client', () => {
       });
 
       // Run a query first to initialize the store
-      const outerPromise = client.query({ query })
+      const outerPromise = client
+        .query({ query })
         // then query for real
         .then(() => {
           const promise = client.query({ query, fetchPolicy: 'network-only' });
           clock.tick(0);
           return promise;
         })
-        .then((result) => {
+        .then(result => {
           assert.deepEqual<{}>(result.data, { myNumber: { n: 1 } });
           clock.tick(100);
           const promise = client.query({ query, fetchPolicy: 'network-only' });
           clock.tick(0);
           return promise;
         })
-        .then((result) => {
+        .then(result => {
           assert.deepEqual<{}>(result.data, { myNumber: { n: 2 } });
         });
       clock.tick(0);
@@ -2028,19 +2076,21 @@ describe('client', () => {
     const query = gql`
       query {
         fortuneCookie
-      }`;
+      }
+    `;
 
     assert.equal(printAST(query), print(query));
   });
 
-  it('should pass a network error correctly on a mutation', (done) => {
+  it('should pass a network error correctly on a mutation', done => {
     const mutation = gql`
       mutation {
         person {
           firstName
           lastName
         }
-      }`;
+      }
+    `;
     const data = {
       person: {
         firstName: 'John',
@@ -2057,16 +2107,19 @@ describe('client', () => {
       addTypename: false,
     });
 
-    client.mutate({ mutation }).then((result) => {
-      done(new Error('Returned a result when it should not have.'));
-    }).catch((error: ApolloError) => {
-      assert(error.networkError);
-      assert.equal(error.networkError!.message, networkError.message);
-      done();
-    });
+    client
+      .mutate({ mutation })
+      .then(result => {
+        done(new Error('Returned a result when it should not have.'));
+      })
+      .catch((error: ApolloError) => {
+        assert(error.networkError);
+        assert.equal(error.networkError!.message, networkError.message);
+        done();
+      });
   });
 
-  it('should pass a GraphQL error correctly on a mutation', (done) => {
+  it('should pass a GraphQL error correctly on a mutation', done => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2075,14 +2128,15 @@ describe('client', () => {
             lastName
           }
         }
-      }`;
+      }
+    `;
     const data = {
       person: {
         firstName: 'John',
         lastName: 'Smith',
       },
     };
-    const errors = [ new Error('Some kind of GraphQL error.') ];
+    const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
       networkInterface: mockNetworkInterface({
         request: { query: mutation },
@@ -2090,17 +2144,20 @@ describe('client', () => {
       }),
       addTypename: false,
     });
-    client.mutate({ mutation }).then((result) => {
-      done(new Error('Returned a result when it should not have.'));
-    }).catch((error: ApolloError) => {
-      assert(error.graphQLErrors);
-      assert.equal(error.graphQLErrors.length, 1);
-      assert.equal(error.graphQLErrors[0].message, errors[0].message);
-      done();
-    });
+    client
+      .mutate({ mutation })
+      .then(result => {
+        done(new Error('Returned a result when it should not have.'));
+      })
+      .catch((error: ApolloError) => {
+        assert(error.graphQLErrors);
+        assert.equal(error.graphQLErrors.length, 1);
+        assert.equal(error.graphQLErrors[0].message, errors[0].message);
+        done();
+      });
   });
 
-  it('should rollback optimistic after mutation got a GraphQL error', (done) => {
+  it('should rollback optimistic after mutation got a GraphQL error', done => {
     const mutation = gql`
       mutation {
         newPerson {
@@ -2109,7 +2166,8 @@ describe('client', () => {
             lastName
           }
         }
-      }`;
+      }
+    `;
     const data = {
       newPerson: {
         person: {
@@ -2118,7 +2176,7 @@ describe('client', () => {
         },
       },
     };
-    const errors = [ new Error('Some kind of GraphQL error.') ];
+    const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
       networkInterface: mockNetworkInterface({
         request: { query: mutation },
@@ -2138,15 +2196,17 @@ describe('client', () => {
       },
     });
     assert.equal(client.store.getState().apollo.optimistic.length, 1);
-    mutatePromise.then((result) => {
-      done(new Error('Returned a result when it should not have.'));
-    }).catch((error: ApolloError) => {
-      assert.equal(client.store.getState().apollo.optimistic.length, 0);
-      done();
-    });
+    mutatePromise
+      .then(result => {
+        done(new Error('Returned a result when it should not have.'));
+      })
+      .catch((error: ApolloError) => {
+        assert.equal(client.store.getState().apollo.optimistic.length, 0);
+        done();
+      });
   });
 
-  it('has a resetStore method which calls QueryManager', (done) => {
+  it('has a resetStore method which calls QueryManager', done => {
     const client = new ApolloClient();
     client.queryManager = {
       resetStore: () => {
@@ -2156,14 +2216,15 @@ describe('client', () => {
     client.resetStore();
   });
 
-  it('should allow us to create a network interface with transport-level batching', (done) => {
+  it('should allow us to create a network interface with transport-level batching', done => {
     const firstQuery = gql`
       query {
         author {
           firstName
           lastName
         }
-      }`;
+      }
+    `;
     const firstResult = {
       data: {
         author: {
@@ -2178,7 +2239,8 @@ describe('client', () => {
         person {
           name
         }
-      }`;
+      }
+    `;
     const secondResult = {
       data: {
         person: {
@@ -2215,23 +2277,29 @@ describe('client', () => {
     Promise.all([
       networkInterface.query({ query: firstQuery }),
       networkInterface.query({ query: secondQuery }),
-    ]).then((results) => {
-      assert.deepEqual<[ExecutionResult]>(results, [firstResult, secondResult]);
-      fetch = oldFetch;
-      done();
-    }).catch( e => {
-      console.error(e);
-    });
+    ])
+      .then(results => {
+        assert.deepEqual<[ExecutionResult]>(results, [
+          firstResult,
+          secondResult,
+        ]);
+        fetch = oldFetch;
+        done();
+      })
+      .catch(e => {
+        console.error(e);
+      });
   });
 
-  it('should throw an error if response to batch request is not an array', (done) => {
+  it('should throw an error if response to batch request is not an array', done => {
     const firstQuery = gql`
       query {
         author {
           firstName
           lastName
         }
-      }`;
+      }
+    `;
     const firstResult = {
       data: {
         author: {
@@ -2246,7 +2314,8 @@ describe('client', () => {
         person {
           name
         }
-      }`;
+      }
+    `;
     const url = 'http://not-a-real-url.com';
     const oldFetch = fetch;
     fetch = createMockFetch({
@@ -2276,23 +2345,29 @@ describe('client', () => {
     Promise.all([
       networkInterface.query({ query: firstQuery }),
       networkInterface.query({ query: secondQuery }),
-    ]).then((results) => {
-      assert.equal(true, false, 'expected response to throw an error');
-    }).catch( e => {
-      assert.equal(e.message, 'BatchingNetworkInterface: server response is not an array');
-      fetch = oldFetch;
-      done();
-    });
+    ])
+      .then(results => {
+        assert.equal(true, false, 'expected response to throw an error');
+      })
+      .catch(e => {
+        assert.equal(
+          e.message,
+          'BatchingNetworkInterface: server response is not an array',
+        );
+        fetch = oldFetch;
+        done();
+      });
   });
 
-  it('should not do transport-level batching when the interval is exceeded', (done) => {
+  it('should not do transport-level batching when the interval is exceeded', done => {
     const firstQuery = gql`
       query {
         author {
           firstName
           lastName
         }
-      }`;
+      }
+    `;
     const firstResult = {
       data: {
         author: {
@@ -2307,7 +2382,8 @@ describe('client', () => {
         person {
           name
         }
-      }`;
+      }
+    `;
     const secondResult = {
       data: {
         person: {
@@ -2317,37 +2393,40 @@ describe('client', () => {
     };
     const url = 'http://not-a-real-url.com';
     const oldFetch = fetch;
-    fetch = createMockFetch({
-      url,
-      opts: {
-        body: JSON.stringify([
-          {
-            query: print(firstQuery),
+    fetch = createMockFetch(
+      {
+        url,
+        opts: {
+          body: JSON.stringify([
+            {
+              query: print(firstQuery),
+            },
+          ]),
+          headers: {
+            Accept: '*/*',
+            'Content-Type': 'application/json',
           },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
+          method: 'POST',
         },
-        method: 'POST',
+        result: createMockedIResponse([firstResult]),
       },
-      result: createMockedIResponse([firstResult]),
-    }, {
-      url,
-      opts: {
-        body: JSON.stringify([
-                    {
-            query: print(secondQuery),
+      {
+        url,
+        opts: {
+          body: JSON.stringify([
+            {
+              query: print(secondQuery),
+            },
+          ]),
+          headers: {
+            Accept: '*/*',
+            'Content-Type': 'application/json',
           },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
+          method: 'POST',
         },
-        method: 'POST',
+        result: createMockedIResponse([secondResult]),
       },
-      result: createMockedIResponse([secondResult]),
-    });
+    );
     const networkInterface = createBatchingNetworkInterface({
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
@@ -2355,24 +2434,34 @@ describe('client', () => {
     });
     Promise.all([
       networkInterface.query({ query: firstQuery }),
-      new Promise( (resolve, reject) =>
-        setTimeout(() => resolve(networkInterface.query({ query: secondQuery })), 10)),
-    ]).then((results) => {
-      assert.deepEqual<[ExecutionResult]>(results, [firstResult, secondResult]);
-      fetch = oldFetch;
-      done();
-    }).catch( e => {
-      console.error(e);
-    });
+      new Promise((resolve, reject) =>
+        setTimeout(
+          () => resolve(networkInterface.query({ query: secondQuery })),
+          10,
+        ),
+      ),
+    ])
+      .then(results => {
+        assert.deepEqual<[ExecutionResult]>(results, [
+          firstResult,
+          secondResult,
+        ]);
+        fetch = oldFetch;
+        done();
+      })
+      .catch(e => {
+        console.error(e);
+      });
   });
 
-  it('should limit the amount of queries in a batch according to the batchMax value', (done) => {
+  it('should limit the amount of queries in a batch according to the batchMax value', done => {
     const authorQuery = gql`
       query {
         author {
           firstName
         }
-      }`;
+      }
+    `;
     const authorResult = {
       data: {
         author: {
@@ -2385,7 +2474,8 @@ describe('client', () => {
         person {
           name
         }
-      }`;
+      }
+    `;
     const personResult = {
       data: {
         person: {
@@ -2404,48 +2494,50 @@ describe('client', () => {
     });
 
     const oldFetch = fetch;
-    fetch = createMockFetch({
-      url,
-      opts: {
-        body: JSON.stringify([
-          { query: print(authorQuery) },
-          { query: print(personQuery) },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
+    fetch = createMockFetch(
+      {
+        url,
+        opts: {
+          body: JSON.stringify([
+            { query: print(authorQuery) },
+            { query: print(personQuery) },
+          ]),
+          headers: {
+            Accept: '*/*',
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
         },
-        method: 'POST',
+        result: createMockedIResponse([authorResult, personResult]),
       },
-      result: createMockedIResponse([authorResult, personResult]),
-    }, {
-      url,
-      opts: {
-        body: JSON.stringify([
-          { query: print(authorQuery) },
-          { query: print(personQuery) },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
+      {
+        url,
+        opts: {
+          body: JSON.stringify([
+            { query: print(authorQuery) },
+            { query: print(personQuery) },
+          ]),
+          headers: {
+            Accept: '*/*',
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
         },
-        method: 'POST',
+        result: createMockedIResponse([authorResult, personResult]),
       },
-      result: createMockedIResponse([authorResult, personResult]),
-    }, {
-      url,
-      opts: {
-        body: JSON.stringify([
-          { query: print(authorQuery) },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
+      {
+        url,
+        opts: {
+          body: JSON.stringify([{ query: print(authorQuery) }]),
+          headers: {
+            Accept: '*/*',
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
         },
-        method: 'POST',
+        result: createMockedIResponse([authorResult]),
       },
-      result: createMockedIResponse([authorResult]),
-    });
+    );
 
     Promise.all([
       networkInterface.query({ query: authorQuery }),
@@ -2453,35 +2545,39 @@ describe('client', () => {
       networkInterface.query({ query: authorQuery }),
       networkInterface.query({ query: personQuery }),
       networkInterface.query({ query: authorQuery }),
-    ]).then((results) => {
-      assert.deepEqual<[
-        ExecutionResult,
-        ExecutionResult,
-        ExecutionResult,
-        ExecutionResult,
-        ExecutionResult
-      ]>(results, [
-        authorResult,
-        personResult,
-        authorResult,
-        personResult,
-        authorResult,
-      ]);
-      fetch = oldFetch;
-      done();
-    }).catch( e => {
-      console.error(e);
-    });
-
+    ])
+      .then(results => {
+        assert.deepEqual<
+          [
+            ExecutionResult,
+            ExecutionResult,
+            ExecutionResult,
+            ExecutionResult,
+            ExecutionResult
+          ]
+        >(results, [
+          authorResult,
+          personResult,
+          authorResult,
+          personResult,
+          authorResult,
+        ]);
+        fetch = oldFetch;
+        done();
+      })
+      .catch(e => {
+        console.error(e);
+      });
   });
 
-  it('should not limit the amount of queries in a batch when batchMax is not set', (done) => {
+  it('should not limit the amount of queries in a batch when batchMax is not set', done => {
     const authorQuery = gql`
       query {
         author {
           firstName
         }
-      }`;
+      }
+    `;
     const authorResult = {
       data: {
         author: {
@@ -2494,7 +2590,8 @@ describe('client', () => {
         person {
           name
         }
-      }`;
+      }
+    `;
     const personResult = {
       data: {
         person: {
@@ -2543,25 +2640,29 @@ describe('client', () => {
       networkInterface.query({ query: authorQuery }),
       networkInterface.query({ query: personQuery }),
       networkInterface.query({ query: authorQuery }),
-    ]).then((results) => {
-     assert.deepEqual<[
-        ExecutionResult,
-        ExecutionResult,
-        ExecutionResult,
-        ExecutionResult,
-        ExecutionResult
-      ]>(results, [
-        authorResult,
-        personResult,
-        authorResult,
-        personResult,
-        authorResult,
-      ]);
-      fetch = oldFetch;
-      done();
-    }).catch( e => {
-      console.error(e);
-    });
+    ])
+      .then(results => {
+        assert.deepEqual<
+          [
+            ExecutionResult,
+            ExecutionResult,
+            ExecutionResult,
+            ExecutionResult,
+            ExecutionResult
+          ]
+        >(results, [
+          authorResult,
+          personResult,
+          authorResult,
+          personResult,
+          authorResult,
+        ]);
+        fetch = oldFetch;
+        done();
+      })
+      .catch(e => {
+        console.error(e);
+      });
   });
 
   it('should enable dev tools logging', () => {
@@ -2601,11 +2702,10 @@ describe('client', () => {
         log.push(entry);
       });
 
-      return client.query({ query })
-        .then(() => {
-          assert.equal(log.length, 2);
-          assert.equal(log[1].state.queries['0'].loading, false);
-        });
+      return client.query({ query }).then(() => {
+        assert.equal(log.length, 2);
+        assert.equal(log[1].state.queries['0'].loading, false);
+      });
     });
 
     it('with passed in store', () => {
@@ -2632,15 +2732,13 @@ describe('client', () => {
         log.push(entry);
       });
 
-      return client.query({ query })
-        .then(() => {
-          assert.equal(log.length, 2);
-        });
+      return client.query({ query }).then(() => {
+        assert.equal(log.length, 2);
+      });
     });
   });
 
-  it('should propagate errors from network interface to observers', (done) => {
-
+  it('should propagate errors from network interface to observers', done => {
     const networkInterface = {
       query: () => Promise.reject(new Error('Uh oh!')),
     };
@@ -2650,7 +2748,15 @@ describe('client', () => {
       addTypename: false,
     });
 
-    const handle = client.watchQuery({ query: gql`query { a b c }` });
+    const handle = client.watchQuery({
+      query: gql`
+        query {
+          a
+          b
+          c
+        }
+      `,
+    });
 
     handle.subscribe({
       error(error) {
@@ -2669,10 +2775,12 @@ describe('client', () => {
         }
       }
     `;
-    const errors: GraphQLError[] = [{
-      name: 'test',
-      message: 'Cannot query field "foo" on type "Post".',
-    }];
+    const errors: GraphQLError[] = [
+      {
+        name: 'test',
+        message: 'Cannot query field "foo" on type "Post".',
+      },
+    ];
     const networkInterface = mockNetworkInterface({
       request: { query },
       result: { errors },
@@ -2682,7 +2790,10 @@ describe('client', () => {
     });
 
     return client.query({ query }).catch(err => {
-      assert.equal(err.message, 'GraphQL error: Cannot query field "foo" on type "Post".');
+      assert.equal(
+        err.message,
+        'GraphQL error: Cannot query field "foo" on type "Post".',
+      );
     });
   });
 
@@ -2717,7 +2828,10 @@ describe('client', () => {
       networkInterface,
     });
 
-    return withWarning(() => client.query({ query }), /Missing field description/);
+    return withWarning(
+      () => client.query({ query }),
+      /Missing field description/,
+    );
   });
 
   it('runs a query with the connection directive and writes it to the store key defined in the directive', () => {
@@ -2726,7 +2840,8 @@ describe('client', () => {
         books(skip: 0, limit: 2) @connection(key: "abc") {
           name
         }
-      }`;
+      }
+    `;
 
     const transformedQuery = gql`
       {
@@ -2734,13 +2849,14 @@ describe('client', () => {
           name
           __typename
         }
-      }`;
+      }
+    `;
 
     const result = {
-      'books': [
+      books: [
         {
-          'name': 'abcd',
-          '__typename': 'Book',
+          name: 'abcd',
+          __typename: 'Book',
         },
       ],
     };
@@ -2754,7 +2870,7 @@ describe('client', () => {
       networkInterface,
     });
 
-    return client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
   });
@@ -2765,7 +2881,8 @@ describe('client', () => {
         books(skip: 0, limit: 2) @connection {
           name
         }
-      }`;
+      }
+    `;
 
     const transformedQuery = gql`
       {
@@ -2773,13 +2890,14 @@ describe('client', () => {
           name
           __typename
         }
-      }`;
+      }
+    `;
 
     const result = {
-      'books': [
+      books: [
         {
-          'name': 'abcd',
-          '__typename': 'Book',
+          name: 'abcd',
+          __typename: 'Book',
         },
       ],
     };
@@ -2793,108 +2911,115 @@ describe('client', () => {
       networkInterface,
     });
 
-    return client.query({ query }).then((actualResult) => {
+    return client.query({ query }).then(actualResult => {
       assert.deepEqual(actualResult.data, result);
     });
   });
 });
 
 it('should run a query with the connection directive and write the result to the store key defined in the directive', () => {
-    const query = gql`
+  const query = gql`
+    {
+      books(skip: 0, limit: 2) @connection(key: "abc") {
+        name
+      }
+    }
+  `;
+
+  const transformedQuery = gql`
+    {
+      books(skip: 0, limit: 2) @connection(key: "abc") {
+        name
+        __typename
+      }
+    }
+  `;
+
+  const result = {
+    books: [
       {
-        books(skip: 0, limit: 2) @connection(key: "abc") {
-          name
-        }
-      }`;
+        name: 'abcd',
+        __typename: 'Book',
+      },
+    ],
+  };
 
-    const transformedQuery = gql`
-      {
-        books(skip: 0, limit: 2) @connection(key: "abc") {
-          name
-          __typename
-        }
-      }`;
-
-    const result = {
-      'books': [
-        {
-          'name': 'abcd',
-          '__typename': 'Book',
-        },
-      ],
-    };
-
-    const networkInterface = mockNetworkInterface({
-      request: { query: transformedQuery },
-      result: { data: result },
-    });
-
-    const client = new ApolloClient({
-      networkInterface,
-    });
-
-    return client.query({ query }).then((actualResult) => {
-      assert.deepEqual(actualResult.data, result);
-      assert.deepEqual(client.store.getState().apollo.data, {
-        'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
-        'ROOT_QUERY': {
-          abc: [
-            {
-              'generated': true,
-              'id': 'ROOT_QUERY.abc.0',
-              'type': 'id',
-            },
-          ],
-        },
-      });
-    });
+  const networkInterface = mockNetworkInterface({
+    request: { query: transformedQuery },
+    result: { data: result },
   });
 
-  it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => {
-    const query = gql`
-      query books($order: string) {
-        books(skip: 0, limit: 2, order: $order) @connection(key: "abc", filter: ["order"]) {
-          name
-          __typename
-        }
-      }`;
+  const client = new ApolloClient({
+    networkInterface,
+  });
 
-    const result = {
-      'books': [
-        {
-          'name': 'abcd',
-          '__typename': 'Book',
-        },
-      ],
-    };
-
-    const variables = {order: 'popularity'};
-
-    const networkInterface = mockNetworkInterface({
-      request: { query: query, variables },
-      result: { data: result },
-    });
-
-    const client = new ApolloClient({
-      networkInterface,
-    });
-
-    return client.query({ query, variables }).then((actualResult) => {
-      assert.deepEqual(actualResult.data, result);
-      assert.deepEqual(client.store.getState().apollo.data, {
-        'ROOT_QUERY.abc({"order":"popularity"}).0': { name: 'abcd', __typename: 'Book' },
-        'ROOT_QUERY': {
-          'abc({"order":"popularity"})': [
-            {
-              'generated': true,
-              'id': 'ROOT_QUERY.abc({"order":"popularity"}).0',
-              'type': 'id',
-            },
-          ],
-        },
-      });
+  return client.query({ query }).then(actualResult => {
+    assert.deepEqual(actualResult.data, result);
+    assert.deepEqual(client.store.getState().apollo.data, {
+      'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
+      ROOT_QUERY: {
+        abc: [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.abc.0',
+            type: 'id',
+          },
+        ],
+      },
     });
   });
+});
+
+it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => {
+  const query = gql`
+    query books($order: string) {
+      books(skip: 0, limit: 2, order: $order)
+        @connection(key: "abc", filter: ["order"]) {
+        name
+        __typename
+      }
+    }
+  `;
+
+  const result = {
+    books: [
+      {
+        name: 'abcd',
+        __typename: 'Book',
+      },
+    ],
+  };
+
+  const variables = { order: 'popularity' };
+
+  const networkInterface = mockNetworkInterface({
+    request: { query: query, variables },
+    result: { data: result },
+  });
+
+  const client = new ApolloClient({
+    networkInterface,
+  });
+
+  return client.query({ query, variables }).then(actualResult => {
+    assert.deepEqual(actualResult.data, result);
+    assert.deepEqual(client.store.getState().apollo.data, {
+      'ROOT_QUERY.abc({"order":"popularity"}).0': {
+        name: 'abcd',
+        __typename: 'Book',
+      },
+      ROOT_QUERY: {
+        'abc({"order":"popularity"})': [
+          {
+            generated: true,
+            id: 'ROOT_QUERY.abc({"order":"popularity"}).0',
+            type: 'id',
+          },
+        ],
+      },
+    });
+  });
+});
 
 function clientRoundtrip(
   query: DocumentNode,
@@ -2912,7 +3037,7 @@ function clientRoundtrip(
     fragmentMatcher,
   });
 
-  return client.query({ query, variables }).then((result) => {
+  return client.query({ query, variables }).then(result => {
     assert.deepEqual(result.data, data.data);
   });
 }

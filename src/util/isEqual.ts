@@ -1,14 +1,19 @@
 /**
  * Performs a deep equality check on two JavaScript values.
  */
-export function isEqual (a: any, b: any): boolean {
+export function isEqual(a: any, b: any): boolean {
   // If the two values are strictly equal, we are good.
   if (a === b) {
     return true;
   }
   // If a and b are both objects, we will compare their properties. This will compare arrays as
   // well.
-  if (a != null && typeof a === 'object' && b != null && typeof b === 'object') {
+  if (
+    a != null &&
+    typeof a === 'object' &&
+    b != null &&
+    typeof b === 'object'
+  ) {
     // Compare all of the keys in `a`. If one of the keys has a different value, or that key does
     // not exist in `b` return false immediately.
     for (const key in a) {

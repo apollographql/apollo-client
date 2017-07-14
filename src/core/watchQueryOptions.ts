@@ -1,21 +1,13 @@
-import {
-  DocumentNode,
-  FragmentDefinitionNode,
-} from 'graphql';
+import { DocumentNode, FragmentDefinitionNode } from 'graphql';
 
 import {
   OperationResultReducer,
   MutationQueryReducersMap,
 } from '../data/mutationResults';
 
-import {
-  DataProxy,
-} from '../data/proxy';
+import { DataProxy } from '../data/proxy';
 
-import {
-  PureQueryOptions,
-  ApolloExecutionResult,
-} from './types';
+import { PureQueryOptions, ApolloExecutionResult } from './types';
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -26,7 +18,12 @@ import {
  * - standby: only for queries that aren't actively watched, but should be available for refetch and updateQueries.
  */
 
-export type FetchPolicy = 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only' | 'standby';
+export type FetchPolicy =
+  | 'cache-first'
+  | 'cache-and-network'
+  | 'network-only'
+  | 'cache-only'
+  | 'standby';
 
 /**
  * We can change these options to an ObservableQuery
@@ -91,10 +88,13 @@ export interface FetchMoreQueryOptions {
 export type SubscribeToMoreOptions = {
   document: DocumentNode;
   variables?: { [key: string]: any };
-  updateQuery?: (previousQueryResult: Object, options: {
-    subscriptionData: { data: any },
-    variables: { [key: string]: any },
-  }) => Object;
+  updateQuery?: (
+    previousQueryResult: Object,
+    options: {
+      subscriptionData: { data: any };
+      variables: { [key: string]: any };
+    },
+  ) => Object;
   onError?: (error: Error) => void;
 };
 
@@ -103,7 +103,7 @@ export interface SubscriptionOptions {
   variables?: { [key: string]: any };
 }
 
-export interface MutationOptions<T = { [key: string]: any}> {
+export interface MutationOptions<T = { [key: string]: any }> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single mutation inside of it.
@@ -164,4 +164,7 @@ export interface MutationOptions<T = { [key: string]: any}> {
 }
 
 // Add a level of indirection for `typedoc`.
-export type MutationUpdaterFn<T = { [key: string]: any}> = (proxy: DataProxy, mutationResult: ApolloExecutionResult<T>) => void;
+export type MutationUpdaterFn<T = { [key: string]: any }> = (
+  proxy: DataProxy,
+  mutationResult: ApolloExecutionResult<T>,
+) => void;

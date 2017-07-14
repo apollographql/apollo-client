@@ -17,9 +17,12 @@ export interface MockedFetchResponse {
   delay?: number;
 }
 
-export function createMockedIResponse(result: Object, options?: any): MockedIResponse {
-  const status = options && options.status || 200;
-  const statusText = options && options.statusText || undefined;
+export function createMockedIResponse(
+  result: Object,
+  options?: any,
+): MockedIResponse {
+  const status = (options && options.status) || 200;
+  const statusText = (options && options.statusText) || undefined;
 
   return {
     ok: status === 200,
@@ -37,7 +40,7 @@ export class MockFetch {
   constructor(...mockedResponses: MockedFetchResponse[]) {
     this.mockedResponsesByKey = {};
 
-    mockedResponses.forEach((mockedResponse) => {
+    mockedResponses.forEach(mockedResponse => {
       this.addMockedResponse(mockedResponse);
     });
   }
@@ -58,7 +61,9 @@ export class MockFetch {
     const key = this.fetchParamsToKey(url, opts);
     const responses = this.mockedResponsesByKey[key];
     if (!responses || responses.length === 0) {
-      throw new Error(`No more mocked fetch responses for the params ${url} and ${opts}`);
+      throw new Error(
+        `No more mocked fetch responses for the params ${url} and ${opts}`,
+      );
     }
 
     const { result, delay } = responses.shift()!;
@@ -91,13 +96,16 @@ export class MockFetch {
 
 function sortByKey(obj: any): Object {
   return Object.keys(obj).sort().reduce(
-    (ret: any, key: string): Object => (
-      Object.assign({
-        [key]: Object.prototype.toString.call(obj[key]).slice(8, -1) === 'Object'
-          ? sortByKey(obj[key])
-          : obj[key],
-      }, ret)
-    ),
+    (ret: any, key: string): Object =>
+      Object.assign(
+        {
+          [key]:
+            Object.prototype.toString.call(obj[key]).slice(8, -1) === 'Object'
+              ? sortByKey(obj[key])
+              : obj[key],
+        },
+        ret,
+      ),
     {},
   );
 }

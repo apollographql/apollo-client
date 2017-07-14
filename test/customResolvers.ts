@@ -5,9 +5,7 @@ import ApolloClient, { toIdValue } from '../src';
 
 import { NetworkStatus } from '../src/queries/networkStatus';
 
-import {
-  ApolloQueryResult,
-} from '../src/core/types';
+import { ApolloQueryResult } from '../src/core/types';
 
 describe('custom resolvers', () => {
   it(`works for cache redirection`, () => {
@@ -15,7 +13,14 @@ describe('custom resolvers', () => {
       return obj.id;
     };
 
-    const listQuery = gql`{ people { id name } }`;
+    const listQuery = gql`
+      {
+        people {
+          id
+          name
+        }
+      }
+    `;
 
     const listData = {
       people: [
@@ -27,9 +32,24 @@ describe('custom resolvers', () => {
       ],
     };
 
-    const netListQuery = gql`{ people { id name __typename } }`;
+    const netListQuery = gql`
+      {
+        people {
+          id
+          name
+          __typename
+        }
+      }
+    `;
 
-    const itemQuery = gql`{ person(id: 4) { id name } }`;
+    const itemQuery = gql`
+      {
+        person(id: 4) {
+          id
+          name
+        }
+      }
+    `;
 
     // We don't expect the item query to go to the server at all
     const networkInterface = mockNetworkInterface({
@@ -47,21 +67,24 @@ describe('custom resolvers', () => {
       dataIdFromObject,
     });
 
-    return client.query({ query: listQuery }).then(() => {
-      return client.query({ query: itemQuery });
-    }).then((itemResult) => {
-      assert.deepEqual<ApolloQueryResult<{}>>(itemResult, {
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        stale: false,
-        data: {
-          person: {
-            __typename: 'Person',
-            id: '4',
-            name: 'Luke Skywalker',
+    return client
+      .query({ query: listQuery })
+      .then(() => {
+        return client.query({ query: itemQuery });
+      })
+      .then(itemResult => {
+        assert.deepEqual<ApolloQueryResult<{}>>(itemResult, {
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          stale: false,
+          data: {
+            person: {
+              __typename: 'Person',
+              id: '4',
+              name: 'Luke Skywalker',
+            },
           },
-        },
+        });
       });
-    });
   });
 });

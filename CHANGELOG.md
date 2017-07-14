@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- added prettier to manage formatting of project [PR #1904](https://github.com/apollographql/apollo-client/pull/1904)
 
 ### v.1.9.0-0
 - Remove query tracking from the Redux store. Query status tracking is now handled outside of Redux in the QueryStore class. [PR #1859](https://github.com/apollographql/apollo-client/pull/1859)

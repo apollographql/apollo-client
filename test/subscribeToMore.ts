@@ -1,9 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import {
-  mockSubscriptionNetworkInterface,
-} from './mocks/mockNetworkInterface';
+import { mockSubscriptionNetworkInterface } from './mocks/mockNetworkInterface';
 
 import ApolloClient from '../src';
 
@@ -27,9 +25,10 @@ describe('subscribeToMore', () => {
 
   const req1 = { request: { query }, result };
 
-  const results = ['Dahivat Pandya', 'Amanda Liu'].map(
-    name => ({ result: { data: { name: name } }, delay: 10 }),
-  );
+  const results = ['Dahivat Pandya', 'Amanda Liu'].map(name => ({
+    result: { data: { name: name } },
+    delay: 10,
+  }));
 
   const sub1 = {
     request: {
@@ -62,7 +61,7 @@ describe('subscribeToMore', () => {
 
   const results3 = [
     { error: new Error('You cant touch this'), delay: 10 },
-    { result: { data: { name: 'Amanda Liu' }}, delay: 10 },
+    { result: { data: { name: 'Amanda Liu' } }, delay: 10 },
   ];
 
   const sub3 = {
@@ -77,9 +76,10 @@ describe('subscribeToMore', () => {
     results: [...results3],
   };
 
-  const results4 = ['Vyacheslav Kim', 'Changping Chen'].map(
-    name => ({ result: { data: { name: name }}, delay: 10 }),
-  );
+  const results4 = ['Vyacheslav Kim', 'Changping Chen'].map(name => ({
+    result: { data: { name: name } },
+    delay: 10,
+  }));
 
   const sub4 = {
     request: {
@@ -93,7 +93,7 @@ describe('subscribeToMore', () => {
     results: [...results4],
   };
 
-  it('triggers new result from subscription data', (done) => {
+  it('triggers new result from subscription data', done => {
     let latestResult: any = null;
     const networkInterface = mockSubscriptionNetworkInterface([sub1], req1);
     let counter = 0;
@@ -127,10 +127,12 @@ describe('subscribeToMore', () => {
     setTimeout(() => {
       sub.unsubscribe();
       assert.equal(counter, 3);
-      assert.deepEqual(
-        latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
-      );
+      assert.deepEqual(latestResult, {
+        data: { entry: { value: 'Amanda Liu' } },
+        loading: false,
+        networkStatus: 7,
+        stale: false,
+      });
       done();
     }, 50);
 
@@ -139,8 +141,7 @@ describe('subscribeToMore', () => {
     }
   });
 
-
-  it('calls error callback on error', (done) => {
+  it('calls error callback on error', done => {
     let latestResult: any = null;
     const networkInterface = mockSubscriptionNetworkInterface([sub2], req1);
     let counter = 0;
@@ -171,16 +172,20 @@ describe('subscribeToMore', () => {
       updateQuery: (prev, { subscriptionData }) => {
         return { entry: { value: subscriptionData.data.name } };
       },
-      onError: (err) => { errorCount += 1; },
+      onError: err => {
+        errorCount += 1;
+      },
     });
 
     setTimeout(() => {
       sub.unsubscribe();
       assert.equal(counter, 2);
-      assert.deepEqual(
-        latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
-      );
+      assert.deepEqual(latestResult, {
+        data: { entry: { value: 'Amanda Liu' } },
+        loading: false,
+        networkStatus: 7,
+        stale: false,
+      });
       assert.equal(errorCount, 1);
       done();
     }, 50);
@@ -190,7 +195,7 @@ describe('subscribeToMore', () => {
     }
   });
 
-  it('prints unhandled subscription errors to the console', (done) => {
+  it('prints unhandled subscription errors to the console', done => {
     let latestResult: any = null;
     const networkInterface = mockSubscriptionNetworkInterface([sub3], req1);
     let counter = 0;
@@ -212,7 +217,9 @@ describe('subscribeToMore', () => {
 
     let errorCount = 0;
     const consoleErr = console.error;
-    console.error = (err: Error) => { errorCount += 1; };
+    console.error = (err: Error) => {
+      errorCount += 1;
+    };
 
     obsHandle.subscribeToMore({
       document: gql`
@@ -228,10 +235,12 @@ describe('subscribeToMore', () => {
     setTimeout(() => {
       sub.unsubscribe();
       assert.equal(counter, 2);
-      assert.deepEqual(
-        latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
-      );
+      assert.deepEqual(latestResult, {
+        data: { entry: { value: 'Amanda Liu' } },
+        loading: false,
+        networkStatus: 7,
+        stale: false,
+      });
       assert.equal(errorCount, 1);
       console.error = consoleErr;
       done();
@@ -242,7 +251,7 @@ describe('subscribeToMore', () => {
     }
   });
 
-  it('updates new result from subscription via a reducer in watchQuery options', (done) => {
+  it('updates new result from subscription via a reducer in watchQuery options', done => {
     let latestResult: any = null;
     const networkInterface = mockSubscriptionNetworkInterface([sub4], req1);
     let counter = 0;
@@ -255,7 +264,10 @@ describe('subscribeToMore', () => {
     const obsHandle = client.watchQuery({
       query,
       reducer: (previousResult, action) => {
-        if (action.type === 'APOLLO_SUBSCRIPTION_RESULT' && action.operationName === 'newValues') {
+        if (
+          action.type === 'APOLLO_SUBSCRIPTION_RESULT' &&
+          action.operationName === 'newValues'
+        ) {
           if (action.result.data) {
             return { entry: { value: action.result.data.name } };
           }
@@ -281,10 +293,12 @@ describe('subscribeToMore', () => {
     setTimeout(() => {
       sub.unsubscribe();
       assert.equal(counter, 3);
-      assert.deepEqual(
-        latestResult,
-        { data: { entry: { value: 'Changping Chen' } }, loading: false, networkStatus: 7, stale: false },
-      );
+      assert.deepEqual(latestResult, {
+        data: { entry: { value: 'Changping Chen' } },
+        loading: false,
+        networkStatus: 7,
+        stale: false,
+      });
       done();
     }, 50);
 

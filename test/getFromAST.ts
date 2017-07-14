@@ -10,10 +10,7 @@ import {
   getFragmentQueryDocument,
 } from '../src/queries/getFromAST';
 
-import {
-  FragmentDefinitionNode,
-  OperationDefinitionNode,
-} from 'graphql';
+import { FragmentDefinitionNode, OperationDefinitionNode } from 'graphql';
 
 import { print } from 'graphql/language/printer';
 import gql from 'graphql-tag';
@@ -28,11 +25,13 @@ describe('AST utility functions', () => {
           lastName
         }
       }
+
       query {
         author {
           address
         }
-      }`;
+      }
+    `;
     assert.throws(() => {
       checkDocument(multipleQueries);
     });
@@ -43,10 +42,12 @@ describe('AST utility functions', () => {
           ...authorDetails
         }
       }
+
       fragment authorDetails on Author {
         firstName
         lastName
-      }`;
+      }
+    `;
     assert.doesNotThrow(() => {
       checkDocument(namedFragment);
     });
@@ -59,16 +60,21 @@ describe('AST utility functions', () => {
           ...authorDetails
         }
       }
+
       fragment authorDetails on Author {
         firstName
         lastName
-      }`;
+      }
+    `;
     const expectedDoc = gql`
       fragment authorDetails on Author {
         firstName
         lastName
-      }`;
-    const expectedResult: FragmentDefinitionNode[] = [expectedDoc.definitions[0] as FragmentDefinitionNode];
+      }
+    `;
+    const expectedResult: FragmentDefinitionNode[] = [
+      expectedDoc.definitions[0] as FragmentDefinitionNode,
+    ];
     const actualResult = getFragmentDefinitions(singleFragmentDefinition);
     assert.equal(actualResult.length, expectedResult.length);
     assert.equal(print(actualResult[0]), print(expectedResult[0]));
@@ -82,21 +88,26 @@ describe('AST utility functions', () => {
           ...moreAuthorDetails
         }
       }
+
       fragment authorDetails on Author {
         firstName
         lastName
       }
+
       fragment moreAuthorDetails on Author {
         address
-      }`;
+      }
+    `;
     const expectedDoc = gql`
       fragment authorDetails on Author {
         firstName
         lastName
       }
+
       fragment moreAuthorDetails on Author {
         address
-      }`;
+      }
+    `;
     const expectedResult: FragmentDefinitionNode[] = [
       expectedDoc.definitions[0] as FragmentDefinitionNode,
       expectedDoc.definitions[1] as FragmentDefinitionNode,
@@ -111,23 +122,28 @@ describe('AST utility functions', () => {
         firstName
         lastName
       }
+
       fragment moreAuthorDetails on Author {
         address
       }
+
       query {
         author {
           ...authorDetails
           ...moreAuthorDetails
         }
-      }`;
+      }
+    `;
     const expectedDoc = gql`
       query {
         author {
           ...authorDetails
           ...moreAuthorDetails
         }
-      }`;
-    const expectedResult: OperationDefinitionNode = expectedDoc.definitions[0] as OperationDefinitionNode;
+      }
+    `;
+    const expectedResult: OperationDefinitionNode = expectedDoc
+      .definitions[0] as OperationDefinitionNode;
     const actualResult = getQueryDefinition(queryWithFragments);
 
     assert.equal(print(actualResult), print(expectedResult));
@@ -144,7 +160,8 @@ describe('AST utility functions', () => {
         createAuthor(firstName: "John", lastName: "Smith") {
           ...authorDetails
         }
-      }`;
+      }
+    `;
     assert.throws(() => {
       getQueryDefinition(mutationWithFragments);
     });
@@ -157,17 +174,21 @@ describe('AST utility functions', () => {
           ...authorDetails
         }
       }
+
       fragment authorDetails on Author {
         firstName
         lastName
-      }`;
+      }
+    `;
     const expectedDoc = gql`
       mutation {
         createAuthor(firstName: "John", lastName: "Smith") {
           ...authorDetails
         }
-      }`;
-    const expectedResult: OperationDefinitionNode = expectedDoc.definitions[0] as OperationDefinitionNode;
+      }
+    `;
+    const expectedResult: OperationDefinitionNode = expectedDoc
+      .definitions[0] as OperationDefinitionNode;
     const actualResult = getMutationDefinition(mutationWithFragments);
     assert.equal(print(actualResult), print(expectedResult));
   });
@@ -178,13 +199,15 @@ describe('AST utility functions', () => {
         firstName
         lastName
       }
+
       fragment moreAuthorDetails on Author {
         address
-      }`);
+      }
+    `);
     const fragmentMap = createFragmentMap(fragments);
     const expectedTable: FragmentMap = {
-      'authorDetails': fragments[0],
-      'moreAuthorDetails': fragments[1],
+      authorDetails: fragments[0],
+      moreAuthorDetails: fragments[1],
     };
     assert.deepEqual(fragmentMap, expectedTable);
   });
@@ -197,7 +220,8 @@ describe('AST utility functions', () => {
     const query = gql`
       query nameOfQuery {
         fortuneCookie
-      }`;
+      }
+    `;
     const operationName = getOperationName(query);
     assert.equal(operationName, 'nameOfQuery');
   });
@@ -206,7 +230,8 @@ describe('AST utility functions', () => {
     const query = gql`
       mutation nameOfMutation {
         fortuneCookie
-      }`;
+      }
+    `;
     const operationName = getOperationName(query);
     assert.equal(operationName, 'nameOfMutation');
   });
@@ -215,7 +240,8 @@ describe('AST utility functions', () => {
     const query = gql`
       {
         fortuneCookie
-      }`;
+      }
+    `;
     const operationName = getOperationName(query);
     assert.equal(operationName, null);
   });
@@ -235,7 +261,8 @@ describe('AST utility functions', () => {
 
       input AuthorSearchInputType {
         firstName: String
-      }`;
+      }
+    `;
     assert.throws(() => {
       getQueryDefinition(queryWithTypeDefination);
     }, 'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"');
@@ -244,41 +271,109 @@ describe('AST utility functions', () => {
   describe('getFragmentQueryDocument', () => {
     it('will throw an error if there is an operation', () => {
       assert.throws(
-        () => getFragmentQueryDocument(gql`{ a b c }`),
+        () =>
+          getFragmentQueryDocument(
+            gql`
+              {
+                a
+                b
+                c
+              }
+            `,
+          ),
         'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
       );
       assert.throws(
-        () => getFragmentQueryDocument(gql`query { a b c }`),
+        () =>
+          getFragmentQueryDocument(
+            gql`
+              query {
+                a
+                b
+                c
+              }
+            `,
+          ),
         'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
       );
       assert.throws(
-        () => getFragmentQueryDocument(gql`query Named { a b c }`),
-        'Found a query operation named \'Named\'. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        () =>
+          getFragmentQueryDocument(
+            gql`
+              query Named {
+                a
+                b
+                c
+              }
+            `,
+          ),
+        "Found a query operation named 'Named'. No operations are allowed when using a fragment as a query. Only fragments are allowed.",
       );
       assert.throws(
-        () => getFragmentQueryDocument(gql`mutation Named { a b c }`),
-        'Found a mutation operation named \'Named\'. No operations are allowed when using a fragment as a query. ' +
-        'Only fragments are allowed.',
+        () =>
+          getFragmentQueryDocument(
+            gql`
+              mutation Named {
+                a
+                b
+                c
+              }
+            `,
+          ),
+        "Found a mutation operation named 'Named'. No operations are allowed when using a fragment as a query. " +
+          'Only fragments are allowed.',
       );
       assert.throws(
-        () => getFragmentQueryDocument(gql`subscription Named { a b c }`),
-        'Found a subscription operation named \'Named\'. No operations are allowed when using a fragment as a query. ' +
-        'Only fragments are allowed.',
+        () =>
+          getFragmentQueryDocument(
+            gql`
+              subscription Named {
+                a
+                b
+                c
+              }
+            `,
+          ),
+        "Found a subscription operation named 'Named'. No operations are allowed when using a fragment as a query. " +
+          'Only fragments are allowed.',
       );
     });
 
     it('will throw an error if there is not exactly one fragment but no `fragmentName`', () => {
       assert.throws(() => {
         getFragmentQueryDocument(gql`
-          fragment foo on Foo { a b c }
-          fragment bar on Bar { d e f }
+          fragment foo on Foo {
+            a
+            b
+            c
+          }
+
+          fragment bar on Bar {
+            d
+            e
+            f
+          }
         `);
       }, 'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
       assert.throws(() => {
         getFragmentQueryDocument(gql`
-          fragment foo on Foo { a b c }
-          fragment bar on Bar { d e f }
-          fragment baz on Baz { g h i }
+          fragment foo on Foo {
+            a
+            b
+            c
+          }
+
+          fragment bar on Bar {
+            d
+            e
+            f
+          }
+
+          fragment baz on Baz {
+            g
+            h
+            i
+          }
         `);
       }, 'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.');
       assert.throws(() => {
@@ -290,54 +385,193 @@ describe('AST utility functions', () => {
 
     it('will create a query document where the single fragment is spread in the root query', () => {
       assert.deepEqual(
-        print(getFragmentQueryDocument(gql`
-          fragment foo on Foo { a b c }
-        `)),
+        print(
+          getFragmentQueryDocument(gql`
+            fragment foo on Foo {
+              a
+              b
+              c
+            }
+          `),
+        ),
         print(gql`
-          { ...foo }
-          fragment foo on Foo { a b c }
+          {
+            ...foo
+          }
+
+          fragment foo on Foo {
+            a
+            b
+            c
+          }
         `),
       );
     });
 
     it('will create a query document where the named fragment is spread in the root query', () => {
       assert.deepEqual(
-        print(getFragmentQueryDocument(gql`
-          fragment foo on Foo { a b c }
-          fragment bar on Bar { d e f ...foo }
-          fragment baz on Baz { g h i ...foo ...bar }
-        `, 'foo')),
+        print(
+          getFragmentQueryDocument(
+            gql`
+              fragment foo on Foo {
+                a
+                b
+                c
+              }
+
+              fragment bar on Bar {
+                d
+                e
+                f
+                ...foo
+              }
+
+              fragment baz on Baz {
+                g
+                h
+                i
+                ...foo
+                ...bar
+              }
+            `,
+            'foo',
+          ),
+        ),
         print(gql`
-          { ...foo }
-          fragment foo on Foo { a b c }
-          fragment bar on Bar { d e f ...foo }
-          fragment baz on Baz { g h i ...foo ...bar }
+          {
+            ...foo
+          }
+
+          fragment foo on Foo {
+            a
+            b
+            c
+          }
+
+          fragment bar on Bar {
+            d
+            e
+            f
+            ...foo
+          }
+
+          fragment baz on Baz {
+            g
+            h
+            i
+            ...foo
+            ...bar
+          }
         `),
       );
       assert.deepEqual(
-        print(getFragmentQueryDocument(gql`
-          fragment foo on Foo { a b c }
-          fragment bar on Bar { d e f ...foo }
-          fragment baz on Baz { g h i ...foo ...bar }
-        `, 'bar')),
+        print(
+          getFragmentQueryDocument(
+            gql`
+              fragment foo on Foo {
+                a
+                b
+                c
+              }
+
+              fragment bar on Bar {
+                d
+                e
+                f
+                ...foo
+              }
+
+              fragment baz on Baz {
+                g
+                h
+                i
+                ...foo
+                ...bar
+              }
+            `,
+            'bar',
+          ),
+        ),
         print(gql`
-          { ...bar }
-          fragment foo on Foo { a b c }
-          fragment bar on Bar { d e f ...foo }
-          fragment baz on Baz { g h i ...foo ...bar }
+          {
+            ...bar
+          }
+
+          fragment foo on Foo {
+            a
+            b
+            c
+          }
+
+          fragment bar on Bar {
+            d
+            e
+            f
+            ...foo
+          }
+
+          fragment baz on Baz {
+            g
+            h
+            i
+            ...foo
+            ...bar
+          }
         `),
       );
       assert.deepEqual(
-        print(getFragmentQueryDocument(gql`
-          fragment foo on Foo { a b c }
-          fragment bar on Bar { d e f ...foo }
-          fragment baz on Baz { g h i ...foo ...bar }
-        `, 'baz')),
+        print(
+          getFragmentQueryDocument(
+            gql`
+              fragment foo on Foo {
+                a
+                b
+                c
+              }
+
+              fragment bar on Bar {
+                d
+                e
+                f
+                ...foo
+              }
+
+              fragment baz on Baz {
+                g
+                h
+                i
+                ...foo
+                ...bar
+              }
+            `,
+            'baz',
+          ),
+        ),
         print(gql`
-          { ...baz }
-          fragment foo on Foo { a b c }
-          fragment bar on Bar { d e f ...foo }
-          fragment baz on Baz { g h i ...foo ...bar }
+          {
+            ...baz
+          }
+
+          fragment foo on Foo {
+            a
+            b
+            c
+          }
+
+          fragment bar on Bar {
+            d
+            e
+            f
+            ...foo
+          }
+
+          fragment baz on Baz {
+            g
+            h
+            i
+            ...foo
+            ...bar
+          }
         `),
       );
     });
@@ -370,7 +604,9 @@ describe('AST utility functions', () => {
       `;
 
       const complexMutation = gql`
-        mutation complexStuff($test: Input = {key1: ["value", "value2"], key2: {key3: 4}}) {
+        mutation complexStuff(
+          $test: Input = { key1: ["value", "value2"], key2: { key3: 4 } }
+        ) {
           complexStuff(test: $test) {
             people {
               name
@@ -379,8 +615,13 @@ describe('AST utility functions', () => {
         }
       `;
 
-      assert.deepEqual(getDefaultValues(getQueryDefinition(basicQuery)), {first: 1});
-      assert.deepEqual(getDefaultValues(getMutationDefinition(complexMutation)), {test: {key1: ['value', 'value2'], key2: {key3: 4}}});
+      assert.deepEqual(getDefaultValues(getQueryDefinition(basicQuery)), {
+        first: 1,
+      });
+      assert.deepEqual(
+        getDefaultValues(getMutationDefinition(complexMutation)),
+        { test: { key1: ['value', 'value2'], key2: { key3: 4 } } },
+      );
     });
   });
 });

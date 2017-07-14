@@ -6,32 +6,21 @@ import {
   isMutationErrorAction,
 } from '../actions';
 
-import {
-  data,
-} from '../data/store';
+import { data } from '../data/store';
 
-import {
-  NormalizedCache,
-} from '../data/storeUtils';
+import { NormalizedCache } from '../data/storeUtils';
 
-import {
-  QueryStore,
-} from '../queries/store';
+import { QueryStore } from '../queries/store';
 
-import {
-  MutationStore,
-} from '../mutations/store';
+import { MutationStore } from '../mutations/store';
 
-import {
-  Store,
-  ApolloReducerConfig,
-} from '../store';
+import { Store, ApolloReducerConfig } from '../store';
 
-  import { assign } from '../util/assign';
+import { assign } from '../util/assign';
 
 export type OptimisticStoreItem = {
-  mutationId: string,
-  data: NormalizedCache,
+  mutationId: string;
+  data: NormalizedCache;
 };
 
 // a stack of patches of new or changed documents
@@ -94,8 +83,10 @@ export function optimistic(
     const newState = [...previousState, optimisticState];
 
     return newState;
-  } else if ((isMutationErrorAction(action) || isMutationResultAction(action))
-               && previousState.some(change => change.mutationId === action.mutationId)) {
+  } else if (
+    (isMutationErrorAction(action) || isMutationResultAction(action)) &&
+    previousState.some(change => change.mutationId === action.mutationId)
+  ) {
     return rollbackOptimisticData(
       change => change.mutationId === action.mutationId,
       previousState,
@@ -107,18 +98,14 @@ export function optimistic(
   return previousState;
 }
 
-function getOptimisticDataPatch (
+function getOptimisticDataPatch(
   previousData: NormalizedCache,
   optimisticAction: MutationResultAction | WriteAction,
   queries: QueryStore,
   mutations: MutationStore,
   config: ApolloReducerConfig,
 ): any {
-  const optimisticData = data(
-    previousData,
-    optimisticAction,
-    config,
-  );
+  const optimisticData = data(previousData, optimisticAction, config);
 
   const patch: any = {};
 
@@ -139,7 +126,7 @@ function getOptimisticDataPatch (
  * The filter function should return true for all items that we want to
  * rollback.
  */
-function rollbackOptimisticData (
+function rollbackOptimisticData(
   filterFn: (item: OptimisticStoreItem) => boolean,
   previousState = optimisticDefaultState,
   store: any,

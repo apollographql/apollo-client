@@ -1,7 +1,7 @@
 export class MutationStore {
-  private store: {[mutationId: string]: MutationStoreValue} = {};
+  private store: { [mutationId: string]: MutationStoreValue } = {};
 
-  public getStore(): {[mutationId: string]: MutationStoreValue} {
+  public getStore(): { [mutationId: string]: MutationStoreValue } {
     return this.store;
   }
 
@@ -9,7 +9,11 @@ export class MutationStore {
     return this.store[mutationId];
   }
 
-  public initMutation(mutationId: string, mutationString: string, variables: Object | undefined) {
+  public initMutation(
+    mutationId: string,
+    mutationString: string,
+    variables: Object | undefined,
+  ) {
     this.store[mutationId] = {
       mutationString: mutationString,
       variables: variables || {},
@@ -39,4 +43,3 @@ export interface MutationStoreValue {
   loading: boolean;
   error: Error | null;
 }
-

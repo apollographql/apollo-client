@@ -1,27 +1,14 @@
-import {
-  DocumentNode,
-  ExecutionResult,
-} from 'graphql';
+import { DocumentNode, ExecutionResult } from 'graphql';
 
-import {
-  MutationQueryReducer,
-} from './data/mutationResults';
+import { MutationQueryReducer } from './data/mutationResults';
 
-import {
-  DataProxy,
-} from './data/proxy';
+import { DataProxy } from './data/proxy';
 
-import {
-  ApolloReducer,
-} from './store';
+import { ApolloReducer } from './store';
 
-import {
-  FetchPolicy,
-} from './core/watchQueryOptions';
+import { FetchPolicy } from './core/watchQueryOptions';
 
-import {
-  QueryStoreValue,
-} from './queries/store';
+import { QueryStoreValue } from './queries/store';
 
 export type QueryResultAction = {
   type: 'APOLLO_QUERY_RESULT';
@@ -35,7 +22,9 @@ export type QueryResultAction = {
   extraReducers?: ApolloReducer[];
 };
 
-export function isQueryResultAction(action: ApolloAction): action is QueryResultAction {
+export function isQueryResultAction(
+  action: ApolloAction,
+): action is QueryResultAction {
   return action.type === 'APOLLO_QUERY_RESULT';
 }
 
@@ -47,7 +36,9 @@ export interface QueryErrorAction {
   fetchMoreForQueryId?: string;
 }
 
-export function isQueryErrorAction(action: ApolloAction): action is QueryErrorAction {
+export function isQueryErrorAction(
+  action: ApolloAction,
+): action is QueryErrorAction {
   return action.type === 'APOLLO_QUERY_ERROR';
 }
 
@@ -67,7 +58,9 @@ export interface QueryInitAction {
   metadata: any;
 }
 
-export function isQueryInitAction(action: ApolloAction): action is QueryInitAction {
+export function isQueryInitAction(
+  action: ApolloAction,
+): action is QueryInitAction {
   return action.type === 'APOLLO_QUERY_INIT';
 }
 
@@ -80,7 +73,9 @@ export interface QueryResultClientAction {
   requestId: number;
 }
 
-export function isQueryResultClientAction(action: ApolloAction): action is QueryResultClientAction {
+export function isQueryResultClientAction(
+  action: ApolloAction,
+): action is QueryResultClientAction {
   return action.type === 'APOLLO_QUERY_RESULT_CLIENT';
 }
 
@@ -89,15 +84,17 @@ export interface QueryStopAction {
   queryId: string;
 }
 
-export function isQueryStopAction(action: ApolloAction): action is QueryStopAction {
+export function isQueryStopAction(
+  action: ApolloAction,
+): action is QueryStopAction {
   return action.type === 'APOLLO_QUERY_STOP';
 }
 
 // contains both the original value of a query and a reducer to transform
 // the query during an update
 export type QueryWithUpdater = {
-  reducer: MutationQueryReducer<Object>,
-  query: QueryStoreValue,
+  reducer: MutationQueryReducer<Object>;
+  query: QueryStoreValue;
 };
 
 export interface MutationInitAction {
@@ -113,7 +110,9 @@ export interface MutationInitAction {
   update?: (proxy: DataProxy, mutationResult: Object) => void;
 }
 
-export function isMutationInitAction(action: ApolloAction): action is MutationInitAction {
+export function isMutationInitAction(
+  action: ApolloAction,
+): action is MutationInitAction {
   return action.type === 'APOLLO_MUTATION_INIT';
 }
 
@@ -130,7 +129,9 @@ export interface MutationResultAction {
   update?: (proxy: DataProxy, mutationResult: Object) => void;
 }
 
-export function isMutationResultAction(action: ApolloAction): action is MutationResultAction {
+export function isMutationResultAction(
+  action: ApolloAction,
+): action is MutationResultAction {
   return action.type === 'APOLLO_MUTATION_RESULT';
 }
 
@@ -140,7 +141,9 @@ export interface MutationErrorAction {
   mutationId: string;
 }
 
-export function isMutationErrorAction(action: ApolloAction): action is MutationErrorAction {
+export function isMutationErrorAction(
+  action: ApolloAction,
+): action is MutationErrorAction {
   return action.type === 'APOLLO_MUTATION_ERROR';
 }
 
@@ -152,7 +155,9 @@ export interface UpdateQueryResultAction {
   newResult: Object;
 }
 
-export function isUpdateQueryResultAction(action: ApolloAction): action is UpdateQueryResultAction {
+export function isUpdateQueryResultAction(
+  action: ApolloAction,
+): action is UpdateQueryResultAction {
   return action.type === 'APOLLO_UPDATE_QUERY_RESULT';
 }
 
@@ -161,7 +166,9 @@ export interface StoreResetAction {
   observableQueryIds: string[];
 }
 
-export function isStoreResetAction(action: ApolloAction): action is StoreResetAction {
+export function isStoreResetAction(
+  action: ApolloAction,
+): action is StoreResetAction {
   return action.type === 'APOLLO_STORE_RESET';
 }
 
@@ -175,7 +182,9 @@ export interface SubscriptionResultAction {
   extraReducers?: ApolloReducer[];
 }
 
-export function isSubscriptionResultAction(action: ApolloAction): action is SubscriptionResultAction {
+export function isSubscriptionResultAction(
+  action: ApolloAction,
+): action is SubscriptionResultAction {
   return action.type === 'APOLLO_SUBSCRIPTION_RESULT';
 }
 
@@ -197,15 +206,15 @@ export function isWriteAction(action: ApolloAction): action is WriteAction {
 }
 
 export type ApolloAction =
-  QueryResultAction |
-  QueryErrorAction |
-  QueryInitAction |
-  QueryResultClientAction |
-  QueryStopAction |
-  MutationInitAction |
-  MutationResultAction |
-  MutationErrorAction |
-  UpdateQueryResultAction |
-  StoreResetAction |
-  SubscriptionResultAction |
-  WriteAction;
+  | QueryResultAction
+  | QueryErrorAction
+  | QueryInitAction
+  | QueryResultClientAction
+  | QueryStopAction
+  | MutationInitAction
+  | MutationResultAction
+  | MutationErrorAction
+  | UpdateQueryResultAction
+  | StoreResetAction
+  | SubscriptionResultAction
+  | WriteAction;

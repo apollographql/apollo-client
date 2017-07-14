@@ -1,10 +1,6 @@
 import * as Benchmark from 'benchmark';
 
-import {
-  times,
-  cloneDeep,
-  merge,
-} from 'lodash';
+import { times, cloneDeep, merge } from 'lodash';
 
 // This file implements utilities around benchmark.js that make it
 // easier to use for our benchmarking needs.
@@ -29,10 +25,18 @@ export interface DescriptionObject {
 export type Nullable<T> = T | undefined;
 export type Description = DescriptionObject | string;
 export type CycleFunction = (doneFn: DoneFunction) => void;
-export type BenchmarkFunction = (description: Description, cycleFn: CycleFunction) => void;
+export type BenchmarkFunction = (
+  description: Description,
+  cycleFn: CycleFunction,
+) => void;
 export type GroupFunction = (done: DoneFunction) => void;
-export type AfterEachCallbackFunction = (descr: Description, event: any) => void;
-export type AfterEachFunction = (afterEachFnArg: AfterEachCallbackFunction) => void;
+export type AfterEachCallbackFunction = (
+  descr: Description,
+  event: any,
+) => void;
+export type AfterEachFunction = (
+  afterEachFnArg: AfterEachCallbackFunction,
+) => void;
 export type AfterAllCallbackFunction = () => void;
 export type AfterAllFunction = (afterAllFn: AfterAllCallbackFunction) => void;
 
@@ -84,9 +88,9 @@ export const groupPromises: Promise<void>[] = [];
 export const group = (groupFn: GroupFunction) => {
   const oldScope = currentScope();
   const scope: {
-    benchmark?: BenchmarkFunction,
-    afterEach?: AfterEachFunction,
-    afterAll?: AfterAllFunction,
+    benchmark?: BenchmarkFunction;
+    afterEach?: AfterEachFunction;
+    afterAll?: AfterAllFunction;
   } = {};
 
   let afterEachFn: Nullable<AfterEachCallbackFunction> = undefined;
@@ -101,49 +105,56 @@ export const group = (groupFn: GroupFunction) => {
 
   const benchmarkPromises: Promise<void>[] = [];
 
-  scope.benchmark = (description: string | Description, benchmarkFn: CycleFunction) => {
-    const name = (description as DescriptionObject).name || (description as string);
+  scope.benchmark = (
+    description: string | Description,
+    benchmarkFn: CycleFunction,
+  ) => {
+    const name =
+      (description as DescriptionObject).name || (description as string);
     log('Adding benchmark: ', name);
 
     const scopes: Object[] = [];
     let cycleCount = 0;
-    benchmarkPromises.push(new Promise<void>((resolve, reject) => {
-      bsuite.add(name, {
-        defer: true,
-        fn: (deferred: any) => {
-          const done = () => {
-            cycleCount++;
-            deferred.resolve();
-          };
+    benchmarkPromises.push(
+      new Promise<void>((resolve, reject) => {
+        bsuite.add(name, {
+          defer: true,
+          fn: (deferred: any) => {
+            const done = () => {
+              cycleCount++;
+              deferred.resolve();
+            };
 
-          benchmarkFn(done);
-        },
+            benchmarkFn(done);
+          },
 
-        onComplete: (event: any) => {
-          if (afterEachFn) {
-            afterEachFn(description, event);
-          }
-          resolve();
-        },
-      });
-    }));
+          onComplete: (event: any) => {
+            if (afterEachFn) {
+              afterEachFn(description, event);
+            }
+            resolve();
+          },
+        });
+      }),
+    );
   };
 
+  groupPromises.push(
+    new Promise<void>((resolve, reject) => {
+      const groupDone = () => {
+        Promise.all(benchmarkPromises).then(() => {
+          if (afterAllFn) {
+            afterAllFn();
+          }
+        });
+        resolve();
+      };
 
-  groupPromises.push(new Promise<void>((resolve, reject) => {
-    const groupDone = () => {
-      Promise.all(benchmarkPromises).then(() => {
-        if (afterAllFn) {
-          afterAllFn();
-        }
-      });
-      resolve();
-    };
-
-    setScope(scope);
-    groupFn(groupDone);
-    setScope(oldScope);
-  }));
+      setScope(scope);
+      groupFn(groupDone);
+      setScope(oldScope);
+    }),
+  );
 };
 
 export function runBenchmarks() {
@@ -157,6 +168,6 @@ export function runBenchmarks() {
         log('Mean time in ms: ', event.target.stats.mean * 1000);
         log(String(event.target));
       })
-      .run({'async': false});
+      .run({ async: false });
   });
 }

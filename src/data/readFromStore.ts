@@ -1,6 +1,4 @@
-import {
-  DocumentNode,
-} from 'graphql';
+import { DocumentNode } from 'graphql';
 
 import graphqlAnywhere, {
   Resolver,
@@ -8,37 +6,19 @@ import graphqlAnywhere, {
   ExecInfo,
 } from 'graphql-anywhere';
 
-import {
-  NormalizedCache,
-  isJsonValue,
-  isIdValue,
-  IdValue,
-} from './storeUtils';
+import { NormalizedCache, isJsonValue, isIdValue, IdValue } from './storeUtils';
 
-import {
-  getStoreKeyName,
-} from './storeUtils';
+import { getStoreKeyName } from './storeUtils';
 
-import {
-  getDefaultValues,
-  getQueryDefinition,
-} from '../queries/getFromAST';
+import { getDefaultValues, getQueryDefinition } from '../queries/getFromAST';
 
-import {
-  ApolloReducerConfig,
-} from '../store';
+import { ApolloReducerConfig } from '../store';
 
-import {
-  isEqual,
-} from '../util/isEqual';
+import { isEqual } from '../util/isEqual';
 
-import {
-  assign,
-} from '../util/assign';
+import { assign } from '../util/assign';
 
-import {
-  isTest,
-} from '../util/environment';
+import { isTest } from '../util/environment';
 
 /**
  * The key which the cache id for a given value is stored in the result object. This key is private
@@ -56,25 +36,28 @@ export type DiffResult = {
 };
 
 export type ReadQueryOptions = {
-  store: NormalizedCache,
-  query: DocumentNode,
-  fragmentMatcherFunction?: FragmentMatcher, // TODO make this required to prevent bugs
-  variables?: Object,
-  previousResult?: any,
-  rootId?: string,
-  config?: ApolloReducerConfig,
+  store: NormalizedCache;
+  query: DocumentNode;
+  fragmentMatcherFunction?: FragmentMatcher; // TODO make this required to prevent bugs
+  variables?: Object;
+  previousResult?: any;
+  rootId?: string;
+  config?: ApolloReducerConfig;
 };
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
-  returnPartialData?: boolean,
+  returnPartialData?: boolean;
 };
 
-export type CustomResolver = (rootValue: any, args: { [argName: string]: any }) => any;
+export type CustomResolver = (
+  rootValue: any,
+  args: { [argName: string]: any },
+) => any;
 
 export type CustomResolverMap = {
   [typeName: string]: {
-    [fieldName: string]: CustomResolver,
-  },
+    [fieldName: string]: CustomResolver;
+  };
 };
 
 /**
@@ -111,12 +94,14 @@ interface IdValueWithPreviousResult extends IdValue {
  * If nothing in the store changed since that previous result then values from the previous result
  * will be returned to preserve referential equality.
  */
-export function readQueryFromStore<QueryType>(options: ReadQueryOptions): QueryType {
+export function readQueryFromStore<QueryType>(
+  options: ReadQueryOptions,
+): QueryType {
   const optsPatch = { returnPartialData: false };
 
   return diffQueryAgainstStore({
-    ... options,
-    ... optsPatch,
+    ...options,
+    ...optsPatch,
   }).result;
 }
 
@@ -142,7 +127,11 @@ const readStoreResolver: Resolver = (
   let fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
-    if (context.customResolvers && obj && (obj.__typename || objId === 'ROOT_QUERY')) {
+    if (
+      context.customResolvers &&
+      obj &&
+      (obj.__typename || objId === 'ROOT_QUERY')
+    ) {
       const typename = obj.__typename || 'Query';
 
       // Look for the type in the custom resolver map
@@ -156,8 +145,14 @@ const readStoreResolver: Resolver = (
       }
     }
 
-    if (! context.returnPartialData) {
-      throw new Error(`Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(obj, null, 2)}.`);
+    if (!context.returnPartialData) {
+      throw new Error(
+        `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(
+          obj,
+          null,
+          2,
+        )}.`,
+      );
     }
 
     context.hasMissingField = true;
@@ -173,7 +168,10 @@ const readStoreResolver: Resolver = (
     // `isEqual` will first perform a referential equality check (with `===`) in case the JSON
     // value has not changed in the store, and then a deep equality check if that fails in case a
     // new JSON object was returned by the API but that object may still be the same.
-    if (idValue.previousResult && isEqual(idValue.previousResult[resultKey], fieldValue.json)) {
+    if (
+      idValue.previousResult &&
+      isEqual(idValue.previousResult[resultKey], fieldValue.json)
+    ) {
       return idValue.previousResult[resultKey];
     }
     return fieldValue.json;
@@ -182,7 +180,10 @@ const readStoreResolver: Resolver = (
   // If we had a previous result, try adding that previous result value for this field to our field
   // value. This will create a new value without mutating the old one.
   if (idValue.previousResult) {
-    fieldValue = addPreviousResultToIdValues(fieldValue, idValue.previousResult[resultKey]);
+    fieldValue = addPreviousResultToIdValues(
+      fieldValue,
+      idValue.previousResult[resultKey],
+    );
   }
 
   return fieldValue;
@@ -227,10 +228,17 @@ export function diffQueryAgainstStore({
     previousResult,
   };
 
-  const result = graphqlAnywhere(readStoreResolver, query, rootIdValue, context, variables, {
-    fragmentMatcher: fragmentMatcherFunction,
-    resultMapper,
-  });
+  const result = graphqlAnywhere(
+    readStoreResolver,
+    query,
+    rootIdValue,
+    context,
+    variables,
+    {
+      fragmentMatcher: fragmentMatcherFunction,
+      resultMapper,
+    },
+  );
 
   return {
     result,
@@ -239,7 +247,7 @@ export function diffQueryAgainstStore({
 }
 
 export function assertIdValue(idValue: IdValue) {
-  if (! isIdValue(idValue)) {
+  if (!isIdValue(idValue)) {
     throw new Error(`Encountered a sub-selection on the query, but the store doesn't have \
 an object reference. This should never happen during normal use unless you have custom code \
 that is directly manipulating the store; please file an issue.`);
@@ -257,7 +265,7 @@ that is directly manipulating the store; please file an issue.`);
  *
  * @private
  */
-function addPreviousResultToIdValues (value: any, previousResult: any): any {
+function addPreviousResultToIdValues(value: any, previousResult: any): any {
   // If the value is an `IdValue`, add the previous result to it whether or not that
   // `previousResult` is undefined.
   //
@@ -311,24 +319,31 @@ function addPreviousResultToIdValues (value: any, previousResult: any): any {
  *
  * @private
  */
-function resultMapper (resultFields: any, idValue: IdValueWithPreviousResult) {
+function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
   // If we had a previous result, we may be able to return that and preserve referential equality
   if (idValue.previousResult) {
     const currentResultKeys = Object.keys(resultFields);
 
     const sameAsPreviousResult =
       // Confirm that we have the same keys in both the current result and the previous result.
-      Object.keys(idValue.previousResult)
-        .reduce((sameKeys, key) => sameKeys && currentResultKeys.indexOf(key) > -1, true) &&
-
+      Object.keys(idValue.previousResult).reduce(
+        (sameKeys, key) => sameKeys && currentResultKeys.indexOf(key) > -1,
+        true,
+      ) &&
       // Perform a shallow comparison of the result fields with the previous result. If all of
       // the shallow fields are referentially equal to the fields of the previous result we can
       // just return the previous result.
       //
       // While we do a shallow comparison of objects, but we do a deep comparison of arrays.
-      currentResultKeys.reduce((same, key) => (
-        same && areNestedArrayItemsStrictlyEqual(resultFields[key], idValue.previousResult[key])
-      ), true);
+      currentResultKeys.reduce(
+        (same, key) =>
+          same &&
+          areNestedArrayItemsStrictlyEqual(
+            resultFields[key],
+            idValue.previousResult[key],
+          ),
+        true,
+      );
 
     if (sameAsPreviousResult) {
       return idValue.previousResult;
@@ -355,7 +370,10 @@ type NestedArray<T> = T | Array<T | Array<T | Array<T>>>;
  *
  * @private
  */
-function areNestedArrayItemsStrictlyEqual (a: NestedArray<any>, b: NestedArray<any>): boolean {
+function areNestedArrayItemsStrictlyEqual(
+  a: NestedArray<any>,
+  b: NestedArray<any>,
+): boolean {
   // If `a` and `b` are referentially equal, return true.
   if (a === b) {
     return true;
@@ -367,5 +385,8 @@ function areNestedArrayItemsStrictlyEqual (a: NestedArray<any>, b: NestedArray<a
   }
   // Otherwise let us compare all of the array items (which are potentially nested arrays!) to see
   // if they are equal.
-  return a.reduce((same, item, i) => same && areNestedArrayItemsStrictlyEqual(item, b[i]), true);
+  return a.reduce(
+    (same, item, i) => same && areNestedArrayItemsStrictlyEqual(item, b[i]),
+    true,
+  );
 }

@@ -18,7 +18,7 @@ const filesOnly = (file: string) =>
 
 // Custom subsets of known files
 const modifiedAppFiles = modified
-  .filter(p => includes(p, 'src/'))
+  .filter(p => includes(p, 'src/') || includes(p, 'test/'))
   .filter(p => filesOnly(p) && typescriptOnly(p));
 
 // Takes a list of file paths, and converts it into clickable links
@@ -47,7 +47,7 @@ const createLink = (href: string, text: string): string =>
 const raiseIssueAboutPaths = (
   type: Function,
   paths: string[],
-  codeToInclude: string
+  codeToInclude: string,
 ) => {
   if (paths.length > 0) {
     const files = linkableFiles(paths);
@@ -83,8 +83,8 @@ if (!isBot) {
 
   const hasAppChanges = modifiedAppFiles.length > 0;
 
-  const testChanges = modifiedAppFiles.filter(
-    filepath => filepath.includes('__tests__') || filepath.includes('test')
+  const testChanges = modifiedAppFiles.filter(filepath =>
+    filepath.includes('test'),
   );
   const hasTestChanges = testChanges.length > 0;
 
@@ -97,13 +97,10 @@ if (!isBot) {
     warn(':exclamation: Big PR');
   }
 
-  // XXX add in License header
-  // https://github.com/facebook/jest/blob/master/dangerfile.js#L58
-
   // Warn if there are library changes, but not tests
   if (hasAppChanges && !hasTestChanges) {
     warn(
-      "There are library changes, but not tests. That's OK as long as you're refactoring existing code"
+      "There are library changes, but not tests. That's OK as long as you're refactoring existing code",
     );
   }
 
@@ -122,6 +119,6 @@ if (!isBot) {
   // Politely ask for their name in the authors file
   message('Please add your name and email to the AUTHORS file (optional)');
   message(
-    'If this was a change that affects the external API, please update the docs and post a link to the PR in the discussion'
+    'If this was a change that affects the external API, please update the docs and post a link to the PR in the discussion',
   );
 }

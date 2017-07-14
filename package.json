@@ -44,7 +44,7 @@
     {
       "path": "./dist/index.min.js",
       "threshold": "28 Kb"
-    }   
+    }
   ],
   "jest": {
     "transform": {

@@ -2,19 +2,22 @@ import { assert, expect } from 'chai';
 import { warnOnceInDevelopment } from '../src/util/warnOnce';
 
 let lastWarning: string | null;
-let keepEnv: string;
+let keepEnv: string | undefined;
 let numCalls = 0;
 let oldConsoleWarn: any;
 
 describe('warnOnce', () => {
-  beforeEach( () => {
+  beforeEach(() => {
     keepEnv = process.env.NODE_ENV;
     numCalls = 0;
     lastWarning = null;
     oldConsoleWarn = console.warn;
-    console.warn = (msg: any) => { numCalls++; lastWarning = msg; };
+    console.warn = (msg: any) => {
+      numCalls++;
+      lastWarning = msg;
+    };
   });
-  afterEach( () => {
+  afterEach(() => {
     process.env.NODE_ENV = keepEnv;
     console.warn = oldConsoleWarn;
   });
@@ -56,5 +59,4 @@ describe('warnOnce', () => {
     expect(lastWarning).to.equal('yo');
     expect(numCalls).to.equal(2);
   });
-
 });

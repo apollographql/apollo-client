@@ -148,7 +148,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
    */
   public currentResult(): ApolloCurrentResult<T> {
     const { data, partial } = this.queryManager.getCurrentQueryResult(this, true);
-    const queryStoreValue = this.queryManager.getApolloState().queries[this.queryId];
+    const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
 
     if (queryStoreValue && (
       (queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0) ||
@@ -272,7 +272,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
             });
         };
         this.updateQuery(mapFn);
-        return fetchMoreResult;
+        return fetchMoreResult as ApolloQueryResult<T>;
       });
   }
 

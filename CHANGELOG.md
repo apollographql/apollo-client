@@ -1,6 +1,17 @@
 # Change log
 
 ### vNEXT
+
+### v.1.9.0-0
+- Remove query tracking from the Redux store. Query status tracking is now handled outside of Redux in the QueryStore class. [PR #1859](https://github.com/apollographql/apollo-client/pull/1859)
+- Remove mutation tracking from the Redux store. Mutation status tracking is now handled outside of Redux in the MutationStore class. [PR #1846](https://github.com/apollographql/apollo-client/pull/1846)
+
+### 1.8.1
+- Use generic types for store updating functions in mutations [PR #1882](https://github.com/apollographql/apollo-client/pull/1882)
+- Update to TypeScript 2.4.1 [PR #1892](https://github.com/apollographql/apollo-client/pull/1892)
+
+### 1.8.0
+- Add the `filter` argument to the `@connection` directive so that custom store keys can include query arguments [PR #1862](https://github.com/apollographql/apollo-client/pull/1862)
 - Add support for flow typecheck to work out of the box (without any configuration) [PR #1820](https://github.com/apollographql/apollo-client/pull/1820)
 - Remove the dependency on the query and mutation store from the data reducer. Apollo actions sent to Redux now contain additional information that was originally pulled from the query and mutation stores [PR #1845](https://github.com/apollographql/apollo-client/pull/1845)
 - Fix: Avoiding reprocessing of identical data when writing to the store [PR #1675](https://github.com/apollographql/apollo-client/pull/1675)

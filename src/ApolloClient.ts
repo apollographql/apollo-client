@@ -45,6 +45,7 @@ import {
 
 import {
   ApolloQueryResult,
+  ApolloExecutionResult,
   IdGetter,
 } from './core/types';
 
@@ -182,7 +183,7 @@ export default class ApolloClient implements DataProxy {
 
   constructor(options: {
     networkInterface?: NetworkInterface | ObservableNetworkInterface,
-    reduxRootSelector?: string | ApolloStateSelector,
+    reduxRootSelector?: ApolloStateSelector,
     initialState?: any,
     dataIdFromObject?: IdGetter,
     ssrMode?: boolean,
@@ -365,7 +366,7 @@ export default class ApolloClient implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T>(options: MutationOptions): Promise<ExecutionResult> {
+  public mutate<T>(options: MutationOptions<T>): Promise<ApolloExecutionResult<T>> {
     this.initStore();
 
     return this.queryManager.mutate<T>(options);
@@ -453,7 +454,10 @@ export default class ApolloClient implements DataProxy {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
             action,
-            state: this.queryManager.getApolloState(),
+            state: {
+              queries: this.queryManager.queryStore.getStore(),
+              mutations: this.queryManager.mutationStore.getStore(),
+            },
             dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
           });
         }
@@ -492,7 +496,10 @@ export default class ApolloClient implements DataProxy {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
             action,
-            state: this.queryManager.getApolloState(),
+            state: {
+              queries: this.queryManager.queryStore.getStore(),
+              mutations: this.queryManager.mutationStore.getStore(),
+            },
             dataWithOptimisticResults: this.queryManager.getDataWithOptimisticResults(),
           });
         }

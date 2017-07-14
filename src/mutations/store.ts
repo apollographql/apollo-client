@@ -1,17 +1,36 @@
-import {
-  ApolloAction,
-  isMutationInitAction,
-  isMutationResultAction,
-  isMutationErrorAction,
-  isStoreResetAction,
-} from '../actions';
+export class MutationStore {
+  private store: {[mutationId: string]: MutationStoreValue} = {};
 
-import {
-  SelectionSetNode,
-} from 'graphql';
+  public getStore(): {[mutationId: string]: MutationStoreValue} {
+    return this.store;
+  }
 
-export interface MutationStore {
-  [mutationId: string]: MutationStoreValue;
+  public get(mutationId: string): MutationStoreValue {
+    return this.store[mutationId];
+  }
+
+  public initMutation(mutationId: string, mutationString: string, variables: Object | undefined) {
+    this.store[mutationId] = {
+      mutationString: mutationString,
+      variables: variables || {},
+      loading: true,
+      error: null,
+    };
+  }
+
+  public markMutationError(mutationId: string, error: Error) {
+    this.store[mutationId].loading = false;
+    this.store[mutationId].error = error;
+  }
+
+  public markMutationResult(mutationId: string) {
+    this.store[mutationId].loading = false;
+    this.store[mutationId].error = null;
+  }
+
+  public reset() {
+    this.store = {};
+  }
 }
 
 export interface MutationStoreValue {
@@ -21,50 +40,3 @@ export interface MutationStoreValue {
   error: Error | null;
 }
 
-export interface SelectionSetWithRoot {
-  id: string;
-  typeName: string;
-  selectionSet: SelectionSetNode;
-}
-
-export function mutations(
-  previousState: MutationStore = {},
-  action: ApolloAction,
-): MutationStore {
-  if (isMutationInitAction(action)) {
-    const newState = { ...previousState } as MutationStore;
-
-    newState[action.mutationId] = {
-      mutationString: action.mutationString,
-      variables: action.variables,
-      loading: true,
-      error: null,
-    };
-
-    return newState;
-  } else if (isMutationResultAction(action)) {
-    const newState = { ...previousState } as MutationStore;
-
-    newState[action.mutationId] = {
-      ...previousState[action.mutationId],
-      loading: false,
-      error: null,
-    } as MutationStoreValue;
-
-    return newState;
-  } else if (isMutationErrorAction(action)) {
-    const newState = { ...previousState } as MutationStore;
-
-    newState[action.mutationId] = {
-      ...previousState[action.mutationId],
-      loading: false,
-      error: action.error,
-    } as MutationStoreValue;
-  } else if (isStoreResetAction(action)) {
-    // if we are resetting the store, we no longer need information about the mutations
-    // that are currently in the store so we can just throw them all away.
-    return {};
-  }
-
-  return previousState;
-}

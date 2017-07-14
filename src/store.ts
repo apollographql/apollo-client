@@ -4,6 +4,7 @@ import {
   applyMiddleware,
   combineReducers,
   Middleware,
+  Action,
 } from 'redux';
 
 import {
@@ -19,12 +20,11 @@ import {
 } from './data/storeUtils';
 
 import {
-  queries,
   QueryStore,
 } from './queries/store';
 
 import {
-  mutations,
+  // mutations,
   MutationStore,
 } from './mutations/store';
 
@@ -61,8 +61,6 @@ export interface ReducerError {
 
 export interface Store {
   data: NormalizedCache;
-  queries: QueryStore;
-  mutations: MutationStore;
   optimistic: OptimisticStore;
   reducerError: ReducerError | null;
 }
@@ -103,15 +101,13 @@ const createReducerError = (error: Error, action: ApolloAction): ReducerError =>
   return reducerError;
 };
 
+// Reducer
 export type ApolloReducer = (store: NormalizedCache, action: ApolloAction) => NormalizedCache;
 
-export function createApolloReducer(config: ApolloReducerConfig): (state: Store, action: ApolloAction) => Store {
+export function createApolloReducer(config: ApolloReducerConfig): (state: Store, action: ApolloAction | Action) => Store {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
     try {
       const newState: Store = {
-        queries: queries(state.queries, action),
-        mutations: mutations(state.mutations, action),
-
         data: data(state.data, action, config),
         optimistic: [] as any,
 
@@ -134,8 +130,6 @@ export function createApolloReducer(config: ApolloReducerConfig): (state: Store,
       );
 
       if (state.data === newState.data &&
-      state.mutations === newState.mutations &&
-      state.queries === newState.queries &&
       state.optimistic === newState.optimistic &&
       state.reducerError === newState.reducerError) {
         return state;

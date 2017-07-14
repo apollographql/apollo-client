@@ -1,7 +1,8 @@
 # two weeks without any progress / comments mark issue as stale
-daysUntilStale: 14
+daysUntilStale: 21
 # one week after marked stale, close the issue
-daysUntilClose: 7
+daysUntilClose: 14
+staleLabel: no-recent-activity
 # whitelist of lables to not mark stale
 exemptLables:
   - pinned

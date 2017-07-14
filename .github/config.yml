@@ -55,6 +55,8 @@ labels:
     color: ededed
   - name: revist
     color: ededed
+  - name: no-recent-activity
+    color: ededed
   
   # priority
   - name: high-priority

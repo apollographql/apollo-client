@@ -562,7 +562,7 @@ describe('QueryManager', () => {
       .map(result => (assign({ fromRx: true }, result)))
       .subscribe({
       next: wrap(done, (newResult) => {
-        const expectedResult = assign({ fromRx: true, loading: false, networkStatus: 7, stale: false }, expResult);
+        const expectedResult = assign({ fromRx: true, loading: false, fulfillsVariables: true, networkStatus: 7, stale: false }, expResult);
         assert.deepEqual(newResult, expectedResult);
         done();
       }),
@@ -3078,6 +3078,7 @@ describe('QueryManager', () => {
             loading: false,
             networkStatus: NetworkStatus.ready,
             stale: false,
+            fulfillsVariables: true,
           });
         },
         (result) => {
@@ -3086,6 +3087,7 @@ describe('QueryManager', () => {
             loading: false,
             networkStatus: NetworkStatus.ready,
             stale: true,
+            fulfillsVariables: true,
           });
         },
       ),
@@ -3100,6 +3102,7 @@ describe('QueryManager', () => {
             loading: false,
             networkStatus: NetworkStatus.ready,
             stale: false,
+            fulfillsVariables: true,
           });
         },
       ),

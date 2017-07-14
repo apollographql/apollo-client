@@ -129,7 +129,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 3);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false, fulfillsVariables: true },
       );
       done();
     }, 50);
@@ -179,7 +179,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 2);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false, fulfillsVariables: true },
       );
       assert.equal(errorCount, 1);
       done();
@@ -230,7 +230,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 2);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false },
+        { data: { entry: { value: 'Amanda Liu' } }, loading: false, networkStatus: 7, stale: false, fulfillsVariables: true },
       );
       assert.equal(errorCount, 1);
       console.error = consoleErr;
@@ -283,7 +283,7 @@ describe('subscribeToMore', () => {
       assert.equal(counter, 3);
       assert.deepEqual(
         latestResult,
-        { data: { entry: { value: 'Changping Chen' } }, loading: false, networkStatus: 7, stale: false },
+        { data: { entry: { value: 'Changping Chen' } }, loading: false, networkStatus: 7, stale: false, fulfillsVariables: true },
       );
       done();
     }, 50);

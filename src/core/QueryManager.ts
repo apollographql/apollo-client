@@ -646,6 +646,7 @@ export class QueryManager {
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
                 networkStatus: queryStoreValue.networkStatus,
                 stale: true,
+                fulfillsVariables: Boolean(lastResult && lastResult.fulfillsVariables),
               };
             } else {
               resultFromStore = {
@@ -653,6 +654,7 @@ export class QueryManager {
                 loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
                 networkStatus: queryStoreValue.networkStatus,
                 stale: false,
+                fulfillsVariables: !queryStoreValue.previousVariables && !isMissing,
               };
             }
 
@@ -1217,7 +1219,7 @@ export class QueryManager {
 
           // return a chainable promise
           this.removeFetchQueryPromise(requestId);
-          resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready, stale: false });
+          resolve({ data: resultFromStore, loading: false, networkStatus: NetworkStatus.ready, stale: false, fulfillsVariables: true  });
           return Promise.resolve();
         }).catch((error: Error) => {
           reject(error);

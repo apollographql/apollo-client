@@ -1,4 +1,3 @@
-
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -15,9 +14,7 @@ import {
   isInlineFragment,
 } from './storeUtils';
 
-import {
-  ReadStoreContext,
-} from '../data/readFromStore';
+import { ReadStoreContext } from '../data/readFromStore';
 
 import {
   OperationDefinitionNode,
@@ -28,32 +25,17 @@ import {
   FragmentDefinitionNode,
 } from 'graphql';
 
-import {
-  FragmentMatcher,
-} from 'graphql-anywhere';
+import { FragmentMatcher } from 'graphql-anywhere';
 
-import {
-  NormalizedCache,
-  StoreObject,
-  IdValue,
-  isIdValue,
-} from './storeUtils';
+import { NormalizedCache, StoreObject, IdValue, isIdValue } from './storeUtils';
 
-import {
-  IdGetter,
-} from '../core/types';
+import { IdGetter } from '../core/types';
 
-import {
-  shouldInclude,
-} from '../queries/directives';
+import { shouldInclude } from '../queries/directives';
 
-import {
-  isProduction,
-} from '../util/environment';
+import { isProduction } from '../util/environment';
 
-import {
-  assign,
-} from '../util/assign';
+import { assign } from '../util/assign';
 
 class WriteError extends Error {
   public type = 'WriteError';
@@ -61,9 +43,11 @@ class WriteError extends Error {
 
 function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
   // XXX A bit hacky maybe ...
-  const enhancedError = new WriteError(`Error writing result to store for query ${
-    document.loc && document.loc.source && document.loc.source.body
-  }`);
+  const enhancedError = new WriteError(
+    `Error writing result to store for query ${document.loc &&
+      document.loc.source &&
+      document.loc.source.body}`,
+  );
   enhancedError.message += '/n' + error.message;
   enhancedError.stack = error.stack;
   return enhancedError;
@@ -98,13 +82,13 @@ export function writeQueryToStore({
   fragmentMap = {} as FragmentMap,
   fragmentMatcherFunction,
 }: {
-  result: Object,
-  query: DocumentNode,
-  store?: NormalizedCache,
-  variables?: Object,
-  dataIdFromObject?: IdGetter,
-  fragmentMap?: FragmentMap,
-  fragmentMatcherFunction?: FragmentMatcher,
+  result: Object;
+  query: DocumentNode;
+  store?: NormalizedCache;
+  variables?: Object;
+  dataIdFromObject?: IdGetter;
+  fragmentMap?: FragmentMap;
+  fragmentMatcherFunction?: FragmentMatcher;
 }): NormalizedCache {
   const queryDefinition: OperationDefinitionNode = getQueryDefinition(query);
 
@@ -131,7 +115,7 @@ export function writeQueryToStore({
 
 export type WriteContext = {
   store: NormalizedCache;
-  processedData?: { [x: string]: FieldNode[] },
+  processedData?: { [x: string]: FieldNode[] };
   variables?: any;
   dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
@@ -147,15 +131,14 @@ export function writeResultToStore({
   dataIdFromObject,
   fragmentMatcherFunction,
 }: {
-  dataId: string,
-  result: any,
-  document: DocumentNode,
-  store?: NormalizedCache,
-  variables?: Object,
-  dataIdFromObject?: IdGetter,
-  fragmentMatcherFunction?: FragmentMatcher,
+  dataId: string;
+  result: any;
+  document: DocumentNode;
+  store?: NormalizedCache;
+  variables?: Object;
+  dataIdFromObject?: IdGetter;
+  fragmentMatcherFunction?: FragmentMatcher;
 }): NormalizedCache {
-
   // XXX TODO REFACTOR: this is a temporary workaround until query normalization is made to work with documents.
   const operationDefinition = getOperationDefinition(document);
   const selectionSet = operationDefinition.selectionSet;
@@ -188,14 +171,14 @@ export function writeSelectionSetToStore({
   selectionSet,
   context,
 }: {
-  dataId: string,
-  result: any,
-  selectionSet: SelectionSetNode,
-  context: WriteContext,
+  dataId: string;
+  result: any;
+  selectionSet: SelectionSetNode;
+  context: WriteContext;
 }): NormalizedCache {
   const { variables, store, dataIdFromObject, fragmentMap } = context;
 
-  selectionSet.selections.forEach((selection) => {
+  selectionSet.selections.forEach(selection => {
     const included = shouldInclude(selection, variables);
 
     if (isField(selection)) {
@@ -216,7 +199,13 @@ export function writeSelectionSetToStore({
             // we just print a warning for the time being.
             //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
             if (!isProduction()) {
-              console.warn(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);
+              console.warn(
+                `Missing field ${resultFieldKey} in ${JSON.stringify(
+                  result,
+                  null,
+                  2,
+                ).substring(0, 100)}`,
+              );
             }
           }
         }
@@ -243,7 +232,7 @@ export function writeSelectionSetToStore({
         // on the context.
         const idValue: IdValue = { type: 'id', id: 'self', generated: false };
         const fakeContext: ReadStoreContext = {
-          store: { 'self': result },
+          store: { self: result },
           returnPartialData: false,
           hasMissingField: false,
           customResolvers: {},
@@ -272,23 +261,24 @@ export function writeSelectionSetToStore({
   return store;
 }
 
-
 // Checks if the id given is an id that was generated by Apollo
 // rather than by dataIdFromObject.
 function isGeneratedId(id: string): boolean {
-  return (id[0] === '$');
+  return id[0] === '$';
 }
 
-function mergeWithGenerated(generatedKey: string, realKey: string, cache: NormalizedCache) {
+function mergeWithGenerated(
+  generatedKey: string,
+  realKey: string,
+  cache: NormalizedCache,
+) {
   const generated = cache[generatedKey];
   const real = cache[realKey];
 
-  Object.keys(generated).forEach((key) => {
+  Object.keys(generated).forEach(key => {
     const value = generated[key];
     const realValue = real[key];
-    if (isIdValue(value)
-        && isGeneratedId(value.id)
-        && isIdValue(realValue)) {
+    if (isIdValue(value) && isGeneratedId(value.id) && isIdValue(realValue)) {
       mergeWithGenerated(value.id, realValue.id, cache);
     }
     delete cache[generatedKey];
@@ -296,9 +286,11 @@ function mergeWithGenerated(generatedKey: string, realKey: string, cache: Normal
   });
 }
 
-function isDataProcessed(dataId: string,
-                         field: FieldNode|SelectionSetNode,
-                         processedData?: {[x: string]: (FieldNode|SelectionSetNode)[]}): boolean {
+function isDataProcessed(
+  dataId: string,
+  field: FieldNode | SelectionSetNode,
+  processedData?: { [x: string]: (FieldNode | SelectionSetNode)[] },
+): boolean {
   if (!processedData) {
     return false;
   }
@@ -322,10 +314,10 @@ function writeFieldToStore({
   dataId,
   context,
 }: {
-  field: FieldNode,
-  value: any,
-  dataId: string,
-  context: WriteContext,
+  field: FieldNode;
+  value: any;
+  dataId: string;
+  context: WriteContext;
 }) {
   const { variables, dataIdFromObject, store, fragmentMap } = context;
 
@@ -341,15 +333,20 @@ function writeFieldToStore({
   if (!field.selectionSet || value === null) {
     storeValue =
       value != null && typeof value === 'object'
-        // If the scalar value is a JSON blob, we have to "escape" it so it can’t pretend to be
-        // an id.
-        ? { type: 'json', json: value }
-        // Otherwise, just store the scalar directly in the store.
-        : value;
+        ? // If the scalar value is a JSON blob, we have to "escape" it so it can’t pretend to be
+          // an id.
+          { type: 'json', json: value }
+        : // Otherwise, just store the scalar directly in the store.
+          value;
   } else if (Array.isArray(value)) {
     const generatedId = `${dataId}.${storeFieldName}`;
 
-    storeValue = processArrayValue(value, generatedId, field.selectionSet, context);
+    storeValue = processArrayValue(
+      value,
+      generatedId,
+      field.selectionSet,
+      context,
+    );
   } else {
     // It's an object
     let valueDataId = `${dataId}.${storeFieldName}`;
@@ -369,7 +366,9 @@ function writeFieldToStore({
       // and we use the distinction between user-desiginated and application-provided
       // ids when managing overwrites.
       if (semanticId && isGeneratedId(semanticId)) {
-        throw new Error('IDs returned by dataIdFromObject cannot begin with the "$" character.');
+        throw new Error(
+          'IDs returned by dataIdFromObject cannot begin with the "$" character.',
+        );
       }
 
       if (semanticId) {
@@ -403,10 +402,16 @@ function writeFieldToStore({
 
       // If there is already a real id in the store and the current id we
       // are dealing with is generated, we throw an error.
-      if (isIdValue(storeValue) && storeValue.generated
-          && isIdValue(escapedId) && !escapedId.generated) {
-        throw new Error(`Store error: the application attempted to write an object with no provided id` +
-            ` but the store already contains an id of ${escapedId.id} for this object.`);
+      if (
+        isIdValue(storeValue) &&
+        storeValue.generated &&
+        isIdValue(escapedId) &&
+        !escapedId.generated
+      ) {
+        throw new Error(
+          `Store error: the application attempted to write an object with no provided id` +
+            ` but the store already contains an id of ${escapedId.id} for this object.`,
+        );
       }
 
       if (isIdValue(escapedId) && escapedId.generated) {

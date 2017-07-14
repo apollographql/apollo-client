@@ -1,6 +1,4 @@
-import {
-  assert,
-} from 'chai';
+import { assert } from 'chai';
 
 import {
   mockSubscriptionNetworkInterface,
@@ -12,38 +10,36 @@ import { omit } from 'lodash';
 import gql from 'graphql-tag';
 
 describe('MockSubscriptionNetworkInterface', () => {
-
   const result1 = {
     result: {
-      data: {user: {name: 'Dhaivat Pandya'}},
+      data: { user: { name: 'Dhaivat Pandya' } },
     },
     delay: 50,
   };
 
   const result2 = {
     result: {
-      data: {user: {name: 'Vyacheslav Kim'}},
+      data: { user: { name: 'Vyacheslav Kim' } },
     },
     delay: 50,
   };
 
   const result3 = {
     result: {
-      data: {user: {name: 'Changping Chen'}},
+      data: { user: { name: 'Changping Chen' } },
     },
     delay: 50,
   };
 
   const result4 = {
     result: {
-      data: {user: {name: 'Amanda Liu'}},
+      data: { user: { name: 'Amanda Liu' } },
     },
     delay: 50,
   };
   let sub1: any;
 
   beforeEach(() => {
-
     sub1 = {
       request: {
         query: gql`
@@ -105,7 +101,6 @@ describe('MockSubscriptionNetworkInterface', () => {
     });
   });
 
-
   it('throws an error when firing a subscription id that does not exist', () => {
     const noResultSub = omit(sub1, 'results') as MockedSubscription;
 
@@ -131,7 +126,7 @@ describe('MockSubscriptionNetworkInterface', () => {
       networkInterface.fireResult(4);
     });
   });
-  it('correctly subscribes', (done) => {
+  it('correctly subscribes', done => {
     const networkInterface = mockSubscriptionNetworkInterface([sub1]);
     const id = networkInterface.subscribe(
       {
@@ -156,7 +151,7 @@ describe('MockSubscriptionNetworkInterface', () => {
     assert.deepEqual(networkInterface.mockedSubscriptionsById[0], sub1);
   });
 
-  it('correctly fires results', (done) => {
+  it('correctly fires results', done => {
     const networkInterface = mockSubscriptionNetworkInterface([sub1]);
     networkInterface.subscribe(
       {
@@ -179,7 +174,7 @@ describe('MockSubscriptionNetworkInterface', () => {
     networkInterface.fireResult(0);
   });
 
-  it('correctly fires multiple results', (done) => {
+  it('correctly fires multiple results', done => {
     let allResults: any[] = [];
     const networkInterface = mockSubscriptionNetworkInterface([sub1]);
     networkInterface.subscribe(
@@ -200,18 +195,18 @@ describe('MockSubscriptionNetworkInterface', () => {
       },
     );
 
-      for (let i = 0; i < 4; i++) {
-        networkInterface.fireResult(0);
-      }
-      setTimeout(() => {
-        assert.deepEqual(
-          allResults,
-          [result1.result.data, result2.result.data, result3.result.data, result4.result.data],
-        );
-        done();
-      }, 50);
-
-
+    for (let i = 0; i < 4; i++) {
+      networkInterface.fireResult(0);
+    }
+    setTimeout(() => {
+      assert.deepEqual(allResults, [
+        result1.result.data,
+        result2.result.data,
+        result3.result.data,
+        result4.result.data,
+      ]);
+      done();
+    }, 50);
   });
 
   it('correctly unsubscribes', () => {

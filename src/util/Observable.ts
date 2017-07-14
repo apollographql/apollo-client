@@ -4,9 +4,13 @@
 import $$observable from 'symbol-observable';
 
 export type CleanupFunction = () => void;
-export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | CleanupFunction);
+export type SubscriberFunction<T> = (
+  observer: Observer<T>,
+) => Subscription | CleanupFunction;
 
-function isSubscription(subscription: Function | Subscription): subscription is Subscription {
+function isSubscription(
+  subscription: Function | Subscription,
+): subscription is Subscription {
   return (<Subscription>subscription).unsubscribe !== undefined;
 }
 

@@ -3,7 +3,10 @@ import { ApolloStore, Store, ApolloReducerConfig } from '../store';
 import { DataWrite } from '../actions';
 import { IdGetter } from '../core/types';
 import { NormalizedCache } from '../data/storeUtils';
-import {getFragmentQueryDocument, getOperationName} from '../queries/getFromAST';
+import {
+  getFragmentQueryDocument,
+  getOperationName,
+} from '../queries/getFromAST';
 import { getDataWithOptimisticResults } from '../optimistic-data/store';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
@@ -122,7 +125,9 @@ export interface DataProxy {
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  readFragment<FragmentType>(options: DataProxyReadFragmentOptions): FragmentType | null;
+  readFragment<FragmentType>(
+    options: DataProxyReadFragmentOptions,
+  ): FragmentType | null;
 
   /**
    * Writes a GraphQL query to the root query id.
@@ -179,14 +184,15 @@ export class ReduxDataProxy implements DataProxy {
     query,
     variables,
   }: DataProxyReadQueryOptions): QueryType {
-
     if (this.reducerConfig.addTypename) {
       query = addTypenameToDocument(query);
     }
 
     return readQueryFromStore<QueryType>({
       rootId: 'ROOT_QUERY',
-      store: getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState())),
+      store: getDataWithOptimisticResults(
+        this.reduxRootSelector(this.store.getState()),
+      ),
       query,
       variables,
       fragmentMatcherFunction: this.fragmentMatcher.match,
@@ -204,7 +210,9 @@ export class ReduxDataProxy implements DataProxy {
     variables,
   }: DataProxyReadFragmentOptions): FragmentType | null {
     let query = getFragmentQueryDocument(fragment, fragmentName);
-    const data = getDataWithOptimisticResults(this.reduxRootSelector(this.store.getState()));
+    const data = getDataWithOptimisticResults(
+      this.reduxRootSelector(this.store.getState()),
+    );
 
     // If we could not find an item in the store with the provided id then we
     // just return `null`.
@@ -234,20 +242,21 @@ export class ReduxDataProxy implements DataProxy {
     query,
     variables,
   }: DataProxyWriteQueryOptions): void {
-
     if (this.reducerConfig.addTypename) {
       query = addTypenameToDocument(query);
     }
 
     this.store.dispatch({
       type: 'APOLLO_WRITE',
-      writes: [{
-        rootId: 'ROOT_QUERY',
-        result: data,
-        document: query,
-        operationName: getOperationName(query),
-        variables: variables || {},
-      }],
+      writes: [
+        {
+          rootId: 'ROOT_QUERY',
+          result: data,
+          document: query,
+          operationName: getOperationName(query),
+          variables: variables || {},
+        },
+      ],
     });
   }
 
@@ -261,7 +270,6 @@ export class ReduxDataProxy implements DataProxy {
     fragmentName,
     variables,
   }: DataProxyWriteFragmentOptions): void {
-
     let document = getFragmentQueryDocument(fragment, fragmentName);
 
     if (this.reducerConfig.addTypename) {
@@ -270,13 +278,15 @@ export class ReduxDataProxy implements DataProxy {
 
     this.store.dispatch({
       type: 'APOLLO_WRITE',
-      writes: [{
-        rootId: id,
-        result: data,
-        document,
-        operationName: getOperationName(document),
-        variables: variables || {},
-      }],
+      writes: [
+        {
+          rootId: id,
+          result: data,
+          document,
+          operationName: getOperationName(document),
+          variables: variables || {},
+        },
+      ],
     });
   }
 }
@@ -341,7 +351,6 @@ export class TransactionDataProxy implements DataProxy {
   }: DataProxyReadQueryOptions): QueryType {
     this.assertNotFinished();
 
-
     if (this.reducerConfig.addTypename) {
       query = addTypenameToDocument(query);
     }
@@ -370,7 +379,9 @@ export class TransactionDataProxy implements DataProxy {
     this.assertNotFinished();
 
     if (!fragment) {
-      throw new Error('fragment option is required. Please pass a GraphQL fragment to readFragment.');
+      throw new Error(
+        'fragment option is required. Please pass a GraphQL fragment to readFragment.',
+      );
     }
 
     const { data } = this;
@@ -436,7 +447,9 @@ export class TransactionDataProxy implements DataProxy {
     this.assertNotFinished();
 
     if (!fragment) {
-      throw new Error('fragment option is required. Please pass a GraphQL fragment to writeFragment.');
+      throw new Error(
+        'fragment option is required. Please pass a GraphQL fragment to writeFragment.',
+      );
     }
 
     let query = getFragmentQueryDocument(fragment, fragmentName);
@@ -460,7 +473,9 @@ export class TransactionDataProxy implements DataProxy {
    */
   private assertNotFinished() {
     if (this.isFinished) {
-      throw new Error('Cannot call transaction methods after the transaction has finished.');
+      throw new Error(
+        'Cannot call transaction methods after the transaction has finished.',
+      );
     }
   }
 

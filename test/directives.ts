@@ -1,13 +1,9 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import {
-  shouldInclude,
-} from '../src/queries/directives';
+import { shouldInclude } from '../src/queries/directives';
 
-import {
-  getQueryDefinition,
-} from '../src/queries/getFromAST';
+import { getQueryDefinition } from '../src/queries/getFromAST';
 
 import gql from 'graphql-tag';
 
@@ -18,7 +14,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @skip(if: true)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(!shouldInclude(field, {}));
   });
@@ -27,7 +24,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @include(if: true)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(shouldInclude(field, {}));
   });
@@ -36,7 +34,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @include(if: false)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(!shouldInclude(field, {}));
   });
@@ -45,7 +44,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @skip(if: false)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(shouldInclude(field, {}));
   });
@@ -54,7 +54,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @skip(if: true) @include(if: true)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(!shouldInclude(field, {}));
   });
@@ -63,7 +64,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @skip(if: true) @include(if: false)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(!shouldInclude(field, {}));
   });
@@ -71,8 +73,9 @@ describe('query directives', () => {
   it('should include a field if skip: false and include: true', () => {
     const query = gql`
       query {
-        fortuneCookie @skip(if:false) @include(if: true)
-      }`;
+        fortuneCookie @skip(if: false) @include(if: true)
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(shouldInclude(field, {}));
   });
@@ -81,7 +84,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @skip(if: false) @include(if: false)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert(!shouldInclude(field, {}));
   });
@@ -90,7 +94,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @skip(if: false) @include(if: false)
-      }`;
+      }
+    `;
     const queryClone = cloneDeep(query);
     const field = getQueryDefinition(query).selectionSet.selections[0];
     shouldInclude(field, {});
@@ -101,7 +106,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @dosomething(if: true)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
 
     assert.doesNotThrow(() => {
@@ -113,7 +119,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @skip(nothing: true)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
 
     assert.throws(() => {
@@ -125,7 +132,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @include(nothing: true)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
 
     assert.throws(() => {
@@ -137,7 +145,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @include(if: $neverDefined)
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert.throws(() => {
       shouldInclude(field, {});
@@ -148,7 +157,8 @@ describe('query directives', () => {
     const query = gql`
       query($shouldSkip: Boolean) {
         fortuneCookie @skip(if: $shouldSkip)
-      }`;
+      }
+    `;
     const variables = {
       shouldSkip: true,
     };
@@ -160,7 +170,8 @@ describe('query directives', () => {
     const query = gql`
       query($shouldSkip: Boolean) {
         fortuneCookie @include(if: $shouldInclude)
-      }`;
+      }
+    `;
     const variables = {
       shouldInclude: false,
     };
@@ -172,7 +183,8 @@ describe('query directives', () => {
     const query = gql`
       query {
         fortuneCookie @include(if: "string")
-      }`;
+      }
+    `;
     const field = getQueryDefinition(query).selectionSet.selections[0];
     assert.throws(() => {
       shouldInclude(field, {});

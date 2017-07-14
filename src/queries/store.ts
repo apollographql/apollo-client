@@ -1,8 +1,4 @@
-import {
-  DocumentNode,
-  GraphQLError,
-  ExecutionResult,
-} from 'graphql';
+import { DocumentNode, GraphQLError, ExecutionResult } from 'graphql';
 
 import { isEqual } from '../util/isEqual';
 
@@ -20,9 +16,9 @@ export type QueryStoreValue = {
 };
 
 export class QueryStore {
-  private store: {[queryId: string]: QueryStoreValue} = {};
+  private store: { [queryId: string]: QueryStoreValue } = {};
 
-  public getStore(): {[queryId: string]: QueryStoreValue} {
+  public getStore(): { [queryId: string]: QueryStoreValue } {
     return this.store;
   }
 
@@ -31,23 +27,25 @@ export class QueryStore {
   }
 
   public initQuery(query: {
-                     queryId: string,
-                     queryString: string,
-                     document: DocumentNode,
-                     storePreviousVariables: boolean,
-                     variables: Object,
-                     isPoll: boolean,
-                     isRefetch: boolean,
-                     metadata: any,
-                     fetchMoreForQueryId: string | undefined,
-                  }) {
+    queryId: string;
+    queryString: string;
+    document: DocumentNode;
+    storePreviousVariables: boolean;
+    variables: Object;
+    isPoll: boolean;
+    isRefetch: boolean;
+    metadata: any;
+    fetchMoreForQueryId: string | undefined;
+  }) {
     const previousQuery = this.store[query.queryId];
 
     if (previousQuery && previousQuery.queryString !== query.queryString) {
       // XXX we're throwing an error here to catch bugs where a query gets overwritten by a new one.
       // we should implement a separate action for refetching so that QUERY_INIT may never overwrite
       // an existing query (see also: https://github.com/apollostack/apollo-client/issues/732)
-      throw new Error('Internal Error: may not update existing query string in store');
+      throw new Error(
+        'Internal Error: may not update existing query string in store',
+      );
     }
 
     let isSetVariables = false;
@@ -100,17 +98,23 @@ export class QueryStore {
     // This is because the implementation of `fetchMore` *always* sets
     // `fetchPolicy` to `network-only` so we would never have a client result.
     if (typeof query.fetchMoreForQueryId === 'string') {
-      this.store[query.fetchMoreForQueryId].networkStatus = NetworkStatus.fetchMore;
+      this.store[query.fetchMoreForQueryId].networkStatus =
+        NetworkStatus.fetchMore;
     }
   }
 
-  public markQueryResult(queryId: string, result: ExecutionResult, fetchMoreForQueryId: string | undefined) {
+  public markQueryResult(
+    queryId: string,
+    result: ExecutionResult,
+    fetchMoreForQueryId: string | undefined,
+  ) {
     if (!this.store[queryId]) {
       return;
     }
 
     this.store[queryId].networkError = null;
-    this.store[queryId].graphQLErrors = (result.errors && result.errors.length) ? result.errors : [];
+    this.store[queryId].graphQLErrors =
+      result.errors && result.errors.length ? result.errors : [];
     this.store[queryId].previousVariables = null;
     this.store[queryId].networkStatus = NetworkStatus.ready;
 
@@ -122,7 +126,11 @@ export class QueryStore {
     }
   }
 
-  public markQueryError(queryId: string, error: Error, fetchMoreForQueryId: string | undefined) {
+  public markQueryError(
+    queryId: string,
+    error: Error,
+    fetchMoreForQueryId: string | undefined,
+  ) {
     if (!this.store[queryId]) {
       return;
     }
@@ -145,7 +153,9 @@ export class QueryStore {
 
     this.store[queryId].networkError = null;
     this.store[queryId].previousVariables = null;
-    this.store[queryId].networkStatus = complete ? NetworkStatus.ready : NetworkStatus.loading;
+    this.store[queryId].networkStatus = complete
+      ? NetworkStatus.ready
+      : NetworkStatus.loading;
   }
 
   public stopQuery(queryId: string) {
@@ -154,16 +164,18 @@ export class QueryStore {
 
   public reset(observableQueryIds: string[]) {
     // keep only the queries with query ids that are associated with observables
-    this.store = Object.keys(this.store).filter((queryId) => {
-      return (observableQueryIds.indexOf(queryId) > -1);
-    }).reduce((res, key) => {
-      // XXX set loading to true so listeners don't trigger unless they want results with partial data
-      res[key] = {
-        ...this.store[key],
-        networkStatus: NetworkStatus.loading,
-      };
+    this.store = Object.keys(this.store)
+      .filter(queryId => {
+        return observableQueryIds.indexOf(queryId) > -1;
+      })
+      .reduce((res, key) => {
+        // XXX set loading to true so listeners don't trigger unless they want results with partial data
+        res[key] = {
+          ...this.store[key],
+          networkStatus: NetworkStatus.loading,
+        };
 
-      return res;
-    }, {} as {[queryId: string]: QueryStoreValue});
+        return res;
+      }, {} as { [queryId: string]: QueryStoreValue });
   }
 }

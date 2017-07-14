@@ -10,10 +10,11 @@ import { NetworkStatus } from '../src/queries/networkStatus';
 
 describe('query deduplication', () => {
   it(`does not affect different queries`, () => {
-
-    const document: DocumentNode = gql`query test1($x: String){
-      test(x: $x)
-    }`;
+    const document: DocumentNode = gql`
+      query test1($x: String) {
+        test(x: $x)
+      }
+    `;
     const variables1 = { x: 'Hello World' };
     const variables2 = { x: 'Goodbye World' };
 
@@ -30,26 +31,28 @@ describe('query deduplication', () => {
     };
 
     let called = 0;
-    const deduper = new Deduplicator({
-      query: () => {
-        called += 1;
-        return new Promise((resolve, reject) => {
-          setTimeout(resolve, 5);
-        });
-      },
-    } as any );
+    const deduper = new Deduplicator(
+      {
+        query: () => {
+          called += 1;
+          return new Promise((resolve, reject) => {
+            setTimeout(resolve, 5);
+          });
+        },
+      } as any,
+    );
 
     deduper.query(request1);
     deduper.query(request2);
     assert.equal(called, 2);
-
   });
 
   it(`will not deduplicate requests following an errored query`, () => {
-
-    const document: DocumentNode = gql`query test1($x: String){
-      test(x: $x)
-    }`;
+    const document: DocumentNode = gql`
+      query test1($x: String) {
+        test(x: $x)
+      }
+    `;
     const variables = { x: 'Hello World' };
 
     const request: Request = {
@@ -59,38 +62,41 @@ describe('query deduplication', () => {
     };
 
     let called = 0;
-    const deduper = new Deduplicator({
-      query: () => {
-        called += 1;
-        switch (called) {
-          case 1:
-            return new Promise((resolve, reject) => {
-              setTimeout(reject);
-            });
-          case 2:
-            return new Promise((resolve, reject) => {
-              setTimeout(resolve);
-            });
-          default:
-            return assert(false, 'Should not have been called more than twice');
-        }
+    const deduper = new Deduplicator(
+      {
+        query: () => {
+          called += 1;
+          switch (called) {
+            case 1:
+              return new Promise((resolve, reject) => {
+                setTimeout(reject);
+              });
+            case 2:
+              return new Promise((resolve, reject) => {
+                setTimeout(resolve);
+              });
+            default:
+              return assert(
+                false,
+                'Should not have been called more than twice',
+              );
+          }
+        },
+      } as any,
+    );
 
-      },
-    } as any );
-
-    return deduper.query(request)
-    .catch( () => {
+    return deduper.query(request).catch(() => {
       deduper.query(request);
       return assert.equal(called, 2);
     });
-
   });
 
   it(`deduplicates identical queries`, () => {
-
-    const document: DocumentNode = gql`query test1($x: String){
-      test(x: $x)
-    }`;
+    const document: DocumentNode = gql`
+      query test1($x: String) {
+        test(x: $x)
+      }
+    `;
     const variables1 = { x: 'Hello World' };
     const variables2 = { x: 'Hello World' };
 
@@ -107,26 +113,28 @@ describe('query deduplication', () => {
     };
 
     let called = 0;
-    const deduper = new Deduplicator({
-      query: () => {
-        called += 1;
-        return new Promise((resolve, reject) => {
-          setTimeout(resolve, 5);
-        });
-      },
-    } as any );
+    const deduper = new Deduplicator(
+      {
+        query: () => {
+          called += 1;
+          return new Promise((resolve, reject) => {
+            setTimeout(resolve, 5);
+          });
+        },
+      } as any,
+    );
 
     deduper.query(request1);
     deduper.query(request2);
     assert.equal(called, 1);
-
   });
 
   it(`can bypass deduplication if desired`, () => {
-
-    const document: DocumentNode = gql`query test1($x: String){
-      test(x: $x)
-    }`;
+    const document: DocumentNode = gql`
+      query test1($x: String) {
+        test(x: $x)
+      }
+    `;
     const variables1 = { x: 'Hello World' };
     const variables2 = { x: 'Hello World' };
 
@@ -143,18 +151,19 @@ describe('query deduplication', () => {
     };
 
     let called = 0;
-    const deduper = new Deduplicator({
-      query: () => {
-        called += 1;
-        return new Promise((resolve, reject) => {
-          setTimeout(resolve, 5);
-        });
-      },
-    } as any );
+    const deduper = new Deduplicator(
+      {
+        query: () => {
+          called += 1;
+          return new Promise((resolve, reject) => {
+            setTimeout(resolve, 5);
+          });
+        },
+      } as any,
+    );
 
     deduper.query(request1, false);
     deduper.query(request2, false);
     assert.equal(called, 2);
-
   });
 });

@@ -12,10 +12,10 @@ import { Subscription } from '../../src/util/Observable';
  * @param errorCallbacks an expected set of errors
  */
 export type Options = {
-  observable: ObservableQuery<any>,
-  shouldResolve?: boolean,
-  wait?: number,
-  errorCallbacks?: ((error: Error) => any)[],
+  observable: ObservableQuery<any>;
+  shouldResolve?: boolean;
+  wait?: number;
+  errorCallbacks?: ((error: Error) => any)[];
 };
 
 export type ResultCallback = ((result: ApolloQueryResult<any>) => any);
@@ -24,15 +24,10 @@ export type ResultCallback = ((result: ApolloQueryResult<any>) => any);
 // ensuring it is called exactly N times, resolving once it has done so.
 // Optionally takes a timeout, which it will wait X ms after the Nth callback
 // to ensure it is not called again.
-export function observableToPromiseAndSubscription({
-    observable,
-    shouldResolve = true,
-    wait = -1,
-    errorCallbacks = [],
-  }: Options,
-  ...cbs: ResultCallback[],
-): { promise: Promise<any[]>, subscription: Subscription } {
-
+export function observableToPromiseAndSubscription(
+  { observable, shouldResolve = true, wait = -1, errorCallbacks = [] }: Options,
+  ...cbs: ResultCallback[]
+): { promise: Promise<any[]>; subscription: Subscription } {
   let subscription: Subscription = null as never;
   const promise = new Promise<any[]>((resolve, reject) => {
     let errorIndex = 0;
@@ -98,7 +93,7 @@ export function observableToPromiseAndSubscription({
 
 export default function(
   options: Options,
-  ...cbs: ResultCallback[],
+  ...cbs: ResultCallback[]
 ): Promise<any[]> {
   return observableToPromiseAndSubscription(options, ...cbs).promise;
 }

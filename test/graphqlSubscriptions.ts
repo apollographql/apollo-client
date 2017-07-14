@@ -3,9 +3,7 @@ import {
   MockedSubscription,
 } from './mocks/mockNetworkInterface';
 
-import {
-  assert,
-} from 'chai';
+import { assert } from 'chai';
 
 import { cloneDeep } from 'lodash';
 
@@ -15,25 +13,23 @@ import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
 
-import {
-  QueryManager,
-} from '../src/core/QueryManager';
+import { QueryManager } from '../src/core/QueryManager';
 
-import {
-  createApolloStore,
-} from '../src/store';
+import { createApolloStore } from '../src/store';
 
 describe('GraphQL Subscriptions', () => {
-  const results = ['Dahivat Pandya', 'Vyacheslav Kim', 'Changping Chen', 'Amanda Liu'].map(
-    name => ({ result: { data: { user: { name: name } }}, delay: 10 }),
-  );
+  const results = [
+    'Dahivat Pandya',
+    'Vyacheslav Kim',
+    'Changping Chen',
+    'Amanda Liu',
+  ].map(name => ({ result: { data: { user: { name: name } } }, delay: 10 }));
 
   let sub1: MockedSubscription;
   let options: any;
   let defaultOptions: any;
   let defaultSub1: MockedSubscription;
   beforeEach(() => {
-
     sub1 = {
       request: {
         query: gql`
@@ -60,10 +56,9 @@ describe('GraphQL Subscriptions', () => {
         }
       `,
       variables: {
-          name: 'Changping Chen',
-        },
+        name: 'Changping Chen',
+      },
     };
-
 
     defaultSub1 = {
       request: {
@@ -93,8 +88,7 @@ describe('GraphQL Subscriptions', () => {
     };
   });
 
-
-  it('should start a subscription on network interface and unsubscribe', (done) => {
+  it('should start a subscription on network interface and unsubscribe', done => {
     const network = mockSubscriptionNetworkInterface([defaultSub1]);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
@@ -120,7 +114,7 @@ describe('GraphQL Subscriptions', () => {
     assert.equal(Object.keys(network.mockedSubscriptionsById).length, 1);
   });
 
-  it('should subscribe with default values', (done) => {
+  it('should subscribe with default values', done => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
@@ -146,7 +140,7 @@ describe('GraphQL Subscriptions', () => {
     assert.equal(Object.keys(network.mockedSubscriptionsById).length, 1);
   });
 
-  it('should multiplex subscriptions', (done) => {
+  it('should multiplex subscriptions', done => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     const queryManager = new QueryManager({
       networkInterface: network,
@@ -184,7 +178,7 @@ describe('GraphQL Subscriptions', () => {
     network.fireResult(id);
   });
 
-  it('should receive multiple results for a subscription', (done) => {
+  it('should receive multiple results for a subscription', done => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     let numResults = 0;
     const queryManager = new QueryManager({
@@ -211,7 +205,7 @@ describe('GraphQL Subscriptions', () => {
     }
   });
 
-  it('should fire redux action and call result reducers', (done) => {
+  it('should fire redux action and call result reducers', done => {
     const query = gql`
       query miniQuery {
         number
@@ -239,20 +233,22 @@ describe('GraphQL Subscriptions', () => {
       addTypename: false,
     });
 
-    const observableQuery = queryManager.watchQuery({
-      query,
-      reducer: (previousResult, action) => {
-        counter++;
-        if (isSubscriptionResultAction(action)) {
-          const newResult = cloneDeep(previousResult) as any;
-          newResult.number++;
-          return newResult;
-        }
-        return previousResult;
-      },
-    }).subscribe({
-      next: () => null,
-    });
+    const observableQuery = queryManager
+      .watchQuery({
+        query,
+        reducer: (previousResult, action) => {
+          counter++;
+          if (isSubscriptionResultAction(action)) {
+            const newResult = cloneDeep(previousResult) as any;
+            newResult.number++;
+            return newResult;
+          }
+          return previousResult;
+        },
+      })
+      .subscribe({
+        next: () => null,
+      });
 
     const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
@@ -262,7 +258,12 @@ describe('GraphQL Subscriptions', () => {
           // once for itself, four times for the subscription results.
           observableQuery.unsubscribe();
           assert.equal(counter, 5);
-          assert.equal(queryManager.store.getState()['apollo']['data']['ROOT_QUERY']['number'], 4);
+          assert.equal(
+            queryManager.store.getState()['apollo']['data']['ROOT_QUERY'][
+              'number'
+            ],
+            4,
+          );
           done();
         }
       },

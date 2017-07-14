@@ -1,6 +1,4 @@
-import {
-  ExecutionResult,
-} from 'graphql';
+import { ExecutionResult } from 'graphql';
 
 import 'whatwg-fetch';
 
@@ -12,17 +10,11 @@ import {
   printRequest,
 } from './networkInterface';
 
-import {
-  BatchAfterwareInterface,
-} from './afterware';
+import { BatchAfterwareInterface } from './afterware';
 
-import {
-  BatchMiddlewareInterface,
-} from './middleware';
+import { BatchMiddlewareInterface } from './middleware';
 
-import {
-  QueryBatcher,
-} from './batching';
+import { QueryBatcher } from './batching';
 
 import { assign } from '../util/assign';
 
@@ -41,7 +33,6 @@ export interface BatchResponseAndOptions {
 // for GraphQL server implementations that support batching. If such a server is not available, you
 // should see `addQueryMerging` instead.
 export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
-
   public _middlewares: BatchMiddlewareInterface[];
   public _afterwares: BatchAfterwareInterface[];
   private batcher: QueryBatcher;
@@ -52,10 +43,10 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
     batchMax = 0,
     fetchOpts,
   }: {
-    uri: string,
-    batchInterval?: number,
-    batchMax?: number,
-    fetchOpts: RequestInit,
+    uri: string;
+    batchInterval?: number;
+    batchMax?: number;
+    fetchOpts: RequestInit;
   }) {
     super(uri, fetchOpts);
 
@@ -83,65 +74,82 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
   public batchQuery(requests: Request[]): Promise<ExecutionResult[]> {
     const options = { ...this._opts };
 
-    const middlewarePromise: Promise<BatchRequestAndOptions> =
-      this.applyBatchMiddlewares({
-        requests,
-        options,
-      });
+    const middlewarePromise: Promise<
+      BatchRequestAndOptions
+    > = this.applyBatchMiddlewares({
+      requests,
+      options,
+    });
 
     return new Promise((resolve, reject) => {
-      middlewarePromise.then((batchRequestAndOptions: BatchRequestAndOptions) => {
-        return this.batchedFetchFromRemoteEndpoint(batchRequestAndOptions)
-          .then(result => {
-            const httpResponse = result as Response;
+      middlewarePromise
+        .then((batchRequestAndOptions: BatchRequestAndOptions) => {
+          return this.batchedFetchFromRemoteEndpoint(batchRequestAndOptions)
+            .then(result => {
+              const httpResponse = result as Response;
 
-            if (!httpResponse.ok) {
-              return this.applyBatchAfterwares({ responses: [httpResponse], options: batchRequestAndOptions.options })
-                  .then(() => {
-                    const httpError = new Error(`Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`);
-                    (httpError as any).response = httpResponse;
+              if (!httpResponse.ok) {
+                return this.applyBatchAfterwares({
+                  responses: [httpResponse],
+                  options: batchRequestAndOptions.options,
+                }).then(() => {
+                  const httpError = new Error(
+                    `Network request failed with status ${httpResponse.status} - "${httpResponse.statusText}"`,
+                  );
+                  (httpError as any).response = httpResponse;
 
-                    throw httpError;
-                  });
-            }
+                  throw httpError;
+                });
+              }
 
-            // XXX can we be stricter with the type here?
-            return result.json() as any;
-          })
-          .then(responses => {
-            if (typeof responses.map !== 'function') {
-              throw new Error('BatchingNetworkInterface: server response is not an array');
-            }
+              // XXX can we be stricter with the type here?
+              return result.json() as any;
+            })
+            .then(responses => {
+              if (typeof responses.map !== 'function') {
+                throw new Error(
+                  'BatchingNetworkInterface: server response is not an array',
+                );
+              }
 
-            type ResponseAndOptions = {
-              response: Response;
-              options: RequestInit;
-            };
+              type ResponseAndOptions = {
+                response: Response;
+                options: RequestInit;
+              };
 
-            this.applyBatchAfterwares({
-              responses,
-              options: batchRequestAndOptions.options,
-            }).then((responseAndOptions) => {
-              // In a batch response, the response is actually an Array of responses, refine it.
-              resolve(responseAndOptions.responses as any);
-            }).catch((error: Error) => {
-              reject(error);
+              this.applyBatchAfterwares({
+                responses,
+                options: batchRequestAndOptions.options,
+              })
+                .then(responseAndOptions => {
+                  // In a batch response, the response is actually an Array of responses, refine it.
+                  resolve(responseAndOptions.responses as any);
+                })
+                .catch((error: Error) => {
+                  reject(error);
+                });
             });
-          });
-      }).catch((error) => {
-        reject(error);
-      });
+        })
+        .catch(error => {
+          reject(error);
+        });
     });
   }
 
-  public applyBatchMiddlewares({requests, options}: BatchRequestAndOptions): Promise<BatchRequestAndOptions> {
+  public applyBatchMiddlewares({
+    requests,
+    options,
+  }: BatchRequestAndOptions): Promise<BatchRequestAndOptions> {
     return new Promise((resolve, reject) => {
       const queue = (funcs: BatchMiddlewareInterface[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
             const f = funcs.shift();
             if (f) {
-              f.applyBatchMiddleware.apply(scope, [{ requests, options }, next]);
+              f.applyBatchMiddleware.apply(scope, [
+                { requests, options },
+                next,
+              ]);
             }
           } else {
             resolve({
@@ -157,9 +165,12 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
     });
   }
 
-  public applyBatchAfterwares({responses, options}: BatchResponseAndOptions): Promise<BatchResponseAndOptions> {
+  public applyBatchAfterwares({
+    responses,
+    options,
+  }: BatchResponseAndOptions): Promise<BatchResponseAndOptions> {
     return new Promise((resolve, reject) => {
-      const responseObject = {responses, options};
+      const responseObject = { responses, options };
       const queue = (funcs: BatchAfterwareInterface[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
@@ -180,11 +191,13 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
   }
 
   public use(middlewares: BatchMiddlewareInterface[]): HTTPNetworkInterface {
-    middlewares.map((middleware) => {
+    middlewares.map(middleware => {
       if (typeof middleware.applyBatchMiddleware === 'function') {
         this._middlewares.push(middleware);
       } else {
-        throw new Error('Batch middleware must implement the applyBatchMiddleware function');
+        throw new Error(
+          'Batch middleware must implement the applyBatchMiddleware function',
+        );
       }
     });
 
@@ -196,7 +209,9 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
       if (typeof afterware.applyBatchAfterware === 'function') {
         this._afterwares.push(afterware);
       } else {
-        throw new Error('Batch afterware must implement the applyBatchAfterware function');
+        throw new Error(
+          'Batch afterware must implement the applyBatchAfterware function',
+        );
       }
     });
 
@@ -212,7 +227,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
     assign(options, batchRequestAndOptions.options);
 
     // Serialize the requests to strings of JSON
-    const printedRequests = batchRequestAndOptions.requests.map((request) => {
+    const printedRequests = batchRequestAndOptions.requests.map(request => {
       return printRequest(request);
     });
 
@@ -224,7 +239,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
       headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-        ...(options.headers as { [headerName: string]: string }),
+        ...options.headers as { [headerName: string]: string },
       },
     });
   }
@@ -237,9 +252,13 @@ export interface BatchingNetworkInterfaceOptions {
   opts?: RequestInit;
 }
 
-export function createBatchingNetworkInterface(options: BatchingNetworkInterfaceOptions): HTTPNetworkInterface {
-  if (! options) {
-    throw new Error('You must pass an options argument to createNetworkInterface.');
+export function createBatchingNetworkInterface(
+  options: BatchingNetworkInterfaceOptions,
+): HTTPNetworkInterface {
+  if (!options) {
+    throw new Error(
+      'You must pass an options argument to createNetworkInterface.',
+    );
   }
   return new HTTPBatchedNetworkInterface({
     uri: options.uri,

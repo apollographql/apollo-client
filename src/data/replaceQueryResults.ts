@@ -1,28 +1,24 @@
-import {
-  NormalizedCache,
-} from './storeUtils';
+import { NormalizedCache } from './storeUtils';
 
-import {
-  writeResultToStore,
-} from './writeToStore';
+import { writeResultToStore } from './writeToStore';
 
-import {
-  ApolloReducerConfig,
-} from '../store';
+import { ApolloReducerConfig } from '../store';
 
-import {
-  DocumentNode,
-} from 'graphql';
+import { DocumentNode } from 'graphql';
 
-export function replaceQueryResults(state: NormalizedCache, {
-  variables,
-  document,
-  newResult,
-}: {
-  variables: any;
-  document: DocumentNode;
-  newResult: Object;
-}, config: ApolloReducerConfig) {
+export function replaceQueryResults(
+  state: NormalizedCache,
+  {
+    variables,
+    document,
+    newResult,
+  }: {
+    variables: any;
+    document: DocumentNode;
+    newResult: Object;
+  },
+  config: ApolloReducerConfig,
+) {
   const clonedState = { ...state } as NormalizedCache;
 
   return writeResultToStore({

@@ -1,13 +1,9 @@
 import { assert } from 'chai';
 import { assign, omit } from 'lodash';
 
-import {
-  readQueryFromStore,
-} from '../src/data/readFromStore';
+import { readQueryFromStore } from '../src/data/readFromStore';
 
-import {
-  withError,
-} from './util/wrap';
+import { withError } from './util/wrap';
 
 import {
   NormalizedCache,
@@ -17,13 +13,10 @@ import {
   JsonValue,
 } from '../src/data/storeUtils';
 
-import {
-  HeuristicFragmentMatcher,
-} from '../src/data/fragmentMatcher';
+import { HeuristicFragmentMatcher } from '../src/data/fragmentMatcher';
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
 import gql from 'graphql-tag';
-
 
 describe('reading from the store', () => {
   it('rejects malformed queries', () => {
@@ -31,8 +24,13 @@ describe('reading from the store', () => {
       readQueryFromStore({
         store: {},
         query: gql`
-          query { name }
-          query { address }
+          query {
+            name
+          }
+
+          query {
+            address
+          }
         `,
       });
     }, /exactly one/);
@@ -41,7 +39,9 @@ describe('reading from the store', () => {
       readQueryFromStore({
         store: {},
         query: gql`
-          fragment x on y { name }
+          fragment x on y {
+            name
+          }
         `,
       });
     }, /contain a query/);
@@ -56,14 +56,14 @@ describe('reading from the store', () => {
     } as StoreObject;
 
     const store = {
-      'ROOT_QUERY': result,
+      ROOT_QUERY: result,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
       store,
       query: gql`
         query {
-          stringField,
+          stringField
           numberField
         }
       `,
@@ -79,9 +79,9 @@ describe('reading from the store', () => {
   it('runs a basic query with arguments', () => {
     const query = gql`
       query {
-        id,
-        stringField(arg: $stringArg),
-        numberField(intArg: $intArg, floatArg: $floatArg),
+        id
+        stringField(arg: $stringArg)
+        numberField(intArg: $intArg, floatArg: $floatArg)
         nullField
       }
     `;
@@ -93,7 +93,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
         'numberField({"intArg":5,"floatArg":3.14})': 5,
@@ -118,13 +118,13 @@ describe('reading from the store', () => {
   it('runs a basic query with default values for arguments', () => {
     const query = gql`
       query someBigQuery(
-        $stringArg: String = "This is a default string!",
-        $intArg: Int = 0,
-        $floatArg: Float,
-      ){
-        id,
-        stringField(arg: $stringArg),
-        numberField(intArg: $intArg, floatArg: $floatArg),
+        $stringArg: String = "This is a default string!"
+        $intArg: Int = 0
+        $floatArg: Float
+      ) {
+        id
+        stringField(arg: $stringArg)
+        numberField(intArg: $intArg, floatArg: $floatArg)
         nullField
       }
     `;
@@ -134,7 +134,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': {
+      ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
         'numberField({"intArg":0,"floatArg":3.14})': 5,
@@ -171,13 +171,17 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: {
-          type: 'id',
-          id: 'abcde',
-          generated: false,
-        },
-      } as StoreObject),
+      ROOT_QUERY: assign(
+        {},
+        assign({}, omit(result, 'nestedObj')),
+        {
+          nestedObj: {
+            type: 'id',
+            id: 'abcde',
+            generated: false,
+          },
+        } as StoreObject,
+      ),
       abcde: result.nestedObj,
     } as NormalizedCache;
 
@@ -185,10 +189,10 @@ describe('reading from the store', () => {
       store,
       query: gql`
         {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nestedObj {
-            stringField,
+            stringField
             numberField
           }
         }
@@ -228,14 +232,18 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj', 'deepNestedObj')), {
-        __typename: 'Query',
-        nestedObj: {
-          type: 'id',
-          id: 'abcde',
-          generated: false,
-        },
-      } as StoreObject),
+      ROOT_QUERY: assign(
+        {},
+        assign({}, omit(result, 'nestedObj', 'deepNestedObj')),
+        {
+          __typename: 'Query',
+          nestedObj: {
+            type: 'id',
+            id: 'abcde',
+            generated: false,
+          },
+        } as StoreObject,
+      ),
       abcde: assign({}, result.nestedObj, {
         deepNestedObj: {
           type: 'id',
@@ -250,9 +258,9 @@ describe('reading from the store', () => {
       store,
       query: gql`
         {
-          stringField,
-          numberField,
-          nullField,
+          stringField
+          numberField
+          nullField
           ... on Query {
             nestedObj {
               stringField
@@ -302,13 +310,15 @@ describe('reading from the store', () => {
   it('runs a nested query with proper fragment fields in arrays', () => {
     return withError(() => {
       const store = {
-        'ROOT_QUERY': {
+        ROOT_QUERY: {
           __typename: 'Query',
           nestedObj: { type: 'id', id: 'abcde', generated: false },
         } as StoreObject,
         abcde: {
           id: 'abcde',
-          innerArray: [{ type: 'id', generated: true, id: 'abcde.innerArray.0' } as any],
+          innerArray: [
+            { type: 'id', generated: true, id: 'abcde.innerArray.0' } as any,
+          ],
         } as StoreObject,
         'abcde.innerArray.0': {
           id: 'abcdef',
@@ -322,17 +332,26 @@ describe('reading from the store', () => {
           {
             ... on DummyQuery {
               nestedObj {
-                innerArray { id otherField }
+                innerArray {
+                  id
+                  otherField
+                }
               }
             }
             ... on Query {
               nestedObj {
-                innerArray { id someField }
+                innerArray {
+                  id
+                  someField
+                }
               }
             }
             ... on DummyQuery2 {
               nestedObj {
-                innerArray { id otherField2 }
+                innerArray {
+                  id
+                  otherField2
+                }
               }
             }
           }
@@ -342,7 +361,7 @@ describe('reading from the store', () => {
 
       assert.deepEqual<{}>(queryResult, {
         nestedObj: {
-          innerArray: [{id: 'abcdef', someField: 3}],
+          innerArray: [{ id: 'abcdef', someField: 3 }],
         },
       });
     }, /IntrospectionFragmentMatcher/);
@@ -369,7 +388,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           { type: 'id', generated: true, id: 'abcd.nestedArray.0' } as IdValue,
           { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
@@ -383,10 +402,10 @@ describe('reading from the store', () => {
       store,
       query: gql`
         {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nestedArray {
-            stringField,
+            stringField
             numberField
           }
         }
@@ -427,7 +446,7 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
           { type: 'id', generated: true, id: 'abcd.nestedArray.1' } as IdValue,
@@ -440,10 +459,10 @@ describe('reading from the store', () => {
       store,
       query: gql`
         {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nestedArray {
-            stringField,
+            stringField
             numberField
           }
         }
@@ -482,24 +501,21 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [
-          null,
-          { type: 'id', generated: false, id: 'abcde' },
-        ],
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
+        nestedArray: [null, { type: 'id', generated: false, id: 'abcde' }],
       }) as StoreObject,
-      'abcde': result.nestedArray[1],
+      abcde: result.nestedArray[1],
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
       store,
       query: gql`
         {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nestedArray {
-            id,
-            stringField,
+            id
+            stringField
             numberField
           }
         }
@@ -529,14 +545,14 @@ describe('reading from the store', () => {
       nullField: null,
     } as StoreObject;
 
-    const store = { 'ROOT_QUERY': result } as NormalizedCache;
+    const store = { ROOT_QUERY: result } as NormalizedCache;
 
     assert.throws(() => {
       readQueryFromStore({
         store,
         query: gql`
           {
-            stringField,
+            stringField
             missingField
           }
         `,
@@ -554,17 +570,19 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'nestedObj')), { nestedObj: null }) as StoreObject,
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
+        nestedObj: null,
+      }) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
       store,
       query: gql`
         {
-          stringField,
-          numberField,
+          stringField
+          numberField
           nestedObj {
-            stringField,
+            stringField
             numberField
           }
         }
@@ -589,18 +607,20 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
-        type: 'json',
-        json: result.simpleArray,
-      } as JsonValue }) as StoreObject,
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
+        simpleArray: {
+          type: 'json',
+          json: result.simpleArray,
+        } as JsonValue,
+      }) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
       store,
       query: gql`
         {
-          stringField,
-          numberField,
+          stringField
+          numberField
           simpleArray
         }
       `,
@@ -624,18 +644,20 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(result, 'simpleArray')), { simpleArray: {
-        type: 'json',
-        json: result.simpleArray,
-      } as JsonValue }) as StoreObject,
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
+        simpleArray: {
+          type: 'json',
+          json: result.simpleArray,
+        } as JsonValue,
+      }) as StoreObject,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
       store,
       query: gql`
         {
-          stringField,
-          numberField,
+          stringField
+          numberField
           simpleArray
         }
       `,
@@ -659,7 +681,7 @@ describe('reading from the store', () => {
     } as StoreObject;
 
     const store = {
-      'ROOT_QUERY': result,
+      ROOT_QUERY: result,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
@@ -674,7 +696,8 @@ describe('reading from the store', () => {
       config: {
         customResolvers: {
           Thing: {
-            computedField: (obj, args) => obj.stringField + obj.numberField + args['extra'],
+            computedField: (obj, args) =>
+              obj.stringField + obj.numberField + args['extra'],
           },
         },
       },
@@ -697,7 +720,7 @@ describe('reading from the store', () => {
     } as StoreObject;
 
     const store = {
-      'ROOT_QUERY': result,
+      ROOT_QUERY: result,
     } as NormalizedCache;
 
     const queryResult = readQueryFromStore({
@@ -712,7 +735,8 @@ describe('reading from the store', () => {
       config: {
         customResolvers: {
           Query: {
-            computedField: (obj, args) => obj.stringField + obj.numberField + args['extra'],
+            computedField: (obj, args) =>
+              obj.stringField + obj.numberField + args['extra'],
           },
         },
       },
@@ -748,14 +772,18 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      'ROOT_QUERY': assign({}, assign({}, omit(data, 'nestedObj', 'deepNestedObj')), {
-        __typename: 'Query',
-        nestedObj: {
-          type: 'id',
-          id: 'abcde',
-          generated: false,
-        } as IdValue,
-      }) as StoreObject,
+      ROOT_QUERY: assign(
+        {},
+        assign({}, omit(data, 'nestedObj', 'deepNestedObj')),
+        {
+          __typename: 'Query',
+          nestedObj: {
+            type: 'id',
+            id: 'abcde',
+            generated: false,
+          } as IdValue,
+        },
+      ) as StoreObject,
       abcde: assign({}, data.nestedObj, {
         deepNestedObj: {
           type: 'id',
@@ -815,17 +843,17 @@ describe('reading from the store', () => {
 
   it('properly handles the connection directive', () => {
     const store: NormalizedCache = {
-      'ROOT_QUERY': {
-        'abc': [
+      ROOT_QUERY: {
+        abc: [
           {
-            'generated': true,
-            'id': 'ROOT_QUERY.abc.0',
-            'type': 'id',
+            generated: true,
+            id: 'ROOT_QUERY.abc.0',
+            type: 'id',
           },
         ],
       },
       'ROOT_QUERY.abc.0': {
-        'name': 'efgh',
+        name: 'efgh',
       },
     };
 
@@ -840,15 +868,12 @@ describe('reading from the store', () => {
       `,
     });
 
-    assert.deepEqual<{}>(
-      queryResult,
-      {
-        'books': [
-          {
-            'name': 'efgh',
-          },
-        ],
-      },
-    );
+    assert.deepEqual<{}>(queryResult, {
+      books: [
+        {
+          name: 'efgh',
+        },
+      ],
+    });
   });
 });

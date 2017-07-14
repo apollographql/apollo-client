@@ -54,10 +54,7 @@
     }
   },
   "lint-staged": {
-    "*.ts*": [
-      "prettier --trailing-comma all --single-quote --write",
-      "git add"
-    ]
+    "*.ts*": ["prettier --trailing-comma all --single-quote --write", "git add"]
   },
   "pre-commit": "lint-staged",
   "keywords": [

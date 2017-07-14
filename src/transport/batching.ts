@@ -1,10 +1,6 @@
-import {
-  Request,
-} from './networkInterface';
+import { Request } from './networkInterface';
 
-import {
-  ExecutionResult,
-} from 'graphql';
+import { ExecutionResult } from 'graphql';
 
 export interface QueryFetchRequest {
   request: Request;
@@ -28,16 +24,18 @@ export class QueryBatcher {
   private batchMax: number;
 
   //This function is called to the queries in the queue to the server.
-  private batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
+  private batchFetchFunction: (
+    request: Request[],
+  ) => Promise<ExecutionResult[]>;
 
   constructor({
     batchInterval,
     batchMax = 0,
     batchFetchFunction,
   }: {
-    batchInterval: number,
-    batchMax?: number,
-    batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>,
+    batchInterval: number;
+    batchMax?: number;
+    batchFetchFunction: (request: Request[]) => Promise<ExecutionResult[]>;
   }) {
     this.queuedRequests = [];
     this.batchInterval = batchInterval;
@@ -62,7 +60,7 @@ export class QueryBatcher {
 
     // When amount of requests reaches `batchMax`, trigger the queue consumption without waiting on the `batchInterval`.
     if (this.queuedRequests.length === this.batchMax) {
-        this.consumeQueue();
+      this.consumeQueue();
     }
 
     return fetchRequest.promise;
@@ -72,7 +70,7 @@ export class QueryBatcher {
   // Returns a list of promises (one for each query).
   public consumeQueue(): (Promise<ExecutionResult> | undefined)[] | undefined {
     const requests: Request[] = this.queuedRequests.map(
-      (queuedRequest) => queuedRequest.request,
+      queuedRequest => queuedRequest.request,
     );
 
     const promises: (Promise<ExecutionResult> | undefined)[] = [];
@@ -88,15 +86,17 @@ export class QueryBatcher {
 
     const batchedPromise = this.batchFetchFunction(requests);
 
-    batchedPromise.then((results) => {
-      results.forEach((result, index) => {
-        resolvers[index](result);
+    batchedPromise
+      .then(results => {
+        results.forEach((result, index) => {
+          resolvers[index](result);
+        });
+      })
+      .catch(error => {
+        rejecters.forEach((rejecter, index) => {
+          rejecters[index](error);
+        });
       });
-    }).catch((error) => {
-      rejecters.forEach((rejecter, index) => {
-        rejecters[index](error);
-      });
-    });
 
     return promises;
   }

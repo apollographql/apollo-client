@@ -1,10 +1,9 @@
 import {
   mockSubscriptionNetworkInterface,
+  MockedSubscription,
 } from './mocks/mockNetworkInterface';
 
-import {
-  assert,
-} from 'chai';
+import { assert } from 'chai';
 
 import { cloneDeep } from 'lodash';
 
@@ -14,33 +13,23 @@ import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
 
-import {
-  QueryManager,
-} from '../src/core/QueryManager';
+import { QueryManager } from '../src/core/QueryManager';
 
-import {
-  createApolloStore,
-} from '../src/store';
+import { createApolloStore } from '../src/store';
 
 describe('GraphQL Subscriptions', () => {
-  const results = ['Dahivat Pandya', 'Vyacheslav Kim', 'Changping Chen', 'Amanda Liu'].map(
-    name => ({ result: { user: { name: name } }, delay: 10 }),
-  );
+  const results = [
+    'Dahivat Pandya',
+    'Vyacheslav Kim',
+    'Changping Chen',
+    'Amanda Liu',
+  ].map(name => ({ result: { data: { user: { name: name } } }, delay: 10 }));
 
-  let sub1: any;
+  let sub1: MockedSubscription;
   let options: any;
-  let watchQueryOptions: any;
-  let sub2: any;
   let defaultOptions: any;
-  let defaultSub1: any;
-  let commentsQuery: any;
-  let commentsVariables: any;
-  let commentsSub: any;
-  let commentsResult: any;
-  let commentsResultMore: any;
-  let commentsWatchQueryOptions: any;
+  let defaultSub1: MockedSubscription;
   beforeEach(() => {
-
     sub1 = {
       request: {
         query: gql`
@@ -67,10 +56,9 @@ describe('GraphQL Subscriptions', () => {
         }
       `,
       variables: {
-          name: 'Changping Chen',
-        },
+        name: 'Changping Chen',
+      },
     };
-
 
     defaultSub1 = {
       request: {
@@ -98,83 +86,9 @@ describe('GraphQL Subscriptions', () => {
         }
       `,
     };
-
-    watchQueryOptions = {
-      query: gql`
-        query UserInfo($name: String) {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
-      variables: {
-        name: 'Changping Chen',
-      },
-    };
-
-    commentsQuery = gql`
-      query Comment($repoName: String!) {
-        entry(repoFullName: $repoName) {
-          comments {
-            text
-          }
-        }
-      }
-    `;
-
-    commentsSub = gql`
-      subscription getNewestComment($repoName: String!) {
-        getNewestComment(repoName: $repoName) {
-          text
-        }
-      }`;
-
-    commentsVariables = {
-      repoName: 'org/repo',
-    };
-
-    commentsWatchQueryOptions = {
-      query: commentsQuery,
-      variables: commentsVariables,
-    };
-
-    commentsResult = {
-      data: {
-        entry: {
-          comments: [],
-        },
-      },
-    };
-
-    commentsResultMore = {
-      result: {
-        entry: {
-          comments: [],
-        },
-      },
-    };
-
-    for (let i = 1; i <= 10; i++) {
-      commentsResult.data.entry.comments.push({ text: `comment ${i}` });
-    }
-
-    for (let i = 11; i < 12; i++) {
-      commentsResultMore.result.entry.comments.push({ text: `comment ${i}` });
-    }
-
-    sub2 = {
-      request: {
-        query: commentsSub,
-        variables: commentsVariables,
-      },
-      id: 0,
-      results: [commentsResultMore],
-    };
-
   });
 
-
-  it('should start a subscription on network interface and unsubscribe', (done) => {
+  it('should start a subscription on network interface and unsubscribe', done => {
     const network = mockSubscriptionNetworkInterface([defaultSub1]);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
@@ -184,7 +98,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = client.subscribe(defaultOptions).subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result);
+        assert.deepEqual(result, results[0].result.data);
 
         // Test unsubscribing
         sub.unsubscribe();
@@ -200,7 +114,7 @@ describe('GraphQL Subscriptions', () => {
     assert.equal(Object.keys(network.mockedSubscriptionsById).length, 1);
   });
 
-  it('should subscribe with default values', (done) => {
+  it('should subscribe with default values', done => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
@@ -210,7 +124,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = client.subscribe(options).subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result);
+        assert.deepEqual(result, results[0].result.data);
 
         // Test unsubscribing
         sub.unsubscribe();
@@ -226,7 +140,7 @@ describe('GraphQL Subscriptions', () => {
     assert.equal(Object.keys(network.mockedSubscriptionsById).length, 1);
   });
 
-  it('should multiplex subscriptions', (done) => {
+  it('should multiplex subscriptions', done => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     const queryManager = new QueryManager({
       networkInterface: network,
@@ -241,7 +155,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = obs.subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result);
+        assert.deepEqual(result, results[0].result.data);
         counter++;
         if (counter === 2) {
           done();
@@ -252,7 +166,7 @@ describe('GraphQL Subscriptions', () => {
     // Subscribe again. Should also receive the same result.
     const resub = obs.subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result);
+        assert.deepEqual(result, results[0].result.data);
         counter++;
         if (counter === 2) {
           done();
@@ -264,7 +178,7 @@ describe('GraphQL Subscriptions', () => {
     network.fireResult(id);
   });
 
-  it('should receive multiple results for a subscription', (done) => {
+  it('should receive multiple results for a subscription', done => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     let numResults = 0;
     const queryManager = new QueryManager({
@@ -276,7 +190,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
-        assert.deepEqual(result, results[numResults].result);
+        assert.deepEqual(result, results[numResults].result.data);
         numResults++;
         if (numResults === 4) {
           done();
@@ -291,7 +205,7 @@ describe('GraphQL Subscriptions', () => {
     }
   });
 
-  it('should fire redux action and call result reducers', (done) => {
+  it('should fire redux action and call result reducers', done => {
     const query = gql`
       query miniQuery {
         number
@@ -319,30 +233,37 @@ describe('GraphQL Subscriptions', () => {
       addTypename: false,
     });
 
-    const observableQuery = queryManager.watchQuery({
-      query,
-      reducer: (previousResult, action) => {
-        counter++;
-        if (isSubscriptionResultAction(action)) {
-          const newResult = cloneDeep(previousResult) as any;
-          newResult.number++;
-          return newResult;
-        }
-        return previousResult;
-      },
-    }).subscribe({
-      next: () => null,
-    });
+    const observableQuery = queryManager
+      .watchQuery({
+        query,
+        reducer: (previousResult, action) => {
+          counter++;
+          if (isSubscriptionResultAction(action)) {
+            const newResult = cloneDeep(previousResult) as any;
+            newResult.number++;
+            return newResult;
+          }
+          return previousResult;
+        },
+      })
+      .subscribe({
+        next: () => null,
+      });
 
     const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
-        assert.deepEqual(result, results[numResults].result);
+        assert.deepEqual(result, results[numResults].result.data);
         numResults++;
         if (numResults === 4) {
           // once for itself, four times for the subscription results.
           observableQuery.unsubscribe();
           assert.equal(counter, 5);
-          assert.equal(queryManager.store.getState()['apollo']['data']['ROOT_QUERY']['number'], 4);
+          assert.equal(
+            queryManager.store.getState()['apollo']['data']['ROOT_QUERY'][
+              'number'
+            ],
+            4,
+          );
           done();
         }
       },

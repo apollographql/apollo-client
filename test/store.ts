@@ -2,13 +2,9 @@ import * as chai from 'chai';
 const { assert } = chai;
 import gql from 'graphql-tag';
 
-import {
-  Store,
-  createApolloStore,
-  ReducerError,
-} from '../src/store';
+import { Store, createApolloStore, ReducerError } from '../src/store';
 
-import {getOperationName} from '../src/queries/getFromAST';
+import { getOperationName } from '../src/queries/getFromAST';
 
 describe('createApolloStore', () => {
   it('does not require any arguments', () => {
@@ -18,16 +14,11 @@ describe('createApolloStore', () => {
 
   it('has a default root key', () => {
     const store = createApolloStore();
-    assert.deepEqual(
-      store.getState()['apollo'],
-      {
-        queries: {},
-        mutations: {},
-        data: {},
-        optimistic: [],
-        reducerError: null,
-      },
-    );
+    assert.deepEqual(store.getState()['apollo'], {
+      data: {},
+      optimistic: [],
+      reducerError: null,
+    });
   });
 
   it('can take a custom root key', () => {
@@ -35,16 +26,11 @@ describe('createApolloStore', () => {
       reduxRootKey: 'test',
     });
 
-    assert.deepEqual(
-      store.getState()['test'],
-      {
-        queries: {},
-        mutations: {},
-        data: {},
-        optimistic: [],
-        reducerError: null,
-      },
-    );
+    assert.deepEqual(store.getState()['test'], {
+      data: {},
+      optimistic: [],
+      reducerError: null,
+    });
   });
 
   it('can be rehydrated from the server', () => {
@@ -53,7 +39,7 @@ describe('createApolloStore', () => {
         data: {
           'test.0': true,
         },
-        optimistic: ([] as any[]),
+        optimistic: [] as any[],
       },
     };
 
@@ -63,8 +49,6 @@ describe('createApolloStore', () => {
 
     assert.deepEqual(store.getState(), {
       apollo: {
-        queries: {},
-        mutations: {},
         data: initialState.apollo.data,
         optimistic: initialState.apollo.optimistic,
         reducerError: null,
@@ -82,13 +66,15 @@ describe('createApolloStore', () => {
         data: {
           'test.0': true,
         },
-        optimistic: ([] as any[]),
+        optimistic: [] as any[],
       },
     };
 
-    assert.throws(() => createApolloStore({
-      initialState,
-    }));
+    assert.throws(() =>
+      createApolloStore({
+        initialState,
+      }),
+    );
   });
 
   it('throws an error if state contains a non-empty mutations field', () => {
@@ -99,13 +85,15 @@ describe('createApolloStore', () => {
         data: {
           'test.0': true,
         },
-        optimistic: ([] as any[]),
+        optimistic: [] as any[],
       },
     };
 
-    assert.throws(() => createApolloStore({
-      initialState,
-    }));
+    assert.throws(() =>
+      createApolloStore({
+        initialState,
+      }),
+    );
   });
 
   it('reset itself', () => {
@@ -118,10 +106,8 @@ describe('createApolloStore', () => {
     };
 
     const emptyState: Store = {
-      queries: { },
-      mutations: { },
-      data: { },
-      optimistic: ([] as any[]),
+      data: {},
+      optimistic: [] as any[],
       reducerError: null,
     };
 
@@ -138,7 +124,11 @@ describe('createApolloStore', () => {
   });
 
   it('can reset itself and keep the observable query ids', () => {
-    const queryDocument = gql` query { abc }`;
+    const queryDocument = gql`
+      query {
+        abc
+      }
+    `;
 
     const initialState = {
       apollo: {
@@ -146,27 +136,13 @@ describe('createApolloStore', () => {
           'test.0': true,
           'test.1': true,
         },
-        optimistic: ([] as any[]),
+        optimistic: [] as any[],
       },
     };
 
     const emptyState: Store = {
-      queries: {
-        'test.0': {
-          'graphQLErrors': [],
-          'lastRequestId': 1,
-          'networkStatus': 1,
-          'networkError': null,
-          'previousVariables': null,
-          'queryString': '',
-          'document': queryDocument,
-          'variables': {},
-          'metadata': null,
-        },
-      },
-      mutations: {},
       data: {},
-      optimistic: ([] as any[]),
+      optimistic: [] as any[],
       reducerError: null,
     };
 
@@ -197,12 +173,12 @@ describe('createApolloStore', () => {
     assert.deepEqual(store.getState().apollo, emptyState);
   });
 
-  it('can\'t crash the reducer', () => {
+  it("can't crash the reducer", () => {
     const initialState = {
       apollo: {
         data: {},
-        optimistic: ([] as any[]),
-        reducerError: (null as Error | null),
+        optimistic: [] as any[],
+        reducerError: null as Error | null,
       },
     };
 
@@ -222,24 +198,26 @@ describe('createApolloStore', () => {
       variables,
       operationName: 'Increment',
       mutationId: '1',
-      optimisticResponse: {data: {incrementer: {counter: 1}}},
+      optimisticResponse: { data: { incrementer: { counter: 1 } } },
     });
 
     store.dispatch({
       type: 'APOLLO_MUTATION_RESULT',
-      result: {data: {incrementer: {counter: 1}}},
+      result: { data: { incrementer: { counter: 1 } } },
       document: mutation,
       operationName: 'Increment',
       variables,
       mutationId: '1',
-      extraReducers: [() => { throw new Error('test!!!'); }],
+      extraReducers: [
+        () => {
+          throw new Error('test!!!');
+        },
+      ],
     });
 
     assert(/test!!!/.test(store.getState().apollo.reducerError.error));
 
     const resetState = {
-      queries: {},
-      mutations: {},
       data: {},
       optimistic: [
         {
@@ -247,7 +225,7 @@ describe('createApolloStore', () => {
           mutationId: '1',
           action: {
             type: 'APOLLO_MUTATION_RESULT',
-            result: {data: {data: {incrementer: {counter: 1}}}},
+            result: { data: { data: { incrementer: { counter: 1 } } } },
             document: mutation,
             operationName: 'Increment',
             variables: {},
@@ -258,7 +236,7 @@ describe('createApolloStore', () => {
           },
         },
       ],
-      reducerError: (null as ReducerError | null),
+      reducerError: null as ReducerError | null,
     };
 
     store.dispatch({

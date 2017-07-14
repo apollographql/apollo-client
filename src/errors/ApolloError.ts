@@ -1,34 +1,34 @@
 import { GraphQLError } from 'graphql';
 
-  // XXX some duck typing here because for some reason new ApolloError is not instanceof ApolloError
-  export function isApolloError(err: Error): err is ApolloError {
-    return err.hasOwnProperty('graphQLErrors');
+// XXX some duck typing here because for some reason new ApolloError is not instanceof ApolloError
+export function isApolloError(err: Error): err is ApolloError {
+  return err.hasOwnProperty('graphQLErrors');
+}
+
+// Sets the error message on this error according to the
+// the GraphQL and network errors that are present.
+// If the error message has already been set through the
+// constructor or otherwise, this function is a nop.
+const generateErrorMessage = (err: ApolloError) => {
+  let message = '';
+  // If we have GraphQL errors present, add that to the error message.
+  if (Array.isArray(err.graphQLErrors) && err.graphQLErrors.length !== 0) {
+    err.graphQLErrors.forEach((graphQLError: GraphQLError) => {
+      const errorMessage = graphQLError
+        ? graphQLError.message
+        : 'Error message not found.';
+      message += `GraphQL error: ${errorMessage}\n`;
+    });
   }
 
-  // Sets the error message on this error according to the
-  // the GraphQL and network errors that are present.
-  // If the error message has already been set through the
-  // constructor or otherwise, this function is a nop.
-  const generateErrorMessage = (err: ApolloError) => {
+  if (err.networkError) {
+    message += 'Network error: ' + err.networkError.message + '\n';
+  }
 
-
-    let message = '';
-    // If we have GraphQL errors present, add that to the error message.
-    if (Array.isArray(err.graphQLErrors) && err.graphQLErrors.length !== 0) {
-      err.graphQLErrors.forEach((graphQLError: GraphQLError) => {
-        const errorMessage = graphQLError ? graphQLError.message : 'Error message not found.';
-        message += `GraphQL error: ${errorMessage}\n`;
-      });
-    }
-
-    if (err.networkError) {
-      message += 'Network error: ' + err.networkError.message + '\n';
-    }
-
-    // strip newline from the end of the message
-    message = message.replace(/\n$/, '');
-    return message;
-  };
+  // strip newline from the end of the message
+  message = message.replace(/\n$/, '');
+  return message;
+};
 
 export class ApolloError extends Error {
   public message: string;
@@ -49,10 +49,10 @@ export class ApolloError extends Error {
     errorMessage,
     extraInfo,
   }: {
-    graphQLErrors?: GraphQLError[],
-    networkError?: Error | null,
-    errorMessage?: string,
-    extraInfo?: any,
+    graphQLErrors?: GraphQLError[];
+    networkError?: Error | null;
+    errorMessage?: string;
+    extraInfo?: any;
   }) {
     super(errorMessage);
     this.graphQLErrors = graphQLErrors || [];
@@ -66,5 +66,4 @@ export class ApolloError extends Error {
 
     this.extraInfo = extraInfo;
   }
-
 }

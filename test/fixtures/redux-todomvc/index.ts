@@ -1,6 +1,4 @@
-import {
-  rootReducer,
-} from './reducers';
+import { rootReducer } from './reducers';
 
 import {
   addTodo,
@@ -9,7 +7,7 @@ import {
   completeTodo,
   completeAll,
   clearCompleted,
-} from './actions'
+} from './actions';
 
 import * as types from './types';
 
@@ -22,4 +20,4 @@ export {
   completeAll,
   clearCompleted,
   types,
-}
+};

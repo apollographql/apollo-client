@@ -52,7 +52,7 @@ describe('updateQuery on a simple query', () => {
       },
     });
 
-    return new Promise((resolve) => setTimeout(resolve, 5))
+    return new Promise(resolve => setTimeout(resolve, 5))
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
         assert.equal(latestResult.data.entry.value, 1);
@@ -119,19 +119,19 @@ describe('updateQuery on a query with required and optional variables', () => {
       },
     });
 
-    return new Promise((resolve) => setTimeout(resolve, 5))
-        .then(() => obsHandle)
-        .then((watchedQuery: ObservableQuery<any>) => {
-          assert.equal(latestResult.data.entry.value, 1);
-          watchedQuery.updateQuery((prevResult: any) => {
-            const res = cloneDeep(prevResult);
-            res.entry.value = 2;
-            return res;
-          });
+    return new Promise(resolve => setTimeout(resolve, 5))
+      .then(() => obsHandle)
+      .then((watchedQuery: ObservableQuery<any>) => {
+        assert.equal(latestResult.data.entry.value, 1);
+        watchedQuery.updateQuery((prevResult: any) => {
+          const res = cloneDeep(prevResult);
+          res.entry.value = 2;
+          return res;
+        });
 
-          assert.equal(latestResult.data.entry.value, 2);
-        })
-        .then(() => sub.unsubscribe());
+        assert.equal(latestResult.data.entry.value, 2);
+      })
+      .then(() => sub.unsubscribe());
   });
 });
 
@@ -184,11 +184,20 @@ describe('fetchMore on an observable query', () => {
     },
   };
   for (let i = 1; i <= 10; i++) {
-    result.data.entry.comments.push({ text: `comment ${i}`, __typename: 'Comment' });
+    result.data.entry.comments.push({
+      text: `comment ${i}`,
+      __typename: 'Comment',
+    });
   }
   for (let i = 11; i <= 20; i++) {
-    resultMore.data.entry.comments.push({ text: `comment ${i}`, __typename: 'Comment' });
-    result2.data.comments.push({ text: `new comment ${i}`, __typename: 'Comment' });
+    resultMore.data.entry.comments.push({
+      text: `comment ${i}`,
+      __typename: 'Comment',
+    });
+    result2.data.comments.push({
+      text: `new comment ${i}`,
+      __typename: 'Comment',
+    });
   }
 
   let latestResult: any = null;
@@ -198,13 +207,16 @@ describe('fetchMore on an observable query', () => {
   let sub: any;
 
   function setup(...mockedResponses: any[]) {
-    networkInterface = mockNetworkInterface({
-      request: {
-        query,
-        variables,
+    networkInterface = mockNetworkInterface(
+      {
+        request: {
+          query,
+          variables,
+        },
+        result,
       },
-      result,
-    }, ...mockedResponses);
+      ...mockedResponses,
+    );
 
     client = new ApolloClient({
       networkInterface,
@@ -238,25 +250,30 @@ describe('fetchMore on an observable query', () => {
         variables: variablesMore,
       },
       result: resultMore,
-    }).then((watchedQuery) => {
-      return watchedQuery.fetchMore({
-        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-        updateQuery: (prev, options) => {
-          const state = cloneDeep(prev) as any;
-          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).entry.comments];
-          return state;
-        },
+    })
+      .then(watchedQuery => {
+        return watchedQuery.fetchMore({
+          variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+          updateQuery: (prev, options) => {
+            const state = cloneDeep(prev) as any;
+            state.entry.comments = [
+              ...state.entry.comments,
+              ...(options.fetchMoreResult as any).entry.comments,
+            ];
+            return state;
+          },
+        });
+      })
+      .then(data => {
+        assert.lengthOf(data.data.entry.comments, 10); // this is the server result
+        assert.isFalse(data.loading);
+        const comments = latestResult.data.entry.comments;
+        assert.lengthOf(comments, 20);
+        for (let i = 1; i <= 20; i++) {
+          assert.equal(comments[i - 1].text, `comment ${i}`);
+        }
+        unsetup();
       });
-    }).then(data => {
-      assert.lengthOf(data.data.entry.comments, 10); // this is the server result
-      assert.isFalse(data.loading);
-      const comments = latestResult.data.entry.comments;
-      assert.lengthOf(comments, 20);
-      for (let i = 1; i <= 20; i++) {
-        assert.equal(comments[i - 1].text, `comment ${i}`);
-      }
-      unsetup();
-    });
   });
 
   it('fetching more with a different query', () => {
@@ -267,33 +284,42 @@ describe('fetchMore on an observable query', () => {
         variables: variables2,
       },
       result: result2,
-    }).then((watchedQuery) => {
-      return watchedQuery.fetchMore({
-        query: query2,
-        variables: variables2,
-        updateQuery: (prev, options) => {
-          const state = cloneDeep(prev) as any;
-          state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).comments];
-          return state;
-        },
+    })
+      .then(watchedQuery => {
+        return watchedQuery.fetchMore({
+          query: query2,
+          variables: variables2,
+          updateQuery: (prev, options) => {
+            const state = cloneDeep(prev) as any;
+            state.entry.comments = [
+              ...state.entry.comments,
+              ...(options.fetchMoreResult as any).comments,
+            ];
+            return state;
+          },
+        });
+      })
+      .then(() => {
+        const comments = latestResult.data.entry.comments;
+        assert.lengthOf(comments, 20);
+        for (let i = 1; i <= 10; i++) {
+          assert.equal(comments[i - 1].text, `comment ${i}`);
+        }
+        for (let i = 11; i <= 20; i++) {
+          assert.equal(comments[i - 1].text, `new comment ${i}`);
+        }
+        unsetup();
       });
-    }).then(() => {
-      const comments = latestResult.data.entry.comments;
-      assert.lengthOf(comments, 20);
-      for (let i = 1; i <= 10; i++) {
-        assert.equal(comments[i - 1].text, `comment ${i}`);
-      }
-      for (let i = 11; i <= 20; i++) {
-        assert.equal(comments[i - 1].text, `new comment ${i}`);
-      }
-      unsetup();
-    });
   });
 
   it('will set the network status to `fetchMore`', done => {
     networkInterface = mockNetworkInterface(
       { request: { query, variables }, result, delay: 5 },
-      { request: { query, variables: variablesMore }, result: resultMore, delay: 5 },
+      {
+        request: { query, variables: variablesMore },
+        result: resultMore,
+        delay: 5,
+      },
     );
 
     client = new ApolloClient({
@@ -318,7 +344,10 @@ describe('fetchMore on an observable query', () => {
               variables: { start: 10 },
               updateQuery: (prev, options) => {
                 const state = cloneDeep(prev) as any;
-                state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).entry.comments];
+                state.entry.comments = [
+                  ...state.entry.comments,
+                  ...(options.fetchMoreResult as any).entry.comments,
+                ];
                 return state;
               },
             });
@@ -348,7 +377,11 @@ describe('fetchMore on an observable query', () => {
   it('will get an error from `fetchMore` if thrown', done => {
     networkInterface = mockNetworkInterface(
       { request: { query, variables }, result, delay: 5 },
-      { request: { query, variables: variablesMore }, error: new Error('Uh, oh!'), delay: 5 },
+      {
+        request: { query, variables: variablesMore },
+        error: new Error('Uh, oh!'),
+        delay: 5,
+      },
     );
 
     client = new ApolloClient({
@@ -373,7 +406,10 @@ describe('fetchMore on an observable query', () => {
               variables: { start: 10 },
               updateQuery: (prev, options) => {
                 const state = cloneDeep(prev) as any;
-                state.entry.comments = [...state.entry.comments, ...(options.fetchMoreResult as any).entry.comments];
+                state.entry.comments = [
+                  ...state.entry.comments,
+                  ...(options.fetchMoreResult as any).entry.comments,
+                ];
                 return state;
               },
             });
@@ -400,7 +436,8 @@ describe('fetchMore on an observable query', () => {
           done(error);
         }
       },
-      complete: () => done(new Error('`complete` called when it wasn’t supposed to be.')),
+      complete: () =>
+        done(new Error('`complete` called when it wasn’t supposed to be.')),
     });
   });
 });

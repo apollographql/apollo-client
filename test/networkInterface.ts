@@ -11,17 +11,13 @@ const { assert, expect } = chai;
 
 import {
   createNetworkInterface,
-//  NetworkInterface,
-//  Request,
+  //  NetworkInterface,
+  //  Request,
 } from '../src/transport/networkInterface';
 
-import {
-  MiddlewareRequest,
-} from '../src/transport/middleware';
+import { MiddlewareRequest } from '../src/transport/middleware';
 
-import {
-  AfterwareResponse,
-} from '../src/transport/afterware';
+import { AfterwareResponse } from '../src/transport/afterware';
 
 import gql from 'graphql-tag';
 
@@ -49,6 +45,26 @@ describe('network interface', () => {
   const simpleQueryWithVar = gql`
     query people($personNum: Int!) {
       allPeople(first: $personNum) {
+        people {
+          name
+        }
+      }
+    }
+  `;
+
+  const simpleQueryWithConnection = gql`
+    query people {
+      allPeople(first: 1) @connection(key: "people") {
+        people {
+          name
+        }
+      }
+    }
+  `;
+
+  const simpleQueryWithConnectionButNoKey = gql`
+    query people {
+      allPeople(first: 1) @connection {
         people {
           name
         }
@@ -111,19 +127,25 @@ describe('network interface', () => {
     // We won't be too careful about counting calls or closely checking
     // parameters, but just do the basic stuff to ensure the request looks right
     fetchMock.post(swapiUrl, (url, opts) => {
-      const { query, variables } = JSON.parse((opts as RequestInit).body!.toString());
+      const { query, variables } = JSON.parse(
+        (opts as RequestInit).body!.toString(),
+      );
 
       if (query === print(simpleQueryWithNoVars)) {
         return simpleResult;
       }
 
-      if (query === print(simpleQueryWithVar)
-          && isEqual(variables, { personNum: 1 })) {
+      if (
+        query === print(simpleQueryWithVar) &&
+        isEqual(variables, { personNum: 1 })
+      ) {
         return simpleResult;
       }
 
-      if (query === print(complexQueryWithTwoVars)
-          && isEqual(variables, { personNum: 1, filmNum: 1 })) {
+      if (
+        query === print(complexQueryWithTwoVars) &&
+        isEqual(variables, { personNum: 1, filmNum: 1 })
+      ) {
         return complexResult;
       }
 
@@ -167,23 +189,29 @@ describe('network interface', () => {
 
     it('should allow for storing of custom options', () => {
       const customOpts: RequestInit = {
-        headers: { 'Authorizaion': 'working' },
+        headers: { Authorizaion: 'working' },
         credentials: 'include',
       };
 
-      const networkInterface = createNetworkInterface({ uri: '/graphql', opts: customOpts });
+      const networkInterface = createNetworkInterface({
+        uri: '/graphql',
+        opts: customOpts,
+      });
 
       assert.deepEqual(networkInterface._opts, assign({}, customOpts));
     });
 
     it('should not mutate custom options', () => {
       const customOpts: RequestInit = {
-        headers: [ 'Authorizaion', 'working' ],
+        headers: ['Authorizaion', 'working'],
         credentials: 'include',
       };
       const originalOpts = assign({}, customOpts);
 
-      const networkInterface = createNetworkInterface({ uri: '/graphql', opts: customOpts });
+      const networkInterface = createNetworkInterface({
+        uri: '/graphql',
+        opts: customOpts,
+      });
 
       delete customOpts.headers;
 
@@ -205,7 +233,6 @@ describe('network interface', () => {
           'Middleware must implement the applyMiddleware function',
         );
       }
-
     });
 
     it('should take a middleware and assign it', () => {
@@ -228,9 +255,7 @@ describe('network interface', () => {
     });
 
     it('should alter the request variables', () => {
-      const testWare1 = TestWare([
-        { key: 'personNum', val: 1 },
-      ]);
+      const testWare1 = TestWare([{ key: 'personNum', val: 1 }]);
 
       const swapi = createNetworkInterface({ uri: swapiUrl });
       swapi.use([testWare1]);
@@ -248,9 +273,7 @@ describe('network interface', () => {
     });
 
     it('should alter the options but not overwrite defaults', () => {
-      const testWare1 = TestWare([], [
-        { key: 'planet', val: 'mars' },
-      ]);
+      const testWare1 = TestWare([], [{ key: 'planet', val: 'mars' }]);
 
       const swapi = createNetworkInterface({ uri: swapiUrl });
       swapi.use([testWare1]);
@@ -261,18 +284,22 @@ describe('network interface', () => {
         debugName: 'People query',
       };
 
-      return swapi.query(simpleRequest).then((data) => {
+      return swapi.query(simpleRequest).then(data => {
         assert.equal((fetchMock.lastCall()[1] as any).planet, 'mars');
         assert.notOk((<any>swapi._opts)['planet']);
       });
     });
 
     it('should alter the request body params', () => {
-      const testWare1 = TestWare([], [], [
-        { key: 'newParam', val: '0123456789' },
-      ]);
+      const testWare1 = TestWare(
+        [],
+        [],
+        [{ key: 'newParam', val: '0123456789' }],
+      );
 
-      const swapi = createNetworkInterface({ uri: 'http://graphql-swapi.test/' });
+      const swapi = createNetworkInterface({
+        uri: 'http://graphql-swapi.test/',
+      });
       swapi.use([testWare1]);
       const simpleRequest = {
         query: simpleQueryWithVar,
@@ -280,11 +307,12 @@ describe('network interface', () => {
         debugName: 'People query',
       };
 
-      return swapi.query(simpleRequest).then((data) => {
+      return swapi.query(simpleRequest).then(data => {
         return assert.deepEqual(
           JSON.parse((fetchMock.lastCall()[1] as any).body),
           {
-            query: 'query people($personNum: Int!) {\n  allPeople(first: $personNum) {\n    people {\n      name\n    }\n  }\n}\n',
+            query:
+              'query people($personNum: Int!) {\n  allPeople(first: $personNum) {\n    people {\n      name\n    }\n  }\n}\n',
             variables: { personNum: 1 },
             debugName: 'People query',
             newParam: '0123456789',
@@ -294,14 +322,12 @@ describe('network interface', () => {
     });
 
     it('handle multiple middlewares', () => {
-      const testWare1 = TestWare([
-        { key: 'personNum', val: 1 },
-      ]);
-      const testWare2 = TestWare([
-        { key: 'filmNum', val: 1 },
-      ]);
+      const testWare1 = TestWare([{ key: 'personNum', val: 1 }]);
+      const testWare2 = TestWare([{ key: 'filmNum', val: 1 }]);
 
-      const swapi = createNetworkInterface({ uri: 'http://graphql-swapi.test/' });
+      const swapi = createNetworkInterface({
+        uri: 'http://graphql-swapi.test/',
+      });
       swapi.use([testWare1, testWare2]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -317,16 +343,11 @@ describe('network interface', () => {
     });
 
     it('should chain use() calls', () => {
-      const testWare1 = TestWare([
-        { key: 'personNum', val: 1 },
-      ]);
-      const testWare2 = TestWare([
-        { key: 'filmNum', val: 1 },
-      ]);
+      const testWare1 = TestWare([{ key: 'personNum', val: 1 }]);
+      const testWare2 = TestWare([{ key: 'filmNum', val: 1 }]);
 
       const swapi = createNetworkInterface({ uri: swapiUrl });
-      swapi.use([testWare1])
-        .use([testWare2]);
+      swapi.use([testWare1]).use([testWare2]);
       const simpleRequest = {
         query: complexQueryWithTwoVars,
         variables: {},
@@ -344,22 +365,22 @@ describe('network interface', () => {
       const testWare2 = TestAfterWare();
 
       const networkInterface = createNetworkInterface({ uri: swapiUrl });
-      networkInterface.use([testWare1])
-        .useAfter([testWare2]);
+      networkInterface.use([testWare1]).useAfter([testWare2]);
       assert.deepEqual(networkInterface._middlewares, [testWare1]);
       assert.deepEqual(networkInterface._afterwares, [testWare2]);
     });
-
   });
 
   describe('afterware', () => {
     it('should return errors thrown in afterwares', () => {
       const networkInterface = createNetworkInterface({ uri: swapiUrl });
-      networkInterface.useAfter([{
-        applyAfterware() {
-          throw Error('Afterware error');
+      networkInterface.useAfter([
+        {
+          applyAfterware() {
+            throw Error('Afterware error');
+          },
         },
-      }]);
+      ]);
 
       const simpleRequest = {
         query: simpleQueryWithNoVars,
@@ -387,7 +408,6 @@ describe('network interface', () => {
           'Afterware must implement the applyAfterware function',
         );
       }
-
     });
 
     it('should take a afterware and assign it', () => {
@@ -414,8 +434,7 @@ describe('network interface', () => {
       const testWare2 = TestAfterWare();
 
       const networkInterface = createNetworkInterface({ uri: '/graphql' });
-      networkInterface.useAfter([testWare1])
-        .useAfter([testWare2]);
+      networkInterface.useAfter([testWare1]).useAfter([testWare2]);
 
       assert.deepEqual(networkInterface._afterwares, [testWare1, testWare2]);
     });
@@ -425,12 +444,10 @@ describe('network interface', () => {
       const testWare2 = TestWare();
 
       const networkInterface = createNetworkInterface({ uri: swapiUrl });
-      networkInterface.useAfter([testWare1])
-        .use([testWare2]);
+      networkInterface.useAfter([testWare1]).use([testWare2]);
       assert.deepEqual(networkInterface._middlewares, [testWare2]);
       assert.deepEqual(networkInterface._afterwares, [testWare1]);
     });
-
   });
 
   describe('making a request', () => {
@@ -464,45 +481,93 @@ describe('network interface', () => {
     });
 
     it('should throw an error with the response when request is forbidden', () => {
-      const unauthorizedInterface = createNetworkInterface({ uri: unauthorizedUrl });
+      const unauthorizedInterface = createNetworkInterface({
+        uri: unauthorizedUrl,
+      });
 
       return unauthorizedInterface.query(doomedToFail).catch(err => {
         assert.isOk(err.response);
         assert.equal(err.response.status, 403);
-        assert.equal(err.message, 'Network request failed with status 403 - "Forbidden"');
+        assert.equal(
+          err.message,
+          'Network request failed with status 403 - "Forbidden"',
+        );
       });
     });
 
     it('should throw an error with the response when service is unavailable', () => {
-      const unauthorizedInterface = createNetworkInterface({ uri: serviceUnavailableUrl });
+      const unauthorizedInterface = createNetworkInterface({
+        uri: serviceUnavailableUrl,
+      });
 
       return unauthorizedInterface.query(doomedToFail).catch(err => {
         assert.isOk(err.response);
         assert.equal(err.response.status, 503);
-        assert.equal(err.message, 'Network request failed with status 503 - "Service Unavailable"');
+        assert.equal(
+          err.message,
+          'Network request failed with status 503 - "Service Unavailable"',
+        );
       });
+    });
+  });
+
+  describe('transforming queries', () => {
+    it('should remove the @connection directive', () => {
+      const swapi = createNetworkInterface({ uri: swapiUrl });
+
+      const simpleRequestWithConnection = {
+        query: simpleQueryWithConnection,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      return assert.eventually.deepEqual(
+        swapi.query(simpleRequestWithConnection),
+        simpleResult,
+      );
+    });
+
+    it('should remove the @connection directive even with no key but warn the user', () => {
+      const swapi = createNetworkInterface({ uri: swapiUrl });
+
+      const simpleRequestWithConnectionButNoKey = {
+        query: simpleQueryWithConnectionButNoKey,
+        variables: {},
+        debugName: 'People query',
+      };
+
+      const expected =
+        'Removing an @connection directive even though it does not have a ' +
+        'key. You may want to use the key parameter to specify a store key.';
+
+      return assert.eventually.deepEqual(
+        withWarning(
+          () => swapi.query(simpleRequestWithConnectionButNoKey),
+          new RegExp(expected),
+        ),
+        simpleResult,
+      );
     });
   });
 });
 
 // simulate middleware by altering variables and options
 function TestWare(
-  variables: Array<{ key: string, val: any }> = [],
-  options: Array<{ key: string, val: any }> = [],
-  bodyParams: Array<{ key: string, val: any }> = [],
+  variables: Array<{ key: string; val: any }> = [],
+  options: Array<{ key: string; val: any }> = [],
+  bodyParams: Array<{ key: string; val: any }> = [],
 ) {
-
   return {
     applyMiddleware: (request: MiddlewareRequest, next: Function): void => {
-      variables.map((variable) => {
+      variables.map(variable => {
         (<any>request.request.variables)[variable.key] = variable.val;
       });
 
-      options.map((variable) => {
+      options.map(variable => {
         (<any>request.options)[variable.key] = variable.val;
       });
 
-      bodyParams.map((param) => {
+      bodyParams.map(param => {
         request.request[param.key as string] = param.val;
       });
 
@@ -512,13 +577,10 @@ function TestWare(
 }
 
 // simulate afterware by altering variables and options
-function TestAfterWare(
-  options: Array<{ key: string, val: any }> = [],
-) {
-
+function TestAfterWare(options: Array<{ key: string; val: any }> = []) {
   return {
     applyAfterware: (response: AfterwareResponse, next: Function): void => {
-      options.map((variable) => {
+      options.map(variable => {
         (<any>response.options)[variable.key] = variable.val;
       });
 

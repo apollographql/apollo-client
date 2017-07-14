@@ -1,14 +1,8 @@
-import {
-  QueryManager,
-} from '../../src/core/QueryManager';
+import { QueryManager } from '../../src/core/QueryManager';
 
-import mockNetworkInterface, {
-  MockedResponse,
-} from './mockNetworkInterface';
+import mockNetworkInterface, { MockedResponse } from './mockNetworkInterface';
 
-import {
-  createApolloStore,
-} from '../../src/store';
+import { createApolloStore } from '../../src/store';
 
 const defaultReduxRootSelector = (state: any) => state.apollo;
 

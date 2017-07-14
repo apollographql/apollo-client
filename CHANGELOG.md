@@ -1,7 +1,33 @@
 # Change log
 
 ### vNEXT
+- added prettier to manage formatting of project [PR #1904](https://github.com/apollographql/apollo-client/pull/1904)
 
+### v.1.9.0-0
+- Remove query tracking from the Redux store. Query status tracking is now handled outside of Redux in the QueryStore class. [PR #1859](https://github.com/apollographql/apollo-client/pull/1859)
+- Remove mutation tracking from the Redux store. Mutation status tracking is now handled outside of Redux in the MutationStore class. [PR #1846](https://github.com/apollographql/apollo-client/pull/1846)
+
+### 1.8.1
+- Use generic types for store updating functions in mutations [PR #1882](https://github.com/apollographql/apollo-client/pull/1882)
+- Update to TypeScript 2.4.1 [PR #1892](https://github.com/apollographql/apollo-client/pull/1892)
+
+### 1.8.0
+- Add the `filter` argument to the `@connection` directive so that custom store keys can include query arguments [PR #1862](https://github.com/apollographql/apollo-client/pull/1862)
+- Add support for flow typecheck to work out of the box (without any configuration) [PR #1820](https://github.com/apollographql/apollo-client/pull/1820)
+- Remove the dependency on the query and mutation store from the data reducer. Apollo actions sent to Redux now contain additional information that was originally pulled from the query and mutation stores [PR #1845](https://github.com/apollographql/apollo-client/pull/1845)
+- Fix: Avoiding reprocessing of identical data when writing to the store [PR #1675](https://github.com/apollographql/apollo-client/pull/1675)
+
+### 1.7.0
+- Add support for network interfaces that return observables [PR #1840](https://github.com/apollographql/apollo-client/pull/1840)
+
+### 1.6.1
+- Pin @types/node to 8.0.2 to avoid breaking type update
+
+### 1.6.0
+- the `@connection(key: ...)` directive can now be used to specify the key to use
+for the Apollo store and is removed by default when sending queries to the server [PR #1801](https://github.com/apollographql/apollo-client/pull/1801)
+
+### 1.5.0
 - `batchInterval` now has a default value of 10 ms [PR #1793](https://github.com/apollographql/apollo-client/pull/1793)
 - Added `batchMax` to allow you to limit the amount of queries in one batch. [PR #1659](https://github.com/apollographql/apollo-client/pull/1659)
 

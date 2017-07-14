@@ -47,46 +47,118 @@ function isEnumValue(value: ValueNode): value is EnumValueNode {
   return value.kind === 'EnumValue';
 }
 
-export function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNode, variables?: Object) {
+export function valueToObjectRepresentation(
+  argObj: any,
+  name: NameNode,
+  value: ValueNode,
+  variables?: Object,
+) {
   if (isIntValue(value) || isFloatValue(value)) {
     argObj[name.value] = Number(value.value);
   } else if (isBooleanValue(value) || isStringValue(value)) {
     argObj[name.value] = value.value;
   } else if (isObjectValue(value)) {
     const nestedArgObj = {};
-    value.fields.map((obj) => valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables));
+    value.fields.map(obj =>
+      valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables),
+    );
     argObj[name.value] = nestedArgObj;
   } else if (isVariable(value)) {
-    const variableValue = (variables || {} as any)[value.name.value];
+    const variableValue = (variables || ({} as any))[value.name.value];
     argObj[name.value] = variableValue;
   } else if (isListValue(value)) {
-    argObj[name.value] = value.values.map((listValue) => {
+    argObj[name.value] = value.values.map(listValue => {
       const nestedArgArrayObj = {};
-      valueToObjectRepresentation(nestedArgArrayObj, name, listValue, variables);
+      valueToObjectRepresentation(
+        nestedArgArrayObj,
+        name,
+        listValue,
+        variables,
+      );
       return (nestedArgArrayObj as any)[name.value];
     });
   } else if (isEnumValue(value)) {
     argObj[name.value] = (value as EnumValueNode).value;
   } else {
-    throw new Error(`The inline argument "${name.value}" of kind "${(value as any).kind}" is not supported.
+    throw new Error(`The inline argument "${name.value}" of kind "${(value as any)
+      .kind}" is not supported.
                     Use variables instead of inline arguments to overcome this limitation.`);
   }
 }
 
-export function storeKeyNameFromField(field: FieldNode, variables?: Object): string {
-  if (field.arguments && field.arguments.length) {
-    const argObj: Object = {};
+export function storeKeyNameFromField(
+  field: FieldNode,
+  variables?: Object,
+): string {
+  let directivesObj: any = null;
+  if (field.directives) {
+    directivesObj = {};
+    field.directives.forEach(directive => {
+      directivesObj[directive.name.value] = {};
 
-    field.arguments.forEach(({name, value}) => valueToObjectRepresentation(
-      argObj, name, value, variables));
-
-    return storeKeyNameFromFieldNameAndArgs(field.name.value, argObj);
+      if (directive.arguments) {
+        directive.arguments.forEach(({ name, value }) =>
+          valueToObjectRepresentation(
+            directivesObj[directive.name.value],
+            name,
+            value,
+            variables,
+          ),
+        );
+      }
+    });
   }
 
-  return field.name.value;
+  let argObj: any = null;
+  if (field.arguments && field.arguments.length) {
+    argObj = {};
+    field.arguments.forEach(({ name, value }) =>
+      valueToObjectRepresentation(argObj, name, value, variables),
+    );
+  }
+
+  return getStoreKeyName(field.name.value, argObj, directivesObj);
 }
 
-export function storeKeyNameFromFieldNameAndArgs(fieldName: string, args?: Object): string {
+export type Directives = {
+  [directiveName: string]: {
+    [argName: string]: any;
+  };
+};
+
+export function getStoreKeyName(
+  fieldName: string,
+  args?: Object,
+  directives?: Directives,
+): string {
+  if (
+    directives &&
+    directives['connection'] &&
+    directives['connection']['key']
+  ) {
+    if (
+      directives['connection']['filter'] &&
+      (directives['connection']['filter'] as string[]).length > 0
+    ) {
+      const filterKeys = directives['connection']['filter']
+        ? directives['connection']['filter'] as string[]
+        : [];
+      filterKeys.sort();
+
+      const queryArgs = args as { [key: string]: any };
+      const filteredArgs = {} as { [key: string]: any };
+      filterKeys.forEach(key => {
+        filteredArgs[key] = queryArgs[key];
+      });
+
+      return `${directives['connection']['key']}(${JSON.stringify(
+        filteredArgs,
+      )})`;
+    } else {
+      return directives['connection']['key'];
+    }
+  }
+
   if (args) {
     const stringifiedArgs: string = JSON.stringify(args);
 
@@ -97,16 +169,16 @@ export function storeKeyNameFromFieldNameAndArgs(fieldName: string, args?: Objec
 }
 
 export function resultKeyNameFromField(field: FieldNode): string {
-  return field.alias ?
-    field.alias.value :
-    field.name.value;
+  return field.alias ? field.alias.value : field.name.value;
 }
 
 export function isField(selection: SelectionNode): selection is FieldNode {
   return selection.kind === 'Field';
 }
 
-export function isInlineFragment(selection: SelectionNode): selection is InlineFragmentNode {
+export function isInlineFragment(
+  selection: SelectionNode,
+): selection is InlineFragmentNode {
   return selection.kind === 'InlineFragment';
 }
 
@@ -140,13 +212,23 @@ export interface JsonValue {
 
 export type ListValue = Array<null | IdValue>;
 
-export type StoreValue = number | string | string[] | IdValue  | ListValue | JsonValue | null | undefined | void | Object;
+export type StoreValue =
+  | number
+  | string
+  | string[]
+  | IdValue
+  | ListValue
+  | JsonValue
+  | null
+  | undefined
+  | void
+  | Object;
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return (
     idObject != null &&
     typeof idObject === 'object' &&
-    (idObject as (IdValue | JsonValue)).type === 'id'
+    (idObject as IdValue | JsonValue).type === 'id'
   );
 }
 
@@ -162,6 +244,6 @@ export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
   return (
     jsonObject != null &&
     typeof jsonObject === 'object' &&
-    (jsonObject as (IdValue | JsonValue)).type === 'json'
+    (jsonObject as IdValue | JsonValue).type === 'json'
   );
 }

@@ -1,21 +1,16 @@
 import 'whatwg-fetch';
 
-import {
-  ExecutionResult,
-  DocumentNode,
-} from 'graphql';
+import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { print } from 'graphql/language/printer';
 
-import {
-  MiddlewareInterface,
-  BatchMiddlewareInterface,
-} from './middleware';
+import { MiddlewareInterface, BatchMiddlewareInterface } from './middleware';
 
-import {
-  AfterwareInterface,
-  BatchAfterwareInterface,
-} from './afterware';
+import { AfterwareInterface, BatchAfterwareInterface } from './afterware';
+
+import { removeConnectionDirectiveFromDocument } from '../queries/queryTransform';
+
+import { Observable } from '../util/Observable';
 
 /**
  * This is an interface that describes an GraphQL document to be sent
@@ -51,13 +46,20 @@ export interface NetworkInterface {
   query(request: Request): Promise<ExecutionResult>;
 }
 
+export interface ObservableNetworkInterface {
+  request(request: Request): Observable<ExecutionResult>;
+}
+
 export interface BatchedNetworkInterface extends NetworkInterface {
   batchQuery(requests: Request[]): Promise<ExecutionResult[]>;
 }
 
 // XXX why does this have to extend network interface? does it even have a 'query' function?
 export interface SubscriptionNetworkInterface extends NetworkInterface {
-  subscribe(request: Request, handler: (error: any, result: any) => void): number;
+  subscribe(
+    request: Request,
+    handler: (error: any, result: any) => void,
+  ): number;
   unsubscribe(id: Number): void;
 }
 
@@ -66,8 +68,12 @@ export interface HTTPNetworkInterface extends NetworkInterface {
   _opts: RequestInit;
   _middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[];
   _afterwares: AfterwareInterface[] | BatchAfterwareInterface[];
-  use(middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[]): HTTPNetworkInterface;
-  useAfter(afterwares: AfterwareInterface[] | BatchAfterwareInterface[]): HTTPNetworkInterface;
+  use(
+    middlewares: MiddlewareInterface[] | BatchMiddlewareInterface[],
+  ): HTTPNetworkInterface;
+  useAfter(
+    afterwares: AfterwareInterface[] | BatchAfterwareInterface[],
+  ): HTTPNetworkInterface;
 }
 
 export interface RequestAndOptions {
@@ -122,7 +128,9 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
   public _middlewares: MiddlewareInterface[];
   public _afterwares: AfterwareInterface[];
 
-  public applyMiddlewares(requestAndOptions: RequestAndOptions): Promise<RequestAndOptions> {
+  public applyMiddlewares(
+    requestAndOptions: RequestAndOptions,
+  ): Promise<RequestAndOptions> {
     return new Promise((resolve, reject) => {
       const { request, options } = requestAndOptions;
       const queue = (funcs: MiddlewareInterface[], scope: any) => {
@@ -146,10 +154,13 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
     });
   }
 
-  public applyAfterwares({response, options}: ResponseAndOptions): Promise<ResponseAndOptions> {
+  public applyAfterwares({
+    response,
+    options,
+  }: ResponseAndOptions): Promise<ResponseAndOptions> {
     return new Promise((resolve, reject) => {
       // Declare responseObject so that afterware can mutate it.
-      const responseObject = {response, options};
+      const responseObject = { response, options };
       const queue = (funcs: AfterwareInterface[], scope: any) => {
         const next = () => {
           if (funcs.length > 0) {
@@ -181,7 +192,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
       headers: {
         Accept: '*/*',
         'Content-Type': 'application/json',
-        ...(options.headers as { [headerName: string]: string }),
+        ...options.headers as { [headerName: string]: string },
       },
     });
   }
@@ -192,16 +203,30 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
     return this.applyMiddlewares({
       request,
       options,
-    }).then( (rao) => this.fetchFromRemoteEndpoint.call(this, rao))
-      .then(response => this.applyAfterwares({
-        response: response as Response,
-        options,
-      }))
+    })
+      .then(rao => {
+        if (rao.request.query) {
+          rao.request.query = removeConnectionDirectiveFromDocument(
+            rao.request.query,
+          );
+        }
+
+        return rao;
+      })
+      .then(rao => this.fetchFromRemoteEndpoint.call(this, rao))
+      .then(response =>
+        this.applyAfterwares({
+          response: response as Response,
+          options,
+        }),
+      )
       .then(({ response }) => {
         const httpResponse = response as Response;
 
-        return httpResponse.json().catch((error) => {
-          const httpError = new Error(`Network request failed with status ${response.status} - "${response.statusText}"`);
+        return httpResponse.json().catch(error => {
+          const httpError = new Error(
+            `Network request failed with status ${response.status} - "${response.statusText}"`,
+          );
           (httpError as any).response = httpResponse;
           (httpError as any).parseError = error;
 
@@ -209,7 +234,10 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
         });
       })
       .then((payload: ExecutionResult) => {
-        if (!payload.hasOwnProperty('data') && !payload.hasOwnProperty('errors')) {
+        if (
+          !payload.hasOwnProperty('data') &&
+          !payload.hasOwnProperty('errors')
+        ) {
           throw new Error(
             `Server response was missing for query '${request.debugName}'.`,
           );
@@ -220,11 +248,13 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
   }
 
   public use(middlewares: MiddlewareInterface[]): HTTPNetworkInterface {
-    middlewares.map((middleware) => {
+    middlewares.map(middleware => {
       if (typeof middleware.applyMiddleware === 'function') {
         this._middlewares.push(middleware);
       } else {
-        throw new Error('Middleware must implement the applyMiddleware function');
+        throw new Error(
+          'Middleware must implement the applyMiddleware function',
+        );
       }
     });
 
@@ -253,8 +283,10 @@ export function createNetworkInterface(
   uriOrInterfaceOpts: string | NetworkInterfaceOptions,
   secondArgOpts: NetworkInterfaceOptions = {},
 ): HTTPNetworkInterface {
-  if (! uriOrInterfaceOpts) {
-    throw new Error('You must pass an options argument to createNetworkInterface.');
+  if (!uriOrInterfaceOpts) {
+    throw new Error(
+      'You must pass an options argument to createNetworkInterface.',
+    );
   }
 
   let uri: string | undefined;
@@ -265,7 +297,7 @@ export function createNetworkInterface(
   if (typeof uriOrInterfaceOpts === 'string') {
     console.warn(`Passing the URI as the first argument to createNetworkInterface is deprecated \
 as of Apollo Client 0.5. Please pass it as the "uri" property of the network interface options.`);
-    opts = secondArgOpts;
+    opts = secondArgOpts.opts;
     uri = uriOrInterfaceOpts;
   } else {
     opts = uriOrInterfaceOpts.opts;

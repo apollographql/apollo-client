@@ -90,6 +90,7 @@ import { print } from 'graphql/language/printer';
 import {
   readQueryFromStore,
   ReadQueryOptions,
+  MissingField,
 } from '../data/readFromStore';
 
 import {
@@ -137,6 +138,21 @@ import {
 
 import { ObservableQuery } from './ObservableQuery';
 
+/**
+ * This type defines
+ * @type {Object}
+ */
+export type ShouldRefetchIfStaleContext<T> = {
+  missingFields: Array<MissingField>,
+  queryId: string,
+  options: WatchQueryOptions,
+  lastResult: ApolloQueryResult<T>,
+  store: NormalizedCache,
+  queryManager: QueryManager,
+};
+
+export type ShouldRefetchIfStaleCb = (context: any) => boolean;
+
 export class QueryManager {
   public static EMIT_REDUX_ACTIONS = true;
 
@@ -154,6 +170,7 @@ export class QueryManager {
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
   private fragmentMatcher: FragmentMatcherInterface;
+  private shouldRefetchIfStale: ShouldRefetchIfStaleCb;
 
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -195,6 +212,7 @@ export class QueryManager {
     reducerConfig = {},
     fragmentMatcher,
     addTypename = true,
+    shouldRefetchIfStale = () => false,
     queryDeduplication = false,
     ssrMode = false,
   }: {
@@ -204,6 +222,7 @@ export class QueryManager {
     fragmentMatcher?: FragmentMatcherInterface,
     reducerConfig?: ApolloReducerConfig,
     addTypename?: boolean,
+    shouldRefetchIfStale?: ShouldRefetchIfStaleCb,
     queryDeduplication?: boolean,
     ssrMode?: boolean,
   }) {
@@ -218,6 +237,7 @@ export class QueryManager {
     this.queryListeners = {};
     this.queryDocuments = {};
     this.addTypename = addTypename;
+    this.shouldRefetchIfStale = shouldRefetchIfStale;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
 
@@ -564,6 +584,9 @@ export class QueryManager {
   ): QueryListener {
     let lastResult: ApolloQueryResult<T>;
     let previouslyHadError: boolean = false;
+    let isRefetching: boolean = false;
+    let refetchFails: boolean = false;
+
     return (queryStoreValue: QueryStoreValue) => {
       // The query store value can be undefined in the event of a store
       // reset.
@@ -626,8 +649,10 @@ export class QueryManager {
           }
         } else {
           try {
-            const { result: data, isMissing } = diffQueryAgainstStore({
-              store: this.getDataWithOptimisticResults(),
+            const store: NormalizedCache = this.getDataWithOptimisticResults();
+
+            const { result: data, isMissing, missingFields } = diffQueryAgainstStore({
+              store,
               query: this.queryDocuments[queryId],
               variables: queryStoreValue.previousVariables || queryStoreValue.variables,
               config: this.reducerConfig,
@@ -647,6 +672,42 @@ export class QueryManager {
                 networkStatus: queryStoreValue.networkStatus,
                 stale: true,
               };
+
+              const shouldRefetchContext: ShouldRefetchIfStaleContext<T> = {
+                missingFields,
+                queryId,
+                options,
+                lastResult,
+                store,
+                queryManager: this,
+              };
+
+              const shouldRefetch: boolean = (
+                !isRefetching &&
+                !refetchFails &&
+                !!storedQuery &&
+                !!lastResult &&
+                !!lastResult.data &&
+                this.shouldRefetchIfStale(shouldRefetchContext)
+              );
+
+              // If there is some data missing but there once was data available,
+              // we understand that there was a cache invalidation applied and the
+              // query may need to be refetched. In that case, we want to provide
+              // the user with previous result and mark it as stale while we load new data.
+              if (shouldRefetch) {
+                resultFromStore.loading = isRefetching = true;
+
+                storedQuery.observableQuery.refetch()
+                  .then(() => {
+                    isRefetching = false;
+                    refetchFails = false;
+                  })
+                  .catch(() => {
+                    isRefetching = false;
+                    refetchFails = true;
+                  });
+              }
             } else {
               resultFromStore = {
                 data,

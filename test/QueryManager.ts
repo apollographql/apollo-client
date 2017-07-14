@@ -1,5 +1,6 @@
 import {
   QueryManager,
+  ShouldRefetchIfStaleCb,
 } from '../src/core/QueryManager';
 
 import mockQueryManager from './mocks/mockQueryManager';
@@ -83,11 +84,13 @@ describe('QueryManager', () => {
     networkInterface,
     store,
     reduxRootSelector,
+    shouldRefetchIfStale,
     addTypename = false,
   }: {
     networkInterface?: NetworkInterface,
     store?: ApolloStore,
     reduxRootSelector?: ApolloStateSelector,
+    shouldRefetchIfStale?: ShouldRefetchIfStaleCb
     addTypename?: boolean,
   }) => {
 
@@ -95,6 +98,7 @@ describe('QueryManager', () => {
       networkInterface: networkInterface || mockNetworkInterface(),
       store: store || createApolloStore(),
       reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
+      shouldRefetchIfStale: shouldRefetchIfStale,
       addTypename,
     });
   };
@@ -3000,6 +3004,147 @@ describe('QueryManager', () => {
         );
       },
     );
+  });
+
+  describe('shouldRefetchIfStale', () => {
+    it('should refetch query when second query makes data stale', () => {
+      // Two queries, different fields.
+      const query1 = gql`query { a { id __typename b { c d } e } }`;
+      const query2 = gql`query { a { id __typename b { c } } }`;
+
+      // First results an object id 1.
+      // Second results an object id 2.
+      const data1 = { a: { id: 1, __typename: 'a', b: { c: 'C', d: 'D' }, e: 'E' } };
+      const data2 = { a: { id: 2, __typename: 'a', b: { c: 'C' } } };
+
+      // When second query is resolved, it
+      // will override cached data for first query,
+      // effectively making field 'b' stale.
+
+      const queries = [
+        { request: { query: query1 }, result: { data: data1 } },
+        { request: { query: query2 }, result: { data: data2 } },
+        { request: { query: query1 }, result: { data: data1 } },
+      ];
+
+      const config = { config: { dataIdFromObject }, reportCrashes: false };
+      const store = createApolloStore(config);
+      const networkInterface = mockNetworkInterface(...queries);
+
+      // shouldRefetchIfStale implementation to
+      // ALWAYS refetch when any data goes stale.
+      const shouldRefetchIfStale = () => true;
+      const queryManager = createQueryManager({ networkInterface, shouldRefetchIfStale, store });
+
+      // Create an observable for the first query.
+      // Any refetchs will notify the observable.
+      const observable = queryManager.watchQuery<any>({ query: query1 });
+
+      // Prepare each observables notification callbacks with assertions.
+      const notifications = [
+        // On the first notification, query 2 is still not executed and
+        // result for query 1 is as expected - id equals 1.
+        (result: any) => assert.deepEqual(result, {
+          networkStatus: NetworkStatus.ready,
+          data: data1,
+          loading: false,
+          stale: false,
+        }, 'first result'),
+
+        // On the second notification, query 2 has modified
+        // cached data, so we get id equals 2.
+        (result: any) => assert.deepEqual(result, {
+          networkStatus: NetworkStatus.ready,
+          data: data1,
+          loading: true,
+          stale: true,
+        }, 'second result'),
+
+        // On the third time, data is refetc thus
+        // being exactly like first time.
+        (result: any) => assert.deepEqual(result, {
+          networkStatus: NetworkStatus.ready,
+          data: data1,
+          loading: false,
+          stale: false,
+        }, 'third result'),
+      ];
+
+      // Build a Promise from the observable.
+      // This is needed to be possible to assert when
+      // notifications happen and to hold test end until
+      // observables get quiet.
+      const observablePromise = observableToPromise({ observable, wait: 60 }, ...notifications);
+
+      // Run second query, effectively changing cached data.
+      const query2Promise = queryManager.query<any>({ query: query2 });
+
+      return Promise.all([ observablePromise, query2Promise ]);
+    });
+
+    it('should refetch query when data is purged from the DataProxy on mutations', () => {
+      const query = gql`query { a { id __typename b } }`;
+      const mutation = gql`mutation { b { c } }`;
+
+      const queryData = { a: { id: 1, __typename: 'a', b: 'B' } };
+      const queryDataAfter = { a: { id: 1, __typename: 'a', b: 'C' } };
+      const mutationData = { b: { c: 'C' } };
+
+      const queries = [
+        { request: { query: query }, result: { data: queryData } },
+        { request: { query: mutation }, result: { data: mutationData } },
+        { request: { query: query }, result: { data: queryDataAfter } },
+      ];
+
+      const config = { config: { dataIdFromObject }, reportCrashes: false };
+      const store = createApolloStore(config);
+      const networkInterface = mockNetworkInterface(...queries);
+
+      const shouldRefetchIfStale = () => true;
+      const queryManager = createQueryManager({ networkInterface, shouldRefetchIfStale, store });
+
+      const observable = queryManager.watchQuery<any>({ query });
+
+      const notifications = [
+        // On the first notification, mutation is still not executed and
+        // result for query is as expected.
+        (result: any) => assert.deepEqual(result, {
+          networkStatus: NetworkStatus.ready,
+          data: queryData,
+          loading: false,
+          stale: false,
+        }, 'first result'),
+
+        // On the second notification, mutation has modified
+        // cached data, so we get stale data.
+        (result: any) => assert.deepEqual(result, {
+          networkStatus: NetworkStatus.ready,
+          data: queryData,
+          loading: true,
+          stale: true,
+        }, 'second result'),
+
+        // On the third time, data is refetched thus
+        // matching new values after mutation.
+        (result: any) => assert.deepEqual(result, {
+          networkStatus: NetworkStatus.ready,
+          data: queryDataAfter,
+          loading: false,
+          stale: false,
+        }, 'third result'),
+      ];
+
+      const observablePromise = observableToPromise({ observable, wait: 60 }, ...notifications);
+
+      const update = (dataProxy: any) => {
+        delete dataProxy.data.ROOT_QUERY.a;
+      };
+
+      // Run mutation, effectively purging cached data on update callback.
+      const mutationPromise = queryManager.mutate<any>({ mutation, update });
+
+      return Promise.all([ observablePromise, mutationPromise ]);
+    });
   });
 
   it('should return stale data when we orphan a real-id node in the store with a real-id node', () => {

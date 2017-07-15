@@ -591,7 +591,10 @@ describe('client', () => {
 
     return client.query({ query }).then(result => {
       assert.deepEqual(result.data, data);
-      assert.deepEqual(finalState.apollo.data, client.queryManager.dataStore.getStore());
+      assert.deepEqual(
+        finalState.apollo.data,
+        client.queryManager.dataStore.getStore(),
+      );
     });
   });
 
@@ -1557,63 +1560,172 @@ describe('client', () => {
     });
   });
 
-  it('emits Redux actions when the flag is enabled', () => {
-    QueryManager.EMIT_REDUX_ACTIONS = true;
+  describe('Redux backcompat', () => {
+    it('emits APOLLO_QUERY_INIT and APOLLO_QUERY_RESULT for query', () => {
+      QueryManager.EMIT_REDUX_ACTIONS = true;
 
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
+      const query = gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+              __typename
+            }
             __typename
           }
-          __typename
         }
-      }
-    `;
+      `;
 
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-            __typename: 'Person',
-          },
-        ],
-        __typename: 'People',
-      },
-    };
+      const data = {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+              __typename: 'Person',
+            },
+          ],
+          __typename: 'People',
+        },
+      };
 
-    const networkInterface = mockNetworkInterface({
-      request: { query: cloneDeep(query) },
-      result: { data },
+      const networkInterface = mockNetworkInterface({
+        request: { query: cloneDeep(query) },
+        result: { data },
+      });
+
+      const client = new ApolloClient({
+        networkInterface,
+      });
+
+      client.initStore();
+
+      const orig = client.store.dispatch;
+      const actionsEmitted: String[] = [];
+
+      client.store.dispatch = action => {
+        actionsEmitted.push(action.type);
+
+        orig(action);
+      };
+
+      const queryPromise = client.query({ query }).then(result => {
+        assert.deepEqual(result.data, data);
+      });
+
+      return queryPromise.then(() => {
+        QueryManager.EMIT_REDUX_ACTIONS = false;
+        assert.deepEqual(
+          actionsEmitted,
+          ['APOLLO_QUERY_INIT', 'APOLLO_QUERY_RESULT'],
+          'An action was not emitted',
+        );
+      });
     });
 
-    const client = new ApolloClient({
-      networkInterface,
+    it('emits APOLLO_MUTATION_INIT and APOLLO_MUTATION_RESULT for mutation', () => {
+      QueryManager.EMIT_REDUX_ACTIONS = true;
+
+      const mutation = gql`
+        mutation {
+          person {
+            firstname
+            lastname
+            __typename
+          }
+        }
+      `;
+
+      const data = {
+        person: {
+          firstname: 'a',
+          lastname: 'b',
+          __typename: 'Person',
+        },
+      };
+
+      const networkInterface = mockNetworkInterface({
+        request: { query: mutation },
+        result: { data },
+      });
+
+      const client = new ApolloClient({
+        networkInterface,
+      });
+
+      client.initStore();
+
+      const orig = client.store.dispatch;
+      const actionsEmitted: String[] = [];
+
+      client.store.dispatch = action => {
+        actionsEmitted.push(action.type);
+
+        orig(action);
+      };
+
+      const queryPromise = client.mutate({ mutation });
+
+      return queryPromise.then(() => {
+        QueryManager.EMIT_REDUX_ACTIONS = false;
+        assert.deepEqual(
+          actionsEmitted,
+          ['APOLLO_MUTATION_INIT', 'APOLLO_MUTATION_RESULT'],
+          'An action was not emitted',
+        );
+      });
     });
 
-    client.initStore();
+    it('emits APOLLO_MUTATION_INIT and APOLLO_MUTATION_ERROR for errored mutation', () => {
+      QueryManager.EMIT_REDUX_ACTIONS = true;
 
-    const orig = client.store.dispatch;
-    let actionEmitted = false;
+      const mutation = gql`
+        mutation {
+          person {
+            firstname
+            lastname
+            __typename
+          }
+        }
+      `;
 
-    client.store.dispatch = action => {
-      if (action.type === 'APOLLO_QUERY_INIT') {
-        actionEmitted = true;
-      }
+      const data = {
+        person: {
+          firstname: 'a',
+          lastname: 'b',
+          __typename: 'Person',
+        },
+      };
 
-      orig(action);
-    };
+      const networkInterface = mockNetworkInterface({
+        request: { query: mutation },
+        error: new Error(),
+      });
 
-    const queryPromise = client.query({ query }).then(result => {
-      assert.deepEqual(result.data, data);
-    });
+      const client = new ApolloClient({
+        networkInterface,
+      });
 
-    QueryManager.EMIT_REDUX_ACTIONS = false;
+      client.initStore();
 
-    return queryPromise.then(() => {
-      assert(actionEmitted, 'An action was not emitted');
+      const orig = client.store.dispatch;
+      const actionsEmitted: String[] = [];
+
+      client.store.dispatch = action => {
+        actionsEmitted.push(action.type);
+
+        orig(action);
+      };
+
+      const queryPromise = client.mutate({ mutation });
+
+      return queryPromise.catch(() => {
+        QueryManager.EMIT_REDUX_ACTIONS = false;
+        assert.deepEqual(
+          actionsEmitted,
+          ['APOLLO_MUTATION_INIT', 'APOLLO_MUTATION_ERROR'],
+          'An action was not emitted',
+        );
+      });
     });
   });
 
@@ -2171,7 +2283,10 @@ describe('client', () => {
         done(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
-        assert.equal(client.queryManager.dataStore.getOptimisticQueue().length, 0);
+        assert.equal(
+          client.queryManager.dataStore.getOptimisticQueue().length,
+          0,
+        );
         done();
       });
   });
@@ -2923,7 +3038,7 @@ it('should run a query with the connection directive and write the result to the
     networkInterface,
   });
 
-  return client.query({ query }).then((actualResult) => {
+  return client.query({ query }).then(actualResult => {
     assert.deepEqual(actualResult.data, result);
     assert.deepEqual(client.queryManager.dataStore.getStore(), {
       'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
@@ -2971,16 +3086,19 @@ it('should run a query with the connection directive and filter arguments and wr
     networkInterface,
   });
 
-  return client.query({ query, variables }).then((actualResult) => {
+  return client.query({ query, variables }).then(actualResult => {
     assert.deepEqual(actualResult.data, result);
     assert.deepEqual(client.queryManager.dataStore.getStore(), {
-      'ROOT_QUERY.abc({"order":"popularity"}).0': { name: 'abcd', __typename: 'Book' },
-      'ROOT_QUERY': {
+      'ROOT_QUERY.abc({"order":"popularity"}).0': {
+        name: 'abcd',
+        __typename: 'Book',
+      },
+      ROOT_QUERY: {
         'abc({"order":"popularity"})': [
           {
-            'generated': true,
-            'id': 'ROOT_QUERY.abc({"order":"popularity"}).0',
-            'type': 'id',
+            generated: true,
+            id: 'ROOT_QUERY.abc({"order":"popularity"}).0',
+            type: 'id',
           },
         ],
       },

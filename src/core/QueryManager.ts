@@ -294,22 +294,31 @@ export class QueryManager {
       return ret;
     };
 
-    this.store.dispatch({
-      type: 'APOLLO_MUTATION_INIT',
-      mutationString,
-      mutation,
-      variables: variables || {},
-      operationName: getOperationName(mutation),
-      mutationId,
-      optimisticResponse,
-      extraReducers: this.getExtraReducers(),
-      updateQueries: generateUpdateQueriesInfo(),
-      update: updateWithProxyFn,
-    });
+    if (QueryManager.EMIT_REDUX_ACTIONS) {
+      this.store.dispatch({
+        type: 'APOLLO_MUTATION_INIT',
+        mutationString,
+        mutation,
+        variables: variables || {},
+        operationName: getOperationName(mutation),
+        mutationId,
+        optimisticResponse,
+        extraReducers: this.getExtraReducers(),
+        updateQueries: generateUpdateQueriesInfo(),
+        update: updateWithProxyFn,
+      });
+    }
 
     this.mutationStore.initMutation(mutationId, mutationString, variables);
-    this.dataStore.markMutationInit(mutationId, mutation, variables || {}, generateUpdateQueriesInfo(),
-      updateWithProxyFn, optimisticResponse, this.getExtraReducers());
+    this.dataStore.markMutationInit(
+      mutationId,
+      mutation,
+      variables || {},
+      generateUpdateQueriesInfo(),
+      updateWithProxyFn,
+      optimisticResponse,
+      this.getExtraReducers(),
+    );
 
     this.broadcastQueries();
 
@@ -321,39 +330,50 @@ export class QueryManager {
             const error = new ApolloError({
               graphQLErrors: result.errors,
             });
-            this.store.dispatch({
-              type: 'APOLLO_MUTATION_ERROR',
-              error,
-              mutationId,
-            });
 
             this.mutationStore.markMutationError(mutationId, error);
             this.dataStore.markMutationComplete(mutationId);
             this.broadcastQueries();
+
+            if (QueryManager.EMIT_REDUX_ACTIONS) {
+              this.store.dispatch({
+                type: 'APOLLO_MUTATION_ERROR',
+                error,
+                mutationId,
+              });
+            }
 
             delete this.queryDocuments[mutationId];
             reject(error);
             return;
           }
 
-          this.store.dispatch({
-            type: 'APOLLO_MUTATION_RESULT',
-            result,
-            mutationId,
-            document: mutation,
-            operationName: getOperationName(mutation),
-            variables: variables || {},
-            extraReducers: this.getExtraReducers(),
-            updateQueries: generateUpdateQueriesInfo(),
-            update: updateWithProxyFn,
-          });
-
           this.mutationStore.markMutationResult(mutationId);
-          this.dataStore.markMutationResult(mutationId, result, mutation, variables || {}, generateUpdateQueriesInfo(),
-            updateWithProxyFn,this.getExtraReducers());
+          this.dataStore.markMutationResult(
+            mutationId,
+            result,
+            mutation,
+            variables || {},
+            generateUpdateQueriesInfo(),
+            updateWithProxyFn,
+            this.getExtraReducers(),
+          );
           this.dataStore.markMutationComplete(mutationId);
-
           this.broadcastQueries();
+
+          if (QueryManager.EMIT_REDUX_ACTIONS) {
+            this.store.dispatch({
+              type: 'APOLLO_MUTATION_RESULT',
+              result,
+              mutationId,
+              document: mutation,
+              operationName: getOperationName(mutation),
+              variables: variables || {},
+              extraReducers: this.getExtraReducers(),
+              updateQueries: generateUpdateQueriesInfo(),
+              update: updateWithProxyFn,
+            });
+          }
 
           if (typeof refetchQueries[0] === 'string') {
             (refetchQueries as string[]).forEach(name => {
@@ -373,15 +393,17 @@ export class QueryManager {
           resolve(result as ApolloExecutionResult<T>);
         })
         .catch(err => {
-          this.store.dispatch({
-            type: 'APOLLO_MUTATION_ERROR',
-            error: err,
-            mutationId,
-          });
-
           this.mutationStore.markMutationError(mutationId, err);
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
+
+          if (QueryManager.EMIT_REDUX_ACTIONS) {
+            this.store.dispatch({
+              type: 'APOLLO_MUTATION_ERROR',
+              error: err,
+              mutationId,
+            });
+          }
 
           delete this.queryDocuments[mutationId];
           reject(
@@ -514,6 +536,9 @@ export class QueryManager {
           throw error;
         } else {
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
+            this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
+            this.broadcastQueries();
+
             if (QueryManager.EMIT_REDUX_ACTIONS) {
               this.store.dispatch({
                 type: 'APOLLO_QUERY_ERROR',
@@ -523,9 +548,6 @@ export class QueryManager {
                 fetchMoreForQueryId,
               });
             }
-
-            this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
-            this.broadcastQueries();
           }
 
           this.removeFetchQueryPromise(requestId);
@@ -932,14 +954,15 @@ export class QueryManager {
     });
 
     this.queryStore.reset(Object.keys(this.observableQueries));
-
-    this.store.dispatch({
-      type: 'APOLLO_STORE_RESET',
-      observableQueryIds: Object.keys(this.observableQueries),
-    });
-
     this.mutationStore.reset();
     this.dataStore.reset();
+
+    if (QueryManager.EMIT_REDUX_ACTIONS) {
+      this.store.dispatch({
+        type: 'APOLLO_STORE_RESET',
+        observableQueryIds: Object.keys(this.observableQueries),
+      });
+    }
 
     // Similarly, we have to have to refetch each of the queries currently being
     // observed. We refetch instead of error'ing on these since the assumption is that
@@ -961,7 +984,7 @@ export class QueryManager {
       }
     });
 
-    this.broadcastQueries()
+    this.broadcastQueries();
 
     return Promise.all(observableQueryPromises);
   }
@@ -1021,19 +1044,26 @@ export class QueryManager {
               }
             });
           } else {
-            this.store.dispatch({
-              type: 'APOLLO_SUBSCRIPTION_RESULT',
-              document: transformedDoc,
-              operationName: getOperationName(transformedDoc),
-              result: { data: result },
+            this.dataStore.markSubscriptionResult(
+              subId,
+              { data: result },
+              transformedDoc,
               variables,
-              subscriptionId: subId,
-              extraReducers: this.getExtraReducers(),
-            });
-
-            this.dataStore.markSubscriptionResult(subId, { data: result }, transformedDoc, variables, this.getExtraReducers());
-
+              this.getExtraReducers(),
+            );
             this.broadcastQueries();
+
+            if (QueryManager.EMIT_REDUX_ACTIONS) {
+              this.store.dispatch({
+                type: 'APOLLO_SUBSCRIPTION_RESULT',
+                document: transformedDoc,
+                operationName: getOperationName(transformedDoc),
+                result: { data: result },
+                variables,
+                subscriptionId: subId,
+                extraReducers: this.getExtraReducers(),
+              });
+            }
 
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {
@@ -1255,19 +1285,28 @@ export class QueryManager {
           // default the lastRequestId to 1
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
             // XXX handle multiple ApolloQueryResults
-            this.store.dispatch({
-              type: 'APOLLO_QUERY_RESULT',
-              document,
-              variables: variables ? variables : {},
-              operationName: getOperationName(document),
-              result,
+            if (QueryManager.EMIT_REDUX_ACTIONS) {
+              this.store.dispatch({
+                type: 'APOLLO_QUERY_RESULT',
+                document,
+                variables: variables ? variables : {},
+                operationName: getOperationName(document),
+                result,
+                queryId,
+                requestId,
+                fetchMoreForQueryId,
+                extraReducers,
+              });
+            }
+
+            this.dataStore.markQueryResult(
               queryId,
               requestId,
-              fetchMoreForQueryId,
+              result,
+              document,
+              variables,
               extraReducers,
-            });
-
-            this.dataStore.markQueryResult(queryId, requestId, result, document, variables, extraReducers);
+            );
 
             this.queryStore.markQueryResult(
               queryId,

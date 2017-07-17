@@ -63,7 +63,7 @@ import {
   DataProxyReadFragmentOptions,
   DataProxyWriteQueryOptions,
   DataProxyWriteFragmentOptions,
-  ReduxDataProxy,
+  StoreDataProxy,
 } from './data/proxy';
 
 import { version } from './version';
@@ -575,11 +575,11 @@ export default class ApolloClient implements DataProxy {
   private initProxy(): DataProxy {
     if (!this.proxy) {
       this.initStore();
-      this.proxy = new ReduxDataProxy(
+      this.proxy = new StoreDataProxy(
         this.queryManager.dataStore,
-        this.reduxRootSelector || defaultReduxRootSelector,
         this.fragmentMatcher,
         this.reducerConfig,
+        this.store,
       );
     }
     return this.proxy;

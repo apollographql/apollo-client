@@ -4,11 +4,15 @@ import { DataStore } from '../data/store';
 import { DataWrite } from '../actions';
 import { IdGetter } from '../core/types';
 import { NormalizedCache } from '../data/storeUtils';
-import {getFragmentQueryDocument, getOperationName} from '../queries/getFromAST';
+import {
+  getFragmentQueryDocument,
+  getOperationName,
+} from '../queries/getFromAST';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
 import { FragmentMatcherInterface } from './fragmentMatcher';
 import { addTypenameToDocument } from '../queries/queryTransform';
+import { QueryManager } from '../core/QueryManager';
 
 export interface DataProxyReadQueryOptions {
   /**
@@ -140,23 +144,16 @@ export interface DataProxy {
 }
 
 /**
- * A data proxy that is completely powered by our Redux store. Reads are read
- * from the Redux state and writes are dispatched using actions where they will
- * update the store.
- *
- * Needs a Redux store and a selector function to get the Apollo state from the
- * root Redux state.
+ * A data proxy powered by our internal implementation of the data store,
+ * which tracks the normalized cache and optimistic query status.
  */
-export class ReduxDataProxy implements DataProxy {
+export class StoreDataProxy implements DataProxy {
   /**
-   * The Redux store that we read and write to.
+   * The internal store containing the normalized cache and optimistic results state.
    */
   private store: DataStore;
 
-  /**
-   * A function that selects the Apollo state from Redux state.
-   */
-  private reduxRootSelector: (state: any) => Store;
+  private reduxStore: ApolloStore;
 
   private reducerConfig: ApolloReducerConfig;
 
@@ -164,18 +161,21 @@ export class ReduxDataProxy implements DataProxy {
 
   constructor(
     store: DataStore,
-    reduxRootSelector: (state: any) => Store,
     fragmentMatcher: FragmentMatcherInterface,
     reducerConfig: ApolloReducerConfig,
+    reduxStore?: ApolloStore,
   ) {
     this.store = store;
-    this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
     this.fragmentMatcher = fragmentMatcher;
+
+    if (reduxStore) {
+      this.reduxStore = reduxStore;
+    }
   }
 
   /**
-   * Reads a query from the Redux state.
+   * Reads a query from the data store.
    */
   public readQuery<QueryType>({
     query,
@@ -196,7 +196,7 @@ export class ReduxDataProxy implements DataProxy {
   }
 
   /**
-   * Reads a fragment from the Redux state.
+   * Reads a fragment from the data store.
    */
   public readFragment<FragmentType>({
     id,
@@ -228,7 +228,7 @@ export class ReduxDataProxy implements DataProxy {
   }
 
   /**
-   * Writes a query to the Redux state.
+   * Writes a query to the data store.
    */
   public writeQuery({
     data,
@@ -239,17 +239,34 @@ export class ReduxDataProxy implements DataProxy {
       query = addTypenameToDocument(query);
     }
 
-    this.store.executeWrites([{
-      rootId: 'ROOT_QUERY',
-      result: data,
-      document: query,
-      operationName: getOperationName(query),
-      variables: variables || {},
-    }]);
+    if (QueryManager.EMIT_REDUX_ACTIONS) {
+      this.reduxStore.dispatch({
+        type: 'APOLLO_WRITE',
+        writes: [
+          {
+            rootId: 'ROOT_QUERY',
+            result: data,
+            document: query,
+            operationName: getOperationName(query),
+            variables: variables || {},
+          },
+        ],
+      });
+    }
+
+    this.store.executeWrites([
+      {
+        rootId: 'ROOT_QUERY',
+        result: data,
+        document: query,
+        operationName: getOperationName(query),
+        variables: variables || {},
+      },
+    ]);
   }
 
   /**
-   * Writes a fragment to the Redux state.
+   * Writes a fragment to the data store.
    */
   public writeFragment({
     data,
@@ -264,13 +281,30 @@ export class ReduxDataProxy implements DataProxy {
       document = addTypenameToDocument(document);
     }
 
-    this.store.executeWrites([{
-      rootId: id,
-      result: data,
-      document,
-      operationName: getOperationName(document),
-      variables: variables || {},
-    }]);
+    if (QueryManager.EMIT_REDUX_ACTIONS) {
+      this.reduxStore.dispatch({
+        type: 'APOLLO_WRITE',
+        writes: [
+          {
+            rootId: id,
+            result: data,
+            document,
+            operationName: getOperationName(document),
+            variables: variables || {},
+          },
+        ],
+      });
+    }
+
+    this.store.executeWrites([
+      {
+        rootId: id,
+        result: data,
+        document,
+        operationName: getOperationName(document),
+        variables: variables || {},
+      },
+    ]);
   }
 }
 
@@ -312,8 +346,7 @@ export class TransactionDataProxy implements DataProxy {
 
   /**
    * Finishes a transaction and returns the actions accumulated during this
-   * transaction. The actions are not ready for dispatch in Redux, however. The
-   * `type` must be added before that.
+   * transaction.
    */
   public finish(): Array<DataWrite> {
     this.assertNotFinished();

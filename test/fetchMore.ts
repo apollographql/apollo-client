@@ -441,3 +441,254 @@ describe('fetchMore on an observable query', () => {
     });
   });
 });
+
+describe('fetchMore on an observable query with connection', () => {
+  const query = gql`
+    query Comment($repoName: String!, $start: Int!, $limit: Int!) {
+      entry(repoFullName: $repoName, start: $start, limit: $limit)
+        @connection(key: "repoName") {
+        comments {
+          text
+          __typename
+        }
+        __typename
+      }
+    }
+  `;
+
+  const variables = {
+    repoName: 'org/repo',
+    start: 0,
+    limit: 10,
+  };
+  const variablesMore = assign({}, variables, { start: 10, limit: 10 });
+
+  const result: any = {
+    data: {
+      __typename: 'Query',
+      entry: {
+        __typename: 'Entry',
+        comments: [],
+      },
+    },
+  };
+  const resultMore = cloneDeep(result);
+
+  for (let i = 1; i <= 10; i++) {
+    result.data.entry.comments.push({
+      text: `comment ${i}`,
+      __typename: 'Comment',
+    });
+  }
+  for (let i = 11; i <= 20; i++) {
+    resultMore.data.entry.comments.push({
+      text: `comment ${i}`,
+      __typename: 'Comment',
+    });
+  }
+
+  let latestResult: any = null;
+
+  let client: ApolloClient;
+  let networkInterface: any;
+  let sub: any;
+
+  function setup(...mockedResponses: any[]) {
+    networkInterface = mockNetworkInterface(
+      {
+        request: {
+          query,
+          variables,
+        },
+        result,
+      },
+      ...mockedResponses,
+    );
+
+    client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+    });
+
+    const obsHandle = client.watchQuery<any>({
+      query,
+      variables,
+    });
+    sub = obsHandle.subscribe({
+      next(queryResult) {
+        // do nothing
+        latestResult = queryResult;
+      },
+    });
+
+    return Promise.resolve(obsHandle);
+  }
+
+  function unsetup() {
+    sub.unsubscribe();
+    sub = null;
+  }
+
+  it('fetchMore with connection results merging', () => {
+    latestResult = null;
+    return setup({
+      request: {
+        query,
+        variables: variablesMore,
+      },
+      result: resultMore,
+    })
+      .then(watchedQuery => {
+        return watchedQuery.fetchMore({
+          variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+          updateQuery: (prev, options) => {
+            const state = cloneDeep(prev) as any;
+            state.entry.comments = [
+              ...state.entry.comments,
+              ...(options.fetchMoreResult as any).entry.comments,
+            ];
+            return state;
+          },
+        });
+      })
+      .then(data => {
+        assert.lengthOf(data.data.entry.comments, 10); // this is the server result
+        assert.isFalse(data.loading);
+        const comments = latestResult.data.entry.comments;
+        assert.lengthOf(comments, 20);
+        for (let i = 1; i <= 20; i++) {
+          assert.equal(comments[i - 1].text, `comment ${i}`);
+        }
+        unsetup();
+      });
+  });
+
+  it('will set the network status to `fetchMore`', done => {
+    networkInterface = mockNetworkInterface(
+      { request: { query, variables }, result, delay: 5 },
+      {
+        request: { query, variables: variablesMore },
+        result: resultMore,
+        delay: 5,
+      },
+    );
+
+    client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+    });
+
+    const observable = client.watchQuery({
+      query,
+      variables,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let count = 0;
+    observable.subscribe({
+      next: ({ data, networkStatus }) => {
+        switch (count++) {
+          case 0:
+            assert.equal(networkStatus, NetworkStatus.ready);
+            assert.equal((data as any).entry.comments.length, 10);
+            observable.fetchMore({
+              variables: { start: 10 },
+              updateQuery: (prev, options) => {
+                const state = cloneDeep(prev) as any;
+                state.entry.comments = [
+                  ...state.entry.comments,
+                  ...(options.fetchMoreResult as any).entry.comments,
+                ];
+                return state;
+              },
+            });
+            break;
+          case 1:
+            assert.equal(networkStatus, NetworkStatus.fetchMore);
+            assert.equal((data as any).entry.comments.length, 10);
+            break;
+          case 2:
+            assert.equal(networkStatus, NetworkStatus.ready);
+            assert.equal((data as any).entry.comments.length, 10);
+            break;
+          case 3:
+            assert.equal(networkStatus, NetworkStatus.ready);
+            assert.equal((data as any).entry.comments.length, 20);
+            done();
+            break;
+          default:
+            done(new Error('`next` called too many times'));
+        }
+      },
+      error: error => done(error),
+      complete: () => done(new Error('Should not have completed')),
+    });
+  });
+
+  it('will get an error from `fetchMore` if thrown', done => {
+    networkInterface = mockNetworkInterface(
+      { request: { query, variables }, result, delay: 5 },
+      {
+        request: { query, variables: variablesMore },
+        error: new Error('Uh, oh!'),
+        delay: 5,
+      },
+    );
+
+    client = new ApolloClient({
+      networkInterface,
+      addTypename: true,
+    });
+
+    const observable = client.watchQuery({
+      query,
+      variables,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let count = 0;
+    observable.subscribe({
+      next: ({ data, networkStatus }) => {
+        switch (count++) {
+          case 0:
+            assert.equal(networkStatus, NetworkStatus.ready);
+            assert.equal((data as any).entry.comments.length, 10);
+            observable.fetchMore({
+              variables: { start: 10 },
+              updateQuery: (prev, options) => {
+                const state = cloneDeep(prev) as any;
+                state.entry.comments = [
+                  ...state.entry.comments,
+                  ...(options.fetchMoreResult as any).entry.comments,
+                ];
+                return state;
+              },
+            });
+            break;
+          case 1:
+            assert.equal(networkStatus, NetworkStatus.fetchMore);
+            assert.equal((data as any).entry.comments.length, 10);
+            break;
+          default:
+            done(new Error('`next` called when it wasn’t supposed to be.'));
+        }
+      },
+      error: error => {
+        try {
+          switch (count++) {
+            case 2:
+              assert.equal(error.message, 'Network error: Uh, oh!');
+              done();
+              break;
+            default:
+              done(new Error('`error` called when it wasn’t supposed to be.'));
+          }
+        } catch (error) {
+          done(error);
+        }
+      },
+      complete: () =>
+        done(new Error('`complete` called when it wasn’t supposed to be.')),
+    });
+  });
+});

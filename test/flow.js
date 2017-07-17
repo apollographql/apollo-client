@@ -29,6 +29,30 @@ const client1 = new ApolloClient({
 });
 
 const networkInterface1 = createNetworkInterface("localhost:3000");
+
+networkInterface1.use([{
+  applyMiddleware(req, next) {
+    const token = localStorage.getItem('token') || ''
+    if (!req.options.headers) {
+        req.options.headers = { authorization: token }
+    } else if (req.options.headers instanceof Headers) {
+        req.options.headers.set('authorization', token)
+    } else {
+        req.options.headers.authorization = token;
+    }
+    next();
+  }
+}]);
+
+networkInterface1.useAfter([{
+  applyAfterware({ response }, next) {
+    if (response.status === 401) {
+      next();
+    }
+    next();
+  }
+}]);
+
 const client2 = new ApolloClient({ networkInterface: networkInterface1 });
 
 // $ExpectError

@@ -39,7 +39,6 @@ export interface MiddlewareRequest {
 
 export interface MiddlewareInterface {
   applyMiddleware(
-    this: HTTPFetchNetworkInterface,
     request: MiddlewareRequest,
     next: Function,
   ): void,
@@ -52,7 +51,6 @@ export interface BatchMiddlewareRequest {
 
 export interface BatchMiddlewareInterface {
   applyBatchMiddleware(
-    this: HTTPBatchedNetworkInterface,
     request: BatchMiddlewareRequest,
     next: Function,
   ): void,
@@ -64,7 +62,6 @@ export interface AfterwareResponse {
 
 export interface AfterwareInterface {
   applyAfterware(
-    this: HTTPFetchNetworkInterface,
     response: AfterwareResponse,
     next: Function,
   ): any,
@@ -77,7 +74,6 @@ export interface BatchAfterwareResponse {
 
 export interface BatchAfterwareInterface {
   applyBatchAfterware(
-    this: HTTPBatchedNetworkInterface,
     response: BatchAfterwareResponse,
     next: Function,
   ): any,
@@ -98,12 +94,8 @@ export interface SubscriptionNetworkInterface {
   unsubscribe(id: Number): void,
 }
 
-export type NetworkMiddleware =
-  | MiddlewareInterface[]
-  | BatchMiddlewareInterface[];
-export type NetworkAfterware =
-  | AfterwareInterface[]
-  | BatchAfterwareInterface[];
+export type NetworkMiddleware = Array<MiddlewareInterface | BatchMiddlewareInterface>;
+export type NetworkAfterware = Array<AfterwareInterface | BatchAfterwareInterface>;
 
 declare export class HTTPNetworkInterface extends NetworkInterface {
   _uri: string,

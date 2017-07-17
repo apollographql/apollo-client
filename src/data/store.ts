@@ -38,6 +38,10 @@ export function data(
   const constAction = action;
 
   if (isQueryResultAction(action)) {
+    if (action.fetchMoreForQueryId) {
+      return previousState;
+    }
+
     // XXX handle partial result due to errors
     if (!graphQLResultHasError(action.result)) {
       // XXX use immutablejs instead of cloning

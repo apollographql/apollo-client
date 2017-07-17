@@ -2,7 +2,7 @@ import * as chai from 'chai';
 const { assert } = chai;
 import gql from 'graphql-tag';
 
-import { Store, createApolloStore, ReducerError } from '../src/store';
+import { Store, createApolloStore } from '../src/store';
 
 import { getOperationName } from '../src/queries/getFromAST';
 
@@ -14,9 +14,7 @@ describe('createApolloStore', () => {
 
   it('has a default root key', () => {
     const store = createApolloStore();
-    assert.deepEqual(store.getState()['apollo'], {
-      reducerError: null,
-    });
+    assert.deepEqual(store.getState()['apollo'], {});
   });
 
   it('can take a custom root key', () => {
@@ -24,9 +22,7 @@ describe('createApolloStore', () => {
       reduxRootKey: 'test',
     });
 
-    assert.deepEqual(store.getState()['test'], {
-      reducerError: null,
-    });
+    assert.deepEqual(store.getState()['test'], {});
   });
 
   it('can be rehydrated from the server', () => {
@@ -44,9 +40,7 @@ describe('createApolloStore', () => {
     });
 
     assert.deepEqual(store.getState(), {
-      apollo: {
-        reducerError: null,
-      },
+      apollo: {},
     });
   });
 
@@ -99,9 +93,7 @@ describe('createApolloStore', () => {
       },
     };
 
-    const emptyState: Store = {
-      reducerError: null,
-    };
+    const emptyState: Store = {};
 
     const store = createApolloStore({
       initialState,
@@ -132,9 +124,7 @@ describe('createApolloStore', () => {
       },
     };
 
-    const emptyState: Store = {
-      reducerError: null,
-    };
+    const emptyState: Store = {};
 
     const store = createApolloStore({
       initialState,

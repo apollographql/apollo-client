@@ -158,9 +158,7 @@ describe('client', () => {
     client.initStore();
 
     assert.deepEqual(client.store.getState(), {
-      apollo: {
-        reducerError: null,
-      },
+      apollo: {},
     });
   });
 
@@ -578,9 +576,7 @@ describe('client', () => {
     };
 
     const finalState = {
-      apollo: assign({}, initialState.apollo, {
-        reducerError: null,
-      }),
+      apollo: assign({}, initialState.apollo, {}),
     };
 
     const client = new ApolloClient({

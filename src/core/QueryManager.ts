@@ -227,11 +227,6 @@ export class QueryManager {
     }
   }
 
-  // Called from middleware
-  public broadcastNewStore(store: any) {
-    this.broadcastQueries();
-  }
-
   public mutate<T>({
     mutation,
     variables,
@@ -1350,11 +1345,6 @@ export class QueryManager {
               /* tslint:disable */
             } catch (e) {}
             /* tslint:enable */
-          }
-
-          const { reducerError } = this.getApolloState();
-          if (reducerError && reducerError.queryId === queryId) {
-            return Promise.reject(reducerError.error);
           }
 
           // return a chainable promise

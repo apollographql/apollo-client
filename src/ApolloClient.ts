@@ -446,10 +446,6 @@ export default class ApolloClient implements DataProxy {
         const returnValue = next(action);
         const newApolloState = this.queryManager.selectApolloState(store);
 
-        if (newApolloState !== previousApolloState) {
-          this.queryManager.broadcastNewStore(store.getState());
-        }
-
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
             action,
@@ -562,8 +558,12 @@ export default class ApolloClient implements DataProxy {
       queryDeduplication: this.queryDeduplication,
       fragmentMatcher: this.fragmentMatcher,
       ssrMode: this.ssrMode,
-      initialDataStore: (this.initialState && this.initialState[DEFAULT_REDUX_ROOT_KEY]
-        && this.initialState[DEFAULT_REDUX_ROOT_KEY].data) ? this.initialState[DEFAULT_REDUX_ROOT_KEY].data : {},
+      initialDataStore:
+        this.initialState &&
+        this.initialState[DEFAULT_REDUX_ROOT_KEY] &&
+        this.initialState[DEFAULT_REDUX_ROOT_KEY].data
+          ? this.initialState[DEFAULT_REDUX_ROOT_KEY].data
+          : {},
     });
   }
 

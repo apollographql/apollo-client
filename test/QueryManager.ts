@@ -166,7 +166,11 @@ describe('QueryManager', () => {
       request: { query: mutation, variables },
       result: { data },
     });
-    const queryManager = createQueryManager({ networkInterface, store, config });
+    const queryManager = createQueryManager({
+      networkInterface,
+      store,
+      config,
+    });
     return new Promise<{
       result: ExecutionResult;
       queryManager: QueryManager;
@@ -1582,7 +1586,7 @@ describe('QueryManager', () => {
     );
   });
 
-  it('does not call broadcastNewStore when Apollo state is not affected by an action', () => {
+  it('does not call broadcastQueries when Apollo state is not affected by an action', () => {
     const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
@@ -1652,7 +1656,7 @@ describe('QueryManager', () => {
 
         // here's the actual test. Everything else is just setup.
         let called = false;
-        client.queryManager.broadcastNewStore = (s: any) => {
+        client.queryManager.broadcastQueries = () => {
           called = true;
         };
         store.dispatch({
@@ -2544,9 +2548,7 @@ describe('QueryManager', () => {
 
       queryManager.resetStore();
       const currentState = queryManager.getApolloState();
-      const expectedState: any = {
-        reducerError: null,
-      };
+      const expectedState: any = {};
 
       assert.deepEqual(currentState, expectedState);
       assert.deepEqual(queryManager.dataStore.getStore(), {});

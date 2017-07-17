@@ -34,6 +34,8 @@ import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { assign } from '../util/assign';
 
+import { cloneDeep } from '../util/cloneDeep';
+
 export type OptimisticStoreItem = {
   mutationId: string;
   data: NormalizedCache;
@@ -80,12 +82,12 @@ export class DataStore {
     if (!fetchMoreForQueryId && !graphQLResultHasError(result)) {
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
-      this.store = writeResultToStore({
+      writeResultToStore({
         result: result.data,
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
         document: document,
         variables: variables,
-        store: { ...this.store } as NormalizedCache,
+        store: this.store,
         dataIdFromObject: this.config.dataIdFromObject,
         fragmentMatcherFunction: this.config.fragmentMatcher,
       });
@@ -118,12 +120,12 @@ export class DataStore {
     if (!graphQLResultHasError(result)) {
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
-      this.store = writeResultToStore({
+      writeResultToStore({
         result: result.data,
         dataId: 'ROOT_SUBSCRIPTION',
         document: document,
         variables: variables,
-        store: { ...this.store } as NormalizedCache,
+        store: this.store,
         dataIdFromObject: this.config.dataIdFromObject,
         fragmentMatcherFunction: this.config.fragmentMatcher,
       });
@@ -197,12 +199,13 @@ export class DataStore {
   }) {
     // Incorporate the result from this mutation into the store
     if (!mutation.result.errors) {
-      let newState = writeResultToStore({
+      const newState = { ...this.store } as NormalizedCache;
+      writeResultToStore({
         result: mutation.result.data,
         dataId: 'ROOT_MUTATION',
         document: mutation.document,
         variables: mutation.variables,
-        store: { ...this.store } as NormalizedCache,
+        store: newState,
         dataIdFromObject: this.config.dataIdFromObject,
         fragmentMatcherFunction: this.config.fragmentMatcher,
       });
@@ -241,7 +244,7 @@ export class DataStore {
 
             // Write the modified result back into the store if we got a new result.
             if (nextQueryResult) {
-              newState = writeResultToStore({
+              writeResultToStore({
                 result: nextQueryResult,
                 dataId: 'ROOT_QUERY',
                 document: query.document,
@@ -285,25 +288,15 @@ export class DataStore {
   }
 
   public markMutationComplete(mutationId: string) {
-    // Create a shallow copy of the data in the store.
-    const optimisticData = assign({}, this.store);
+    // Throw away optimistic changes of that particular mutation
+    this.optimistic = this.optimistic.filter(
+      item => item.mutationId !== mutationId,
+    );
 
-    const newState = this.optimistic
-      // Throw away optimistic changes of that particular mutation
-      .filter(item => item.mutationId !== mutationId)
-      // Re-run all of our optimistic data actions on top of one another.
-      .map(change => {
-        const patch = this.collectPatch(optimisticData, change.changeFn);
-
-        assign(optimisticData, patch);
-
-        return {
-          ...change,
-          data: patch,
-        };
-      });
-
-    this.optimistic = newState;
+    // Re-run all of our optimistic data actions on top of one another.
+    this.optimistic.forEach(change => {
+      change.data = this.collectPatch(this.store, change.changeFn);
+    });
   }
 
   public markUpdateQueryResult(
@@ -311,7 +304,7 @@ export class DataStore {
     variables: any,
     newResult: any,
   ) {
-    this.store = replaceQueryResults(
+    replaceQueryResults(
       this.store,
       { document, variables, newResult },
       this.config,
@@ -323,19 +316,17 @@ export class DataStore {
   }
 
   public executeWrites(writes: DataWrite[]) {
-    this.store = writes.reduce(
-      (currentState, write) =>
-        writeResultToStore({
-          result: write.result,
-          dataId: write.rootId,
-          document: write.document,
-          variables: write.variables,
-          store: currentState,
-          dataIdFromObject: this.config.dataIdFromObject,
-          fragmentMatcherFunction: this.config.fragmentMatcher,
-        }),
-      { ...this.store } as NormalizedCache,
-    );
+    writes.forEach(write => {
+      writeResultToStore({
+        result: write.result,
+        dataId: write.rootId,
+        document: write.document,
+        variables: write.variables,
+        store: this.store,
+        dataIdFromObject: this.config.dataIdFromObject,
+        fragmentMatcherFunction: this.config.fragmentMatcher,
+      });
+    });
   }
 
   private collectPatch(before: NormalizedCache, fn: () => void): any {

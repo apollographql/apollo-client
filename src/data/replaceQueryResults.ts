@@ -19,14 +19,12 @@ export function replaceQueryResults(
   },
   config: ApolloReducerConfig,
 ) {
-  const clonedState = { ...state } as NormalizedCache;
-
   return writeResultToStore({
     result: newResult,
     dataId: 'ROOT_QUERY',
     variables,
     document,
-    store: clonedState,
+    store: state,
     dataIdFromObject: config.dataIdFromObject,
     fragmentMatcherFunction: config.fragmentMatcher,
   });

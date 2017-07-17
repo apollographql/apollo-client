@@ -305,15 +305,15 @@ export class QueryManager {
     }
 
     this.mutationStore.initMutation(mutationId, mutationString, variables);
-    this.dataStore.markMutationInit(
+    this.dataStore.markMutationInit({
       mutationId,
-      mutation,
-      variables || {},
-      generateUpdateQueriesInfo(),
-      updateWithProxyFn,
+      document: mutation,
+      variables: variables || {},
+      updateQueries: generateUpdateQueriesInfo(),
+      update: updateWithProxyFn,
       optimisticResponse,
-      this.getExtraReducers(),
-    );
+      extraReducers: this.getExtraReducers(),
+    });
 
     this.broadcastQueries();
 
@@ -344,15 +344,15 @@ export class QueryManager {
           }
 
           this.mutationStore.markMutationResult(mutationId);
-          this.dataStore.markMutationResult(
+          this.dataStore.markMutationResult({
             mutationId,
             result,
-            mutation,
-            variables || {},
-            generateUpdateQueriesInfo(),
-            updateWithProxyFn,
-            this.getExtraReducers(),
-          );
+            document: mutation,
+            variables: variables || {},
+            updateQueries: generateUpdateQueriesInfo(),
+            update: updateWithProxyFn,
+            extraReducers: this.getExtraReducers(),
+          });
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
 
@@ -1301,6 +1301,7 @@ export class QueryManager {
               document,
               variables,
               extraReducers,
+              fetchMoreForQueryId,
             );
 
             this.queryStore.markQueryResult(

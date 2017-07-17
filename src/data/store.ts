@@ -30,17 +30,14 @@ import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
-import {
-  ExecutionResult,
-  DocumentNode,
-} from 'graphql';
+import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { assign } from '../util/assign';
 
 export type OptimisticStoreItem = {
-  mutationId: string,
-  data: NormalizedCache,
-  changeFn: () => void,
+  mutationId: string;
+  data: NormalizedCache;
+  changeFn: () => void;
 };
 
 export class DataStore {
@@ -70,13 +67,17 @@ export class DataStore {
     return assign({}, this.store, ...patches) as NormalizedCache;
   }
 
-  public markQueryResult(queryId: string, requestId: number, result: ExecutionResult, document: DocumentNode, variables: any, extraReducers: ApolloReducer[], fetchMoreForQueryId?: string) {
-    if (fetchMoreForQueryId) {
-      return;
-    }
-
+  public markQueryResult(
+    queryId: string,
+    requestId: number,
+    result: ExecutionResult,
+    document: DocumentNode,
+    variables: any,
+    extraReducers: ApolloReducer[],
+    fetchMoreForQueryId: string | undefined,
+  ) {
     // XXX handle partial result due to errors
-    if (!graphQLResultHasError(result)) {
+    if (!fetchMoreForQueryId && !graphQLResultHasError(result)) {
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
       this.store = writeResultToStore({
@@ -84,7 +85,7 @@ export class DataStore {
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
         document: document,
         variables: variables,
-        store: {...this.store} as NormalizedCache,
+        store: { ...this.store } as NormalizedCache,
         dataIdFromObject: this.config.dataIdFromObject,
         fragmentMatcherFunction: this.config.fragmentMatcher,
       });
@@ -105,7 +106,13 @@ export class DataStore {
     }
   }
 
-  public markSubscriptionResult(subscriptionId: number, result: ExecutionResult, document: DocumentNode, variables: any, extraReducers: ApolloReducer[]) {
+  public markSubscriptionResult(
+    subscriptionId: number,
+    result: ExecutionResult,
+    document: DocumentNode,
+    variables: any,
+    extraReducers: ApolloReducer[],
+  ) {
     // the subscription interface should handle not sending us results we no longer subscribe to.
     // XXX I don't think we ever send in an object with errors, but we might in the future...
     if (!graphQLResultHasError(result)) {
@@ -116,7 +123,7 @@ export class DataStore {
         dataId: 'ROOT_SUBSCRIPTION',
         document: document,
         variables: variables,
-        store: {...this.store} as NormalizedCache,
+        store: { ...this.store } as NormalizedCache,
         dataIdFromObject: this.config.dataIdFromObject,
         fragmentMatcherFunction: this.config.fragmentMatcher,
       });
@@ -136,34 +143,42 @@ export class DataStore {
     }
   }
 
-  public markMutationInit(mutationId: string, mutation: DocumentNode, variables: any, updateQueries: { [queryId: string]: QueryWithUpdater }, update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined, optimisticResponse: Object | Function | undefined, extraReducers: ApolloReducer[]) {
-    if (optimisticResponse) {
-      if (typeof optimisticResponse === 'function') {
-        optimisticResponse = optimisticResponse(variables);
+  public markMutationInit(mutation: {
+    mutationId: string;
+    document: DocumentNode;
+    variables: any;
+    updateQueries: { [queryId: string]: QueryWithUpdater };
+    update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
+    optimisticResponse: Object | Function | undefined;
+    extraReducers: ApolloReducer[];
+  }) {
+    if (mutation.optimisticResponse) {
+      let optimistic: Object;
+      if (typeof mutation.optimisticResponse === 'function') {
+        optimistic = mutation.optimisticResponse(mutation.variables);
+      } else {
+        optimistic = mutation.optimisticResponse;
       }
 
       const optimisticData = this.getDataWithOptimisticResults();
 
       const changeFn = () => {
-        this.markMutationResult(
-          mutationId,
-          { data: optimisticResponse },
-          mutation,
-          variables,
-          updateQueries,
-          update,
-          extraReducers,
-        );
+        this.markMutationResult({
+          mutationId: mutation.mutationId,
+          result: { data: optimistic },
+          document: mutation.document,
+          variables: mutation.variables,
+          updateQueries: mutation.updateQueries,
+          update: mutation.update,
+          extraReducers: mutation.extraReducers,
+        });
       };
 
-      const patch = this.collectPatch(
-        optimisticData,
-        changeFn
-      );
+      const patch = this.collectPatch(optimisticData, changeFn);
 
       const optimisticState = {
         data: patch,
-        mutationId: mutationId,
+        mutationId: mutation.mutationId,
         changeFn,
       };
 
@@ -171,57 +186,72 @@ export class DataStore {
     }
   }
 
-  public markMutationResult(mutationId: string, result: ExecutionResult, document: DocumentNode, variables: any, updateQueries: { [queryId: string]: QueryWithUpdater }, update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined, extraReducers: ApolloReducer[]) {
+  public markMutationResult(mutation: {
+    mutationId: string;
+    result: ExecutionResult;
+    document: DocumentNode;
+    variables: any;
+    updateQueries: { [queryId: string]: QueryWithUpdater };
+    update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
+    extraReducers: ApolloReducer[];
+  }) {
     // Incorporate the result from this mutation into the store
-    if (!result.errors) {
+    if (!mutation.result.errors) {
       let newState = writeResultToStore({
-        result: result.data,
+        result: mutation.result.data,
         dataId: 'ROOT_MUTATION',
-        document: document,
-        variables: variables,
-        store: {...this.store} as NormalizedCache,
+        document: mutation.document,
+        variables: mutation.variables,
+        store: { ...this.store } as NormalizedCache,
         dataIdFromObject: this.config.dataIdFromObject,
         fragmentMatcherFunction: this.config.fragmentMatcher,
       });
 
-      if (updateQueries) {
-        Object.keys(updateQueries).filter(id => updateQueries[id]).forEach(queryId => {
-          const { query, reducer } = updateQueries[queryId];
+      if (mutation.updateQueries) {
+        Object.keys(mutation.updateQueries)
+          .filter(id => mutation.updateQueries[id])
+          .forEach(queryId => {
+            const { query, reducer } = mutation.updateQueries[queryId];
 
-          // Read the current query result from the store.
-          const { result: currentQueryResult, isMissing } = diffQueryAgainstStore({
-            store: this.store,
-            query: query.document,
-            variables: query.variables,
-            returnPartialData: true,
-            fragmentMatcherFunction: this.config.fragmentMatcher,
-            config: this.config,
-          });
-
-          if (isMissing) {
-            return;
-          }
-
-          // Run our reducer using the current query result and the mutation result.
-          const nextQueryResult = tryFunctionOrLogError(() => reducer(currentQueryResult, {
-            mutationResult: result,
-            queryName: getOperationName(query.document),
-            queryVariables: query.variables,
-          }));
-
-          // Write the modified result back into the store if we got a new result.
-          if (nextQueryResult) {
-            newState = writeResultToStore({
-              result: nextQueryResult,
-              dataId: 'ROOT_QUERY',
-              document: query.document,
+            // Read the current query result from the store.
+            const {
+              result: currentQueryResult,
+              isMissing,
+            } = diffQueryAgainstStore({
+              store: this.store,
+              query: query.document,
               variables: query.variables,
-              store: newState,
-              dataIdFromObject: this.config.dataIdFromObject,
+              returnPartialData: true,
               fragmentMatcherFunction: this.config.fragmentMatcher,
+              config: this.config,
             });
-          }
-        });
+
+            if (isMissing) {
+              return;
+            }
+
+            // Run our reducer using the current query result and the mutation result.
+            const nextQueryResult = tryFunctionOrLogError(() =>
+              reducer(currentQueryResult, {
+                mutationResult: mutation.result,
+                queryName: getOperationName(query.document),
+                queryVariables: query.variables,
+              }),
+            );
+
+            // Write the modified result back into the store if we got a new result.
+            if (nextQueryResult) {
+              newState = writeResultToStore({
+                result: nextQueryResult,
+                dataId: 'ROOT_QUERY',
+                document: query.document,
+                variables: query.variables,
+                store: newState,
+                dataIdFromObject: this.config.dataIdFromObject,
+                fragmentMatcherFunction: this.config.fragmentMatcher,
+              });
+            }
+          });
 
         this.store = newState;
       }
@@ -229,26 +259,25 @@ export class DataStore {
       // If the mutation has some writes associated with it then we need to
       // apply those writes to the store by running this reducer again with a
       // write action.
+      const update = mutation.update;
       if (update) {
-        const proxy = new TransactionDataProxy(
-          newState,
-          this.config,
-        );
+        const proxy = new TransactionDataProxy(newState, this.config);
 
-        tryFunctionOrLogError(() => update(proxy, result));
+        tryFunctionOrLogError(() => update(proxy, mutation.result));
         const writes = proxy.finish();
         this.executeWrites(writes);
       }
 
-      if (extraReducers) {
-        extraReducers.forEach(reducer => {
+      if (mutation.extraReducers) {
+        mutation.extraReducers.forEach(reducer => {
           this.store = reducer(this.store, {
             type: 'APOLLO_MUTATION_RESULT',
-            result,
-            document,
-            operationName: getOperationName(document),
-            variables,
-            mutationId,
+            mutationId: mutation.mutationId,
+            result: mutation.result,
+            document: mutation.document,
+            operationName: getOperationName(mutation.document),
+            variables: mutation.variables,
+            mutation: mutation.mutationId,
           });
         });
       }
@@ -264,10 +293,7 @@ export class DataStore {
       .filter(item => item.mutationId !== mutationId)
       // Re-run all of our optimistic data actions on top of one another.
       .map(change => {
-        const patch = this.collectPatch(
-          optimisticData,
-          change.changeFn,
-        );
+        const patch = this.collectPatch(optimisticData, change.changeFn);
 
         assign(optimisticData, patch);
 
@@ -280,7 +306,11 @@ export class DataStore {
     this.optimistic = newState;
   }
 
-  public markUpdateQueryResult(document: DocumentNode, variables: any, newResult: any) {
+  public markUpdateQueryResult(
+    document: DocumentNode,
+    variables: any,
+    newResult: any,
+  ) {
     this.store = replaceQueryResults(
       this.store,
       { document, variables, newResult },
@@ -294,23 +324,24 @@ export class DataStore {
 
   public executeWrites(writes: DataWrite[]) {
     this.store = writes.reduce(
-      (currentState, write) => writeResultToStore({
-        result: write.result,
-        dataId: write.rootId,
-        document: write.document,
-        variables: write.variables,
-        store: currentState,
-        dataIdFromObject: this.config.dataIdFromObject,
-        fragmentMatcherFunction: this.config.fragmentMatcher,
-      }),
+      (currentState, write) =>
+        writeResultToStore({
+          result: write.result,
+          dataId: write.rootId,
+          document: write.document,
+          variables: write.variables,
+          store: currentState,
+          dataIdFromObject: this.config.dataIdFromObject,
+          fragmentMatcherFunction: this.config.fragmentMatcher,
+        }),
       { ...this.store } as NormalizedCache,
     );
   }
 
   private collectPatch(before: NormalizedCache, fn: () => void): any {
-    const orig = this.store
+    const orig = this.store;
     this.store = before;
-    fn()
+    fn();
     const after = this.store;
     this.store = orig;
 

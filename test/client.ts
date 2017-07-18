@@ -72,6 +72,8 @@ import { cloneDeep, assign, isEqual } from 'lodash';
 
 import { ApolloLink, Observable } from 'apollo-link-core';
 
+import { InMemoryCache } from '../src/data/inMemoryCache';
+
 declare var fetch: any;
 
 // make it easy to assert with promises
@@ -594,7 +596,7 @@ describe('client', () => {
       assert.deepEqual(result.data, data);
       assert.deepEqual(
         finalState.apollo.data,
-        client.queryManager.dataStore.getStore(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
       );
     });
   });
@@ -1911,10 +1913,15 @@ describe('client', () => {
 
       return client.query({ query }).then(result => {
         assert.deepEqual(result.data, data);
-        assert.deepEqual(client.queryManager.dataStore.getStore()['1'], {
-          id: '1',
-          name: 'Luke Skywalker',
-        });
+        assert.deepEqual(
+          (client.queryManager.dataStore.getCache() as InMemoryCache).getData()[
+            '1'
+          ],
+          {
+            id: '1',
+            name: 'Luke Skywalker',
+          },
+        );
       });
     });
   });
@@ -2372,14 +2379,19 @@ describe('client', () => {
         },
       },
     });
-    assert.equal(client.queryManager.dataStore.getOptimisticQueue().length, 1);
+    assert.equal(
+      (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticQueue()
+        .length,
+      1,
+    );
     mutatePromise
       .then(result => {
         done(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
         assert.equal(
-          client.queryManager.dataStore.getOptimisticQueue().length,
+          (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticQueue()
+            .length,
           0,
         );
         done();
@@ -3135,18 +3147,21 @@ it('should run a query with the connection directive and write the result to the
 
   return client.query({ query }).then(actualResult => {
     assert.deepEqual(actualResult.data, result);
-    assert.deepEqual(client.queryManager.dataStore.getStore(), {
-      'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
-      ROOT_QUERY: {
-        abc: [
-          {
-            generated: true,
-            id: 'ROOT_QUERY.abc.0',
-            type: 'id',
-          },
-        ],
+    assert.deepEqual(
+      (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+      {
+        'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
+        ROOT_QUERY: {
+          abc: [
+            {
+              generated: true,
+              id: 'ROOT_QUERY.abc.0',
+              type: 'id',
+            },
+          ],
+        },
       },
-    });
+    );
   });
 });
 
@@ -3183,21 +3198,24 @@ it('should run a query with the connection directive and filter arguments and wr
 
   return client.query({ query, variables }).then(actualResult => {
     assert.deepEqual(actualResult.data, result);
-    assert.deepEqual(client.queryManager.dataStore.getStore(), {
-      'ROOT_QUERY.abc({"order":"popularity"}).0': {
-        name: 'abcd',
-        __typename: 'Book',
+    assert.deepEqual(
+      (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+      {
+        'ROOT_QUERY.abc({"order":"popularity"}).0': {
+          name: 'abcd',
+          __typename: 'Book',
+        },
+        ROOT_QUERY: {
+          'abc({"order":"popularity"})': [
+            {
+              generated: true,
+              id: 'ROOT_QUERY.abc({"order":"popularity"}).0',
+              type: 'id',
+            },
+          ],
+        },
       },
-      ROOT_QUERY: {
-        'abc({"order":"popularity"})': [
-          {
-            generated: true,
-            id: 'ROOT_QUERY.abc({"order":"popularity"}).0',
-            type: 'id',
-          },
-        ],
-      },
-    });
+    );
   });
 });
 

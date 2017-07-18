@@ -46,6 +46,8 @@ import observableToPromise, {
   observableToPromiseAndSubscription,
 } from './util/observableToPromise';
 
+import { InMemoryCache } from '../src/data/inMemoryCache';
+
 describe('QueryManager', () => {
   // Standard "get id from object" method.
   const dataIdFromObject = (object: any) => {
@@ -1430,10 +1432,13 @@ describe('QueryManager', () => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(queryManager.dataStore.getStore()['5'], {
-        id: '5',
-        isPrivate: true,
-      });
+      assert.deepEqual(
+        (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+        {
+          id: '5',
+          isPrivate: true,
+        },
+      );
     });
   });
 
@@ -1463,10 +1468,13 @@ describe('QueryManager', () => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(queryManager.dataStore.getStore()['5'], {
-        id: '5',
-        isPrivate: true,
-      });
+      assert.deepEqual(
+        (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+        {
+          id: '5',
+          isPrivate: true,
+        },
+      );
     });
   });
 
@@ -1511,10 +1519,13 @@ describe('QueryManager', () => {
         assert.deepEqual(result.data, data);
 
         // Make sure we updated the store with the new data
-        assert.deepEqual(queryManager.dataStore.getStore()['5'], {
-          id: '5',
-          isPrivate: true,
-        });
+        assert.deepEqual(
+          (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+          {
+            id: '5',
+            isPrivate: true,
+          },
+        );
       });
   });
 
@@ -2551,7 +2562,10 @@ describe('QueryManager', () => {
       const expectedState: any = {};
 
       assert.deepEqual(currentState, expectedState);
-      assert.deepEqual(queryManager.dataStore.getStore(), {});
+      assert.deepEqual(
+        (queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {},
+      );
       assert.deepEqual(queryManager.queryStore.getStore(), {});
       assert.deepEqual(queryManager.mutationStore.getStore(), {});
     });
@@ -2983,7 +2997,9 @@ describe('QueryManager', () => {
           .catch(error => {
             // make that the error thrown doesn't empty the state
             assert.deepEqual(
-              queryManager.dataStore.getStore()['$ROOT_QUERY.author'] as Object,
+              (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+                '$ROOT_QUERY.author'
+              ] as Object,
               data['author'],
             );
             done();
@@ -3065,7 +3081,9 @@ describe('QueryManager', () => {
         errorCallbacks: [
           () => {
             assert.deepEqual(
-              queryManager.dataStore.getStore()['$ROOT_QUERY.author'] as Object,
+              (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+                '$ROOT_QUERY.author'
+              ] as Object,
               data.author,
             );
           },
@@ -3074,7 +3092,9 @@ describe('QueryManager', () => {
       result => {
         assert.deepEqual(result.data, data);
         assert.deepEqual(
-          queryManager.dataStore.getStore()['$ROOT_QUERY.author'] as Object,
+          (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+            '$ROOT_QUERY.author'
+          ] as Object,
           data.author,
         );
       },

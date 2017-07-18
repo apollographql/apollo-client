@@ -14,6 +14,8 @@ import gql from 'graphql-tag';
 
 import { withWarning } from './util/wrap';
 
+import { InMemoryCache } from '../src/data/inMemoryCache';
+
 describe('mutation results', () => {
   const query = gql`
     query todoList {
@@ -1419,17 +1421,22 @@ describe('mutation results', () => {
       client.mutate({
         mutation,
       }),
-    ]).then(() => {
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_MUTATION: {
-          'result({"a":1,"b":2})': 'hello',
-          'result({"a":1,"c":3})': 'world',
-          'result({"b":2,"c":3})': 'goodbye',
-          'result({})': 'moon',
-        },
-      });
-      done();
-    }).catch(done);
+    ])
+      .then(() => {
+        assert.deepEqual(
+          (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+          {
+            ROOT_MUTATION: {
+              'result({"a":1,"b":2})': 'hello',
+              'result({"a":1,"c":3})': 'world',
+              'result({"b":2,"c":3})': 'goodbye',
+              'result({})': 'moon',
+            },
+          },
+        );
+        done();
+      })
+      .catch(done);
   });
 
   it('allows mutations with default values', done => {
@@ -1486,16 +1493,21 @@ describe('mutation results', () => {
         mutation,
         variables: { c: 3 },
       }),
-    ]).then(() => {
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_MUTATION: {
-          'result({"a":1,"b":"water"})': 'hello',
-          'result({"a":2,"b":"cheese","c":3})': 'world',
-          'result({"a":1,"b":"cheese","c":3})': 'goodbye',
-        },
-      });
-      done();
-    }).catch(done);
+    ])
+      .then(() => {
+        assert.deepEqual(
+          (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+          {
+            ROOT_MUTATION: {
+              'result({"a":1,"b":"water"})': 'hello',
+              'result({"a":2,"b":"cheese","c":3})': 'world',
+              'result({"a":1,"b":"cheese","c":3})': 'goodbye',
+            },
+          },
+        );
+        done();
+      })
+      .catch(done);
   });
 
   it('will pass null to the network interface when provided', done => {
@@ -1553,16 +1565,21 @@ describe('mutation results', () => {
         mutation,
         variables: { a: null, b: null, c: null },
       }),
-    ]).then(() => {
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_MUTATION: {
-          'result({"a":1,"b":2,"c":null})': 'hello',
-          'result({"a":1,"b":null,"c":3})': 'world',
-          'result({"a":null,"b":null,"c":null})': 'moon',
-        },
-      });
-      done();
-    }).catch(done);
+    ])
+      .then(() => {
+        assert.deepEqual(
+          (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+          {
+            ROOT_MUTATION: {
+              'result({"a":1,"b":2,"c":null})': 'hello',
+              'result({"a":1,"b":null,"c":3})': 'world',
+              'result({"a":null,"b":null,"c":null})': 'moon',
+            },
+          },
+        );
+        done();
+      })
+      .catch(done);
   });
 
   describe('store transaction updater', () => {

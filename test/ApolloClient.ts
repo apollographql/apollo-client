@@ -5,6 +5,8 @@ import ApolloClient from '../src/ApolloClient';
 
 import { withWarning } from './util/wrap';
 
+import { InMemoryCache } from '../src/data/inMemoryCache';
+
 describe('ApolloClient', () => {
   describe('readQuery', () => {
     it('will read some data from the store', () => {
@@ -569,11 +571,14 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+          },
         },
-      });
+      );
 
       client.writeQuery({
         data: { b: 2, c: 3 },
@@ -585,13 +590,16 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          c: 3,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            c: 3,
+          },
         },
-      });
+      );
 
       client.writeQuery({
         data: { a: 4, b: 5, c: 6 },
@@ -604,13 +612,16 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 4,
-          b: 5,
-          c: 6,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 4,
+            b: 5,
+            c: 6,
+          },
         },
-      });
+      );
     });
 
     it('will write some deeply nested data to the store', () => {
@@ -628,20 +639,23 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            __typename: 'D',
+            e: 4,
           },
         },
-        '$ROOT_QUERY.d': {
-          __typename: 'D',
-          e: 4,
-        },
-      });
+      );
 
       client.writeQuery({
         data: { a: 1, d: { __typename: 'D', h: { __typename: 'H', i: 7 } } },
@@ -657,29 +671,32 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            __typename: 'D',
+            e: 4,
+            h: {
+              type: 'id',
+              id: '$ROOT_QUERY.d.h',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d.h': {
+            __typename: 'H',
+            i: 7,
           },
         },
-        '$ROOT_QUERY.d': {
-          __typename: 'D',
-          e: 4,
-          h: {
-            type: 'id',
-            id: '$ROOT_QUERY.d.h',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.d.h': {
-          __typename: 'H',
-          i: 7,
-        },
-      });
+      );
 
       client.writeQuery({
         data: {
@@ -718,35 +735,38 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          c: 3,
-          d: {
-            type: 'id',
-            id: '$ROOT_QUERY.d',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            c: 3,
+            d: {
+              type: 'id',
+              id: '$ROOT_QUERY.d',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d': {
+            __typename: 'D',
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: '$ROOT_QUERY.d.h',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.d.h': {
+            __typename: 'H',
+            i: 7,
+            j: 8,
+            k: 9,
           },
         },
-        '$ROOT_QUERY.d': {
-          __typename: 'D',
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: '$ROOT_QUERY.d.h',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.d.h': {
-          __typename: 'H',
-          i: 7,
-          j: 8,
-          k: 9,
-        },
-      });
+      );
     });
 
     it('will write some data to the store with variables', () => {
@@ -769,12 +789,15 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          'field({"literal":true,"value":42})': 1,
-          'field({"literal":false,"value":42})': 2,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            'field({"literal":true,"value":42})': 1,
+            'field({"literal":false,"value":42})': 2,
+          },
         },
-      });
+      );
     });
 
     it('will write some data to the store with default values for variables', () => {
@@ -809,12 +832,15 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          'field({"literal":true,"value":42})': 2,
-          'field({"literal":false,"value":-1})': 1,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            'field({"literal":true,"value":42})': 2,
+            'field({"literal":false,"value":-1})': 1,
+          },
         },
-      });
+      );
     });
 
     it('should warn when the data provided does not match the query shape', () => {
@@ -936,21 +962,24 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        foo: {
-          __typename: 'Foo',
-          e: 4,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          foo: {
+            __typename: 'Foo',
+            e: 4,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          bar: {
+            __typename: 'Bar',
+            i: 7,
           },
         },
-        bar: {
-          __typename: 'Bar',
-          i: 7,
-        },
-      });
+      );
 
       client.writeFragment({
         data: {
@@ -972,25 +1001,28 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        foo: {
-          __typename: 'Foo',
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          foo: {
+            __typename: 'Foo',
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          bar: {
+            __typename: 'Bar',
+            i: 7,
+            j: 8,
+            k: 9,
           },
         },
-        bar: {
-          __typename: 'Bar',
-          i: 7,
-          j: 8,
-          k: 9,
-        },
-      });
+      );
 
       client.writeFragment({
         data: { __typename: 'Bar', i: 10 },
@@ -1002,25 +1034,28 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        foo: {
-          __typename: 'Foo',
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          foo: {
+            __typename: 'Foo',
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          bar: {
+            __typename: 'Bar',
+            i: 10,
+            j: 8,
+            k: 9,
           },
         },
-        bar: {
-          __typename: 'Bar',
-          i: 10,
-          j: 8,
-          k: 9,
-        },
-      });
+      );
 
       client.writeFragment({
         data: { __typename: 'Bar', j: 11, k: 12 },
@@ -1033,25 +1068,28 @@ describe('ApolloClient', () => {
         `,
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        foo: {
-          __typename: 'Foo',
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          foo: {
+            __typename: 'Foo',
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          bar: {
+            __typename: 'Bar',
+            i: 10,
+            j: 11,
+            k: 12,
           },
         },
-        bar: {
-          __typename: 'Bar',
-          i: 10,
-          j: 11,
-          k: 12,
-        },
-      });
+      );
 
       client.writeFragment({
         data: {
@@ -1083,25 +1121,28 @@ describe('ApolloClient', () => {
         fragmentName: 'fooFragment',
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        foo: {
-          __typename: 'Foo',
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          foo: {
+            __typename: 'Foo',
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          bar: {
+            __typename: 'Bar',
+            i: 7,
+            j: 8,
+            k: 9,
           },
         },
-        bar: {
-          __typename: 'Bar',
-          i: 7,
-          j: 8,
-          k: 9,
-        },
-      });
+      );
 
       client.writeFragment({
         data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
@@ -1127,25 +1168,28 @@ describe('ApolloClient', () => {
         fragmentName: 'barFragment',
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        foo: {
-          __typename: 'Foo',
-          e: 4,
-          f: 5,
-          g: 6,
-          h: {
-            type: 'id',
-            id: 'bar',
-            generated: false,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          foo: {
+            __typename: 'Foo',
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          bar: {
+            __typename: 'Bar',
+            i: 10,
+            j: 11,
+            k: 12,
           },
         },
-        bar: {
-          __typename: 'Bar',
-          i: 10,
-          j: 11,
-          k: 12,
-        },
-      });
+      );
     });
 
     it('will write some data to the store with variables', () => {
@@ -1170,13 +1214,16 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        foo: {
-          __typename: 'Foo',
-          'field({"literal":true,"value":42})': 1,
-          'field({"literal":false,"value":42})': 2,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          foo: {
+            __typename: 'Foo',
+            'field({"literal":true,"value":42})': 1,
+            'field({"literal":false,"value":42})': 2,
+          },
         },
-      });
+      );
     });
 
     it('should warn when the data provided does not match the fragment shape', () => {
@@ -1357,25 +1404,28 @@ describe('ApolloClient', () => {
         },
       );
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        foo: {
-          __typename: 'Foo',
-          a: 7,
-          b: 2,
-          c: 3,
-          bar: {
-            type: 'id',
-            id: '$foo.bar',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          foo: {
+            __typename: 'Foo',
+            a: 7,
+            b: 2,
+            c: 3,
+            bar: {
+              type: 'id',
+              id: '$foo.bar',
+              generated: true,
+            },
+          },
+          '$foo.bar': {
+            __typename: 'Bar',
+            d: 8,
+            e: 9,
+            f: 6,
           },
         },
-        '$foo.bar': {
-          __typename: 'Bar',
-          d: 8,
-          e: 9,
-          f: 6,
-        },
-      });
+      );
     });
 
     it('will write data to a specific id', () => {
@@ -1442,33 +1492,36 @@ describe('ApolloClient', () => {
         },
       );
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo': {
+            __typename: 'foo',
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: 'foobar',
+              generated: false,
+            },
+          },
+          foobar: {
+            key: 'foobar',
+            __typename: 'bar',
+            e: 5,
+            f: 6,
           },
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: 'foobar',
-            generated: false,
-          },
-        },
-        foobar: {
-          key: 'foobar',
-          __typename: 'bar',
-          e: 5,
-          f: 6,
-        },
-      });
+      );
     });
 
     it('will not use a default id getter if __typename is not present', () => {
@@ -1523,52 +1576,55 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          g: 8,
-          h: 9,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            g: 8,
+            h: 9,
+            bar: {
+              type: 'id',
+              id: '$ROOT_QUERY.bar',
+              generated: true,
+            },
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
           },
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+          '$ROOT_QUERY.foo': {
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo.bar',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.bar': {
+            i: 10,
+            j: 11,
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.bar.foo',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo.bar': {
+            id: 'foobar',
+            e: 5,
+            f: 6,
+          },
+          '$ROOT_QUERY.bar.foo': {
+            _id: 'barfoo',
+            k: 12,
+            l: 13,
           },
         },
-        '$ROOT_QUERY.foo': {
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.bar': {
-          i: 10,
-          j: 11,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar.foo',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.foo.bar': {
-          id: 'foobar',
-          e: 5,
-          f: 6,
-        },
-        '$ROOT_QUERY.bar.foo': {
-          _id: 'barfoo',
-          k: 12,
-          l: 13,
-        },
-      });
+      );
     });
 
     it('will not use a default id getter if id and _id are not present', () => {
@@ -1630,54 +1686,57 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          g: 8,
-          h: 9,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            g: 8,
+            h: 9,
+            bar: {
+              type: 'id',
+              id: '$ROOT_QUERY.bar',
+              generated: true,
+            },
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
           },
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+          '$ROOT_QUERY.foo': {
+            __typename: 'foo',
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo.bar',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.bar': {
+            __typename: 'bar',
+            i: 10,
+            j: 11,
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.bar.foo',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo.bar': {
+            __typename: 'bar',
+            e: 5,
+            f: 6,
+          },
+          '$ROOT_QUERY.bar.foo': {
+            __typename: 'foo',
+            k: 12,
+            l: 13,
           },
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.bar': {
-          __typename: 'bar',
-          i: 10,
-          j: 11,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar.foo',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.foo.bar': {
-          __typename: 'bar',
-          e: 5,
-          f: 6,
-        },
-        '$ROOT_QUERY.bar.foo': {
-          __typename: 'foo',
-          k: 12,
-          l: 13,
-        },
-      });
+      );
     });
 
     it('will use a default id getter if __typename and id are present', () => {
@@ -1713,33 +1772,36 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo': {
+            __typename: 'foo',
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: 'bar:foobar',
+              generated: false,
+            },
+          },
+          'bar:foobar': {
+            id: 'foobar',
+            __typename: 'bar',
+            e: 5,
+            f: 6,
           },
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: 'bar:foobar',
-            generated: false,
-          },
-        },
-        'bar:foobar': {
-          id: 'foobar',
-          __typename: 'bar',
-          e: 5,
-          f: 6,
-        },
-      });
+      );
     });
 
     it('will use a default id getter if __typename and _id are present', () => {
@@ -1775,33 +1837,36 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo': {
+            __typename: 'foo',
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: 'bar:foobar',
+              generated: false,
+            },
+          },
+          'bar:foobar': {
+            __typename: 'bar',
+            _id: 'foobar',
+            e: 5,
+            f: 6,
           },
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: 'bar:foobar',
-            generated: false,
-          },
-        },
-        'bar:foobar': {
-          __typename: 'bar',
-          _id: 'foobar',
-          e: 5,
-          f: 6,
-        },
-      });
+      );
     });
 
     it('will not use a default id getter if id is present and __typename is not present', () => {
@@ -1833,31 +1898,34 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo': {
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo.bar',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo.bar': {
+            id: 'foobar',
+            e: 5,
+            f: 6,
           },
         },
-        '$ROOT_QUERY.foo': {
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.foo.bar': {
-          id: 'foobar',
-          e: 5,
-          f: 6,
-        },
-      });
+      );
     });
 
     it('will not use a default id getter if _id is present but __typename is not present', () => {
@@ -1889,31 +1957,34 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo': {
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo.bar',
+              generated: true,
+            },
+          },
+          '$ROOT_QUERY.foo.bar': {
+            _id: 'foobar',
+            e: 5,
+            f: 6,
           },
         },
-        '$ROOT_QUERY.foo': {
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo.bar',
-            generated: true,
-          },
-        },
-        '$ROOT_QUERY.foo.bar': {
-          _id: 'foobar',
-          e: 5,
-          f: 6,
-        },
-      });
+      );
     });
 
     it('will not use a default id getter if either _id or id is present when __typename is not also present', () => {
@@ -1972,52 +2043,55 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          g: 8,
-          h: 9,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            g: 8,
+            h: 9,
+            bar: {
+              type: 'id',
+              id: '$ROOT_QUERY.bar',
+              generated: true,
+            },
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
           },
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+          '$ROOT_QUERY.foo': {
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: 'bar:foobar',
+              generated: false,
+            },
+          },
+          '$ROOT_QUERY.bar': {
+            i: 10,
+            j: 11,
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.bar.foo',
+              generated: true,
+            },
+          },
+          'bar:foobar': {
+            id: 'foobar',
+            e: 5,
+            f: 6,
+          },
+          '$ROOT_QUERY.bar.foo': {
+            _id: 'barfoo',
+            k: 12,
+            l: 13,
           },
         },
-        '$ROOT_QUERY.foo': {
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: 'bar:foobar',
-            generated: false,
-          },
-        },
-        '$ROOT_QUERY.bar': {
-          i: 10,
-          j: 11,
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar.foo',
-            generated: true,
-          },
-        },
-        'bar:foobar': {
-          id: 'foobar',
-          e: 5,
-          f: 6,
-        },
-        '$ROOT_QUERY.bar.foo': {
-          _id: 'barfoo',
-          k: 12,
-          l: 13,
-        },
-      });
+      );
     });
 
     it('will use a default id getter if one is not specified and __typename is present along with either _id or id', () => {
@@ -2081,56 +2155,59 @@ describe('ApolloClient', () => {
         },
       });
 
-      assert.deepEqual(client.queryManager.dataStore.getStore(), {
-        ROOT_QUERY: {
-          a: 1,
-          b: 2,
-          g: 8,
-          h: 9,
-          bar: {
-            type: 'id',
-            id: '$ROOT_QUERY.bar',
-            generated: true,
+      assert.deepEqual(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        {
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            g: 8,
+            h: 9,
+            bar: {
+              type: 'id',
+              id: '$ROOT_QUERY.bar',
+              generated: true,
+            },
+            foo: {
+              type: 'id',
+              id: '$ROOT_QUERY.foo',
+              generated: true,
+            },
           },
-          foo: {
-            type: 'id',
-            id: '$ROOT_QUERY.foo',
-            generated: true,
+          '$ROOT_QUERY.foo': {
+            __typename: 'foo',
+            c: 3,
+            d: 4,
+            bar: {
+              type: 'id',
+              id: 'bar:foobar',
+              generated: false,
+            },
+          },
+          '$ROOT_QUERY.bar': {
+            __typename: 'bar',
+            i: 10,
+            j: 11,
+            foo: {
+              type: 'id',
+              id: 'foo:barfoo',
+              generated: false,
+            },
+          },
+          'bar:foobar': {
+            __typename: 'bar',
+            id: 'foobar',
+            e: 5,
+            f: 6,
+          },
+          'foo:barfoo': {
+            __typename: 'foo',
+            _id: 'barfoo',
+            k: 12,
+            l: 13,
           },
         },
-        '$ROOT_QUERY.foo': {
-          __typename: 'foo',
-          c: 3,
-          d: 4,
-          bar: {
-            type: 'id',
-            id: 'bar:foobar',
-            generated: false,
-          },
-        },
-        '$ROOT_QUERY.bar': {
-          __typename: 'bar',
-          i: 10,
-          j: 11,
-          foo: {
-            type: 'id',
-            id: 'foo:barfoo',
-            generated: false,
-          },
-        },
-        'bar:foobar': {
-          __typename: 'bar',
-          id: 'foobar',
-          e: 5,
-          f: 6,
-        },
-        'foo:barfoo': {
-          __typename: 'foo',
-          _id: 'barfoo',
-          k: 12,
-          l: 13,
-        },
-      });
+      );
     });
   });
 });

@@ -340,7 +340,9 @@ describe('GraphQL Subscriptions', () => {
           observableQuery.unsubscribe();
           assert.equal(counter, 5);
           assert.equal(
-            queryManager.dataStore.getStore()['ROOT_QUERY']['number'],
+            (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+              'ROOT_QUERY'
+            ]['number'],
             4,
           );
           done();

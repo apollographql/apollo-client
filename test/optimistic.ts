@@ -16,6 +16,8 @@ import { addTypenameToDocument } from '../src/queries/queryTransform';
 
 import { isMutationResultAction } from '../src/actions';
 
+import { InMemoryCache } from '../src/data/inMemoryCache';
+
 describe('optimistic mutation results', () => {
   const query = gql`
     query todoList {
@@ -219,7 +221,7 @@ describe('optimistic mutation results', () => {
               updateQueries,
             });
 
-            const dataInStore = client.queryManager.getDataWithOptimisticResults();
+            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
             assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
             assert.equal(
               (dataInStore['Todo99'] as any).text,
@@ -232,7 +234,7 @@ describe('optimistic mutation results', () => {
             assert.instanceOf(err, Error);
             assert.equal(err.message, 'Network error: forbidden (test error)');
 
-            const dataInStore = client.queryManager.getDataWithOptimisticResults();
+            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
             assert.equal((dataInStore['TodoList5'] as any).todos.length, 3);
             assert.notProperty(dataInStore, 'Todo99');
           });
@@ -284,7 +286,7 @@ describe('optimistic mutation results', () => {
               updateQueries,
             });
 
-            const dataInStore = client.queryManager.getDataWithOptimisticResults();
+            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
             assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
             assert.equal(
               (dataInStore['Todo99'] as any).text,
@@ -299,7 +301,7 @@ describe('optimistic mutation results', () => {
           })
           .then(() => {
             subscriptionHandle.unsubscribe();
-            const dataInStore = client.queryManager.getDataWithOptimisticResults();
+            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
             assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
             assert.notProperty(dataInStore, 'Todo99');
             assert.property(dataInStore, 'Todo66');
@@ -319,7 +321,7 @@ describe('optimistic mutation results', () => {
           expectedText1: any,
           expectedText2: any,
         ) {
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.property(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
@@ -461,7 +463,7 @@ describe('optimistic mutation results', () => {
               update,
             });
 
-            const dataInStore = client.queryManager.getDataWithOptimisticResults();
+            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
             assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
             assert.equal(
               (dataInStore['Todo99'] as any).text,
@@ -474,7 +476,7 @@ describe('optimistic mutation results', () => {
             assert.instanceOf(err, Error);
             assert.equal(err.message, 'Network error: forbidden (test error)');
 
-            const dataInStore = client.queryManager.getDataWithOptimisticResults();
+            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
             assert.equal((dataInStore['TodoList5'] as any).todos.length, 3);
             assert.notProperty(dataInStore, 'Todo99');
           });
@@ -526,7 +528,7 @@ describe('optimistic mutation results', () => {
               update,
             });
 
-            const dataInStore = client.queryManager.getDataWithOptimisticResults();
+            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
             assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
             assert.equal(
               (dataInStore['Todo99'] as any).text,
@@ -541,7 +543,7 @@ describe('optimistic mutation results', () => {
           })
           .then(() => {
             subscriptionHandle.unsubscribe();
-            const dataInStore = client.queryManager.getDataWithOptimisticResults();
+            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
             assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
             assert.notProperty(dataInStore, 'Todo99');
             assert.property(dataInStore, 'Todo66');
@@ -561,7 +563,7 @@ describe('optimistic mutation results', () => {
           expectedText1: any,
           expectedText2: any,
         ) {
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.property(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
@@ -746,7 +748,7 @@ describe('optimistic mutation results', () => {
             },
           });
 
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.equal(
             (dataInStore['Todo99'] as any).text,
@@ -870,7 +872,7 @@ describe('optimistic mutation results', () => {
             },
           });
 
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.equal(
             (dataInStore['Todo99'] as any).text,
@@ -940,7 +942,7 @@ describe('optimistic mutation results', () => {
               updateQueries,
             })
             .then(res => {
-              const currentDataInStore = client.queryManager.getDataWithOptimisticResults();
+              const currentDataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
               assert.equal(
                 (currentDataInStore['TodoList5'] as any).todos.length,
                 5,
@@ -962,7 +964,7 @@ describe('optimistic mutation results', () => {
             updateQueries,
           });
 
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.equal(
             (dataInStore['Todo99'] as any).text,
@@ -1061,7 +1063,7 @@ describe('optimistic mutation results', () => {
             updateQueries,
           });
 
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.equal(
             (dataInStore['Todo99'] as any).text,
@@ -1076,7 +1078,7 @@ describe('optimistic mutation results', () => {
         })
         .then(() => {
           subscriptionHandle.unsubscribe();
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.notProperty(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
@@ -1332,7 +1334,7 @@ describe('optimistic mutation results', () => {
             },
           });
 
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.equal(
             (dataInStore['Todo99'] as any).text,
@@ -1422,7 +1424,7 @@ describe('optimistic mutation results', () => {
               update,
             })
             .then(res => {
-              const currentDataInStore = client.queryManager.getDataWithOptimisticResults();
+              const currentDataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
               assert.equal(
                 (currentDataInStore['TodoList5'] as any).todos.length,
                 5,
@@ -1444,7 +1446,7 @@ describe('optimistic mutation results', () => {
             update,
           });
 
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.equal(
             (dataInStore['Todo99'] as any).text,
@@ -1563,7 +1565,7 @@ describe('optimistic mutation results', () => {
             update,
           });
 
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 5);
           assert.equal(
             (dataInStore['Todo99'] as any).text,
@@ -1578,7 +1580,7 @@ describe('optimistic mutation results', () => {
         })
         .then(() => {
           subscriptionHandle.unsubscribe();
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.notProperty(dataInStore, 'Todo99');
           assert.property(dataInStore, 'Todo66');
@@ -1859,7 +1861,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse,
           });
 
-          const dataInStore = client.queryManager.getDataWithOptimisticResults();
+          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData();
           assert.equal((dataInStore['TodoList5'] as any).todos.length, 4);
           assert.equal(
             (dataInStore['Todo99'] as any).text,

@@ -1,72 +1,35 @@
-import {
-  ApolloAction,
-  isQueryResultAction,
-  isMutationResultAction,
-  isUpdateQueryResultAction,
-  isStoreResetAction,
-  isSubscriptionResultAction,
-  isWriteAction,
-  QueryWithUpdater,
-  DataWrite,
-} from '../actions';
-
-import { writeResultToStore } from './writeToStore';
+import { QueryWithUpdater, DataWrite } from '../actions';
 
 import { TransactionDataProxy, DataProxy } from '../data/proxy';
 
-import { QueryStore } from '../queries/store';
-
 import { getOperationName } from '../queries/getFromAST';
-
-import { MutationStore } from '../mutations/store';
 
 import { ApolloReducerConfig, ApolloReducer } from '../store';
 
-import { graphQLResultHasError, NormalizedCache } from './storeUtils';
-
-import { replaceQueryResults } from './replaceQueryResults';
-
-import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
+import { graphQLResultHasError } from './storeUtils';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { ExecutionResult, DocumentNode } from 'graphql';
 
-import { assign } from '../util/assign';
+import { Cache, CacheWrite } from './cache';
 
-import { cloneDeep } from '../util/cloneDeep';
-
-export type OptimisticStoreItem = {
-  mutationId: string;
-  data: NormalizedCache;
-  changeFn: () => void;
-};
+import { InMemoryCache } from './inMemoryCache';
 
 export class DataStore {
-  private store: NormalizedCache;
-  private optimistic: OptimisticStoreItem[] = [];
+  private cache: Cache;
   private config: ApolloReducerConfig;
 
-  constructor(config: ApolloReducerConfig, initialStore: NormalizedCache = {}) {
+  constructor(
+    config: ApolloReducerConfig,
+    initialCache: Cache = new InMemoryCache(config, {}),
+  ) {
     this.config = config;
-    this.store = initialStore;
+    this.cache = initialCache;
   }
 
-  public getStore(): NormalizedCache {
-    return this.store;
-  }
-
-  public getOptimisticQueue(): OptimisticStoreItem[] {
-    return this.optimistic;
-  }
-
-  public getDataWithOptimisticResults(): NormalizedCache {
-    if (this.optimistic.length === 0) {
-      return this.store;
-    }
-
-    const patches = this.optimistic.map(opt => opt.data);
-    return assign({}, this.store, ...patches) as NormalizedCache;
+  public getCache(): Cache {
+    return this.cache;
   }
 
   public markQueryResult(
@@ -82,28 +45,35 @@ export class DataStore {
     if (!fetchMoreForQueryId && !graphQLResultHasError(result)) {
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
-      writeResultToStore({
+      this.cache.writeResult({
         result: result.data,
         dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
         document: document,
         variables: variables,
-        store: this.store,
-        dataIdFromObject: this.config.dataIdFromObject,
-        fragmentMatcherFunction: this.config.fragmentMatcher,
       });
 
       if (extraReducers) {
-        extraReducers.forEach(reducer => {
-          this.store = reducer(this.store, {
-            type: 'APOLLO_QUERY_RESULT',
-            result,
-            document,
-            operationName: getOperationName(document),
-            variables,
-            queryId,
-            requestId,
+        const cache = this.cache;
+        if (cache instanceof InMemoryCache) {
+          extraReducers.forEach(reducer => {
+            cache.applyTransformer(i => {
+              return reducer(i, {
+                type: 'APOLLO_QUERY_RESULT',
+                result,
+                document,
+                operationName: getOperationName(document),
+                variables,
+                queryId,
+                requestId,
+              });
+            });
           });
-        });
+        } else {
+          console.warn(
+            'You supplied an reducer in your query, but are not using an in-memory cache.' +
+              ' Reducers are not supported with caches that are not in-memory.',
+          );
+        }
       }
     }
   }
@@ -120,27 +90,34 @@ export class DataStore {
     if (!graphQLResultHasError(result)) {
       // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
       // write to "the" store?
-      writeResultToStore({
+      this.cache.writeResult({
         result: result.data,
         dataId: 'ROOT_SUBSCRIPTION',
         document: document,
         variables: variables,
-        store: this.store,
-        dataIdFromObject: this.config.dataIdFromObject,
-        fragmentMatcherFunction: this.config.fragmentMatcher,
       });
 
       if (extraReducers) {
-        extraReducers.forEach(reducer => {
-          this.store = reducer(this.store, {
-            type: 'APOLLO_SUBSCRIPTION_RESULT',
-            result,
-            document,
-            operationName: getOperationName(document),
-            variables,
-            subscriptionId,
+        const cache = this.cache;
+        if (cache instanceof InMemoryCache) {
+          extraReducers.forEach(reducer => {
+            cache.applyTransformer(i => {
+              return reducer(i, {
+                type: 'APOLLO_SUBSCRIPTION_RESULT',
+                result,
+                document,
+                operationName: getOperationName(document),
+                variables,
+                subscriptionId,
+              });
+            });
           });
-        });
+        } else {
+          console.warn(
+            'You supplied an reducer in your query, but are not using an in-memory cache.' +
+              ' Reducers are not supported with caches that are not in-memory.',
+          );
+        }
       }
     }
   }
@@ -162,8 +139,6 @@ export class DataStore {
         optimistic = mutation.optimisticResponse;
       }
 
-      const optimisticData = this.getDataWithOptimisticResults();
-
       const changeFn = () => {
         this.markMutationResult({
           mutationId: mutation.mutationId,
@@ -176,15 +151,14 @@ export class DataStore {
         });
       };
 
-      const patch = this.collectPatch(optimisticData, changeFn);
+      this.cache.performOptimisticTransaction(c => {
+        const orig = this.cache;
+        this.cache = c;
 
-      const optimisticState = {
-        data: patch,
-        mutationId: mutation.mutationId,
-        changeFn,
-      };
+        changeFn();
 
-      this.optimistic.push(optimisticState);
+        this.cache = orig;
+      }, mutation.mutationId);
     }
   }
 
@@ -199,15 +173,12 @@ export class DataStore {
   }) {
     // Incorporate the result from this mutation into the store
     if (!mutation.result.errors) {
-      const newState = { ...this.store } as NormalizedCache;
-      writeResultToStore({
+      const cacheWrites: CacheWrite[] = [];
+      cacheWrites.push({
         result: mutation.result.data,
         dataId: 'ROOT_MUTATION',
         document: mutation.document,
         variables: mutation.variables,
-        store: newState,
-        dataIdFromObject: this.config.dataIdFromObject,
-        fragmentMatcherFunction: this.config.fragmentMatcher,
       });
 
       if (mutation.updateQueries) {
@@ -215,18 +186,14 @@ export class DataStore {
           .filter(id => mutation.updateQueries[id])
           .forEach(queryId => {
             const { query, reducer } = mutation.updateQueries[queryId];
-
             // Read the current query result from the store.
             const {
               result: currentQueryResult,
               isMissing,
-            } = diffQueryAgainstStore({
-              store: this.store,
+            } = this.cache.diffQuery({
               query: query.document,
               variables: query.variables,
               returnPartialData: true,
-              fragmentMatcherFunction: this.config.fragmentMatcher,
-              config: this.config,
             });
 
             if (isMissing) {
@@ -244,59 +211,62 @@ export class DataStore {
 
             // Write the modified result back into the store if we got a new result.
             if (nextQueryResult) {
-              writeResultToStore({
+              cacheWrites.push({
                 result: nextQueryResult,
                 dataId: 'ROOT_QUERY',
                 document: query.document,
                 variables: query.variables,
-                store: newState,
-                dataIdFromObject: this.config.dataIdFromObject,
-                fragmentMatcherFunction: this.config.fragmentMatcher,
               });
             }
           });
-
-        this.store = newState;
       }
+
+      this.cache.performTransaction(c => {
+        cacheWrites.forEach(write => {
+          c.writeResult(write);
+        });
+      });
 
       // If the mutation has some writes associated with it then we need to
       // apply those writes to the store by running this reducer again with a
       // write action.
       const update = mutation.update;
       if (update) {
-        const proxy = new TransactionDataProxy(newState, this.config);
+        this.cache.performTransaction(c => {
+          const proxy = new TransactionDataProxy(c, this.config);
 
-        tryFunctionOrLogError(() => update(proxy, mutation.result));
-        const writes = proxy.finish();
-        this.executeWrites(writes);
+          tryFunctionOrLogError(() => update(proxy, mutation.result));
+        });
       }
 
       if (mutation.extraReducers) {
-        mutation.extraReducers.forEach(reducer => {
-          this.store = reducer(this.store, {
-            type: 'APOLLO_MUTATION_RESULT',
-            mutationId: mutation.mutationId,
-            result: mutation.result,
-            document: mutation.document,
-            operationName: getOperationName(mutation.document),
-            variables: mutation.variables,
-            mutation: mutation.mutationId,
+        const cache = this.cache;
+        if (cache instanceof InMemoryCache) {
+          mutation.extraReducers.forEach(reducer => {
+            cache.applyTransformer(i => {
+              return reducer(i, {
+                type: 'APOLLO_MUTATION_RESULT',
+                mutationId: mutation.mutationId,
+                result: mutation.result,
+                document: mutation.document,
+                operationName: getOperationName(mutation.document),
+                variables: mutation.variables,
+                mutation: mutation.mutationId,
+              });
+            });
           });
-        });
+        } else {
+          console.warn(
+            'You supplied an reducer in your query, but are not using an in-memory cache.' +
+              ' Reducers are not supported with caches that are not in-memory.',
+          );
+        }
       }
     }
   }
 
   public markMutationComplete(mutationId: string) {
-    // Throw away optimistic changes of that particular mutation
-    this.optimistic = this.optimistic.filter(
-      item => item.mutationId !== mutationId,
-    );
-
-    // Re-run all of our optimistic data actions on top of one another.
-    this.optimistic.forEach(change => {
-      change.data = this.collectPatch(this.store, change.changeFn);
-    });
+    this.cache.removeOptimistic(mutationId);
   }
 
   public markUpdateQueryResult(
@@ -304,46 +274,28 @@ export class DataStore {
     variables: any,
     newResult: any,
   ) {
-    replaceQueryResults(
-      this.store,
-      { document, variables, newResult },
-      this.config,
-    );
+    this.cache.writeResult({
+      result: newResult,
+      dataId: 'ROOT_QUERY',
+      variables,
+      document,
+    });
   }
 
-  public reset() {
-    this.store = {};
+  public reset(): Promise<void> {
+    return this.cache.reset();
   }
 
   public executeWrites(writes: DataWrite[]) {
-    writes.forEach(write => {
-      writeResultToStore({
-        result: write.result,
-        dataId: write.rootId,
-        document: write.document,
-        variables: write.variables,
-        store: this.store,
-        dataIdFromObject: this.config.dataIdFromObject,
-        fragmentMatcherFunction: this.config.fragmentMatcher,
+    this.cache.performTransaction(c => {
+      writes.forEach(write => {
+        this.cache.writeResult({
+          result: write.result,
+          dataId: write.rootId,
+          document: write.document,
+          variables: write.variables,
+        });
       });
     });
-  }
-
-  private collectPatch(before: NormalizedCache, fn: () => void): any {
-    const orig = this.store;
-    this.store = before;
-    fn();
-    const after = this.store;
-    this.store = orig;
-
-    const patch: any = {};
-
-    Object.keys(after).forEach(key => {
-      if (after[key] !== before[key]) {
-        patch[key] = after[key];
-      }
-    });
-
-    return patch;
   }
 }

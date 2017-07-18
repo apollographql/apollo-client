@@ -10,9 +10,9 @@ import {
 } from '../queries/getFromAST';
 import { readQueryFromStore } from './readFromStore';
 import { writeResultToStore } from './writeToStore';
-import { FragmentMatcherInterface } from './fragmentMatcher';
 import { addTypenameToDocument } from '../queries/queryTransform';
 import { QueryManager } from '../core/QueryManager';
+import { Cache } from './cache';
 
 export interface DataProxyReadQueryOptions {
   /**
@@ -144,30 +144,26 @@ export interface DataProxy {
 }
 
 /**
- * A data proxy powered by our internal implementation of the data store,
+ * A data proxy powered by our internal implementation of the data cache,
  * which tracks the normalized cache and optimistic query status.
  */
-export class StoreDataProxy implements DataProxy {
+export class CacheDataProxy implements DataProxy {
   /**
-   * The internal store containing the normalized cache and optimistic results state.
+   * Te cache containing the normalized cache and optimistic results state.
    */
-  private store: DataStore;
+  private cache: Cache;
 
   private reduxStore: ApolloStore;
 
   private reducerConfig: ApolloReducerConfig;
 
-  private fragmentMatcher: FragmentMatcherInterface;
-
   constructor(
-    store: DataStore,
-    fragmentMatcher: FragmentMatcherInterface,
+    cache: Cache,
     reducerConfig: ApolloReducerConfig,
     reduxStore?: ApolloStore,
   ) {
-    this.store = store;
+    this.cache = cache;
     this.reducerConfig = reducerConfig;
-    this.fragmentMatcher = fragmentMatcher;
 
     if (reduxStore) {
       this.reduxStore = reduxStore;
@@ -185,13 +181,10 @@ export class StoreDataProxy implements DataProxy {
       query = addTypenameToDocument(query);
     }
 
-    return readQueryFromStore<QueryType>({
+    return this.cache.readQueryOptimistic({
       rootId: 'ROOT_QUERY',
-      store: this.store.getDataWithOptimisticResults(),
       query,
       variables,
-      fragmentMatcherFunction: this.fragmentMatcher.match,
-      config: this.reducerConfig,
     });
   }
 
@@ -205,25 +198,17 @@ export class StoreDataProxy implements DataProxy {
     variables,
   }: DataProxyReadFragmentOptions): FragmentType | null {
     let query = getFragmentQueryDocument(fragment, fragmentName);
-    const data = this.store.getDataWithOptimisticResults();
-
-    // If we could not find an item in the store with the provided id then we
-    // just return `null`.
-    if (typeof data[id] === 'undefined') {
-      return null;
-    }
-
     if (this.reducerConfig.addTypename) {
       query = addTypenameToDocument(query);
     }
 
-    return readQueryFromStore<FragmentType>({
+    // If we could not find an item in the store with the provided id then we
+    // just return `null`.
+    return this.cache.readQueryOptimistic({
       rootId: id,
-      store: data,
       query,
       variables,
-      fragmentMatcherFunction: this.fragmentMatcher.match,
-      config: this.reducerConfig,
+      nullIfIdNotFound: true,
     });
   }
 
@@ -254,15 +239,12 @@ export class StoreDataProxy implements DataProxy {
       });
     }
 
-    this.store.executeWrites([
-      {
-        rootId: 'ROOT_QUERY',
-        result: data,
-        document: query,
-        operationName: getOperationName(query),
-        variables: variables || {},
-      },
-    ]);
+    this.cache.writeResult({
+      dataId: 'ROOT_QUERY',
+      result: data,
+      document: query,
+      variables: variables || {},
+    });
   }
 
   /**
@@ -296,15 +278,12 @@ export class StoreDataProxy implements DataProxy {
       });
     }
 
-    this.store.executeWrites([
-      {
-        rootId: id,
-        result: data,
-        document,
-        operationName: getOperationName(document),
-        variables: variables || {},
-      },
-    ]);
+    this.cache.writeResult({
+      dataId: id,
+      result: data,
+      document,
+      variables: variables || {},
+    });
   }
 }
 
@@ -322,7 +301,7 @@ export class TransactionDataProxy implements DataProxy {
    * The normalized cache that this transaction reads from. This object will be
    * a shallow clone of the `data` object passed into the constructor.
    */
-  private data: NormalizedCache;
+  private cache: Cache;
 
   private reducerConfig: ApolloReducerConfig;
 
@@ -337,8 +316,8 @@ export class TransactionDataProxy implements DataProxy {
    */
   private isFinished: boolean;
 
-  constructor(data: NormalizedCache, reducerConfig: ApolloReducerConfig) {
-    this.data = { ...data };
+  constructor(cache: Cache, reducerConfig: ApolloReducerConfig) {
+    this.cache = cache;
     this.reducerConfig = reducerConfig;
     this.writes = [];
     this.isFinished = false;
@@ -371,13 +350,10 @@ export class TransactionDataProxy implements DataProxy {
       query = addTypenameToDocument(query);
     }
 
-    return readQueryFromStore<QueryType>({
+    return this.cache.readQuery({
       rootId: 'ROOT_QUERY',
-      store: this.data,
       query,
       variables,
-      config: this.reducerConfig,
-      fragmentMatcherFunction: this.reducerConfig.fragmentMatcher,
     });
   }
 
@@ -400,7 +376,6 @@ export class TransactionDataProxy implements DataProxy {
       );
     }
 
-    const { data } = this;
     let query = getFragmentQueryDocument(fragment, fragmentName);
 
     if (this.reducerConfig.addTypename) {
@@ -408,18 +383,11 @@ export class TransactionDataProxy implements DataProxy {
     }
 
     // If we could not find an item in the store with the provided id then we
-    // just return `null`.
-    if (typeof data[id] === 'undefined') {
-      return null;
-    }
-
-    return readQueryFromStore<FragmentType>({
+    return this.cache.readQuery({
       rootId: id,
-      store: data,
       query,
       variables,
-      config: this.reducerConfig,
-      fragmentMatcherFunction: this.reducerConfig.fragmentMatcher,
+      nullIfIdNotFound: true,
     });
   }
 
@@ -500,14 +468,11 @@ export class TransactionDataProxy implements DataProxy {
    * array which will be returned later on when the transaction finishes.
    */
   private applyWrite(write: DataWrite) {
-    writeResultToStore({
+    this.cache.writeResult({
       result: write.result,
       dataId: write.rootId,
       document: write.document,
       variables: write.variables,
-      store: this.data,
-      dataIdFromObject: this.reducerConfig.dataIdFromObject || (() => null),
-      fragmentMatcherFunction: this.reducerConfig.fragmentMatcher,
     });
     this.writes.push(write);
   }

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Adds apollo-link network interface support [PR #1918](https://github.com/apollographql/apollo-client/pull/1918)
 - Fix issue with fetchMore not merging results correctly when the @connection directive is used [PR #1915](https://github.com/apollographql/apollo-client/pull/1915)
 - added prettier to manage formatting of project [PR #1904](https://github.com/apollographql/apollo-client/pull/1904)
 - Replace use of `Object` with `Record<string, any>` in mutation types

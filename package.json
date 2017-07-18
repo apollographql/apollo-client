@@ -80,7 +80,7 @@
     "@types/benchmark": "^1.0.30",
     "@types/chai": "4.0.1",
     "@types/chai-as-promised": "0.0.31",
-    "@types/lodash": "4.14.69",
+    "@types/lodash": "4.14.70",
     "@types/mocha": "^2.2.31",
     "@types/node": "8.0.14",
     "@types/promises-a-plus": "0.0.27",

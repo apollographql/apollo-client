@@ -541,7 +541,6 @@ export class QueryManager {
     options: WatchQueryOptions,
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
-    let lastResult: ApolloQueryResult<T>;
     let previouslyHadError: boolean = false;
     return (queryStoreValue: QueryStoreValue) => {
       // The query store value can be undefined in the event of a store
@@ -555,15 +554,20 @@ export class QueryManager {
       queryStoreValue = this.queryStore.get(queryId);
 
       const storedQuery = this.observableQueries[queryId];
+      const observableQuery = storedQuery ? storedQuery.observableQuery : null;
 
-      const fetchPolicy = storedQuery
-        ? storedQuery.observableQuery.options.fetchPolicy
+      const fetchPolicy = observableQuery
+        ? observableQuery.options.fetchPolicy
         : options.fetchPolicy;
 
       if (fetchPolicy === 'standby') {
         // don't watch the store for queries on standby
         return;
       }
+
+      const lastResult = observableQuery
+        ? observableQuery.getLastResult()
+        : null;
 
       const shouldNotifyIfLoading =
         queryStoreValue.previousVariables ||
@@ -667,7 +671,6 @@ export class QueryManager {
               );
 
               if (isDifferentResult || previouslyHadError) {
-                lastResult = resultFromStore;
                 try {
                   observer.next(maybeDeepFreeze(resultFromStore));
                 } catch (e) {

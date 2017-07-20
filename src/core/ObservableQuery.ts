@@ -189,12 +189,18 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       networkStatus = loading ? NetworkStatus.loading : NetworkStatus.ready;
     }
 
-    return {
+    const result = {
       data,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-      partial,
     };
+
+    if (!partial) {
+      const stale = false;
+      this.lastResult = { ...result, stale };
+    }
+
+    return { ...result, partial };
   }
 
   // Returns the last result that observer.next was called with. This is not the same as

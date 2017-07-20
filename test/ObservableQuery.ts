@@ -1105,7 +1105,7 @@ describe('ObservableQuery', () => {
             stale: false,
           });
 
-          if (handleCount === 1) {
+          if (handleCount === 2) {
             assert.deepEqual<ApolloQueryResult<any>>(subResult, {
               data: dataTwo,
               loading: false,

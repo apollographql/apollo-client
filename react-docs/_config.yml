@@ -25,6 +25,7 @@ sidebar_categories:
     - subscriptions
     - receiving-updates
     - cache-updates
+    - using-with-types
   API Reference:
     - api
     - api-graphql

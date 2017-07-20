@@ -7,7 +7,7 @@ staleLabel: no-recent-activity
 exemptLables:
   - discussion
   - good-first-issue
-  - revist
+  - revisit
   - high-priority
 # text of the comment when marking issue as stale
 markComment: >

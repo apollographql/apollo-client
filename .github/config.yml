@@ -53,7 +53,7 @@ labels:
     color: d93f0b
   - name: in-progress
     color: ededed
-  - name: revist
+  - name: revisit
     color: ededed
   - name: no-recent-activity
     color: ededed

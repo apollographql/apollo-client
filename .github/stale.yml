@@ -5,9 +5,10 @@ daysUntilClose: 14
 staleLabel: no-recent-activity
 # whitelist of lables to not mark stale
 exemptLables:
-  - pinned
-  - security
-  - enhancement
+  - discussion
+  - good-first-issue
+  - revisit
+  - high-priority
 # text of the comment when marking issue as stale
 markComment: >
   This issue has been automatically marked as stale becuase it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions to Apollo Client!

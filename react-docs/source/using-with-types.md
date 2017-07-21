@@ -346,6 +346,8 @@ export default withCharacter(({ loading, hero, error }) => {
 Since we have typed the response shape, the props shape, and the shape of what will be passed to the client, we can prevent errors in multiple places. Our options and props function within the `graphql` wrapper are now type safe, our rendered component is protected, and our tree of components have their required props enforced. Take for example errors using Flow within the `props` function after adding the above typings:
 
 ```javascript
+// @flow
+
 export const withCharacter: OperationComponent<Response, InputProps, Props> = graphql(HERO_QUERY, {
   options: ({ episode }) => ({
     variables: { episode }
@@ -367,6 +369,7 @@ With this addition, the entirety of the integration between Apollo and React can
 All of the above examples show wrapping a component which is just a function using the result of a `graphql` wrapper. Sometimes, components that depend on GraphQL data require state and are formed using the `class MyComponent extends React.Component` practice. In these use cases, both TypeScript and Flow require adding prop shape to the class instance. In order to support this, `react-apollo` exports types to support creating result types easily. This is the previous example shortened to show just the component when using Flow:
 
 ```javascript
+// @flow
 import { ChildProps } from "react-apollo";
 
 const withCharacter: OperationComponent<Response, InputProps> = graphql(HERO_QUERY, {
@@ -375,16 +378,17 @@ const withCharacter: OperationComponent<Response, InputProps> = graphql(HERO_QUE
   })
 });
 
+// flow will infer this type 
 export default class Character extends Component {
-    props: ChildProps<InputProps, Response>;
-
-    render(){
-        const { loading, hero, error } = this.props.data;
-        if (loading) return <div>Loading</div>;
-        if (error) return <h1>ERROR</h1>;
-        return ...// actual component with data;
-    }
+  render(){
+    const { loading, hero, error } = this.props.data;
+    if (loading) return <div>Loading</div>;
+    if (error) return <h1>ERROR</h1>;
+    return ...// actual component with data;
+  }
 }
+
+const CharacterWithData = withCharacter(Character);
 ```
 
 The same example looks like this when using TypeScript:
@@ -399,12 +403,12 @@ const withCharacter = graphql<Response, InputProps>(HERO_QUERY, {
 });
 
 export default class Character extends React.Component<ChildProps<InputProps, Response>, {}> {
-    render(){
-        const { loading, hero, error } = this.props.data;
-        if (loading) return <div>Loading</div>;
-        if (error) return <h1>ERROR</h1>;
-        return ...// actual component with data;
-    }
+  render(){
+    const { loading, hero, error } = this.props.data;
+    if (loading) return <div>Loading</div>;
+    if (error) return <h1>ERROR</h1>;
+    return ...// actual component with data;
+  }
 }
 ```
 

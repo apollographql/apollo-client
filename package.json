@@ -45,7 +45,7 @@
   "bundlesize": [
     {
       "path": "./dist/index.min.js",
-      "threshold": "28 Kb"
+      "threshold": "30 Kb"
     }
   ],
   "jest": {

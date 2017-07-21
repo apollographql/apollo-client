@@ -21,7 +21,7 @@
     "compile:benchmark": "tsc -p tsconfig.test.json",
     "compile:coverage": "tsc -p tsconfig.coverage.json",
     "compile:test": "tsc -p tsconfig.test.json",
-    "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/apollo.umd.js -o=./dist/index.js && npm run minify:browser",
+    "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/apollo.umd.js --i graphql-tag -o=./dist/index.js && npm run minify:browser",
     "minify:browser": "uglifyjs -c -m -o ./dist/index.min.js -- ./dist/index.js",
     "watch": "tsc -w",
     "watch:test": "tsc -p tsconfig.test.json -w",
@@ -45,7 +45,7 @@
   "bundlesize": [
     {
       "path": "./dist/index.min.js",
-      "threshold": "28 Kb"
+      "threshold": "30 Kb"
     }
   ],
   "jest": {
@@ -54,7 +54,10 @@
     }
   },
   "lint-staged": {
-    "*.ts*": ["prettier --trailing-comma all --single-quote --write", "git add"]
+    "*.ts*": [
+      "prettier --trailing-comma all --single-quote --write",
+      "git add"
+    ]
   },
   "pre-commit": "lint-staged",
   "keywords": [
@@ -69,6 +72,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
+    "apollo-link": "^0.0.3",
     "graphql": "^0.10.0",
     "graphql-anywhere": "^3.0.1",
     "graphql-tag": "^2.0.0",

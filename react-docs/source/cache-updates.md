@@ -473,6 +473,8 @@ query DetailView {
 }
 ```
 
+> Note: The data returned by the list query has to include all the data the specific query needs. If the specific book query fetches a field that the list query doesn't return Apollo Client cannot return the data from the cache.
+
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```
@@ -482,22 +484,43 @@ const client = new ApolloClient({
   networkInterface,
   customResolvers: {
     Query: {
-      book: (_, args) => toIdValue(dataIdFromObject({ __typename: 'book', id: args['id'] })),
+      book: (_, args) => toIdValue(client.dataIdFromObject({ __typename: 'Book', id: args.id })),
     },
   },
-  dataIdFromObject,
 });
 ```
 
+> Note: This'll also work with custom `dataIdFromObject` methods as long as you use the same one.
+
 Apollo Client will use the return value of the custom resolver to look up the item in its cache. `toIdValue` must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object. "Query" key in this example is your root query type name.
+
+To figure out what you should put in the `__typename` property run one of the queries in GraphiQL and get the `__typename` field:
+
+```
+query ListView {
+  books {
+    __typename
+  }
+}
+
+# or
+
+query DetailView {
+  book(id: $id) {
+    __typename
+  }
+}
+```
+
+The value that's returned (the name of your type) is what you need to put into the `__typename` property.
 
 It is also possible to return a list of IDs:
 
 ```
 customResolvers: {
   Query: {
-    books: (_, args) => args['ids'].map(id =>
-      toIdValue(dataIdFromObject({ __typename: 'book', id: id }))),
+    books: (_, args) => args.ids.map(id =>
+      toIdValue(dataIdFromObject({ __typename: 'Book', id: id }))),
   },
 },
 ```

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Document ApolloClient.prototype.subscribe [PR #1932](https://github.com/apollographql/apollo-client/pull/1932)
 
 ### 1.9.0-1
 - Adds apollo-link network interface support [PR #1918](https://github.com/apollographql/apollo-client/pull/1918)

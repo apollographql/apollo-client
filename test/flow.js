@@ -11,7 +11,7 @@
 
 // @flow
 import ApolloClient, { createNetworkInterface, ApolloError } from "../src";
-import type { ApolloQueryResult } from "../src";
+import type { ApolloQueryResult, MiddlewareInterface, AfterwareInterface } from "../src";
 import type { DocumentNode } from "graphql";
 import gql from "graphql-tag";
 
@@ -30,28 +30,31 @@ const client1 = new ApolloClient({
 
 const networkInterface1 = createNetworkInterface("localhost:3000");
 
-networkInterface1.use([{
+const middleware: MiddlewareInterface[] = [{
   applyMiddleware(req, next) {
-    const token = localStorage.getItem('token') || ''
+    const token = localStorage.getItem('token') || '';
     if (!req.options.headers) {
-        req.options.headers = { authorization: token }
+      req.options.headers = { authorization: token }
     } else if (req.options.headers instanceof Headers) {
-        req.options.headers.set('authorization', token)
+      req.options.headers.set('authorization', token)
     } else {
-        req.options.headers.authorization = token;
+      req.options.headers.authorization = token;
     }
     next();
   }
-}]);
+}];
+networkInterface1.use(middleware);
 
-networkInterface1.useAfter([{
+const afterware: AfterwareInterface[] = [{
   applyAfterware({ response }, next) {
     if (response.status === 401) {
       next();
     }
     next();
   }
-}]);
+}];
+
+networkInterface1.useAfter(afterware);
 
 const client2 = new ApolloClient({ networkInterface: networkInterface1 });
 

@@ -99,7 +99,16 @@ export type SubscribeToMoreOptions = {
 };
 
 export interface SubscriptionOptions {
+  /**
+   * A GraphQL document, often created with `gql` from the `graphql-tag`
+   * package, that contains a single subscription inside of it.
+   */
   query: DocumentNode;
+
+  /**
+   * An object that maps from the name of a variable as used in the subscription
+   * GraphQL document to that variable's value.
+   */
   variables?: { [key: string]: any };
 }
 

@@ -259,9 +259,7 @@ describe('GraphQL Subscriptions', () => {
           observableQuery.unsubscribe();
           assert.equal(counter, 5);
           assert.equal(
-            queryManager.store.getState()['apollo']['data']['ROOT_QUERY'][
-              'number'
-            ],
+            queryManager.dataStore.getStore()['ROOT_QUERY']['number'],
             4,
           );
           done();

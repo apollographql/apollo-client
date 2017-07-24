@@ -40,6 +40,8 @@ import { NetworkStatus } from '../src/queries/networkStatus';
 
 import wrap, { withWarning } from './util/wrap';
 
+import { ApolloReducerConfig } from '../src/store';
+
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from './util/observableToPromise';
@@ -63,17 +65,20 @@ describe('QueryManager', () => {
     store,
     reduxRootSelector,
     addTypename = false,
+    config = {},
   }: {
     networkInterface?: NetworkInterface;
     store?: ApolloStore;
     reduxRootSelector?: ApolloStateSelector;
     addTypename?: boolean;
+    config?: ApolloReducerConfig;
   }) => {
     return new QueryManager({
       networkInterface: networkInterface || mockNetworkInterface(),
       store: store || createApolloStore(),
       reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
       addTypename,
+      reducerConfig: config,
     });
   };
 
@@ -146,11 +151,13 @@ describe('QueryManager', () => {
     data,
     variables = {},
     store,
+    config = {},
   }: {
     mutation: DocumentNode;
     data: Object;
     variables?: Object;
     store?: ApolloStore;
+    config?: ApolloReducerConfig;
   }) => {
     if (!store) {
       store = createApolloStore();
@@ -159,7 +166,11 @@ describe('QueryManager', () => {
       request: { query: mutation, variables },
       result: { data },
     });
-    const queryManager = createQueryManager({ networkInterface, store });
+    const queryManager = createQueryManager({
+      networkInterface,
+      store,
+      config,
+    });
     return new Promise<{
       result: ExecutionResult;
       queryManager: QueryManager;
@@ -1414,11 +1425,12 @@ describe('QueryManager', () => {
       store: createApolloStore({
         config: { dataIdFromObject: getIdField },
       }),
+      config: { dataIdFromObject: getIdField },
     }).then(({ result, queryManager }) => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(queryManager.store.getState()['apollo'].data['5'], {
+      assert.deepEqual(queryManager.dataStore.getStore()['5'], {
         id: '5',
         isPrivate: true,
       });
@@ -1446,11 +1458,12 @@ describe('QueryManager', () => {
       store: createApolloStore({
         config: { dataIdFromObject: getIdField },
       }),
+      config: { dataIdFromObject: getIdField },
     }).then(({ result, queryManager }) => {
       assert.deepEqual(result.data, data);
 
       // Make sure we updated the store with the new data
-      assert.deepEqual(queryManager.store.getState()['apollo'].data['5'], {
+      assert.deepEqual(queryManager.dataStore.getStore()['5'], {
         id: '5',
         isPrivate: true,
       });
@@ -1487,6 +1500,7 @@ describe('QueryManager', () => {
       }),
       store,
       reduxRootSelector,
+      config: { dataIdFromObject: getIdField },
     });
 
     return queryManager
@@ -1497,7 +1511,7 @@ describe('QueryManager', () => {
         assert.deepEqual(result.data, data);
 
         // Make sure we updated the store with the new data
-        assert.deepEqual(reduxRootSelector(store.getState()).data['5'], {
+        assert.deepEqual(queryManager.dataStore.getStore()['5'], {
           id: '5',
           isPrivate: true,
         });
@@ -1572,7 +1586,7 @@ describe('QueryManager', () => {
     );
   });
 
-  it('does not call broadcastNewStore when Apollo state is not affected by an action', () => {
+  it('does not call broadcastQueries when Apollo state is not affected by an action', () => {
     const query = gql`
       query fetchLuke($id: String) {
         people_one(id: $id) {
@@ -1642,7 +1656,7 @@ describe('QueryManager', () => {
 
         // here's the actual test. Everything else is just setup.
         let called = false;
-        client.queryManager.broadcastNewStore = (s: any) => {
+        client.queryManager.broadcastQueries = () => {
           called = true;
         };
         store.dispatch({
@@ -2534,13 +2548,12 @@ describe('QueryManager', () => {
 
       queryManager.resetStore();
       const currentState = queryManager.getApolloState();
-      const expectedState: any = {
-        data: {},
-        optimistic: [],
-        reducerError: null,
-      };
+      const expectedState: any = {};
 
       assert.deepEqual(currentState, expectedState);
+      assert.deepEqual(queryManager.dataStore.getStore(), {});
+      assert.deepEqual(queryManager.queryStore.getStore(), {});
+      assert.deepEqual(queryManager.mutationStore.getStore(), {});
     });
 
     it('should only refetch once when we store reset', () => {
@@ -2892,6 +2905,7 @@ describe('QueryManager', () => {
         result: { data },
       }),
       store,
+      config: reducerConfig,
     })
       .query({ query })
       .then(result => {
@@ -2969,7 +2983,7 @@ describe('QueryManager', () => {
           .catch(error => {
             // make that the error thrown doesn't empty the state
             assert.deepEqual(
-              queryManager.store.getState().apollo.data['$ROOT_QUERY.author'],
+              queryManager.dataStore.getStore()['$ROOT_QUERY.author'] as Object,
               data['author'],
             );
             done();
@@ -3051,7 +3065,7 @@ describe('QueryManager', () => {
         errorCallbacks: [
           () => {
             assert.deepEqual(
-              queryManager.store.getState().apollo.data['$ROOT_QUERY.author'],
+              queryManager.dataStore.getStore()['$ROOT_QUERY.author'] as Object,
               data.author,
             );
           },
@@ -3060,7 +3074,7 @@ describe('QueryManager', () => {
       result => {
         assert.deepEqual(result.data, data);
         assert.deepEqual(
-          queryManager.store.getState().apollo.data['$ROOT_QUERY.author'],
+          queryManager.dataStore.getStore()['$ROOT_QUERY.author'] as Object,
           data.author,
         );
       },
@@ -3203,6 +3217,7 @@ describe('QueryManager', () => {
         },
       ),
       store,
+      config: reducerConfig,
     });
 
     const observable1 = queryManager.watchQuery<any>({ query: query1 });
@@ -3297,6 +3312,7 @@ describe('QueryManager', () => {
         },
       ),
       store,
+      config: reducerConfig,
     });
 
     const observableWithId = queryManager.watchQuery<any>({

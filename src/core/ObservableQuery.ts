@@ -456,13 +456,22 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     );
 
     if (newResult) {
-      this.queryManager.store.dispatch({
-        type: 'APOLLO_UPDATE_QUERY_RESULT',
-        newResult,
-        variables,
+      if (QueryManager.EMIT_REDUX_ACTIONS) {
+        this.queryManager.store.dispatch({
+          type: 'APOLLO_UPDATE_QUERY_RESULT',
+          newResult,
+          variables,
+          document,
+          operationName: getOperationName(document),
+        });
+      }
+
+      this.queryManager.dataStore.markUpdateQueryResult(
         document,
-        operationName: getOperationName(document),
-      });
+        variables,
+        newResult,
+      );
+      this.queryManager.broadcastQueries();
     }
   }
 

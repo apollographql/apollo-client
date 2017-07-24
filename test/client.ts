@@ -68,7 +68,9 @@ import { withWarning } from './util/wrap';
 
 import observableToPromise from './util/observableToPromise';
 
-import { cloneDeep, assign } from 'lodash';
+import { cloneDeep, assign, isEqual } from 'lodash';
+
+import { ApolloLink, Observable } from 'apollo-link';
 
 declare var fetch: any;
 
@@ -263,7 +265,7 @@ describe('client', () => {
     return clientRoundtrip(query, { data });
   });
 
-  it('should allow a single query with an observable enabled network interface', done => {
+  it('should allow a single query with an apollo-link enabled network interface', done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -290,10 +292,13 @@ describe('client', () => {
 
     const variables = { first: 1 };
 
-    const networkInterface = mockObservableNetworkInterface({
-      request: { query, variables },
-      result: { data },
-    });
+    const networkInterface = ApolloLink.from([
+      () => {
+        return Observable.of({
+          data,
+        });
+      },
+    ]);
 
     const client = new ApolloClient({
       networkInterface,
@@ -674,7 +679,7 @@ describe('client', () => {
     });
   });
 
-  it('should return GraphQL errors correctly for a single query with an observable enabled network interface', done => {
+  it('should return GraphQL errors correctly for a single query with an apollo-link enabled network interface', done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -685,6 +690,16 @@ describe('client', () => {
       }
     `;
 
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
     const errors: GraphQLError[] = [
       {
         name: 'test',
@@ -692,10 +707,13 @@ describe('client', () => {
       },
     ];
 
-    const networkInterface = mockObservableNetworkInterface({
-      request: { query },
-      result: { errors },
-    });
+    const networkInterface = ApolloLink.from([
+      () => {
+        return new Observable(observer => {
+          observer.next({ data, errors });
+        });
+      },
+    ]);
 
     const client = new ApolloClient({
       networkInterface,
@@ -708,7 +726,49 @@ describe('client', () => {
     });
   });
 
-  it('should pass a network error correctly on a query with observable network interface', done => {
+  it('should pass a network error correctly on a query using an observable network interface with a warning', done => {
+    withWarning(() => {
+      const query = gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data = {
+        person: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const networkError = new Error('Some kind of network error.');
+
+      const networkInterface = ApolloLink.from([
+        () => {
+          return new Observable(observer => {
+            throw networkError;
+          });
+        },
+      ]);
+
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+      });
+
+      client.query({ query }).catch((error: ApolloError) => {
+        assert(error.networkError);
+        assert.deepEqual(error.networkError!.message, networkError.message);
+        done();
+      });
+    }, /deprecated/);
+  });
+
+  it('should pass a network error correctly on a query with apollo-link network interface', done => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -728,11 +788,13 @@ describe('client', () => {
 
     const networkError = new Error('Some kind of network error.');
 
-    const networkInterface = mockObservableNetworkInterface({
-      request: { query },
-      result: { data },
-      error: networkError,
-    });
+    const networkInterface = ApolloLink.from([
+      () => {
+        return new Observable(observer => {
+          throw networkError;
+        });
+      },
+    ]);
 
     const client = new ApolloClient({
       networkInterface,
@@ -744,6 +806,43 @@ describe('client', () => {
       assert.deepEqual(error.networkError!.message, networkError.message);
       done();
     });
+  });
+
+  it('should warn when receiving multiple results from apollo-link network interface', () => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
+          }
+        }
+      }
+    `;
+
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+          },
+        ],
+      },
+    };
+
+    const networkInterface = ApolloLink.from([
+      () => Observable.of({ data }, { data }),
+    ]);
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    return withWarning(() => {
+      return client.query({ query }).then((result: ExecutionResult) => {
+        assert.deepEqual(result.data, data);
+      });
+    }, /multiple results/);
   });
 
   it('should surface errors in observer.next as uncaught', done => {

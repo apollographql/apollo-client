@@ -9,8 +9,6 @@ import {
 
 import { FragmentMatcher } from 'graphql-anywhere';
 
-import { data } from './data/store';
-
 import { NormalizedCache } from './data/storeUtils';
 
 import { QueryStore } from './queries/store';
@@ -19,13 +17,6 @@ import {
   // mutations,
   MutationStore,
 } from './mutations/store';
-
-import {
-  optimistic,
-  OptimisticStore,
-  getDataWithOptimisticResults,
-} from './optimistic-data/store';
-export { getDataWithOptimisticResults };
 
 import {
   ApolloAction,
@@ -40,18 +31,7 @@ import { CustomResolverMap } from './data/readFromStore';
 
 import { assign } from './util/assign';
 
-export interface ReducerError {
-  error: Error;
-  queryId?: string;
-  mutationId?: string;
-  subscriptionId?: number;
-}
-
-export interface Store {
-  data: NormalizedCache;
-  optimistic: OptimisticStore;
-  reducerError: ReducerError | null;
-}
+export interface Store {}
 
 /**
  * This is an interface that describes the behavior of a Apollo store, which is currently
@@ -75,23 +55,6 @@ const crashReporter = (store: any) => (next: any) => (action: any) => {
   }
 };
 
-const createReducerError = (
-  error: Error,
-  action: ApolloAction,
-): ReducerError => {
-  const reducerError: ReducerError = { error };
-
-  if (isQueryResultAction(action)) {
-    reducerError.queryId = action.queryId;
-  } else if (isSubscriptionResultAction(action)) {
-    reducerError.subscriptionId = action.subscriptionId;
-  } else if (isMutationResultAction(action)) {
-    reducerError.mutationId = action.mutationId;
-  }
-
-  return reducerError;
-};
-
 // Reducer
 export type ApolloReducer = (
   store: NormalizedCache,
@@ -102,44 +65,11 @@ export function createApolloReducer(
   config: ApolloReducerConfig,
 ): (state: Store, action: ApolloAction | Action) => Store {
   return function apolloReducer(state = {} as Store, action: ApolloAction) {
-    try {
-      const newState: Store = {
-        data: data(state.data, action, config),
-        optimistic: [] as any,
+    // use the two lines below to debug tests :)
+    // console.log('ACTION', action.type, JSON.stringify(action, null, 2));
+    // console.log('new state', newState);
 
-        reducerError: null,
-      };
-
-      // use the two lines below to debug tests :)
-      // console.log('ACTION', action.type, JSON.stringify(action, null, 2));
-      // console.log('new state', newState);
-
-      // Note, we need to have the results of the
-      // APOLLO_MUTATION_INIT action to simulate
-      // the APOLLO_MUTATION_RESULT action. That's
-      // why we pass in newState
-      newState.optimistic = optimistic(
-        state.optimistic,
-        action,
-        newState,
-        config,
-      );
-
-      if (
-        state.data === newState.data &&
-        state.optimistic === newState.optimistic &&
-        state.reducerError === newState.reducerError
-      ) {
-        return state;
-      }
-
-      return newState;
-    } catch (reducerError) {
-      return {
-        ...state,
-        reducerError: createReducerError(reducerError, action),
-      };
-    }
+    return {};
   };
 }
 

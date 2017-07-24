@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Migrated the cache away from Redux in preparation for the generic store API [PR 1907](https://github.com/apollographql/apollo-client/pull/1907)
 - Document ApolloClient.prototype.subscribe [PR #1932](https://github.com/apollographql/apollo-client/pull/1932)
 - Fix NetworkMiddleware flow typings [PR #1937](https://github.com/apollographql/apollo-client/pull/1937)
 

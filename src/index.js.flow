@@ -94,8 +94,8 @@ export interface SubscriptionNetworkInterface {
   unsubscribe(id: Number): void,
 }
 
-export type NetworkMiddleware = Array<MiddlewareInterface | BatchMiddlewareInterface>;
-export type NetworkAfterware = Array<AfterwareInterface | BatchAfterwareInterface>;
+export type NetworkMiddleware = Array<MiddlewareInterface> | Array<BatchMiddlewareInterface>;
+export type NetworkAfterware = Array<AfterwareInterface> | Array<BatchAfterwareInterface>;
 
 declare export class HTTPNetworkInterface extends NetworkInterface {
   _uri: string,

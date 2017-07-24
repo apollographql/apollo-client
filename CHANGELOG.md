@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix NetworkMiddleware flow typings [PR #1937](https://github.com/apollographql/apollo-client/pull/1937)
 
 ### 1.9.0-1
 - Adds apollo-link network interface support [PR #1918](https://github.com/apollographql/apollo-client/pull/1918)

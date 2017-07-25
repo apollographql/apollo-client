@@ -5,10 +5,7 @@ import {
   Request,
 } from './transport/networkInterface';
 
-import {
-  execute,
-  ApolloLink,
-} from 'apollo-link';
+import { execute, ApolloLink } from 'apollo-link';
 
 import {
   ExecutionResult,
@@ -69,7 +66,6 @@ import {
   DataProxyReadFragmentOptions,
   DataProxyWriteQueryOptions,
   DataProxyWriteFragmentOptions,
-  CacheDataProxy,
 } from './data/proxy';
 
 import { version } from './version';
@@ -171,7 +167,10 @@ export default class ApolloClient implements DataProxy {
 
   constructor(
     options: {
-      networkInterface?: NetworkInterface | ObservableNetworkInterface | ApolloLink;
+      networkInterface?:
+        | NetworkInterface
+        | ObservableNetworkInterface
+        | ApolloLink;
       reduxRootSelector?: ApolloStateSelector;
       initialState?: any;
       initialCache?: Cache;
@@ -212,32 +211,36 @@ export default class ApolloClient implements DataProxy {
       this.fragmentMatcher = fragmentMatcher;
     }
 
-
-    const createQuery = (getResult: (request: Request) => Observable<ExecutionResult>) => {
+    const createQuery = (
+      getResult: (request: Request) => Observable<ExecutionResult>,
+    ) => {
       let resolved = false;
-      return (request: Request) => new Promise<ExecutionResult>((resolve, reject) => {
-        const subscription = getResult(request).subscribe({
-          next: (data: ExecutionResult) => {
-            if (!resolved) {
-              resolve(data);
-              resolved = true;
-            } else {
-              console.warn('Apollo Client does not support multiple results from an Observable');
-            }
-          },
-          error: reject,
-          complete: () => subscription.unsubscribe(),
-        })
-      })
+      return (request: Request) =>
+        new Promise<ExecutionResult>((resolve, reject) => {
+          const subscription = getResult(request).subscribe({
+            next: (data: ExecutionResult) => {
+              if (!resolved) {
+                resolve(data);
+                resolved = true;
+              } else {
+                console.warn(
+                  'Apollo Client does not support multiple results from an Observable',
+                );
+              }
+            },
+            error: reject,
+            complete: () => subscription.unsubscribe(),
+          });
+        });
     };
 
-    if ( networkInterface instanceof ApolloLink) {
+    if (networkInterface instanceof ApolloLink) {
       this.networkInterface = {
         query: createQuery((request: Request) => {
-          return execute(
-            (networkInterface as ApolloLink),
+          return (execute(
+            networkInterface as ApolloLink,
             request,
-          ) as any as Observable<ExecutionResult>;
+          ) as any) as Observable<ExecutionResult>;
         }),
       };
     } else if (
@@ -248,7 +251,9 @@ export default class ApolloClient implements DataProxy {
       console.warn(`The Observable Network interface will be deprecated`);
       this.networkInterface = {
         ...networkInterface,
-        query: createQuery((networkInterface as ObservableNetworkInterface).request)
+        query: createQuery(
+          (networkInterface as ObservableNetworkInterface).request,
+        ),
       };
     } else {
       this.networkInterface = networkInterface
@@ -619,11 +624,7 @@ export default class ApolloClient implements DataProxy {
   private initProxy(): DataProxy {
     if (!this.proxy) {
       this.initStore();
-      this.proxy = new CacheDataProxy(
-        this.queryManager.dataStore.getCache(),
-        this.reducerConfig,
-        this.store,
-      );
+      this.proxy = this.queryManager.dataStore.getCache();
     }
     return this.proxy;
   }

@@ -1,6 +1,6 @@
 import { QueryWithUpdater, DataWrite } from '../actions';
 
-import { TransactionDataProxy, DataProxy } from '../data/proxy';
+import { DataProxy } from '../data/proxy';
 
 import { getOperationName } from '../queries/getFromAST';
 
@@ -151,7 +151,7 @@ export class DataStore {
         });
       };
 
-      this.cache.performOptimisticTransaction(c => {
+      this.cache.recordOptimisticTransaction(c => {
         const orig = this.cache;
         this.cache = c;
 
@@ -194,6 +194,7 @@ export class DataStore {
               query: query.document,
               variables: query.variables,
               returnPartialData: true,
+              optimistic: false,
             });
 
             if (isMissing) {
@@ -233,9 +234,7 @@ export class DataStore {
       const update = mutation.update;
       if (update) {
         this.cache.performTransaction(c => {
-          const proxy = new TransactionDataProxy(c, this.config);
-
-          tryFunctionOrLogError(() => update(proxy, mutation.result));
+          tryFunctionOrLogError(() => update(c, mutation.result));
         });
       }
 

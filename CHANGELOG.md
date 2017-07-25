@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Document ApolloClient.prototype.subscribe [PR #1932](https://github.com/apollographql/apollo-client/pull/1932)
 - Fix NetworkMiddleware flow typings [PR #1937](https://github.com/apollographql/apollo-client/pull/1937)
 
 ### 1.9.0-1

@@ -29,7 +29,6 @@ export abstract class Cache {
     variables: any;
     rootId?: string;
     previousResult?: any;
-    nullIfIdNotFound?: boolean;
   }): any;
 
   public abstract readQueryOptimistic(query: {
@@ -37,7 +36,6 @@ export abstract class Cache {
     variables: any;
     rootId?: string;
     previousResult?: any;
-    nullIfIdNotFound?: boolean;
   }): any;
 
   public abstract writeResult(write: CacheWrite): void;

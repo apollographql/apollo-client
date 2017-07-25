@@ -66,7 +66,6 @@ import {
   DataProxyReadFragmentOptions,
   DataProxyWriteQueryOptions,
   DataProxyWriteFragmentOptions,
-  CacheDataProxy,
 } from './data/proxy';
 
 import { version } from './version';
@@ -183,7 +182,7 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools?: boolean;
       queryDeduplication?: boolean;
       fragmentMatcher?: FragmentMatcherInterface;
-    } = {},
+    } = {}
   ) {
     let { dataIdFromObject } = options;
     const {
@@ -213,7 +212,7 @@ export default class ApolloClient implements DataProxy {
     }
 
     const createQuery = (
-      getResult: (request: Request) => Observable<ExecutionResult>,
+      getResult: (request: Request) => Observable<ExecutionResult>
     ) => {
       let resolved = false;
       return (request: Request) =>
@@ -225,7 +224,7 @@ export default class ApolloClient implements DataProxy {
                 resolved = true;
               } else {
                 console.warn(
-                  'Apollo Client does not support multiple results from an Observable',
+                  'Apollo Client does not support multiple results from an Observable'
                 );
               }
             },
@@ -240,7 +239,7 @@ export default class ApolloClient implements DataProxy {
         query: createQuery((request: Request) => {
           return (execute(
             networkInterface as ApolloLink,
-            request,
+            request
           ) as any) as Observable<ExecutionResult>;
         }),
       };
@@ -253,7 +252,7 @@ export default class ApolloClient implements DataProxy {
       this.networkInterface = {
         ...networkInterface,
         query: createQuery(
-          (networkInterface as ObservableNetworkInterface).request,
+          (networkInterface as ObservableNetworkInterface).request
         ),
       };
     } else {
@@ -275,7 +274,7 @@ export default class ApolloClient implements DataProxy {
     if (ssrForceFetchDelay) {
       setTimeout(
         () => (this.disableNetworkFetches = false),
-        ssrForceFetchDelay,
+        ssrForceFetchDelay
       );
     }
 
@@ -294,7 +293,7 @@ export default class ApolloClient implements DataProxy {
           this.initialState[DEFAULT_REDUX_ROOT_KEY] &&
           this.initialState[DEFAULT_REDUX_ROOT_KEY].data
             ? this.initialState[DEFAULT_REDUX_ROOT_KEY].data
-            : {},
+            : {}
         );
 
     this.watchQuery = this.watchQuery.bind(this);
@@ -338,7 +337,7 @@ export default class ApolloClient implements DataProxy {
             console.debug(
               'Download the Apollo DevTools ' +
                 'for a better development experience: ' +
-                'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm',
+                'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm'
             );
           }
         }
@@ -392,7 +391,7 @@ export default class ApolloClient implements DataProxy {
 
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error(
-        'cache-and-network fetchPolicy can only be used with watchQuery',
+        'cache-and-network fetchPolicy can only be used with watchQuery'
       );
     }
 
@@ -415,7 +414,7 @@ export default class ApolloClient implements DataProxy {
    * It takes options as an object with the following keys and values:
    */
   public mutate<T>(
-    options: MutationOptions<T>,
+    options: MutationOptions<T>
   ): Promise<ApolloExecutionResult<T>> {
     this.initStore();
 
@@ -531,7 +530,7 @@ export default class ApolloClient implements DataProxy {
         'Cannot initialize the store because "reduxRootSelector" is provided. ' +
           'reduxRootSelector should only be used when the store is created outside of the client. ' +
           'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`,
+          `Please remove that option from ApolloClient constructor.`
       );
     }
 
@@ -557,7 +556,7 @@ export default class ApolloClient implements DataProxy {
 
           return result;
         },
-      }),
+      })
     );
   }
 
@@ -598,7 +597,7 @@ export default class ApolloClient implements DataProxy {
     if (typeof reduxRootSelector(store.getState()) === 'undefined') {
       throw new Error(
         'Existing store does not use apolloReducer. Please make sure the store ' +
-          'is properly configured and "reduxRootSelector" is correctly specified.',
+          'is properly configured and "reduxRootSelector" is correctly specified.'
       );
     }
 
@@ -625,11 +624,7 @@ export default class ApolloClient implements DataProxy {
   private initProxy(): DataProxy {
     if (!this.proxy) {
       this.initStore();
-      this.proxy = new CacheDataProxy(
-        this.queryManager.dataStore.getCache(),
-        this.reducerConfig,
-        this.store,
-      );
+      this.proxy = this.queryManager.dataStore.getCache();
     }
     return this.proxy;
   }

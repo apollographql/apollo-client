@@ -23,11 +23,10 @@ export type OptimisticStoreItem = {
 export class InMemoryCache extends Cache {
   private data: NormalizedCache;
   private config: ApolloReducerConfig;
-  private nextOptimisticId = 0;
   private optimistic: OptimisticStoreItem[] = [];
 
   constructor(config: ApolloReducerConfig, initialStore: NormalizedCache = {}) {
-    super();
+    super(config.addTypename || false);
     this.config = config;
     this.data = initialStore;
   }
@@ -66,9 +65,10 @@ export class InMemoryCache extends Cache {
     variables: any;
     returnPartialData?: boolean;
     previousResult?: any;
+    optimistic: boolean;
   }): DiffResult {
     return diffQueryAgainstStore({
-      store: this.data,
+      store: query.optimistic ? this.getOptimisticData() : this.data,
       query: query.query,
       variables: query.variables,
       returnPartialData: query.returnPartialData,
@@ -78,58 +78,19 @@ export class InMemoryCache extends Cache {
     });
   }
 
-  public diffQueryOptimistic(query: {
-    query: DocumentNode;
-    variables: any;
-    returnPartialData?: boolean;
-    previousResult?: any;
-  }): DiffResult {
-    return diffQueryAgainstStore({
-      store: this.getOptimisticData(),
-      query: query.query,
-      variables: query.variables,
-      returnPartialData: query.returnPartialData,
-      previousResult: query.previousResult,
-      fragmentMatcherFunction: this.config.fragmentMatcher,
-      config: this.config,
-    });
-  }
-
-  public readQuery(query: {
+  public read(query: {
     query: DocumentNode;
     variables: any;
     rootId?: string;
     previousResult?: any;
+    optimistic: boolean;
   }): any {
     if (query.rootId && typeof this.data[query.rootId] === 'undefined') {
       return null;
     }
 
     return readQueryFromStore({
-      store: this.data,
-      query: query.query,
-      variables: query.variables,
-      rootId: query.rootId,
-      fragmentMatcherFunction: this.config.fragmentMatcher,
-      previousResult: query.previousResult,
-      config: this.config,
-    });
-  }
-
-  public readQueryOptimistic(query: {
-    query: DocumentNode;
-    variables: any;
-    rootId?: string;
-    previousResult?: any;
-  }): any {
-    const data = this.getOptimisticData();
-
-    if (query.rootId && typeof data[query.rootId] === 'undefined') {
-      return null;
-    }
-
-    return readQueryFromStore({
-      store: data,
+      store: query.optimistic ? this.getOptimisticData() : this.data,
       query: query.query,
       variables: query.variables,
       rootId: query.rootId,
@@ -156,7 +117,7 @@ export class InMemoryCache extends Cache {
 
     // Re-run all of our optimistic data actions on top of one another.
     toPerform.forEach(change => {
-      this.performOptimisticTransaction(change.transaction, change.id);
+      this.recordOptimisticTransaction(change.transaction, change.id);
     });
   }
 
@@ -165,7 +126,7 @@ export class InMemoryCache extends Cache {
     transaction(this);
   }
 
-  public performOptimisticTransaction(
+  public recordOptimisticTransaction(
     transaction: (c: Cache) => void,
     id: string,
   ) {

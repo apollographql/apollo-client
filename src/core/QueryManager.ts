@@ -444,6 +444,7 @@ export class QueryManager {
         query: queryDoc,
         variables,
         returnPartialData: true,
+        optimistic: false,
       });
 
       // If we're in here, only fetch if we have missing fields
@@ -655,11 +656,12 @@ export class QueryManager {
             const {
               result: data,
               isMissing,
-            } = this.dataStore.getCache().diffQueryOptimistic({
+            } = this.dataStore.getCache().diffQuery({
               query: this.queryDocuments[queryId],
               variables:
                 queryStoreValue.previousVariables || queryStoreValue.variables,
               previousResult: lastResult && lastResult.data,
+              optimistic: true,
             });
 
             let resultFromStore: ApolloQueryResult<T>;
@@ -1114,17 +1116,12 @@ export class QueryManager {
     try {
       // first try reading the full result from the store
       // const data = ;
-      const data = isOptimistic
-        ? this.dataStore.getCache().readQueryOptimistic({
-            query: document,
-            variables,
-            previousResult: lastResult ? lastResult.data : undefined,
-          })
-        : this.dataStore.getCache().readQuery({
-            query: document,
-            variables,
-            previousResult: lastResult ? lastResult.data : undefined,
-          });
+      const data = this.dataStore.getCache().read({
+        query: document,
+        variables,
+        previousResult: lastResult ? lastResult.data : undefined,
+        optimistic: isOptimistic,
+      });
 
       return maybeDeepFreeze({ data, partial: false });
     } catch (e) {
@@ -1327,9 +1324,10 @@ export class QueryManager {
               // ensure result is combined with data already in store
               // this will throw an error if there are missing fields in
               // the results if returnPartialData is false.
-              resultFromStore = this.dataStore.getCache().readQuery({
+              resultFromStore = this.dataStore.getCache().read({
                 variables,
                 query: document,
+                optimistic: false,
               });
               // ensure multiple errors don't get thrown
               /* tslint:disable */

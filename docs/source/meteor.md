@@ -182,7 +182,7 @@ const client = new ApolloClient(meteorClientConfig({ networkInterface }));
 
 `customOptions` is an object that can have any [GraphQL Server `options`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlOptions), used to enhance the GraphQL server run thanks to [`graphqlExpress`](http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlExpress). Defining a `customOptions` object extends or replaces fields of the default configuration provided by the package:
 
-- `context`: `{}`, ensure that a context object is defined for the resolvers.
+- `context`: `{}` is an object or a function returning an object that extends the context object being passed down to the resolvers.
 - `formatError`: a function used to format errors before returning them to clients.
 - `debug`: `Meteor.isDevelopment`, additional debug logging if execution errors occur in dev mode.
 

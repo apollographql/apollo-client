@@ -100,13 +100,8 @@ export class InMemoryCache extends Cache {
     variables: any;
     rootId?: string;
     previousResult?: any;
-    nullIfIdNotFound?: boolean;
   }): any {
-    if (
-      query.nullIfIdNotFound &&
-      query.rootId &&
-      typeof this.data[query.rootId] === 'undefined'
-    ) {
+    if (query.rootId && typeof this.data[query.rootId] === 'undefined') {
       return null;
     }
 
@@ -126,15 +121,10 @@ export class InMemoryCache extends Cache {
     variables: any;
     rootId?: string;
     previousResult?: any;
-    nullIfIdNotFound?: boolean;
   }): any {
     const data = this.getOptimisticData();
 
-    if (
-      query.nullIfIdNotFound &&
-      query.rootId &&
-      typeof data[query.rootId] === 'undefined'
-    ) {
+    if (query.rootId && typeof data[query.rootId] === 'undefined') {
       return null;
     }
 

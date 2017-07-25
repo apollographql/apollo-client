@@ -208,7 +208,6 @@ export class CacheDataProxy implements DataProxy {
       rootId: id,
       query,
       variables,
-      nullIfIdNotFound: true,
     });
   }
 
@@ -387,7 +386,6 @@ export class TransactionDataProxy implements DataProxy {
       rootId: id,
       query,
       variables,
-      nullIfIdNotFound: true,
     });
   }
 

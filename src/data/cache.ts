@@ -119,24 +119,4 @@ export abstract class Cache implements DataProxy {
     transaction: (c: Cache) => void,
     id: string,
   ): void;
-
-  public nonOptimisticProxy(): DataProxy {
-    const parent = this;
-    return {
-      readQuery<QueryType>(options: DataProxyReadQueryOptions): QueryType {
-        return parent.readQuery(options, true);
-      },
-      readFragment<FragmentType>(
-        options: DataProxyReadFragmentOptions,
-      ): FragmentType | null {
-        return parent.readFragment(options, true);
-      },
-      writeQuery(options: DataProxyWriteQueryOptions): void {
-        parent.writeQuery(options);
-      },
-      writeFragment(options: DataProxyWriteFragmentOptions): void {
-        parent.writeFragment(options);
-      },
-    };
-  }
 }

@@ -284,17 +284,4 @@ export class DataStore {
   public reset(): Promise<void> {
     return this.cache.reset();
   }
-
-  public executeWrites(writes: DataWrite[]) {
-    this.cache.performTransaction(c => {
-      writes.forEach(write => {
-        this.cache.writeResult({
-          result: write.result,
-          dataId: write.rootId,
-          document: write.document,
-          variables: write.variables,
-        });
-      });
-    });
-  }
 }

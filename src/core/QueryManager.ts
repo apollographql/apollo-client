@@ -1091,6 +1091,7 @@ export class QueryManager {
       const data = readQueryFromStore(readOptions);
       return maybeDeepFreeze({ data, partial: false });
     } catch (e) {
+      console.warn(`Couldn't read result from store. ${e}`);
       return maybeDeepFreeze({ data: {}, partial: true });
     }
   }

@@ -24,6 +24,7 @@ export class InMemoryCache extends Cache {
   private data: NormalizedCache;
   private config: ApolloReducerConfig;
   private optimistic: OptimisticStoreItem[] = [];
+  private watches: (() => void)[] = [];
 
   constructor(config: ApolloReducerConfig, initialStore: NormalizedCache = {}) {
     super(config.addTypename || false);
@@ -50,6 +51,7 @@ export class InMemoryCache extends Cache {
 
   public reset(): Promise<void> {
     this.data = {};
+    this.broadcastWatches();
 
     return Promise.resolve();
   }
@@ -58,6 +60,7 @@ export class InMemoryCache extends Cache {
     transform: (i: NormalizedCache) => NormalizedCache,
   ): void {
     this.data = transform(this.data);
+    this.broadcastWatches();
   }
 
   public diffQuery(query: {
@@ -107,6 +110,8 @@ export class InMemoryCache extends Cache {
       dataIdFromObject: this.config.dataIdFromObject,
       fragmentMatcherFunction: this.config.fragmentMatcher,
     });
+
+    this.broadcastWatches();
   }
 
   public removeOptimistic(id: string) {
@@ -151,5 +156,29 @@ export class InMemoryCache extends Cache {
       transaction,
       data: patch,
     });
+
+    this.broadcastWatches();
+  }
+
+  public watch(
+    query: {
+      query: DocumentNode;
+      variables: any;
+      rootId?: string;
+      previousResult?: any;
+      optimistic: boolean;
+    },
+    callback: () => void,
+  ): () => void {
+    this.watches.push(callback);
+
+    return () => {
+      this.watches = this.watches.filter(c => c !== callback);
+    };
+  }
+
+  private broadcastWatches() {
+    // right now, we invalidate all queries whenever anything changes
+    this.watches.forEach(c => c());
   }
 }

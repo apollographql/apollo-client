@@ -86,6 +86,9 @@ To learn more about all of the features available to you through the `apollo-cli
 - [Vanilla JS](http://dev.apollodata.com/core/)
 - [Next.js](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
 
+## Learn how to use Apollo Client with a server protected behind a Amazon AWS API Gateway
+ - [Use Apollo Client with Amazon AWS API Gateway](https://blog.merapar.com/willComeWhenPRAccepted)
+
 ---
 
 ## Contributing

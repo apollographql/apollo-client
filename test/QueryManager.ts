@@ -3349,12 +3349,7 @@ describe('QueryManager', () => {
       ),
       observableToPromise({
         observable: observableWithoutId,
-        errorCallbacks: [
-          error => assert.include(error.message, 'Store error'),
-          // The error gets triggered a second time when we unsubscribe the
-          // the first promise, as there is no duplicate prevention for errors
-          error => assert.include(error.message, 'Store error'),
-        ],
+        errorCallbacks: [error => assert.include(error.message, 'Store error')],
         wait: 60,
       }),
     ]);

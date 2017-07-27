@@ -92,7 +92,7 @@ export class QueryScheduler {
     this.registeredQueries[queryId] = options;
 
     if (listener) {
-      this.queryManager.addQueryListener(queryId, listener);
+      this.queryManager.addQueryListener(queryId, listener, options);
     }
     this.addQueryOnInterval<T>(queryId, options);
 

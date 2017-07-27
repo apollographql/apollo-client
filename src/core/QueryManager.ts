@@ -124,6 +124,8 @@ export class QueryManager {
   // this should be combined with ObservableQuery, but that needs to be expanded to support
   // mutations and subscriptions as well.
   private queryListeners: { [queryId: string]: QueryListener[] };
+  private queryListenerWatchCancel: { [queryId: string]: (() => void) } = {};
+  private queryListenerInvalidated: { [queryId: string]: boolean } = {};
   private queryDocuments: { [queryId: string]: DocumentNode };
 
   private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
@@ -473,6 +475,12 @@ export class QueryManager {
       fetchMoreForQueryId,
     });
 
+    this.queryListenerInvalidated[queryId] = true;
+
+    if (fetchMoreForQueryId) {
+      this.queryListenerInvalidated[fetchMoreForQueryId] = true;
+    }
+
     this.broadcastQueries();
 
     if (QueryManager.EMIT_REDUX_ACTIONS) {
@@ -503,6 +511,10 @@ export class QueryManager {
       !shouldFetch || fetchPolicy === 'cache-and-network';
     if (shouldDispatchClientResult) {
       this.queryStore.markQueryResultClient(queryId, !shouldFetch);
+      this.queryListenerInvalidated[queryId] = true;
+      if (fetchMoreForQueryId) {
+        this.queryListenerInvalidated[fetchMoreForQueryId] = true;
+      }
       this.broadcastQueries();
 
       if (QueryManager.EMIT_REDUX_ACTIONS) {
@@ -534,6 +546,11 @@ export class QueryManager {
         } else {
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
+            this.queryListenerInvalidated[queryId] = true;
+            if (fetchMoreForQueryId) {
+              this.queryListenerInvalidated[fetchMoreForQueryId] = true;
+            }
+
             this.broadcastQueries();
 
             if (QueryManager.EMIT_REDUX_ACTIONS) {
@@ -860,6 +877,7 @@ export class QueryManager {
 
   public stopQueryInStore(queryId: string) {
     this.queryStore.stopQuery(queryId);
+    this.queryListenerInvalidated[queryId] = true;
     this.broadcastQueries();
 
     if (QueryManager.EMIT_REDUX_ACTIONS) {
@@ -878,9 +896,28 @@ export class QueryManager {
     return this.reduxRootSelector(store.getState());
   }
 
-  public addQueryListener(queryId: string, listener: QueryListener) {
+  public addQueryListener(
+    queryId: string,
+    listener: QueryListener,
+    options: WatchQueryOptions,
+  ) {
     this.queryListeners[queryId] = this.queryListeners[queryId] || [];
+
+    if (this.queryListenerWatchCancel[queryId]) {
+      this.queryListenerWatchCancel[queryId]();
+    }
+
+    this.queryListenerInvalidated[queryId] = false;
     this.queryListeners[queryId].push(listener);
+
+    this.queryListenerWatchCancel[queryId] = this.dataStore.getCache().watch(
+      {
+        query: options.query,
+        variables: options.variables,
+        optimistic: true,
+      },
+      () => (this.queryListenerInvalidated[queryId] = true),
+    );
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.
@@ -975,6 +1012,8 @@ export class QueryManager {
           this.observableQueries[queryId].observableQuery.refetch(),
         );
       }
+
+      this.queryListenerInvalidated[queryId] = true;
     });
 
     this.broadcastQueries();
@@ -987,7 +1026,7 @@ export class QueryManager {
     options: WatchQueryOptions,
     listener: QueryListener,
   ) {
-    this.addQueryListener(queryId, listener);
+    this.addQueryListener(queryId, listener, options);
 
     this.fetchQuery<T>(queryId, options)
       // `fetchQuery` returns a Promise. In case of a failure it should be caucht or else the
@@ -1164,7 +1203,8 @@ export class QueryManager {
       // XXX due to an unknown race condition listeners can sometimes be undefined here.
       // this prevents a crash but doesn't solve the root cause
       // see: https://github.com/apollostack/apollo-client/issues/833
-      if (listeners) {
+      if (listeners && this.queryListenerInvalidated[queryId]) {
+        this.queryListenerInvalidated[queryId] = false;
         listeners.forEach((listener: QueryListener) => {
           // it's possible for the listener to be undefined if the query is being stopped
           // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
@@ -1298,6 +1338,13 @@ export class QueryManager {
               result,
               fetchMoreForQueryId,
             );
+
+            this.queryListenerInvalidated[queryId] = true;
+
+            if (fetchMoreForQueryId) {
+              this.queryListenerInvalidated[fetchMoreForQueryId] = true;
+            }
+
             this.broadcastQueries();
           }
 

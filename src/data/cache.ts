@@ -119,4 +119,15 @@ export abstract class Cache implements DataProxy {
     transaction: (c: Cache) => void,
     id: string,
   ): void;
+
+  public abstract watch(
+    query: {
+      query: DocumentNode;
+      variables: any;
+      rootId?: string;
+      previousResult?: any;
+      optimistic: boolean;
+    },
+    callback: () => void,
+  ): () => void;
 }

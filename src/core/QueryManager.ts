@@ -42,8 +42,6 @@ import {
 
 import { addTypenameToDocument } from '../queries/queryTransform';
 
-import { NormalizedCache } from '../data/storeUtils';
-
 import { createStoreReducer } from '../data/resultReducers';
 
 import { DataProxy } from '../data/proxy';
@@ -100,6 +98,9 @@ import { WatchQueryOptions, SubscriptionOptions } from './watchQueryOptions';
 
 import { ObservableQuery } from './ObservableQuery';
 
+import { Cache } from '../data/cache';
+import { InMemoryCache } from '../data/inMemoryCache';
+
 export class QueryManager {
   public static EMIT_REDUX_ACTIONS = true;
 
@@ -123,6 +124,8 @@ export class QueryManager {
   // this should be combined with ObservableQuery, but that needs to be expanded to support
   // mutations and subscriptions as well.
   private queryListeners: { [queryId: string]: QueryListener[] };
+  private queryListenerWatchCancel: { [queryId: string]: (() => void) } = {};
+  private queryListenerInvalidated: { [queryId: string]: boolean } = {};
   private queryDocuments: { [queryId: string]: DocumentNode };
 
   private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
@@ -163,7 +166,7 @@ export class QueryManager {
     addTypename = true,
     queryDeduplication = false,
     ssrMode = false,
-    initialDataStore = {},
+    initialCache,
   }: {
     networkInterface: NetworkInterface;
     store: ApolloStore;
@@ -173,7 +176,7 @@ export class QueryManager {
     addTypename?: boolean;
     queryDeduplication?: boolean;
     ssrMode?: boolean;
-    initialDataStore?: NormalizedCache;
+    initialCache?: Cache;
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -188,7 +191,10 @@ export class QueryManager {
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
-    this.dataStore = new DataStore(reducerConfig, initialDataStore);
+    this.dataStore = new DataStore(
+      reducerConfig,
+      initialCache ? initialCache : new InMemoryCache(this.reducerConfig, {}),
+    );
 
     // XXX This logic is duplicated in ApolloClient.ts for two reasons:
     // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.
@@ -436,13 +442,11 @@ export class QueryManager {
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
     if (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only') {
-      const { isMissing, result } = diffQueryAgainstStore({
+      const { isMissing, result } = this.dataStore.getCache().diffQuery({
         query: queryDoc,
-        store: this.dataStore.getStore(),
         variables,
         returnPartialData: true,
-        fragmentMatcherFunction: this.fragmentMatcher.match,
-        config: this.reducerConfig,
+        optimistic: false,
       });
 
       // If we're in here, only fetch if we have missing fields
@@ -470,6 +474,12 @@ export class QueryManager {
       metadata,
       fetchMoreForQueryId,
     });
+
+    this.queryListenerInvalidated[queryId] = true;
+
+    if (fetchMoreForQueryId) {
+      this.queryListenerInvalidated[fetchMoreForQueryId] = true;
+    }
 
     this.broadcastQueries();
 
@@ -501,6 +511,10 @@ export class QueryManager {
       !shouldFetch || fetchPolicy === 'cache-and-network';
     if (shouldDispatchClientResult) {
       this.queryStore.markQueryResultClient(queryId, !shouldFetch);
+      this.queryListenerInvalidated[queryId] = true;
+      if (fetchMoreForQueryId) {
+        this.queryListenerInvalidated[fetchMoreForQueryId] = true;
+      }
       this.broadcastQueries();
 
       if (QueryManager.EMIT_REDUX_ACTIONS) {
@@ -532,6 +546,11 @@ export class QueryManager {
         } else {
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
+            this.queryListenerInvalidated[queryId] = true;
+            if (fetchMoreForQueryId) {
+              this.queryListenerInvalidated[fetchMoreForQueryId] = true;
+            }
+
             this.broadcastQueries();
 
             if (QueryManager.EMIT_REDUX_ACTIONS) {
@@ -647,14 +666,15 @@ export class QueryManager {
           }
         } else {
           try {
-            const { result: data, isMissing } = diffQueryAgainstStore({
-              store: this.getDataWithOptimisticResults(),
+            const {
+              result: data,
+              isMissing,
+            } = this.dataStore.getCache().diffQuery({
               query: this.queryDocuments[queryId],
               variables:
                 queryStoreValue.previousVariables || queryStoreValue.variables,
-              config: this.reducerConfig,
-              fragmentMatcherFunction: this.fragmentMatcher.match,
               previousResult: lastResult && lastResult.data,
+              optimistic: true,
             });
 
             let resultFromStore: ApolloQueryResult<T>;
@@ -854,6 +874,7 @@ export class QueryManager {
 
   public stopQueryInStore(queryId: string) {
     this.queryStore.stopQuery(queryId);
+    this.queryListenerInvalidated[queryId] = true;
     this.broadcastQueries();
 
     if (QueryManager.EMIT_REDUX_ACTIONS) {
@@ -872,17 +893,28 @@ export class QueryManager {
     return this.reduxRootSelector(store.getState());
   }
 
-  public getInitialState(): { data: Object } {
-    return { data: this.dataStore.getStore() };
-  }
-
-  public getDataWithOptimisticResults(): NormalizedCache {
-    return this.dataStore.getDataWithOptimisticResults();
-  }
-
-  public addQueryListener(queryId: string, listener: QueryListener) {
+  public addQueryListener(
+    queryId: string,
+    listener: QueryListener,
+    options: WatchQueryOptions,
+  ) {
     this.queryListeners[queryId] = this.queryListeners[queryId] || [];
+
+    if (this.queryListenerWatchCancel[queryId]) {
+      this.queryListenerWatchCancel[queryId]();
+    }
+
+    this.queryListenerInvalidated[queryId] = false;
     this.queryListeners[queryId].push(listener);
+
+    this.queryListenerWatchCancel[queryId] = this.dataStore.getCache().watch(
+      {
+        query: options.query,
+        variables: options.variables,
+        optimistic: true,
+      },
+      () => (this.queryListenerInvalidated[queryId] = true),
+    );
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.
@@ -950,7 +982,7 @@ export class QueryManager {
 
     this.queryStore.reset(Object.keys(this.observableQueries));
     this.mutationStore.reset();
-    this.dataStore.reset();
+    const dataStoreReset = this.dataStore.reset();
 
     if (QueryManager.EMIT_REDUX_ACTIONS) {
       this.store.dispatch({
@@ -977,11 +1009,13 @@ export class QueryManager {
           this.observableQueries[queryId].observableQuery.refetch(),
         );
       }
+
+      this.queryListenerInvalidated[queryId] = true;
     });
 
     this.broadcastQueries();
 
-    return Promise.all(observableQueryPromises);
+    return dataStoreReset.then(() => Promise.all(observableQueryPromises));
   }
 
   public startQuery<T>(
@@ -989,7 +1023,7 @@ export class QueryManager {
     options: WatchQueryOptions,
     listener: QueryListener,
   ) {
-    this.addQueryListener(queryId, listener);
+    this.addQueryListener(queryId, listener, options);
 
     this.fetchQuery<T>(queryId, options)
       // `fetchQuery` returns a Promise. In case of a failure it should be caucht or else the
@@ -1115,25 +1149,16 @@ export class QueryManager {
 
     const lastResult = observableQuery.getLastResult();
 
-    const queryOptions = observableQuery.options;
-
-    const readOptions: ReadQueryOptions = {
-      // In case of an optimistic change, apply reducer on top of the
-      // results including previous optimistic updates. Otherwise, apply it
-      // on top of the real data only.
-      store: isOptimistic
-        ? this.getDataWithOptimisticResults()
-        : this.dataStore.getStore(),
-      query: document,
-      variables,
-      config: this.reducerConfig,
-      previousResult: lastResult ? lastResult.data : undefined,
-      fragmentMatcherFunction: this.fragmentMatcher.match,
-    };
-
     try {
       // first try reading the full result from the store
-      const data = readQueryFromStore(readOptions);
+      // const data = ;
+      const data = this.dataStore.getCache().read({
+        query: document,
+        variables,
+        previousResult: lastResult ? lastResult.data : undefined,
+        optimistic: isOptimistic,
+      });
+
       return maybeDeepFreeze({ data, partial: false });
     } catch (e) {
       return maybeDeepFreeze({ data: {}, partial: true });
@@ -1175,7 +1200,8 @@ export class QueryManager {
       // XXX due to an unknown race condition listeners can sometimes be undefined here.
       // this prevents a crash but doesn't solve the root cause
       // see: https://github.com/apollostack/apollo-client/issues/833
-      if (listeners) {
+      if (listeners && this.queryListenerInvalidated[queryId]) {
+        this.queryListenerInvalidated[queryId] = false;
         listeners.forEach((listener: QueryListener) => {
           // it's possible for the listener to be undefined if the query is being stopped
           // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
@@ -1309,6 +1335,13 @@ export class QueryManager {
               result,
               fetchMoreForQueryId,
             );
+
+            this.queryListenerInvalidated[queryId] = true;
+
+            if (fetchMoreForQueryId) {
+              this.queryListenerInvalidated[fetchMoreForQueryId] = true;
+            }
+
             this.broadcastQueries();
           }
 
@@ -1335,12 +1368,10 @@ export class QueryManager {
               // ensure result is combined with data already in store
               // this will throw an error if there are missing fields in
               // the results if returnPartialData is false.
-              resultFromStore = readQueryFromStore({
-                store: this.dataStore.getStore(),
+              resultFromStore = this.dataStore.getCache().read({
                 variables,
                 query: document,
-                config: this.reducerConfig,
-                fragmentMatcherFunction: this.fragmentMatcher.match,
+                optimistic: false,
               });
               // ensure multiple errors don't get thrown
               /* tslint:disable */

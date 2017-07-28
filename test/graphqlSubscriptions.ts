@@ -17,6 +17,8 @@ import { QueryManager } from '../src/core/QueryManager';
 
 import { createApolloStore } from '../src/store';
 
+import { InMemoryCache } from '../src/data/inMemoryCache';
+
 describe('GraphQL Subscriptions', () => {
   const results = [
     'Dahivat Pandya',
@@ -259,7 +261,9 @@ describe('GraphQL Subscriptions', () => {
           observableQuery.unsubscribe();
           assert.equal(counter, 5);
           assert.equal(
-            queryManager.dataStore.getStore()['ROOT_QUERY']['number'],
+            (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+              'ROOT_QUERY'
+            ]['number'],
             4,
           );
           done();

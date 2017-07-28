@@ -45,10 +45,6 @@ export class InMemoryCache extends Cache {
     return Object.assign({}, this.data, ...patches) as NormalizedCache;
   }
 
-  public getOptimisticQueue(): OptimisticStoreItem[] {
-    return this.optimistic;
-  }
-
   public reset(): Promise<void> {
     this.data = {};
     this.broadcastWatches();
@@ -56,6 +52,7 @@ export class InMemoryCache extends Cache {
     return Promise.resolve();
   }
 
+  // deprecated, only for supporting reducers
   public applyTransformer(
     transform: (i: NormalizedCache) => NormalizedCache,
   ): void {

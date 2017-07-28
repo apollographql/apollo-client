@@ -2450,8 +2450,7 @@ describe('client', () => {
       },
     });
     assert.equal(
-      (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticQueue()
-        .length,
+      (client.queryManager.dataStore.getCache() as any).optimistic.length,
       1,
     );
     mutatePromise
@@ -2460,8 +2459,7 @@ describe('client', () => {
       })
       .catch((error: ApolloError) => {
         assert.equal(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticQueue()
-            .length,
+          (client.queryManager.dataStore.getCache() as any).optimistic.length,
           0,
         );
         done();

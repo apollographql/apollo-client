@@ -446,4 +446,10 @@ describe('HTTPBatchedNetworkInterface', () => {
         });
     });
   });
+
+  describe('transforming queries', () => {
+    it('should remove the @connection directive', () => {
+      // TODO:
+    });
+  });
 });

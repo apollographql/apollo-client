@@ -76,7 +76,6 @@
     "graphql": "^0.10.0",
     "graphql-anywhere": "^3.0.1",
     "graphql-tag": "^2.0.0",
-    "redux": "^3.4.0",
     "symbol-observable": "^1.0.2",
     "whatwg-fetch": "^2.0.0"
   },
@@ -113,6 +112,7 @@
     "pre-commit": "^1.2.2",
     "prettier": "^1.5.2",
     "pretty-bytes": "^4.0.0",
+    "redux": "^3.4.0",
     "remap-istanbul": "0.8.0",
     "request": "^2.75.0",
     "rollup": "^0.45.2",

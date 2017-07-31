@@ -2,8 +2,6 @@ import { QueryManager } from '../../src/core/QueryManager';
 
 import mockNetworkInterface, { MockedResponse } from './mockNetworkInterface';
 
-import { createApolloStore } from '../../src/store';
-
 const defaultReduxRootSelector = (state: any) => state.apollo;
 
 // Helper method for the tests that construct a query manager out of a
@@ -11,8 +9,6 @@ const defaultReduxRootSelector = (state: any) => state.apollo;
 export default (...mockedResponses: MockedResponse[]) => {
   return new QueryManager({
     networkInterface: mockNetworkInterface(...mockedResponses),
-    store: createApolloStore(),
-    reduxRootSelector: defaultReduxRootSelector,
     addTypename: false,
   });
 };

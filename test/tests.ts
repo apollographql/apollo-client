@@ -13,7 +13,6 @@ import 'isomorphic-fetch';
 import { QueryManager } from '../src/core/QueryManager';
 
 process.env.NODE_ENV = 'test';
-QueryManager.EMIT_REDUX_ACTIONS = false;
 
 declare function require(name: string): any
 require('source-map-support').install();
@@ -41,7 +40,6 @@ import './networkInterface';
 import './deduplicator';
 import './QueryManager';
 import './client';
-import './store';
 import './queryTransform';
 import './getFromAST';
 import './directives';

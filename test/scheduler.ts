@@ -2,7 +2,6 @@ import { QueryScheduler } from '../src/scheduler/scheduler';
 import { assert } from 'chai';
 import { QueryManager } from '../src/core/QueryManager';
 import { WatchQueryOptions } from '../src/core/watchQueryOptions';
-import { createApolloStore } from '../src/store';
 import mockNetworkInterface from './mocks/mockNetworkInterface';
 import { NetworkStatus } from '../src/queries/networkStatus';
 import gql from 'graphql-tag';
@@ -13,8 +12,6 @@ describe('QueryScheduler', () => {
   it('should throw an error if we try to start polling a non-polling query', () => {
     const queryManager = new QueryManager({
       networkInterface: mockNetworkInterface(),
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
       addTypename: false,
     });
 
@@ -65,8 +62,6 @@ describe('QueryScheduler', () => {
     });
     const queryManager = new QueryManager({
       networkInterface: networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
       addTypename: false,
     });
     const scheduler = new QueryScheduler({
@@ -114,8 +109,6 @@ describe('QueryScheduler', () => {
     });
     const queryManager = new QueryManager({
       networkInterface: networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -163,8 +156,6 @@ describe('QueryScheduler', () => {
     });
     const queryManager = new QueryManager({
       networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
       addTypename: false,
     });
     const scheduler = new QueryScheduler({
@@ -206,8 +197,6 @@ describe('QueryScheduler', () => {
     });
     const queryManager = new QueryManager({
       networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -246,8 +235,6 @@ describe('QueryScheduler', () => {
     });
     const queryManager = new QueryManager({
       networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -282,8 +269,6 @@ describe('QueryScheduler', () => {
     });
     const queryManager = new QueryManager({
       networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -315,8 +300,6 @@ describe('QueryScheduler', () => {
     });
     const queryManager = new QueryManager({
       networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -378,8 +361,6 @@ describe('QueryScheduler', () => {
           result: { data: data2 },
         },
       ),
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
       addTypename: false,
     });
     const scheduler = new QueryScheduler({
@@ -429,8 +410,6 @@ describe('QueryScheduler', () => {
         request: { query },
         result: { data },
       }),
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
       addTypename: false,
     });
     const scheduler = new QueryScheduler({
@@ -481,8 +460,6 @@ describe('QueryScheduler', () => {
     });
     const queryManager = new QueryManager({
       networkInterface: networkInterface,
-      store: createApolloStore(),
-      reduxRootSelector: defaultReduxRootSelector,
       addTypename: false,
     });
     const scheduler = new QueryScheduler({

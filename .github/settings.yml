@@ -29,7 +29,7 @@ labels:
     color: c2e0c6
   - name: feature
     color: 5319e7
-  - name: greenkeeper
+  - name: dependencies
     color: ededed
   - name: idea
     color: fbca04

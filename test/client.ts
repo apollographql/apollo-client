@@ -70,7 +70,7 @@ import observableToPromise from './util/observableToPromise';
 
 import { cloneDeep, assign, isEqual } from 'lodash';
 
-import { ApolloLink, Observable } from 'apollo-link';
+import { ApolloLink, Observable } from 'apollo-link-core';
 
 declare var fetch: any;
 

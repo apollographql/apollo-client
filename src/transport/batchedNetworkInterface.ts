@@ -9,6 +9,7 @@ import {
   Request,
   printRequest,
 } from './networkInterface';
+import { removeConnectionDirectiveFromDocument } from '../queries/queryTransform';
 
 import { BatchAfterwareInterface } from './afterware';
 
@@ -84,6 +85,10 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
     return new Promise((resolve, reject) => {
       middlewarePromise
         .then((batchRequestAndOptions: BatchRequestAndOptions) => {
+          batchRequestAndOptions.requests.forEach(r => {
+            if (r.query)
+              r.query = removeConnectionDirectiveFromDocument(r.query);
+          });
           return this.batchedFetchFromRemoteEndpoint(batchRequestAndOptions)
             .then(result => {
               const httpResponse = result as Response;

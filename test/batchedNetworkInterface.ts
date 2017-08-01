@@ -446,4 +446,48 @@ describe('HTTPBatchedNetworkInterface', () => {
         });
     });
   });
+
+  describe('transforming queries', () => {
+    it('should remove the @connection directive', () => {
+      const authorQueryWithConnection = gql`
+        query {
+          author @connection(key: "author") {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const url = 'http://fake.com/graphql';
+      const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
+        uri: url,
+        batchInterval: 10,
+        fetchOpts: {},
+      });
+
+      const printedRequests: Array<any> = [
+        printRequest({ query: authorQuery }),
+      ];
+      const resultList: Array<any> = [authorResult];
+
+      fetch = createMockFetch({
+        url,
+        opts: {
+          body: JSON.stringify(printedRequests),
+          headers: {
+            Accept: '*/*',
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        },
+        result: createMockedIResponse(resultList),
+      });
+
+      return batchedNetworkInterface
+        .batchQuery([{ query: authorQueryWithConnection }])
+        .then(results => {
+          assert.deepEqual(results, resultList);
+        });
+    });
+  });
 });

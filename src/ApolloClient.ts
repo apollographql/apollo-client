@@ -498,11 +498,6 @@ export default class ApolloClient implements DataProxy {
     return this.queryManager ? this.queryManager.resetStore() : null;
   }
 
-  public getInitialState(): {} {
-    this.initQueryManager();
-    return {};
-  }
-
   /**
    * Initializes a data proxy for this client instance if one does not already
    * exist and returns either a previously initialized proxy instance or the

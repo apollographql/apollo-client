@@ -220,6 +220,9 @@ describe('QueryScheduler', () => {
 
       error(errorVal) {
         assert(errorVal);
+        const queryId = scheduler.intervalQueries[queryOptions.pollInterval][0];
+        assert.isFalse(scheduler.checkInFlight(queryId),
+            'Should be able to poll after an error')
         subscription.unsubscribe();
         done();
       },

@@ -456,16 +456,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     );
 
     if (newResult) {
-      if (QueryManager.EMIT_REDUX_ACTIONS) {
-        this.queryManager.store.dispatch({
-          type: 'APOLLO_UPDATE_QUERY_RESULT',
-          newResult,
-          variables,
-          document,
-          operationName: getOperationName(document),
-        });
-      }
-
       this.queryManager.dataStore.markUpdateQueryResult(
         document,
         variables,

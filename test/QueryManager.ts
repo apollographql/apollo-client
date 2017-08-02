@@ -8,19 +8,15 @@ import { ObservableQuery } from '../src/core/ObservableQuery';
 
 import { WatchQueryOptions } from '../src/core/watchQueryOptions';
 
-import { createApolloStore, ApolloStore } from '../src/store';
-
 import gql from 'graphql-tag';
 
 import { assert } from 'chai';
 
 import { DocumentNode, ExecutionResult } from 'graphql';
 
-import ApolloClient, { ApolloStateSelector } from '../src/ApolloClient';
+import ApolloClient from '../src/ApolloClient';
 
 import { ApolloQueryResult } from '../src/core/types';
-
-import { createStore, combineReducers, applyMiddleware } from 'redux';
 
 import * as Rx from 'rxjs';
 
@@ -57,28 +53,20 @@ describe('QueryManager', () => {
     return undefined;
   };
 
-  const defaultReduxRootSelector = (state: any) => state.apollo;
-
   // Helper method that serves as the constructor method for
   // QueryManager but has defaults that make sense for these
   // tests.
   const createQueryManager = ({
     networkInterface,
-    store,
-    reduxRootSelector,
     addTypename = false,
     config = {},
   }: {
     networkInterface?: NetworkInterface;
-    store?: ApolloStore;
-    reduxRootSelector?: ApolloStateSelector;
     addTypename?: boolean;
     config?: ApolloReducerConfig;
   }) => {
     return new QueryManager({
       networkInterface: networkInterface || mockNetworkInterface(),
-      store: store || createApolloStore(),
-      reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
       addTypename,
       reducerConfig: config,
     });
@@ -152,25 +140,19 @@ describe('QueryManager', () => {
     mutation,
     data,
     variables = {},
-    store,
     config = {},
   }: {
     mutation: DocumentNode;
     data: Object;
     variables?: Object;
-    store?: ApolloStore;
     config?: ApolloReducerConfig;
   }) => {
-    if (!store) {
-      store = createApolloStore();
-    }
     const networkInterface = mockNetworkInterface({
       request: { query: mutation, variables },
       result: { data },
     });
     const queryManager = createQueryManager({
       networkInterface,
-      store,
       config,
     });
     return new Promise<{
@@ -228,89 +210,6 @@ describe('QueryManager', () => {
 
     return mockQueryManager(...args);
   };
-
-  it('properly roundtrips through a Redux store', done => {
-    assertRoundtrip({
-      query: gql`
-        query people {
-          allPeople(first: 1) {
-            people {
-              name
-            }
-          }
-        }
-      `,
-      data: {
-        allPeople: {
-          people: [
-            {
-              name: 'Luke Skywalker',
-            },
-          ],
-        },
-      },
-      done,
-    });
-  });
-
-  it('runs multiple root queries', done => {
-    assertRoundtrip({
-      query: gql`
-        query people {
-          allPeople(first: 1) {
-            people {
-              name
-            }
-          }
-          person(id: "1") {
-            name
-          }
-        }
-      `,
-      data: {
-        allPeople: {
-          people: [
-            {
-              name: 'Luke Skywalker',
-            },
-          ],
-        },
-        person: {
-          name: 'Luke Skywalker',
-        },
-      },
-      done,
-    });
-  });
-
-  it('properly roundtrips through a Redux store with variables', done => {
-    assertRoundtrip({
-      query: gql`
-        query people($firstArg: Int) {
-          allPeople(first: $firstArg) {
-            people {
-              name
-            }
-          }
-        }
-      `,
-
-      variables: {
-        firstArg: 1,
-      },
-
-      data: {
-        allPeople: {
-          people: [
-            {
-              name: 'Luke Skywalker',
-            },
-          ],
-        },
-      },
-      done,
-    });
-  });
 
   it('handles GraphQL errors', done => {
     assertWithObserver({
@@ -1424,9 +1323,6 @@ describe('QueryManager', () => {
         }
       `,
       data,
-      store: createApolloStore({
-        config: { dataIdFromObject: getIdField },
-      }),
       config: { dataIdFromObject: getIdField },
     }).then(({ result, queryManager }) => {
       assert.deepEqual(result.data, data);
@@ -1460,9 +1356,6 @@ describe('QueryManager', () => {
         }
       `,
       data,
-      store: createApolloStore({
-        config: { dataIdFromObject: getIdField },
-      }),
       config: { dataIdFromObject: getIdField },
     }).then(({ result, queryManager }) => {
       assert.deepEqual(result.data, data);
@@ -1495,19 +1388,11 @@ describe('QueryManager', () => {
       },
     };
 
-    const reduxRootKey = 'test';
-    const reduxRootSelector = (state: any) => state[reduxRootKey];
-    const store = createApolloStore({
-      reduxRootKey,
-      config: { dataIdFromObject: getIdField },
-    });
     const queryManager = createQueryManager({
       networkInterface: mockNetworkInterface({
         request: { query: mutation },
         result: { data },
       }),
-      store,
-      reduxRootSelector,
       config: { dataIdFromObject: getIdField },
     });
 
@@ -1527,164 +1412,6 @@ describe('QueryManager', () => {
           },
         );
       });
-  });
-
-  it('does not broadcast queries when non-apollo actions are dispatched', () => {
-    const query = gql`
-      query fetchLuke($id: String) {
-        people_one(id: $id) {
-          name
-        }
-      }
-    `;
-
-    const variables = {
-      id: '1',
-    };
-
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
-
-    const data2 = {
-      people_one: {
-        name: 'Luke Skywalker has a new name',
-      },
-    };
-
-    function testReducer(state = false, action: any): boolean {
-      if (action.type === 'TOGGLE') {
-        return true;
-      }
-      return state;
-    }
-    const client = new ApolloClient();
-    const store = createStore(
-      combineReducers({
-        test: testReducer,
-        apollo: client.reducer() as any, // XXX see why this type fails
-      }),
-      applyMiddleware(client.middleware()),
-    );
-    const observable = createQueryManager({
-      networkInterface: mockNetworkInterface(
-        {
-          request: { query, variables },
-          result: { data: data1 },
-        },
-        {
-          request: { query, variables },
-          result: { data: data2 },
-        },
-      ),
-      store: store,
-    }).watchQuery({ query, variables, notifyOnNetworkStatusChange: false });
-
-    return observableToPromise(
-      { observable },
-      result => {
-        assert.deepEqual(result.data, data1);
-        observable.refetch();
-      },
-      result => {
-        assert.deepEqual(result.data, data2);
-        store.dispatch({
-          type: 'TOGGLE',
-        });
-      },
-    );
-  });
-
-  it('does not call broadcastQueries when Apollo state is not affected by an action', () => {
-    const query = gql`
-      query fetchLuke($id: String) {
-        people_one(id: $id) {
-          name
-        }
-      }
-    `;
-
-    const variables = {
-      id: '1',
-    };
-
-    const data1 = {
-      people_one: {
-        name: 'Luke Skywalker',
-      },
-    };
-
-    const data2 = {
-      people_one: {
-        name: 'Luke Skywalker has a new name',
-      },
-    };
-
-    function testReducer(state = false, action: any): boolean {
-      if (action.type === 'TOGGLE') {
-        return true;
-      }
-      return state;
-    }
-    const client = new ApolloClient();
-    const store = createStore(
-      combineReducers({
-        test: testReducer,
-        apollo: client.reducer() as any, // XXX see why this type fails
-      }),
-      applyMiddleware(client.middleware()),
-    );
-    const qm = createQueryManager({
-      networkInterface: mockNetworkInterface(
-        {
-          request: { query, variables },
-          result: { data: data1 },
-        },
-        {
-          request: { query, variables },
-          result: { data: data2 },
-        },
-      ),
-      store: store,
-    });
-
-    const observable = qm.watchQuery({
-      query,
-      variables,
-      notifyOnNetworkStatusChange: false,
-    });
-
-    return observableToPromise(
-      { observable },
-      result => {
-        assert.deepEqual(result.data, data1);
-        observable.refetch();
-      },
-      result => {
-        assert.deepEqual(result.data, data2);
-
-        // here's the actual test. Everything else is just setup.
-        let called = false;
-        client.queryManager.broadcastQueries = () => {
-          called = true;
-        };
-        store.dispatch({
-          type: 'TOGGLE',
-        });
-        assert.equal(
-          (store.getState() as any).test,
-          true,
-          'test state should have been updated',
-        );
-        assert.equal(
-          called,
-          false,
-          'broadcastNewStore should not have been called',
-        );
-      },
-    );
   });
 
   it(`doesn't return data while query is loading`, () => {
@@ -1894,8 +1621,6 @@ describe('QueryManager', () => {
             result: { data: data2 },
           },
         ),
-        store: createApolloStore(),
-        reduxRootSelector: defaultReduxRootSelector,
         addTypename: false,
         ssrMode: true,
       });
@@ -2558,10 +2283,7 @@ describe('QueryManager', () => {
       const queryManager = createQueryManager({});
 
       queryManager.resetStore();
-      const currentState = queryManager.getApolloState();
-      const expectedState: any = {};
 
-      assert.deepEqual(currentState, expectedState);
       assert.deepEqual(
         (queryManager.dataStore.getCache() as InMemoryCache).getData(),
         {},
@@ -2909,16 +2631,11 @@ describe('QueryManager', () => {
     const reducerConfig = {
       dataIdFromObject: (x: any) => '$' + dataIdFromObject(x),
     };
-    const store = createApolloStore({
-      config: reducerConfig,
-      reportCrashes: false,
-    });
     createQueryManager({
       networkInterface: mockNetworkInterface({
         request: { query },
         result: { data },
       }),
-      store,
       config: reducerConfig,
     })
       .query({ query })
@@ -3221,10 +2938,6 @@ describe('QueryManager', () => {
       },
     };
     const reducerConfig = { dataIdFromObject };
-    const store = createApolloStore({
-      config: reducerConfig,
-      reportCrashes: false,
-    });
     const queryManager = createQueryManager({
       networkInterface: mockNetworkInterface(
         {
@@ -3236,7 +2949,6 @@ describe('QueryManager', () => {
           result: { data: data2 },
         },
       ),
-      store,
       config: reducerConfig,
     });
 
@@ -3316,10 +3028,6 @@ describe('QueryManager', () => {
       },
     };
     const reducerConfig = { dataIdFromObject };
-    const store = createApolloStore({
-      config: reducerConfig,
-      reportCrashes: false,
-    });
     const queryManager = createQueryManager({
       networkInterface: mockNetworkInterface(
         {
@@ -3331,7 +3039,6 @@ describe('QueryManager', () => {
           result: { data: dataWithoutId },
         },
       ),
-      store,
       config: reducerConfig,
     });
 
@@ -3408,7 +3115,6 @@ describe('QueryManager', () => {
         __typename: 'Author',
       },
     };
-    const store = createApolloStore({ config: { dataIdFromObject } });
     const queryManager = createQueryManager({
       networkInterface: mockNetworkInterface(
         {
@@ -3420,7 +3126,6 @@ describe('QueryManager', () => {
           result: { data: dataWithId },
         },
       ),
-      store,
     });
 
     const observableWithId = queryManager.watchQuery<any>({

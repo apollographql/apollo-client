@@ -1,10 +1,12 @@
-import { QueryWithUpdater, DataWrite } from '../actions';
+import { QueryStoreValue } from '../queries/store';
+
+import { MutationQueryReducer } from './mutationResults';
 
 import { DataProxy } from '../data/proxy';
 
 import { getOperationName } from '../queries/getFromAST';
 
-import { ApolloReducerConfig, ApolloReducer } from '../store';
+import { ApolloReducerConfig } from '../store';
 
 import { graphQLResultHasError } from './storeUtils';
 
@@ -15,6 +17,19 @@ import { ExecutionResult, DocumentNode } from 'graphql';
 import { Cache, CacheWrite } from './cache';
 
 import { InMemoryCache } from './inMemoryCache';
+
+export type QueryWithUpdater = {
+  updater: MutationQueryReducer<Object>;
+  query: QueryStoreValue;
+};
+
+export interface DataWrite {
+  rootId: string;
+  result: any;
+  document: DocumentNode;
+  operationName: string | null;
+  variables: Object;
+}
 
 export class DataStore {
   private cache: Cache;
@@ -38,7 +53,6 @@ export class DataStore {
     result: ExecutionResult,
     document: DocumentNode,
     variables: any,
-    extraReducers: ApolloReducer[],
     fetchMoreForQueryId: string | undefined,
   ) {
     // XXX handle partial result due to errors
@@ -51,30 +65,6 @@ export class DataStore {
         document: document,
         variables: variables,
       });
-
-      if (extraReducers) {
-        const cache = this.cache;
-        if (cache instanceof InMemoryCache) {
-          extraReducers.forEach(reducer => {
-            cache.applyTransformer(i => {
-              return reducer(i, {
-                type: 'APOLLO_QUERY_RESULT',
-                result,
-                document,
-                operationName: getOperationName(document),
-                variables,
-                queryId,
-                requestId,
-              });
-            });
-          });
-        } else {
-          console.warn(
-            'You supplied an reducer in your query, but are not using an in-memory cache.' +
-              ' Reducers are not supported with caches that are not in-memory.',
-          );
-        }
-      }
     }
   }
 
@@ -83,7 +73,6 @@ export class DataStore {
     result: ExecutionResult,
     document: DocumentNode,
     variables: any,
-    extraReducers: ApolloReducer[],
   ) {
     // the subscription interface should handle not sending us results we no longer subscribe to.
     // XXX I don't think we ever send in an object with errors, but we might in the future...
@@ -96,29 +85,6 @@ export class DataStore {
         document: document,
         variables: variables,
       });
-
-      if (extraReducers) {
-        const cache = this.cache;
-        if (cache instanceof InMemoryCache) {
-          extraReducers.forEach(reducer => {
-            cache.applyTransformer(i => {
-              return reducer(i, {
-                type: 'APOLLO_SUBSCRIPTION_RESULT',
-                result,
-                document,
-                operationName: getOperationName(document),
-                variables,
-                subscriptionId,
-              });
-            });
-          });
-        } else {
-          console.warn(
-            'You supplied an reducer in your query, but are not using an in-memory cache.' +
-              ' Reducers are not supported with caches that are not in-memory.',
-          );
-        }
-      }
     }
   }
 
@@ -129,7 +95,6 @@ export class DataStore {
     updateQueries: { [queryId: string]: QueryWithUpdater };
     update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
     optimisticResponse: Object | Function | undefined;
-    extraReducers: ApolloReducer[];
   }) {
     if (mutation.optimisticResponse) {
       let optimistic: Object;
@@ -147,7 +112,6 @@ export class DataStore {
           variables: mutation.variables,
           updateQueries: mutation.updateQueries,
           update: mutation.update,
-          extraReducers: mutation.extraReducers,
         });
       };
 
@@ -169,7 +133,6 @@ export class DataStore {
     variables: any;
     updateQueries: { [queryId: string]: QueryWithUpdater };
     update: ((proxy: DataProxy, mutationResult: Object) => void) | undefined;
-    extraReducers: ApolloReducer[];
   }) {
     // Incorporate the result from this mutation into the store
     if (!mutation.result.errors) {
@@ -185,7 +148,7 @@ export class DataStore {
         Object.keys(mutation.updateQueries)
           .filter(id => mutation.updateQueries[id])
           .forEach(queryId => {
-            const { query, reducer } = mutation.updateQueries[queryId];
+            const { query, updater } = mutation.updateQueries[queryId];
             // Read the current query result from the store.
             const {
               result: currentQueryResult,
@@ -203,7 +166,7 @@ export class DataStore {
 
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = tryFunctionOrLogError(() =>
-              reducer(currentQueryResult, {
+              updater(currentQueryResult, {
                 mutationResult: mutation.result,
                 queryName: getOperationName(query.document),
                 queryVariables: query.variables,
@@ -236,30 +199,6 @@ export class DataStore {
         this.cache.performTransaction(c => {
           tryFunctionOrLogError(() => update(c, mutation.result));
         });
-      }
-
-      if (mutation.extraReducers) {
-        const cache = this.cache;
-        if (cache instanceof InMemoryCache) {
-          mutation.extraReducers.forEach(reducer => {
-            cache.applyTransformer(i => {
-              return reducer(i, {
-                type: 'APOLLO_MUTATION_RESULT',
-                mutationId: mutation.mutationId,
-                result: mutation.result,
-                document: mutation.document,
-                operationName: getOperationName(mutation.document),
-                variables: mutation.variables,
-                mutation: mutation.mutationId,
-              });
-            });
-          });
-        } else {
-          console.warn(
-            'You supplied an reducer in your query, but are not using an in-memory cache.' +
-              ' Reducers are not supported with caches that are not in-memory.',
-          );
-        }
       }
     }
   }

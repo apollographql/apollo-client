@@ -68,7 +68,6 @@ describe('ObservableQuery', () => {
     message: 'is offline.',
   };
 
-  const defaultReduxRootSelector = (state: any) => state.apollo;
   const createQueryManager = ({
     networkInterface,
     addTypename = false,

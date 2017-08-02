@@ -1,6 +1,4 @@
-const globals = {
-  'redux': 'Redux'
-};
+const globals = {};
 
 export default {
   entry: 'lib/src/index.js',

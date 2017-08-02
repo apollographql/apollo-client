@@ -1,7 +1,7 @@
 # Change log
 
 ### vNEXT
-- Remove support for Redux as well as store reducers (update and updateQueries are still supported and should be used instead) [PR 1949](https://github.com/apollographql/apollo-client/pull/1949)
+- Remove dependency on Redux as well as store reducers (update and updateQueries are still supported and should be used instead) [PR 1949](https://github.com/apollographql/apollo-client/pull/1949)
 - Introduce a new Cache API that makes it possible to plug in custom cache implementations into the client [PR 1921](https://github.com/apollographql/apollo-client/pull/1921)
 - Migrated the cache away from Redux in preparation for the generic store API [PR 1907](https://github.com/apollographql/apollo-client/pull/1907)
 - Document ApolloClient.prototype.subscribe [PR #1932](https://github.com/apollographql/apollo-client/pull/1932)

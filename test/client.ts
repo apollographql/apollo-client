@@ -14,8 +14,6 @@ import {
   FragmentDefinitionNode,
 } from 'graphql';
 
-import { rootReducer as todosReducer } from './fixtures/redux-todomvc';
-
 import gql from 'graphql-tag';
 
 import { print } from 'graphql/language/printer';

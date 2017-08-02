@@ -7,8 +7,6 @@ import { NetworkStatus } from '../src/queries/networkStatus';
 import gql from 'graphql-tag';
 
 describe('QueryScheduler', () => {
-  const defaultReduxRootSelector = (state: any) => state.apollo;
-
   it('should throw an error if we try to start polling a non-polling query', () => {
     const queryManager = new QueryManager({
       networkInterface: mockNetworkInterface(),

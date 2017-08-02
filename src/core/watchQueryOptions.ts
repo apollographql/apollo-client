@@ -66,7 +66,7 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
   query: DocumentNode;
 
   /**
-   * Arbitrary metadata stored in Redux with this query.  Designed for debugging,
+   * Arbitrary metadata stored in the store with this query.  Designed for debugging,
    * developer tools, etc.
    */
   metadata?: any;

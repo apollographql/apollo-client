@@ -82,7 +82,7 @@ let hasSuggestedDevtools = false;
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
- * receive results from the server and cache the results in a Redux store. It also delivers updates
+ * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
 export default class ApolloClient implements DataProxy {

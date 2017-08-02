@@ -7,15 +7,11 @@ import { assert } from 'chai';
 
 import { cloneDeep } from 'lodash';
 
-import { isSubscriptionResultAction } from '../src/actions';
-
 import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
 
 import { QueryManager } from '../src/core/QueryManager';
-
-import { createApolloStore } from '../src/store';
 
 import { InMemoryCache } from '../src/data/inMemoryCache';
 
@@ -146,8 +142,6 @@ describe('GraphQL Subscriptions', () => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     const queryManager = new QueryManager({
       networkInterface: network,
-      reduxRootSelector: (state: any) => state.apollo,
-      store: createApolloStore(),
       addTypename: false,
     });
 
@@ -185,8 +179,6 @@ describe('GraphQL Subscriptions', () => {
     let numResults = 0;
     const queryManager = new QueryManager({
       networkInterface: network,
-      reduxRootSelector: (state: any) => state.apollo,
-      store: createApolloStore(),
       addTypename: false,
     });
 
@@ -195,77 +187,6 @@ describe('GraphQL Subscriptions', () => {
         assert.deepEqual(result, results[numResults].result.data);
         numResults++;
         if (numResults === 4) {
-          done();
-        }
-      },
-    }) as any;
-
-    const id = sub._networkSubscriptionId;
-
-    for (let i = 0; i < 4; i++) {
-      network.fireResult(id);
-    }
-  });
-
-  it('should fire redux action and call result reducers', done => {
-    const query = gql`
-      query miniQuery {
-        number
-      }
-    `;
-
-    const res = {
-      data: {
-        number: 0,
-      },
-    };
-
-    const req1 = {
-      request: { query },
-      result: res,
-    };
-
-    const network = mockSubscriptionNetworkInterface([sub1], req1);
-    let numResults = 0;
-    let counter = 0;
-    const queryManager = new QueryManager({
-      networkInterface: network,
-      reduxRootSelector: (state: any) => state.apollo,
-      store: createApolloStore(),
-      addTypename: false,
-    });
-
-    const observableQuery = queryManager
-      .watchQuery({
-        query,
-        reducer: (previousResult, action) => {
-          counter++;
-          if (isSubscriptionResultAction(action)) {
-            const newResult = cloneDeep(previousResult) as any;
-            newResult.number++;
-            return newResult;
-          }
-          return previousResult;
-        },
-      })
-      .subscribe({
-        next: () => null,
-      });
-
-    const sub = queryManager.startGraphQLSubscription(options).subscribe({
-      next(result) {
-        assert.deepEqual(result, results[numResults].result.data);
-        numResults++;
-        if (numResults === 4) {
-          // once for itself, four times for the subscription results.
-          observableQuery.unsubscribe();
-          assert.equal(counter, 5);
-          assert.equal(
-            (queryManager.dataStore.getCache() as InMemoryCache).getData()[
-              'ROOT_QUERY'
-            ]['number'],
-            4,
-          );
           done();
         }
       },

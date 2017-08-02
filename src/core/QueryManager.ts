@@ -24,12 +24,7 @@ import {
   isNetworkRequestInFlight,
 } from '../queries/networkStatus';
 
-import {
-  ApolloStore,
-  Store,
-  ApolloReducerConfig,
-  ApolloReducer,
-} from '../store';
+import { ApolloReducerConfig } from '../store';
 
 import {
   checkDocument,
@@ -41,8 +36,6 @@ import {
 } from '../queries/getFromAST';
 
 import { addTypenameToDocument } from '../queries/queryTransform';
-
-import { createStoreReducer } from '../data/resultReducers';
 
 import { DataProxy } from '../data/proxy';
 
@@ -73,7 +66,7 @@ import { readQueryFromStore, ReadQueryOptions } from '../data/readFromStore';
 
 import { diffQueryAgainstStore } from '../data/readFromStore';
 
-import { QueryWithUpdater } from '../actions';
+import { QueryWithUpdater } from '../data/store';
 
 import {
   MutationQueryReducersMap,
@@ -85,8 +78,6 @@ import { MutationStore } from '../mutations/store';
 import { QueryScheduler } from '../scheduler/scheduler';
 
 import { DataStore } from '../data/store';
-
-import { ApolloStateSelector } from '../ApolloClient';
 
 import { Observer, Subscription, Observable } from '../util/Observable';
 
@@ -102,11 +93,8 @@ import { Cache } from '../data/cache';
 import { InMemoryCache } from '../data/inMemoryCache';
 
 export class QueryManager {
-  public static EMIT_REDUX_ACTIONS = true;
-
   public pollingTimers: { [queryId: string]: any };
   public scheduler: QueryScheduler;
-  public store: ApolloStore;
   public networkInterface: NetworkInterface;
   public ssrMode: boolean;
   public mutationStore: MutationStore = new MutationStore();
@@ -115,10 +103,11 @@ export class QueryManager {
 
   private addTypename: boolean;
   private deduplicator: Deduplicator;
-  private reduxRootSelector: ApolloStateSelector;
   private reducerConfig: ApolloReducerConfig;
   private queryDeduplication: boolean;
   private fragmentMatcher: FragmentMatcherInterface;
+
+  private onBroadcast: () => void;
 
   // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
   // this should be combined with ObservableQuery, but that needs to be expanded to support
@@ -159,31 +148,27 @@ export class QueryManager {
 
   constructor({
     networkInterface,
-    store,
-    reduxRootSelector,
     reducerConfig = {},
     fragmentMatcher,
     addTypename = true,
     queryDeduplication = false,
     ssrMode = false,
     initialCache,
+    onBroadcast = () => undefined,
   }: {
     networkInterface: NetworkInterface;
-    store: ApolloStore;
-    reduxRootSelector: ApolloStateSelector;
     fragmentMatcher?: FragmentMatcherInterface;
     reducerConfig?: ApolloReducerConfig;
     addTypename?: boolean;
     queryDeduplication?: boolean;
     ssrMode?: boolean;
     initialCache?: Cache;
+    onBroadcast?: () => void;
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.networkInterface = networkInterface;
     this.deduplicator = new Deduplicator(networkInterface);
-    this.store = store;
-    this.reduxRootSelector = reduxRootSelector;
     this.reducerConfig = reducerConfig;
     this.pollingTimers = {};
     this.queryListeners = {};
@@ -195,6 +180,7 @@ export class QueryManager {
       reducerConfig,
       initialCache ? initialCache : new InMemoryCache(this.reducerConfig, {}),
     );
+    this.onBroadcast = onBroadcast;
 
     // XXX This logic is duplicated in ApolloClient.ts for two reasons:
     // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.
@@ -213,24 +199,6 @@ export class QueryManager {
     this.fetchQueryPromises = {};
     this.observableQueries = {};
     this.queryIdsByName = {};
-
-    // this.store is usually the fake store we get from the Redux middleware API
-    // XXX for tests, we sometimes pass in a real Redux store into the QueryManager
-    if ((this.store as any)['subscribe']) {
-      let currentStoreData: any;
-      (this.store as any)['subscribe'](() => {
-        let previousStoreData = currentStoreData || {};
-        const previousStoreHasData = Object.keys(previousStoreData).length;
-        currentStoreData = this.getApolloState();
-        if (
-          isEqual(previousStoreData, currentStoreData) &&
-          previousStoreHasData
-        ) {
-          return;
-        }
-        this.broadcastQueries();
-      });
-    }
   }
 
   public mutate<T>({
@@ -285,7 +253,7 @@ export class QueryManager {
         Object.keys(updateQueriesByName).forEach(queryName =>
           (this.queryIdsByName[queryName] || []).forEach(queryId => {
             ret[queryId] = {
-              reducer: updateQueriesByName[queryName],
+              updater: updateQueriesByName[queryName],
               query: this.queryStore.get(queryId),
             };
           }),
@@ -295,21 +263,6 @@ export class QueryManager {
       return ret;
     };
 
-    if (QueryManager.EMIT_REDUX_ACTIONS) {
-      this.store.dispatch({
-        type: 'APOLLO_MUTATION_INIT',
-        mutationString,
-        mutation,
-        variables: variables || {},
-        operationName: getOperationName(mutation),
-        mutationId,
-        optimisticResponse,
-        extraReducers: this.getExtraReducers(),
-        updateQueries: generateUpdateQueriesInfo(),
-        update: updateWithProxyFn,
-      });
-    }
-
     this.mutationStore.initMutation(mutationId, mutationString, variables);
     this.dataStore.markMutationInit({
       mutationId,
@@ -318,7 +271,6 @@ export class QueryManager {
       updateQueries: generateUpdateQueriesInfo(),
       update: updateWithProxyFn,
       optimisticResponse,
-      extraReducers: this.getExtraReducers(),
     });
 
     this.broadcastQueries();
@@ -336,14 +288,6 @@ export class QueryManager {
             this.dataStore.markMutationComplete(mutationId);
             this.broadcastQueries();
 
-            if (QueryManager.EMIT_REDUX_ACTIONS) {
-              this.store.dispatch({
-                type: 'APOLLO_MUTATION_ERROR',
-                error,
-                mutationId,
-              });
-            }
-
             delete this.queryDocuments[mutationId];
             reject(error);
             return;
@@ -357,24 +301,9 @@ export class QueryManager {
             variables: variables || {},
             updateQueries: generateUpdateQueriesInfo(),
             update: updateWithProxyFn,
-            extraReducers: this.getExtraReducers(),
           });
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
-
-          if (QueryManager.EMIT_REDUX_ACTIONS) {
-            this.store.dispatch({
-              type: 'APOLLO_MUTATION_RESULT',
-              result,
-              mutationId,
-              document: mutation,
-              operationName: getOperationName(mutation),
-              variables: variables || {},
-              extraReducers: this.getExtraReducers(),
-              updateQueries: generateUpdateQueriesInfo(),
-              update: updateWithProxyFn,
-            });
-          }
 
           if (typeof refetchQueries[0] === 'string') {
             (refetchQueries as string[]).forEach(name => {
@@ -397,14 +326,6 @@ export class QueryManager {
           this.mutationStore.markMutationError(mutationId, err);
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
-
-          if (QueryManager.EMIT_REDUX_ACTIONS) {
-            this.store.dispatch({
-              type: 'APOLLO_MUTATION_ERROR',
-              error: err,
-              mutationId,
-            });
-          }
 
           delete this.queryDocuments[mutationId];
           reject(
@@ -483,26 +404,6 @@ export class QueryManager {
 
     this.broadcastQueries();
 
-    if (QueryManager.EMIT_REDUX_ACTIONS) {
-      this.store.dispatch({
-        type: 'APOLLO_QUERY_INIT',
-        queryString,
-        document: queryDoc,
-        operationName: getOperationName(queryDoc),
-        variables,
-        fetchPolicy,
-        queryId,
-        requestId,
-        // we store the old variables in order to trigger "loading new variables"
-        // state if we know we will go to the server
-        storePreviousVariables: shouldFetch,
-        isPoll: fetchType === FetchType.poll,
-        isRefetch: fetchType === FetchType.refetch,
-        fetchMoreForQueryId,
-        metadata,
-      });
-    }
-
     this.lastRequestId[queryId] = requestId;
 
     // If there is no part of the query we need to fetch from the server (or,
@@ -516,19 +417,6 @@ export class QueryManager {
         this.queryListenerInvalidated[fetchMoreForQueryId] = true;
       }
       this.broadcastQueries();
-
-      if (QueryManager.EMIT_REDUX_ACTIONS) {
-        this.store.dispatch({
-          type: 'APOLLO_QUERY_RESULT_CLIENT',
-          result: { data: storeResult },
-          variables,
-          document: queryDoc,
-          operationName: getOperationName(queryDoc),
-          complete: !shouldFetch,
-          queryId,
-          requestId,
-        });
-      }
     }
 
     if (shouldFetch) {
@@ -552,16 +440,6 @@ export class QueryManager {
             }
 
             this.broadcastQueries();
-
-            if (QueryManager.EMIT_REDUX_ACTIONS) {
-              this.store.dispatch({
-                type: 'APOLLO_QUERY_ERROR',
-                error,
-                queryId,
-                requestId,
-                fetchMoreForQueryId,
-              });
-            }
           }
 
           this.removeFetchQueryPromise(requestId);
@@ -879,21 +757,6 @@ export class QueryManager {
     this.queryStore.stopQuery(queryId);
     this.queryListenerInvalidated[queryId] = true;
     this.broadcastQueries();
-
-    if (QueryManager.EMIT_REDUX_ACTIONS) {
-      this.store.dispatch({
-        type: 'APOLLO_QUERY_STOP',
-        queryId,
-      });
-    }
-  }
-
-  public getApolloState(): Store {
-    return this.reduxRootSelector(this.store.getState());
-  }
-
-  public selectApolloState(store: any) {
-    return this.reduxRootSelector(store.getState());
   }
 
   public addQueryListener(
@@ -987,13 +850,6 @@ export class QueryManager {
     this.mutationStore.reset();
     const dataStoreReset = this.dataStore.reset();
 
-    if (QueryManager.EMIT_REDUX_ACTIONS) {
-      this.store.dispatch({
-        type: 'APOLLO_STORE_RESET',
-        observableQueryIds: Object.keys(this.observableQueries),
-      });
-    }
-
     // Similarly, we have to have to refetch each of the queries currently being
     // observed. We refetch instead of error'ing on these since the assumption is that
     // resetting the store doesn't eliminate the need for the queries currently being
@@ -1081,21 +937,8 @@ export class QueryManager {
               { data: result },
               transformedDoc,
               variables,
-              this.getExtraReducers(),
             );
             this.broadcastQueries();
-
-            if (QueryManager.EMIT_REDUX_ACTIONS) {
-              this.store.dispatch({
-                type: 'APOLLO_SUBSCRIPTION_RESULT',
-                document: transformedDoc,
-                operationName: getOperationName(transformedDoc),
-                result: { data: result },
-                variables,
-                subscriptionId: subId,
-                extraReducers: this.getExtraReducers(),
-              });
-            }
 
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {
@@ -1198,6 +1041,7 @@ export class QueryManager {
   }
 
   public broadcastQueries() {
+    this.onBroadcast();
     Object.keys(this.queryListeners).forEach((queryId: string) => {
       const listeners = this.queryListeners[queryId];
       // XXX due to an unknown race condition listeners can sometimes be undefined here.
@@ -1254,27 +1098,6 @@ export class QueryManager {
     };
   }
 
-  private getExtraReducers(): ApolloReducer[] {
-    return Object.keys(this.observableQueries)
-      .map(obsQueryId => {
-        const query = this.observableQueries[obsQueryId].observableQuery;
-        const queryOptions = query.options;
-
-        if (queryOptions.reducer) {
-          return createStoreReducer(
-            queryOptions.reducer,
-            this.addTypename
-              ? addTypenameToDocument(queryOptions.query)
-              : queryOptions.query,
-            query.variables || {},
-            this.reducerConfig,
-          );
-        }
-        return null as never;
-      })
-      .filter(reducer => reducer !== null);
-  }
-
   // Takes a request id, query id, a query document and information associated with the query
   // and send it to the network interface. Returns
   // a promise for the result associated with that request.
@@ -1304,24 +1127,9 @@ export class QueryManager {
       this.deduplicator
         .query(request, this.queryDeduplication)
         .then((result: ExecutionResult) => {
-          const extraReducers = this.getExtraReducers();
-
           // default the lastRequestId to 1
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
             // XXX handle multiple ApolloQueryResults
-            if (QueryManager.EMIT_REDUX_ACTIONS) {
-              this.store.dispatch({
-                type: 'APOLLO_QUERY_RESULT',
-                document,
-                variables: variables ? variables : {},
-                operationName: getOperationName(document),
-                result,
-                queryId,
-                requestId,
-                fetchMoreForQueryId,
-                extraReducers,
-              });
-            }
 
             this.dataStore.markQueryResult(
               queryId,
@@ -1329,7 +1137,6 @@ export class QueryManager {
               result,
               document,
               variables,
-              extraReducers,
               fetchMoreForQueryId,
             );
 

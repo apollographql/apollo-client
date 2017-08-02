@@ -24,15 +24,7 @@ import {
   FragmentMatcherInterface,
 } from './data/fragmentMatcher';
 
-import {
-  createApolloStore,
-  ApolloStore,
-  createApolloReducer,
-  ApolloReducerConfig,
-  Store,
-} from './store';
-
-import { ApolloAction } from './actions';
+import { ApolloReducerConfig } from './store';
 
 import { CustomResolverMap } from './data/readFromStore';
 
@@ -73,20 +65,6 @@ import { version } from './version';
 import { InMemoryCache } from './data/inMemoryCache';
 import { Cache } from './data/cache';
 
-/**
- * This type defines a "selector" function that receives state from the Redux store
- * and returns the part of it that is managed by ApolloClient
- * @param state State of a Redux store
- * @returns {Store} Part of state managed by ApolloClient
- */
-export type ApolloStateSelector = (state: any) => Store;
-
-const DEFAULT_REDUX_ROOT_KEY = 'apollo';
-
-function defaultReduxRootSelector(state: any) {
-  return state[DEFAULT_REDUX_ROOT_KEY];
-}
-
 function defaultDataIdFromObject(result: any): string | null {
   if (result.__typename) {
     if (result.id !== undefined) {
@@ -104,13 +82,11 @@ let hasSuggestedDevtools = false;
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
- * receive results from the server and cache the results in a Redux store. It also delivers updates
+ * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
 export default class ApolloClient implements DataProxy {
   public networkInterface: NetworkInterface;
-  public store: ApolloStore;
-  public reduxRootSelector: ApolloStateSelector | null;
   public initialState: any;
   public initialCache: Cache;
   public queryManager: QueryManager;
@@ -140,10 +116,6 @@ export default class ApolloClient implements DataProxy {
    * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
    * to a GraphQL spec-compliant server.
    *
-   * @param reduxRootSelector A "selector" function that receives state from the Redux store
-   * and returns the part of it that is managed by ApolloClient.
-   * This option should only be used if the store is created outside of the client.
-   *
    * @param initialState The initial state assigned to the store.
    *
    * @param initialCache The initial cache to use in the data store.
@@ -171,7 +143,6 @@ export default class ApolloClient implements DataProxy {
         | NetworkInterface
         | ObservableNetworkInterface
         | ApolloLink;
-      reduxRootSelector?: ApolloStateSelector;
       initialState?: any;
       initialCache?: Cache;
       dataIdFromObject?: IdGetter;
@@ -187,7 +158,6 @@ export default class ApolloClient implements DataProxy {
     let { dataIdFromObject } = options;
     const {
       networkInterface,
-      reduxRootSelector,
       initialState,
       initialCache,
       ssrMode = false,
@@ -198,12 +168,6 @@ export default class ApolloClient implements DataProxy {
       fragmentMatcher,
       queryDeduplication = true,
     } = options;
-
-    if (typeof reduxRootSelector === 'function') {
-      this.reduxRootSelector = reduxRootSelector;
-    } else if (typeof reduxRootSelector !== 'undefined') {
-      throw new Error('"reduxRootSelector" must be a function.');
-    }
 
     if (typeof fragmentMatcher === 'undefined') {
       this.fragmentMatcher = new HeuristicFragmentMatcher();
@@ -289,17 +253,14 @@ export default class ApolloClient implements DataProxy {
       ? initialCache
       : new InMemoryCache(
           this.reducerConfig,
-          this.initialState &&
-          this.initialState[DEFAULT_REDUX_ROOT_KEY] &&
-          this.initialState[DEFAULT_REDUX_ROOT_KEY].data
-            ? this.initialState[DEFAULT_REDUX_ROOT_KEY].data
+          this.initialState && this.initialState.data
+            ? this.initialState.data
             : {}
         );
 
     this.watchQuery = this.watchQuery.bind(this);
     this.query = this.query.bind(this);
     this.mutate = this.mutate.bind(this);
-    this.setStore = this.setStore.bind(this);
     this.resetStore = this.resetStore.bind(this);
 
     // Attach the client instance to window to let us be found by chrome devtools, but only in
@@ -364,7 +325,7 @@ export default class ApolloClient implements DataProxy {
    *
    */
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
-    this.initStore();
+    this.initQueryManager();
 
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
@@ -387,7 +348,7 @@ export default class ApolloClient implements DataProxy {
    * server at all or just resolve from the cache, etc.
    */
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
-    this.initStore();
+    this.initQueryManager();
 
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error(
@@ -416,7 +377,7 @@ export default class ApolloClient implements DataProxy {
   public mutate<T>(
     options: MutationOptions<T>
   ): Promise<ApolloExecutionResult<T>> {
-    this.initStore();
+    this.initQueryManager();
 
     return this.queryManager.mutate<T>(options);
   }
@@ -426,7 +387,7 @@ export default class ApolloClient implements DataProxy {
    * {@link Observable} which either emits received data or an error.
    */
   public subscribe(options: SubscriptionOptions): Observable<any> {
-    this.initStore();
+    this.initQueryManager();
 
     return this.queryManager.startGraphQLSubscription(options);
   }
@@ -480,29 +441,30 @@ export default class ApolloClient implements DataProxy {
     return this.initProxy().writeFragment(options);
   }
 
-  /**
-   * Returns a reducer function configured according to the `reducerConfig` instance variable.
-   */
-  public reducer(): (state: Store, action: ApolloAction) => Store {
-    return createApolloReducer(this.reducerConfig);
-  }
-
   public __actionHookForDevTools(cb: Function) {
     this.devToolsHookCb = cb;
   }
 
-  public middleware = () => {
-    return (store: ApolloStore) => {
-      this.setStore(store);
+  /**
+   * This initializes the query manager that tracks queries and the cache
+   */
+  public initQueryManager() {
+    if (this.queryManager) {
+      return;
+    }
 
-      return (next: any) => (action: any) => {
-        const previousApolloState = this.queryManager.selectApolloState(store);
-        const returnValue = next(action);
-        const newApolloState = this.queryManager.selectApolloState(store);
-
+    this.queryManager = new QueryManager({
+      networkInterface: this.networkInterface,
+      addTypename: this.addTypename,
+      reducerConfig: this.reducerConfig,
+      queryDeduplication: this.queryDeduplication,
+      fragmentMatcher: this.fragmentMatcher,
+      ssrMode: this.ssrMode,
+      initialCache: this.initialCache,
+      onBroadcast: () => {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
-            action,
+            action: {},
             state: {
               queries: this.queryManager.queryStore.getStore(),
               mutations: this.queryManager.mutationStore.getStore(),
@@ -510,54 +472,8 @@ export default class ApolloClient implements DataProxy {
             dataWithOptimisticResults: (this.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData(),
           });
         }
-
-        return returnValue;
-      };
-    };
-  };
-
-  /**
-   * This initializes the Redux store that we use as a reactive cache.
-   */
-  public initStore() {
-    if (this.store) {
-      // Don't do anything if we already have a store
-      return;
-    }
-
-    if (this.reduxRootSelector) {
-      throw new Error(
-        'Cannot initialize the store because "reduxRootSelector" is provided. ' +
-          'reduxRootSelector should only be used when the store is created outside of the client. ' +
-          'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`
-      );
-    }
-
-    // If we don't have a store already, initialize a default one
-    this.setStore(
-      createApolloStore({
-        reduxRootKey: DEFAULT_REDUX_ROOT_KEY,
-        initialState: this.initialState,
-        config: this.reducerConfig,
-        logger: (store: any) => (next: any) => (action: any) => {
-          const result = next(action);
-
-          if (this.devToolsHookCb) {
-            this.devToolsHookCb({
-              action,
-              state: {
-                queries: this.queryManager.queryStore.getStore(),
-                mutations: this.queryManager.mutationStore.getStore(),
-              },
-              dataWithOptimisticResults: (this.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData(),
-            });
-          }
-
-          return result;
-        },
-      })
-    );
+      },
+    });
   }
 
   /**
@@ -580,42 +496,6 @@ export default class ApolloClient implements DataProxy {
     return this.queryManager ? this.queryManager.resetStore() : null;
   }
 
-  public getInitialState(): {} {
-    this.initStore();
-    return {};
-  }
-
-  private setStore(store: ApolloStore) {
-    let reduxRootSelector: ApolloStateSelector;
-    if (this.reduxRootSelector) {
-      reduxRootSelector = this.reduxRootSelector;
-    } else {
-      reduxRootSelector = defaultReduxRootSelector;
-    }
-
-    // ensure existing store has apolloReducer
-    if (typeof reduxRootSelector(store.getState()) === 'undefined') {
-      throw new Error(
-        'Existing store does not use apolloReducer. Please make sure the store ' +
-          'is properly configured and "reduxRootSelector" is correctly specified.'
-      );
-    }
-
-    this.store = store;
-
-    this.queryManager = new QueryManager({
-      networkInterface: this.networkInterface,
-      reduxRootSelector: reduxRootSelector,
-      store,
-      addTypename: this.addTypename,
-      reducerConfig: this.reducerConfig,
-      queryDeduplication: this.queryDeduplication,
-      fragmentMatcher: this.fragmentMatcher,
-      ssrMode: this.ssrMode,
-      initialCache: this.initialCache,
-    });
-  }
-
   /**
    * Initializes a data proxy for this client instance if one does not already
    * exist and returns either a previously initialized proxy instance or the
@@ -623,7 +503,7 @@ export default class ApolloClient implements DataProxy {
    */
   private initProxy(): DataProxy {
     if (!this.proxy) {
-      this.initStore();
+      this.initQueryManager();
       this.proxy = this.queryManager.dataStore.getCache();
     }
     return this.proxy;

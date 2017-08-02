@@ -5,6 +5,7 @@
 - Document ApolloClient.prototype.subscribe [PR #1932](https://github.com/apollographql/apollo-client/pull/1932)
 - Fix NetworkMiddleware flow typings [PR #1937](https://github.com/apollographql/apollo-client/pull/1937)
 - Fix use of @connection directives when using batching [PR #1961](https://github.com/apollographql/apollo-client/pull/1961)
+- Allow data fetch after a NetworkError when polling
 
 ### 1.9.0-1
 - Adds apollo-link network interface support [PR #1918](https://github.com/apollographql/apollo-client/pull/1918)

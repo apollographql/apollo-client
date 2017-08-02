@@ -11,7 +11,7 @@
 
 // @flow
 import ApolloClient, { createNetworkInterface, ApolloError } from "../src";
-import type { ApolloQueryResult, MiddlewareInterface, AfterwareInterface } from "../src";
+import type { ApolloQueryResult, MiddlewareInterface, AfterwareInterface, Request, HTTPNetworkInterface } from "../src";
 import type { DocumentNode } from "graphql";
 import gql from "graphql-tag";
 
@@ -24,9 +24,7 @@ const mutation: DocumentNode = gql`mutation { foo }`;
 const client = new ApolloClient("localhost:3000");
 
 // $ExpectError
-const client1 = new ApolloClient({
-  networkInterface: true,
-});
+const client1 = new ApolloClient({ networkInterface: true });
 
 const networkInterface1 = createNetworkInterface("localhost:3000");
 
@@ -68,6 +66,29 @@ const data = client.query({ query });
 
 // $ExpectError
 console.log(data.loading);
+
+class CustomNetworkInterface {
+  networkInterface: HTTPNetworkInterface;
+
+  constructor(networkInterface: HTTPNetworkInterface) {
+    this.networkInterface = networkInterface;
+  }
+
+  query(request: Request) {
+   return this.networkInterface.query(request);
+  }
+}
+
+const client3 = new ApolloClient({
+  networkInterface: new CustomNetworkInterface(networkInterface1)
+})
+
+class BadCustomNetworkInterface {}
+
+const client4 = new ApolloClient({
+  // $ExpectError
+  networkInterface: BadCustomNetworkInterface
+});
 
 // $ExpectError
 const status: Promise<ApolloError | boolean> = data.then(({ data, error }) => {

@@ -964,7 +964,6 @@ declare export function createApolloStore(
     initialState?: any,
     config?: ApolloReducerConfig,
     reportCrashes?: boolean,
-    logger?: Middleware<*, *>,
   },
 ): ApolloStore;
 

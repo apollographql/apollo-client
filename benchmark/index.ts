@@ -365,10 +365,10 @@ times(50, index => {
           `diff query against store with ${reservationCount} items`,
           done => {
             results.push(
-              diffQueryAgainstStore({
+              client.queryManager.dataStore.getCache().diffQuery({
                 query,
                 variables,
-                store: client.store.getState()['apollo'].data,
+                optimistic: false,
               }),
             );
             done();

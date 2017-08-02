@@ -1,13 +1,12 @@
 import { assert } from 'chai';
-import { createStore } from 'redux';
 import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
-import { createApolloStore, ApolloReducerConfig } from '../src/store';
+import { ApolloReducerConfig } from '../src/store';
 import { InMemoryCache } from '../src/data/inMemoryCache';
 import { toIdValue } from '../src/data/storeUtils';
 import { HeuristicFragmentMatcher } from '../src/data/fragmentMatcher';
 import { addTypenameToDocument } from '../src/queries/queryTransform';
-import { DataWrite } from '../src/actions';
+import { DataWrite } from '../src/data/store';
 import { getOperationName } from '../src/queries/getFromAST';
 import { DataStore } from '../src/data/store';
 import { DataProxy } from '../src/data/proxy';

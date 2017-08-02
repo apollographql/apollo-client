@@ -11,13 +11,11 @@ describe('ApolloClient', () => {
     it('will read some data from the store', () => {
       const client = new ApolloClient({
         initialState: {
-          apollo: {
-            data: {
-              ROOT_QUERY: {
-                a: 1,
-                b: 2,
-                c: 3,
-              },
+          data: {
+            ROOT_QUERY: {
+              a: 1,
+              b: 2,
+              c: 3,
             },
           },
         },
@@ -61,35 +59,33 @@ describe('ApolloClient', () => {
     it('will read some deeply nested data from the store', () => {
       const client = new ApolloClient({
         initialState: {
-          apollo: {
-            data: {
-              ROOT_QUERY: {
-                a: 1,
-                b: 2,
-                c: 3,
-                d: {
-                  type: 'id',
-                  id: 'foo',
-                  generated: false,
-                },
+          data: {
+            ROOT_QUERY: {
+              a: 1,
+              b: 2,
+              c: 3,
+              d: {
+                type: 'id',
+                id: 'foo',
+                generated: false,
               },
-              foo: {
-                __typename: 'Foo',
-                e: 4,
-                f: 5,
-                g: 6,
-                h: {
-                  type: 'id',
-                  id: 'bar',
-                  generated: false,
-                },
+            },
+            foo: {
+              __typename: 'Foo',
+              e: 4,
+              f: 5,
+              g: 6,
+              h: {
+                type: 'id',
+                id: 'bar',
+                generated: false,
               },
-              bar: {
-                __typename: 'Bar',
-                i: 7,
-                j: 8,
-                k: 9,
-              },
+            },
+            bar: {
+              __typename: 'Bar',
+              i: 7,
+              j: 8,
+              k: 9,
             },
           },
         },
@@ -165,12 +161,10 @@ describe('ApolloClient', () => {
     it('will read some data from the store with variables', () => {
       const client = new ApolloClient({
         initialState: {
-          apollo: {
-            data: {
-              ROOT_QUERY: {
-                'field({"literal":true,"value":42})': 1,
-                'field({"literal":false,"value":42})': 2,
-              },
+          data: {
+            ROOT_QUERY: {
+              'field({"literal":true,"value":42})': 1,
+              'field({"literal":false,"value":42})': 2,
             },
           },
         },
@@ -197,12 +191,10 @@ describe('ApolloClient', () => {
   it('will read some data from the store with default values', () => {
     const client = new ApolloClient({
       initialState: {
-        apollo: {
-          data: {
-            ROOT_QUERY: {
-              'field({"literal":true,"value":-1})': 1,
-              'field({"literal":false,"value":42})': 2,
-            },
+        data: {
+          ROOT_QUERY: {
+            'field({"literal":true,"value":-1})': 1,
+            'field({"literal":false,"value":42})': 2,
           },
         },
       },
@@ -306,36 +298,34 @@ describe('ApolloClient', () => {
     it('will read some deeply nested data from the store at any id', () => {
       const client = new ApolloClient({
         initialState: {
-          apollo: {
-            data: {
-              ROOT_QUERY: {
-                __typename: 'Foo',
-                a: 1,
-                b: 2,
-                c: 3,
-                d: {
-                  type: 'id',
-                  id: 'foo',
-                  generated: false,
-                },
+          data: {
+            ROOT_QUERY: {
+              __typename: 'Foo',
+              a: 1,
+              b: 2,
+              c: 3,
+              d: {
+                type: 'id',
+                id: 'foo',
+                generated: false,
               },
-              foo: {
-                __typename: 'Foo',
-                e: 4,
-                f: 5,
-                g: 6,
-                h: {
-                  type: 'id',
-                  id: 'bar',
-                  generated: false,
-                },
+            },
+            foo: {
+              __typename: 'Foo',
+              e: 4,
+              f: 5,
+              g: 6,
+              h: {
+                type: 'id',
+                id: 'bar',
+                generated: false,
               },
-              bar: {
-                __typename: 'Bar',
-                i: 7,
-                j: 8,
-                k: 9,
-              },
+            },
+            bar: {
+              __typename: 'Bar',
+              i: 7,
+              j: 8,
+              k: 9,
             },
           },
         },
@@ -464,13 +454,11 @@ describe('ApolloClient', () => {
     it('will read some data from the store with variables', () => {
       const client = new ApolloClient({
         initialState: {
-          apollo: {
-            data: {
-              foo: {
-                __typename: 'Foo',
-                'field({"literal":true,"value":42})': 1,
-                'field({"literal":false,"value":42})': 2,
-              },
+          data: {
+            foo: {
+              __typename: 'Foo',
+              'field({"literal":true,"value":42})': 1,
+              'field({"literal":false,"value":42})': 2,
             },
           },
         },
@@ -498,19 +486,15 @@ describe('ApolloClient', () => {
       const client1 = new ApolloClient();
       const client2 = new ApolloClient({
         initialState: {
-          apollo: {
-            data: {
-              bar: { __typename: 'Foo', a: 1, b: 2, c: 3 },
-            },
+          data: {
+            bar: { __typename: 'Foo', a: 1, b: 2, c: 3 },
           },
         },
       });
       const client3 = new ApolloClient({
         initialState: {
-          apollo: {
-            data: {
-              foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
-            },
+          data: {
+            foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
           },
         },
       });
@@ -1247,25 +1231,23 @@ describe('ApolloClient', () => {
     it('will write data locally which will then be read back', () => {
       const client = new ApolloClient({
         initialState: {
-          apollo: {
-            data: {
-              foo: {
-                __typename: 'Foo',
-                a: 1,
-                b: 2,
-                c: 3,
-                bar: {
-                  type: 'id',
-                  id: '$foo.bar',
-                  generated: true,
-                },
+          data: {
+            foo: {
+              __typename: 'Foo',
+              a: 1,
+              b: 2,
+              c: 3,
+              bar: {
+                type: 'id',
+                id: '$foo.bar',
+                generated: true,
               },
-              '$foo.bar': {
-                __typename: 'Bar',
-                d: 4,
-                e: 5,
-                f: 6,
-              },
+            },
+            '$foo.bar': {
+              __typename: 'Bar',
+              d: 4,
+              e: 5,
+              f: 6,
             },
           },
         },
@@ -1429,7 +1411,7 @@ describe('ApolloClient', () => {
 
     it('will write data to a specific id', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
         dataIdFromObject: (o: any) => o.key,
       });
 
@@ -1525,7 +1507,7 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if __typename is not present', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
         addTypename: false,
       });
 
@@ -1628,7 +1610,7 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if id and _id are not present', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
       });
 
       client.writeQuery({
@@ -1740,7 +1722,7 @@ describe('ApolloClient', () => {
 
     it('will use a default id getter if __typename and id are present', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
       });
 
       client.writeQuery({
@@ -1805,7 +1787,7 @@ describe('ApolloClient', () => {
 
     it('will use a default id getter if __typename and _id are present', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
       });
 
       client.writeQuery({
@@ -1870,7 +1852,7 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if id is present and __typename is not present', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
         addTypename: false,
       });
 
@@ -1929,7 +1911,7 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if _id is present but __typename is not present', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
         addTypename: false,
       });
 
@@ -1988,7 +1970,7 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if either _id or id is present when __typename is not also present', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
         addTypename: false,
       });
 
@@ -2095,7 +2077,7 @@ describe('ApolloClient', () => {
 
     it('will use a default id getter if one is not specified and __typename is present along with either _id or id', () => {
       const client = new ApolloClient({
-        initialState: { apollo: { data: {} } },
+        initialState: { data: {} },
       });
 
       client.writeQuery({

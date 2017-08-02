@@ -418,35 +418,31 @@ describe('client', () => {
     });
 
     const initialState: any = {
-      apollo: {
-        data: {
-          'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
-            name: 'Luke Skywalker',
-          },
-          'ROOT_QUERY.allPeople({"first":1})': {
-            people: [
-              {
-                type: 'id',
-                generated: true,
-                id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
-              },
-            ],
-          },
-          ROOT_QUERY: {
-            'allPeople({"first":1})': {
+      data: {
+        'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
+          name: 'Luke Skywalker',
+        },
+        'ROOT_QUERY.allPeople({"first":1})': {
+          people: [
+            {
               type: 'id',
-              id: 'ROOT_QUERY.allPeople({"first":1})',
               generated: true,
+              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
             },
+          ],
+        },
+        ROOT_QUERY: {
+          'allPeople({"first":1})': {
+            type: 'id',
+            id: 'ROOT_QUERY.allPeople({"first":1})',
+            generated: true,
           },
         },
         optimistic: [],
       },
     };
 
-    const finalState = {
-      apollo: assign({}, initialState.apollo, {}),
-    };
+    const finalState = assign({}, initialState, {});
 
     const client = new ApolloClient({
       networkInterface,
@@ -457,7 +453,7 @@ describe('client', () => {
     return client.query({ query }).then(result => {
       assert.deepEqual(result.data, data);
       assert.deepEqual(
-        finalState.apollo.data,
+        finalState.data,
         (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
       );
     });

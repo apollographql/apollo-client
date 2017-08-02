@@ -253,10 +253,8 @@ export default class ApolloClient implements DataProxy {
       ? initialCache
       : new InMemoryCache(
           this.reducerConfig,
-          this.initialState &&
-          this.initialState.apollo &&
-          this.initialState.apollo.data
-            ? this.initialState.apollo.data
+          this.initialState && this.initialState.data
+            ? this.initialState.data
             : {},
         );
 

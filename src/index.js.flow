@@ -11,8 +11,6 @@ import type {
   NameNode,
 } from "graphql";
 
-import type { Middleware } from "redux";
-
 export interface Request {
   // causes flow errors
   // property `$key` of Request. Indexable signature not found in
@@ -556,21 +554,6 @@ declare export class DataProxy {
   writeFragment(options: DataProxyWriteFragmentOptions): void,
 }
 
-declare export class ReduxDataProxy extends DataProxy {
-  constructor(
-    store: ApolloStore,
-    reduxRootSelector: (state: any) => Store,
-    fragmentMatcher: FragmentMatcherInterface,
-    reducerConfig: ApolloReducerConfig,
-  ): this,
-  readQuery<QueryType>(options: DataProxyReadQueryOptions): QueryType,
-  readFragment<FragmentType>(options: DataProxyReadFragmentOptions):
-    | FragmentType
-    | null,
-  writeQuery(options: DataProxyWriteQueryOptions): void,
-  writeFragment(options: DataProxyWriteFragmentOptions): void,
-}
-
 declare export class TransactionDataProxy extends DataProxy {
   constructor(
     data: NormalizedCache,
@@ -966,11 +949,9 @@ declare export function createApolloReducer(config: ApolloReducerConfig): (
 
 declare export function createApolloStore(
   init?: {
-    reduxRootKey?: string,
     initialState?: any,
     config?: ApolloReducerConfig,
     reportCrashes?: boolean,
-    logger?: Middleware<*, *>,
   },
 ): ApolloStore;
 
@@ -981,11 +962,9 @@ declare export function createApolloReducer(config: ApolloReducerConfig): (
 
 declare export function createApolloStore(
   store?: {
-    reduxRootKey?: string,
     initialState?: any,
     config?: ApolloReducerConfig,
     reportCrashes?: boolean,
-    logger?: Middleware<*, *>,
   },
 ): ApolloStore;
 
@@ -1001,7 +980,6 @@ declare export class QueryManager {
     setup: {
       networkInterface: NetworkInterface,
       store: ApolloStore,
-      reduxRootSelector: ApolloStateSelector,
       fragmentMatcher?: FragmentMatcherInterface,
       reducerConfig?: ApolloReducerConfig,
       addTypename?: boolean,
@@ -1087,7 +1065,6 @@ declare export class QueryManager {
 declare export class ApolloClient extends DataProxy {
   networkInterface: NetworkInterface,
   store: ApolloStore,
-  reduxRootSelector: ApolloStateSelector | null,
   initialState: any,
   queryManager: QueryManager,
   reducerConfig: ApolloReducerConfig,
@@ -1101,7 +1078,6 @@ declare export class ApolloClient extends DataProxy {
   constructor(
     options?: {
       networkInterface?: NetworkInterface,
-      reduxRootSelector?: string | ApolloStateSelector,
       initialState?: any,
       dataIdFromObject?: IdGetter,
       ssrMode?: boolean,

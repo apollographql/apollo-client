@@ -76,7 +76,6 @@
     "graphql": "^0.10.0",
     "graphql-anywhere": "^3.0.1",
     "graphql-tag": "^2.0.0",
-    "redux": "^3.4.0",
     "symbol-observable": "^1.0.2",
     "whatwg-fetch": "^2.0.0"
   },

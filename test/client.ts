@@ -14,22 +14,11 @@ import {
   FragmentDefinitionNode,
 } from 'graphql';
 
-import { rootReducer as todosReducer } from './fixtures/redux-todomvc';
-
-import { Store } from '../src/store';
-
 import gql from 'graphql-tag';
 
 import { print } from 'graphql/language/printer';
 
 import { NetworkStatus } from '../src/queries/networkStatus';
-
-import {
-  createStore,
-  Store as ReduxStore,
-  combineReducers,
-  applyMiddleware,
-} from 'redux';
 
 import { QueryManager } from '../src/core/QueryManager';
 
@@ -83,15 +72,15 @@ chai.use(chaiAsPromised);
 graphqlTagDisableFragmentWarnings();
 
 describe('client', () => {
-  it('does not require any arguments and creates store lazily', () => {
+  it('does not require any arguments and creates query manager lazily', () => {
     const client = new ApolloClient();
 
-    assert.isUndefined(client.store);
+    assert.isUndefined(client.queryManager);
 
-    // We only create the store on the first query
-    client.initStore();
-    assert.isDefined(client.store);
-    assert.isDefined(client.store.getState().apollo);
+    // We only create the query manager on the first query
+    client.initQueryManager();
+    assert.isDefined(client.queryManager);
+    assert.isDefined(client.queryManager.dataStore.getCache());
   });
 
   it('can be loaded via require', () => {
@@ -101,12 +90,12 @@ describe('client', () => {
 
     const client = new ApolloClientRequire();
 
-    assert.isUndefined(client.store);
+    assert.isUndefined(client.queryManager);
 
-    // We only create the store on the first query
-    client.initStore();
-    assert.isDefined(client.store);
-    assert.isDefined(client.store.getState().apollo);
+    // We only create the query manager on the first query
+    client.initQueryManager();
+    assert.isDefined(client.queryManager);
+    assert.isDefined(client.queryManager.dataStore.getCache());
   });
 
   it('can allow passing in a network interface', () => {
@@ -555,50 +544,6 @@ describe('client', () => {
     return clientRoundtrip(query, { data }, null, ifm);
   });
 
-  it('should allow for a single query with existing store', () => {
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
-    };
-
-    const networkInterface = mockNetworkInterface({
-      request: { query },
-      result: { data },
-    });
-
-    const client = new ApolloClient({
-      networkInterface,
-      addTypename: false,
-    });
-
-    createStore(
-      combineReducers({
-        todos: todosReducer,
-        apollo: client.reducer() as any, // XXX see why this type fails
-      }),
-      applyMiddleware(client.middleware()),
-    );
-
-    return client.query({ query }).then(result => {
-      assert.deepEqual(result.data, data);
-    });
-  });
-
   it('store can be rehydrated from the server', () => {
     const query = gql`
       query people {
@@ -626,35 +571,31 @@ describe('client', () => {
     });
 
     const initialState: any = {
-      apollo: {
-        data: {
-          'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
-            name: 'Luke Skywalker',
-          },
-          'ROOT_QUERY.allPeople({"first":1})': {
-            people: [
-              {
-                type: 'id',
-                generated: true,
-                id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
-              },
-            ],
-          },
-          ROOT_QUERY: {
-            'allPeople({"first":1})': {
+      data: {
+        'ROOT_QUERY.allPeople({"first":"1"}).people.0': {
+          name: 'Luke Skywalker',
+        },
+        'ROOT_QUERY.allPeople({"first":1})': {
+          people: [
+            {
               type: 'id',
-              id: 'ROOT_QUERY.allPeople({"first":1})',
               generated: true,
+              id: 'ROOT_QUERY.allPeople({"first":"1"}).people.0',
             },
+          ],
+        },
+        ROOT_QUERY: {
+          'allPeople({"first":1})': {
+            type: 'id',
+            id: 'ROOT_QUERY.allPeople({"first":1})',
+            generated: true,
           },
         },
         optimistic: [],
       },
     };
 
-    const finalState = {
-      apollo: assign({}, initialState.apollo, {}),
-    };
+    const finalState = assign({}, initialState, {});
 
     const client = new ApolloClient({
       networkInterface,
@@ -665,56 +606,9 @@ describe('client', () => {
     return client.query({ query }).then(result => {
       assert.deepEqual(result.data, data);
       assert.deepEqual(
-        finalState.apollo.data,
+        finalState.data,
         (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
       );
-    });
-  });
-
-  it('allows for a single query with existing store and custom key', () => {
-    const reduxRootSelector = (store: any) => store['test'];
-
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-          },
-        ],
-      },
-    };
-
-    const networkInterface = mockNetworkInterface({
-      request: { query },
-      result: { data },
-    });
-
-    const client = new ApolloClient({
-      reduxRootSelector,
-      networkInterface,
-      addTypename: false,
-    });
-
-    createStore(
-      combineReducers({
-        todos: todosReducer,
-        test: client.reducer() as any,
-      }),
-      applyMiddleware(client.middleware()),
-    );
-
-    return client.query({ query }).then((result: any) => {
-      assert.deepEqual(result.data, data);
     });
   });
 
@@ -1465,7 +1359,7 @@ describe('client', () => {
     });
   });
 
-  it('should call updateQueries, update and reducer after mutation on query with inlined fragments on an Interface type', done => {
+  it('should call updateQueries and update after mutation on query with inlined fragments on an Interface type', done => {
     const query = gql`
       query items {
         items {
@@ -1543,12 +1437,6 @@ describe('client', () => {
       fragmentMatcher: ifm,
     });
 
-    const reducerSpy = sinon.spy();
-    const reducer = (prev: any, action: any) => {
-      reducerSpy();
-      return prev;
-    };
-
     const queryUpdaterSpy = sinon.spy();
     const queryUpdater = (prev: any) => {
       queryUpdaterSpy();
@@ -1560,14 +1448,13 @@ describe('client', () => {
 
     const updateSpy = sinon.spy();
 
-    const obs = client.watchQuery({ query, reducer });
+    const obs = client.watchQuery({ query });
 
     const sub = obs.subscribe({
       next() {
         client
           .mutate({ mutation, updateQueries, update: updateSpy })
           .then(() => {
-            assert.isTrue(reducerSpy.called);
             assert.isTrue(queryUpdaterSpy.called);
             assert.isTrue(updateSpy.called);
             sub.unsubscribe();
@@ -1724,175 +1611,6 @@ describe('client', () => {
     // if deduplication didn't happen, result.data will equal data2.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
       assert.deepEqual(result1.data, result2.data);
-    });
-  });
-
-  describe('Redux backcompat', () => {
-    it('emits APOLLO_QUERY_INIT and APOLLO_QUERY_RESULT for query', () => {
-      QueryManager.EMIT_REDUX_ACTIONS = true;
-
-      const query = gql`
-        query people {
-          allPeople(first: 1) {
-            people {
-              name
-              __typename
-            }
-            __typename
-          }
-        }
-      `;
-
-      const data = {
-        allPeople: {
-          people: [
-            {
-              name: 'Luke Skywalker',
-              __typename: 'Person',
-            },
-          ],
-          __typename: 'People',
-        },
-      };
-
-      const networkInterface = mockNetworkInterface({
-        request: { query: cloneDeep(query) },
-        result: { data },
-      });
-
-      const client = new ApolloClient({
-        networkInterface,
-      });
-
-      client.initStore();
-
-      const orig = client.store.dispatch;
-      const actionsEmitted: String[] = [];
-
-      client.store.dispatch = action => {
-        actionsEmitted.push(action.type);
-
-        orig(action);
-      };
-
-      const queryPromise = client.query({ query }).then(result => {
-        assert.deepEqual(result.data, data);
-      });
-
-      return queryPromise.then(() => {
-        QueryManager.EMIT_REDUX_ACTIONS = false;
-        assert.deepEqual(
-          actionsEmitted,
-          ['APOLLO_QUERY_INIT', 'APOLLO_QUERY_RESULT'],
-          'An action was not emitted',
-        );
-      });
-    });
-
-    it('emits APOLLO_MUTATION_INIT and APOLLO_MUTATION_RESULT for mutation', () => {
-      QueryManager.EMIT_REDUX_ACTIONS = true;
-
-      const mutation = gql`
-        mutation {
-          person {
-            firstname
-            lastname
-            __typename
-          }
-        }
-      `;
-
-      const data = {
-        person: {
-          firstname: 'a',
-          lastname: 'b',
-          __typename: 'Person',
-        },
-      };
-
-      const networkInterface = mockNetworkInterface({
-        request: { query: mutation },
-        result: { data },
-      });
-
-      const client = new ApolloClient({
-        networkInterface,
-      });
-
-      client.initStore();
-
-      const orig = client.store.dispatch;
-      const actionsEmitted: String[] = [];
-
-      client.store.dispatch = action => {
-        actionsEmitted.push(action.type);
-
-        orig(action);
-      };
-
-      const queryPromise = client.mutate({ mutation });
-
-      return queryPromise.then(() => {
-        QueryManager.EMIT_REDUX_ACTIONS = false;
-        assert.deepEqual(
-          actionsEmitted,
-          ['APOLLO_MUTATION_INIT', 'APOLLO_MUTATION_RESULT'],
-          'An action was not emitted',
-        );
-      });
-    });
-
-    it('emits APOLLO_MUTATION_INIT and APOLLO_MUTATION_ERROR for errored mutation', () => {
-      QueryManager.EMIT_REDUX_ACTIONS = true;
-
-      const mutation = gql`
-        mutation {
-          person {
-            firstname
-            lastname
-            __typename
-          }
-        }
-      `;
-
-      const data = {
-        person: {
-          firstname: 'a',
-          lastname: 'b',
-          __typename: 'Person',
-        },
-      };
-
-      const networkInterface = mockNetworkInterface({
-        request: { query: mutation },
-        error: new Error(),
-      });
-
-      const client = new ApolloClient({
-        networkInterface,
-      });
-
-      client.initStore();
-
-      const orig = client.store.dispatch;
-      const actionsEmitted: String[] = [];
-
-      client.store.dispatch = action => {
-        actionsEmitted.push(action.type);
-
-        orig(action);
-      };
-
-      const queryPromise = client.mutate({ mutation });
-
-      return queryPromise.catch(() => {
-        QueryManager.EMIT_REDUX_ACTIONS = false;
-        assert.deepEqual(
-          actionsEmitted,
-          ['APOLLO_MUTATION_INIT', 'APOLLO_MUTATION_ERROR'],
-          'An action was not emitted',
-        );
-      });
     });
   });
 
@@ -2965,35 +2683,6 @@ describe('client', () => {
       return client.query({ query }).then(() => {
         assert.equal(log.length, 2);
         assert.equal(log[1].state.queries['0'].loading, false);
-      });
-    });
-
-    it('with passed in store', () => {
-      const networkInterface = mockNetworkInterface({
-        request: { query: cloneDeep(query) },
-        result: { data },
-      });
-
-      const client = new ApolloClient({
-        networkInterface,
-        addTypename: false,
-      });
-
-      createStore(
-        combineReducers({
-          apollo: client.reducer() as any,
-        }),
-        {}, // initial state
-        applyMiddleware(client.middleware()),
-      );
-
-      const log: any[] = [];
-      client.__actionHookForDevTools((entry: any) => {
-        log.push(entry);
-      });
-
-      return client.query({ query }).then(() => {
-        assert.equal(log.length, 2);
       });
     });
   });

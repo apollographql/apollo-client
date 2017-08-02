@@ -7,8 +7,6 @@ import { assert } from 'chai';
 
 import { cloneDeep } from 'lodash';
 
-import { isSubscriptionResultAction } from '../src/actions';
-
 import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
@@ -148,8 +146,6 @@ describe('GraphQL Subscriptions', () => {
     const network = mockSubscriptionNetworkInterface([sub1]);
     const queryManager = new QueryManager({
       networkInterface: network,
-      reduxRootSelector: (state: any) => state.apollo,
-      store: createApolloStore(),
       addTypename: false,
     });
 
@@ -187,8 +183,6 @@ describe('GraphQL Subscriptions', () => {
     let numResults = 0;
     const queryManager = new QueryManager({
       networkInterface: network,
-      reduxRootSelector: (state: any) => state.apollo,
-      store: createApolloStore(),
       addTypename: false,
     });
 

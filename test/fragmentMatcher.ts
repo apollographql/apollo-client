@@ -1,6 +1,5 @@
 import { assert } from 'chai';
 import gql from 'graphql-tag';
-import { Store } from '../src/store';
 import ApolloClient from '../src/ApolloClient';
 import { IntrospectionFragmentMatcher } from '../src/data/fragmentMatcher';
 

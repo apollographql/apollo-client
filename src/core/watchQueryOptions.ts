@@ -1,9 +1,6 @@
 import { DocumentNode, FragmentDefinitionNode } from 'graphql';
 
-import {
-  OperationResultReducer,
-  MutationQueryReducersMap,
-} from '../data/mutationResults';
+import { MutationQueryReducersMap } from '../data/mutationResults';
 
 import { DataProxy } from '../data/proxy';
 
@@ -55,11 +52,6 @@ export interface ModifiableWatchQueryOptions {
    * Whether or not updates to the network status should trigger next on the observer of this query
    */
   notifyOnNetworkStatusChange?: boolean;
-
-  /**
-   * A redux reducer that lets you update the result of this query in the store based on any action (including mutation and query results)
-   */
-  reducer?: OperationResultReducer;
 }
 
 /**
@@ -74,7 +66,7 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
   query: DocumentNode;
 
   /**
-   * Arbitrary metadata stored in Redux with this query.  Designed for debugging,
+   * Arbitrary metadata stored in the store with this query.  Designed for debugging,
    * developer tools, etc.
    */
   metadata?: any;

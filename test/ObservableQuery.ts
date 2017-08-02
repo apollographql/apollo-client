@@ -6,8 +6,7 @@ import gql from 'graphql-tag';
 import { ExecutionResult } from 'graphql';
 
 import { QueryManager } from '../src/core/QueryManager';
-import { createApolloStore, ApolloStore } from '../src/store';
-import ApolloClient, { ApolloStateSelector } from '../src/ApolloClient';
+import ApolloClient from '../src/ApolloClient';
 
 import mockQueryManager from './mocks/mockQueryManager';
 import mockWatchQuery from './mocks/mockWatchQuery';
@@ -69,22 +68,15 @@ describe('ObservableQuery', () => {
     message: 'is offline.',
   };
 
-  const defaultReduxRootSelector = (state: any) => state.apollo;
   const createQueryManager = ({
     networkInterface,
-    store,
-    reduxRootSelector,
     addTypename = false,
   }: {
     networkInterface?: NetworkInterface;
-    store?: ApolloStore;
-    reduxRootSelector?: ApolloStateSelector;
     addTypename?: boolean;
   }) => {
     return new QueryManager({
       networkInterface: networkInterface || mockNetworkInterface(),
-      store: store || createApolloStore(),
-      reduxRootSelector: reduxRootSelector || defaultReduxRootSelector,
       addTypename,
     });
   };
@@ -1185,70 +1177,6 @@ describe('ObservableQuery', () => {
             assert.deepEqual(result.data.people_one, mutationData);
             done();
           }
-        });
-      });
-
-      it('applies query reducers with correct variables', done => {
-        const queryManager = mockQueryManager(
-          {
-            // First we make the query
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            // Then we make a mutation
-            request: { query: mutation },
-            result: { data: mutationData },
-          },
-          {
-            // Then we make another query
-            request: { query, variables: differentVariables },
-            result: { data: dataTwo },
-          },
-          {
-            // Then we make another mutation
-            request: { query: mutation },
-            result: { data: mutationData },
-          },
-        );
-
-        let lastReducerVars: Array<Object> = [];
-        let lastReducerData: Array<Object> = [];
-        const observable = queryManager.watchQuery({
-          query,
-          variables,
-          reducer: (previous, action, reducerVars) => {
-            if (action.type === 'APOLLO_MUTATION_RESULT') {
-              // We want to track the history of the `variables` the reducer
-              // is given for the query.
-              lastReducerData.push(previous);
-              lastReducerVars.push(reducerVars);
-            }
-
-            return previous;
-          },
-        });
-
-        // Check that the variables fed into the reducer are correct.
-        function assertVariables() {
-          assert.lengthOf(lastReducerVars, 2);
-          assert.deepEqual(lastReducerVars[0], variables);
-          assert.deepEqual(lastReducerData[0], dataOne);
-          assert.deepEqual(lastReducerVars[1], differentVariables);
-          assert.deepEqual(lastReducerData[1], dataTwo);
-          done();
-        }
-
-        // Subscribe to the query, then run the mutation, then change the variables, then run another mutation.
-        let sub = observable.subscribe({});
-        queryManager.mutate({ mutation }).then(() => {
-          observable.setVariables(differentVariables);
-          queryManager.mutate({ mutation }).then(() => {
-            // We have to get out of the Promise scope here
-            // because the promises are capturing the assertion errors
-            // leading to timesouts.
-            setTimeout(assertVariables, 0);
-          });
         });
       });
     });

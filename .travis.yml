@@ -3,20 +3,21 @@ node_js:
   - "6"
 
 install:
+  - npm run bootstrap
   - npm install -g coveralls
   - npm prune
-  - npm install
 
 script:
   - npm run danger
   - npm test
 
     # test flow types (validity and use cases)
-  - npm run flow-check
+  - npm run type-check
 
     # run coverage and file size checks
-  - npm run coverage
-  - coveralls < ./coverage/lcov.info || true # ignore coveralls error
+    # XXX how do we do coverage here?
+  # - npm run coverage
+  # - coveralls < ./coverage/lcov.info || true # ignore coveralls error
   - npm run filesize
 
 # Allow Travis tests to run in containers.

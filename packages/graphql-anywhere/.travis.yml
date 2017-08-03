@@ -1,0 +1,8 @@
+language: node_js
+
+node_js:
+  - "6"
+  - "4"
+
+# Allow Travis tests to run in containers.
+sudo: false

@@ -1,3 +1,4 @@
+<<<<<<< 8ef861a97a6941bdf8598b22d5a29fce1f69c506
 import {
   NetworkInterface,
   ObservableNetworkInterface,
@@ -12,6 +13,9 @@ import {
   ZenObservable,
 } from 'apollo-link-core';
 import { assign } from './util/assign';
+=======
+import { execute, ApolloLink } from 'apollo-link-core';
+>>>>>>> started working on moving to link support
 
 import {
   ExecutionResult,
@@ -92,7 +96,7 @@ let hasSuggestedDevtools = false;
  * to GraphQL queries through {@link Observable} instances.
  */
 export default class ApolloClient implements DataProxy {
-  public networkInterface: NetworkInterface;
+  public link: ApolloLink;
   public initialState: any;
   public initialCache: Cache;
   public queryManager: QueryManager;
@@ -120,8 +124,7 @@ export default class ApolloClient implements DataProxy {
   /**
    * Constructs an instance of {@link ApolloClient}.
    *
-   * @param networkInterface The {@link NetworkInterface} over which GraphQL documents will be sent
-   * to a GraphQL spec-compliant server.
+   * @param link The {@link ApolloLink} over which GraphQL documents will be resolved into a response.
    *
    * @param initialState The initial state assigned to the store.
    *
@@ -146,10 +149,7 @@ export default class ApolloClient implements DataProxy {
 
   constructor(
     options: {
-      networkInterface?:
-        | NetworkInterface
-        | ObservableNetworkInterface
-        | ApolloLink;
+      link?: ApolloLink;
       initialState?: any;
       initialCache?: Cache;
       dataIdFromObject?: IdGetter;
@@ -164,7 +164,7 @@ export default class ApolloClient implements DataProxy {
   ) {
     let { dataIdFromObject } = options;
     const {
-      networkInterface,
+      link,
       initialState,
       initialCache,
       ssrMode = false,
@@ -182,74 +182,7 @@ export default class ApolloClient implements DataProxy {
       this.fragmentMatcher = fragmentMatcher;
     }
 
-    const createQuery = (
-      getResult: (request: Request) => Observable<ExecutionResult>,
-    ) => {
-      return (request: Request) =>
-        new Promise<ExecutionResult>((resolve, reject) => {
-          let resolved = false;
-          const subscription = getResult(request).subscribe({
-            next: (data: ExecutionResult) => {
-              if (!resolved) {
-                resolve(data);
-                resolved = true;
-              } else {
-                console.warn(
-                  'Apollo Client does not support multiple results from an Observable',
-                );
-              }
-            },
-            error: reject,
-            complete: () => subscription.unsubscribe(),
-          });
-        });
-    };
-
-    if (networkInterface instanceof ApolloLink) {
-      let count = 0;
-      this.networkInterface = {
-        query: createQuery((request: Request) => {
-          return (execute(
-            networkInterface as ApolloLink,
-            request,
-          ) as any) as Observable<ExecutionResult>;
-        }),
-        subscribe: (request: any, handler: any): string => {
-          if (!this.subscriptionMap) {
-            this.subscriptionMap = new Map<
-              string,
-              ZenObservable.Subscription
-            >();
-          }
-
-          const subscription = (execute(
-            networkInterface as ApolloLink,
-            request,
-          ) as any).subscribe({
-            next: (data: FetchResult) => handler(undefined, data),
-            error: (error: Error) => handler([error]),
-            complete: handler,
-          });
-
-          const id = count.toString();
-          this.subscriptionMap.set(id, subscription);
-          count++;
-          return id;
-        },
-        unsubscribe: (id: string): void => {
-          if (this.subscriptionMap) {
-            const subscription = this.subscriptionMap.get(id);
-            if (subscription) {
-              subscription.unsubscribe();
-            }
-          }
-        },
-      };
-    } else {
-      this.networkInterface = networkInterface
-        ? <NetworkInterface>networkInterface
-        : createNetworkInterface({ uri: '/graphql' });
-    }
+    this.link = link ? <ApolloLink>link : ApolloLink.empty();
 
     this.initialState = initialState ? initialState : {};
     this.addTypename = addTypename;
@@ -480,7 +413,7 @@ export default class ApolloClient implements DataProxy {
     }
 
     this.queryManager = new QueryManager({
-      networkInterface: this.networkInterface,
+      link: this.link,
       addTypename: this.addTypename,
       reducerConfig: this.reducerConfig,
       queryDeduplication: this.queryDeduplication,

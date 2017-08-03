@@ -1,16 +1,3 @@
-import {
-  Request,
-  createNetworkInterface,
-  NetworkInterface,
-  SubscriptionNetworkInterface,
-  HTTPFetchNetworkInterface,
-} from './transport/networkInterface';
-
-import {
-  createBatchingNetworkInterface,
-  HTTPBatchedNetworkInterface,
-} from './transport/batchedNetworkInterface';
-
 import { print } from 'graphql/language/printer';
 
 import {
@@ -61,9 +48,9 @@ import {
   FragmentMatcherInterface,
 } from './data/fragmentMatcher';
 
+export { GraphQLRequest as Request } from 'apollo-link-core';
+
 export {
-  createNetworkInterface,
-  createBatchingNetworkInterface,
   readQueryFromStore,
   writeQueryToStore,
   addTypenameToDocument,
@@ -74,7 +61,6 @@ export {
   getMutationDefinition,
   getFragmentDefinitions,
   FragmentMap,
-  Request,
   ApolloQueryResult,
   ApolloExecutionResult,
   toIdValue,
@@ -84,10 +70,6 @@ export {
   // custom network interfaces can turn query ASTs into query strings as needed.
   print as printAST,
   // Internal type definitions
-  NetworkInterface,
-  SubscriptionNetworkInterface,
-  HTTPFetchNetworkInterface,
-  HTTPBatchedNetworkInterface,
   FetchPolicy,
   WatchQueryOptions,
   MutationOptions,

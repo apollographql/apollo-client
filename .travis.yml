@@ -3,9 +3,9 @@ node_js:
   - "6"
 
 install:
+  - npm run bootstrap
   - npm install -g coveralls
   - npm prune
-  - npm install
 
 script:
   - npm run danger

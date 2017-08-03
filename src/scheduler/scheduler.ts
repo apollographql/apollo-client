@@ -46,13 +46,13 @@ export class QueryScheduler {
   }
 
   public checkInFlight(queryId: string) {
-    const querie = this.queryManager.queryStore.get(queryId);
+    const query = this.queryManager.queryStore.get(queryId);
 
     // XXX we do this because some legacy tests use a fake queryId. We should rewrite those tests
     return (
-      querie &&
-      querie.networkStatus !== NetworkStatus.ready &&
-      querie.networkStatus !== NetworkStatus.error
+      query &&
+      query.networkStatus !== NetworkStatus.ready &&
+      query.networkStatus !== NetworkStatus.error
     );
   }
 

@@ -11,7 +11,17 @@
 
 // @flow
 import ApolloClient, { createNetworkInterface, ApolloError } from "../src";
-import type { ApolloQueryResult, MiddlewareInterface, AfterwareInterface, Request, HTTPNetworkInterface } from "../src";
+import type {
+    ApolloQueryResult,
+    MiddlewareInterface,
+    AfterwareInterface,
+    Request,
+    HTTPNetworkInterface,
+    Store as ApolloState,
+    ApolloAction
+} from "../src";
+import {combineReducers, createStore, applyMiddleware} from 'redux';
+import type {Store as ReduxStore} from 'redux';
 import type { DocumentNode } from "graphql";
 import gql from "graphql-tag";
 
@@ -105,3 +115,20 @@ const result: ApolloQueryResult<mixed> = observable.result();
 
 // $ExpectError
 const current: Promise<ApolloQueryResult<mixed>> = observable.currentResult();
+
+const client5 = new ApolloClient({
+    networkInterface: networkInterface1
+});
+
+const reducer = combineReducers({
+    apollo: client5.reducer()
+});
+
+type State = {
+    apollo: ApolloState
+};
+
+const store: ReduxStore<State, ApolloAction> = createStore(
+    reducer,
+    applyMiddleware(client5.middleware())
+);

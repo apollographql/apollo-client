@@ -1123,9 +1123,7 @@ declare export class ApolloClient extends DataProxy {
   writeFragment(options: DataProxyWriteFragmentOptions): void,
   reducer(): (state: Store, action: ApolloAction) => Store,
   ___actionHookForDevTools(cb: Function): void,
-  middleware: () => (store: ApolloStore) => (next: any) => (
-    action: any,
-  ) => any,
+  middleware: <S, A>() => Middleware<S, A>,
   initStore(): void,
   resetStore(): void,
   getInitialState(): {

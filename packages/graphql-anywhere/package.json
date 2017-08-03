@@ -14,7 +14,10 @@
     "lint": "grunt tslint",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
-    "testonly": "mocha --reporter spec --full-trace lib/test/tests.js"
+    "testonly": "mocha --reporter spec --full-trace lib/test/tests.js",
+    "compile:browser": "browserify ./lib/src/index.js --i zen-observable-ts --i graphql-tag -o=./lib/index.js && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/index.min.js -- ./lib/index.js",
+    "filesize": "npm run compile:browser"
   },
   "repository": {
     "type": "git",
@@ -41,6 +44,7 @@
     "@types/react": "^15.0.14",
     "@types/react-dom": "^15.5.0",
     "async": "^2.0.0",
+    "browserify": "^14.4.0",
     "chai": "^4.1.0",
     "chai-as-promised": "^7.0.0",
     "es6-promise": "^4.0.5",
@@ -56,6 +60,7 @@
     "remap-istanbul": "^0.8.0",
     "source-map-support": "^0.4.0",
     "tslint": "^5.5.0",
-    "typescript": "^2.2.1"
+    "typescript": "^2.2.1",
+    "uglify": "^0.1.5"
   }
 }

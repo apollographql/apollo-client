@@ -30,6 +30,9 @@
     "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts && tslint --type-check -p tsconfig.json tests/*.ts",
     "prebuild": "npm run clean:dist",
+    "compile:browser": "browserify ./dist/src/index.js --i zen-observable-ts --i graphql-tag -o=./dist/index.js && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./dist/index.min.js -- ./dist/index.js",
+    "filesize": "npm run compile:browser",
     "build": "tsc -p .",
     "postbuild": "cp -R ./dist/src/. ./lib",
     "watch": "tsc -w -p .",
@@ -49,6 +52,7 @@
     "@types/graphql": "^0.9.4",
     "@types/mocha": "^2.2.31",
     "@types/sinon": "^2.3.2",
+    "browserify": "^14.4.0",
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
     "fetch-mock": "^5.11.0",
@@ -60,7 +64,8 @@
     "sinon": "^2.3.4",
     "source-map-support": "^0.4.5",
     "tslint": "^5.0.0",
-    "typescript": "^2.2.1"
+    "typescript": "^2.2.1",
+    "uglify": "^0.1.5"
   },
   "optionalDependencies": {
     "@types/zen-observable": "^0.5.1"

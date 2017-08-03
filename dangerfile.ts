@@ -1,4 +1,4 @@
-import { danger, fail, warn, message } from 'danger';
+// Removed import
 import { includes } from 'lodash';
 import * as fs from 'fs';
 
@@ -71,7 +71,7 @@ if (!isBot) {
 
   // When there are app-changes and it's not a PR marked as trivial, expect
   // there to be CHANGELOG changes.
-  const changelogChanges = includes(modified, 'CHANGELOG.md');
+  const changelogChanges = modified.some(x => x.indexOf('CHANGELOG') > -1);
   if (modifiedAppFiles.length > 0 && !trivialPR && !changelogChanges) {
     fail('No CHANGELOG added.');
   }

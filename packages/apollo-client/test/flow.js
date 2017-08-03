@@ -10,49 +10,65 @@
 */
 
 // @flow
-import ApolloClient, { createNetworkInterface, ApolloError } from "../src";
-import type { ApolloQueryResult, MiddlewareInterface, AfterwareInterface } from "../src";
-import type { DocumentNode } from "graphql";
-import gql from "graphql-tag";
+import ApolloClient, { createNetworkInterface, ApolloError } from '../src';
+import type {
+  ApolloQueryResult,
+  MiddlewareInterface,
+  AfterwareInterface,
+} from '../src';
+import type { DocumentNode } from 'graphql';
+import gql from 'graphql-tag';
 
-const query: DocumentNode = gql`{ foo }`;
-const mutation: DocumentNode = gql`mutation { foo }`;
+const query: DocumentNode = gql`
+  {
+    foo
+  }
+`;
+const mutation: DocumentNode = gql`
+  mutation {
+    foo
+  }
+`;
 
 // common errors
 
 // $ExpectError
-const client = new ApolloClient("localhost:3000");
+const client = new ApolloClient('localhost:3000');
 
 // $ExpectError
 const client1 = new ApolloClient({
   networkInterface: true,
 });
 
-const networkInterface1 = createNetworkInterface("localhost:3000");
+const networkInterface1 = createNetworkInterface('localhost:3000');
 
-const middleware: MiddlewareInterface[] = [{
-  applyMiddleware(req, next) {
-    const token = localStorage.getItem('token') || '';
-    if (!req.options.headers) {
-      req.options.headers = { authorization: token }
-    } else if (req.options.headers instanceof Headers) {
-      req.options.headers.set('authorization', token)
-    } else {
-      req.options.headers.authorization = token;
-    }
-    next();
-  }
-}];
+const middleware: MiddlewareInterface[] = [
+  {
+    applyMiddleware(req, next) {
+      const token = localStorage.getItem('token') || '';
+      if (!req.options.headers) {
+        req.options.headers = { authorization: token };
+      } else if (req.options.headers instanceof Headers) {
+        req.options.headers.set('authorization', token);
+      } else {
+        req.options.headers.authorization = token;
+      }
+      next();
+    },
+  },
+];
 networkInterface1.use(middleware);
 
-const afterware: AfterwareInterface[] = [{
-  applyAfterware({ response }, next) {
-    if (response.status === 401) {
+const afterware: AfterwareInterface[] = [
+  {
+    applyAfterware({ response }, next) {
+      if (response.status === 401) {
+        next();
+      }
       next();
-    }
-    next();
-  }
-}];
+    },
+  },
+];
 
 networkInterface1.useAfter(afterware);
 
@@ -75,7 +91,6 @@ const status: Promise<ApolloError | boolean> = data.then(({ data, error }) => {
   if (error) return error;
   return foo;
 });
-
 
 const observable = client2.watchQuery({ query });
 

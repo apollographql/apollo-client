@@ -153,7 +153,7 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools?: boolean;
       queryDeduplication?: boolean;
       fragmentMatcher?: FragmentMatcherInterface;
-    } = {}
+    } = {},
   ) {
     let { dataIdFromObject } = options;
     const {
@@ -176,7 +176,7 @@ export default class ApolloClient implements DataProxy {
     }
 
     const createQuery = (
-      getResult: (request: Request) => Observable<ExecutionResult>
+      getResult: (request: Request) => Observable<ExecutionResult>,
     ) => {
       let resolved = false;
       return (request: Request) =>
@@ -188,7 +188,7 @@ export default class ApolloClient implements DataProxy {
                 resolved = true;
               } else {
                 console.warn(
-                  'Apollo Client does not support multiple results from an Observable'
+                  'Apollo Client does not support multiple results from an Observable',
                 );
               }
             },
@@ -203,7 +203,7 @@ export default class ApolloClient implements DataProxy {
         query: createQuery((request: Request) => {
           return (execute(
             networkInterface as ApolloLink,
-            request
+            request,
           ) as any) as Observable<ExecutionResult>;
         }),
       };
@@ -216,7 +216,7 @@ export default class ApolloClient implements DataProxy {
       this.networkInterface = {
         ...networkInterface,
         query: createQuery(
-          (networkInterface as ObservableNetworkInterface).request
+          (networkInterface as ObservableNetworkInterface).request,
         ),
       };
     } else {
@@ -238,7 +238,7 @@ export default class ApolloClient implements DataProxy {
     if (ssrForceFetchDelay) {
       setTimeout(
         () => (this.disableNetworkFetches = false),
-        ssrForceFetchDelay
+        ssrForceFetchDelay,
       );
     }
 
@@ -255,7 +255,7 @@ export default class ApolloClient implements DataProxy {
           this.reducerConfig,
           this.initialState && this.initialState.data
             ? this.initialState.data
-            : {}
+            : {},
         );
 
     this.watchQuery = this.watchQuery.bind(this);
@@ -298,7 +298,7 @@ export default class ApolloClient implements DataProxy {
             console.debug(
               'Download the Apollo DevTools ' +
                 'for a better development experience: ' +
-                'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm'
+                'https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm',
             );
           }
         }
@@ -352,7 +352,7 @@ export default class ApolloClient implements DataProxy {
 
     if (options.fetchPolicy === 'cache-and-network') {
       throw new Error(
-        'cache-and-network fetchPolicy can only be used with watchQuery'
+        'cache-and-network fetchPolicy can only be used with watchQuery',
       );
     }
 
@@ -375,7 +375,7 @@ export default class ApolloClient implements DataProxy {
    * It takes options as an object with the following keys and values:
    */
   public mutate<T>(
-    options: MutationOptions<T>
+    options: MutationOptions<T>,
   ): Promise<ApolloExecutionResult<T>> {
     this.initQueryManager();
 

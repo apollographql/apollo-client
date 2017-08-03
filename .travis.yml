@@ -12,7 +12,7 @@ script:
   - npm test
 
     # test flow types (validity and use cases)
-  - npm run flow-check
+  - npm run type-check
 
     # run coverage and file size checks
   - npm run coverage

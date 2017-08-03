@@ -9,7 +9,7 @@ import type {
   ValueNode,
   SelectionNode,
   NameNode,
-} from "graphql";
+} from 'graphql';
 
 export interface Request {
   // causes flow errors
@@ -36,10 +36,7 @@ export interface MiddlewareRequest {
 }
 
 export interface MiddlewareInterface {
-  applyMiddleware(
-    request: MiddlewareRequest,
-    next: Function,
-  ): void,
+  applyMiddleware(request: MiddlewareRequest, next: Function): void,
 }
 
 export interface BatchMiddlewareRequest {
@@ -48,10 +45,7 @@ export interface BatchMiddlewareRequest {
 }
 
 export interface BatchMiddlewareInterface {
-  applyBatchMiddleware(
-    request: BatchMiddlewareRequest,
-    next: Function,
-  ): void,
+  applyBatchMiddleware(request: BatchMiddlewareRequest, next: Function): void,
 }
 export interface AfterwareResponse {
   response: Response,
@@ -59,10 +53,7 @@ export interface AfterwareResponse {
 }
 
 export interface AfterwareInterface {
-  applyAfterware(
-    response: AfterwareResponse,
-    next: Function,
-  ): any,
+  applyAfterware(response: AfterwareResponse, next: Function): any,
 }
 
 export interface BatchAfterwareResponse {
@@ -71,10 +62,7 @@ export interface BatchAfterwareResponse {
 }
 
 export interface BatchAfterwareInterface {
-  applyBatchAfterware(
-    response: BatchAfterwareResponse,
-    next: Function,
-  ): any,
+  applyBatchAfterware(response: BatchAfterwareResponse, next: Function): any,
 }
 
 export interface PrintedRequest {
@@ -92,8 +80,12 @@ export interface SubscriptionNetworkInterface {
   unsubscribe(id: Number): void,
 }
 
-export type NetworkMiddleware = Array<MiddlewareInterface> | Array<BatchMiddlewareInterface>;
-export type NetworkAfterware = Array<AfterwareInterface> | Array<BatchAfterwareInterface>;
+export type NetworkMiddleware =
+  | Array<MiddlewareInterface>
+  | Array<BatchMiddlewareInterface>;
+export type NetworkAfterware =
+  | Array<AfterwareInterface>
+  | Array<BatchAfterwareInterface>;
 
 declare export class HTTPNetworkInterface extends NetworkInterface {
   _uri: string,
@@ -125,8 +117,7 @@ declare export function createBatchingNetworkInterface(
   options: BatchingNetworkInterfaceOptions,
 ): HTTPNetworkInterface;
 
-declare export class HTTPBatchedNetworkInterface
-  extends BaseNetworkInterface {
+declare export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
   _middlewares: NetworkMiddleware,
   _afterwares: NetworkAfterware,
   constructor(
@@ -194,11 +185,11 @@ declare export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
 }
 
 export type FetchPolicy =
-  | "cache-first"
-  | "cache-and-network"
-  | "network-only"
-  | "cache-only"
-  | "standby";
+  | 'cache-first'
+  | 'cache-and-network'
+  | 'network-only'
+  | 'cache-only'
+  | 'standby';
 
 export type SubscribeToMoreOptions = {
   document: DocumentNode,
@@ -254,7 +245,7 @@ export interface SubscriptionOptions {
   },
 }
 
-export interface MutationOptions<T = { [key: string]: any}> {
+export interface MutationOptions<T = { [key: string]: any }> {
   mutation: DocumentNode,
   variables?: Object,
   optimisticResponse?: Object,
@@ -263,9 +254,7 @@ export interface MutationOptions<T = { [key: string]: any}> {
   update?: MutationUpdaterFn<T>,
 }
 
-export type QueryListener = (
-  queryStoreValue: QueryStoreValue,
-) => void;
+export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
 export type FetchType = number;
 export type PureQueryOptions = {
   query: DocumentNode,
@@ -282,7 +271,7 @@ export type ApolloQueryResult<T> = {
 };
 
 export type ApolloExecutionResult<T = { [key: string]: any }> = {
-  data: T;
+  data: T,
 };
 
 export type IdGetter = (value: Object) => string | null | void;
@@ -309,13 +298,13 @@ export interface StoreObject {
 }
 
 export interface IdValue {
-  type: "id",
+  type: 'id',
   id: string,
   generated: boolean,
 }
 
 export interface JsonValue {
-  type: "json",
+  type: 'json',
   json: any,
 }
 
@@ -344,9 +333,9 @@ declare export function isInlineFragment(
   selection: SelectionNode,
 ): InlineFragmentNode;
 
-declare export function graphQLResultHasError(result: ExecutionResult):
-  | number
-  | void;
+declare export function graphQLResultHasError(
+  result: ExecutionResult,
+): number | void;
 
 declare export function isIdValue(idObject: StoreValue): IdValue;
 
@@ -363,7 +352,7 @@ export type MutationQueryReducer<T> = (
   },
 ) => Object;
 
-export type MutationQueryReducersMap<T = { [key: string]: any}> = {
+export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>,
 };
 
@@ -399,20 +388,19 @@ export interface UpdateQueryOptions {
   variables?: Object,
 }
 
-declare export class ObservableQuery<T>
-  extends Observable<ApolloQueryResult<T>> {
+declare export class ObservableQuery<T> extends Observable<
+  ApolloQueryResult<T>,
+> {
   options: WatchQueryOptions,
   queryId: string,
   variables: {
     [key: string]: any,
   },
-  constructor(
-    data: {
-      scheduler: QueryScheduler,
-      options: WatchQueryOptions,
-      shouldSubscribe?: boolean,
-    },
-  ): this,
+  constructor(data: {
+    scheduler: QueryScheduler,
+    options: WatchQueryOptions,
+    shouldSubscribe?: boolean,
+  }): this,
   result(): Promise<ApolloQueryResult<T>>,
   currentResult(): ApolloCurrentResult<T>,
   getLastResult(): ApolloQueryResult<T>,
@@ -421,9 +409,7 @@ declare export class ObservableQuery<T>
     fetchMoreOptions: FetchMoreQueryOptions & FetchMoreOptions,
   ): Promise<ApolloQueryResult<T>>,
   subscribeToMore(options: SubscribeToMoreOptions): () => void,
-  setOptions(
-    opts: ModifiableWatchQueryOptions,
-  ): Promise<ApolloQueryResult<T>>,
+  setOptions(opts: ModifiableWatchQueryOptions): Promise<ApolloQueryResult<T>>,
   setVariables(
     variables: any,
     tryFetch?: boolean,
@@ -437,9 +423,9 @@ declare export class ObservableQuery<T>
 
 export type CleanupFunction = () => void;
 
-export type SubscriberFunction<T> = (observer: Observer<T>) =>
-  | Subscription
-  | CleanupFunction;
+export type SubscriberFunction<T> = (
+  observer: Observer<T>,
+) => Subscription | CleanupFunction;
 
 export interface Observer<T> {
   next?: (value: T) => void,
@@ -474,13 +460,17 @@ export interface MutationStoreValue {
 
 export type IntrospectionResultData = {
   ___schema: {
-    types: [{
-      kind: string,
-      name: string,
-      possibleTypes: [{
+    types: [
+      {
+        kind: string,
         name: string,
-      }],
-    }],
+        possibleTypes: [
+          {
+            name: string,
+          },
+        ],
+      },
+    ],
   },
 };
 
@@ -492,13 +482,10 @@ declare export class FragmentMatcherInterface {
   ): boolean,
 }
 
-declare export class IntrospectionFragmentMatcher
-  extends FragmentMatcherInterface {
-  constructor(
-    options?: {
-      introspectionQueryResultData?: IntrospectionResultData,
-    },
-  ): this,
+declare export class IntrospectionFragmentMatcher extends FragmentMatcherInterface {
+  constructor(options?: {
+    introspectionQueryResultData?: IntrospectionResultData,
+  }): this,
   match(
     idValue: IdValue,
     typeCondition: string,
@@ -506,8 +493,7 @@ declare export class IntrospectionFragmentMatcher
   ): boolean,
 }
 
-declare export class HeuristicFragmentMatcher
-  extends FragmentMatcherInterface {
+declare export class HeuristicFragmentMatcher extends FragmentMatcherInterface {
   constructor(): this,
   ensureReady(): Promise<void>,
   canBypassInit(): boolean,
@@ -546,29 +532,26 @@ export interface DataProxyWriteFragmentOptions {
 
 declare export class DataProxy {
   readQuery<QueryType>(options: DataProxyReadQueryOptions): QueryType,
-  readFragment<FragmentType>(options: DataProxyReadFragmentOptions):
-    | FragmentType
-    | null,
+  readFragment<FragmentType>(
+    options: DataProxyReadFragmentOptions,
+  ): FragmentType | null,
   writeQuery(options: DataProxyWriteQueryOptions): void,
   writeFragment(options: DataProxyWriteFragmentOptions): void,
 }
 
 declare export class TransactionDataProxy extends DataProxy {
-  constructor(
-    data: NormalizedCache,
-    reducerConfig: ApolloReducerConfig,
-  ): this,
+  constructor(data: NormalizedCache, reducerConfig: ApolloReducerConfig): this,
   finish(): Array<DataWrite>,
   readQuery<QueryType>(options: DataProxyReadQueryOptions): QueryType,
-  readFragment<FragmentType>(options: DataProxyReadFragmentOptions):
-    | FragmentType
-    | null,
+  readFragment<FragmentType>(
+    options: DataProxyReadFragmentOptions,
+  ): FragmentType | null,
   writeQuery(options: DataProxyWriteQueryOptions): void,
   writeFragment(options: DataProxyWriteFragmentOptions): void,
 }
 
 export type QueryResultAction = {
-  type: "APOLLO_QUERY_RESULT",
+  type: 'APOLLO_QUERY_RESULT',
   result: ExecutionResult,
   queryId: string,
   document: DocumentNode,
@@ -598,7 +581,7 @@ declare export function mutations(
 ): MutationStore;
 
 export interface QueryErrorAction {
-  type: "APOLLO_QUERY_ERROR",
+  type: 'APOLLO_QUERY_ERROR',
   error: Error,
   queryId: string,
   requestId: number,
@@ -606,7 +589,7 @@ export interface QueryErrorAction {
 }
 
 export interface QueryInitAction {
-  type: "APOLLO_QUERY_INIT",
+  type: 'APOLLO_QUERY_INIT',
   queryString: string,
   document: DocumentNode,
   variables: Object,
@@ -621,7 +604,7 @@ export interface QueryInitAction {
 }
 
 export interface QueryResultClientAction {
-  type: "APOLLO_QUERY_RESULT_CLIENT",
+  type: 'APOLLO_QUERY_RESULT_CLIENT',
   result: ExecutionResult,
   complete: boolean,
   queryId: string,
@@ -629,7 +612,7 @@ export interface QueryResultClientAction {
 }
 
 export interface QueryStopAction {
-  type: "APOLLO_QUERY_STOP",
+  type: 'APOLLO_QUERY_STOP',
   queryId: string,
 }
 
@@ -639,7 +622,7 @@ export type QueryWithUpdater = {
 };
 
 export interface MutationInitAction {
-  type: "APOLLO_MUTATION_INIT",
+  type: 'APOLLO_MUTATION_INIT',
   mutationString: string,
   mutation: DocumentNode,
   variables: Object,
@@ -654,7 +637,7 @@ export interface MutationInitAction {
 }
 
 export interface MutationResultAction {
-  type: "APOLLO_MUTATION_RESULT",
+  type: 'APOLLO_MUTATION_RESULT',
   result: ExecutionResult,
   document: DocumentNode,
   operationName: string | null,
@@ -668,25 +651,25 @@ export interface MutationResultAction {
 }
 
 export interface MutationErrorAction {
-  type: "APOLLO_MUTATION_ERROR",
+  type: 'APOLLO_MUTATION_ERROR',
   error: Error,
   mutationId: string,
 }
 
 export interface UpdateQueryResultAction {
-  type: "APOLLO_UPDATE_QUERY_RESULT",
+  type: 'APOLLO_UPDATE_QUERY_RESULT',
   variables: any,
   document: DocumentNode,
   newResult: Object,
 }
 
 export interface StoreResetAction {
-  type: "APOLLO_STORE_RESET",
+  type: 'APOLLO_STORE_RESET',
   observableQueryIds: string[],
 }
 
 export interface SubscriptionResultAction {
-  type: "APOLLO_SUBSCRIPTION_RESULT",
+  type: 'APOLLO_SUBSCRIPTION_RESULT',
   result: ExecutionResult,
   subscriptionId: number,
   variables: Object,
@@ -703,7 +686,7 @@ export interface DataWrite {
 }
 
 export interface WriteAction {
-  type: "APOLLO_WRITE",
+  type: 'APOLLO_WRITE',
   writes: Array<DataWrite>,
 }
 
@@ -867,11 +850,9 @@ export type ReadQueryOptions = {
   config?: ApolloReducerConfig,
 };
 
-export type DiffQueryAgainstStoreOptions =
-  & ReadQueryOptions
-  & {
-    returnPartialData?: boolean,
-  };
+export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
+  returnPartialData?: boolean,
+};
 
 export type CustomResolver = (
   rootValue: any,
@@ -914,11 +895,9 @@ declare export class QueryScheduler {
     [interval: number]: string[],
   },
   queryManager: QueryManager,
-  constructor(
-    queryManager: {
-      queryManager: QueryManager,
-    },
-  ): this,
+  constructor(queryManager: {
+    queryManager: QueryManager,
+  }): this,
   checkInFlight(queryId: string): boolean,
   fetchQuery<T>(
     queryId: string,
@@ -932,40 +911,29 @@ declare export class QueryScheduler {
   ): string,
   stopPollingQuery(queryId: string): void,
   fetchQueriesOnInterval<T>(interval: number): void,
-  addQueryOnInterval<T>(
-    queryId: string,
-    queryOptions: WatchQueryOptions,
-  ): void,
-  registerPollingQuery<T>(
-    queryOptions: WatchQueryOptions,
-  ): ObservableQuery<T>,
+  addQueryOnInterval<T>(queryId: string, queryOptions: WatchQueryOptions): void,
+  registerPollingQuery<T>(queryOptions: WatchQueryOptions): ObservableQuery<T>,
 }
 
-declare export function createApolloReducer(config: ApolloReducerConfig): (
-  state: Store,
-  action: ApolloAction,
-) => Store;
+declare export function createApolloReducer(
+  config: ApolloReducerConfig,
+): (state: Store, action: ApolloAction) => Store;
 
-declare export function createApolloStore(
-  init?: {
-    initialState?: any,
-    config?: ApolloReducerConfig,
-    reportCrashes?: boolean,
-  },
-): ApolloStore;
+declare export function createApolloStore(init?: {
+  initialState?: any,
+  config?: ApolloReducerConfig,
+  reportCrashes?: boolean,
+}): ApolloStore;
 
-declare export function createApolloReducer(config: ApolloReducerConfig): (
-  state: Store,
-  action: ApolloAction,
-) => Store;
+declare export function createApolloReducer(
+  config: ApolloReducerConfig,
+): (state: Store, action: ApolloAction) => Store;
 
-declare export function createApolloStore(
-  store?: {
-    initialState?: any,
-    config?: ApolloReducerConfig,
-    reportCrashes?: boolean,
-  },
-): ApolloStore;
+declare export function createApolloStore(store?: {
+  initialState?: any,
+  config?: ApolloReducerConfig,
+  reportCrashes?: boolean,
+}): ApolloStore;
 
 declare export class QueryManager {
   pollingTimers: {
@@ -975,28 +943,24 @@ declare export class QueryManager {
   store: ApolloStore,
   networkInterface: NetworkInterface,
   ssrMode: boolean,
-  constructor(
-    setup: {
-      networkInterface: NetworkInterface,
-      store: ApolloStore,
-      fragmentMatcher?: FragmentMatcherInterface,
-      reducerConfig?: ApolloReducerConfig,
-      addTypename?: boolean,
-      queryDeduplication?: boolean,
-      ssrMode?: boolean,
-    },
-  ): this,
+  constructor(setup: {
+    networkInterface: NetworkInterface,
+    store: ApolloStore,
+    fragmentMatcher?: FragmentMatcherInterface,
+    reducerConfig?: ApolloReducerConfig,
+    addTypename?: boolean,
+    queryDeduplication?: boolean,
+    ssrMode?: boolean,
+  }): this,
   broadcastNewStore(store: any): void,
-  mutate<T>(
-    mutationOpts: {
-      mutation: DocumentNode,
-      variables?: Object,
-      optimisticResponse?: Object,
-      updateQueries?: MutationQueryReducersMap<T>,
-      refetchQueries?: string[] | PureQueryOptions[],
-      update?: (proxy: DataProxy, mutationResult: Object) => void,
-    },
-  ): Promise<ApolloExecutionResult<T>>,
+  mutate<T>(mutationOpts: {
+    mutation: DocumentNode,
+    variables?: Object,
+    optimisticResponse?: Object,
+    updateQueries?: MutationQueryReducersMap<T>,
+    refetchQueries?: string[] | PureQueryOptions[],
+    update?: (proxy: DataProxy, mutationResult: Object) => void,
+  }): Promise<ApolloExecutionResult<T>>,
   fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
@@ -1052,11 +1016,9 @@ declare export class QueryManager {
     isOptimistic?: boolean,
   ): {
     previousResult: any,
-    variables:
-      | {
-          [key: string]: any,
-        }
-      | void,
+    variables: {
+      [key: string]: any,
+    } | void,
     document: DocumentNode,
   },
 }
@@ -1074,20 +1036,18 @@ declare export class ApolloClient extends DataProxy {
   fieldWithArgs: (fieldName: string, args?: Object) => string,
   version: string,
   queryDeduplication: boolean,
-  constructor(
-    options?: {
-      networkInterface?: NetworkInterface,
-      initialState?: any,
-      dataIdFromObject?: IdGetter,
-      ssrMode?: boolean,
-      ssrForceFetchDelay?: number,
-      addTypename?: boolean,
-      customResolvers?: CustomResolverMap,
-      connectToDevTools?: boolean,
-      queryDeduplication?: boolean,
-      fragmentMatcher?: FragmentMatcherInterface,
-    },
-  ): this,
+  constructor(options?: {
+    networkInterface?: NetworkInterface,
+    initialState?: any,
+    dataIdFromObject?: IdGetter,
+    ssrMode?: boolean,
+    ssrForceFetchDelay?: number,
+    addTypename?: boolean,
+    customResolvers?: CustomResolverMap,
+    connectToDevTools?: boolean,
+    queryDeduplication?: boolean,
+    fragmentMatcher?: FragmentMatcherInterface,
+  }): this,
   watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T>,
   query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>>,
   mutate<T>(options: MutationOptions<T>): Promise<ApolloExecutionResult<T>>,
@@ -1098,13 +1058,11 @@ declare export class ApolloClient extends DataProxy {
   writeFragment(options: DataProxyWriteFragmentOptions): void,
   reducer(): (state: Store, action: ApolloAction) => Store,
   ___actionHookForDevTools(cb: Function): void,
-  middleware: () => (store: ApolloStore) => (next: any) => (
-    action: any,
-  ) => any,
+  middleware: () => (store: ApolloStore) => (next: any) => (action: any) => any,
   initStore(): void,
   resetStore(): void,
   getInitialState(): {
     data: Object,
   },
 }
-declare export default typeof ApolloClient;
+declare export default typeof ApolloClient

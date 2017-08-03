@@ -1,11 +1,11 @@
 'use strict';
 
-module.exports = function (grunt) {
+module.exports = function(grunt) {
   grunt.initConfig({
     tslint: {
       options: {
         // can be a configuration object or a filepath to tslint.json
-        configuration: grunt.file.readJSON('tslint.json')
+        configuration: grunt.file.readJSON('tslint.json'),
       },
       files: {
         src: [
@@ -13,10 +13,10 @@ module.exports = function (grunt) {
           'test/**/*.ts',
           '!test/fixtures/**/*.ts',
           'benchmark/**/*.ts',
-        ]
-      }
-    }
-  })
+        ],
+      },
+    },
+  });
 
   grunt.loadNpmTasks('grunt-tslint');
-}
+};

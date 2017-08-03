@@ -1,5 +1,9 @@
-import { execute, ApolloLink, makePromise } from 'apollo-link-core';
-import { Request } from '../transport/networkInterface';
+import {
+  execute,
+  ApolloLink,
+  makePromise,
+  GraphQLRequest as Request,
+} from 'apollo-link-core';
 
 import { Deduplicator } from '../transport/Deduplicator';
 

@@ -8,6 +8,7 @@
     "lint-staged": "lint-staged",
     "filesize": "lerna run -- filesize && bundlesize",
     "type-check": "lerna run -- type-check",
+    "coverage": "lerna run -- coverage",
     "danger": "danger run --verbose"
   },
   "bundlesize": [

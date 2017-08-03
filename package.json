@@ -1,5 +1,5 @@
 {
- "private": true,
+  "private": true,
   "license": "MIT",
   "scripts": {
     "bootstrap": "npm i && lerna bootstrap",

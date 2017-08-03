@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
 - Move to `apollo-link-core` from `apollo-link` to reduce bundle size [PR #1955](https://github.com/apollographql/apollo-client/pull/1955)
 - Remove dependency on Redux as well as store reducers (update and updateQueries are still supported and should be used instead) [PR 1949](https://github.com/apollographql/apollo-client/pull/1949)
 - Introduce a new Cache API that makes it possible to plug in custom cache implementations into the client [PR 1921](https://github.com/apollographql/apollo-client/pull/1921)

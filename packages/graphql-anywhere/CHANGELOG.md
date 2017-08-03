@@ -1,5 +1,8 @@
 # Change log
 
+## vNEXT
+- Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
+
 ### v3.1.0
 - Add `directives` to the `info` argument, with information about all of the directives on the current field. [PR #52](https://github.com/apollographql/graphql-anywhere/pull/52) by [brysgo](https://github.com/brysgo) and [cesarsolorzano](https://github.com/cesarsolorzano)
 - Merging overlapping fragment and inline object fields [PR #67](https://github.com/apollographql/graphql-anywhere/pull/67) by [abergenw](https://github.com/abergenw)

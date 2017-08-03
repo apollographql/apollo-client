@@ -2,5 +2,5 @@
   "lerna": "2.0.0",
   "packages": ["packages/*"],
   "version": "independent",
-  "hoist": true
+  "hoist": false
 }

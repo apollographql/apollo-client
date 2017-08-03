@@ -10,18 +10,16 @@
 */
 
 // @flow
-import ApolloClient, { createNetworkInterface, ApolloError } from "../src";
+import ApolloClient, { createNetworkInterface, ApolloError } from '../src';
 import type {
   ApolloQueryResult,
   MiddlewareInterface,
   AfterwareInterface,
   Request,
   HTTPNetworkInterface,
-} from "../src";
-import { combineReducers, createStore, applyMiddleware } from "redux";
-import type { Store as ReduxStore } from "redux";
-import type { DocumentNode } from "graphql";
-import gql from "graphql-tag";
+} from '../src';
+import type { DocumentNode } from 'graphql';
+import gql from 'graphql-tag';
 
 const query: DocumentNode = gql`
   {
@@ -36,21 +34,21 @@ const mutation: DocumentNode = gql`
 // common errors
 
 // $ExpectError
-const client = new ApolloClient("localhost:3000");
+const client = new ApolloClient('localhost:3000');
 
 // $ExpectError
 const client1 = new ApolloClient({ networkInterface: true });
 
-const networkInterface1 = createNetworkInterface("localhost:3000");
+const networkInterface1 = createNetworkInterface('localhost:3000');
 
 const middleware: MiddlewareInterface[] = [
   {
     applyMiddleware(req, next) {
-      const token = localStorage.getItem("token") || "";
+      const token = localStorage.getItem('token') || '';
       if (!req.options.headers) {
         req.options.headers = { authorization: token };
       } else if (req.options.headers instanceof Headers) {
-        req.options.headers.set("authorization", token);
+        req.options.headers.set('authorization', token);
       } else {
         req.options.headers.authorization = token;
       }

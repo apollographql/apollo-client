@@ -20,7 +20,7 @@
     "compile:benchmark": "tsc -p tsconfig.test.json",
     "compile:coverage": "tsc -p tsconfig.coverage.json",
     "compile:test": "tsc -p tsconfig.test.json",
-    "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/apollo.umd.js --i graphql-tag -o=./dist/index.js && npm run minify:browser",
+    "compile:browser": "rm -rf ./dist && mkdir ./dist && browserify ./lib/apollo.umd.js --i graphql-tag --i graphql-anywhere --i apollo-link-core -o=./dist/index.js && npm run minify:browser",
     "minify:browser": "uglifyjs -c -m -o ./dist/index.min.js -- ./dist/index.js",
     "watch": "tsc -w",
     "watch:test": "tsc -p tsconfig.test.json -w",

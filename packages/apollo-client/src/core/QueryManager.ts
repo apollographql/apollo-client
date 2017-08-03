@@ -1,8 +1,5 @@
-import {
-  NetworkInterface,
-  SubscriptionNetworkInterface,
-  Request,
-} from '../transport/networkInterface';
+import { execute, ApolloLink, makePromise } from 'apollo-link-core';
+import { Request } from '../transport/networkInterface';
 
 import { Deduplicator } from '../transport/Deduplicator';
 
@@ -95,7 +92,7 @@ import { InMemoryCache } from '../data/inMemoryCache';
 export class QueryManager {
   public pollingTimers: { [queryId: string]: any };
   public scheduler: QueryScheduler;
-  public networkInterface: NetworkInterface;
+  public link: ApolloLink;
   public ssrMode: boolean;
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
@@ -147,7 +144,7 @@ export class QueryManager {
   private lastRequestId: { [queryId: string]: number } = {};
 
   constructor({
-    networkInterface,
+    link,
     reducerConfig = {},
     fragmentMatcher,
     addTypename = true,
@@ -156,7 +153,7 @@ export class QueryManager {
     initialCache,
     onBroadcast = () => undefined,
   }: {
-    networkInterface: NetworkInterface;
+    link: ApolloLink;
     fragmentMatcher?: FragmentMatcherInterface;
     reducerConfig?: ApolloReducerConfig;
     addTypename?: boolean;
@@ -167,8 +164,8 @@ export class QueryManager {
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
-    this.networkInterface = networkInterface;
-    this.deduplicator = new Deduplicator(networkInterface);
+    this.link = link;
+    this.deduplicator = new Deduplicator(link);
     this.reducerConfig = reducerConfig;
     this.pollingTimers = {};
     this.queryListeners = {};
@@ -275,66 +272,61 @@ export class QueryManager {
 
     this.broadcastQueries();
 
-    return new Promise<ApolloExecutionResult<T>>((resolve, reject) => {
-      this.networkInterface
-        .query(request)
-        .then(result => {
-          if (result.errors) {
-            const error = new ApolloError({
-              graphQLErrors: result.errors,
-            });
-
-            this.mutationStore.markMutationError(mutationId, error);
-            this.dataStore.markMutationComplete(mutationId);
-            this.broadcastQueries();
-
-            delete this.queryDocuments[mutationId];
-            reject(error);
-            return;
-          }
-
-          this.mutationStore.markMutationResult(mutationId);
-          this.dataStore.markMutationResult({
-            mutationId,
-            result,
-            document: mutation,
-            variables: variables || {},
-            updateQueries: generateUpdateQueriesInfo(),
-            update: updateWithProxyFn,
+    const observable = execute(this.link, request);
+    return makePromise(observable)
+      .then((result: ExecutionResult) => {
+        if (result.errors) {
+          const error = new ApolloError({
+            graphQLErrors: result.errors,
           });
-          this.dataStore.markMutationComplete(mutationId);
-          this.broadcastQueries();
 
-          if (typeof refetchQueries[0] === 'string') {
-            (refetchQueries as string[]).forEach(name => {
-              this.refetchQueryByName(name);
-            });
-          } else {
-            (refetchQueries as PureQueryOptions[]).forEach(pureQuery => {
-              this.query({
-                query: pureQuery.query,
-                variables: pureQuery.variables,
-                fetchPolicy: 'network-only',
-              });
-            });
-          }
-
-          delete this.queryDocuments[mutationId];
-          resolve(result as ApolloExecutionResult<T>);
-        })
-        .catch(err => {
-          this.mutationStore.markMutationError(mutationId, err);
+          this.mutationStore.markMutationError(mutationId, error);
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
 
           delete this.queryDocuments[mutationId];
-          reject(
-            new ApolloError({
-              networkError: err,
-            }),
-          );
+          throw error;
+        }
+
+        this.mutationStore.markMutationResult(mutationId);
+        this.dataStore.markMutationResult({
+          mutationId,
+          result,
+          document: mutation,
+          variables: variables || {},
+          updateQueries: generateUpdateQueriesInfo(),
+          update: updateWithProxyFn,
         });
-    });
+        this.dataStore.markMutationComplete(mutationId);
+        this.broadcastQueries();
+
+        if (typeof refetchQueries[0] === 'string') {
+          (refetchQueries as string[]).forEach(name => {
+            this.refetchQueryByName(name);
+          });
+        } else {
+          (refetchQueries as PureQueryOptions[]).forEach(pureQuery => {
+            this.query({
+              query: pureQuery.query,
+              variables: pureQuery.variables,
+              fetchPolicy: 'network-only',
+            });
+          });
+        }
+
+        delete this.queryDocuments[mutationId];
+        return result as ApolloExecutionResult<T>;
+      })
+      .catch((err: Error) => {
+        this.mutationStore.markMutationError(mutationId, err);
+        this.dataStore.markMutationComplete(mutationId);
+        this.broadcastQueries();
+
+        delete this.queryDocuments[mutationId];
+        throw new ApolloError({
+          networkError: err,
+        });
+      });
   }
 
   public fetchQuery<T>(
@@ -892,88 +884,88 @@ export class QueryManager {
     return queryId;
   }
 
-  public startGraphQLSubscription(
-    options: SubscriptionOptions,
-  ): Observable<any> {
-    const { query } = options;
-    let transformedDoc = query;
-    // Apply the query transformer if one has been provided.
-    if (this.addTypename) {
-      transformedDoc = addTypenameToDocument(transformedDoc);
-    }
+  // public startGraphQLSubscription(
+  //   options: SubscriptionOptions
+  // ): Observable<any> {
+  //   const { query } = options;
+  //   let transformedDoc = query;
+  //   // Apply the query transformer if one has been provided.
+  //   if (this.addTypename) {
+  //     transformedDoc = addTypenameToDocument(transformedDoc);
+  //   }
 
-    const variables = assign(
-      {},
-      getDefaultValues(getOperationDefinition(query)),
-      options.variables,
-    );
+  //   const variables = assign(
+  //     {},
+  //     getDefaultValues(getOperationDefinition(query)),
+  //     options.variables
+  //   );
 
-    const request: Request = {
-      query: transformedDoc,
-      variables,
-      operationName: getOperationName(transformedDoc),
-    };
+  //   const request: Request = {
+  //     query: transformedDoc,
+  //     variables,
+  //     operationName: getOperationName(transformedDoc),
+  //   };
 
-    let subId: number;
-    let observers: Observer<any>[] = [];
+  //   let subId: number;
+  //   let observers: Observer<any>[] = [];
 
-    return new Observable(observer => {
-      observers.push(observer);
+  //   return new Observable(observer => {
+  //     observers.push(observer);
 
-      // TODO REFACTOR: the result here is not a normal GraphQL result.
+  //     // TODO REFACTOR: the result here is not a normal GraphQL result.
 
-      // If this is the first observer, actually initiate the network subscription
-      if (observers.length === 1) {
-        const handler = (error: Error, result: any) => {
-          if (error) {
-            observers.forEach(obs => {
-              if (obs.error) {
-                obs.error(error);
-              }
-            });
-          } else {
-            this.dataStore.markSubscriptionResult(
-              subId,
-              { data: result },
-              transformedDoc,
-              variables,
-            );
-            this.broadcastQueries();
+  //     // If this is the first observer, actually initiate the network subscription
+  //     if (observers.length === 1) {
+  //       const handler = (error: Error, result: any) => {
+  //         if (error) {
+  //           observers.forEach(obs => {
+  //             if (obs.error) {
+  //               obs.error(error);
+  //             }
+  //           });
+  //         } else {
+  //           this.dataStore.markSubscriptionResult(
+  //             subId,
+  //             { data: result },
+  //             transformedDoc,
+  //             variables
+  //           );
+  //           this.broadcastQueries();
 
-            // It's slightly awkward that the data for subscriptions doesn't come from the store.
-            observers.forEach(obs => {
-              if (obs.next) {
-                obs.next(result);
-              }
-            });
-          }
-        };
+  //           // It's slightly awkward that the data for subscriptions doesn't come from the store.
+  //           observers.forEach(obs => {
+  //             if (obs.next) {
+  //               obs.next(result);
+  //             }
+  //           });
+  //         }
+  //       };
 
-        // QueryManager sets up the handler so the query can be transformed. Alternatively,
-        // pass in the transformer to the ObservableQuery.
-        subId = (this
-          .networkInterface as SubscriptionNetworkInterface).subscribe(
-          request,
-          handler,
-        );
-      }
+  //       // QueryManager sets up the handler so the query can be transformed. Alternatively,
+  //       // pass in the transformer to the ObservableQuery.
+  //       subId = (this
+  //         .networkInterface as SubscriptionNetworkInterface).subscribe(
+  //         request,
+  //         handler
+  //       );
+  //     }
 
-      return {
-        unsubscribe: () => {
-          observers = observers.filter(obs => obs !== observer);
+  //     return {
+  //       unsubscribe: () => {
+  //         observers = observers.filter(obs => obs !== observer);
 
-          // If we removed the last observer, tear down the network subscription
-          if (observers.length === 0) {
-            (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(
-              subId,
-            );
-          }
-        },
-        // Used in tests...
-        _networkSubscriptionId: subId,
-      } as Subscription;
-    });
-  }
+  //         // If we removed the last observer, tear down the network subscription
+  //         if (observers.length === 0) {
+  //           (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(
+  //             subId
+  //           );
+  //         }
+  //       },
+  //       // Used in tests...
+  //       _networkSubscriptionId: subId,
+  //     } as Subscription;
+  //   });
+  // }
 
   public removeQuery(queryId: string) {
     delete this.queryListeners[queryId];

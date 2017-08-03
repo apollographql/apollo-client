@@ -1,27 +1,16 @@
 {
   "rules": {
-    "align": [
-      false,
-      "parameters",
-      "arguments",
-      "statements"
-    ],
+    "align": [false, "parameters", "arguments", "statements"],
     "ban": false,
     "class-name": true,
     "curly": true,
     "eofline": true,
     "forin": true,
-    "indent": [
-      true,
-      "spaces"
-    ],
+    "indent": [true, "spaces"],
     "interface-name": false,
     "jsdoc-format": true,
     "label-position": true,
-    "max-line-length": [
-      true,
-      140
-    ],
+    "max-line-length": [true, 140],
     "member-access": true,
     "member-ordering": [
       true,
@@ -34,15 +23,7 @@
     "no-bitwise": true,
     "no-conditional-assignment": true,
     "no-consecutive-blank-lines": false,
-    "no-console": [
-      true,
-      "log",
-      "debug",
-      "info",
-      "time",
-      "timeEnd",
-      "trace"
-    ],
+    "no-console": [true, "log", "debug", "info", "time", "timeEnd", "trace"],
     "no-construct": true,
     "no-debugger": true,
     "no-duplicate-variable": true,
@@ -69,16 +50,9 @@
       "check-finally",
       "check-whitespace"
     ],
-    "quotemark": [
-      true,
-      "single",
-      "avoid-escape"
-    ],
+    "quotemark": [true, "single", "avoid-escape"],
     "radix": true,
-    "semicolon": [
-      true,
-      "always"
-    ],
+    "semicolon": [true, "always"],
     "switch-default": true,
     "trailing-comma": [
       true,
@@ -87,10 +61,7 @@
         "singleline": "never"
       }
     ],
-    "triple-equals": [
-      true,
-      "allow-null-check"
-    ],
+    "triple-equals": [true, "allow-null-check"],
     "typedef": [
       false,
       "call-signature",
@@ -117,9 +88,7 @@
         "variable-declaration": "space"
       }
     ],
-    "use-strict": [
-      false
-    ],
+    "use-strict": [false],
     "variable-name": [
       true,
       "check-format",

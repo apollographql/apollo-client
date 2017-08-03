@@ -13,9 +13,5 @@
     "allowSyntheticDefaultImports": true,
     "removeComments": true
   },
-  "files": [
-    "typings.d.ts",
-    "src/index.ts",
-    "test/tests.ts"
-   ]
+  "files": ["typings.d.ts", "src/index.ts", "test/tests.ts"]
 }

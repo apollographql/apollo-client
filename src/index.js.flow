@@ -24,7 +24,7 @@ export interface Request {
   operationName?: string | null,
 }
 
-declare export class NetworkInterface {
+export interface NetworkInterface {
   query(request: Request): Promise<ExecutionResult>,
 }
 
@@ -97,13 +97,14 @@ export interface SubscriptionNetworkInterface {
 export type NetworkMiddleware = Array<MiddlewareInterface> | Array<BatchMiddlewareInterface>;
 export type NetworkAfterware = Array<AfterwareInterface> | Array<BatchAfterwareInterface>;
 
-declare export class HTTPNetworkInterface extends NetworkInterface {
+declare export class HTTPNetworkInterface {
   _uri: string,
   _opts: RequestOptions,
   _middlewares: NetworkMiddleware,
   _afterwares: NetworkAfterware,
   use(middlewares: NetworkMiddleware): HTTPNetworkInterface,
   useAfter(afterwares: NetworkAfterware): HTTPNetworkInterface,
+  query(request: Request): Promise<ExecutionResult>
 }
 
 export interface BatchRequestAndOptions {
@@ -173,7 +174,7 @@ declare export function createNetworkInterface(
   secondArgOpts?: NetworkInterfaceOptions,
 ): HTTPNetworkInterface;
 
-declare export class BaseNetworkInterface extends NetworkInterface {
+declare export class BaseNetworkInterface {
   _middlewares: NetworkMiddleware,
   _afterwares: NetworkAfterware,
   _uri: string,

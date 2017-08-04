@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Convert network stack to links [PR #1993](https://github.com/apollographql/apollo-client/pull/1993)
 - Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
 ### 1.9.2
 - Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)

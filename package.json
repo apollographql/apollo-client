@@ -129,6 +129,6 @@
   },
   "optionalDependencies": {
     "@types/async": "2.0.40",
-    "@types/graphql": "0.9.4"
+    "@types/graphql": "0.10.2"
   }
 }

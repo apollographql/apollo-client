@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "apollo-fetch": "^0.6.0",
-    "apollo-link-core": "^0.1.1",
+    "apollo-link-core": "^0.1.2",
     "graphql": "^0.10.5"
   },
   "devDependencies": {

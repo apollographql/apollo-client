@@ -39,7 +39,7 @@
     "prepublishOnly": "npm run clean && npm run build"
   },
   "dependencies": {
-    "apollo-link-core": "^0.1.1"
+    "apollo-link-core": "^0.1.2"
   },
   "devDependencies": {
     "@types/chai": "^4.0.0",

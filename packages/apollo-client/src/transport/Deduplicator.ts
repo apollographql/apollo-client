@@ -1,4 +1,10 @@
-import { execute, makePromise, ApolloLink, Operation } from 'apollo-link-core';
+import {
+  execute,
+  makePromise,
+  ApolloLink,
+  Operation,
+  FetchResult,
+} from 'apollo-link-core';
 import { ExecutionResult } from 'graphql';
 import { print } from 'graphql/language/printer';
 
@@ -12,7 +18,7 @@ export class Deduplicator {
     this.inFlightRequestPromises = {};
   }
 
-  public queryLink(request: Operation) {
+  public queryLink(request: Operation): Promise<FetchResult> {
     return makePromise(execute(this.link, request));
   }
 

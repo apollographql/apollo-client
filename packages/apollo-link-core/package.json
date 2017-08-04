@@ -1,6 +1,6 @@
 {
   "name": "apollo-link-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Flexible, lightweight transport layer for GraphQL",
   "author": "Evans Hauser <evanshauser@gmail.com>",
   "contributors": [

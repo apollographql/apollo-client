@@ -1,5 +1,7 @@
 import { assert } from 'chai';
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import { Operation, ApolloLink, Observable } from 'apollo-link-core';
+
+import { mockSingleLink } from './mocks/mockLinks';
 import ApolloClient from '../src';
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 
@@ -208,7 +210,7 @@ describe('mutation results', () => {
   };
 
   let client: ApolloClient;
-  let networkInterface: any;
+  let link: any;
 
   type CustomMutationBehavior = {
     type: 'CUSTOM_MUTATION_RESULT';
@@ -218,7 +220,7 @@ describe('mutation results', () => {
   };
 
   function setupObsHandle(...mockedResponses: any[]) {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       {
         request: { query: queryWithTypename },
         result,
@@ -227,7 +229,7 @@ describe('mutation results', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
@@ -244,7 +246,7 @@ describe('mutation results', () => {
   }
 
   function setupDelayObsHandle(delay: number, ...mockedResponses: any[]) {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       {
         request: { query: queryWithTypename },
         result,
@@ -254,7 +256,7 @@ describe('mutation results', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
@@ -764,7 +766,7 @@ describe('mutation results', () => {
       },
     };
 
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       {
         request: { query: variableQuery, variables: variables1 },
         result: result1,
@@ -780,7 +782,7 @@ describe('mutation results', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -829,30 +831,36 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       addTypename: false,
-      networkInterface: {
-        query({ variables }) {
-          switch (count++) {
-            case 0:
-              assert.deepEqual<Object | undefined>(variables, { a: 1, b: 2 });
-              return Promise.resolve({ data: { result: 'hello' } });
-            case 1:
-              assert.deepEqual<Object | undefined>(variables, { a: 1, c: 3 });
-              return Promise.resolve({ data: { result: 'world' } });
-            case 2:
-              assert.deepEqual<Object | undefined>(variables, {
-                a: undefined,
-                b: 2,
-                c: 3,
-              });
-              return Promise.resolve({ data: { result: 'goodbye' } });
-            case 3:
-              assert.deepEqual(variables, {});
-              return Promise.resolve({ data: { result: 'moon' } });
-            default:
-              return Promise.reject(new Error('Too many network calls.'));
-          }
-        },
-      },
+      link: ApolloLink.from([
+        ({ variables }) =>
+          new Observable(observer => {
+            switch (count++) {
+              case 0:
+                assert.deepEqual<Object | undefined>(variables, { a: 1, b: 2 });
+                observer.next({ data: { result: 'hello' } });
+                return;
+              case 1:
+                assert.deepEqual<Object | undefined>(variables, { a: 1, c: 3 });
+                observer.next({ data: { result: 'world' } });
+                return;
+              case 2:
+                assert.deepEqual<Object | undefined>(variables, {
+                  a: undefined,
+                  b: 2,
+                  c: 3,
+                });
+                observer.next({ data: { result: 'goodbye' } });
+                return;
+              case 3:
+                assert.deepEqual(variables, {});
+                observer.next({ data: { result: 'moon' } });
+                return;
+              default:
+                observer.error(new Error('Too many network calls.'));
+                return;
+            }
+          }),
+      ]),
     });
 
     const mutation = gql`
@@ -900,34 +908,39 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       addTypename: false,
-      networkInterface: {
-        query({ variables }) {
-          switch (count++) {
-            case 0:
-              assert.deepEqual<Object | undefined>(variables, {
-                a: 1,
-                b: 'water',
-              });
-              return Promise.resolve({ data: { result: 'hello' } });
-            case 1:
-              assert.deepEqual<Object | undefined>(variables, {
-                a: 2,
-                b: 'cheese',
-                c: 3,
-              });
-              return Promise.resolve({ data: { result: 'world' } });
-            case 2:
-              assert.deepEqual<Object | undefined>(variables, {
-                a: 1,
-                b: 'cheese',
-                c: 3,
-              });
-              return Promise.resolve({ data: { result: 'goodbye' } });
-            default:
-              return Promise.reject(new Error('Too many network calls.'));
-          }
-        },
-      },
+      link: ApolloLink.from([
+        ({ variables }) =>
+          new Observable(observer => {
+            switch (count++) {
+              case 0:
+                assert.deepEqual<Object | undefined>(variables, {
+                  a: 1,
+                  b: 'water',
+                });
+                observer.next({ data: { result: 'hello' } });
+                return;
+              case 1:
+                assert.deepEqual<Object | undefined>(variables, {
+                  a: 2,
+                  b: 'cheese',
+                  c: 3,
+                });
+                observer.next({ data: { result: 'world' } });
+                return;
+              case 2:
+                assert.deepEqual<Object | undefined>(variables, {
+                  a: 1,
+                  b: 'cheese',
+                  c: 3,
+                });
+                observer.next({ data: { result: 'goodbye' } });
+                return;
+              default:
+                observer.error(new Error('Too many network calls.'));
+                return;
+            }
+          }),
+      ]),
     });
 
     const mutation = gql`
@@ -971,35 +984,40 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       addTypename: false,
-      networkInterface: {
-        query({ variables }) {
-          switch (count++) {
-            case 0:
-              assert.deepEqual<Object | undefined>(variables, {
-                a: 1,
-                b: 2,
-                c: null,
-              });
-              return Promise.resolve({ data: { result: 'hello' } });
-            case 1:
-              assert.deepEqual<Object | undefined>(variables, {
-                a: 1,
-                b: null,
-                c: 3,
-              });
-              return Promise.resolve({ data: { result: 'world' } });
-            case 2:
-              assert.deepEqual<Object | undefined>(variables, {
-                a: null,
-                b: null,
-                c: null,
-              });
-              return Promise.resolve({ data: { result: 'moon' } });
-            default:
-              return Promise.reject(new Error('Too many network calls.'));
-          }
-        },
-      },
+      link: ApolloLink.from([
+        ({ variables }) =>
+          new Observable(observer => {
+            switch (count++) {
+              case 0:
+                assert.deepEqual<Object | undefined>(variables, {
+                  a: 1,
+                  b: 2,
+                  c: null,
+                });
+                observer.next({ data: { result: 'hello' } });
+                return;
+              case 1:
+                assert.deepEqual<Object | undefined>(variables, {
+                  a: 1,
+                  b: null,
+                  c: 3,
+                });
+                observer.next({ data: { result: 'world' } });
+                return;
+              case 2:
+                assert.deepEqual<Object | undefined>(variables, {
+                  a: null,
+                  b: null,
+                  c: null,
+                });
+                observer.next({ data: { result: 'moon' } });
+                return;
+              default:
+                observer.error(new Error('Too many network calls.'));
+                return;
+            }
+          }),
+      ]),
     });
 
     const mutation = gql`

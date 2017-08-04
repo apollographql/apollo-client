@@ -234,17 +234,17 @@ describe('diffing queries against the store', () => {
       query {
         person {
           __typename
-          ...authorInfo
-          ...jediInfo
+          ...authorInfo2
+          ...jediInfo2
         }
       }
 
-      fragment authorInfo on Author {
+      fragment authorInfo2 on Author {
         firstName
         address
       }
 
-      fragment jediInfo on Jedi {
+      fragment jediInfo2 on Jedi {
         jedi
       }
     `;

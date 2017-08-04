@@ -1,4 +1,4 @@
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import { mockSingleLink } from './mocks/mockLinks';
 import gql from 'graphql-tag';
 import { assert } from 'chai';
 import ApolloClient, { toIdValue } from '../src';
@@ -52,13 +52,13 @@ describe('custom resolvers', () => {
     `;
 
     // We don't expect the item query to go to the server at all
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query: netListQuery },
       result: { data: listData },
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       customResolvers: {
         Query: {
           person: (_, args) => toIdValue(args['id']),

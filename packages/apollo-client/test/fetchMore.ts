@@ -1,7 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import { mockSingleLink } from './mocks/mockLinks';
 import ApolloClient from '../src';
 import { ObservableQuery } from '../src/core/ObservableQuery';
 import { NetworkStatus } from '../src/queries/networkStatus';
@@ -32,13 +32,13 @@ describe('updateQuery on a simple query', () => {
 
   it('triggers new result from updateQuery', () => {
     let latestResult: any = null;
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result,
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -95,7 +95,7 @@ describe('updateQuery on a query with required and optional variables', () => {
 
   it('triggers new result from updateQuery', () => {
     let latestResult: any = null;
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: {
         query,
         variables,
@@ -104,7 +104,7 @@ describe('updateQuery on a query with required and optional variables', () => {
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -203,11 +203,11 @@ describe('fetchMore on an observable query', () => {
   let latestResult: any = null;
 
   let client: ApolloClient;
-  let networkInterface: any;
+  let link: any;
   let sub: any;
 
   function setup(...mockedResponses: any[]) {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       {
         request: {
           query,
@@ -219,7 +219,7 @@ describe('fetchMore on an observable query', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -312,8 +312,8 @@ describe('fetchMore on an observable query', () => {
       });
   });
 
-  it('will set the network status to `fetchMore`', done => {
-    networkInterface = mockNetworkInterface(
+  it('will set the `network` status to `fetchMore`', done => {
+    link = mockSingleLink(
       { request: { query, variables }, result, delay: 5 },
       {
         request: { query, variables: variablesMore },
@@ -323,7 +323,7 @@ describe('fetchMore on an observable query', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -375,7 +375,7 @@ describe('fetchMore on an observable query', () => {
   });
 
   it('will get an error from `fetchMore` if thrown', done => {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       { request: { query, variables }, result, delay: 5 },
       {
         request: { query, variables: variablesMore },
@@ -385,7 +385,7 @@ describe('fetchMore on an observable query', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -490,11 +490,11 @@ describe('fetchMore on an observable query with connection', () => {
   let latestResult: any = null;
 
   let client: ApolloClient;
-  let networkInterface: any;
+  let link: any;
   let sub: any;
 
   function setup(...mockedResponses: any[]) {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       {
         request: {
           query,
@@ -506,7 +506,7 @@ describe('fetchMore on an observable query with connection', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -564,7 +564,7 @@ describe('fetchMore on an observable query with connection', () => {
   });
 
   it('will set the network status to `fetchMore`', done => {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       { request: { query, variables }, result, delay: 5 },
       {
         request: { query, variables: variablesMore },
@@ -574,7 +574,7 @@ describe('fetchMore on an observable query with connection', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -626,7 +626,7 @@ describe('fetchMore on an observable query with connection', () => {
   });
 
   it('will get an error from `fetchMore` if thrown', done => {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       { request: { query, variables }, result, delay: 5 },
       {
         request: { query, variables: variablesMore },
@@ -636,7 +636,7 @@ describe('fetchMore on an observable query with connection', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 

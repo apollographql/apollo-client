@@ -94,7 +94,7 @@ declare export class HTTPNetworkInterface {
   _afterwares: NetworkAfterware,
   use(middlewares: NetworkMiddleware): HTTPNetworkInterface,
   useAfter(afterwares: NetworkAfterware): HTTPNetworkInterface,
-  query(request: Request): Promise<ExecutionResult>
+  query(request: Request): Promise<ExecutionResult>,
 }
 
 export interface BatchRequestAndOptions {
@@ -213,7 +213,7 @@ export type SubscribeToMoreOptions = {
 
 export type MutationUpdaterFn<T = { [key: string]: any }> = (
   proxy: DataProxy,
-  mutationResult: ApolloExecutionResult<T>,
+  mutationResult: FetchResult<T>,
 ) => void;
 
 export interface ModifiableWatchQueryOptions {
@@ -271,7 +271,7 @@ export type ApolloQueryResult<T> = {
   stale: boolean,
 };
 
-export type ApolloExecutionResult<T = { [key: string]: any }> = {
+export type FetchResult<T = { [key: string]: any }> = {
   data: T,
 };
 
@@ -347,7 +347,7 @@ declare export function isJsonValue(jsonObject: StoreValue): JsonValue;
 export type MutationQueryReducer<T> = (
   previousResult: Object,
   options: {
-    mutationResult: ApolloExecutionResult<T>,
+    mutationResult: FetchResult<T>,
     queryName: string | null,
     queryVariables: Object,
   },
@@ -961,7 +961,7 @@ declare export class QueryManager {
     updateQueries?: MutationQueryReducersMap<T>,
     refetchQueries?: string[] | PureQueryOptions[],
     update?: (proxy: DataProxy, mutationResult: Object) => void,
-  }): Promise<ApolloExecutionResult<T>>,
+  }): Promise<FetchResult<T>>,
   fetchQuery<T>(
     queryId: string,
     options: WatchQueryOptions,
@@ -1051,7 +1051,7 @@ declare export class ApolloClient extends DataProxy {
   }): this,
   watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T>,
   query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>>,
-  mutate<T>(options: MutationOptions<T>): Promise<ApolloExecutionResult<T>>,
+  mutate<T>(options: MutationOptions<T>): Promise<FetchResult<T>>,
   subscribe(options: SubscriptionOptions): Observable<any>,
   readQuery<T>(options: DataProxyReadQueryOptions): T,
   readFragment<T>(options: DataProxyReadFragmentOptions): T | null,

@@ -26,7 +26,7 @@
     "watch:test": "tsc -p tsconfig.test.json -w",
     "bundle": "rollup -c",
     "postcompile": "npm run bundle",
-    "prepublish": "npm run compile",
+    "prepublishOnly": "npm run compile",
     "lint": "grunt tslint",
     "precoverage": "npm run compile:coverage",
     "coverage": "COV=1 istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",

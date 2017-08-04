@@ -2,14 +2,14 @@ import { QueryScheduler } from '../src/scheduler/scheduler';
 import { assert } from 'chai';
 import { QueryManager } from '../src/core/QueryManager';
 import { WatchQueryOptions } from '../src/core/watchQueryOptions';
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import { mockSingleLink } from './mocks/mockLinks';
 import { NetworkStatus } from '../src/queries/networkStatus';
 import gql from 'graphql-tag';
 
 describe('QueryScheduler', () => {
   it('should throw an error if we try to start polling a non-polling query', () => {
     const queryManager = new QueryManager({
-      networkInterface: mockNetworkInterface(),
+      link: mockSingleLink(),
       addTypename: false,
     });
 
@@ -54,12 +54,12 @@ describe('QueryScheduler', () => {
       pollInterval: 80,
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
     });
     const queryManager = new QueryManager({
-      networkInterface: networkInterface,
+      link: link,
       addTypename: false,
     });
     const scheduler = new QueryScheduler({
@@ -99,14 +99,14 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 20,
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: {
         query: queryOptions.query,
       },
       result: { data },
     });
     const queryManager = new QueryManager({
-      networkInterface: networkInterface,
+      link: link,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -148,12 +148,12 @@ describe('QueryScheduler', () => {
       query: myQuery,
       pollInterval: 20,
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
     });
     const queryManager = new QueryManager({
-      networkInterface,
+      link,
       addTypename: false,
     });
     const scheduler = new QueryScheduler({
@@ -189,12 +189,12 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 80,
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: queryOptions,
       error,
     });
     const queryManager = new QueryManager({
-      networkInterface,
+      link,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -208,8 +208,10 @@ describe('QueryScheduler', () => {
       error(errorVal) {
         assert(errorVal);
         const queryId = scheduler.intervalQueries[queryOptions.pollInterval][0];
-        assert.isFalse(scheduler.checkInFlight(queryId),
-            'Should be able to poll after an error')
+        assert.isFalse(
+          scheduler.checkInFlight(queryId),
+          'Should be able to poll after an error',
+        );
         subscription.unsubscribe();
         done();
       },
@@ -230,12 +232,12 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 80,
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: queryOptions,
       result: { errors },
     });
     const queryManager = new QueryManager({
-      networkInterface,
+      link,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -263,13 +265,13 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 10,
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
       delay: 20000,
     });
     const queryManager = new QueryManager({
-      networkInterface,
+      link,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -295,12 +297,12 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 10000,
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
     });
     const queryManager = new QueryManager({
-      networkInterface,
+      link,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -352,7 +354,7 @@ describe('QueryScheduler', () => {
       pollInterval: interval,
     };
     const queryManager = new QueryManager({
-      networkInterface: mockNetworkInterface(
+      link: mockSingleLink(
         {
           request: { query: query1 },
           result: { data: data1 },
@@ -407,7 +409,7 @@ describe('QueryScheduler', () => {
       },
     };
     const queryManager = new QueryManager({
-      networkInterface: mockNetworkInterface({
+      link: mockSingleLink({
         request: { query },
         result: { data },
       }),
@@ -455,12 +457,12 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 20,
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: queryOptions,
       result: { data },
     });
     const queryManager = new QueryManager({
-      networkInterface: networkInterface,
+      link: link,
       addTypename: false,
     });
     const scheduler = new QueryScheduler({

@@ -1,7 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import mockNetworkInterface from './mocks/mockNetworkInterface';
+import { mockSingleLink } from './mocks/mockLinks';
 import ApolloClient from '../src';
 import { MutationQueryReducersMap } from '../src/data/mutationResults';
 import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
@@ -101,7 +101,7 @@ describe('optimistic mutation results', () => {
   };
 
   let client: ApolloClient;
-  let networkInterface: any;
+  let link: any;
 
   type CustomMutationBehavior = {
     type: 'CUSTOM_MUTATION_RESULT';
@@ -111,7 +111,7 @@ describe('optimistic mutation results', () => {
   };
 
   function setup(...mockedResponses: any[]) {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       {
         request: { query },
         result,
@@ -120,7 +120,7 @@ describe('optimistic mutation results', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;
@@ -1092,7 +1092,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('will handle dependent updates', done => {
-      networkInterface = mockNetworkInterface(
+      link = mockSingleLink(
         {
           request: { query },
           result,
@@ -1144,7 +1144,7 @@ describe('optimistic mutation results', () => {
       } as MutationQueryReducersMap<IMutationResult>;
 
       client = new ApolloClient({
-        networkInterface,
+        link,
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
             return obj.__typename + obj.id;
@@ -1594,7 +1594,7 @@ describe('optimistic mutation results', () => {
     });
 
     it('will handle dependent updates', done => {
-      networkInterface = mockNetworkInterface(
+      link = mockSingleLink(
         {
           request: { query },
           result,
@@ -1663,7 +1663,7 @@ describe('optimistic mutation results', () => {
       };
 
       client = new ApolloClient({
-        networkInterface,
+        link,
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
             return obj.__typename + obj.id;
@@ -1802,10 +1802,10 @@ describe('optimistic mutation - githunt comments', () => {
   };
 
   let client: ApolloClient;
-  let networkInterface: any;
+  let link: any;
 
   function setup(...mockedResponses: any[]) {
-    networkInterface = mockNetworkInterface(
+    link = mockSingleLink(
       {
         request: {
           query: addTypenameToDocument(query),
@@ -1824,7 +1824,7 @@ describe('optimistic mutation - githunt comments', () => {
     );
 
     client = new ApolloClient({
-      networkInterface,
+      link,
       dataIdFromObject: (obj: any) => {
         if (obj.id && obj.__typename) {
           return obj.__typename + obj.id;

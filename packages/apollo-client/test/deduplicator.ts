@@ -1,8 +1,7 @@
-import mockNetworkInterface from './mocks/mockNetworkInterface';
 import gql from 'graphql-tag';
 import { assert } from 'chai';
 import ApolloClient, { toIdValue } from '../src';
-import { Request, NetworkInterface } from '../src/transport/networkInterface';
+import { Operation as Request, ApolloLink, Observable } from 'apollo-link-core';
 import { Deduplicator } from '../src/transport/Deduplicator';
 import { getOperationName } from '../src/queries/getFromAST';
 import { DocumentNode } from 'graphql';
@@ -32,14 +31,16 @@ describe('query deduplication', () => {
 
     let called = 0;
     const deduper = new Deduplicator(
-      {
-        query: () => {
-          called += 1;
-          return new Promise((resolve, reject) => {
-            setTimeout(resolve, 5);
-          });
-        },
-      } as any,
+      ApolloLink.from([
+        operation =>
+          new Observable(observer => {
+            called++;
+            const timer = setTimeout(() => observer.next(operation), 5);
+            return () => {
+              clearTimeout(timer);
+            };
+          }),
+      ]),
     );
 
     deduper.query(request1);
@@ -63,26 +64,24 @@ describe('query deduplication', () => {
 
     let called = 0;
     const deduper = new Deduplicator(
-      {
-        query: () => {
-          called += 1;
-          switch (called) {
-            case 1:
-              return new Promise((resolve, reject) => {
-                setTimeout(reject);
-              });
-            case 2:
-              return new Promise((resolve, reject) => {
-                setTimeout(resolve);
-              });
-            default:
-              return assert(
-                false,
-                'Should not have been called more than twice',
-              );
-          }
-        },
-      } as any,
+      ApolloLink.from([
+        operation =>
+          new Observable(observer => {
+            called++;
+            switch (called) {
+              case 1:
+                observer.error(new Error('case 1'));
+                return;
+              case 2:
+                observer.next(operation);
+                observer.complete();
+                return;
+              default:
+                assert(false, 'Should not have been called more than twice');
+            }
+            return;
+          }),
+      ]),
     );
 
     return deduper.query(request).catch(() => {
@@ -114,14 +113,16 @@ describe('query deduplication', () => {
 
     let called = 0;
     const deduper = new Deduplicator(
-      {
-        query: () => {
-          called += 1;
-          return new Promise((resolve, reject) => {
-            setTimeout(resolve, 5);
-          });
-        },
-      } as any,
+      ApolloLink.from([
+        operation =>
+          new Observable(observer => {
+            called++;
+            const timer = setTimeout(() => observer.next(operation), 5);
+            return () => {
+              clearTimeout(timer);
+            };
+          }),
+      ]),
     );
 
     deduper.query(request1);
@@ -152,14 +153,16 @@ describe('query deduplication', () => {
 
     let called = 0;
     const deduper = new Deduplicator(
-      {
-        query: () => {
-          called += 1;
-          return new Promise((resolve, reject) => {
-            setTimeout(resolve, 5);
-          });
-        },
-      } as any,
+      ApolloLink.from([
+        operation =>
+          new Observable(observer => {
+            called++;
+            const timer = setTimeout(() => observer.next(operation), 5);
+            return () => {
+              clearTimeout(timer);
+            };
+          }),
+      ]),
     );
 
     deduper.query(request1, false);

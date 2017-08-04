@@ -10,7 +10,7 @@ export interface GraphQLRequest {
 export interface Operation {
   query: DocumentNode;
   variables?: Record<string, any>;
-  operationName?: string;
+  operationName?: string | null;
   context?: Record<string, any>;
 }
 

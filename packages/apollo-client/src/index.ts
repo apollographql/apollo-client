@@ -39,7 +39,7 @@ import { ApolloError } from './errors/ApolloError';
 
 import ApolloClient from './ApolloClient';
 
-import { ApolloQueryResult, ApolloExecutionResult } from './core/types';
+import { ApolloQueryResult } from './core/types';
 
 import { toIdValue } from './data/storeUtils';
 
@@ -48,7 +48,7 @@ import {
   FragmentMatcherInterface,
 } from './data/fragmentMatcher';
 
-export { GraphQLRequest as Request } from 'apollo-link-core';
+export { Operation as Request } from 'apollo-link-core';
 
 export {
   readQueryFromStore,
@@ -62,7 +62,6 @@ export {
   getFragmentDefinitions,
   FragmentMap,
   ApolloQueryResult,
-  ApolloExecutionResult,
   toIdValue,
   IntrospectionFragmentMatcher,
   FragmentMatcherInterface,

@@ -2,7 +2,8 @@ import {
   execute,
   ApolloLink,
   makePromise,
-  GraphQLRequest as Request,
+  Operation as Request,
+  FetchResult,
 } from 'apollo-link-core';
 
 import { Deduplicator } from '../transport/Deduplicator';
@@ -13,7 +14,6 @@ import { assign } from '../util/assign';
 import {
   QueryListener,
   ApolloQueryResult,
-  ApolloExecutionResult,
   PureQueryOptions,
   FetchType,
 } from './types';
@@ -216,7 +216,7 @@ export class QueryManager {
     updateQueries?: MutationQueryReducersMap<T>;
     refetchQueries?: string[] | PureQueryOptions[];
     update?: (proxy: DataProxy, mutationResult: Object) => void;
-  }): Promise<ApolloExecutionResult<T>> {
+  }): Promise<FetchResult<T>> {
     if (!mutation) {
       throw new Error(
         'mutation option is required. You must specify your GraphQL document in the mutation option.',
@@ -277,60 +277,65 @@ export class QueryManager {
     this.broadcastQueries();
 
     const observable = execute(this.link, request);
-    return makePromise(observable)
-      .then((result: ExecutionResult) => {
-        if (result.errors) {
-          const error = new ApolloError({
-            graphQLErrors: result.errors,
-          });
+    return new Promise((resolve, reject) => {
+      makePromise(observable)
+        .then((result: ExecutionResult) => {
+          if (result.errors) {
+            const error = new ApolloError({
+              graphQLErrors: result.errors,
+            });
 
-          this.mutationStore.markMutationError(mutationId, error);
+            this.mutationStore.markMutationError(mutationId, error);
+            this.dataStore.markMutationComplete(mutationId);
+            this.broadcastQueries();
+
+            delete this.queryDocuments[mutationId];
+            reject(error);
+            return;
+          }
+
+          this.mutationStore.markMutationResult(mutationId);
+          this.dataStore.markMutationResult({
+            mutationId,
+            result,
+            document: mutation,
+            variables: variables || {},
+            updateQueries: generateUpdateQueriesInfo(),
+            update: updateWithProxyFn,
+          });
+          this.dataStore.markMutationComplete(mutationId);
+          this.broadcastQueries();
+
+          if (typeof refetchQueries[0] === 'string') {
+            (refetchQueries as string[]).forEach(name => {
+              this.refetchQueryByName(name);
+            });
+          } else {
+            (refetchQueries as PureQueryOptions[]).forEach(pureQuery => {
+              this.query({
+                query: pureQuery.query,
+                variables: pureQuery.variables,
+                fetchPolicy: 'network-only',
+              });
+            });
+          }
+
+          delete this.queryDocuments[mutationId];
+          resolve(result as FetchResult<T>);
+        })
+        .catch((err: Error) => {
+          this.mutationStore.markMutationError(mutationId, err);
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
 
           delete this.queryDocuments[mutationId];
-          throw error;
-        }
-
-        this.mutationStore.markMutationResult(mutationId);
-        this.dataStore.markMutationResult({
-          mutationId,
-          result,
-          document: mutation,
-          variables: variables || {},
-          updateQueries: generateUpdateQueriesInfo(),
-          update: updateWithProxyFn,
+          reject(
+            new ApolloError({
+              networkError: err,
+            }),
+          );
         });
-        this.dataStore.markMutationComplete(mutationId);
-        this.broadcastQueries();
-
-        if (typeof refetchQueries[0] === 'string') {
-          (refetchQueries as string[]).forEach(name => {
-            this.refetchQueryByName(name);
-          });
-        } else {
-          (refetchQueries as PureQueryOptions[]).forEach(pureQuery => {
-            this.query({
-              query: pureQuery.query,
-              variables: pureQuery.variables,
-              fetchPolicy: 'network-only',
-            });
-          });
-        }
-
-        delete this.queryDocuments[mutationId];
-        return result as ApolloExecutionResult<T>;
-      })
-      .catch((err: Error) => {
-        this.mutationStore.markMutationError(mutationId, err);
-        this.dataStore.markMutationComplete(mutationId);
-        this.broadcastQueries();
-
-        delete this.queryDocuments[mutationId];
-        throw new ApolloError({
-          networkError: err,
-        });
-      });
+    });
   }
 
   public fetchQuery<T>(

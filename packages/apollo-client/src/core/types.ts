@@ -19,14 +19,6 @@ export type ApolloQueryResult<T> = {
   // Those are thrown via the standard promise/observer catch mechanism.
 };
 
-export type ApolloExecutionResult<T = { [key: string]: any }> = {
-  data?: T;
-
-  // This type is different from the ExecutionResult type because it doesn't include errors.
-  // Those are thrown via the standard promise/observer catch mechanism.
-  // It also has a generic type
-};
-
 export enum FetchType {
   normal = 1,
   refetch = 2,

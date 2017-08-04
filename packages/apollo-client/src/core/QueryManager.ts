@@ -49,17 +49,7 @@ import { isProduction } from '../util/environment';
 
 import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
-import {
-  ExecutionResult,
-  DocumentNode,
-  // TODO REFACTOR: do we still need this??
-  // We need to import this here to allow TypeScript to include it in the definition file even
-  // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
-  // We need to disable the linter here because TSLint rightfully complains that this is unused.
-  /* tslint:disable */
-  SelectionSetNode,
-  /* tslint:enable */
-} from 'graphql';
+import { ExecutionResult, DocumentNode, SelectionSetNode } from 'graphql';
 
 import { print } from 'graphql/language/printer';
 
@@ -863,88 +853,72 @@ export class QueryManager {
     return queryId;
   }
 
-  // public startGraphQLSubscription(
-  //   options: SubscriptionOptions
-  // ): Observable<any> {
-  //   const { query } = options;
-  //   let transformedDoc = query;
-  //   // Apply the query transformer if one has been provided.
-  //   if (this.addTypename) {
-  //     transformedDoc = addTypenameToDocument(transformedDoc);
-  //   }
+  public startGraphQLSubscription(
+    options: SubscriptionOptions,
+  ): Observable<any> {
+    const { query } = options;
+    let transformedDoc = query;
+    // Apply the query transformer if one has been provided.
+    if (this.addTypename) {
+      transformedDoc = addTypenameToDocument(transformedDoc);
+    }
 
-  //   const variables = assign(
-  //     {},
-  //     getDefaultValues(getOperationDefinition(query)),
-  //     options.variables
-  //   );
+    const variables = assign(
+      {},
+      getDefaultValues(getOperationDefinition(query)),
+      options.variables,
+    );
 
-  //   const request: Request = {
-  //     query: transformedDoc,
-  //     variables,
-  //     operationName: getOperationName(transformedDoc),
-  //   };
+    const request: Request = {
+      query: transformedDoc,
+      variables,
+      operationName: getOperationName(transformedDoc),
+    };
 
-  //   let subId: number;
-  //   let observers: Observer<any>[] = [];
+    let sub: Subscription;
+    let observers: Observer<any>[] = [];
 
-  //   return new Observable(observer => {
-  //     observers.push(observer);
+    return new Observable(observer => {
+      observers.push(observer);
 
-  //     // TODO REFACTOR: the result here is not a normal GraphQL result.
+      // If this is the first observer, actually initiate the network subscription
+      if (observers.length === 1) {
+        const handler = {
+          next: (result: FetchResult) => {
+            this.dataStore.markSubscriptionResult(
+              result,
+              transformedDoc,
+              variables,
+            );
+            this.broadcastQueries();
 
-  //     // If this is the first observer, actually initiate the network subscription
-  //     if (observers.length === 1) {
-  //       const handler = (error: Error, result: any) => {
-  //         if (error) {
-  //           observers.forEach(obs => {
-  //             if (obs.error) {
-  //               obs.error(error);
-  //             }
-  //           });
-  //         } else {
-  //           this.dataStore.markSubscriptionResult(
-  //             subId,
-  //             { data: result },
-  //             transformedDoc,
-  //             variables
-  //           );
-  //           this.broadcastQueries();
+            // It's slightly awkward that the data for subscriptions doesn't come from the store.
+            observers.forEach(obs => {
+              if (obs.next) obs.next(result);
+            });
+          },
+          error: (error: Error) => {
+            observers.forEach(obs => {
+              if (obs.error) obs.error(error);
+            });
+          },
+        };
 
-  //           // It's slightly awkward that the data for subscriptions doesn't come from the store.
-  //           observers.forEach(obs => {
-  //             if (obs.next) {
-  //               obs.next(result);
-  //             }
-  //           });
-  //         }
-  //       };
+        sub = execute(this.link, request).subscribe(handler);
+      }
 
-  //       // QueryManager sets up the handler so the query can be transformed. Alternatively,
-  //       // pass in the transformer to the ObservableQuery.
-  //       subId = (this
-  //         .networkInterface as SubscriptionNetworkInterface).subscribe(
-  //         request,
-  //         handler
-  //       );
-  //     }
+      return {
+        unsubscribe: () => {
+          observers = observers.filter(obs => obs !== observer);
 
-  //     return {
-  //       unsubscribe: () => {
-  //         observers = observers.filter(obs => obs !== observer);
-
-  //         // If we removed the last observer, tear down the network subscription
-  //         if (observers.length === 0) {
-  //           (this.networkInterface as SubscriptionNetworkInterface).unsubscribe(
-  //             subId
-  //           );
-  //         }
-  //       },
-  //       // Used in tests...
-  //       _networkSubscriptionId: subId,
-  //     } as Subscription;
-  //   });
-  // }
+          // If we removed the last observer, tear down the network subscription
+          if (observers.length === 0 && sub) {
+            sub.unsubscribe();
+          }
+        },
+      };
+    });
+  }
 
   public removeQuery(queryId: string) {
     delete this.queryListeners[queryId];

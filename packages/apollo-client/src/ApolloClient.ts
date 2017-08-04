@@ -321,11 +321,11 @@ export default class ApolloClient implements DataProxy {
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  // public subscribe(options: SubscriptionOptions): Observable<any> {
-  //   this.initQueryManager();
+  public subscribe(options: SubscriptionOptions): Observable<any> {
+    this.initQueryManager();
 
-  //   return this.queryManager.startGraphQLSubscription(options);
-  // }
+    return this.queryManager.startGraphQLSubscription(options);
+  }
 
   /**
    * Tries to read some data from the store in the shape of the provided

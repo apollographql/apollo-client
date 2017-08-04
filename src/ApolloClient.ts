@@ -255,7 +255,9 @@ export default class ApolloClient implements DataProxy {
             networkInterface as ApolloLink,
             request,
           ) as any).subscribe({
-            next: (data: FetchResult) => handler(data.errors, data.data),
+            next: (data: FetchResult) => handler(undefined, data),
+            error: (error: Error) => handler([error]),
+            complete: handler,
           });
 
           const id = count.toString();

@@ -14,7 +14,7 @@
     "benchmark": "npm run compile:benchmark && node --stack-size=20000 lib/benchmark/index.js",
     "benchmark:inspect": "npm run compile:benchmark && node --stack-size=20000 --inspect --debug-brk lib/benchmark/index.js",
     "posttest": "npm run lint",
-    "filesize": "npm run compile:browser",
+    "filesize": "npm run compile && npm run compile:browser",
     "type-check": "flow check",
     "compile": "tsc",
     "compile:benchmark": "tsc -p tsconfig.test.json",

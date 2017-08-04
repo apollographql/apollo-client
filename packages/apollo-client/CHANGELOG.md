@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Convert network stack to links [PR #1993](https://github.com/apollographql/apollo-client/pull/1993)
 - Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
 - Remove dependency on Redux as well as store reducers (update and updateQueries are still supported and should be used instead) [PR 1949](https://github.com/apollographql/apollo-client/pull/1949)
 - Introduce a new Cache API that makes it possible to plug in custom cache implementations into the client [PR 1921](https://github.com/apollographql/apollo-client/pull/1921)

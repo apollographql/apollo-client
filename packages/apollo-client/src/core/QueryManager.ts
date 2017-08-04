@@ -636,24 +636,6 @@ export class QueryManager {
     options: WatchQueryOptions,
     shouldSubscribe = true,
   ): ObservableQuery<T> {
-    if ((options as any).returnPartialData) {
-      throw new Error(
-        'returnPartialData option is no longer supported since Apollo Client 1.0.',
-      );
-    }
-
-    if ((options as any).forceFetch) {
-      throw new Error(
-        'forceFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.',
-      );
-    }
-
-    if ((options as any).noFetch) {
-      throw new Error(
-        'noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.',
-      );
-    }
-
     if (options.fetchPolicy === 'standby') {
       throw new Error(
         'client.watchQuery cannot be called with fetchPolicy set to "standby"',
@@ -708,18 +690,6 @@ export class QueryManager {
 
     if ((options as any).pollInterval) {
       throw new Error('pollInterval option only supported on watchQuery.');
-    }
-
-    if ((options as any).forceFetch) {
-      throw new Error(
-        'forceFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.',
-      );
-    }
-
-    if ((options as any).noFetch) {
-      throw new Error(
-        'noFetch option is no longer supported since Apollo Client 1.0. Use fetchPolicy instead.',
-      );
     }
 
     if (typeof options.notifyOnNetworkStatusChange !== 'undefined') {

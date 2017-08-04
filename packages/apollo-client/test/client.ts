@@ -1449,39 +1449,11 @@ describe('client', () => {
       }, /returnPartialData/);
     });
 
-    it('errors when noFetch is used on query', () => {
-      const client = new ApolloClient();
-      assert.throws(() => {
-        client.query({ query, noFetch: true } as WatchQueryOptions);
-      }, /noFetch/);
-    });
-
-    it('errors when forceFetch is used on query', () => {
-      const client = new ApolloClient();
-      assert.throws(() => {
-        client.query({ query, forceFetch: true } as WatchQueryOptions);
-      }, /forceFetch/);
-    });
-
     it('errors when returnPartialData is used on watchQuery', () => {
       const client = new ApolloClient();
       assert.throws(() => {
         client.query({ query, returnPartialData: true } as WatchQueryOptions);
       }, /returnPartialData/);
-    });
-
-    it('errors when noFetch is used on watchQuery', () => {
-      const client = new ApolloClient();
-      assert.throws(() => {
-        client.query({ query, noFetch: true } as WatchQueryOptions);
-      }, /noFetch/);
-    });
-
-    it('errors when forceFetch is used on watchQuery', () => {
-      const client = new ApolloClient();
-      assert.throws(() => {
-        client.query({ query, forceFetch: true } as WatchQueryOptions);
-      }, /forceFetch/);
     });
   });
 

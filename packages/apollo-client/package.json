@@ -52,7 +52,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "apollo-link-core": "^0.2.0",
+    "apollo-link-core": "^0.1.2",
     "graphql": "^0.10.0",
     "graphql-anywhere": "^3.0.1",
     "graphql-tag": "^2.0.0",
@@ -65,6 +65,7 @@
     "@types/chai-as-promised": "0.0.31",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/lodash": "4.14.71",
+    "@types/graphql": "0.9.4",
     "@types/mocha": "2.2.41",
     "@types/node": "8.0.19",
     "@types/promises-a-plus": "0.0.27",
@@ -102,7 +103,6 @@
     "webpack-bundle-analyzer": "2.8.3"
   },
   "optionalDependencies": {
-    "@types/async": "2.0.40",
-    "@types/graphql": "0.9.4"
+    "@types/async": "2.0.40"
   }
 }

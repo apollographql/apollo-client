@@ -39,7 +39,7 @@
     "prepublishOnly": "npm run clean && npm run build"
   },
   "dependencies": {
-    "apollo-link-core": "^0.1.1",
+    "apollo-link-core": "^0.1.2",
     "apollo-link-http": "^0.1.1",
     "apollo-link-polling": "^0.1.1",
     "apollo-link-retry": "^0.1.1",

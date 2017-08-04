@@ -1,5 +1,11 @@
-import Observable from 'zen-observable-ts';
+import Observable, { ZenObservable } from 'zen-observable-ts';
 import { ExecutionResult, DocumentNode } from 'graphql';
+
+export type SubscriptionObserver<T> = ZenObservable.SubscriptionObserver<T>;
+export type Subscription = ZenObservable.Subscription;
+export type Observer<T> = ZenObservable.Observer<T>;
+export type Subscriber<T> = ZenObservable.Subscriber<T>;
+export type ObservableLike<T> = ZenObservable.ObservableLike<T>;
 
 export interface GraphQLRequest {
   query?: string | DocumentNode;

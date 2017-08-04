@@ -1,7 +1,4 @@
-import {
-  mockSubscriptionNetworkInterface,
-  MockedSubscription,
-} from './mocks/mockNetworkInterface';
+import { mockObservableLink, MockedSubscription } from './mocks/mockLinks';
 
 import { assert } from 'chai';
 
@@ -21,7 +18,7 @@ describe('GraphQL Subscriptions', () => {
     'Vyacheslav Kim',
     'Changping Chen',
     'Amanda Liu',
-  ].map(name => ({ result: { data: { user: { name: name } } }, delay: 10 }));
+  ].map(name => ({ result: { data: { user: { name } } }, delay: 10 }));
 
   let sub1: MockedSubscription;
   let options: any;
@@ -41,8 +38,6 @@ describe('GraphQL Subscriptions', () => {
           name: 'Changping Chen',
         },
       },
-      id: 0,
-      results: [...results],
     };
 
     options = {
@@ -71,8 +66,6 @@ describe('GraphQL Subscriptions', () => {
           name: 'Changping Chen',
         },
       },
-      id: 0,
-      results: [...results],
     };
 
     defaultOptions = {
@@ -87,61 +80,61 @@ describe('GraphQL Subscriptions', () => {
   });
 
   it('should start a subscription on network interface and unsubscribe', done => {
-    const network = mockSubscriptionNetworkInterface([defaultSub1]);
+    const link = mockObservableLink(defaultSub1);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
-      networkInterface: network,
+      link,
       addTypename: false,
     });
 
+    let count = 0;
     const sub = client.subscribe(defaultOptions).subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result.data);
+        count++;
+        assert.deepEqual(result, results[0].result);
 
         // Test unsubscribing
+        if (count > 1) {
+          throw new Error('next fired after unsubscribing');
+        }
         sub.unsubscribe();
-        assert.equal(Object.keys(network.mockedSubscriptionsById).length, 0);
-
         done();
       },
     });
 
-    const id = (sub as any)._networkSubscriptionId;
-    network.fireResult(id);
-
-    assert.equal(Object.keys(network.mockedSubscriptionsById).length, 1);
+    link.simulateResult(results[0]);
   });
 
   it('should subscribe with default values', done => {
-    const network = mockSubscriptionNetworkInterface([sub1]);
+    const link = mockObservableLink(sub1);
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
-      networkInterface: network,
+      link,
       addTypename: false,
     });
 
+    let count = 0;
     const sub = client.subscribe(options).subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result.data);
+        assert.deepEqual(result, results[0].result);
 
         // Test unsubscribing
+        if (count > 1) {
+          throw new Error('next fired after unsubscribing');
+        }
         sub.unsubscribe();
-        assert.equal(Object.keys(network.mockedSubscriptionsById).length, 0);
 
         done();
       },
     });
 
-    const id = (sub as any)._networkSubscriptionId;
-    network.fireResult(id);
-
-    assert.equal(Object.keys(network.mockedSubscriptionsById).length, 1);
+    link.simulateResult(results[0]);
   });
 
   it('should multiplex subscriptions', done => {
-    const network = mockSubscriptionNetworkInterface([sub1]);
+    const link = mockObservableLink(sub1);
     const queryManager = new QueryManager({
-      networkInterface: network,
+      link,
       addTypename: false,
     });
 
@@ -151,7 +144,7 @@ describe('GraphQL Subscriptions', () => {
 
     const sub = obs.subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result.data);
+        assert.deepEqual(result, results[0].result);
         counter++;
         if (counter === 2) {
           done();
@@ -162,7 +155,7 @@ describe('GraphQL Subscriptions', () => {
     // Subscribe again. Should also receive the same result.
     const resub = obs.subscribe({
       next(result) {
-        assert.deepEqual(result, results[0].result.data);
+        assert.deepEqual(result, results[0].result);
         counter++;
         if (counter === 2) {
           done();
@@ -170,21 +163,20 @@ describe('GraphQL Subscriptions', () => {
       },
     }) as any;
 
-    const id = sub._networkSubscriptionId;
-    network.fireResult(id);
+    link.simulateResult(results[0]);
   });
 
   it('should receive multiple results for a subscription', done => {
-    const network = mockSubscriptionNetworkInterface([sub1]);
+    const link = mockObservableLink(sub1);
     let numResults = 0;
     const queryManager = new QueryManager({
-      networkInterface: network,
+      link,
       addTypename: false,
     });
 
     const sub = queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
-        assert.deepEqual(result, results[numResults].result.data);
+        assert.deepEqual(result, results[numResults].result);
         numResults++;
         if (numResults === 4) {
           done();
@@ -192,10 +184,8 @@ describe('GraphQL Subscriptions', () => {
       },
     }) as any;
 
-    const id = sub._networkSubscriptionId;
-
     for (let i = 0; i < 4; i++) {
-      network.fireResult(id);
+      link.simulateResult(results[i]);
     }
   });
 });

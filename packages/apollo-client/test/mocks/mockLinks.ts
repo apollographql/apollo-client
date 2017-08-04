@@ -6,6 +6,7 @@ import {
   execute,
   FetchResult,
   Observable,
+  Observer,
 } from 'apollo-link-core';
 
 import { print } from 'graphql/language/printer';
@@ -18,12 +19,11 @@ export function mockSingleLink(
   return new MockLink(mockedResponses);
 }
 
-// export function mockSubscriptionLink(
-//   mockedSubscriptions: MockedSubscription[],
-//   ...mockedResponses: MockedResponse[]
-// ): MockSubscriptionLink {
-//   return new MockSubscriptionLink(mockedSubscriptions, mockedResponses);
-// }
+export function mockObservableLink(
+  mockedSubscription: MockedSubscription,
+): MockSubscriptionLink {
+  return new MockSubscriptionLink(mockedSubscription);
+}
 
 export interface MockedResponse {
   request: Operation;
@@ -40,8 +40,6 @@ export interface MockedSubscriptionResult {
 
 export interface MockedSubscription {
   request: Operation;
-  results?: MockedSubscriptionResult[];
-  id?: number;
 }
 
 export class MockLink extends ApolloLink {
@@ -99,94 +97,31 @@ export class MockLink extends ApolloLink {
   }
 }
 
-// export class MockSubscriptionLink extends MockLink {
-//   public mockedSubscriptionsByKey: { [key: string]: MockedSubscription[] } = {};
-//   public mockedSubscriptionsById: { [id: number]: MockedSubscription } = {};
-//   public handlersById: { [id: number]: (error: any, result: any) => void } = {};
-//   public subId: number;
+export class MockSubscriptionLink extends ApolloLink {
+  public mockedSubscription: MockedSubscription;
+  private observer: Observer<any>;
 
-//   constructor(
-//     mockedSubscriptions: MockedSubscription[],
-//     mockedResponses: MockedResponse[],
-//   ) {
-//     super(mockedResponses);
-//     this.subId = 0;
-//     mockedSubscriptions.forEach(sub => {
-//       this.addMockedSubscription(sub);
-//     });
-//   }
-//   public generateSubscriptionId() {
-//     const requestId = this.subId;
-//     this.subId++;
-//     return requestId;
-//   }
+  constructor(mockedSubscription: MockedSubscription) {
+    super();
+    this.mockedSubscription = mockedSubscription;
+  }
 
-//   public addMockedSubscription(mockedSubscription: MockedSubscription) {
-//     const key = requestToKey(mockedSubscription.request);
-//     if (mockedSubscription.id === undefined) {
-//       mockedSubscription.id = this.generateSubscriptionId();
-//     }
+  public request(operation: Operation) {
+    return new Observable<FetchResult>(observer => {
+      this.observer = observer;
+    });
+  }
 
-//     let mockedSubs = this.mockedSubscriptionsByKey[key];
-//     if (!mockedSubs) {
-//       mockedSubs = [];
-//       this.mockedSubscriptionsByKey[key] = mockedSubs;
-//     }
-//     mockedSubs.push(mockedSubscription);
-//   }
+  public simulateResult(result: MockedSubscriptionResult) {
+    const { observer } = this;
+    setTimeout(() => {
+      if (result.result && !result.error && observer.next)
+        observer.next(result.result);
 
-//   public subscribe(
-//     request: Operation,
-//     handler: (error: any, result: any) => void,
-//   ): number {
-//     const parsedRequest: Operation = {
-//       query: request.query,
-//       variables: request.variables,
-//     };
-//     const key = requestToKey(parsedRequest);
-//     if (this.mockedSubscriptionsByKey.hasOwnProperty(key)) {
-//       const subscription = this.mockedSubscriptionsByKey[key].shift()!;
-//       const id = subscription.id!;
-//       this.handlersById[id] = handler;
-//       this.mockedSubscriptionsById[id] = subscription;
-//       return id;
-//     } else {
-//       throw new Error(
-//         'Network interface does not have subscription associated with this request.',
-//       );
-//     }
-//   }
-
-//   public fireResult(id: number) {
-//     const handler = this.handlersById[id];
-//     if (this.mockedSubscriptionsById.hasOwnProperty(id.toString())) {
-//       const subscription = this.mockedSubscriptionsById[id];
-//       if (subscription.results!.length === 0) {
-//         throw new Error(
-//           `No more mocked subscription responses for the query: ` +
-//             `${print(subscription.request.query)}, variables: ${JSON.stringify(
-//               subscription.request.variables,
-//             )}`,
-//         );
-//       }
-//       const response = subscription.results!.shift()!;
-//       setTimeout(() => {
-//         handler(
-//           response.error,
-//           response.result ? response.result.data : undefined,
-//         );
-//       }, response.delay ? response.delay : 0);
-//     } else {
-//       throw new Error(
-//         'Network interface does not have subscription associated with this id.',
-//       );
-//     }
-//   }
-
-//   public unsubscribe(id: number) {
-//     delete this.mockedSubscriptionsById[id];
-//   }
-// }
+      if (result.error && observer.error) observer.error(result.error);
+    }, result.delay || 0);
+  }
+}
 
 function requestToKey(request: Operation): string {
   const queryString = request.query && print(request.query);

@@ -69,7 +69,6 @@ export class DataStore {
   }
 
   public markSubscriptionResult(
-    subscriptionId: number,
     result: ExecutionResult,
     document: DocumentNode,
     variables: any,
@@ -77,8 +76,6 @@ export class DataStore {
     // the subscription interface should handle not sending us results we no longer subscribe to.
     // XXX I don't think we ever send in an object with errors, but we might in the future...
     if (!graphQLResultHasError(result)) {
-      // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
-      // write to "the" store?
       this.cache.writeResult({
         result: result.data,
         dataId: 'ROOT_SUBSCRIPTION',

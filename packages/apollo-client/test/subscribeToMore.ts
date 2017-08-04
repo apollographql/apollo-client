@@ -1,11 +1,24 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import { mockSubscriptionNetworkInterface } from './mocks/mockNetworkInterface';
+import {
+  mockSingleLink,
+  mockObservableLink,
+  MockedSubscription,
+} from './mocks/mockLinks';
 
 import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
+
+import { DocumentNode, OperationDefinitionNode } from 'graphql';
+
+import { ApolloLink, Operation } from 'apollo-link-core';
+
+const isSub = (operation: Operation) =>
+  (operation.query as DocumentNode).definitions
+    .filter(x => x.kind === 'OperationDefinition')
+    .some((x: OperationDefinitionNode) => x.operation === 'subscription');
 
 describe('subscribeToMore', () => {
   const query = gql`
@@ -26,7 +39,7 @@ describe('subscribeToMore', () => {
   const req1 = { request: { query }, result };
 
   const results = ['Dahivat Pandya', 'Amanda Liu'].map(name => ({
-    result: { data: { name: name } },
+    result: { data: { name } },
     delay: 10,
   }));
 
@@ -38,13 +51,11 @@ describe('subscribeToMore', () => {
         }
       `,
     },
-    id: 0,
-    results: [...results],
   };
 
   const results2 = [
-    { error: new Error('You cant touch this'), delay: 10 },
     { result: { data: { name: 'Amanda Liu' } }, delay: 10 },
+    { error: new Error('You cant touch this'), delay: 10 },
   ];
 
   const sub2 = {
@@ -55,8 +66,6 @@ describe('subscribeToMore', () => {
         }
       `,
     },
-    id: 0,
-    results: [...results2],
   };
 
   const results3 = [
@@ -72,40 +81,23 @@ describe('subscribeToMore', () => {
         }
       `,
     },
-    id: 0,
-    results: [...results3],
-  };
-
-  const results4 = ['Vyacheslav Kim', 'Changping Chen'].map(name => ({
-    result: { data: { name: name } },
-    delay: 10,
-  }));
-
-  const sub4 = {
-    request: {
-      query: gql`
-        subscription newValues {
-          name
-        }
-      `,
-    },
-    id: 0,
-    results: [...results4],
   };
 
   it('triggers new result from subscription data', done => {
     let latestResult: any = null;
-    const networkInterface = mockSubscriptionNetworkInterface([sub1], req1);
+    const wSLink = mockObservableLink(sub1);
+    const httpLink = mockSingleLink(req1);
+
+    const link = ApolloLink.split(isSub, wSLink, httpLink);
     let counter = 0;
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
-    const obsHandle = client.watchQuery({
-      query,
-    });
+    const obsHandle = client.watchQuery({ query });
+
     const sub = obsHandle.subscribe({
       next(queryResult) {
         latestResult = queryResult;
@@ -137,17 +129,21 @@ describe('subscribeToMore', () => {
     }, 50);
 
     for (let i = 0; i < 2; i++) {
-      networkInterface.fireResult(0); // 0 is the id of the subscription for the NI
+      wSLink.simulateResult(results[i]);
     }
   });
 
   it('calls error callback on error', done => {
     let latestResult: any = null;
-    const networkInterface = mockSubscriptionNetworkInterface([sub2], req1);
+    const wSLink = mockObservableLink(sub2);
+    const httpLink = mockSingleLink(req1);
+
+    const link = ApolloLink.split(isSub, wSLink, httpLink);
+
     let counter = 0;
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -179,29 +175,34 @@ describe('subscribeToMore', () => {
 
     setTimeout(() => {
       sub.unsubscribe();
-      assert.equal(counter, 2);
       assert.deepEqual(latestResult, {
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
         stale: false,
       });
+      assert.equal(counter, 2);
       assert.equal(errorCount, 1);
       done();
     }, 50);
 
     for (let i = 0; i < 2; i++) {
-      networkInterface.fireResult(0); // 0 is the id of the subscription for the NI
+      wSLink.simulateResult(results2[i]);
     }
   });
 
   it('prints unhandled subscription errors to the console', done => {
     let latestResult: any = null;
-    const networkInterface = mockSubscriptionNetworkInterface([sub3], req1);
+
+    const wSLink = mockObservableLink(sub3);
+    const httpLink = mockSingleLink(req1);
+
+    const link = ApolloLink.split(isSub, wSLink, httpLink);
+
     let counter = 0;
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -228,26 +229,26 @@ describe('subscribeToMore', () => {
         }
       `,
       updateQuery: (prev, { subscriptionData }) => {
-        return { entry: { value: subscriptionData.data.name } };
+        throw new Error('should not be called because of initial error');
       },
     });
 
     setTimeout(() => {
       sub.unsubscribe();
-      assert.equal(counter, 2);
       assert.deepEqual(latestResult, {
-        data: { entry: { value: 'Amanda Liu' } },
+        data: { entry: { value: 1 } },
         loading: false,
         networkStatus: 7,
         stale: false,
       });
+      assert.equal(counter, 1);
       assert.equal(errorCount, 1);
       console.error = consoleErr;
       done();
     }, 50);
 
     for (let i = 0; i < 2; i++) {
-      networkInterface.fireResult(0); // 0 is the id of the subscription for the NI
+      wSLink.simulateResult(results3[i]);
     }
   });
   // TODO add a test that checks that subscriptions are cancelled when obs is unsubscribed from.

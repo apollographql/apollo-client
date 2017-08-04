@@ -59,6 +59,6 @@ import './queryTransform';
 import './readFromStore';
 import './roundtrip';
 import './scheduler';
-// import './subscribeToMore';
+import './subscribeToMore';
 import './warnOnce';
 import './writeToStore';

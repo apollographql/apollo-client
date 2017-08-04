@@ -1,4 +1,4 @@
-import { MockedResponse } from './mockNetworkInterface';
+import { MockedResponse } from './mockLinks';
 
 import mockQueryManager from './mockQueryManager';
 

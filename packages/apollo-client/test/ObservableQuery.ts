@@ -4,21 +4,20 @@ import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
 import { ExecutionResult } from 'graphql';
+import { Operation, ApolloLink, Observable } from 'apollo-link-core';
 
 import { QueryManager } from '../src/core/QueryManager';
 import ApolloClient from '../src/ApolloClient';
 
 import mockQueryManager from './mocks/mockQueryManager';
 import mockWatchQuery from './mocks/mockWatchQuery';
-import mockNetworkInterface, {
-  ParsedRequest,
-} from './mocks/mockNetworkInterface';
+import { mockSingleLink } from './mocks/mockLinks';
+
 import {
   ObservableQuery,
   ApolloCurrentResult,
 } from '../src/core/ObservableQuery';
 import { ApolloQueryResult } from '../src/core/types';
-import { NetworkInterface } from '../src/transport/networkInterface';
 
 import { IntrospectionFragmentMatcher } from '../src/data/fragmentMatcher';
 
@@ -69,14 +68,14 @@ describe('ObservableQuery', () => {
   };
 
   const createQueryManager = ({
-    networkInterface,
+    link,
     addTypename = false,
   }: {
-    networkInterface?: NetworkInterface;
+    link?: ApolloLink;
     addTypename?: boolean;
   }) => {
     return new QueryManager({
-      networkInterface: networkInterface || mockNetworkInterface(),
+      link: link || mockSingleLink(),
       addTypename,
     });
   };
@@ -320,13 +319,17 @@ describe('ObservableQuery', () => {
       };
 
       let timesFired = 0;
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          timesFired += 1;
-          return Promise.resolve({ data });
+      const link: ApolloLink = ApolloLink.from([
+        (operation: Operation) => {
+          return new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            observer.complete();
+            return;
+          });
         },
-      };
-      queryManager = createQueryManager({ networkInterface });
+      ]);
+      queryManager = createQueryManager({ link });
       observable = queryManager.watchQuery({ query: testQuery });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
@@ -374,13 +377,17 @@ describe('ObservableQuery', () => {
       };
 
       let timesFired = 0;
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          timesFired += 1;
-          return Promise.resolve({ data });
+      const link: ApolloLink = ApolloLink.from([
+        (operation: Operation) => {
+          return new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            observer.complete();
+            return;
+          });
         },
-      };
-      queryManager = createQueryManager({ networkInterface });
+      ]);
+      queryManager = createQueryManager({ link });
       observable = queryManager.watchQuery({
         query: testQuery,
         fetchPolicy: 'cache-only',
@@ -423,13 +430,17 @@ describe('ObservableQuery', () => {
       };
 
       let timesFired = 0;
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          timesFired += 1;
-          return Promise.resolve({ data });
+      const link: ApolloLink = ApolloLink.from([
+        (operation: Operation) => {
+          return new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            observer.complete();
+            return;
+          });
         },
-      };
-      queryManager = createQueryManager({ networkInterface });
+      ]);
+      queryManager = createQueryManager({ link });
       observable = queryManager.watchQuery({
         query: testQuery,
         fetchPolicy: 'cache-first',
@@ -474,13 +485,17 @@ describe('ObservableQuery', () => {
       };
 
       let timesFired = 0;
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          timesFired += 1;
-          return Promise.resolve({ data });
+      const link: ApolloLink = ApolloLink.from([
+        (operation: Operation) => {
+          return new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            observer.complete();
+            return;
+          });
         },
-      };
-      queryManager = createQueryManager({ networkInterface });
+      ]);
+      queryManager = createQueryManager({ link });
 
       queryManager.query({ query: testQuery }).then(() => {
         observable = queryManager.watchQuery({
@@ -919,7 +934,7 @@ describe('ObservableQuery', () => {
         people: peopleData.slice(0, 3),
       };
 
-      const ni = mockNetworkInterface(
+      const ni = mockSingleLink(
         {
           request: { query: queryWithFragment, variables },
           result: { data: dataOneWithTypename },
@@ -931,7 +946,7 @@ describe('ObservableQuery', () => {
       );
 
       const client = new ApolloClient({
-        networkInterface: ni,
+        link: ni,
         fragmentMatcher: new IntrospectionFragmentMatcher({
           introspectionQueryResultData: {
             __schema: {

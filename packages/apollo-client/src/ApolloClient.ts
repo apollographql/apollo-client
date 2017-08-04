@@ -1,4 +1,3 @@
-<<<<<<< 8ef861a97a6941bdf8598b22d5a29fce1f69c506
 import {
   NetworkInterface,
   ObservableNetworkInterface,
@@ -13,9 +12,7 @@ import {
   ZenObservable,
 } from 'apollo-link-core';
 import { assign } from './util/assign';
-=======
 import { execute, ApolloLink } from 'apollo-link-core';
->>>>>>> started working on moving to link support
 
 import {
   ExecutionResult,
@@ -40,11 +37,7 @@ import { CustomResolverMap } from './data/readFromStore';
 
 import { QueryManager } from './core/QueryManager';
 
-import {
-  ApolloQueryResult,
-  ApolloExecutionResult,
-  IdGetter,
-} from './core/types';
+import { ApolloQueryResult, IdGetter } from './core/types';
 
 import { ObservableQuery } from './core/ObservableQuery';
 
@@ -333,9 +326,7 @@ export default class ApolloClient implements DataProxy {
    *
    * It takes options as an object with the following keys and values:
    */
-  public mutate<T>(
-    options: MutationOptions<T>,
-  ): Promise<ApolloExecutionResult<T>> {
+  public mutate<T>(options: MutationOptions<T>): Promise<FetchResult<T>> {
     this.initQueryManager();
 
     return this.queryManager.mutate<T>(options);
@@ -345,11 +336,11 @@ export default class ApolloClient implements DataProxy {
    * This subscribes to a graphql subscription according to the options specified and returns an
    * {@link Observable} which either emits received data or an error.
    */
-  public subscribe(options: SubscriptionOptions): Observable<any> {
-    this.initQueryManager();
+  // public subscribe(options: SubscriptionOptions): Observable<any> {
+  //   this.initQueryManager();
 
-    return this.queryManager.startGraphQLSubscription(options);
-  }
+  //   return this.queryManager.startGraphQLSubscription(options);
+  // }
 
   /**
    * Tries to read some data from the store in the shape of the provided

@@ -1,10 +1,11 @@
 import { DocumentNode, FragmentDefinitionNode } from 'graphql';
+import { FetchResult } from 'apollo-link-core';
 
 import { MutationQueryReducersMap } from '../data/mutationResults';
 
 import { DataProxy } from '../data/proxy';
 
-import { PureQueryOptions, ApolloExecutionResult } from './types';
+import { PureQueryOptions } from './types';
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -167,5 +168,5 @@ export interface MutationOptions<T = { [key: string]: any }> {
 // Add a level of indirection for `typedoc`.
 export type MutationUpdaterFn<T = { [key: string]: any }> = (
   proxy: DataProxy,
-  mutationResult: ApolloExecutionResult<T>,
+  mutationResult: FetchResult<T>,
 ) => void;

@@ -22,11 +22,9 @@ import * as Rx from 'rxjs';
 
 import { assign } from 'lodash';
 
-import mockNetworkInterface, {
-  ParsedRequest,
-} from './mocks/mockNetworkInterface';
+import { ApolloLink, Operation, Observable } from 'apollo-link-core';
 
-import { NetworkInterface } from '../src/transport/networkInterface';
+import { mockSingleLink } from './mocks/mockLinks';
 
 import { ApolloError } from '../src/errors/ApolloError';
 
@@ -57,16 +55,16 @@ describe('QueryManager', () => {
   // QueryManager but has defaults that make sense for these
   // tests.
   const createQueryManager = ({
-    networkInterface,
+    link,
     addTypename = false,
     config = {},
   }: {
-    networkInterface?: NetworkInterface;
+    link?: ApolloLink;
     addTypename?: boolean;
     config?: ApolloReducerConfig;
   }) => {
     return new QueryManager({
-      networkInterface: networkInterface || mockNetworkInterface(),
+      link: link || mockSingleLink(),
       addTypename,
       reducerConfig: config,
     });
@@ -147,12 +145,12 @@ describe('QueryManager', () => {
     variables?: Object;
     config?: ApolloReducerConfig;
   }) => {
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query: mutation, variables },
       result: { data },
     });
     const queryManager = createQueryManager({
-      networkInterface,
+      link,
       config,
     });
     return new Promise<{
@@ -188,7 +186,7 @@ describe('QueryManager', () => {
     secondResult,
     thirdResult,
   }: {
-    request: ParsedRequest;
+    request: Operation;
     firstResult: ExecutionResult;
     secondResult: ExecutionResult;
     thirdResult?: ExecutionResult;
@@ -1389,7 +1387,7 @@ describe('QueryManager', () => {
     };
 
     const queryManager = createQueryManager({
-      networkInterface: mockNetworkInterface({
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data },
       }),
@@ -1607,7 +1605,7 @@ describe('QueryManager', () => {
       };
 
       const queryManager = new QueryManager({
-        networkInterface: mockNetworkInterface(
+        link: mockSingleLink(
           {
             request: { query, variables },
             result: { data: data1 },
@@ -2113,7 +2111,7 @@ describe('QueryManager', () => {
     //make sure that the query is transformed within the query
     //manager
     createQueryManager({
-      networkInterface: mockNetworkInterface(
+      link: mockSingleLink(
         {
           request: { query },
           result: { data: unmodifiedQueryResult },
@@ -2165,7 +2163,7 @@ describe('QueryManager', () => {
     };
 
     createQueryManager({
-      networkInterface: mockNetworkInterface(
+      link: mockSingleLink(
         {
           request: { query: mutation },
           result: { data: unmodifiedMutationResult },
@@ -2233,7 +2231,7 @@ describe('QueryManager', () => {
       };
 
       const queryManager = createQueryManager({
-        networkInterface: mockNetworkInterface(
+        link: mockSingleLink(
           {
             request: { query },
             result: { data },
@@ -2310,18 +2308,20 @@ describe('QueryManager', () => {
       };
 
       let timesFired = 0;
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          if (timesFired === 0) {
-            timesFired += 1;
-            queryManager.resetStore();
-          } else {
-            timesFired += 1;
-          }
-          return Promise.resolve({ data });
-        },
-      };
-      queryManager = createQueryManager({ networkInterface });
+      const link: ApolloLink = ApolloLink.from([
+        operation =>
+          new Observable(observer => {
+            if (timesFired === 0) {
+              timesFired += 1;
+              queryManager.resetStore();
+            } else {
+              timesFired += 1;
+            }
+            observer.next({ data });
+            return;
+          }),
+      ]);
+      queryManager = createQueryManager({ link });
       const observable = queryManager.watchQuery<any>({ query });
 
       // wait just to make sure the observable doesn't fire again
@@ -2351,13 +2351,16 @@ describe('QueryManager', () => {
       };
 
       let timesFired = 0;
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          timesFired += 1;
-          return Promise.resolve({ data });
-        },
-      };
-      queryManager = createQueryManager({ networkInterface });
+      const link: ApolloLink = ApolloLink.from([
+        operation =>
+          new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            return;
+          }),
+      ]);
+
+      queryManager = createQueryManager({ link });
       observable = queryManager.watchQuery({ query });
 
       observableToPromise({ observable, wait: 0 }, result =>
@@ -2395,18 +2398,20 @@ describe('QueryManager', () => {
       };
 
       let timesFired = 0;
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          if (timesFired === 0) {
-            timesFired += 1;
-            setTimeout(queryManager.resetStore.bind(queryManager), 10);
-          } else {
-            timesFired += 1;
-          }
-          return Promise.resolve({ data });
-        },
-      };
-      queryManager = createQueryManager({ networkInterface });
+      const link = ApolloLink.from([
+        operation =>
+          new Observable(observer => {
+            if (timesFired === 0) {
+              timesFired += 1;
+              setTimeout(queryManager.resetStore.bind(queryManager), 10);
+            } else {
+              timesFired += 1;
+            }
+            observer.next({ data });
+            return;
+          }),
+      ]);
+      queryManager = createQueryManager({ link });
       const observable = queryManager.watchQuery<any>({
         query,
         notifyOnNetworkStatusChange: false,
@@ -2560,15 +2565,17 @@ describe('QueryManager', () => {
           lastName: 'Smith',
         },
       };
-      const networkInterface: NetworkInterface = {
-        query(request: Request): Promise<ExecutionResult> {
-          // reset the store as soon as we hear about the query
-          queryManager.resetStore();
-          return Promise.resolve({ data });
-        },
-      };
+      const link = ApolloLink.from([
+        operation =>
+          new Observable(observer => {
+            // reset the store as soon as we hear about the query
+            queryManager.resetStore();
+            observer.next({ data });
+            return;
+          }),
+      ]);
 
-      queryManager = createQueryManager({ networkInterface });
+      queryManager = createQueryManager({ link });
       queryManager
         .query<any>({ query })
         .then(result => {
@@ -2632,7 +2639,7 @@ describe('QueryManager', () => {
       dataIdFromObject: (x: any) => '$' + dataIdFromObject(x),
     };
     createQueryManager({
-      networkInterface: mockNetworkInterface({
+      link: mockSingleLink({
         request: { query },
         result: { data },
       }),
@@ -2939,7 +2946,7 @@ describe('QueryManager', () => {
     };
     const reducerConfig = { dataIdFromObject };
     const queryManager = createQueryManager({
-      networkInterface: mockNetworkInterface(
+      link: mockSingleLink(
         {
           request: { query: query1 },
           result: { data: data1 },
@@ -3029,7 +3036,7 @@ describe('QueryManager', () => {
     };
     const reducerConfig = { dataIdFromObject };
     const queryManager = createQueryManager({
-      networkInterface: mockNetworkInterface(
+      link: mockSingleLink(
         {
           request: { query: queryWithId },
           result: { data: dataWithId },
@@ -3116,7 +3123,7 @@ describe('QueryManager', () => {
       },
     };
     const queryManager = createQueryManager({
-      networkInterface: mockNetworkInterface(
+      link: mockSingleLink(
         {
           request: { query: queryWithoutId },
           result: { data: dataWithoutId },

@@ -5,8 +5,6 @@ import * as fetchMock from 'fetch-mock';
 
 import ApolloClient, { printAST } from '../src';
 
-import { disableFragmentWarnings as graphqlTagDisableFragmentWarnings } from 'graphql-tag';
-
 import {
   GraphQLError,
   ExecutionResult,
@@ -29,17 +27,9 @@ import {
 
 import fragmentMatcherIntrospectionQuery from '../src/data/fragmentMatcherIntrospectionQuery';
 
-import {
-  createNetworkInterface,
-  HTTPNetworkInterface,
-  Request,
-  NetworkInterface,
-} from '../src/transport/networkInterface';
+import { GraphQLRequest as Request } from 'apollo-link-core';
 
-import { createBatchingNetworkInterface } from '../src/transport/batchedNetworkInterface';
-
-import mockNetworkInterface from './mocks/mockNetworkInterface';
-import { mockObservableNetworkInterface } from './mocks/mockNetworkInterface';
+import { mockSingleLink } from './mocks/mockLinks';
 
 import { getFragmentDefinitions } from '../src/queries/getFromAST';
 
@@ -68,9 +58,6 @@ declare var fetch: any;
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
 
-// Turn off warnings for repeated fragment names
-graphqlTagDisableFragmentWarnings();
-
 describe('client', () => {
   it('does not require any arguments and creates query manager lazily', () => {
     const client = new ApolloClient();
@@ -98,16 +85,13 @@ describe('client', () => {
     assert.isDefined(client.queryManager.dataStore.getCache());
   });
 
-  it('can allow passing in a network interface', () => {
-    const networkInterface = createNetworkInterface({ uri: 'swapi' });
+  it('can allow passing in a link', () => {
+    const link = ApolloLink.empty();
     const client = new ApolloClient({
-      networkInterface,
+      link,
     });
 
-    assert.equal(
-      (client.networkInterface as HTTPNetworkInterface)._uri,
-      networkInterface._uri,
-    );
+    assert.instanceOf(client.link, ApolloLink);
   });
 
   it('can allow passing in a store', () => {
@@ -275,16 +259,10 @@ describe('client', () => {
 
     const variables = { first: 1 };
 
-    const networkInterface = ApolloLink.from([
-      () => {
-        return Observable.of({
-          data,
-        });
-      },
-    ]);
+    const link = ApolloLink.from([() => Observable.of({ data })]);
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -402,13 +380,13 @@ describe('client', () => {
       test: { key1: ['value', 'value2'], key2: { key3: 4 } },
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query, variables },
       result: { data: result },
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -460,7 +438,7 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface(
+    const link = mockSingleLink(
       {
         request: { query, variables },
         result: { data: result },
@@ -472,7 +450,7 @@ describe('client', () => {
     );
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -565,7 +543,7 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { data },
     });
@@ -598,7 +576,7 @@ describe('client', () => {
     const finalState = assign({}, initialState, {});
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       initialState,
       addTypename: false,
     });
@@ -630,13 +608,13 @@ describe('client', () => {
       },
     ];
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { errors },
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -673,7 +651,7 @@ describe('client', () => {
       },
     ];
 
-    const networkInterface = ApolloLink.from([
+    const link = ApolloLink.from([
       () => {
         return new Observable(observer => {
           observer.next({ data, errors });
@@ -682,7 +660,7 @@ describe('client', () => {
     ]);
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -713,7 +691,7 @@ describe('client', () => {
 
       const networkError = new Error('Some kind of network error.');
 
-      const networkInterface = ApolloLink.from([
+      const link = ApolloLink.from([
         () => {
           return new Observable(observer => {
             throw networkError;
@@ -722,7 +700,7 @@ describe('client', () => {
       ]);
 
       const client = new ApolloClient({
-        networkInterface,
+        link,
         addTypename: false,
       });
 
@@ -754,7 +732,7 @@ describe('client', () => {
 
     const networkError = new Error('Some kind of network error.');
 
-    const networkInterface = ApolloLink.from([
+    const link = ApolloLink.from([
       () => {
         return new Observable(observer => {
           throw networkError;
@@ -763,7 +741,7 @@ describe('client', () => {
     ]);
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -795,12 +773,10 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = ApolloLink.from([
-      () => Observable.of({ data }, { data }),
-    ]);
+    const link = ApolloLink.from([() => Observable.of({ data }, { data })]);
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -846,13 +822,13 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { data },
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -891,13 +867,13 @@ describe('client', () => {
       }
     `;
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: {},
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -933,13 +909,13 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { data },
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -986,7 +962,7 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface(
+    const link = mockSingleLink(
       {
         request: { query },
         result: { data: result },
@@ -998,7 +974,7 @@ describe('client', () => {
     );
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -1038,7 +1014,7 @@ describe('client', () => {
         __typename: 'Author',
       },
     };
-    const networkInterface = mockNetworkInterface(
+    const link = mockSingleLink(
       {
         request: { query },
         result: { data: result },
@@ -1050,7 +1026,7 @@ describe('client', () => {
     );
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: true,
     });
 
@@ -1086,12 +1062,12 @@ describe('client', () => {
         },
       },
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query: mutation },
       result: { data: result },
     });
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -1122,13 +1098,13 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -1167,12 +1143,12 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
     });
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -1203,12 +1179,12 @@ describe('client', () => {
       },
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
     });
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -1276,12 +1252,12 @@ describe('client', () => {
       return false;
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
     });
     const client = new ApolloClient({
-      networkInterface,
+      link,
       fragmentMatcher: {
         match: fancyFragmentMatcher,
       },
@@ -1323,7 +1299,7 @@ describe('client', () => {
       ],
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { data: result },
     });
@@ -1350,7 +1326,7 @@ describe('client', () => {
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       fragmentMatcher: ifm,
     });
 
@@ -1400,7 +1376,7 @@ describe('client', () => {
       fortuneCookie: 'The waiter spit in your food',
     };
 
-    const networkInterface = mockNetworkInterface(
+    const link = mockSingleLink(
       {
         request: { query },
         result: { data: result },
@@ -1433,7 +1409,7 @@ describe('client', () => {
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       fragmentMatcher: ifm,
     });
 
@@ -1479,14 +1455,14 @@ describe('client', () => {
     const data = {
       fortuneCookie: 'The waiter spit in your food',
     };
-    const networkInterface: NetworkInterface = {
-      query(request: Request): Promise<ExecutionResult> {
+    const link = ApolloLink.from([
+      request => {
         assert.equal(request.operationName, 'myQueryName');
-        return Promise.resolve({ data });
+        return Observable.of({ data });
       },
-    };
+    ]);
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -1504,14 +1480,14 @@ describe('client', () => {
     const data = {
       fortuneCookie: 'The waiter spit in your food',
     };
-    const networkInterface: NetworkInterface = {
-      query(request: Request): Promise<ExecutionResult> {
+    const link = ApolloLink.from([
+      request => {
         assert.equal(request.operationName, 'myMutationName');
-        return Promise.resolve({ data });
+        return Observable.of({ data });
       },
-    };
+    ]);
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -1541,7 +1517,7 @@ describe('client', () => {
 
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
-    const networkInterface = mockNetworkInterface(
+    const link = mockSingleLink(
       {
         request: { query: queryDoc },
         result: { data },
@@ -1553,7 +1529,7 @@ describe('client', () => {
       },
     );
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
       queryDeduplication: false,
     });
@@ -1589,7 +1565,7 @@ describe('client', () => {
 
     // we have two responses for identical queries, but only the first should be requested.
     // the second one should never make it through to the network interface.
-    const networkInterface = mockNetworkInterface(
+    const link = mockSingleLink(
       {
         request: { query: queryDoc },
         result: { data },
@@ -1601,7 +1577,7 @@ describe('client', () => {
       },
     );
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -1688,13 +1664,13 @@ describe('client', () => {
     };
 
     it('for internal store', () => {
-      const networkInterface = mockNetworkInterface({
+      const link = mockSingleLink({
         request: { query },
         result: { data },
       });
 
       const client = new ApolloClient({
-        networkInterface,
+        link,
         dataIdFromObject: (obj: { id: any }) => obj.id,
         addTypename: false,
       });
@@ -1743,12 +1719,12 @@ describe('client', () => {
     });
 
     it('fetches from cache first, then network', done => {
-      const networkInterface = mockNetworkInterface({
+      const link = mockSingleLink({
         request: { query },
         result: { data: networkFetch },
       });
       const client = new ApolloClient({
-        networkInterface,
+        link,
         addTypename: false,
       });
 
@@ -1773,12 +1749,12 @@ describe('client', () => {
     });
 
     it('does not fail if cache entry is not present', done => {
-      const networkInterface = mockNetworkInterface({
+      const link = mockSingleLink({
         request: { query },
         result: { data: networkFetch },
       });
       const client = new ApolloClient({
-        networkInterface,
+        link,
         addTypename: false,
       });
 
@@ -1800,9 +1776,9 @@ describe('client', () => {
     });
 
     it('fails if network request fails', done => {
-      const networkInterface = mockNetworkInterface(); // no queries = no replies.
+      const link = mockSingleLink(); // no queries = no replies.
       const client = new ApolloClient({
-        networkInterface,
+        link,
         addTypename: false,
       });
 
@@ -1856,12 +1832,12 @@ describe('client', () => {
       const data = { test: 'ok' };
       const data2 = { test: 'not ok' };
 
-      const networkInterface = mockNetworkInterface({
+      const link = mockSingleLink({
         request: { query },
         result: { data },
       });
 
-      const client = new ApolloClient({ networkInterface });
+      const client = new ApolloClient({ link });
 
       const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
 
@@ -1895,12 +1871,12 @@ describe('client', () => {
       const data = { test: 'ok' };
       const data2 = { test: 'not ok' };
 
-      const networkInterface = mockNetworkInterface({
+      const link = mockSingleLink({
         request: { query },
         result: { data },
       });
 
-      const client = new ApolloClient({ networkInterface });
+      const client = new ApolloClient({ link });
 
       const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
 
@@ -1945,10 +1921,10 @@ describe('client', () => {
       },
     };
 
-    let networkInterface: any;
+    let link: any;
     let clock: any;
     beforeEach(() => {
-      networkInterface = mockNetworkInterface(
+      link = mockSingleLink(
         {
           request: { query },
           result: { data: firstFetch },
@@ -1968,7 +1944,7 @@ describe('client', () => {
 
     it('forces the query to rerun', () => {
       const client = new ApolloClient({
-        networkInterface,
+        link,
         addTypename: false,
       });
 
@@ -1986,7 +1962,7 @@ describe('client', () => {
 
     it('can be disabled with ssrMode', () => {
       const client = new ApolloClient({
-        networkInterface,
+        link,
         ssrMode: true,
         addTypename: false,
       });
@@ -2015,7 +1991,7 @@ describe('client', () => {
       clock = sinon.useFakeTimers();
 
       const client = new ApolloClient({
-        networkInterface,
+        link,
         ssrForceFetchDelay: 100,
         addTypename: false,
       });
@@ -2071,7 +2047,7 @@ describe('client', () => {
     };
     const networkError = new Error('Some kind of network error.');
     const client = new ApolloClient({
-      networkInterface: mockNetworkInterface({
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data },
         error: networkError,
@@ -2110,7 +2086,7 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      networkInterface: mockNetworkInterface({
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data, errors },
       }),
@@ -2150,7 +2126,7 @@ describe('client', () => {
     };
     const errors = [new Error('Some kind of GraphQL error.')];
     const client = new ApolloClient({
-      networkInterface: mockNetworkInterface({
+      link: mockSingleLink({
         request: { query: mutation },
         result: { data, errors },
       }),
@@ -2194,455 +2170,6 @@ describe('client', () => {
     client.resetStore();
   });
 
-  it('should allow us to create a network interface with transport-level batching', done => {
-    const firstQuery = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }
-    `;
-    const firstResult = {
-      data: {
-        author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      },
-      loading: false,
-    };
-    const secondQuery = gql`
-      query {
-        person {
-          name
-        }
-      }
-    `;
-    const secondResult = {
-      data: {
-        person: {
-          name: 'Jane Smith',
-        },
-      },
-    };
-    const url = 'http://not-a-real-url.com';
-    const oldFetch = fetch;
-    fetch = createMockFetch({
-      url,
-      opts: {
-        body: JSON.stringify([
-          {
-            query: print(firstQuery),
-          },
-          {
-            query: print(secondQuery),
-          },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      },
-      result: createMockedIResponse([firstResult, secondResult]),
-    });
-    const networkInterface = createBatchingNetworkInterface({
-      uri: 'http://not-a-real-url.com',
-      batchInterval: 5,
-      opts: {},
-    });
-    Promise.all([
-      networkInterface.query({ query: firstQuery }),
-      networkInterface.query({ query: secondQuery }),
-    ])
-      .then(results => {
-        assert.deepEqual<[ExecutionResult]>(results, [
-          firstResult,
-          secondResult,
-        ]);
-        fetch = oldFetch;
-        done();
-      })
-      .catch(e => {
-        console.error(e);
-      });
-  });
-
-  it('should throw an error if response to batch request is not an array', done => {
-    const firstQuery = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }
-    `;
-    const firstResult = {
-      data: {
-        author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      },
-      loading: false,
-    };
-    const secondQuery = gql`
-      query {
-        person {
-          name
-        }
-      }
-    `;
-    const url = 'http://not-a-real-url.com';
-    const oldFetch = fetch;
-    fetch = createMockFetch({
-      url,
-      opts: {
-        body: JSON.stringify([
-          {
-            query: print(firstQuery),
-          },
-          {
-            query: print(secondQuery),
-          },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      },
-      result: createMockedIResponse(firstResult),
-    });
-    const networkInterface = createBatchingNetworkInterface({
-      uri: 'http://not-a-real-url.com',
-      batchInterval: 5,
-      opts: {},
-    });
-    Promise.all([
-      networkInterface.query({ query: firstQuery }),
-      networkInterface.query({ query: secondQuery }),
-    ])
-      .then(results => {
-        assert.equal(true, false, 'expected response to throw an error');
-      })
-      .catch(e => {
-        assert.equal(
-          e.message,
-          'BatchingNetworkInterface: server response is not an array',
-        );
-        fetch = oldFetch;
-        done();
-      });
-  });
-
-  it('should not do transport-level batching when the interval is exceeded', done => {
-    const firstQuery = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }
-    `;
-    const firstResult = {
-      data: {
-        author: {
-          firstName: 'John',
-          lastName: 'Smith',
-        },
-      },
-      loading: false,
-    };
-    const secondQuery = gql`
-      query {
-        person {
-          name
-        }
-      }
-    `;
-    const secondResult = {
-      data: {
-        person: {
-          name: 'Jane Smith',
-        },
-      },
-    };
-    const url = 'http://not-a-real-url.com';
-    const oldFetch = fetch;
-    fetch = createMockFetch(
-      {
-        url,
-        opts: {
-          body: JSON.stringify([
-            {
-              query: print(firstQuery),
-            },
-          ]),
-          headers: {
-            Accept: '*/*',
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        },
-        result: createMockedIResponse([firstResult]),
-      },
-      {
-        url,
-        opts: {
-          body: JSON.stringify([
-            {
-              query: print(secondQuery),
-            },
-          ]),
-          headers: {
-            Accept: '*/*',
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        },
-        result: createMockedIResponse([secondResult]),
-      },
-    );
-    const networkInterface = createBatchingNetworkInterface({
-      uri: 'http://not-a-real-url.com',
-      batchInterval: 5,
-      opts: {},
-    });
-    Promise.all([
-      networkInterface.query({ query: firstQuery }),
-      new Promise((resolve, reject) =>
-        setTimeout(
-          () => resolve(networkInterface.query({ query: secondQuery })),
-          10,
-        ),
-      ),
-    ])
-      .then(results => {
-        assert.deepEqual<[ExecutionResult]>(results, [
-          firstResult,
-          secondResult,
-        ]);
-        fetch = oldFetch;
-        done();
-      })
-      .catch(e => {
-        console.error(e);
-      });
-  });
-
-  it('should limit the amount of queries in a batch according to the batchMax value', done => {
-    const authorQuery = gql`
-      query {
-        author {
-          firstName
-        }
-      }
-    `;
-    const authorResult = {
-      data: {
-        author: {
-          firstName: 'John',
-        },
-      },
-    };
-    const personQuery = gql`
-      query {
-        person {
-          name
-        }
-      }
-    `;
-    const personResult = {
-      data: {
-        person: {
-          name: 'Jane Smith',
-        },
-      },
-    };
-
-    const url = 'http://not-a-real-url.com';
-
-    const networkInterface = createBatchingNetworkInterface({
-      uri: url,
-      batchInterval: 5,
-      batchMax: 2,
-      opts: {},
-    });
-
-    const oldFetch = fetch;
-    fetch = createMockFetch(
-      {
-        url,
-        opts: {
-          body: JSON.stringify([
-            { query: print(authorQuery) },
-            { query: print(personQuery) },
-          ]),
-          headers: {
-            Accept: '*/*',
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        },
-        result: createMockedIResponse([authorResult, personResult]),
-      },
-      {
-        url,
-        opts: {
-          body: JSON.stringify([
-            { query: print(authorQuery) },
-            { query: print(personQuery) },
-          ]),
-          headers: {
-            Accept: '*/*',
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        },
-        result: createMockedIResponse([authorResult, personResult]),
-      },
-      {
-        url,
-        opts: {
-          body: JSON.stringify([{ query: print(authorQuery) }]),
-          headers: {
-            Accept: '*/*',
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        },
-        result: createMockedIResponse([authorResult]),
-      },
-    );
-
-    Promise.all([
-      networkInterface.query({ query: authorQuery }),
-      networkInterface.query({ query: personQuery }),
-      networkInterface.query({ query: authorQuery }),
-      networkInterface.query({ query: personQuery }),
-      networkInterface.query({ query: authorQuery }),
-    ])
-      .then(results => {
-        assert.deepEqual<
-          [
-            ExecutionResult,
-            ExecutionResult,
-            ExecutionResult,
-            ExecutionResult,
-            ExecutionResult
-          ]
-        >(results, [
-          authorResult,
-          personResult,
-          authorResult,
-          personResult,
-          authorResult,
-        ]);
-        fetch = oldFetch;
-        done();
-      })
-      .catch(e => {
-        console.error(e);
-      });
-  });
-
-  it('should not limit the amount of queries in a batch when batchMax is not set', done => {
-    const authorQuery = gql`
-      query {
-        author {
-          firstName
-        }
-      }
-    `;
-    const authorResult = {
-      data: {
-        author: {
-          firstName: 'John',
-        },
-      },
-    };
-    const personQuery = gql`
-      query {
-        person {
-          name
-        }
-      }
-    `;
-    const personResult = {
-      data: {
-        person: {
-          name: 'Jane Smith',
-        },
-      },
-    };
-
-    const url = 'http://not-a-real-url.com';
-
-    const networkInterface = createBatchingNetworkInterface({
-      uri: url,
-      batchInterval: 5,
-      opts: {},
-    });
-
-    const oldFetch = fetch;
-    fetch = createMockFetch({
-      url,
-      opts: {
-        body: JSON.stringify([
-          { query: print(authorQuery) },
-          { query: print(personQuery) },
-          { query: print(authorQuery) },
-          { query: print(personQuery) },
-          { query: print(authorQuery) },
-        ]),
-        headers: {
-          Accept: '*/*',
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      },
-      result: createMockedIResponse([
-        authorResult,
-        personResult,
-        authorResult,
-        personResult,
-        authorResult,
-      ]),
-    });
-
-    Promise.all([
-      networkInterface.query({ query: authorQuery }),
-      networkInterface.query({ query: personQuery }),
-      networkInterface.query({ query: authorQuery }),
-      networkInterface.query({ query: personQuery }),
-      networkInterface.query({ query: authorQuery }),
-    ])
-      .then(results => {
-        assert.deepEqual<
-          [
-            ExecutionResult,
-            ExecutionResult,
-            ExecutionResult,
-            ExecutionResult,
-            ExecutionResult
-          ]
-        >(results, [
-          authorResult,
-          personResult,
-          authorResult,
-          personResult,
-          authorResult,
-        ]);
-        fetch = oldFetch;
-        done();
-      })
-      .catch(e => {
-        console.error(e);
-      });
-  });
-
   it('should enable dev tools logging', () => {
     const query = gql`
       query people {
@@ -2665,13 +2192,13 @@ describe('client', () => {
     };
 
     it('with self-made store', () => {
-      const networkInterface = mockNetworkInterface({
+      const link = mockSingleLink({
         request: { query: cloneDeep(query) },
         result: { data },
       });
 
       const client = new ApolloClient({
-        networkInterface,
+        link,
         addTypename: false,
       });
 
@@ -2688,12 +2215,16 @@ describe('client', () => {
   });
 
   it('should propagate errors from network interface to observers', done => {
-    const networkInterface = {
-      query: () => Promise.reject(new Error('Uh oh!')),
-    };
+    const link = ApolloLink.from([
+      () =>
+        new Observable(x => {
+          x.error(new Error('Uh oh!'));
+          return;
+        }),
+    ]);
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
       addTypename: false,
     });
 
@@ -2730,12 +2261,12 @@ describe('client', () => {
         message: 'Cannot query field "foo" on type "Post".',
       },
     ];
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result: { errors },
     });
     const client = new ApolloClient({
-      networkInterface,
+      link,
     });
 
     return client.query({ query }).catch(err => {
@@ -2769,12 +2300,12 @@ describe('client', () => {
         ],
       },
     };
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query },
       result,
     });
     const client = new ApolloClient({
-      networkInterface,
+      link,
     });
 
     return withWarning(
@@ -2810,13 +2341,13 @@ describe('client', () => {
       ],
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query: transformedQuery },
       result: { data: result },
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
     });
 
     return client.query({ query }).then(actualResult => {
@@ -2851,13 +2382,13 @@ describe('client', () => {
       ],
     };
 
-    const networkInterface = mockNetworkInterface({
+    const link = mockSingleLink({
       request: { query: transformedQuery },
       result: { data: result },
     });
 
     const client = new ApolloClient({
-      networkInterface,
+      link,
     });
 
     return client.query({ query }).then(actualResult => {
@@ -2893,13 +2424,13 @@ it('should run a query with the connection directive and write the result to the
     ],
   };
 
-  const networkInterface = mockNetworkInterface({
+  const link = mockSingleLink({
     request: { query: transformedQuery },
     result: { data: result },
   });
 
   const client = new ApolloClient({
-    networkInterface,
+    link,
   });
 
   return client.query({ query }).then(actualResult => {
@@ -2944,13 +2475,13 @@ it('should run a query with the connection directive and filter arguments and wr
 
   const variables = { order: 'popularity' };
 
-  const networkInterface = mockNetworkInterface({
+  const link = mockSingleLink({
     request: { query: query, variables },
     result: { data: result },
   });
 
   const client = new ApolloClient({
-    networkInterface,
+    link,
   });
 
   return client.query({ query, variables }).then(actualResult => {
@@ -2982,13 +2513,13 @@ function clientRoundtrip(
   variables?: any,
   fragmentMatcher?: FragmentMatcherInterface,
 ) {
-  const networkInterface = mockNetworkInterface({
+  const link = mockSingleLink({
     request: { query: cloneDeep(query) },
     result: data,
   });
 
   const client = new ApolloClient({
-    networkInterface,
+    link,
     fragmentMatcher,
   });
 

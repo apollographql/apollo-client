@@ -30,34 +30,36 @@ console.warn = console.error = (...messages: string[]) => {
 
 process.on('unhandledRejection', () => {});
 
-import './warnOnce';
+import { disableFragmentWarnings as graphqlTagDisableFragmentWarnings } from 'graphql-tag';
+
+// Turn off warnings for repeated fragment names
+graphqlTagDisableFragmentWarnings();
+
+import './ApolloClient';
+import './assign';
+import './cache';
+import './client';
+import './cloneDeep';
+import './customResolvers';
+import './deduplicator';
+import './diffAgainstStore';
+import './directives';
+import './environment';
+import './errors';
+import './fetchMore';
 import './fragmentMatcher';
-import './writeToStore';
+import './getFromAST';
+// // import './graphqlSubscriptions';
+import './isEqual';
+// // import './mockSubscriptionLink';
+import './mutationResults';
+import './ObservableQuery';
+import './optimistic';
+import './QueryManager';
+import './queryTransform';
 import './readFromStore';
 import './roundtrip';
-import './diffAgainstStore';
-import './networkInterface';
-import './deduplicator';
-import './QueryManager';
-import './client';
-import './queryTransform';
-import './getFromAST';
-import './directives';
-import './batching';
 import './scheduler';
-import './mutationResults';
-import './optimistic';
-import './fetchMore';
-import './errors';
-import './mockNetworkInterface';
-import './graphqlSubscriptions';
-import './batchedNetworkInterface';
-import './ObservableQuery';
-import './subscribeToMore';
-import './customResolvers';
-import './isEqual';
-import './cloneDeep';
-import './assign';
-import './environment';
-import './ApolloClient';
-import './cache';
+// import './subscribeToMore';
+import './warnOnce';
+import './writeToStore';

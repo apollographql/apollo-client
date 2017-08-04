@@ -305,47 +305,47 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
-  public subscribeToMore(options: SubscribeToMoreOptions): () => void {
-    const observable = this.queryManager.startGraphQLSubscription({
-      query: options.document,
-      variables: options.variables,
-    });
+  // public subscribeToMore(options: SubscribeToMoreOptions): () => void {
+  //   const observable = this.queryManager.startGraphQLSubscription({
+  //     query: options.document,
+  //     variables: options.variables,
+  //   });
 
-    const subscription = observable.subscribe({
-      next: data => {
-        if (options.updateQuery) {
-          const reducer = options.updateQuery;
-          const mapFn = (
-            previousResult: Object,
-            { variables }: { variables: Object },
-          ) => {
-            return reducer(previousResult, {
-              subscriptionData: { data },
-              variables,
-            });
-          };
-          this.updateQuery(mapFn);
-        }
-      },
-      error: err => {
-        if (options.onError) {
-          options.onError(err);
-        } else {
-          console.error('Unhandled GraphQL subscription error', err);
-        }
-      },
-    });
+  //   const subscription = observable.subscribe({
+  //     next: data => {
+  //       if (options.updateQuery) {
+  //         const reducer = options.updateQuery;
+  //         const mapFn = (
+  //           previousResult: Object,
+  //           { variables }: { variables: Object },
+  //         ) => {
+  //           return reducer(previousResult, {
+  //             subscriptionData: { data },
+  //             variables,
+  //           });
+  //         };
+  //         this.updateQuery(mapFn);
+  //       }
+  //     },
+  //     error: err => {
+  //       if (options.onError) {
+  //         options.onError(err);
+  //       } else {
+  //         console.error('Unhandled GraphQL subscription error', err);
+  //       }
+  //     },
+  //   });
 
-    this.subscriptionHandles.push(subscription);
+  //   this.subscriptionHandles.push(subscription);
 
-    return () => {
-      const i = this.subscriptionHandles.indexOf(subscription);
-      if (i >= 0) {
-        this.subscriptionHandles.splice(i, 1);
-        subscription.unsubscribe();
-      }
-    };
-  }
+  //   return () => {
+  //     const i = this.subscriptionHandles.indexOf(subscription);
+  //     if (i >= 0) {
+  //       this.subscriptionHandles.splice(i, 1);
+  //       subscription.unsubscribe();
+  //     }
+  //   };
+  // }
 
   // Note: if the query is not active (there are no subscribers), the promise
   // will return null immediately.

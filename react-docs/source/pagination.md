@@ -141,15 +141,16 @@ const CommentsWithData = graphql(CommentsQuery, {
           updateQuery: (previousResult, { fetchMoreResult }) => {
             const previousEntry = previousResult.entry;
             const newComments = fetchMoreResult.moreComments.comments;
+            const newCursor = fetchMoreResult.moreComments.cursor;
 
             return {
               // By returning `cursor` here, we update the `loadMore` function
               // to the new cursor.
-              cursor: fetchMoreResult.moreComments.cursor,
+              cursor: newCursor,
 
               entry: {
                 // Put the new comments in the front of the list
-                comments: [...newComments, ...previousEntry.entry.comments],
+                comments: [...newComments, ...previousEntry.comments],
               },
             };
           },

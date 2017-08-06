@@ -51,7 +51,7 @@ We select `id` and `__typename` because that's what our `dataIdFromObject` uses 
 
 In the example above, we showed how to seamlessly edit an existing object in the store with an optimistic mutation result. However, many mutations don't just update an existing object in the store, but they insert a new one.
 
-In that case we need to specify how to integrate the new data into existing queries, and thus our UI. You can read in detail about how to do that in the article about [controlling the store](cache-updates.html)--in particular, we can use the `update` function to insert a result into an existing query's result set. `update` works exactly the same way for optimistic results and the real results returned from the server, so just like above we only need to add the `optimisticResponse` option.
+In that case we need to specify how to integrate the new data into existing queries, and thus our UI. You can read in detail about how to do that in the article about [controlling the store](cache-updates.html)--in particular, we can use the `update` function to insert a result into an existing query's result set. `update` works exactly the same way for optimistic results and the real results returned from the server.
 
 Here is a concrete example from GitHunt, which inserts a comment into an existing list of comments.
 

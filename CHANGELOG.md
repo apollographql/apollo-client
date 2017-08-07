@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Make `fetch` implementation configurable [PR #2008](https://github.com/apollographql/apollo-client/pull/2008)
 
 -fixed `resolved` scoping issue for multiple queries in flight with Apollo Link [PR #2002](https://github.com/apollographql/apollo-client/pull/2002)
 

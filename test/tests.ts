@@ -6,9 +6,8 @@
 /// <reference types="node" />
 /// <reference types="mocha" />
 
-// ensure support for fetch and promise
+// ensure support for promise
 import 'es6-promise';
-import 'isomorphic-fetch';
 
 import { QueryManager } from '../src/core/QueryManager';
 

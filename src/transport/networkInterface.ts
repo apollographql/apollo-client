@@ -1,5 +1,3 @@
-import 'whatwg-fetch';
-
 import { ExecutionResult, DocumentNode } from 'graphql';
 
 import { print } from 'graphql/language/printer';
@@ -11,6 +9,11 @@ import { AfterwareInterface, BatchAfterwareInterface } from './afterware';
 import { removeConnectionDirectiveFromDocument } from '../queries/queryTransform';
 
 import { Observable } from '../util/Observable';
+
+import * as fetchPonyfill_ from 'fetch-ponyfill';
+// Trick rollup, see:
+// https://github.com/rollup/rollup/issues/670#issuecomment-284621537
+const fetchPonyfill = fetchPonyfill_;
 
 /**
  * This is an interface that describes an GraphQL document to be sent
@@ -100,8 +103,13 @@ export class BaseNetworkInterface implements NetworkInterface {
   public _afterwares: AfterwareInterface[] | BatchAfterwareInterface[];
   public _uri: string;
   public _opts: RequestInit;
+  public _fetch: any;
 
-  constructor(uri: string | undefined, opts: RequestInit = {}) {
+  constructor(
+    uri: string | undefined,
+    opts: RequestInit = {},
+    fetch: any | undefined,
+  ) {
     if (!uri) {
       throw new Error('A remote endpoint is required for a network layer');
     }
@@ -112,6 +120,7 @@ export class BaseNetworkInterface implements NetworkInterface {
 
     this._uri = uri;
     this._opts = { ...opts };
+    this._fetch = fetch || fetchPonyfill();
 
     this._middlewares = [];
     this._afterwares = [];
@@ -184,7 +193,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
     request,
     options,
   }: RequestAndOptions): Promise<Response> {
-    return fetch(this._uri, {
+    return this._fetch(this._uri, {
       ...this._opts,
       body: JSON.stringify(printRequest(request)),
       method: 'POST',
@@ -277,6 +286,7 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
 export interface NetworkInterfaceOptions {
   uri?: string;
   opts?: RequestInit;
+  fetch?: any;
 }
 
 export function createNetworkInterface(
@@ -291,6 +301,7 @@ export function createNetworkInterface(
 
   let uri: string | undefined;
   let opts: RequestInit | undefined;
+  let fetch: any | undefined;
 
   // We want to change the API in the future so that you just pass all of the options as one
   // argument, so even though the internals work with two arguments we're warning here.
@@ -299,9 +310,11 @@ export function createNetworkInterface(
 as of Apollo Client 0.5. Please pass it as the "uri" property of the network interface options.`);
     opts = secondArgOpts.opts;
     uri = uriOrInterfaceOpts;
+    fetch = secondArgOpts.fetch;
   } else {
     opts = uriOrInterfaceOpts.opts;
     uri = uriOrInterfaceOpts.uri;
+    fetch = uriOrInterfaceOpts.fetch;
   }
-  return new HTTPFetchNetworkInterface(uri, opts);
+  return new HTTPFetchNetworkInterface(uri, opts, fetch);
 }

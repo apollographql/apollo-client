@@ -1,7 +1,6 @@
 import * as chai from 'chai';
 const { assert } = chai;
 import * as sinon from 'sinon';
-import * as fetchMock from 'fetch-mock';
 
 import ApolloClient, { printAST } from '../src';
 
@@ -71,8 +70,6 @@ import observableToPromise from './util/observableToPromise';
 import { cloneDeep, assign, isEqual } from 'lodash';
 
 import { ApolloLink, Observable } from 'apollo-link-core';
-
-declare var fetch: any;
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -2429,8 +2426,7 @@ describe('client', () => {
       },
     };
     const url = 'http://not-a-real-url.com';
-    const oldFetch = fetch;
-    fetch = createMockFetch({
+    const fetch = createMockFetch({
       url,
       opts: {
         body: JSON.stringify([
@@ -2453,6 +2449,7 @@ describe('client', () => {
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
       opts: {},
+      fetch,
     });
     Promise.all([
       networkInterface.query({ query: firstQuery }),
@@ -2463,7 +2460,6 @@ describe('client', () => {
           firstResult,
           secondResult,
         ]);
-        fetch = oldFetch;
         done();
       })
       .catch(e => {
@@ -2497,8 +2493,7 @@ describe('client', () => {
       }
     `;
     const url = 'http://not-a-real-url.com';
-    const oldFetch = fetch;
-    fetch = createMockFetch({
+    const fetch = createMockFetch({
       url,
       opts: {
         body: JSON.stringify([
@@ -2521,6 +2516,7 @@ describe('client', () => {
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
       opts: {},
+      fetch,
     });
     Promise.all([
       networkInterface.query({ query: firstQuery }),
@@ -2534,7 +2530,6 @@ describe('client', () => {
           e.message,
           'BatchingNetworkInterface: server response is not an array',
         );
-        fetch = oldFetch;
         done();
       });
   });
@@ -2572,8 +2567,7 @@ describe('client', () => {
       },
     };
     const url = 'http://not-a-real-url.com';
-    const oldFetch = fetch;
-    fetch = createMockFetch(
+    const fetch = createMockFetch(
       {
         url,
         opts: {
@@ -2611,6 +2605,7 @@ describe('client', () => {
       uri: 'http://not-a-real-url.com',
       batchInterval: 5,
       opts: {},
+      fetch,
     });
     Promise.all([
       networkInterface.query({ query: firstQuery }),
@@ -2626,7 +2621,6 @@ describe('client', () => {
           firstResult,
           secondResult,
         ]);
-        fetch = oldFetch;
         done();
       })
       .catch(e => {
@@ -2666,15 +2660,7 @@ describe('client', () => {
 
     const url = 'http://not-a-real-url.com';
 
-    const networkInterface = createBatchingNetworkInterface({
-      uri: url,
-      batchInterval: 5,
-      batchMax: 2,
-      opts: {},
-    });
-
-    const oldFetch = fetch;
-    fetch = createMockFetch(
+    const fetch = createMockFetch(
       {
         url,
         opts: {
@@ -2719,6 +2705,14 @@ describe('client', () => {
       },
     );
 
+    const networkInterface = createBatchingNetworkInterface({
+      uri: url,
+      batchInterval: 5,
+      batchMax: 2,
+      opts: {},
+      fetch,
+    });
+
     Promise.all([
       networkInterface.query({ query: authorQuery }),
       networkInterface.query({ query: personQuery }),
@@ -2742,7 +2736,6 @@ describe('client', () => {
           personResult,
           authorResult,
         ]);
-        fetch = oldFetch;
         done();
       })
       .catch(e => {
@@ -2782,14 +2775,7 @@ describe('client', () => {
 
     const url = 'http://not-a-real-url.com';
 
-    const networkInterface = createBatchingNetworkInterface({
-      uri: url,
-      batchInterval: 5,
-      opts: {},
-    });
-
-    const oldFetch = fetch;
-    fetch = createMockFetch({
+    const fetch = createMockFetch({
       url,
       opts: {
         body: JSON.stringify([
@@ -2812,6 +2798,13 @@ describe('client', () => {
         personResult,
         authorResult,
       ]),
+    });
+
+    const networkInterface = createBatchingNetworkInterface({
+      uri: url,
+      batchInterval: 5,
+      opts: {},
+      fetch,
     });
 
     Promise.all([
@@ -2837,7 +2830,6 @@ describe('client', () => {
           personResult,
           authorResult,
         ]);
-        fetch = oldFetch;
         done();
       })
       .catch(e => {

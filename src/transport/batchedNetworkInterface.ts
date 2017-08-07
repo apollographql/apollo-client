@@ -1,7 +1,5 @@
 import { ExecutionResult } from 'graphql';
 
-import 'whatwg-fetch';
-
 import {
   BaseNetworkInterface,
   HTTPNetworkInterface,
@@ -43,13 +41,15 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
     batchInterval = 10,
     batchMax = 0,
     fetchOpts,
+    fetch = undefined,
   }: {
     uri: string;
     batchInterval?: number;
     batchMax?: number;
     fetchOpts: RequestInit;
+    fetch?: any;
   }) {
-    super(uri, fetchOpts);
+    super(uri, fetchOpts, fetch);
 
     if (typeof batchInterval !== 'number') {
       throw new Error(`batchInterval must be a number, got ${batchInterval}`);
@@ -236,7 +236,7 @@ export class HTTPBatchedNetworkInterface extends BaseNetworkInterface {
       return printRequest(request);
     });
 
-    return fetch(this._uri, {
+    return this._fetch(this._uri, {
       ...this._opts,
       body: JSON.stringify(printedRequests),
       method: 'POST',
@@ -255,6 +255,7 @@ export interface BatchingNetworkInterfaceOptions {
   batchInterval?: number;
   batchMax?: number;
   opts?: RequestInit;
+  fetch?: any;
 }
 
 export function createBatchingNetworkInterface(
@@ -270,5 +271,6 @@ export function createBatchingNetworkInterface(
     batchInterval: options.batchInterval,
     batchMax: options.batchMax,
     fetchOpts: options.opts || {},
+    fetch: options.fetch,
   });
 }

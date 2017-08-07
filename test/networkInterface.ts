@@ -2,7 +2,15 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { assign, isEqual } from 'lodash';
-import * as fetchMock from 'fetch-mock';
+import * as fetchMockModule from 'fetch-mock';
+
+import * as fetchPonyfill_ from 'fetch-ponyfill';
+// Trick rollup, see:
+// https://github.com/rollup/rollup/issues/670#issuecomment-284621537
+const fetchPonyfill = fetchPonyfill_;
+
+const fetchMock = fetchMockModule.sandbox();
+fetchMock.setImplementations(fetchPonyfill());
 
 // make it easy to assert with promises
 chai.use(chaiAsPromised);
@@ -257,7 +265,7 @@ describe('network interface', () => {
     it('should alter the request variables', () => {
       const testWare1 = TestWare([{ key: 'personNum', val: 1 }]);
 
-      const swapi = createNetworkInterface({ uri: swapiUrl });
+      const swapi = createNetworkInterface({ uri: swapiUrl, fetch: fetchMock });
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -275,7 +283,7 @@ describe('network interface', () => {
     it('should alter the options but not overwrite defaults', () => {
       const testWare1 = TestWare([], [{ key: 'planet', val: 'mars' }]);
 
-      const swapi = createNetworkInterface({ uri: swapiUrl });
+      const swapi = createNetworkInterface({ uri: swapiUrl, fetch: fetchMock });
       swapi.use([testWare1]);
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -299,6 +307,7 @@ describe('network interface', () => {
 
       const swapi = createNetworkInterface({
         uri: 'http://graphql-swapi.test/',
+        fetch: fetchMock,
       });
       swapi.use([testWare1]);
       const simpleRequest = {
@@ -327,6 +336,7 @@ describe('network interface', () => {
 
       const swapi = createNetworkInterface({
         uri: 'http://graphql-swapi.test/',
+        fetch: fetchMock,
       });
       swapi.use([testWare1, testWare2]);
       // this is a stub for the end user client api
@@ -346,7 +356,7 @@ describe('network interface', () => {
       const testWare1 = TestWare([{ key: 'personNum', val: 1 }]);
       const testWare2 = TestWare([{ key: 'filmNum', val: 1 }]);
 
-      const swapi = createNetworkInterface({ uri: swapiUrl });
+      const swapi = createNetworkInterface({ uri: swapiUrl, fetch: fetchMock });
       swapi.use([testWare1]).use([testWare2]);
       const simpleRequest = {
         query: complexQueryWithTwoVars,
@@ -373,7 +383,10 @@ describe('network interface', () => {
 
   describe('afterware', () => {
     it('should return errors thrown in afterwares', () => {
-      const networkInterface = createNetworkInterface({ uri: swapiUrl });
+      const networkInterface = createNetworkInterface({
+        uri: swapiUrl,
+        fetch: fetchMock,
+      });
       networkInterface.useAfter([
         {
           applyAfterware() {
@@ -459,7 +472,7 @@ describe('network interface', () => {
     };
 
     it('should fetch remote data', () => {
-      const swapi = createNetworkInterface({ uri: swapiUrl });
+      const swapi = createNetworkInterface({ uri: swapiUrl, fetch: fetchMock });
 
       // this is a stub for the end user client api
       const simpleRequest = {
@@ -483,6 +496,7 @@ describe('network interface', () => {
     it('should throw an error with the response when request is forbidden', () => {
       const unauthorizedInterface = createNetworkInterface({
         uri: unauthorizedUrl,
+        fetch: fetchMock,
       });
 
       return unauthorizedInterface.query(doomedToFail).catch(err => {
@@ -498,6 +512,7 @@ describe('network interface', () => {
     it('should throw an error with the response when service is unavailable', () => {
       const unauthorizedInterface = createNetworkInterface({
         uri: serviceUnavailableUrl,
+        fetch: fetchMock,
       });
 
       return unauthorizedInterface.query(doomedToFail).catch(err => {
@@ -513,7 +528,7 @@ describe('network interface', () => {
 
   describe('transforming queries', () => {
     it('should remove the @connection directive', () => {
-      const swapi = createNetworkInterface({ uri: swapiUrl });
+      const swapi = createNetworkInterface({ uri: swapiUrl, fetch: fetchMock });
 
       const simpleRequestWithConnection = {
         query: simpleQueryWithConnection,
@@ -528,7 +543,7 @@ describe('network interface', () => {
     });
 
     it('should remove the @connection directive even with no key but warn the user', () => {
-      const swapi = createNetworkInterface({ uri: swapiUrl });
+      const swapi = createNetworkInterface({ uri: swapiUrl, fetch: fetchMock });
 
       const simpleRequestWithConnectionButNoKey = {
         query: simpleQueryWithConnectionButNoKey,

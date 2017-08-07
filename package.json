@@ -73,12 +73,12 @@
   "license": "MIT",
   "dependencies": {
     "apollo-link-core": "^0.2.0",
+    "fetch-ponyfill": "^4.1.0",
     "graphql": "^0.10.0",
     "graphql-anywhere": "^3.0.1",
     "graphql-tag": "^2.0.0",
     "redux": "^3.4.0",
-    "symbol-observable": "^1.0.2",
-    "whatwg-fetch": "^2.0.0"
+    "symbol-observable": "^1.0.2"
   },
   "devDependencies": {
     "@types/benchmark": "1.0.30",
@@ -104,7 +104,6 @@
     "grunt": "1.0.1",
     "grunt-tslint": "5.0.1",
     "gzip-size": "3.0.0",
-    "isomorphic-fetch": "2.2.1",
     "istanbul": "0.4.5",
     "lint-staged": "4.0.2",
     "lodash": "4.17.4",

@@ -17,10 +17,6 @@ import { ExecutionResult } from 'graphql';
 
 import gql from 'graphql-tag';
 
-import 'whatwg-fetch';
-
-declare var fetch: any;
-
 describe('HTTPBatchedNetworkInterface', () => {
   // Helper method that tests a roundtrip given a particular set of requests to the
   // batched network interface and the
@@ -41,14 +37,6 @@ describe('HTTPBatchedNetworkInterface', () => {
     opts?: RequestInit;
   }) => {
     const url = 'http://fake.com/graphql';
-    const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
-      uri: url,
-      batchInterval: 10,
-      fetchOpts: opts,
-    });
-
-    batchedNetworkInterface.use(middlewares);
-    batchedNetworkInterface.useAfter(afterwares);
 
     const printedRequests: Array<any> = [];
     const resultList: Array<any> = [];
@@ -57,7 +45,7 @@ describe('HTTPBatchedNetworkInterface', () => {
       resultList.push(result);
     });
 
-    fetch =
+    const fetch =
       fetchFunc ||
       createMockFetch({
         url,
@@ -74,6 +62,16 @@ describe('HTTPBatchedNetworkInterface', () => {
         ),
         result: createMockedIResponse(resultList),
       });
+
+    const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
+      uri: url,
+      batchInterval: 10,
+      fetchOpts: opts,
+      fetch,
+    });
+
+    batchedNetworkInterface.use(middlewares);
+    batchedNetworkInterface.useAfter(afterwares);
 
     return batchedNetworkInterface
       .batchQuery(requestResultPairs.map(({ request }) => request))
@@ -459,18 +457,13 @@ describe('HTTPBatchedNetworkInterface', () => {
       `;
 
       const url = 'http://fake.com/graphql';
-      const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
-        uri: url,
-        batchInterval: 10,
-        fetchOpts: {},
-      });
 
       const printedRequests: Array<any> = [
         printRequest({ query: authorQuery }),
       ];
       const resultList: Array<any> = [authorResult];
 
-      fetch = createMockFetch({
+      const fetch = createMockFetch({
         url,
         opts: {
           body: JSON.stringify(printedRequests),
@@ -481,6 +474,13 @@ describe('HTTPBatchedNetworkInterface', () => {
           method: 'POST',
         },
         result: createMockedIResponse(resultList),
+      });
+
+      const batchedNetworkInterface = new HTTPBatchedNetworkInterface({
+        uri: url,
+        batchInterval: 10,
+        fetchOpts: {},
+        fetch,
       });
 
       return batchedNetworkInterface

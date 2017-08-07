@@ -281,6 +281,14 @@ declare namespace FetchMock {
               lot of array buffers, it can be useful to default to `false`
         */
       configure(opts: Object): void;
+      /**
+         * Configure the fetch implementation to be used
+         */
+      setImplementations(implementations: Object): void;
+      /**
+         * Return a sandbox
+         */
+      sandbox(): FetchMockStatic;
   }
 }
 

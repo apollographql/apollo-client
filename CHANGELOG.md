@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Make `fetch` implementation configurable [PR #2008](https://github.com/apollographql/apollo-client/pull/2008)
 
 ### 1.9.0
 - Move to `apollo-link-core` from `apollo-link` to reduce bundle size [PR #1955](https://github.com/apollographql/apollo-client/pull/1955)

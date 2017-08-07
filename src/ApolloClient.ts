@@ -294,7 +294,7 @@ export default class ApolloClient implements DataProxy {
     if (
       typeof connectToDevTools === 'undefined'
         ? defaultConnectToDevTools
-        : connectToDevTools
+        : connectToDevTools && typeof window !== 'undefined'
     ) {
       (window as any).__APOLLO_CLIENT__ = this;
     }

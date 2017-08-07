@@ -207,9 +207,9 @@ export default class ApolloClient implements DataProxy {
     const createQuery = (
       getResult: (request: Request) => Observable<ExecutionResult>,
     ) => {
-      let resolved = false;
       return (request: Request) =>
         new Promise<ExecutionResult>((resolve, reject) => {
+          let resolved = false;
           const subscription = getResult(request).subscribe({
             next: (data: ExecutionResult) => {
               if (!resolved) {

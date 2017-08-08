@@ -6,6 +6,7 @@ import {
 } from './transport/networkInterface';
 
 import { execute, ApolloLink } from 'apollo-link-core';
+import { assign } from './util/assign';
 
 import {
   ExecutionResult,
@@ -242,12 +243,11 @@ export default class ApolloClient implements DataProxy {
         'function'
     ) {
       console.warn(`The Observable Network interface will be deprecated`);
-      this.networkInterface = {
-        ...networkInterface,
+      this.networkInterface = assign(networkInterface || {}, {
         query: createQuery(
           (networkInterface as ObservableNetworkInterface).request,
         ),
-      };
+      });
     } else {
       this.networkInterface = networkInterface
         ? <NetworkInterface>networkInterface

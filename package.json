@@ -120,7 +120,7 @@
     "rxjs": "5.4.2",
     "sinon": "3.0.0",
     "source-map-support": "0.4.15",
-    "ts-jest": "20.0.9",
+    "ts-jest": "20.0.10",
     "tslint": "5.5.0",
     "typescript": "2.4.2",
     "uglify-js": "3.0.27",

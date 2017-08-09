@@ -118,7 +118,7 @@
     "request": "2.81.0",
     "rollup": "0.45.2",
     "rxjs": "5.4.2",
-    "sinon": "3.0.0",
+    "sinon": "3.1.0",
     "source-map-support": "0.4.15",
     "ts-jest": "20.0.10",
     "tslint": "5.5.0",

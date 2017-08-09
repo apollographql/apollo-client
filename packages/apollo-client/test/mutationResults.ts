@@ -1,21 +1,18 @@
 import { assert } from 'chai';
-import { Operation, ApolloLink, Observable } from 'apollo-link-core';
+import { ApolloLink, Observable } from 'apollo-link-core';
 
 import { mockSingleLink } from './mocks/mockLinks';
 import ApolloClient from '../src';
-import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
 
 import { Subscription } from '../src/util/Observable';
 
-import { assign, cloneDeep } from 'lodash';
-
-import { ObservableQuery } from '../src/core/ObservableQuery';
+import { cloneDeep } from 'lodash';
 
 import gql from 'graphql-tag';
 
 import { withWarning } from './util/wrap';
 
-import { InMemoryCache } from '../src/data/inMemoryCache';
+import InMemoryCache from '../src/cache-inmemory';
 
 describe('mutation results', () => {
   const query = gql`
@@ -73,28 +70,6 @@ describe('mutation results', () => {
     }
   `;
 
-  const queryWithVars = gql`
-    query todoList($id: Int) {
-      __typename
-      todoList(id: $id) {
-        __typename
-        id
-        todos {
-          id
-          __typename
-          text
-          completed
-        }
-        filteredTodos: todos(completed: true) {
-          id
-          __typename
-          text
-          completed
-        }
-      }
-    }
-  `;
-
   const result: any = {
     data: {
       __typename: 'Query',
@@ -147,77 +122,8 @@ describe('mutation results', () => {
     },
   };
 
-  const result6: any = {
-    data: {
-      __typename: 'Query',
-      todoList: {
-        __typename: 'TodoList',
-        id: '6',
-        todos: [
-          {
-            __typename: 'Todo',
-            id: '13',
-            text: 'Hello world',
-            completed: false,
-          },
-          {
-            __typename: 'Todo',
-            id: '16',
-            text: 'Second task',
-            completed: false,
-          },
-          {
-            __typename: 'Todo',
-            id: '112',
-            text: 'Do other stuff',
-            completed: false,
-          },
-        ],
-        filteredTodos: [],
-      },
-    },
-  };
-
-  const result5: any = {
-    data: {
-      __typename: 'Query',
-      todoList: {
-        __typename: 'TodoList',
-        id: '5',
-        todos: [
-          {
-            __typename: 'Todo',
-            id: '13',
-            text: 'Hello world',
-            completed: false,
-          },
-          {
-            __typename: 'Todo',
-            id: '16',
-            text: 'Second task',
-            completed: false,
-          },
-          {
-            __typename: 'Todo',
-            id: '112',
-            text: 'Do other stuff',
-            completed: false,
-          },
-        ],
-        filteredTodos: [],
-      },
-    },
-  };
-
   let client: ApolloClient;
   let link: any;
-
-  type CustomMutationBehavior = {
-    type: 'CUSTOM_MUTATION_RESULT';
-    dataId: string;
-    field: string;
-    value: any;
-  };
 
   function setupObsHandle(...mockedResponses: any[]) {
     link = mockSingleLink(
@@ -231,12 +137,17 @@ describe('mutation results', () => {
     client = new ApolloClient({
       link,
       addTypename: true,
-      dataIdFromObject: (obj: any) => {
-        if (obj.id && obj.__typename) {
-          return obj.__typename + obj.id;
-        }
-        return null;
-      },
+      cache: new InMemoryCache(
+        {},
+        {
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+        },
+      ),
     });
 
     return client.watchQuery({
@@ -258,12 +169,17 @@ describe('mutation results', () => {
     client = new ApolloClient({
       link,
       addTypename: true,
-      dataIdFromObject: (obj: any) => {
-        if (obj.id && obj.__typename) {
-          return obj.__typename + obj.id;
-        }
-        return null;
-      },
+      cache: new InMemoryCache(
+        {},
+        {
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+        },
+      ),
     });
 
     return client.watchQuery({
@@ -386,7 +302,7 @@ describe('mutation results', () => {
       )
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             handle = client.watchQuery({ query: queryTodos });
             subscriptionHandle = handle.subscribe({
               next(res: any) {
@@ -449,7 +365,7 @@ describe('mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -522,7 +438,7 @@ describe('mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({
               query,
               variables,
@@ -605,7 +521,7 @@ describe('mutation results', () => {
         request: { query: mutation },
         result: mutationResult,
       });
-      const subs = obsHandle.subscribe({
+      obsHandle.subscribe({
         next: () => null,
       });
       return client.mutate({
@@ -640,7 +556,7 @@ describe('mutation results', () => {
       );
 
       obsHandle.subscribe({
-        next(obj) {
+        next() {
           client
             .mutate({
               mutation,
@@ -695,7 +611,7 @@ describe('mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -708,7 +624,7 @@ describe('mutation results', () => {
           return client.mutate({
             mutation,
             updateQueries: {
-              todoList: (prev, options) => {
+              todoList: () => {
                 throw new Error(`Hello... It's me.`);
               },
             },
@@ -783,6 +699,7 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       link,
+      cache: new InMemoryCache({}, { addTypename: false }),
       addTypename: false,
     });
 
@@ -808,7 +725,7 @@ describe('mutation results', () => {
           client.mutate({
             mutation: resetMutation,
             updateQueries: {
-              Echo: (prev, options) => {
+              Echo: () => {
                 return { echo: '0' };
               },
             },
@@ -831,6 +748,7 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       addTypename: false,
+      cache: new InMemoryCache({}, { addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>
           new Observable(observer => {
@@ -908,6 +826,7 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       addTypename: false,
+      cache: new InMemoryCache({}, { addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>
           new Observable(observer => {
@@ -984,6 +903,7 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       addTypename: false,
+      cache: new InMemoryCache({}, { addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>
           new Observable(observer => {
@@ -1090,7 +1010,7 @@ describe('mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -1179,7 +1099,7 @@ describe('mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({
               query,
               variables,
@@ -1257,7 +1177,7 @@ describe('mutation results', () => {
       );
 
       obsHandle.subscribe({
-        next(obj) {
+        next() {
           client
             .mutate({
               mutation,
@@ -1352,7 +1272,7 @@ describe('mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {

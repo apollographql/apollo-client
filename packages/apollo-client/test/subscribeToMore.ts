@@ -11,6 +11,8 @@ import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
 import { ApolloLink, Operation } from 'apollo-link-core';
 
+import InMemoryCache from '../src/cache-inmemory';
+
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions
     .filter(x => x.kind === 'OperationDefinition')
@@ -88,6 +90,7 @@ describe('subscribeToMore', () => {
     let counter = 0;
 
     const client = new ApolloClient({
+      cache: new InMemoryCache({}, { addTypename: false }),
       link,
       addTypename: false,
     });
@@ -107,7 +110,7 @@ describe('subscribeToMore', () => {
           name
         }
       `,
-      updateQuery: (prev, { subscriptionData }) => {
+      updateQuery: (_, { subscriptionData }) => {
         return { entry: { value: subscriptionData.data.name } };
       },
     });
@@ -141,6 +144,7 @@ describe('subscribeToMore', () => {
     const client = new ApolloClient({
       link,
       addTypename: false,
+      cache: new InMemoryCache({}, { addTypename: false }),
     });
 
     const obsHandle = client.watchQuery({
@@ -161,10 +165,10 @@ describe('subscribeToMore', () => {
           name
         }
       `,
-      updateQuery: (prev, { subscriptionData }) => {
+      updateQuery: (_, { subscriptionData }) => {
         return { entry: { value: subscriptionData.data.name } };
       },
-      onError: err => {
+      onError: () => {
         errorCount += 1;
       },
     });
@@ -200,6 +204,7 @@ describe('subscribeToMore', () => {
     const client = new ApolloClient({
       link,
       addTypename: false,
+      cache: new InMemoryCache({}, { addTypename: false }),
     });
 
     const obsHandle = client.watchQuery({
@@ -214,7 +219,7 @@ describe('subscribeToMore', () => {
 
     let errorCount = 0;
     const consoleErr = console.error;
-    console.error = (err: Error) => {
+    console.error = (_: Error) => {
       errorCount += 1;
     };
 
@@ -224,7 +229,7 @@ describe('subscribeToMore', () => {
           name
         }
       `,
-      updateQuery: (prev, { subscriptionData }) => {
+      updateQuery: () => {
         throw new Error('should not be called because of initial error');
       },
     });

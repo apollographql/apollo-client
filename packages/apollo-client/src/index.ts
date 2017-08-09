@@ -1,4 +1,4 @@
-export { print } from 'graphql/language/printer';
+export { print as printAST } from 'graphql/language/printer';
 export { Operation } from 'apollo-link-core';
 
 export {

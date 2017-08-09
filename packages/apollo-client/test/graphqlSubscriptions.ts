@@ -2,15 +2,14 @@ import { mockObservableLink, MockedSubscription } from './mocks/mockLinks';
 
 import { assert } from 'chai';
 
-import { cloneDeep } from 'lodash';
-
 import ApolloClient from '../src';
 
 import gql from 'graphql-tag';
 
 import { QueryManager } from '../src/core/QueryManager';
+import { DataStore } from '../src/data/store';
 
-import { InMemoryCache } from '../src/data/inMemoryCache';
+import InMemoryCache from '../src/cache-inmemory';
 
 describe('GraphQL Subscriptions', () => {
   const results = [
@@ -84,6 +83,7 @@ describe('GraphQL Subscriptions', () => {
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
+      cache: new InMemoryCache({}, { addTypename: false }),
       addTypename: false,
     });
 
@@ -110,6 +110,7 @@ describe('GraphQL Subscriptions', () => {
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
+      cache: new InMemoryCache({}, { addTypename: false }),
       addTypename: false,
     });
 
@@ -135,6 +136,7 @@ describe('GraphQL Subscriptions', () => {
     const link = mockObservableLink(sub1);
     const queryManager = new QueryManager({
       link,
+      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       addTypename: false,
     });
 
@@ -142,7 +144,7 @@ describe('GraphQL Subscriptions', () => {
 
     let counter = 0;
 
-    const sub = obs.subscribe({
+    obs.subscribe({
       next(result) {
         assert.deepEqual(result, results[0].result);
         counter++;
@@ -153,7 +155,7 @@ describe('GraphQL Subscriptions', () => {
     }) as any;
 
     // Subscribe again. Should also receive the same result.
-    const resub = obs.subscribe({
+    obs.subscribe({
       next(result) {
         assert.deepEqual(result, results[0].result);
         counter++;
@@ -171,10 +173,11 @@ describe('GraphQL Subscriptions', () => {
     let numResults = 0;
     const queryManager = new QueryManager({
       link,
+      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       addTypename: false,
     });
 
-    const sub = queryManager.startGraphQLSubscription(options).subscribe({
+    queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
         assert.deepEqual(result, results[numResults].result);
         numResults++;

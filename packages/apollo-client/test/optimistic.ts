@@ -3,11 +3,7 @@ const { assert } = chai;
 
 import { mockSingleLink } from './mocks/mockLinks';
 import ApolloClient from '../src';
-import {
-  MutationQueryReducersMap,
-  NormalizedCache,
-  StoreObject,
-} from '../src/data/types';
+import { MutationQueryReducersMap } from '../src/data/types';
 
 import { assign, cloneDeep } from 'lodash';
 
@@ -17,7 +13,7 @@ import gql from 'graphql-tag';
 
 import { addTypenameToDocument } from '../src/queries/queryTransform';
 
-import InMemoryCache from 'apollo-cache-inmemory';
+import InMemoryCache from '../src/cache-inmemory';
 
 describe('optimistic mutation results', () => {
   const query = gql`
@@ -106,13 +102,6 @@ describe('optimistic mutation results', () => {
   let client: ApolloClient;
   let link: any;
 
-  type CustomMutationBehavior = {
-    type: 'CUSTOM_MUTATION_RESULT';
-    dataId: string;
-    field: string;
-    value: any;
-  };
-
   function setup(...mockedResponses: any[]) {
     link = mockSingleLink(
       {
@@ -124,12 +113,17 @@ describe('optimistic mutation results', () => {
 
     client = new ApolloClient({
       link,
-      dataIdFromObject: (obj: any) => {
-        if (obj.id && obj.__typename) {
-          return obj.__typename + obj.id;
-        }
-        return null;
-      },
+      cache: new InMemoryCache(
+        {},
+        {
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+        },
+      ),
     });
 
     const obsHandle = client.watchQuery({
@@ -173,16 +167,6 @@ describe('optimistic mutation results', () => {
         }),
       }),
     };
-
-    interface IOptimisticResponse {
-      __typename: string;
-      createTodo: {
-        __typename: string;
-        id: string;
-        text: string;
-        completed: boolean;
-      };
-    }
 
     const optimisticResponse = {
       __typename: 'Mutation',
@@ -255,7 +239,7 @@ describe('optimistic mutation results', () => {
         )
           .then(() => {
             // we have to actually subscribe to the query to be able to update it
-            return new Promise((resolve, reject) => {
+            return new Promise(resolve => {
               const handle = client.watchQuery({ query });
               subscriptionHandle = handle.subscribe({
                 next(res) {
@@ -353,7 +337,7 @@ describe('optimistic mutation results', () => {
         )
           .then(() => {
             // we have to actually subscribe to the query to be able to update it
-            return new Promise((resolve, reject) => {
+            return new Promise(resolve => {
               const handle = client.watchQuery({ query });
               subscriptionHandle = handle.subscribe({
                 next(res) {
@@ -497,7 +481,7 @@ describe('optimistic mutation results', () => {
         )
           .then(() => {
             // we have to actually subscribe to the query to be able to update it
-            return new Promise((resolve, reject) => {
+            return new Promise(resolve => {
               const handle = client.watchQuery({ query });
               subscriptionHandle = handle.subscribe({
                 next(res) {
@@ -594,7 +578,7 @@ describe('optimistic mutation results', () => {
         )
           .then(() => {
             // we have to actually subscribe to the query to be able to update it
-            return new Promise((resolve, reject) => {
+            return new Promise(resolve => {
               const handle = client.watchQuery({ query });
               subscriptionHandle = handle.subscribe({
                 next(res) {
@@ -707,7 +691,7 @@ describe('optimistic mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -848,7 +832,7 @@ describe('optimistic mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -913,7 +897,7 @@ describe('optimistic mutation results', () => {
       )
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -1019,7 +1003,7 @@ describe('optimistic mutation results', () => {
       )
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -1148,12 +1132,17 @@ describe('optimistic mutation results', () => {
 
       client = new ApolloClient({
         link,
-        dataIdFromObject: (obj: any) => {
-          if (obj.id && obj.__typename) {
-            return obj.__typename + obj.id;
-          }
-          return null;
-        },
+        cache: new InMemoryCache(
+          {},
+          {
+            dataIdFromObject: (obj: any) => {
+              if (obj.id && obj.__typename) {
+                return obj.__typename + obj.id;
+              }
+              return null;
+            },
+          },
+        ),
       });
 
       const defaultTodos = result.data.todoList.todos;
@@ -1294,7 +1283,7 @@ describe('optimistic mutation results', () => {
       })
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -1375,7 +1364,7 @@ describe('optimistic mutation results', () => {
       )
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -1501,7 +1490,7 @@ describe('optimistic mutation results', () => {
       )
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             const handle = client.watchQuery({ query });
             subscriptionHandle = handle.subscribe({
               next(res) {
@@ -1667,12 +1656,17 @@ describe('optimistic mutation results', () => {
 
       client = new ApolloClient({
         link,
-        dataIdFromObject: (obj: any) => {
-          if (obj.id && obj.__typename) {
-            return obj.__typename + obj.id;
-          }
-          return null;
-        },
+        cache: new InMemoryCache(
+          {},
+          {
+            dataIdFromObject: (obj: any) => {
+              if (obj.id && obj.__typename) {
+                return obj.__typename + obj.id;
+              }
+              return null;
+            },
+          },
+        ),
       });
 
       const defaultTodos = result.data.todoList.todos;
@@ -1828,12 +1822,17 @@ describe('optimistic mutation - githunt comments', () => {
 
     client = new ApolloClient({
       link,
-      dataIdFromObject: (obj: any) => {
-        if (obj.id && obj.__typename) {
-          return obj.__typename + obj.id;
-        }
-        return null;
-      },
+      cache: new InMemoryCache(
+        {},
+        {
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+        },
+      ),
     });
 
     const obsHandle = client.watchQuery({
@@ -1854,17 +1853,6 @@ describe('optimistic mutation - githunt comments', () => {
           login
           html_url
         }
-      }
-    }
-  `;
-
-  const mutationWithFragment = gql`
-    mutation submitComment($repoFullName: String!, $commentContent: String!) {
-      submitComment(
-        repoFullName: $repoFullName
-        commentContent: $commentContent
-      ) {
-        ...authorFields
       }
     }
   `;
@@ -1925,7 +1913,7 @@ describe('optimistic mutation - githunt comments', () => {
     })
       .then(() => {
         // we have to actually subscribe to the query to be able to update it
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
           const handle = client.watchQuery({ query, variables });
           subscriptionHandle = handle.subscribe({
             next(res) {

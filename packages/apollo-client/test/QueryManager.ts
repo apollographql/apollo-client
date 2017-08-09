@@ -14,8 +14,6 @@ import { assert } from 'chai';
 
 import { DocumentNode, ExecutionResult } from 'graphql';
 
-import ApolloClient from '../src/ApolloClient';
-
 import { ApolloQueryResult } from '../src/core/types';
 
 import * as Rx from 'rxjs';
@@ -32,15 +30,16 @@ import { Observer } from '../src/util/Observable';
 
 import { NetworkStatus } from '../src/queries/networkStatus';
 
-import wrap, { withWarning } from './util/wrap';
+import wrap from './util/wrap';
 
 import { ApolloReducerConfig } from '../src/data/types';
+import { DataStore } from '../src/data/store';
 
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from './util/observableToPromise';
 
-import InMemoryCache from 'apollo-cache-inmemory';
+import InMemoryCache from '../src/cache-inmemory';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.
@@ -65,8 +64,8 @@ describe('QueryManager', () => {
   }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
+      store: new DataStore(new InMemoryCache({}, config)),
       addTypename,
-      reducerConfig: config,
     });
   };
 
@@ -104,33 +103,6 @@ describe('QueryManager', () => {
     return queryManager.watchQuery<any>(finalOptions).subscribe({
       next: wrap(done, observer.next!),
       error: observer.error,
-    });
-  };
-
-  // Helper method that asserts whether a particular query correctly returns
-  // a given piece of data.
-  const assertRoundtrip = ({
-    done,
-    query,
-    data,
-    variables = {},
-  }: {
-    done: MochaDone;
-    query: DocumentNode;
-    data: Object;
-    variables?: Object;
-  }) => {
-    assertWithObserver({
-      done,
-      query,
-      result: { data },
-      variables,
-      observer: {
-        next(result) {
-          assert.deepEqual(result.data, data, 'Roundtrip assertion failed.');
-          done();
-        },
-      },
     });
   };
 
@@ -231,7 +203,7 @@ describe('QueryManager', () => {
         ],
       },
       observer: {
-        next(result) {
+        next() {
           done(
             new Error('Returned a result when it was supposed to error out'),
           );
@@ -273,7 +245,7 @@ describe('QueryManager', () => {
         ],
       },
       observer: {
-        next(result) {
+        next() {
           done(new Error('Returned data when it was supposed to error out.'));
         },
 
@@ -364,7 +336,7 @@ describe('QueryManager', () => {
       `,
       error: new Error('Network error'),
       observer: {
-        next: result => {
+        next: () => {
           done(new Error('Should not deliver result'));
         },
         error: error => {
@@ -397,7 +369,7 @@ describe('QueryManager', () => {
       `,
       error: new Error('Network error'),
       observer: {
-        next: result => {
+        next: () => {
           done(new Error('Should not deliver result'));
         },
       },
@@ -424,10 +396,10 @@ describe('QueryManager', () => {
       `,
       delay: 1000,
       observer: {
-        next: result => {
+        next: () => {
           done(new Error('Should not deliver result'));
         },
-        error: error => {
+        error: () => {
           done(new Error('Should not deliver result'));
         },
       },
@@ -1193,7 +1165,7 @@ describe('QueryManager', () => {
       assertWithObserver({
         done,
         observer: {
-          next(result) {
+          next() {
             done(new Error('Returned a result when it should not have.'));
           },
         },
@@ -1212,7 +1184,7 @@ describe('QueryManager', () => {
       assertWithObserver({
         done,
         observer: {
-          next(result) {
+          next() {
             done(new Error('Returned a result when it should not have.'));
           },
         },
@@ -1619,6 +1591,7 @@ describe('QueryManager', () => {
             result: { data: data2 },
           },
         ),
+        store: new DataStore(new InMemoryCache({}, { addTypename: false })),
         addTypename: false,
         ssrMode: true,
       });
@@ -1740,7 +1713,7 @@ describe('QueryManager', () => {
           pollInterval: 150,
         })
         .subscribe({
-          next(result) {
+          next() {
             handle1Count++;
             handleCount++;
             if (handle1Count > 1 && !setMilestone) {
@@ -1756,7 +1729,7 @@ describe('QueryManager', () => {
           pollInterval: 2000,
         })
         .subscribe({
-          next(result) {
+          next() {
             handleCount++;
           },
         });
@@ -2045,7 +2018,7 @@ describe('QueryManager', () => {
         ),
         // Ensure that the observable has recieved 2 results *before*
         // the rejection triggered above
-        new Promise((resolve, reject) => {
+        new Promise((_, reject) => {
           timeout = (error: Error) => reject(error);
         }),
       ]);
@@ -2309,7 +2282,7 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        operation =>
+        () =>
           new Observable(observer => {
             if (timesFired === 0) {
               timesFired += 1;
@@ -2352,7 +2325,7 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        operation =>
+        () =>
           new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
@@ -2399,7 +2372,7 @@ describe('QueryManager', () => {
 
       let timesFired = 0;
       const link = ApolloLink.from([
-        operation =>
+        () =>
           new Observable(observer => {
             if (timesFired === 0) {
               timesFired += 1;
@@ -2447,7 +2420,7 @@ describe('QueryManager', () => {
       });
       queryManager
         .fetchQuery('made up id', { query })
-        .then(result => {
+        .then(() => {
           done(new Error('Returned a result.'));
         })
         .catch(error => {
@@ -2469,7 +2442,7 @@ describe('QueryManager', () => {
       const queryManager = mockQueryManager();
 
       const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(variables: any): Promise<ExecutionResult> {
+        refetch(_: any): Promise<ExecutionResult> {
           done();
           return null as never;
         },
@@ -2499,7 +2472,7 @@ describe('QueryManager', () => {
       options.query = query;
       let refetchCount = 0;
       const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(variables: any): Promise<ExecutionResult> {
+        refetch(_: any): Promise<ExecutionResult> {
           refetchCount++;
           return null as never;
         },
@@ -2531,7 +2504,7 @@ describe('QueryManager', () => {
       options.query = query;
       let refetchCount = 0;
       const mockObservableQuery: ObservableQuery<any> = ({
-        refetch(variables: any): Promise<ExecutionResult> {
+        refetch(_: any): Promise<ExecutionResult> {
           refetchCount++;
           return null as never;
         },
@@ -2566,7 +2539,7 @@ describe('QueryManager', () => {
         },
       };
       const link = ApolloLink.from([
-        operation =>
+        () =>
           new Observable(observer => {
             // reset the store as soon as we hear about the query
             queryManager.resetStore();
@@ -2578,10 +2551,10 @@ describe('QueryManager', () => {
       queryManager = createQueryManager({ link });
       queryManager
         .query<any>({ query })
-        .then(result => {
+        .then(() => {
           done(new Error('query() gave results on a store reset'));
         })
-        .catch(error => {
+        .catch(() => {
           done();
         });
     });
@@ -2602,7 +2575,7 @@ describe('QueryManager', () => {
       error: networkError,
     })
       .query({ query })
-      .then(result => {
+      .then(() => {
         done(new Error('Returned result on an errored fetchQuery'));
       })
       .catch(error => {
@@ -2646,10 +2619,10 @@ describe('QueryManager', () => {
       config: reducerConfig,
     })
       .query({ query })
-      .then(result => {
+      .then(() => {
         done(new Error('Returned a result when it should not have.'));
       })
-      .catch(error => {
+      .catch(() => {
         done();
       });
   });
@@ -2670,7 +2643,7 @@ describe('QueryManager', () => {
     })
       .query({ query })
       .then(
-        result => {
+        () => {
           throw new Error('Returned result on an errored fetchQuery');
         },
         // don't use .catch() for this or it will catch the above error
@@ -2718,7 +2691,7 @@ describe('QueryManager', () => {
           .then(() => {
             done(new Error('Returned a result when it was not supposed to.'));
           })
-          .catch(error => {
+          .catch(() => {
             // make that the error thrown doesn't empty the state
             assert.deepEqual(
               (queryManager.dataStore.getCache() as InMemoryCache).getData()[
@@ -2729,7 +2702,7 @@ describe('QueryManager', () => {
             done();
           });
       })
-      .catch(error => {
+      .catch(() => {
         done(new Error('Threw an error on the first query.'));
       });
   });

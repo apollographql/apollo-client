@@ -1,24 +1,25 @@
 import { assert } from 'chai';
 import gql from 'graphql-tag';
-import ApolloClient from '../src/ApolloClient';
+
+import { ApolloLink } from 'apollo-link-core';
+import InMemoryCache from '../src/cache-inmemory';
 
 import { withWarning } from './util/wrap';
 
-import { InMemoryCache } from '../src/data/inMemoryCache';
+import ApolloClient from '../src/ApolloClient';
 
 describe('ApolloClient', () => {
   describe('readQuery', () => {
     it('will read some data from the store', () => {
       const client = new ApolloClient({
-        initialState: {
-          data: {
-            ROOT_QUERY: {
-              a: 1,
-              b: 2,
-              c: 3,
-            },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            c: 3,
           },
-        },
+        }),
       });
 
       assert.deepEqual<{}>(
@@ -58,37 +59,36 @@ describe('ApolloClient', () => {
 
     it('will read some deeply nested data from the store', () => {
       const client = new ApolloClient({
-        initialState: {
-          data: {
-            ROOT_QUERY: {
-              a: 1,
-              b: 2,
-              c: 3,
-              d: {
-                type: 'id',
-                id: 'foo',
-                generated: false,
-              },
-            },
-            foo: {
-              __typename: 'Foo',
-              e: 4,
-              f: 5,
-              g: 6,
-              h: {
-                type: 'id',
-                id: 'bar',
-                generated: false,
-              },
-            },
-            bar: {
-              __typename: 'Bar',
-              i: 7,
-              j: 8,
-              k: 9,
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          ROOT_QUERY: {
+            a: 1,
+            b: 2,
+            c: 3,
+            d: {
+              type: 'id',
+              id: 'foo',
+              generated: false,
             },
           },
-        },
+          foo: {
+            __typename: 'Foo',
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          bar: {
+            __typename: 'Bar',
+            i: 7,
+            j: 8,
+            k: 9,
+          },
+        }),
       });
 
       assert.deepEqual<{}>(
@@ -160,14 +160,13 @@ describe('ApolloClient', () => {
 
     it('will read some data from the store with variables', () => {
       const client = new ApolloClient({
-        initialState: {
-          data: {
-            ROOT_QUERY: {
-              'field({"literal":true,"value":42})': 1,
-              'field({"literal":false,"value":42})': 2,
-            },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          ROOT_QUERY: {
+            'field({"literal":true,"value":42})': 1,
+            'field({"literal":false,"value":42})': 2,
           },
-        },
+        }),
       });
 
       assert.deepEqual<{}>(
@@ -190,14 +189,13 @@ describe('ApolloClient', () => {
 
   it('will read some data from the store with default values', () => {
     const client = new ApolloClient({
-      initialState: {
-        data: {
-          ROOT_QUERY: {
-            'field({"literal":true,"value":-1})': 1,
-            'field({"literal":false,"value":42})': 2,
-          },
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache({
+        ROOT_QUERY: {
+          'field({"literal":true,"value":-1})': 1,
+          'field({"literal":false,"value":42})': 2,
         },
-      },
+      }),
     });
 
     assert.deepEqual<{}>(
@@ -232,7 +230,10 @@ describe('ApolloClient', () => {
 
   describe('readFragment', () => {
     it('will throw an error when there is no fragment', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       assert.throws(() => {
         client.readFragment({
@@ -259,7 +260,10 @@ describe('ApolloClient', () => {
     });
 
     it('will throw an error when there is more than one fragment but no fragment name', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       assert.throws(() => {
         client.readFragment({
@@ -297,38 +301,37 @@ describe('ApolloClient', () => {
 
     it('will read some deeply nested data from the store at any id', () => {
       const client = new ApolloClient({
-        initialState: {
-          data: {
-            ROOT_QUERY: {
-              __typename: 'Foo',
-              a: 1,
-              b: 2,
-              c: 3,
-              d: {
-                type: 'id',
-                id: 'foo',
-                generated: false,
-              },
-            },
-            foo: {
-              __typename: 'Foo',
-              e: 4,
-              f: 5,
-              g: 6,
-              h: {
-                type: 'id',
-                id: 'bar',
-                generated: false,
-              },
-            },
-            bar: {
-              __typename: 'Bar',
-              i: 7,
-              j: 8,
-              k: 9,
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          ROOT_QUERY: {
+            __typename: 'Foo',
+            a: 1,
+            b: 2,
+            c: 3,
+            d: {
+              type: 'id',
+              id: 'foo',
+              generated: false,
             },
           },
-        },
+          foo: {
+            __typename: 'Foo',
+            e: 4,
+            f: 5,
+            g: 6,
+            h: {
+              type: 'id',
+              id: 'bar',
+              generated: false,
+            },
+          },
+          bar: {
+            __typename: 'Bar',
+            i: 7,
+            j: 8,
+            k: 9,
+          },
+        }),
       });
 
       assert.deepEqual<{} | null>(
@@ -453,15 +456,14 @@ describe('ApolloClient', () => {
 
     it('will read some data from the store with variables', () => {
       const client = new ApolloClient({
-        initialState: {
-          data: {
-            foo: {
-              __typename: 'Foo',
-              'field({"literal":true,"value":42})': 1,
-              'field({"literal":false,"value":42})': 2,
-            },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          foo: {
+            __typename: 'Foo',
+            'field({"literal":true,"value":42})': 1,
+            'field({"literal":false,"value":42})': 2,
           },
-        },
+        }),
       });
 
       assert.deepEqual<{} | null>(
@@ -483,20 +485,21 @@ describe('ApolloClient', () => {
     });
 
     it('will return null when an id that can’t be found is provided', () => {
-      const client1 = new ApolloClient();
+      const client1 = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
       const client2 = new ApolloClient({
-        initialState: {
-          data: {
-            bar: { __typename: 'Foo', a: 1, b: 2, c: 3 },
-          },
-        },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          bar: { __typename: 'Foo', a: 1, b: 2, c: 3 },
+        }),
       });
       const client3 = new ApolloClient({
-        initialState: {
-          data: {
-            foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
-          },
-        },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
+        }),
       });
 
       assert.equal(
@@ -543,7 +546,10 @@ describe('ApolloClient', () => {
 
   describe('writeQuery', () => {
     it('will write some data to the store', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       client.writeQuery({
         data: { a: 1 },
@@ -608,7 +614,10 @@ describe('ApolloClient', () => {
     });
 
     it('will write some deeply nested data to the store', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       client.writeQuery({
         data: { a: 1, d: { __typename: 'D', e: 4 } },
@@ -753,7 +762,10 @@ describe('ApolloClient', () => {
     });
 
     it('will write some data to the store with variables', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       client.writeQuery({
         data: {
@@ -784,7 +796,10 @@ describe('ApolloClient', () => {
     });
 
     it('will write some data to the store with default values for variables', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       client.writeQuery({
         data: {
@@ -827,7 +842,10 @@ describe('ApolloClient', () => {
     });
 
     it('should warn when the data provided does not match the query shape', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       return withWarning(() => {
         client.writeQuery({
@@ -856,7 +874,10 @@ describe('ApolloClient', () => {
 
   describe('writeFragment', () => {
     it('will throw an error when there is no fragment', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       assert.throws(() => {
         client.writeFragment({
@@ -885,7 +906,10 @@ describe('ApolloClient', () => {
     });
 
     it('will throw an error when there is more than one fragment but no fragment name', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       assert.throws(() => {
         client.writeFragment({
@@ -925,7 +949,8 @@ describe('ApolloClient', () => {
 
     it('will write some deeply nested data into the store at any id', () => {
       const client = new ApolloClient({
-        dataIdFromObject: (o: any) => o.id,
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({}, { dataIdFromObject: (o: any) => o.id }),
       });
 
       client.writeFragment({
@@ -1176,7 +1201,10 @@ describe('ApolloClient', () => {
     });
 
     it('will write some data to the store with variables', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       client.writeFragment({
         data: {
@@ -1210,7 +1238,10 @@ describe('ApolloClient', () => {
     });
 
     it('should warn when the data provided does not match the fragment shape', () => {
-      const client = new ApolloClient();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
 
       return withWarning(() => {
         client.writeFragment({
@@ -1230,27 +1261,26 @@ describe('ApolloClient', () => {
   describe('write then read', () => {
     it('will write data locally which will then be read back', () => {
       const client = new ApolloClient({
-        initialState: {
-          data: {
-            foo: {
-              __typename: 'Foo',
-              a: 1,
-              b: 2,
-              c: 3,
-              bar: {
-                type: 'id',
-                id: '$foo.bar',
-                generated: true,
-              },
-            },
-            '$foo.bar': {
-              __typename: 'Bar',
-              d: 4,
-              e: 5,
-              f: 6,
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          foo: {
+            __typename: 'Foo',
+            a: 1,
+            b: 2,
+            c: 3,
+            bar: {
+              type: 'id',
+              id: '$foo.bar',
+              generated: true,
             },
           },
-        },
+          '$foo.bar': {
+            __typename: 'Bar',
+            d: 4,
+            e: 5,
+            f: 6,
+          },
+        }),
       });
 
       assert.deepEqual<{} | null>(
@@ -1411,8 +1441,13 @@ describe('ApolloClient', () => {
 
     it('will write data to a specific id', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
-        dataIdFromObject: (o: any) => o.key,
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(
+          {},
+          {
+            dataIdFromObject: (o: any) => o.key,
+          },
+        ),
       });
 
       client.writeQuery({
@@ -1507,7 +1542,13 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if __typename is not present', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(
+          {},
+          {
+            addTypename: false,
+          },
+        ),
         addTypename: false,
       });
 
@@ -1610,7 +1651,8 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if id and _id are not present', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1722,7 +1764,8 @@ describe('ApolloClient', () => {
 
     it('will use a default id getter if __typename and id are present', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1787,7 +1830,8 @@ describe('ApolloClient', () => {
 
     it('will use a default id getter if __typename and _id are present', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1852,7 +1896,13 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if id is present and __typename is not present', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(
+          {},
+          {
+            addTypename: false,
+          },
+        ),
         addTypename: false,
       });
 
@@ -1911,7 +1961,13 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if _id is present but __typename is not present', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(
+          {},
+          {
+            addTypename: false,
+          },
+        ),
         addTypename: false,
       });
 
@@ -1970,7 +2026,13 @@ describe('ApolloClient', () => {
 
     it('will not use a default id getter if either _id or id is present when __typename is not also present', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(
+          {},
+          {
+            addTypename: false,
+          },
+        ),
         addTypename: false,
       });
 
@@ -2077,7 +2139,8 @@ describe('ApolloClient', () => {
 
     it('will use a default id getter if one is not specified and __typename is present along with either _id or id', () => {
       const client = new ApolloClient({
-        initialState: { data: {} },
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({

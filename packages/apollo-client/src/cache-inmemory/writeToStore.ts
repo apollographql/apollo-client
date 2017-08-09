@@ -26,7 +26,7 @@ import {
   shouldInclude,
   storeKeyNameFromField,
   StoreObject,
-} from 'apollo-client';
+} from '../';
 
 export class WriteError extends Error {
   public type = 'WriteError';

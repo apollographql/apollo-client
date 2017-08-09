@@ -8,10 +8,8 @@ import {
   DataProxyWriteFragmentOptions,
 } from 'apollo-cache-core';
 
-import { HeuristicFragmentMatcher } from './fragments/fragmentMatcher';
-
 import { QueryManager } from './core/QueryManager';
-import { ApolloQueryResult, IdGetter } from './core/types';
+import { ApolloQueryResult } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 
 import { Observable } from './util/Observable';
@@ -24,7 +22,6 @@ import {
 } from './core/watchQueryOptions';
 
 import { DataStore } from './data/store';
-import { FragmentMatcherInterface } from './data/types';
 
 import { version } from './version';
 
@@ -54,20 +51,11 @@ export default class ApolloClient implements DataProxy {
   public queryManager: QueryManager;
   public addTypename: boolean;
   public disableNetworkFetches: boolean;
-  /**
-   * The dataIdFromObject function used by this client instance.
-   */
-  public dataId: IdGetter | undefined;
-  /**
-   * The dataIdFromObject function used by this client instance.
-   */
-  public dataIdFromObject: IdGetter | undefined;
   public version: string;
   public queryDeduplication: boolean;
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
-  private fragmentMatcher: FragmentMatcherInterface;
   private ssrMode: boolean;
 
   /**
@@ -78,9 +66,6 @@ export default class ApolloClient implements DataProxy {
    * @param initialState The initial state assigned to the store.
    *
    * @param initialCache The initial cache to use in the data store.
-   *
-   * @param dataIdFromObject A function that returns a object identifier given a particular result
-   * object.
    *
    * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
    *
@@ -99,15 +84,12 @@ export default class ApolloClient implements DataProxy {
   constructor(options: {
     link: ApolloLink;
     cache: Cache;
-    dataIdFromObject?: IdGetter;
     ssrMode?: boolean;
     ssrForceFetchDelay?: number;
     addTypename?: boolean;
     connectToDevTools?: boolean;
     queryDeduplication?: boolean;
-    fragmentMatcher?: FragmentMatcherInterface;
   }) {
-    let { dataIdFromObject } = options;
     const {
       link,
       cache,
@@ -115,23 +97,13 @@ export default class ApolloClient implements DataProxy {
       ssrForceFetchDelay = 0,
       addTypename = true,
       connectToDevTools,
-      fragmentMatcher,
       queryDeduplication = true,
     } = options;
-
-    if (typeof fragmentMatcher === 'undefined') {
-      this.fragmentMatcher = new HeuristicFragmentMatcher();
-    } else {
-      this.fragmentMatcher = fragmentMatcher;
-    }
 
     this.link = link;
     this.store = new DataStore(cache);
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
-    this.dataId = dataIdFromObject =
-      dataIdFromObject || defaultDataIdFromObject;
-    this.dataIdFromObject = this.dataId;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
 

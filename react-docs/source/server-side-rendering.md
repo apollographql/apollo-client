@@ -123,6 +123,8 @@ app.listen(basePort, () => console.log( // eslint-disable-line no-console
 import { Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
 import React from 'react';
+
+// A Routes file is a good shared entry-point between client and server
 import routes from './routes';
 
 const App = () =>

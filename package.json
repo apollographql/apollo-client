@@ -15,17 +15,12 @@
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/dist/index.min.js",
-      "threshold": "16 Kb"
+      "threshold": "21 Kb"
     },
     {
       "name": "graphql-anywhere",
       "path": "./packages/graphql-anywhere/lib/index.min.js",
       "threshold": "2.5 Kb"
-    },
-    {
-      "name": "apollo-cache-inmemory",
-      "path": "./packages/apollo-cache-inmemory/dist/index.min.js",
-      "threshold": "4.1 Kb"
     }
   ],
   "jest": {

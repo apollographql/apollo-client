@@ -1,8 +1,6 @@
 import { assert } from 'chai';
 import { ApolloError } from '../src/errors/ApolloError';
 
-import { createMockedIResponse } from './mocks/mockFetch';
-
 describe('ApolloError', () => {
   it('should construct itself correctly', () => {
     const graphQLErrors = [

@@ -15,22 +15,17 @@
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/dist/index.min.js",
-      "threshold": "25 Kb"
-    },
-    {
-      "name": "apollo-link-core",
-      "path": "./packages/apollo-link-core/dist/index.min.js",
-      "threshold": "2 Kb"
-    },
-    {
-      "name": "zen-observable-ts",
-      "path": "./packages/zen-observable-ts/dist/index.min.js",
-      "threshold": "2 Kb"
+      "threshold": "16 Kb"
     },
     {
       "name": "graphql-anywhere",
       "path": "./packages/graphql-anywhere/lib/index.min.js",
-      "threshold": "3 Kb"
+      "threshold": "2.5 Kb"
+    },
+    {
+      "name": "apollo-cache-inmemory",
+      "path": "./packages/apollo-cache-inmemory/dist/index.min.js",
+      "threshold": "4.1 Kb"
     }
   ],
   "jest": {

@@ -11,9 +11,10 @@ import {
   InlineFragmentNode,
   ValueNode,
   SelectionNode,
-  ExecutionResult,
   NameNode,
 } from 'graphql';
+
+import { StoreValue, IdValue, JsonValue } from '../data/types';
 
 function isStringValue(value: ValueNode): value is StringValueNode {
   return value.kind === 'StringValue';
@@ -181,48 +182,6 @@ export function isInlineFragment(
 ): selection is InlineFragmentNode {
   return selection.kind === 'InlineFragment';
 }
-
-export function graphQLResultHasError(result: ExecutionResult) {
-  return result.errors && result.errors.length;
-}
-
-/**
- * This is a normalized representation of the Apollo query result cache. It consists of
- * a flattened representation of query result trees.
- */
-export interface NormalizedCache {
-  [dataId: string]: StoreObject;
-}
-
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldKey: string]: StoreValue;
-}
-
-export interface IdValue {
-  type: 'id';
-  id: string;
-  generated: boolean;
-}
-
-export interface JsonValue {
-  type: 'json';
-  json: any;
-}
-
-export type ListValue = Array<null | IdValue>;
-
-export type StoreValue =
-  | number
-  | string
-  | string[]
-  | IdValue
-  | ListValue
-  | JsonValue
-  | null
-  | undefined
-  | void
-  | Object;
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
   return (

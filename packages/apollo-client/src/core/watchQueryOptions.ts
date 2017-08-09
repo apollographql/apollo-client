@@ -1,9 +1,8 @@
-import { DocumentNode, FragmentDefinitionNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { FetchResult } from 'apollo-link-core';
+import { DataProxy } from 'apollo-cache-core';
 
-import { MutationQueryReducersMap } from '../data/mutationResults';
-
-import { DataProxy } from '../data/proxy';
+import { MutationQueryReducersMap } from '../data/types';
 
 import { PureQueryOptions } from './types';
 
@@ -71,6 +70,11 @@ export interface WatchQueryOptions extends ModifiableWatchQueryOptions {
    * developer tools, etc.
    */
   metadata?: any;
+
+  /**
+   * Context to be passed to link execution chain
+   */
+  context?: any;
 }
 
 export interface FetchMoreQueryOptions {

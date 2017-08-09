@@ -1,31 +1,25 @@
 import {
-  ModifiableWatchQueryOptions,
-  WatchQueryOptions,
-  FetchMoreQueryOptions,
-  SubscribeToMoreOptions,
-} from './watchQueryOptions';
+  NetworkStatus,
+  isNetworkRequestInFlight,
+} from '../queries/networkStatus';
 
 import { Observable, Observer, Subscription } from '../util/Observable';
+import { isEqual } from '../util/isEqual';
+import { tryFunctionOrLogError } from '../util/errorHandling';
+import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
 import { QueryScheduler } from '../scheduler/scheduler';
 
 import { ApolloError } from '../errors/ApolloError';
 
 import { QueryManager } from './QueryManager';
-
 import { ApolloQueryResult, FetchType } from './types';
-
-import { tryFunctionOrLogError } from '../util/errorHandling';
-
-import { isEqual } from '../util/isEqual';
-import maybeDeepFreeze from '../util/maybeDeepFreeze';
-
 import {
-  NetworkStatus,
-  isNetworkRequestInFlight,
-} from '../queries/networkStatus';
-
-import { getOperationName } from '../queries/getFromAST';
+  ModifiableWatchQueryOptions,
+  WatchQueryOptions,
+  FetchMoreQueryOptions,
+  SubscribeToMoreOptions,
+} from './watchQueryOptions';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};

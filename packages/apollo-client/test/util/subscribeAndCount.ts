@@ -2,8 +2,6 @@ import { ObservableQuery } from '../../src/core/ObservableQuery';
 import { ApolloQueryResult } from '../../src/core/types';
 import { Subscription } from '../../src/util/Observable';
 
-import wrap from './wrap';
-
 export default function subscribeAndCount(
   done: MochaDone,
   observable: ObservableQuery<any>,

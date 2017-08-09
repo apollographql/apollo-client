@@ -4,7 +4,7 @@ import mockQueryManager from './mockQueryManager';
 
 import { ObservableQuery } from '../../src/core/ObservableQuery'; // tslint:disable-line
 
-export default (...mockedResponses: MockedResponse[]) => {
+export default (...mockedResponses: MockedResponse[]): ObservableQuery<any> => {
   const queryManager = mockQueryManager(...mockedResponses);
   const firstRequest = mockedResponses[0].request;
   return queryManager.watchQuery({

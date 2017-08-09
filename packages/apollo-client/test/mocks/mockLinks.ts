@@ -1,12 +1,9 @@
-import { ExecutionResult, DocumentNode } from 'graphql';
-
 import {
   Operation,
   ApolloLink,
-  execute,
   FetchResult,
   Observable,
-  Observer,
+  // Observer,
 } from 'apollo-link-core';
 
 import { print } from 'graphql/language/printer';
@@ -99,14 +96,15 @@ export class MockLink extends ApolloLink {
 
 export class MockSubscriptionLink extends ApolloLink {
   public mockedSubscription: MockedSubscription;
-  private observer: Observer<any>;
+  // private observer: Observer<any>;
+  private observer: any;
 
   constructor(mockedSubscription: MockedSubscription) {
     super();
     this.mockedSubscription = mockedSubscription;
   }
 
-  public request(operation: Operation) {
+  public request() {
     return new Observable<FetchResult>(observer => {
       this.observer = observer;
     });

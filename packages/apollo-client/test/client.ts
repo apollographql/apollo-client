@@ -1024,275 +1024,261 @@ describe('client', () => {
     });
   });
 
-  it.skip(
-    'should be able to handle inlined fragments on an Interface type',
-    () => {
-      const query = gql`
-        query items {
-          items {
-            ...ItemFragment
-            __typename
-          }
-        }
-
-        fragment ItemFragment on Item {
-          id
+  it('should be able to handle inlined fragments on an Interface type', () => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
           __typename
-          ... on ColorItem {
-            color
-            __typename
-          }
         }
-      `;
-      const result = {
-        items: [
-          {
-            __typename: 'ColorItem',
-            id: '27tlpoPeXm6odAxj3paGQP',
-            color: 'red',
-          },
-          {
-            __typename: 'MonochromeItem',
-            id: '1t3iFLsHBm4c4RjOMdMgOO',
-          },
-        ],
-      };
+      }
 
-      const fancyFragmentMatcher = (
-        idValue: any, // TODO types, please.
-        typeCondition: string,
-        context: any,
-      ): boolean => {
-        const obj = context.store[idValue.id];
-
-        if (!obj) {
-          return false;
+      fragment ItemFragment on Item {
+        id
+        __typename
+        ... on ColorItem {
+          color
+          __typename
         }
+      }
+    `;
+    const result = {
+      items: [
+        {
+          __typename: 'ColorItem',
+          id: '27tlpoPeXm6odAxj3paGQP',
+          color: 'red',
+        },
+        {
+          __typename: 'MonochromeItem',
+          id: '1t3iFLsHBm4c4RjOMdMgOO',
+        },
+      ],
+    };
 
-        const implementingTypesMap: { [key: string]: string[] } = {
-          Item: ['ColorItem', 'MonochromeItem'],
-        };
+    const fancyFragmentMatcher = (
+      idValue: any, // TODO types, please.
+      typeCondition: string,
+      context: any,
+    ): boolean => {
+      const obj = context.store[idValue.id];
 
-        if (obj.__typename === typeCondition) {
-          return true;
-        }
-
-        const implementingTypes = implementingTypesMap[typeCondition];
-        if (
-          implementingTypes &&
-          implementingTypes.indexOf(obj.__typename) > -1
-        ) {
-          return true;
-        }
-
+      if (!obj) {
         return false;
+      }
+
+      const implementingTypesMap: { [key: string]: string[] } = {
+        Item: ['ColorItem', 'MonochromeItem'],
       };
 
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: result },
-      });
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(
-          {},
-          {
-            fragmentMatcher: {
-              match: fancyFragmentMatcher,
+      if (obj.__typename === typeCondition) {
+        return true;
+      }
+
+      const implementingTypes = implementingTypesMap[typeCondition];
+      if (implementingTypes && implementingTypes.indexOf(obj.__typename) > -1) {
+        return true;
+      }
+
+      return false;
+    };
+
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: result },
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(
+        {},
+        {
+          fragmentMatcher: fancyFragmentMatcher,
+        },
+      ),
+    });
+    return client.query({ query }).then((actualResult: any) => {
+      assert.deepEqual(actualResult.data, result);
+    });
+  });
+
+  it('should be able to handle inlined fragments on an Interface type with introspection fragment matcher', () => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
+          __typename
+        }
+      }
+
+      fragment ItemFragment on Item {
+        id
+        ... on ColorItem {
+          color
+          __typename
+        }
+        __typename
+      }
+    `;
+    const result = {
+      items: [
+        {
+          __typename: 'ColorItem',
+          id: '27tlpoPeXm6odAxj3paGQP',
+          color: 'red',
+        },
+        {
+          __typename: 'MonochromeItem',
+          id: '1t3iFLsHBm4c4RjOMdMgOO',
+        },
+      ],
+    };
+
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: result },
+    });
+
+    const ifm = new IntrospectionFragmentMatcher({
+      introspectionQueryResultData: {
+        __schema: {
+          types: [
+            {
+              kind: 'UNION',
+              name: 'Item',
+              possibleTypes: [
+                {
+                  name: 'ColorItem',
+                },
+                {
+                  name: 'MonochromeItem',
+                },
+              ],
             },
-          },
-        ),
-      });
-      return client.query({ query }).then((actualResult: any) => {
-        assert.deepEqual(actualResult.data, result);
-      });
-    },
-  );
+          ],
+        },
+      },
+    });
 
-  it.skip(
-    'should be able to handle inlined fragments on an Interface type with introspection fragment matcher',
-    () => {
-      const query = gql`
-        query items {
-          items {
-            ...ItemFragment
-            __typename
-          }
-        }
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({}, { fragmentMatcher: ifm.match }),
+    });
 
-        fragment ItemFragment on Item {
-          id
-          ... on ColorItem {
-            color
-            __typename
-          }
+    return client.query({ query }).then(actualResult => {
+      assert.deepEqual(actualResult.data, result);
+    });
+  });
+
+  it('should call updateQueries and update after mutation on query with inlined fragments on an Interface type', done => {
+    const query = gql`
+      query items {
+        items {
+          ...ItemFragment
           __typename
         }
-      `;
-      const result = {
-        items: [
-          {
-            __typename: 'ColorItem',
-            id: '27tlpoPeXm6odAxj3paGQP',
-            color: 'red',
-          },
-          {
-            __typename: 'MonochromeItem',
-            id: '1t3iFLsHBm4c4RjOMdMgOO',
-          },
-        ],
-      };
+      }
 
-      const link = mockSingleLink({
+      fragment ItemFragment on Item {
+        id
+        ... on ColorItem {
+          color
+          __typename
+        }
+        __typename
+      }
+    `;
+    const result = {
+      items: [
+        {
+          __typename: 'ColorItem',
+          id: '27tlpoPeXm6odAxj3paGQP',
+          color: 'red',
+        },
+        {
+          __typename: 'MonochromeItem',
+          id: '1t3iFLsHBm4c4RjOMdMgOO',
+        },
+      ],
+    };
+
+    const mutation = gql`
+      mutation myMutationName {
+        fortuneCookie
+      }
+    `;
+    const mutationResult = {
+      fortuneCookie: 'The waiter spit in your food',
+    };
+
+    const link = mockSingleLink(
+      {
         request: { query },
         result: { data: result },
-      });
+      },
+      {
+        request: { query: mutation },
+        result: { data: mutationResult },
+      },
+    );
 
-      const ifm = new IntrospectionFragmentMatcher({
-        introspectionQueryResultData: {
-          __schema: {
-            types: [
-              {
-                kind: 'UNION',
-                name: 'Item',
-                possibleTypes: [
-                  {
-                    name: 'ColorItem',
-                  },
-                  {
-                    name: 'MonochromeItem',
-                  },
-                ],
-              },
-            ],
-          },
+    const ifm = new IntrospectionFragmentMatcher({
+      introspectionQueryResultData: {
+        __schema: {
+          types: [
+            {
+              kind: 'UNION',
+              name: 'Item',
+              possibleTypes: [
+                {
+                  name: 'ColorItem',
+                },
+                {
+                  name: 'MonochromeItem',
+                },
+              ],
+            },
+          ],
         },
-      });
+      },
+    });
 
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache({}, { fragmentMatcher: ifm }),
-      });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({}, { fragmentMatcher: ifm.match }),
+    });
 
-      return client.query({ query }).then(actualResult => {
-        assert.deepEqual(actualResult.data, result);
-      });
-    },
-  );
+    const queryUpdaterSpy = sinon.spy();
+    const queryUpdater = (prev: any) => {
+      queryUpdaterSpy();
+      return prev;
+    };
+    const updateQueries = {
+      items: queryUpdater,
+    };
 
-  it.skip(
-    'should call updateQueries and update after mutation on query with inlined fragments on an Interface type',
-    done => {
-      const query = gql`
-        query items {
-          items {
-            ...ItemFragment
-            __typename
-          }
-        }
+    const updateSpy = sinon.spy();
 
-        fragment ItemFragment on Item {
-          id
-          ... on ColorItem {
-            color
-            __typename
-          }
-          __typename
-        }
-      `;
-      const result = {
-        items: [
-          {
-            __typename: 'ColorItem',
-            id: '27tlpoPeXm6odAxj3paGQP',
-            color: 'red',
-          },
-          {
-            __typename: 'MonochromeItem',
-            id: '1t3iFLsHBm4c4RjOMdMgOO',
-          },
-        ],
-      };
+    const obs = client.watchQuery({ query });
 
-      const mutation = gql`
-        mutation myMutationName {
-          fortuneCookie
-        }
-      `;
-      const mutationResult = {
-        fortuneCookie: 'The waiter spit in your food',
-      };
-
-      const link = mockSingleLink(
-        {
-          request: { query },
-          result: { data: result },
-        },
-        {
-          request: { query: mutation },
-          result: { data: mutationResult },
-        },
-      );
-
-      const ifm = new IntrospectionFragmentMatcher({
-        introspectionQueryResultData: {
-          __schema: {
-            types: [
-              {
-                kind: 'UNION',
-                name: 'Item',
-                possibleTypes: [
-                  {
-                    name: 'ColorItem',
-                  },
-                  {
-                    name: 'MonochromeItem',
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache({}, { fragmentMatcher: ifm }),
-      });
-
-      const queryUpdaterSpy = sinon.spy();
-      const queryUpdater = (prev: any) => {
-        queryUpdaterSpy();
-        return prev;
-      };
-      const updateQueries = {
-        items: queryUpdater,
-      };
-
-      const updateSpy = sinon.spy();
-
-      const obs = client.watchQuery({ query });
-
-      const sub = obs.subscribe({
-        next() {
-          client
-            .mutate({ mutation, updateQueries, update: updateSpy })
-            .then(() => {
-              assert.isTrue(queryUpdaterSpy.called);
-              assert.isTrue(updateSpy.called);
-              sub.unsubscribe();
-              done();
-            })
-            .catch(err => {
-              done(err);
-            });
-        },
-        error(err) {
-          done(err);
-        },
-      });
-    },
-  );
+    const sub = obs.subscribe({
+      next() {
+        client
+          .mutate({ mutation, updateQueries, update: updateSpy })
+          .then(() => {
+            assert.isTrue(queryUpdaterSpy.called);
+            assert.isTrue(updateSpy.called);
+            sub.unsubscribe();
+            done();
+          })
+          .catch(err => {
+            done(err);
+          });
+      },
+      error(err) {
+        done(err);
+      },
+    });
+  });
 
   it('should send operationName along with the query to the server', () => {
     const query = gql`

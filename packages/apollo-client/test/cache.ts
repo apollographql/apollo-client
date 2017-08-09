@@ -1085,13 +1085,16 @@ describe('Cache', () => {
       });
     });
 
-    it.skip('will write some data to the store with variables', () => {
-      const proxy = createCache();
+    it('will write some data to the store with variables', () => {
+      const proxy = createCache({
+        config: { addTypename: true },
+      });
 
       proxy.writeFragment({
         data: {
           a: 1,
           b: 2,
+          __typename: 'Foo',
         },
         id: 'foo',
         fragment: gql`
@@ -1108,6 +1111,7 @@ describe('Cache', () => {
 
       assert.deepEqual((proxy as InMemoryCache).getData(), {
         foo: {
+          __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
         },

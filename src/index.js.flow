@@ -117,12 +117,12 @@ export interface BatchResponseAndOptions {
   options: RequestOptions,
 }
 
-export interface BatchingNetworkInterfaceOptions {
+export type BatchingNetworkInterfaceOptions = {
   uri: string,
   batchInterval: number,
   // compatibility with NetworkInterfaceOptions
   opts?: ?RequestOptions,
-}
+};
 
 declare export function createBatchingNetworkInterface(
   options: BatchingNetworkInterfaceOptions,
@@ -159,13 +159,13 @@ export interface ResponseAndOptions {
   options: RequestOptions,
 }
 
-export interface NetworkInterfaceOptions {
+export type NetworkInterfaceOptions  = {
   // compatibility with BatchNetworkInrfaceOptions
   // also network interfaces throws an error in case you haven't provide an uri
   // in this case is right to fail typecheck too
   uri: string,
   opts?: ?RequestOptions,
-}
+};
 
 declare export function printRequest(request: Request): PrintedRequest;
 

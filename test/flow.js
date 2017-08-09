@@ -132,3 +132,12 @@ const store: ReduxStore<State, ApolloAction> = createStore(
     reducer,
     applyMiddleware(client5.middleware())
 );
+
+new ApolloClient({
+    networkInterface: createNetworkInterface({
+        uri: '/api/v1/graphql',
+        opts: {
+            credentials: 'same-origin',
+        }
+    }),
+});

@@ -17,6 +17,7 @@
 - added prettier to manage formatting of project [PR #1904](https://github.com/apollographql/apollo-client/pull/1904)
 - Replace use of `Object` with `Record<string, any>` in mutation types
 - Fix loss of referential equality for results returned by `currentResults()` before an ObservableQuery is setup [PR #1927](https://github.com/apollographql/apollo-client/pull/1927)
+- Fix networkInterface applying in constructor [PR #2014](https://github.com/apollographql/apollo-client/pull/2014)
 
 ### 1.9.0-0
 - Remove query tracking from the Redux store. Query status tracking is now handled outside of Redux in the QueryStore class. [PR #1859](https://github.com/apollographql/apollo-client/pull/1859)

@@ -9,7 +9,7 @@ import {
   execute,
   ApolloLink,
   FetchResult,
-  Observable as ZenObservable,
+  ZenObservable,
 } from 'apollo-link-core';
 import { assign } from './util/assign';
 

@@ -1,6 +1,8 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
+import InMemoryCache from '../src/cache-inmemory';
+
 import { mockSingleLink } from './mocks/mockLinks';
 import ApolloClient from '../src';
 import { ObservableQuery } from '../src/core/ObservableQuery';
@@ -39,6 +41,7 @@ describe('updateQuery on a simple query', () => {
 
     const client = new ApolloClient({
       link,
+      cache: new InMemoryCache(),
       addTypename: true,
     });
 
@@ -105,6 +108,7 @@ describe('updateQuery on a query with required and optional variables', () => {
 
     const client = new ApolloClient({
       link,
+      cache: new InMemoryCache(),
       addTypename: true,
     });
 
@@ -220,6 +224,7 @@ describe('fetchMore on an observable query', () => {
 
     client = new ApolloClient({
       link,
+      cache: new InMemoryCache(),
       addTypename: true,
     });
 
@@ -324,6 +329,7 @@ describe('fetchMore on an observable query', () => {
 
     client = new ApolloClient({
       link,
+      cache: new InMemoryCache(),
       addTypename: true,
     });
 
@@ -386,6 +392,7 @@ describe('fetchMore on an observable query', () => {
 
     client = new ApolloClient({
       link,
+      cache: new InMemoryCache(),
       addTypename: true,
     });
 
@@ -507,6 +514,7 @@ describe('fetchMore on an observable query with connection', () => {
 
     client = new ApolloClient({
       link,
+      cache: new InMemoryCache(),
       addTypename: true,
     });
 
@@ -575,6 +583,7 @@ describe('fetchMore on an observable query with connection', () => {
 
     client = new ApolloClient({
       link,
+      cache: new InMemoryCache(),
       addTypename: true,
     });
 
@@ -637,6 +646,7 @@ describe('fetchMore on an observable query with connection', () => {
 
     client = new ApolloClient({
       link,
+      cache: new InMemoryCache(),
       addTypename: true,
     });
 

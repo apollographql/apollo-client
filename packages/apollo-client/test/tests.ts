@@ -33,23 +33,24 @@ import { disableFragmentWarnings as graphqlTagDisableFragmentWarnings } from 'gr
 // Turn off warnings for repeated fragment names
 graphqlTagDisableFragmentWarnings();
 
-// import './ApolloClient';
+import './ApolloClient';
 import './assign';
-// import './client';
+import './client';
+import './cache';
 import './cloneDeep';
 import './directives';
 import './environment';
 import './errors';
-// import './fetchMore';
+import './fetchMore';
 import './fragmentMatcher';
 import './getFromAST';
-// import './graphqlSubscriptions';
+import './graphqlSubscriptions';
 import './isEqual';
-// import './mutationResults';
-// import './ObservableQuery';
-// import './optimistic';
-// import './QueryManager';
+import './mutationResults';
+import './ObservableQuery';
+import './optimistic';
+import './QueryManager';
 import './queryTransform';
-// import './scheduler';
-// import './subscribeToMore';
+import './scheduler';
+import './subscribeToMore';
 import './warnOnce';

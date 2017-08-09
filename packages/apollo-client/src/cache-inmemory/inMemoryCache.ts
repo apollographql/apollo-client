@@ -16,10 +16,18 @@ import {
   NormalizedCache,
   DiffResult,
   addTypenameToDocument,
-} from 'apollo-client';
+  defaultDataIdFromObject,
+  HeuristicFragmentMatcher,
+} from '../';
 
 import { writeResultToStore } from './writeToStore';
 import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
+
+const defaultConfig: ApolloReducerConfig = {
+  fragmentMatcher: new HeuristicFragmentMatcher().match,
+  dataIdFromObject: defaultDataIdFromObject,
+  addTypename: true,
+};
 
 export class InMemoryCache extends Cache {
   private data: NormalizedCache;
@@ -28,10 +36,13 @@ export class InMemoryCache extends Cache {
   private watches: (() => void)[] = [];
   private addTypename: boolean;
 
-  constructor(initialStore: NormalizedCache = {}, config: ApolloReducerConfig) {
+  constructor(
+    initialStore: NormalizedCache = {},
+    config: ApolloReducerConfig = {},
+  ) {
     super();
-    this.addTypename = config.addTypename;
-    this.config = config;
+    this.config = { ...defaultConfig, ...config };
+    this.addTypename = this.config.addTypename ? true : false;
     this.data = initialStore;
   }
 

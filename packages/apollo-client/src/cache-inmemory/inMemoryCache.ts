@@ -1,4 +1,5 @@
 import { DocumentNode } from 'graphql';
+import { print } from 'graphql/language/printer';
 
 import {
   Cache,

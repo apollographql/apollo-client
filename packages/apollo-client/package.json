@@ -75,7 +75,6 @@
     "@types/node": "8.0.19",
     "@types/promises-a-plus": "0.0.27",
     "@types/sinon": "2.3.3",
-    "apollo-cache-inmemory": "^0.1.0",
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
     "bundlesize": "0.13.2",

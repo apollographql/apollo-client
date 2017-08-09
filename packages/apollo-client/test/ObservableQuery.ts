@@ -3,9 +3,11 @@ const { assert } = chai;
 import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
-import { Operation, ApolloLink, Observable } from 'apollo-link-core';
+import { ApolloLink, Observable } from 'apollo-link-core';
+import InMemoryCache from '../src/cache-inmemory';
 
 import { QueryManager } from '../src/core/QueryManager';
+import { DataStore } from '../src/data/store';
 import ApolloClient from '../src/ApolloClient';
 
 import mockQueryManager from './mocks/mockQueryManager';
@@ -61,6 +63,7 @@ describe('ObservableQuery', () => {
   }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
+      store: new DataStore(new InMemoryCache()),
       addTypename,
     });
   };
@@ -254,7 +257,7 @@ describe('ObservableQuery', () => {
             done();
           }
         },
-        error: err => {
+        error: () => {
           handleCount++;
           assert.equal(handleCount, 2);
           observable.refetch();
@@ -305,7 +308,7 @@ describe('ObservableQuery', () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        (operation: Operation) => {
+        () => {
           return new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
@@ -363,7 +366,7 @@ describe('ObservableQuery', () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        (operation: Operation) => {
+        () => {
           return new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
@@ -416,7 +419,7 @@ describe('ObservableQuery', () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        (operation: Operation) => {
+        () => {
           return new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
@@ -471,7 +474,7 @@ describe('ObservableQuery', () => {
 
       let timesFired = 0;
       const link: ApolloLink = ApolloLink.from([
-        (operation: Operation) => {
+        () => {
           return new Observable(observer => {
             timesFired += 1;
             observer.next({ data });
@@ -519,7 +522,7 @@ describe('ObservableQuery', () => {
         },
       );
 
-      subscribeAndCount(done, observable, (handleCount, result) => {
+      subscribeAndCount(done, observable, handleCount => {
         if (handleCount !== 1) {
           return;
         }
@@ -545,7 +548,7 @@ describe('ObservableQuery', () => {
       );
 
       let errored = false;
-      subscribeAndCount(done, observable, (handleCount, result) => {
+      subscribeAndCount(done, observable, handleCount => {
         if (handleCount === 1) {
           observable
             .setOptions({ fetchResults: false, fetchPolicy: 'standby' })
@@ -932,19 +935,24 @@ describe('ObservableQuery', () => {
 
       const client = new ApolloClient({
         link: ni,
-        fragmentMatcher: new IntrospectionFragmentMatcher({
-          introspectionQueryResultData: {
-            __schema: {
-              types: [
-                {
-                  kind: 'UNION',
-                  name: 'Creature',
-                  possibleTypes: [{ name: 'Person' }],
+        cache: new InMemoryCache(
+          {},
+          {
+            fragmentMatcher: new IntrospectionFragmentMatcher({
+              introspectionQueryResultData: {
+                __schema: {
+                  types: [
+                    {
+                      kind: 'UNION',
+                      name: 'Creature',
+                      possibleTypes: [{ name: 'Person' }],
+                    },
+                  ],
                 },
-              ],
-            },
+              },
+            }).match,
           },
-        }),
+        ),
       });
 
       const observable = client.watchQuery({
@@ -1075,7 +1083,7 @@ describe('ObservableQuery', () => {
         },
       );
 
-      queryManager.query({ query, variables }).then((result: any) => {
+      queryManager.query({ query, variables }).then(() => {
         const observable = queryManager.watchQuery({
           query,
           variables,
@@ -1126,7 +1134,7 @@ describe('ObservableQuery', () => {
       };
 
       const updateQueries = {
-        query: (previousQueryResult: any, { mutationResult }: any) => {
+        query: (_: any, { mutationResult }: any) => {
           return {
             people_one: { name: mutationResult.data.name },
           };
@@ -1204,7 +1212,7 @@ describe('ObservableQuery', () => {
       observable.stopPolling();
 
       let startedPolling = false;
-      subscribeAndCount(done, observable, (handleCount, result) => {
+      subscribeAndCount(done, observable, handleCount => {
         if (handleCount === 1) {
           // first call to subscribe is the immediate result when
           // subscribing. later calls to this callback indicate that

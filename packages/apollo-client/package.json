@@ -54,7 +54,7 @@
   "dependencies": {
     "apollo-cache-core": "^0.1.0",
     "apollo-link-core": "^0.4.0",
-    "apollo-link-dedup": "^0.1.1",
+    "apollo-link-dedup": "^0.2.0",
     "graphql": "^0.10.0",
     "graphql-anywhere": "^3.1.0",
     "graphql-tag": "^2.0.0",

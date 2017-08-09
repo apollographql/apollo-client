@@ -1,11 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import {
-  mockSingleLink,
-  mockObservableLink,
-  MockedSubscription,
-} from './mocks/mockLinks';
+import { mockSingleLink, mockObservableLink } from './mocks/mockLinks';
 
 import ApolloClient from '../src';
 

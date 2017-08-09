@@ -121,32 +121,3 @@ const result: ApolloQueryResult<mixed> = observable.result();
 
 // $ExpectError
 const current: Promise<ApolloQueryResult<mixed>> = observable.currentResult();
-<<<<<<< f7b9869459a841f04a5cb0457a35d875a72bedc8:test/flow.js
-
-const client5 = new ApolloClient({
-    networkInterface: networkInterface1
-});
-
-const reducer = combineReducers({
-    apollo: client5.reducer()
-});
-
-type State = {
-    apollo: ApolloState
-};
-
-const store: ReduxStore<State, ApolloAction> = createStore(
-    reducer,
-    applyMiddleware(client5.middleware())
-);
-
-new ApolloClient({
-    networkInterface: createNetworkInterface({
-        uri: '/api/v1/graphql',
-        opts: {
-            credentials: 'same-origin',
-        }
-    }),
-});
-=======
->>>>>>> Lerna (#1984):packages/apollo-client/test/flow.js

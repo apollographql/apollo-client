@@ -1054,12 +1054,7 @@ declare export class ApolloClient extends DataProxy {
   writeQuery(options: DataProxyWriteQueryOptions): void,
   writeFragment(options: DataProxyWriteFragmentOptions): void,
   reducer(): (state: Store, action: ApolloAction) => Store,
-<<<<<<< f7b9869459a841f04a5cb0457a35d875a72bedc8:src/index.js.flow
-  __actionHookForDevTools(cb: Function): void,
-  middleware: <S, A>() => Middleware<S, A>,
-=======
   ___actionHookForDevTools(cb: Function): void,
->>>>>>> Lerna (#1984):packages/apollo-client/src/index.js.flow
   initStore(): void,
   resetStore(): void,
   getInitialState(): {

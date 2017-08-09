@@ -1,25 +1,7 @@
 import { assert } from 'chai';
-import gql from 'graphql-tag';
-import ApolloClient from '../src/ApolloClient';
-import { IntrospectionFragmentMatcher } from '../src/data/fragmentMatcher';
-
-import mockQueryManager from './mocks/mockQueryManager';
+import { IntrospectionFragmentMatcher } from '../src/fragments/fragmentMatcher';
 
 describe('IntrospectionFragmentMatcher', () => {
-  const introspectionQuery = gql`
-    {
-      __schema {
-        types {
-          kind
-          name
-          possibleTypes {
-            name
-          }
-        }
-      }
-    }
-  `;
-
   it('will throw an error if match is called if it is not ready', () => {
     const ifm = new IntrospectionFragmentMatcher();
     assert.throws(() => (ifm.match as any)(), /called before/);

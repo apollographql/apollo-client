@@ -4,12 +4,11 @@ import {
   DefinitionNode,
   OperationDefinitionNode,
   FieldNode,
-  InlineFragmentNode,
 } from 'graphql';
 
-import { checkDocument } from './getFromAST';
-
 import { cloneDeep } from '../util/cloneDeep';
+
+import { checkDocument } from './getFromAST';
 
 const TYPENAME_FIELD: FieldNode = {
   kind: 'Field',

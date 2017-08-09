@@ -5,83 +5,47 @@ import {
   Operation as Request,
   FetchResult,
 } from 'apollo-link-core';
-
-import { Deduplicator } from '../transport/Deduplicator';
-
-import { isEqual } from '../util/isEqual';
+import { ExecutionResult, DocumentNode } from 'graphql';
+import { print } from 'graphql/language/printer';
+import Deduplicator from 'apollo-link-dedup';
+import { DataProxy } from 'apollo-cache-core';
 import { assign } from '../util/assign';
 
-import {
-  QueryListener,
-  ApolloQueryResult,
-  PureQueryOptions,
-  FetchType,
-} from './types';
-
 import { QueryStore, QueryStoreValue } from '../queries/store';
-
 import {
   NetworkStatus,
   isNetworkRequestInFlight,
 } from '../queries/networkStatus';
-
-import { ApolloReducerConfig } from '../store';
-
 import {
-  checkDocument,
   getQueryDefinition,
   getOperationDefinition,
   getOperationName,
   getDefaultValues,
   getMutationDefinition,
 } from '../queries/getFromAST';
-
 import { addTypenameToDocument } from '../queries/queryTransform';
-
-import { DataProxy } from '../data/proxy';
-
-import {
-  FragmentMatcherInterface,
-  HeuristicFragmentMatcher,
-} from '../data/fragmentMatcher';
-
-import { isProduction } from '../util/environment';
-
-import maybeDeepFreeze from '../util/maybeDeepFreeze';
-
-import { ExecutionResult, DocumentNode, SelectionSetNode } from 'graphql';
-
-import { print } from 'graphql/language/printer';
-
-import { readQueryFromStore, ReadQueryOptions } from '../data/readFromStore';
-
-import { diffQueryAgainstStore } from '../data/readFromStore';
-
-import { QueryWithUpdater } from '../data/store';
-
-import {
-  MutationQueryReducersMap,
-  MutationQueryReducer,
-} from '../data/mutationResults';
 
 import { MutationStore } from '../mutations/store';
 
 import { QueryScheduler } from '../scheduler/scheduler';
 
-import { DataStore } from '../data/store';
-
-import { Observer, Subscription, Observable } from '../util/Observable';
-
-import { tryFunctionOrLogError } from '../util/errorHandling';
-
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 
+import { isProduction } from '../util/environment';
+import maybeDeepFreeze from '../util/maybeDeepFreeze';
+import { Observer, Subscription, Observable } from '../util/Observable';
+
+import { MutationQueryReducersMap } from '../data/types';
+import { QueryWithUpdater, DataStore } from '../data/store';
+
 import { WatchQueryOptions, SubscriptionOptions } from './watchQueryOptions';
-
 import { ObservableQuery } from './ObservableQuery';
-
-import { Cache } from '../data/cache';
-import { InMemoryCache } from '../data/inMemoryCache';
+import {
+  QueryListener,
+  ApolloQueryResult,
+  PureQueryOptions,
+  FetchType,
+} from './types';
 
 export class QueryManager {
   public pollingTimers: { [queryId: string]: any };
@@ -93,10 +57,8 @@ export class QueryManager {
   public dataStore: DataStore;
 
   private addTypename: boolean;
-  private deduplicator: Deduplicator;
-  private reducerConfig: ApolloReducerConfig;
+  private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
-  private fragmentMatcher: FragmentMatcherInterface;
 
   private onBroadcast: () => void;
 
@@ -139,49 +101,31 @@ export class QueryManager {
 
   constructor({
     link,
-    reducerConfig = {},
-    fragmentMatcher,
     addTypename = true,
     queryDeduplication = false,
     ssrMode = false,
-    initialCache,
+    store,
     onBroadcast = () => undefined,
   }: {
     link: ApolloLink;
-    fragmentMatcher?: FragmentMatcherInterface;
-    reducerConfig?: ApolloReducerConfig;
     addTypename?: boolean;
     queryDeduplication?: boolean;
     ssrMode?: boolean;
-    initialCache?: Cache;
+    store: DataStore;
     onBroadcast?: () => void;
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
     this.link = link;
-    this.deduplicator = new Deduplicator(link);
-    this.reducerConfig = reducerConfig;
+    this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
     this.pollingTimers = {};
     this.queryListeners = {};
     this.queryDocuments = {};
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
-    this.dataStore = new DataStore(
-      reducerConfig,
-      initialCache ? initialCache : new InMemoryCache(this.reducerConfig, {}),
-    );
+    this.dataStore = store;
     this.onBroadcast = onBroadcast;
-
-    // XXX This logic is duplicated in ApolloClient.ts for two reasons:
-    // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.
-    // 2. we need it here so we don't have to rewrite all the tests.
-    // in the longer term we should remove the need for 2 and move it to ApolloClient.ts only.
-    if (typeof fragmentMatcher === 'undefined') {
-      this.fragmentMatcher = new HeuristicFragmentMatcher();
-    } else {
-      this.fragmentMatcher = fragmentMatcher;
-    }
 
     this.scheduler = new QueryScheduler({
       queryManager: this,
@@ -336,7 +280,7 @@ export class QueryManager {
     // call for another query. We need this data to compute the `fetchMore`
     // network status for the query this is fetching for.
     fetchMoreForQueryId?: string,
-  ): Promise<ExecutionResult> {
+  ): Promise<FetchResult<T>> {
     const {
       variables = {},
       metadata = null,
@@ -819,8 +763,6 @@ export class QueryManager {
     // store.
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
     Object.keys(this.observableQueries).forEach(queryId => {
-      const storeQuery = this.queryStore.get(queryId);
-
       const fetchPolicy = this.observableQueries[queryId].observableQuery
         .options.fetchPolicy;
 
@@ -848,7 +790,7 @@ export class QueryManager {
     this.fetchQuery<T>(queryId, options)
       // `fetchQuery` returns a Promise. In case of a failure it should be caucht or else the
       // console will show an `Uncaught (in promise)` message. Ignore the error for now.
-      .catch((error: Error) => undefined);
+      .catch(() => undefined);
 
     return queryId;
   }
@@ -1059,26 +1001,26 @@ export class QueryManager {
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
-    const { variables } = options;
-    const request: Request = {
+    const { variables, context } = options;
+    const request = {
       query: document,
       variables,
       operationName: getOperationName(document),
+      context: context || {},
     };
+
+    request.context.forceFetch = !this.queryDeduplication;
 
     const retPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, retPromise, resolve, reject);
 
-      this.deduplicator
-        .query(request, this.queryDeduplication)
+      makePromise(execute(this.deduplicator, request))
         .then((result: ExecutionResult) => {
           // default the lastRequestId to 1
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
             // XXX handle multiple ApolloQueryResults
 
             this.dataStore.markQueryResult(
-              queryId,
-              requestId,
               result,
               document,
               variables,

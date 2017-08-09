@@ -1,0 +1,61 @@
+{
+  "name": "apollo-cache-core",
+  "version": "0.1.0",
+  "description": "Core abstract of Caching layer for Apollo Client",
+  "author": "James Baxley <james@meteor.com>",
+  "contributors": [
+    "James Baxley <james@meteor.com>",
+    "Jonas Helfer <jonas@helfer.email>",
+    "Sashko Stubailo <sashko@stubailo.com>"
+  ],
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apollographql/apollo-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-client/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-client#readme",
+  "scripts": {
+    "pretest": "npm run build",
+    "test": "npm run test-only --",
+    "posttest": "npm run lint",
+    "test-only": "mocha --reporter spec --full-trace dist/tests/tests.js",
+    "test-watch": "mocha --reporter spec --full-trace dist/tests/tests.js --watch",
+    "coverage": "istanbul cover ./node_modules/.bin/_mocha -- --reporter dot --full-trace dist/tests/tests.js",
+    "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
+    "lint": "tslint --type-check -p tsconfig.json src/*.ts && tslint --type-check -p tsconfig.json tests/*.ts",
+    "prebuild": "npm run clean:dist",
+    "build": "tsc -p .",
+    "postbuild": "cp -R ./dist/src/. ./lib",
+    "watch": "tsc -w -p .",
+    "clean": "npm run clean:dist && npm run clean:coverage",
+    "clean:dist": "rimraf dist/* && rimraf lib/*",
+    "clean:coverage": "rimraf coverage/*",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/chai-as-promised": "0.0.31",
+    "@types/chai": "^4.0.0",
+    "@types/graphql": "~0.9.0",
+    "@types/mocha": "^2.2.31",
+    "@types/sinon": "^2.3.2",
+    "chai-as-promised": "^7.0.0",
+    "chai": "^4.0.2",
+    "fetch-mock": "^5.11.0",
+    "graphql": "^0.10.3",
+    "istanbul": "^0.4.4",
+    "lodash": "^4.17.4",
+    "mocha": "^3.2.0",
+    "remap-istanbul": "^0.9.0",
+    "rimraf": "^2.5.4",
+    "sinon": "^2.3.4",
+    "source-map-support": "^0.4.5",
+    "tslint": "^5.0.0",
+    "typescript": "^2.2.1"
+  }
+}

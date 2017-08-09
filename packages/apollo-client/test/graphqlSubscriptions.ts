@@ -144,6 +144,7 @@ describe('GraphQL Subscriptions', () => {
 
     let counter = 0;
 
+    // tslint:disable-next-line
     obs.subscribe({
       next(result) {
         assert.deepEqual(result, results[0].result);
@@ -155,6 +156,7 @@ describe('GraphQL Subscriptions', () => {
     }) as any;
 
     // Subscribe again. Should also receive the same result.
+    // tslint:disable-next-line
     obs.subscribe({
       next(result) {
         assert.deepEqual(result, results[0].result);
@@ -177,6 +179,7 @@ describe('GraphQL Subscriptions', () => {
       addTypename: false,
     });
 
+    // tslint:disable-next-line
     queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
         assert.deepEqual(result, results[numResults].result);

@@ -17,6 +17,10 @@ import { QueryManager } from '../src/core/QueryManager';
 
 import { createApolloStore } from '../src/store';
 
+import { SubscriptionOptions } from '../src/core/watchQueryOptions';
+
+import { ApolloLink, Observable, FetchResult } from 'apollo-link-core';
+
 describe('GraphQL Subscriptions', () => {
   const results = [
     'Dahivat Pandya',
@@ -203,6 +207,83 @@ describe('GraphQL Subscriptions', () => {
     for (let i = 0; i < 4; i++) {
       network.fireResult(id);
     }
+  });
+
+  it('should receive multiple results for a subscription with Apollo Link', done => {
+    let numResults = 0;
+    const expectedData = [
+      'Dahivat Pandya',
+      'Vyacheslav Kim',
+      'Changping Chen',
+      'Amanda Liu',
+    ].map(name => ({ user: { name: name } }));
+    const queryInfo = {
+      request: defaultSub1.request || ({} as any),
+      results: [...expectedData],
+    };
+
+    const link = ApolloLink.from([
+      operation =>
+        new Observable(observer => {
+          if (queryInfo.results) {
+            queryInfo.results.map(result =>
+              observer.next(result as FetchResult),
+            );
+          }
+        }),
+    ]);
+    const client = new ApolloClient({
+      networkInterface: link,
+      addTypename: false,
+    });
+
+    const obs = client.subscribe(queryInfo.request as SubscriptionOptions);
+    const sub = obs.subscribe({
+      next: data => {
+        const expected = expectedData.shift();
+        if (expected) {
+          assert.equal(data, expected);
+        } else {
+          assert(false);
+        }
+        if (expectedData.length === 0) {
+          done();
+        }
+      },
+      error: console.log,
+      complete: () => assert(false),
+    });
+  });
+
+  it('should unsubscribe properly with Apollo Link', () => {
+    let numResults = 0;
+    const readyToUnsub: boolean[] = [];
+
+    const link = ApolloLink.from([
+      operation =>
+        new Observable(observer => {
+          const index = readyToUnsub.length;
+          readyToUnsub.push(false);
+          return () => {
+            assert(readyToUnsub[index]);
+          };
+        }),
+    ]);
+    const client = new ApolloClient({
+      networkInterface: link,
+      addTypename: false,
+    });
+
+    const obs0 = client.subscribe(defaultSub1.request as SubscriptionOptions);
+    const obs1 = client.subscribe(defaultSub1.request as SubscriptionOptions);
+    const subscription0 = obs0.subscribe({});
+    const subscription1 = obs1.subscribe({});
+
+    readyToUnsub[1] = true;
+    subscription1.unsubscribe();
+    readyToUnsub[0] = true;
+    subscription0.unsubscribe();
+    readyToUnsub.map(bool => assert(bool));
   });
 
   it('should fire redux action and call result reducers', done => {

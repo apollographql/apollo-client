@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+-Add support for subscriptions with Apollo Link network stack [PR #1992](https://github.com/apollographql/apollo-client/pull/1992)
 -fixed `resolved` scoping issue for multiple queries in flight with Apollo Link [PR #2002](https://github.com/apollographql/apollo-client/pull/2002)
 
 ### 1.9.0

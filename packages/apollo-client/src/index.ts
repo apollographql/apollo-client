@@ -1,14 +1,12 @@
-import { print } from 'graphql/language/printer';
+export { print } from 'graphql/language/printer';
+export { Operation } from 'apollo-link-core';
 
-import {
+export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
 } from './core/ObservableQuery';
-
-import { Subscription } from './util/Observable';
-
-import {
+export {
   WatchQueryOptions,
   MutationOptions,
   SubscriptionOptions,
@@ -16,71 +14,37 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
 } from './core/watchQueryOptions';
+export * from './core/types';
 
-import { readQueryFromStore } from './data/readFromStore';
+export {
+  HeuristicFragmentMatcher,
+  IntrospectionFragmentMatcher,
+} from './fragments/fragmentMatcher';
 
-import { writeQueryToStore } from './data/writeToStore';
-
-import { MutationQueryReducersMap } from './data/mutationResults';
-
-import {
+export {
   getQueryDefinition,
   getMutationDefinition,
+  getOperationDefinition,
   getFragmentDefinitions,
+  getDefaultValues,
   FragmentMap,
   createFragmentMap,
 } from './queries/getFromAST';
+export { NetworkStatus } from './queries/networkStatus';
+export { addTypenameToDocument } from './queries/queryTransform';
+export { shouldInclude } from './queries/directives';
 
-import { NetworkStatus } from './queries/networkStatus';
+export * from './data/types';
+export * from './data/storeUtils';
 
-import { addTypenameToDocument } from './queries/queryTransform';
+export { Subscription } from './util/Observable';
+export { assign } from './util/assign';
+export { isEqual } from './util/isEqual';
+export { isProduction } from './util/environment';
 
-import { ApolloError } from './errors/ApolloError';
+export { ApolloError } from './errors/ApolloError';
 
+export { defaultDataIdFromObject } from './ApolloClient';
 import ApolloClient from './ApolloClient';
-
-import { ApolloQueryResult } from './core/types';
-
-import { toIdValue } from './data/storeUtils';
-
-import {
-  IntrospectionFragmentMatcher,
-  FragmentMatcherInterface,
-} from './data/fragmentMatcher';
-
-export { Operation as Request } from 'apollo-link-core';
-
-export {
-  readQueryFromStore,
-  writeQueryToStore,
-  addTypenameToDocument,
-  createFragmentMap,
-  NetworkStatus,
-  ApolloError,
-  getQueryDefinition,
-  getMutationDefinition,
-  getFragmentDefinitions,
-  FragmentMap,
-  ApolloQueryResult,
-  toIdValue,
-  IntrospectionFragmentMatcher,
-  FragmentMatcherInterface,
-  // Expose the print method from GraphQL so that people that implement
-  // custom network interfaces can turn query ASTs into query strings as needed.
-  print as printAST,
-  // Internal type definitions
-  FetchPolicy,
-  WatchQueryOptions,
-  MutationOptions,
-  ObservableQuery,
-  MutationQueryReducersMap,
-  Subscription,
-  SubscriptionOptions,
-  ApolloClient,
-  FetchMoreOptions,
-  UpdateQueryOptions,
-  FetchMoreQueryOptions,
-  SubscribeToMoreOptions,
-};
 
 export default ApolloClient;

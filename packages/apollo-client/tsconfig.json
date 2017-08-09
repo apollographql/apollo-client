@@ -13,14 +13,14 @@
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "files": [
     "node_modules/typescript/lib/lib.es2015.d.ts",
     "node_modules/typescript/lib/lib.dom.d.ts",
-    "fetch-mock.typings.d.ts",
     "src/index.ts",
-    "test/tests.ts",
-    "benchmark/index.ts"
+    "test/tests.ts"
   ]
 }

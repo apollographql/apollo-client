@@ -1,22 +1,12 @@
+import { ExecutionResult, DocumentNode } from 'graphql';
+import { Cache, CacheWrite, DataProxy } from 'apollo-cache-core';
+
 import { QueryStoreValue } from '../queries/store';
-
-import { MutationQueryReducer } from './mutationResults';
-
-import { DataProxy } from '../data/proxy';
-
 import { getOperationName } from '../queries/getFromAST';
-
-import { ApolloReducerConfig } from '../store';
-
-import { graphQLResultHasError } from './storeUtils';
 
 import { tryFunctionOrLogError } from '../util/errorHandling';
 
-import { ExecutionResult, DocumentNode } from 'graphql';
-
-import { Cache, CacheWrite } from './cache';
-
-import { InMemoryCache } from './inMemoryCache';
+import { MutationQueryReducer } from './types';
 
 export type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -31,15 +21,14 @@ export interface DataWrite {
   variables: Object;
 }
 
+export function graphQLResultHasError(result: ExecutionResult) {
+  return result.errors && result.errors.length;
+}
+
 export class DataStore {
   private cache: Cache;
-  private config: ApolloReducerConfig;
 
-  constructor(
-    config: ApolloReducerConfig,
-    initialCache: Cache = new InMemoryCache(config, {}),
-  ) {
-    this.config = config;
+  constructor(initialCache: Cache) {
     this.cache = initialCache;
   }
 
@@ -48,8 +37,6 @@ export class DataStore {
   }
 
   public markQueryResult(
-    queryId: string,
-    requestId: number,
     result: ExecutionResult,
     document: DocumentNode,
     variables: any,
@@ -57,11 +44,9 @@ export class DataStore {
   ) {
     // XXX handle partial result due to errors
     if (!fetchMoreForQueryId && !graphQLResultHasError(result)) {
-      // TODO REFACTOR: is writeResultToStore a good name for something that doesn't actually
-      // write to "the" store?
       this.cache.writeResult({
         result: result.data,
-        dataId: 'ROOT_QUERY', // TODO: is this correct? what am I doing here? What is dataId for??
+        dataId: 'ROOT_QUERY',
         document: document,
         variables: variables,
       });

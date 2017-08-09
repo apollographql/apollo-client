@@ -4,15 +4,22 @@
     "class-name": true,
     "eofline": true,
     "forin": true,
-    "interface-name": false,
+    "interface-name": [true, "never-prefix"],
     "jsdoc-format": true,
     "label-position": true,
     "member-access": true,
     "member-ordering": [
       true,
-      "public-before-private",
-      "static-before-instance",
-      "variables-before-functions"
+      {
+        "order": [
+          "static-field",
+          "instance-field",
+          "constructor",
+          "public-instance-method",
+          "protected-instance-method",
+          "private-instance-method"
+        ]
+      }
     ],
     "no-any": false,
     "no-arg": true,
@@ -33,7 +40,6 @@
     "no-switch-case-fall-through": true,
     "no-trailing-whitespace": true,
     "no-unused-expression": true,
-    "no-use-before-declare": true,
     "no-var-keyword": true,
     "no-var-requires": true,
     "object-literal-sort-keys": false,

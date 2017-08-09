@@ -3,7 +3,6 @@ const { assert } = chai;
 import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
-import { ExecutionResult } from 'graphql';
 import { Operation, ApolloLink, Observable } from 'apollo-link-core';
 
 import { QueryManager } from '../src/core/QueryManager';
@@ -19,7 +18,7 @@ import {
 } from '../src/core/ObservableQuery';
 import { ApolloQueryResult } from '../src/core/types';
 
-import { IntrospectionFragmentMatcher } from '../src/data/fragmentMatcher';
+import { IntrospectionFragmentMatcher } from '../src/fragments/fragmentMatcher';
 
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
@@ -35,25 +34,11 @@ describe('ObservableQuery', () => {
       }
     }
   `;
-  const superQuery = gql`
-    query superQuery($id: ID!) {
-      people_one(id: $id) {
-        name
-        age
-      }
-    }
-  `;
   const variables = { id: 1 };
   const differentVariables = { id: 2 };
   const dataOne = {
     people_one: {
       name: 'Luke Skywalker',
-    },
-  };
-  const superDataOne = {
-    people_one: {
-      name: 'Luke Skywalker',
-      age: 21,
     },
   };
   const dataTwo = {

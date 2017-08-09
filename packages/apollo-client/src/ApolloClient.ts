@@ -1,34 +1,20 @@
-import { execute, ApolloLink, FetchResult } from 'apollo-link-core';
-
+import { ApolloLink, FetchResult } from 'apollo-link-core';
 import {
-  ExecutionResult,
-  // We need to import this here to allow TypeScript to include it in the definition file even
-  // though we don't use it. https://github.com/Microsoft/TypeScript/issues/5711
-  // We need to disable the linter here because TSLint rightfully complains that this is unused.
-  /* tslint:disable */
-  SelectionSetNode,
-  /* tslint:enable */
-  DocumentNode,
-  FragmentDefinitionNode,
-} from 'graphql';
+  Cache,
+  DataProxy,
+  DataProxyReadQueryOptions,
+  DataProxyReadFragmentOptions,
+  DataProxyWriteQueryOptions,
+  DataProxyWriteFragmentOptions,
+} from 'apollo-cache-core';
 
-import {
-  HeuristicFragmentMatcher,
-  FragmentMatcherInterface,
-} from './data/fragmentMatcher';
-
-import { ApolloReducerConfig } from './store';
-
-import { CustomResolverMap } from './data/readFromStore';
+import { HeuristicFragmentMatcher } from './fragments/fragmentMatcher';
 
 import { QueryManager } from './core/QueryManager';
-
 import { ApolloQueryResult, IdGetter } from './core/types';
-
 import { ObservableQuery } from './core/ObservableQuery';
 
 import { Observable } from './util/Observable';
-
 import { isProduction } from './util/environment';
 
 import {
@@ -37,24 +23,12 @@ import {
   MutationOptions,
 } from './core/watchQueryOptions';
 
-import { getStoreKeyName } from './data/storeUtils';
-
-import { getFragmentQueryDocument } from './queries/getFromAST';
-
-import {
-  DataProxy,
-  DataProxyReadQueryOptions,
-  DataProxyReadFragmentOptions,
-  DataProxyWriteQueryOptions,
-  DataProxyWriteFragmentOptions,
-} from './data/proxy';
+import { DataStore } from './data/store';
+import { FragmentMatcherInterface } from './data/types';
 
 import { version } from './version';
 
-import { InMemoryCache } from './data/inMemoryCache';
-import { Cache } from './data/cache';
-
-function defaultDataIdFromObject(result: any): string | null {
+export function defaultDataIdFromObject(result: any): string | null {
   if (result.__typename) {
     if (result.id !== undefined) {
       return `${result.__typename}:${result.id}`;
@@ -76,10 +50,8 @@ let hasSuggestedDevtools = false;
  */
 export default class ApolloClient implements DataProxy {
   public link: ApolloLink;
-  public initialState: any;
-  public initialCache: Cache;
+  public store: DataStore;
   public queryManager: QueryManager;
-  public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
   public disableNetworkFetches: boolean;
   /**
@@ -90,7 +62,6 @@ export default class ApolloClient implements DataProxy {
    * The dataIdFromObject function used by this client instance.
    */
   public dataIdFromObject: IdGetter | undefined;
-  public fieldWithArgs: (fieldName: string, args?: Object) => string;
   public version: string;
   public queryDeduplication: boolean;
 
@@ -125,30 +96,24 @@ export default class ApolloClient implements DataProxy {
    * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
    */
 
-  constructor(
-    options: {
-      link?: ApolloLink;
-      initialState?: any;
-      initialCache?: Cache;
-      dataIdFromObject?: IdGetter;
-      ssrMode?: boolean;
-      ssrForceFetchDelay?: number;
-      addTypename?: boolean;
-      customResolvers?: CustomResolverMap;
-      connectToDevTools?: boolean;
-      queryDeduplication?: boolean;
-      fragmentMatcher?: FragmentMatcherInterface;
-    } = {},
-  ) {
+  constructor(options: {
+    link: ApolloLink;
+    cache: Cache;
+    dataIdFromObject?: IdGetter;
+    ssrMode?: boolean;
+    ssrForceFetchDelay?: number;
+    addTypename?: boolean;
+    connectToDevTools?: boolean;
+    queryDeduplication?: boolean;
+    fragmentMatcher?: FragmentMatcherInterface;
+  }) {
     let { dataIdFromObject } = options;
     const {
       link,
-      initialState,
-      initialCache,
+      cache,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       addTypename = true,
-      customResolvers,
       connectToDevTools,
       fragmentMatcher,
       queryDeduplication = true,
@@ -160,15 +125,13 @@ export default class ApolloClient implements DataProxy {
       this.fragmentMatcher = fragmentMatcher;
     }
 
-    this.link = link ? <ApolloLink>link : ApolloLink.empty();
-
-    this.initialState = initialState ? initialState : {};
+    this.link = link;
+    this.store = new DataStore(cache);
     this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.dataId = dataIdFromObject =
       dataIdFromObject || defaultDataIdFromObject;
     this.dataIdFromObject = this.dataId;
-    this.fieldWithArgs = getStoreKeyName;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
 
@@ -178,22 +141,6 @@ export default class ApolloClient implements DataProxy {
         ssrForceFetchDelay,
       );
     }
-
-    this.reducerConfig = {
-      dataIdFromObject,
-      customResolvers,
-      addTypename,
-      fragmentMatcher: this.fragmentMatcher.match,
-    };
-
-    this.initialCache = initialCache
-      ? initialCache
-      : new InMemoryCache(
-          this.reducerConfig,
-          this.initialState && this.initialState.data
-            ? this.initialState.data
-            : {},
-        );
 
     this.watchQuery = this.watchQuery.bind(this);
     this.query = this.query.bind(this);
@@ -391,11 +338,9 @@ export default class ApolloClient implements DataProxy {
     this.queryManager = new QueryManager({
       link: this.link,
       addTypename: this.addTypename,
-      reducerConfig: this.reducerConfig,
+      store: this.store,
       queryDeduplication: this.queryDeduplication,
-      fragmentMatcher: this.fragmentMatcher,
       ssrMode: this.ssrMode,
-      initialCache: this.initialCache,
       onBroadcast: () => {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
@@ -404,7 +349,9 @@ export default class ApolloClient implements DataProxy {
               queries: this.queryManager.queryStore.getStore(),
               mutations: this.queryManager.mutationStore.getStore(),
             },
-            dataWithOptimisticResults: (this.queryManager.dataStore.getCache() as InMemoryCache).getOptimisticData(),
+            dataWithOptimisticResults: this.queryManager.dataStore
+              .getCache()
+              .getOptimisticData(),
           });
         }
       },

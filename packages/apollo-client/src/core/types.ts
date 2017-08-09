@@ -1,4 +1,4 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import { DocumentNode } from 'graphql';
 import { QueryStoreValue } from '../queries/store';
 import { NetworkStatus } from '../queries/networkStatus';
 

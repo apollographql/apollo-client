@@ -34,13 +34,13 @@ import { NetworkStatus } from '../src/queries/networkStatus';
 
 import wrap, { withWarning } from './util/wrap';
 
-import { ApolloReducerConfig } from '../src/store';
+import { ApolloReducerConfig } from '../src/data/types';
 
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from './util/observableToPromise';
 
-import { InMemoryCache } from '../src/data/inMemoryCache';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.

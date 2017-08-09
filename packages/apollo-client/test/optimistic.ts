@@ -3,8 +3,11 @@ const { assert } = chai;
 
 import { mockSingleLink } from './mocks/mockLinks';
 import ApolloClient from '../src';
-import { MutationQueryReducersMap } from '../src/data/mutationResults';
-import { NormalizedCache, StoreObject } from '../src/data/storeUtils';
+import {
+  MutationQueryReducersMap,
+  NormalizedCache,
+  StoreObject,
+} from '../src/data/types';
 
 import { assign, cloneDeep } from 'lodash';
 
@@ -14,7 +17,7 @@ import gql from 'graphql-tag';
 
 import { addTypenameToDocument } from '../src/queries/queryTransform';
 
-import { InMemoryCache } from '../src/data/inMemoryCache';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 describe('optimistic mutation results', () => {
   const query = gql`

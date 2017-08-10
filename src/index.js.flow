@@ -308,7 +308,7 @@ export interface NormalizedCache {
 
 export interface StoreObject {
   [storeFieldKey: string]: StoreValue,
-  ___typename?: string,
+  __typename?: string,
 }
 
 export interface IdValue {
@@ -476,14 +476,14 @@ export interface MutationStoreValue {
 }
 
 export type IntrospectionResultData = {
-  ___schema: {
-    types: [{
+  __schema: {
+    types: Array<{
       kind: string,
       name: string,
-      possibleTypes: [{
+      possibleTypes: Array<{
         name: string,
-      }],
-    }],
+      }>,
+    }>,
   },
 };
 
@@ -1122,7 +1122,7 @@ declare export class ApolloClient extends DataProxy {
   writeQuery(options: DataProxyWriteQueryOptions): void,
   writeFragment(options: DataProxyWriteFragmentOptions): void,
   reducer(): (state: Store, action: ApolloAction) => Store,
-  ___actionHookForDevTools(cb: Function): void,
+  __actionHookForDevTools(cb: Function): void,
   middleware: <S, A>() => Middleware<S, A>,
   initStore(): void,
   resetStore(): void,

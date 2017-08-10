@@ -245,7 +245,7 @@ export interface WatchQueryOptions {
 
 export interface FetchMoreQueryOptions {
   query?: DocumentNode,
-  variables?: {
+  +variables?: {
     [key: string]: any,
   },
 }

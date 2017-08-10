@@ -67,14 +67,6 @@ export class InMemoryCache extends Cache {
     return Promise.resolve();
   }
 
-  // deprecated, only for supporting reducers
-  public applyTransformer(
-    transform: (i: NormalizedCache) => NormalizedCache,
-  ): void {
-    this.data = transform(this.data);
-    this.broadcastWatches();
-  }
-
   public diffQuery(query: {
     query: DocumentNode;
     variables: any;

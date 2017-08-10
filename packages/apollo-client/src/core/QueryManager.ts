@@ -915,33 +915,38 @@ export class QueryManager {
     this.stopQueryInStore(queryId);
   }
 
-  public getCurrentQueryResult<T>(
-    observableQuery: ObservableQuery<T>,
-    isOptimistic = false,
-  ) {
+  public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
     const { variables, document } = this.getQueryParts(observableQuery);
 
     const lastResult = observableQuery.getLastResult();
 
-    try {
-      // first try reading the full result from the store
-      // const data = ;
-      const data = this.dataStore.getCache().read({
-        query: document,
-        variables,
-        previousResult: lastResult ? lastResult.data : undefined,
-        optimistic: isOptimistic,
-      });
+    if (lastResult && lastResult.data) {
+      return maybeDeepFreeze({ data: lastResult.data, partial: false });
+    } else {
+      const maybeNewData = this.queryListenerInvalidatedNewData[
+        observableQuery.queryId
+      ];
+      if (maybeNewData) {
+        return maybeDeepFreeze({ data: maybeNewData.data, partial: false });
+      } else {
+        try {
+          // the query is brand new, so we read from the store to see if anything is there
+          const diffResult = this.dataStore.getCache().read({
+            query: document,
+            variables,
+            optimistic: true,
+          });
 
-      return maybeDeepFreeze({ data, partial: false });
-    } catch (e) {
-      return maybeDeepFreeze({ data: {}, partial: true });
+          return maybeDeepFreeze({ data: diffResult, partial: false });
+        } catch (e) {
+          return maybeDeepFreeze({ data: {}, partial: true });
+        }
+      }
     }
   }
 
   public getQueryWithPreviousResult<T>(
     queryIdOrObservable: string | ObservableQuery<T>,
-    isOptimistic = false,
   ) {
     let observableQuery: ObservableQuery<T>;
     if (typeof queryIdOrObservable === 'string') {
@@ -959,7 +964,7 @@ export class QueryManager {
 
     const { variables, document } = this.getQueryParts(observableQuery);
 
-    const { data } = this.getCurrentQueryResult(observableQuery, isOptimistic);
+    const { data } = this.getCurrentQueryResult(observableQuery);
 
     return {
       previousResult: data,

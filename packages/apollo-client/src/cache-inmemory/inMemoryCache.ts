@@ -8,6 +8,7 @@ import {
   DataProxyReadQueryOptions,
   DataProxyWriteQueryOptions,
   DataProxyWriteFragmentOptions,
+  QueryWatch,
 } from 'apollo-cache-core';
 
 import {
@@ -33,7 +34,7 @@ export class InMemoryCache extends Cache {
   private data: NormalizedCache;
   private config: ApolloReducerConfig;
   private optimistic: OptimisticStoreItem[] = [];
-  private watches: (() => void)[] = [];
+  private watches: QueryWatch[] = [];
   private addTypename: boolean;
 
   constructor(
@@ -202,6 +203,8 @@ export class InMemoryCache extends Cache {
     toPerform.forEach(change => {
       this.recordOptimisticTransaction(change.transaction, change.id);
     });
+
+    this.broadcastWatches();
   }
 
   public performTransaction(transaction: (c: Cache) => void) {
@@ -238,25 +241,25 @@ export class InMemoryCache extends Cache {
     this.broadcastWatches();
   }
 
-  public watch(
-    _: {
-      query: DocumentNode;
-      variables: any;
-      rootId?: string;
-      previousResult?: any;
-      optimistic: boolean;
-    },
-    callback: () => void,
-  ): () => void {
-    this.watches.push(callback);
+  public watch(watch: QueryWatch): () => void {
+    this.watches.push(watch);
 
     return () => {
-      this.watches = this.watches.filter(c => c !== callback);
+      this.watches = this.watches.filter(c => c !== watch);
     };
   }
 
   private broadcastWatches() {
     // right now, we invalidate all queries whenever anything changes
-    this.watches.forEach(c => c());
+    this.watches.forEach(c => {
+      const newData = this.diffQuery({
+        query: c.query,
+        variables: c.variables,
+        previousResult: c.previousResult(),
+        optimistic: c.optimistic,
+      });
+
+      c.callback(newData);
+    });
   }
 }

@@ -17,6 +17,15 @@ export type CacheWrite = {
   variables?: Object;
 };
 
+export type QueryWatch = {
+  query: DocumentNode;
+  variables: any;
+  rootId?: string;
+  previousResult: () => any;
+  optimistic: boolean;
+  callback: (newData: any) => void;
+};
+
 export abstract class Cache implements DataProxy {
   public abstract reset(): Promise<void>;
 
@@ -96,14 +105,5 @@ export abstract class Cache implements DataProxy {
     id: string,
   ): void;
 
-  public abstract watch(
-    query: {
-      query: DocumentNode;
-      variables: any;
-      rootId?: string;
-      previousResult?: any;
-      optimistic: boolean;
-    },
-    callback: () => void,
-  ): () => void;
+  public abstract watch(watch: QueryWatch): () => void;
 }

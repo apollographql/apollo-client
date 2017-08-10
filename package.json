@@ -87,7 +87,7 @@
     "@types/isomorphic-fetch": "0.0.34",
     "@types/lodash": "4.14.71",
     "@types/mocha": "2.2.41",
-    "@types/node": "8.0.19",
+    "@types/node": "8.0.20",
     "@types/promises-a-plus": "0.0.27",
     "@types/sinon": "2.3.3",
     "benchmark": "2.1.4",

@@ -1,10 +1,11 @@
 # Change log
 
 ### vNEXT
+- Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)
 
 ### 1.9.1
--Add support for subscriptions with Apollo Link network stack [PR #1992](https://github.com/apollographql/apollo-client/pull/1992)
--fixed `resolved` scoping issue for multiple queries in flight with Apollo Link [PR #2002](https://github.com/apollographql/apollo-client/pull/2002)
+- Add support for subscriptions with Apollo Link network stack [PR #1992](https://github.com/apollographql/apollo-client/pull/1992)
+- fixed `resolved` scoping issue for multiple queries in flight with Apollo Link [PR #2002](https://github.com/apollographql/apollo-client/pull/2002)
 
 ### 1.9.0
 - Move to `apollo-link-core` from `apollo-link` to reduce bundle size [PR #1955](https://github.com/apollographql/apollo-client/pull/1955)

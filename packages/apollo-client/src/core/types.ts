@@ -2,7 +2,10 @@ import { DocumentNode } from 'graphql';
 import { QueryStoreValue } from '../queries/store';
 import { NetworkStatus } from '../queries/networkStatus';
 
-export type QueryListener = (queryStoreValue: QueryStoreValue) => void;
+export type QueryListener = (
+  queryStoreValue: QueryStoreValue,
+  newData?: any,
+) => void;
 
 export type PureQueryOptions = {
   query: DocumentNode;

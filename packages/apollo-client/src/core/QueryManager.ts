@@ -47,6 +47,8 @@ import {
   FetchType,
 } from './types';
 
+import { DiffResult } from '../index';
+
 export class QueryManager {
   public pollingTimers: { [queryId: string]: any };
   public scheduler: QueryScheduler;
@@ -68,6 +70,9 @@ export class QueryManager {
   private queryListeners: { [queryId: string]: QueryListener[] };
   private queryListenerWatchCancel: { [queryId: string]: (() => void) } = {};
   private queryListenerInvalidated: { [queryId: string]: boolean } = {};
+  private queryListenerInvalidatedNewData: {
+    [queryId: string]: ApolloQueryResult<any> | null;
+  } = {};
   private queryDocuments: { [queryId: string]: DocumentNode };
 
   private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
@@ -319,6 +324,9 @@ export class QueryManager {
     // Initialize query in store with unique requestId
     this.queryDocuments[queryId] = queryDoc;
 
+    // set up a watcher to listen to cache updates
+    this.updateQueryWatch(queryId, options);
+
     this.queryStore.initQuery({
       queryId,
       queryString,
@@ -402,7 +410,10 @@ export class QueryManager {
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
     let previouslyHadError: boolean = false;
-    return (queryStoreValue: QueryStoreValue) => {
+    return (queryStoreValue: QueryStoreValue, newData?: DiffResult) => {
+      // we're going to take a look at the data, so the query is no longer invalidated
+      this.queryListenerInvalidated[queryId] = false;
+
       // The query store value can be undefined in the event of a store
       // reset.
       if (!queryStoreValue) {
@@ -483,16 +494,35 @@ export class QueryManager {
           }
         } else {
           try {
-            const {
-              result: data,
-              isMissing,
-            } = this.dataStore.getCache().diffQuery({
-              query: this.queryDocuments[queryId],
-              variables:
-                queryStoreValue.previousVariables || queryStoreValue.variables,
-              previousResult: lastResult && lastResult.data,
-              optimistic: true,
-            });
+            let data: any;
+            let isMissing: boolean;
+
+            if (newData) {
+              // clear out the latest new data, since we're now using it
+              this.queryListenerInvalidatedNewData[queryId] = null;
+
+              data = newData.result;
+              isMissing = newData.isMissing ? newData.isMissing : false;
+            } else {
+              if (lastResult && lastResult.data) {
+                // no new data, use what we already have
+                data = lastResult.data;
+                isMissing = false;
+              } else {
+                // this is called when a query has just started,
+                // so we try to see if the data is already in the cache
+                const readResult = this.dataStore.getCache().diffQuery({
+                  query: this.queryDocuments[queryId],
+                  variables:
+                    queryStoreValue.previousVariables ||
+                    queryStoreValue.variables,
+                  optimistic: true,
+                });
+
+                data = readResult.result;
+                isMissing = readResult.isMissing;
+              }
+            }
 
             let resultFromStore: ApolloQueryResult<T>;
 
@@ -664,28 +694,39 @@ export class QueryManager {
     this.broadcastQueries();
   }
 
-  public addQueryListener(
-    queryId: string,
-    listener: QueryListener,
-    options: WatchQueryOptions,
-  ) {
+  public addQueryListener(queryId: string, listener: QueryListener) {
     this.queryListeners[queryId] = this.queryListeners[queryId] || [];
 
+    this.queryListenerInvalidated[queryId] = false;
+    this.queryListeners[queryId].push(listener);
+  }
+
+  public updateQueryWatch(queryId: string, options: WatchQueryOptions) {
     if (this.queryListenerWatchCancel[queryId]) {
       this.queryListenerWatchCancel[queryId]();
     }
 
-    this.queryListenerInvalidated[queryId] = false;
-    this.queryListeners[queryId].push(listener);
+    this.queryListenerWatchCancel[queryId] = this.dataStore.getCache().watch({
+      query: this.queryDocuments[queryId],
+      variables: options.variables,
+      optimistic: true,
+      previousResult: () => {
+        let previousResult = null;
+        const observableQueryWrap = this.observableQueries[queryId];
+        if (observableQueryWrap && observableQueryWrap.observableQuery) {
+          const lastResult = observableQueryWrap.observableQuery.getLastResult();
+          if (lastResult) {
+            previousResult = lastResult.data;
+          }
+        }
 
-    this.queryListenerWatchCancel[queryId] = this.dataStore.getCache().watch(
-      {
-        query: options.query,
-        variables: options.variables,
-        optimistic: true,
+        return previousResult;
       },
-      () => (this.queryListenerInvalidated[queryId] = true),
-    );
+      callback: newData => {
+        this.queryListenerInvalidated[queryId] = true;
+        this.queryListenerInvalidatedNewData[queryId] = newData;
+      },
+    });
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.
@@ -785,7 +826,7 @@ export class QueryManager {
     options: WatchQueryOptions,
     listener: QueryListener,
   ) {
-    this.addQueryListener(queryId, listener, options);
+    this.addQueryListener(queryId, listener);
 
     this.fetchQuery<T>(queryId, options)
       // `fetchQuery` returns a Promise. In case of a failure it should be caucht or else the
@@ -935,13 +976,15 @@ export class QueryManager {
       // this prevents a crash but doesn't solve the root cause
       // see: https://github.com/apollostack/apollo-client/issues/833
       if (listeners && this.queryListenerInvalidated[queryId]) {
-        this.queryListenerInvalidated[queryId] = false;
         listeners.forEach((listener: QueryListener) => {
           // it's possible for the listener to be undefined if the query is being stopped
           // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
           if (listener) {
             const queryStoreValue = this.queryStore.get(queryId);
-            listener(queryStoreValue);
+            listener(
+              queryStoreValue,
+              this.queryListenerInvalidatedNewData[queryId],
+            );
           }
         });
       }

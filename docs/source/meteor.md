@@ -234,10 +234,10 @@ meteor npm install --save react react-dom apollo-client redux react-apollo react
 ```js
 import { Meteor } from 'meteor/meteor';
 import { WebApp } from 'meteor/webapp';
-import { meteorClientConfig } from 'meteor/apollo';
+import { meteorClientConfig, createMeteorNetworkInterface } from 'meteor/apollo';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import ApolloClient from 'apollo-client';
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import { ApolloProvider, renderToStringWithData } from 'react-apollo';
 import { match, RouterContext } from 'react-router';

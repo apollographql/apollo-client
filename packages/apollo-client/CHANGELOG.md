@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- When cache implementations broadcast invalidations, they also provide the latest data for the invalidated query to minimize reads inside the QueryManager [PR 2031](https://github.com/apollographql/apollo-client/pull/2031)
 - Move abstract cache into its own module [PR #2019](https://github.com/apollographql/apollo-client/pull/2019)
 - Convert network stack to links [PR #1993](https://github.com/apollographql/apollo-client/pull/1993)
 - Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)

@@ -85,7 +85,7 @@
     "@types/chai": "4.0.2",
     "@types/chai-as-promised": "0.0.31",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/lodash": "4.14.71",
+    "@types/lodash": "4.14.72",
     "@types/mocha": "2.2.41",
     "@types/node": "8.0.19",
     "@types/promises-a-plus": "0.0.27",

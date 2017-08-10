@@ -135,10 +135,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
    * @return {result: Object, loading: boolean, networkStatus: number, partial: boolean}
    */
   public currentResult(): ApolloCurrentResult<T> {
-    const { data, partial } = this.queryManager.getCurrentQueryResult(
-      this,
-      true,
-    );
+    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
     const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
 
     if (

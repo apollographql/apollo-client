@@ -589,7 +589,7 @@ export default class ApolloClient implements DataProxy {
    * active queries.
    */
   public resetStore(): Promise<ApolloQueryResult<any>[]> | null {
-    return this.queryManager ? this.queryManager.resetStore() : null;
+    return this.queryManager ? this.queryManager.resetStore() : Promise.resolve();
   }
 
   public getInitialState(): { data: Object } {

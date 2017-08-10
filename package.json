@@ -99,7 +99,7 @@
     "concurrently": "3.5.0",
     "danger": "1.2.0",
     "es6-promise": "4.1.1",
-    "fetch-mock": "5.12.1",
+    "fetch-mock": "5.12.2",
     "flow-bin": "0.52.0",
     "grunt": "1.0.1",
     "grunt-tslint": "5.0.1",

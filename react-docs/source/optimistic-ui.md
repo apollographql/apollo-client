@@ -26,7 +26,7 @@ const updateComment = gql`
   }
 `;
 
-const CommentPageWithData = graphql(submitComment, {
+const CommentPageWithData = graphql(updateComment, {
   props: ({ ownProps, mutate }) => ({
     submit({ commentId, commentContent }) {
       return mutate({

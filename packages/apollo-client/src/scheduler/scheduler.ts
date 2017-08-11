@@ -16,7 +16,7 @@ import { ObservableQuery } from '../core/ObservableQuery';
 
 import { WatchQueryOptions } from '../core/watchQueryOptions';
 
-import { NetworkStatus } from '../queries/networkStatus';
+import { NetworkStatus } from '../core/networkStatus';
 
 export class QueryScheduler {
   // Map going from queryIds to query options that are in flight.

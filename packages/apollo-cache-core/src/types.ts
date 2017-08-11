@@ -95,6 +95,11 @@ export interface DataProxyWriteFragmentOptions {
   variables?: Object;
 }
 
+export type DiffResult<T> = {
+  result?: T;
+  isMissing?: boolean;
+};
+
 /**
  * A proxy to the normalized data living in our store. This interface allows a
  * user to read and write denormalized data which feels natural to the user
@@ -105,16 +110,14 @@ export interface DataProxy {
   /**
    * Reads a GraphQL query from the root query id.
    */
-  readQuery<QueryType>(options: DataProxyReadQueryOptions): QueryType;
+  readQuery<T>(options: DataProxyReadQueryOptions): DiffResult<T>;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  readFragment<FragmentType>(
-    options: DataProxyReadFragmentOptions,
-  ): FragmentType | null;
+  readFragment<T>(options: DataProxyReadFragmentOptions): DiffResult<T> | null;
 
   /**
    * Writes a GraphQL query to the root query id.

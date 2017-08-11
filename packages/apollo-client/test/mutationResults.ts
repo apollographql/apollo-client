@@ -12,7 +12,7 @@ import gql from 'graphql-tag';
 
 import { withWarning } from './util/wrap';
 
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 describe('mutation results', () => {
   const query = gql`

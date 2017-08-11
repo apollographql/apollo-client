@@ -3,11 +3,11 @@ import { assert } from 'chai';
 import { QueryManager } from '../src/core/QueryManager';
 import { WatchQueryOptions } from '../src/core/watchQueryOptions';
 import { mockSingleLink } from './mocks/mockLinks';
-import { NetworkStatus } from '../src/queries/networkStatus';
+import { NetworkStatus } from '../src/core/networkStatus';
 import gql from 'graphql-tag';
 
 import { DataStore } from '../src/data/store';
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 describe('QueryScheduler', () => {
   it('should throw an error if we try to start polling a non-polling query', () => {

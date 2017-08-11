@@ -13,14 +13,34 @@
   },
   "bundlesize": [
     {
+      "name": "apollo-cache-core",
+      "path": "./packages/apollo-cache-core/dist/index.min.js",
+      "threshold": "1 Kb"
+    },
+    {
+      "name": "apollo-cache-inmemory",
+      "path": "./packages/apollo-cache-inmemory/dist/index.min.js",
+      "threshold": "5.5 Kb"
+    },
+    {
       "name": "apollo-client",
       "path": "./packages/apollo-client/dist/index.min.js",
-      "threshold": "21 Kb"
+      "threshold": "11 Kb"
+    },
+    {
+      "name": "apollo-client-preset",
+      "path": "./packages/apollo-client-preset/dist/index.min.js",
+      "threshold": "35 Kb"
+    },
+    {
+      "name": "apollo-utilities",
+      "path": "./packages/apollo-utilities/dist/index.min.js",
+      "threshold": "4.5 Kb"
     },
     {
       "name": "graphql-anywhere",
       "path": "./packages/graphql-anywhere/lib/index.min.js",
-      "threshold": "2.5 Kb"
+      "threshold": "1.5 Kb"
     }
   ],
   "jest": {

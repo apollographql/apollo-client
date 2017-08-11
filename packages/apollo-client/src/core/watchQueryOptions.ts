@@ -2,7 +2,7 @@ import { DocumentNode } from 'graphql';
 import { FetchResult } from 'apollo-link-core';
 import { DataProxy } from 'apollo-cache-core';
 
-import { MutationQueryReducersMap } from '../data/types';
+import { MutationQueryReducersMap } from './types';
 
 import { PureQueryOptions } from './types';
 

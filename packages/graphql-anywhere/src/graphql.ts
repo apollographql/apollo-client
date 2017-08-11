@@ -11,20 +11,14 @@ import {
   getFragmentDefinitions,
   createFragmentMap,
   FragmentMap,
-} from './getFromAST';
-
-import {
   DirectiveInfo,
   shouldInclude,
   getDirectiveInfoFromField,
-} from './directives';
-
-import {
   isField,
   isInlineFragment,
   resultKeyNameFromField,
   argumentsObjectFromField,
-} from './storeUtils';
+} from 'apollo-utilities';
 
 export type Resolver = (
   fieldName: string,

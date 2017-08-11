@@ -5,13 +5,69 @@ import { IdValue, JsonValue } from 'apollo-utilities';
 
 import { NormalizedCache, StoreObject, HeuristicFragmentMatcher } from '../src';
 
-import { withError } from './util';
 import { readQueryFromStore } from '../src/readFromStore';
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
 import gql from 'graphql-tag';
 
 describe('reading from the store', () => {
+  it('runs a nested query with proper fragment fields in arrays', () => {
+    const store = {
+      ROOT_QUERY: {
+        __typename: 'Query',
+        nestedObj: { type: 'id', id: 'abcde', generated: false },
+      } as StoreObject,
+      abcde: {
+        id: 'abcde',
+        innerArray: [
+          { type: 'id', generated: true, id: 'abcde.innerArray.0' } as any,
+        ],
+      } as StoreObject,
+      'abcde.innerArray.0': {
+        id: 'abcdef',
+        someField: 3,
+      } as StoreObject,
+    } as NormalizedCache;
+
+    const queryResult = readQueryFromStore({
+      store,
+      query: gql`
+        {
+          ... on DummyQuery {
+            nestedObj {
+              innerArray {
+                id
+                otherField
+              }
+            }
+          }
+          ... on Query {
+            nestedObj {
+              innerArray {
+                id
+                someField
+              }
+            }
+          }
+          ... on DummyQuery2 {
+            nestedObj {
+              innerArray {
+                id
+                otherField2
+              }
+            }
+          }
+        }
+      `,
+      fragmentMatcherFunction,
+    });
+
+    assert.deepEqual<{}>(queryResult, {
+      nestedObj: {
+        innerArray: [{ id: 'abcdef', someField: 3 }],
+      },
+    });
+  });
   it('rejects malformed queries', () => {
     assert.throws(() => {
       readQueryFromStore({
@@ -298,66 +354,6 @@ describe('reading from the store', () => {
       },
       nullObject: null,
     });
-  });
-
-  it.skip('runs a nested query with proper fragment fields in arrays', () => {
-    return withError(() => {
-      const store = {
-        ROOT_QUERY: {
-          __typename: 'Query',
-          nestedObj: { type: 'id', id: 'abcde', generated: false },
-        } as StoreObject,
-        abcde: {
-          id: 'abcde',
-          innerArray: [
-            { type: 'id', generated: true, id: 'abcde.innerArray.0' } as any,
-          ],
-        } as StoreObject,
-        'abcde.innerArray.0': {
-          id: 'abcdef',
-          someField: 3,
-        } as StoreObject,
-      } as NormalizedCache;
-
-      const queryResult = readQueryFromStore({
-        store,
-        query: gql`
-          {
-            ... on DummyQuery {
-              nestedObj {
-                innerArray {
-                  id
-                  otherField
-                }
-              }
-            }
-            ... on Query {
-              nestedObj {
-                innerArray {
-                  id
-                  someField
-                }
-              }
-            }
-            ... on DummyQuery2 {
-              nestedObj {
-                innerArray {
-                  id
-                  otherField2
-                }
-              }
-            }
-          }
-        `,
-        fragmentMatcherFunction,
-      });
-
-      assert.deepEqual<{}>(queryResult, {
-        nestedObj: {
-          innerArray: [{ id: 'abcdef', someField: 3 }],
-        },
-      });
-    }, /IntrospectionFragmentMatcher/);
   });
 
   it('runs a nested query with an array without IDs', () => {

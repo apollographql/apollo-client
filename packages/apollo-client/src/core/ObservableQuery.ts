@@ -1,12 +1,12 @@
 import {
-  NetworkStatus,
-  isNetworkRequestInFlight,
-} from '../queries/networkStatus';
+  isEqual,
+  tryFunctionOrLogError,
+  maybeDeepFreeze,
+} from 'apollo-utilities';
+
+import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 
 import { Observable, Observer, Subscription } from '../util/Observable';
-import { isEqual } from '../util/isEqual';
-import { tryFunctionOrLogError } from '../util/errorHandling';
-import maybeDeepFreeze from '../util/maybeDeepFreeze';
 
 import { QueryScheduler } from '../scheduler/scheduler';
 

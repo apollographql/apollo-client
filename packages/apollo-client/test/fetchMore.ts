@@ -1,12 +1,12 @@
 import * as chai from 'chai';
 const { assert } = chai;
 
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 import { mockSingleLink } from './mocks/mockLinks';
 import ApolloClient from '../src';
 import { ObservableQuery } from '../src/core/ObservableQuery';
-import { NetworkStatus } from '../src/queries/networkStatus';
+import { NetworkStatus } from '../src/core/networkStatus';
 
 import { assign, cloneDeep } from 'lodash';
 

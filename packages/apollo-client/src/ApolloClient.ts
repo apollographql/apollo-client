@@ -6,14 +6,15 @@ import {
   DataProxyReadFragmentOptions,
   DataProxyWriteQueryOptions,
   DataProxyWriteFragmentOptions,
+  DiffResult,
 } from 'apollo-cache-core';
+import { isProduction } from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';
 import { ApolloQueryResult } from './core/types';
 import { ObservableQuery } from './core/ObservableQuery';
 
 import { Observable } from './util/Observable';
-import { isProduction } from './util/environment';
 
 import {
   WatchQueryOptions,
@@ -24,18 +25,6 @@ import {
 import { DataStore } from './data/store';
 
 import { version } from './version';
-
-export function defaultDataIdFromObject(result: any): string | null {
-  if (result.__typename) {
-    if (result.id !== undefined) {
-      return `${result.__typename}:${result.id}`;
-    }
-    if (result._id !== undefined) {
-      return `${result.__typename}:${result._id}`;
-    }
-  }
-  return null;
-}
 
 let hasSuggestedDevtools = false;
 
@@ -252,7 +241,7 @@ export default class ApolloClient implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    */
-  public readQuery<T>(options: DataProxyReadQueryOptions): T {
+  public readQuery<T>(options: DataProxyReadQueryOptions): DiffResult<T> {
     return this.initProxy().readQuery<T>(options);
   }
 
@@ -267,7 +256,9 @@ export default class ApolloClient implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public readFragment<T>(options: DataProxyReadFragmentOptions): T | null {
+  public readFragment<T>(
+    options: DataProxyReadFragmentOptions,
+  ): DiffResult<T> | null {
     return this.initProxy().readFragment<T>(options);
   }
 

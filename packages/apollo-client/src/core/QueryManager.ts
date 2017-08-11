@@ -8,46 +8,39 @@ import {
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
 import Deduplicator from 'apollo-link-dedup';
-import { DataProxy } from 'apollo-cache-core';
-import { assign } from '../util/assign';
-
-import { QueryStore, QueryStoreValue } from '../queries/store';
+import { DataProxy, DiffResult } from 'apollo-cache-core';
 import {
-  NetworkStatus,
-  isNetworkRequestInFlight,
-} from '../queries/networkStatus';
-import {
-  getQueryDefinition,
-  getOperationDefinition,
-  getOperationName,
+  addTypenameToDocument,
+  assign,
   getDefaultValues,
   getMutationDefinition,
-} from '../queries/getFromAST';
-import { addTypenameToDocument } from '../queries/queryTransform';
-
-import { MutationStore } from '../mutations/store';
+  getOperationDefinition,
+  getOperationName,
+  getQueryDefinition,
+  isProduction,
+  maybeDeepFreeze,
+} from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
 
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 
-import { isProduction } from '../util/environment';
-import maybeDeepFreeze from '../util/maybeDeepFreeze';
 import { Observer, Subscription, Observable } from '../util/Observable';
 
-import { MutationQueryReducersMap } from '../data/types';
 import { QueryWithUpdater, DataStore } from '../data/store';
+import { MutationStore } from '../data/mutations';
+import { QueryStore, QueryStoreValue } from '../data/queries';
 
 import { WatchQueryOptions, SubscriptionOptions } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
+import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
   QueryListener,
   ApolloQueryResult,
   PureQueryOptions,
   FetchType,
+  MutationQueryReducersMap,
 } from './types';
-
-import { DiffResult } from '../index';
 
 export class QueryManager {
   public pollingTimers: { [queryId: string]: any };
@@ -410,7 +403,7 @@ export class QueryManager {
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
     let previouslyHadError: boolean = false;
-    return (queryStoreValue: QueryStoreValue, newData?: DiffResult) => {
+    return (queryStoreValue: QueryStoreValue, newData?: DiffResult<T>) => {
       // we're going to take a look at the data, so the query is no longer invalidated
       this.queryListenerInvalidated[queryId] = false;
 

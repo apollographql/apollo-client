@@ -28,18 +28,17 @@ import { ApolloError } from '../src/errors/ApolloError';
 
 import { Observer } from '../src/util/Observable';
 
-import { NetworkStatus } from '../src/queries/networkStatus';
+import { NetworkStatus } from '../src/core/networkStatus';
 
 import wrap from './util/wrap';
 
-import { ApolloReducerConfig } from '../src/data/types';
 import { DataStore } from '../src/data/store';
 
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from './util/observableToPromise';
 
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache, { ApolloReducerConfig } from 'apollo-cache-inmemory';
 
 describe('QueryManager', () => {
   // Standard "get id from object" method.

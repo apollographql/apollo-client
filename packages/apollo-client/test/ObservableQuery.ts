@@ -4,7 +4,9 @@ import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link-core';
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache, {
+  IntrospectionFragmentMatcher,
+} from 'apollo-cache-inmemory';
 
 import { QueryManager } from '../src/core/QueryManager';
 import { DataStore } from '../src/data/store';
@@ -20,12 +22,10 @@ import {
 } from '../src/core/ObservableQuery';
 import { ApolloQueryResult } from '../src/core/types';
 
-import { IntrospectionFragmentMatcher } from '../src/fragments/fragmentMatcher';
-
 import wrap from './util/wrap';
 import subscribeAndCount from './util/subscribeAndCount';
 
-import { NetworkStatus } from '../src/queries/networkStatus';
+import { NetworkStatus } from '../src/core/networkStatus';
 
 describe('ObservableQuery', () => {
   // Standard data for all these tests

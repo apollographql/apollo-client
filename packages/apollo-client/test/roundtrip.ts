@@ -1,11 +1,6 @@
 import { assert } from 'chai';
 
-import { writeQueryToStore } from '../src/data/writeToStore';
-import { readQueryFromStore } from '../src/data/readFromStore';
-import {
-  getFragmentDefinitions,
-  createFragmentMap,
-} from '../src/queries/getFromAST';
+import { getFragmentDefinitions, createFragmentMap } from 'apollo-utilities';
 
 import { DocumentNode } from 'graphql';
 
@@ -13,7 +8,12 @@ import gql from 'graphql-tag';
 
 import { withWarning, withError } from './util/wrap';
 
-import { HeuristicFragmentMatcher } from '../src/data/fragmentMatcher';
+import {
+  HeuristicFragmentMatcher,
+  writeQueryToStore,
+  readQueryFromStore,
+} from 'apollo-cache-inmemory';
+
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 
 describe('roundtrip', () => {

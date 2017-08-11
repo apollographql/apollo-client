@@ -1,6 +1,7 @@
 # Change log
 
 ## vNEXT
+- Replace core utils with apollo-utilities
 - Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
 
 ### v3.1.0

@@ -1,6 +1,7 @@
 import { DocumentNode } from 'graphql';
-import { QueryStoreValue } from '../queries/store';
-import { NetworkStatus } from '../queries/networkStatus';
+import { QueryStoreValue } from '../data/queries';
+import { NetworkStatus } from './networkStatus';
+import { FetchResult } from 'apollo-link-core';
 
 export type QueryListener = (
   queryStoreValue: QueryStoreValue,
@@ -28,4 +29,16 @@ export enum FetchType {
   poll = 3,
 }
 
-export type IdGetter = (value: Object) => string | null | undefined;
+// This is part of the public API, people write these functions in `updateQueries`.
+export type MutationQueryReducer<T> = (
+  previousResult: Record<string, any>,
+  options: {
+    mutationResult: FetchResult<T>;
+    queryName: string | undefined;
+    queryVariables: Record<string, any>;
+  },
+) => Record<string, any>;
+
+export type MutationQueryReducersMap<T = { [key: string]: any }> = {
+  [queryName: string]: MutationQueryReducer<T>;
+};

@@ -11,7 +11,7 @@ import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
 import { ApolloLink, Operation } from 'apollo-link-core';
 
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions

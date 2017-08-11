@@ -1,6 +1,6 @@
 {
   "name": "graphql-anywhere",
-  "version": "3.1.0",
+  "version": "4.0.0-0",
   "description": "Run GraphQL queries with no schema and just one resolver",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
@@ -10,12 +10,12 @@
     "posttest": "npm run lint",
     "compile": "tsc",
     "watch": "tsc -w",
-    "prepublish": "npm run compile",
+    "prepublishOnly": "npm run compile",
     "lint": "grunt tslint",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter dot --full-trace lib/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
     "testonly": "mocha --reporter spec --full-trace lib/test/tests.js",
-    "compile:browser": "browserify ./lib/src/index.js --i zen-observable-ts --i graphql-tag -o=./lib/index.js && npm run minify:browser",
+    "compile:browser": "browserify ./lib/src/index.js -o=./lib/index.js --i apollo-utilities && npm run minify:browser",
     "minify:browser": "uglifyjs -c -m -o ./lib/index.min.js -- ./lib/index.js",
     "filesize": "npm run compile:browser"
   },
@@ -34,9 +34,12 @@
   ],
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
+  "dependencies": {
+    "apollo-utilities": "*"
+  },
   "devDependencies": {
     "@types/chai": "3.5.2",
-    "@types/graphql": "^0.9.4",
+    "@types/graphql": "~0.9.0",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/lodash": "^4.14.37",
     "@types/mocha": "^2.2.32",

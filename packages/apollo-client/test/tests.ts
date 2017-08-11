@@ -34,23 +34,13 @@ import { disableFragmentWarnings as graphqlTagDisableFragmentWarnings } from 'gr
 graphqlTagDisableFragmentWarnings();
 
 import './ApolloClient';
-import './assign';
 import './client';
-import './cache';
-import './cloneDeep';
-import './directives';
-import './environment';
 import './errors';
 import './fetchMore';
-import './fragmentMatcher';
-import './getFromAST';
 import './graphqlSubscriptions';
-import './isEqual';
 import './mutationResults';
 import './ObservableQuery';
 import './optimistic';
 import './QueryManager';
-import './queryTransform';
 import './scheduler';
 import './subscribeToMore';
-import './warnOnce';

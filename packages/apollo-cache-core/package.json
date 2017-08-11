@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-core",
-  "version": "0.1.0",
+  "version": "0.1.0-0",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -35,15 +35,21 @@
     "clean": "npm run clean:dist && npm run clean:coverage",
     "clean:dist": "rimraf dist/* && rimraf lib/*",
     "clean:coverage": "rimraf coverage/*",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "npm run clean && npm run build",
+    "compile:browser": "browserify ./dist/src/index.js --i apollo-utilities -o=./dist/index.js && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./dist/index.min.js -- ./dist/index.js",
+    "filesize": "npm run build && npm run compile:browser"
   },
-  "dependencies": {},
+  "dependencies": {
+    "apollo-utilities": "*"
+  },
   "devDependencies": {
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "0.0.31",
     "@types/graphql": "~0.9.0",
     "@types/mocha": "^2.2.31",
     "@types/sinon": "^2.3.2",
+    "browserify": "^14.4.0",
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
     "fetch-mock": "^5.11.0",
@@ -57,6 +63,7 @@
     "sinon": "^2.3.4",
     "source-map-support": "^0.4.5",
     "tslint": "^5.0.0",
-    "typescript": "^2.2.1"
+    "typescript": "^2.2.1",
+    "uglifyjs": "^2.4.11"
   }
 }

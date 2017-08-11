@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import gql from 'graphql-tag';
 
 import { ApolloLink } from 'apollo-link-core';
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 import { withWarning } from './util/wrap';
 

@@ -9,7 +9,7 @@ import gql from 'graphql-tag';
 import { QueryManager } from '../src/core/QueryManager';
 import { DataStore } from '../src/data/store';
 
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 describe('GraphQL Subscriptions', () => {
   const results = [

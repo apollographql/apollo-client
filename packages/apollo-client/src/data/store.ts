@@ -1,12 +1,13 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { Cache, CacheWrite, DataProxy } from 'apollo-cache-core';
 
-import { QueryStoreValue } from '../queries/store';
-import { getOperationName } from '../queries/getFromAST';
-
-import { tryFunctionOrLogError } from '../util/errorHandling';
-
-import { MutationQueryReducer } from './types';
+import { QueryStoreValue } from '../data/queries';
+import {
+  getOperationName,
+  tryFunctionOrLogError,
+  graphQLResultHasError,
+} from 'apollo-utilities';
+import { MutationQueryReducer } from '../core/types';
 
 export type QueryWithUpdater = {
   updater: MutationQueryReducer<Object>;
@@ -19,10 +20,6 @@ export interface DataWrite {
   document: DocumentNode;
   operationName: string | null;
   variables: Object;
-}
-
-export function graphQLResultHasError(result: ExecutionResult) {
-  return result.errors && result.errors.length;
 }
 
 export class DataStore {

@@ -12,12 +12,12 @@ import { ApolloLink, Observable } from 'apollo-link-core';
 import { QueryManager } from '../src/core/QueryManager';
 import { WatchQueryOptions } from '../src/core/watchQueryOptions';
 
-import { IntrospectionFragmentMatcher } from '../src/fragments/fragmentMatcher';
-import { FragmentMatcherInterface } from '../src/data/types';
-
 import { ApolloError } from '../src/errors/ApolloError';
 
-import InMemoryCache from '../src/cache-inmemory';
+import InMemoryCache, {
+  IntrospectionFragmentMatcher,
+  FragmentMatcherInterface,
+} from 'apollo-cache-inmemory';
 
 import ApolloClient, { printAST } from '../src';
 

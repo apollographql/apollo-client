@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import { getFragmentQueryDocument } from './fragment';
+import { getFragmentQueryDocument } from 'apollo-utilities';
 
 import {
   DataProxy,
@@ -8,6 +8,7 @@ import {
   DataProxyReadFragmentOptions,
   DataProxyWriteQueryOptions,
   DataProxyWriteFragmentOptions,
+  DiffResult,
 } from './types';
 
 export type CacheWrite = {
@@ -37,18 +38,18 @@ export abstract class Cache implements DataProxy {
     optimistic: boolean;
   }): any;
 
-  public abstract read(query: {
+  public abstract read<T>(query: {
     query: DocumentNode;
     variables: any;
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
-  }): any;
+  }): DiffResult<T>;
 
   public readQuery<QueryType>(
     options: DataProxyReadQueryOptions,
     optimistic: boolean = false,
-  ): QueryType {
+  ): DiffResult<QueryType> {
     return this.read({
       query: options.query,
       variables: options.variables,
@@ -59,7 +60,7 @@ export abstract class Cache implements DataProxy {
   public readFragment<FragmentType>(
     options: DataProxyReadFragmentOptions,
     optimistic: boolean = false,
-  ): FragmentType | null {
+  ): DiffResult<FragmentType> | null {
     let document = getFragmentQueryDocument(
       options.fragment,
       options.fragmentName,

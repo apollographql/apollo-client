@@ -90,7 +90,7 @@
     "@types/node": "8.0.20",
     "@types/promises-a-plus": "0.0.27",
     "@types/sinon": "2.3.3",
-    "all-contributors-cli": "^4.4.0",
+    "all-contributors-cli": "4.4.0",
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
     "bundlesize": "0.13.2",

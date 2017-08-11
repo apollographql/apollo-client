@@ -118,7 +118,7 @@
     "remap-istanbul": "0.9.5",
     "request": "2.81.0",
     "rollup": "0.45.2",
-    "rxjs": "5.4.2",
+    "rxjs": "5.4.3",
     "sinon": "3.2.0",
     "source-map-support": "0.4.15",
     "ts-jest": "20.0.10",

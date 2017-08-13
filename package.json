@@ -117,7 +117,7 @@
     "pretty-bytes": "4.0.2",
     "remap-istanbul": "0.9.5",
     "request": "2.81.0",
-    "rollup": "0.45.2",
+    "rollup": "0.47.4",
     "rxjs": "5.4.2",
     "sinon": "3.2.0",
     "source-map-support": "0.4.15",

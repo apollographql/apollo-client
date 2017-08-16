@@ -75,7 +75,7 @@ Another option is to reload the page, which will have a similar effect.
 
 
 ```js
-import { withApollo, graphql } from 'react-apollo';
+import { withApollo, graphql, gql } from 'react-apollo';
 import ApolloClient from 'apollo-client';
 
 class Profile extends React.Component {

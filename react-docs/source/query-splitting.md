@@ -7,7 +7,7 @@ This is powerful and works perfectly on the browser, but can not be applied to a
 
 One solution for improving the UI experience would be the usage of fragments to preload more data in a query, but loading huge amounts of data (that you probably never show to the user) is expensive.
 
-An other way would be the splitting of huge queries into two smaller queries:
+Another solution would be to split huge queries into two smaller queries:
 - The first one could load data which is already in the store. This means that it can be displayed instantly.
 - The second query could load data which is not in the store yet and must be fetched from the server first.
 

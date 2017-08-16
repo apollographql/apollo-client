@@ -125,7 +125,7 @@ const MoreCommentsQuery = gql`
   }
 `;
 
-const CommentsWithData = graphql(Comment, {
+const CommentsWithData = graphql(CommentsQuery, {
   // This function re-runs every time `data` changes, including after `updateQuery`,
   // meaning our loadMoreEntries function will always have the right cursor
   props({ data: { loading, cursor, comments, fetchMore } }) {
@@ -141,15 +141,16 @@ const CommentsWithData = graphql(Comment, {
           updateQuery: (previousResult, { fetchMoreResult }) => {
             const previousEntry = previousResult.entry;
             const newComments = fetchMoreResult.moreComments.comments;
+            const newCursor = fetchMoreResult.moreComments.cursor;
 
             return {
               // By returning `cursor` here, we update the `loadMore` function
               // to the new cursor.
-              cursor: fetchMoreResult.cursor,
+              cursor: newCursor,
 
               entry: {
                 // Put the new comments in the front of the list
-                comments: [...newComments, ...previousEntry.entry.comments],
+                comments: [...newComments, ...previousEntry.comments],
               },
             };
           },
@@ -157,7 +158,7 @@ const CommentsWithData = graphql(Comment, {
       },
     };
   },
-})(Feed);
+})(Comments);
 ```
 
 <h2 id="relay-cursors">Relay-style cursor pagination</h2>

@@ -140,24 +140,26 @@ const readStoreResolver: Resolver = (
         // Look for the field in the custom resolver map
         const resolver = type[fieldName];
         if (resolver) {
-          return resolver(obj, args);
+          fieldValue = resolver(obj, args);
         }
       }
     }
 
-    if (!context.returnPartialData) {
-      throw new Error(
-        `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(
-          obj,
-          null,
-          2,
-        )}.`,
-      );
+    if (typeof fieldValue === 'undefined') {
+      if (!context.returnPartialData) {
+        throw new Error(
+          `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(
+            obj,
+            null,
+            2,
+          )}.`,
+        );
+      }
+
+      context.hasMissingField = true;
+
+      return fieldValue;
     }
-
-    context.hasMissingField = true;
-
-    return fieldValue;
   }
 
   // if this is an object scalar, it must be a json blob and we have to unescape it

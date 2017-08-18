@@ -38,7 +38,8 @@ When we use mutations in Apollo, the result is typically integrated into the cac
 Using `graphql` with mutations makes it easy to bind actions to your components. Unlike queries, which provide a complicated object with lots of metadata and methods, mutations provide only a simple function to the wrapped component, in a prop called `mutate`.
 
 ```js
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { gql, graphql } from 'react-apollo';
 
 class NewEntry extends Component { ... }
@@ -69,7 +70,8 @@ Most mutations will require arguments in the form of query variables, and you ma
 The simplest option is to directly pass options to the default `mutate` prop when you call it in the wrapped component:
 
 ```js
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { gql, graphql } from 'react-apollo';
 
 class NewEntry extends Component {
@@ -115,7 +117,8 @@ const NewEntryWithData = graphql(submitRepository, {
 Here's that in context with a component, which can now be much simpler because it just needs to pass one argument:
 
 ```js
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { gql, graphql } from 'react-apollo';
 
 const NewEntry = ({ submit }) => (
@@ -168,7 +171,8 @@ Sometimes your client code can easily predict the result of a successful mutatio
 All you need to do is specify the `optimisticResponse` option. This "fake result" will be used to update active queries immediately, in the same way that the server's mutation response would have done. The optimistic patches are stored in a separate place in the cache, so once the actual mutation returns, the relevant optimistic update is automatically thrown away and replaced with the real result.
 
 ```js
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { gql, graphql } from 'react-apollo';
 
 class CommentPage extends Component { ... }

@@ -158,6 +158,6 @@ Now you've seen all of the code you need to build a React Native app that loads 
 Let's get you building your own app from scratch! You have two tutorials to go through, and we recommend doing them in the following order:
 
 1. [Full-Stack GraphQL + React tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc) by [Jonas Helfer](https://twitter.com/helferjs), the lead developer of Apollo Client.
-2. [Learn Apollo](https://www.learnapollo.com) by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform.
+2. [Learn Apollo](https://www.howtographql.com/react-apollo/0-introduction/) by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform.
 
 Have fun!

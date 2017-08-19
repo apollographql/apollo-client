@@ -18,9 +18,12 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  // The contents of { ... } could be the result of client.store.getState(),
-  // or synthetically generated to look similar
-  window.__APOLLO_STATE__ = { ... };
+  // `initialState` should have the shape of the Apollo store
+  // state. Make sure to include only the data though. E.g.:
+  // const initialState = {[client.reduxRootKey]: {
+  //   data: client.store.getState()[client.reduxRootKey].data
+  // }};
+  window.__APOLLO_STATE__ = initialState;
 </script>
 ```
 
@@ -67,8 +70,7 @@ We'll see how to take your component tree and turn it into a string in the next 
 Once you put that all together, you'll end up with initialization code that looks like this:
 
 ```js
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
-import { ApolloProvider } from 'react-apollo';
+import { ApolloClient, createNetworkInterface, ApolloProvider } from 'react-apollo';
 import Express from 'express';
 import { match, RouterContext } from 'react-router';
 
@@ -88,11 +90,14 @@ app.use((req, res) => {
       ssrMode: true,
       // Remember that this is the interface the SSR server will use to connect to the
       // API server, so we need to ensure it isn't firewalled, etc
-      networkInterface: createNetworkInterface('http://localhost:3010', {
-        credentials: 'same-origin',
-        // transfer request headers to networkInterface so that they're accessible to proxy server
-        // Addresses this issue: https://github.com/matthew-andrews/isomorphic-fetch/issues/83
-        headers: req.headers,
+      networkInterface: createNetworkInterface({
+        uri: 'http://localhost:3010',
+        opts: {
+          credentials: 'same-origin',
+          headers: {
+            cookie: req.header('Cookie'),
+          },
+        },
       }),
     });
 
@@ -110,25 +115,28 @@ app.listen(basePort, () => console.log( // eslint-disable-line no-console
   `App Server is now running on http://localhost:${basePort}`
 ));
 ```
-You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollostack/GitHunt-React/blob/master/ui/server.js) for a complete working example.
+You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/ui/server.js) for a complete working example.
 
 Next we'll see what that rendering code actually does.
 
 <h3 id="getDataFromTree">Using `getDataFromTree`</h3>
 
-The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all. It does this recursively down the whole tree if you have nested queries. It returns a promise which resolves to the React Context provided by `ApolloProvider`, and you can use this to get the current store state with `context.store.getState()`.
+The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all. It does this recursively down the whole tree if you have nested queries. It returns a promise which resolves when the data is ready in your Apollo Client store.
 
 At the point that the promise resolves, your Apollo Client store will be completely initialized, which should mean your app will now render instantly (since all queries are prefetched) and you can return the stringified results in the response:
 
 ```js
-import { getDataFromTree } from "react-apollo/server"
+import { getDataFromTree } from "react-apollo"
+
+const client = new ApolloClient(....);
 
 // during request (see above)
-getDataFromTree(app).then((context) => {
+getDataFromTree(app).then(() => {
   // We are ready to render for real
   const content = ReactDOM.renderToString(app);
+  const initialState = {[client.reduxRootKey]: client.getInitialState()  };
 
-  const html = <Html content={content} state={context.store.getState()} />;
+  const html = <Html content={content} state={initialState} />;
 
   res.status(200);
   res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);
@@ -145,7 +153,7 @@ function Html({ content, state }) {
       <body>
         <div id="content" dangerouslySetInnerHTML={{ __html: content }} />
         <script dangerouslySetInnerHTML={{
-          __html: `window.__APOLLO_STATE__=${JSON.stringify(state)};`,
+          __html: `window.__APOLLO_STATE__=${JSON.stringify(state).replace(/</g, '\\u003c')};`,
         }} />
       </body>
     </html>
@@ -153,9 +161,13 @@ function Html({ content, state }) {
 }
 ```
 
+<h3 id="local-queries">Avoiding the network for local queries</h3>
+
+If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work. One solution to this problem is the [apollo-local-query](https://github.com/af/apollo-local-query) module, which lets you create a `networkInterface` for apollo that doesn't actually use the network.
+
 <h3 id="skip-for-ssr">Skipping queries for SSR</h3>
 
-If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in it's loading state on the server. For example:
+If you want to intentionally skip a query during SSR, you can pass `ssr: false` in the query options. Typically, this will mean the component will get rendered in its loading state on the server. For example:
 
 ```js
 const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
@@ -165,15 +177,18 @@ const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
 
 <h3 id="renderToStringWithData">Using `renderToStringWithData`</h3>
 
-The `renderToStringWithData` function simplifies the above and simply returns the content string and state that you need to render. So it reduces the number of steps slightly:
+The `renderToStringWithData` function simplifies the above and simply returns the content string  that you need to render. So it reduces the number of steps slightly:
 
 ```js
 // server application code (integrated usage)
-import { renderToStringWithData } from "react-apollo/server"
+import { renderToStringWithData } from "react-apollo"
+
+const client = new ApolloClient(....);
 
 // during request
-renderToStringWithData(app).then((content, state) => {
-  const html = <Html content={content} state={state} />;
+renderToStringWithData(app).then((content) => {
+  const initialState = {[client.reduxRootKey]: client.getInitialState() };
+  const html = <Html content={content} state={initialState} />;
 
   res.status(200);
   res.send(`<!doctype html>\n${ReactDOM.renderToStaticMarkup(html)}`);

@@ -3,7 +3,8 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Apollo React Guide
+title: Apollo React Docs
+propertytitle: Using GraphQL with React
 subtitle: React Guide
 description: A guide to using the Apollo GraphQL Client with React.
 author:
@@ -14,36 +15,51 @@ versions:
 sidebar_categories:
   null:
     - index
-    - example
     - initialization
-    - higher-order-components
+    - simple-example
     - example-schema
+    - migration
   Usage:
     - queries
     - mutations
+    - subscriptions
     - receiving-updates
     - cache-updates
+    - using-with-types
+  API Reference:
+    - api
+    - api-graphql
+    - api-queries
+    - api-mutations
+    - api-server
   Recipes:
     - auth
     - pagination
     - optimistic-ui
+    - fragments
     - prefetching
+    - query-splitting
     - react-native
     - redux
+    - webpack
     - server-side-rendering
-github_repo: apollostack/react-docs
+github_repo: apollographql/react-docs
 content_root: source
 
 typescript_api_box:
   data_file: docs.json
 
 social_links:
-  github: 'https://github.com/apollostack'
-  twitter: '@apollostack'
+  github: 'https://github.com/apollographql'
+  twitter: '@apollographql'
 
 # API keys
 apis:
   segment: wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg
+  docsearch:
+    apiKey: 768e823959d35bbd51e4b2439be13fb7
+    indexName: apollodata
+  gtm: GTM-PNFDVBB
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'

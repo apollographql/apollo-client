@@ -14,9 +14,8 @@ This will let you better track the different events that happen in your app, and
 If you want to use your own store, you'll need to pass in reducer and middleware from your Apollo Client instance; you can then pass the store into your `ApolloProvider` directly:
 
 ```js
-import { createStore, combineReducers, applyMiddleware } from 'redux';
-import ApolloClient from 'apollo-client';
-import { ApolloProvider } from 'react-apollo';
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
+import { ApolloClient, ApolloProvider } from 'react-apollo';
 
 import { todoReducer, userReducer } from './reducers';
 
@@ -28,9 +27,12 @@ const store = createStore(
     users: userReducer,
     apollo: client.reducer(),
   }),
-  applyMiddleware(client.middleware()),
-  // If you are using the devToolsExtension, you can add it here also
-  window.devToolsExtension ? window.devToolsExtension() : f => f,
+  {}, // initial state
+  compose(
+      applyMiddleware(client.middleware()),
+      // If you are using the devToolsExtension, you can add it here also
+      (typeof window.__REDUX_DEVTOOLS_EXTENSION__ !== 'undefined') ? window.__REDUX_DEVTOOLS_EXTENSION__() : f => f,
+  )
 );
 
 ReactDOM.render(
@@ -41,11 +43,11 @@ ReactDOM.render(
 )
 ```
 
-If you'd like to use a different root key for the client reducer (rather than `apollo`), use the `reduxRootKey: "key"` option when creating the client:
+If you'd like to use a different root key for the client reducer (rather than `apollo`), use the `reduxRootSelector: selector` option when creating the client:
 
 ```js
 const client = new ApolloClient({
-  reduxRootKey: 'differentKey',
+  reduxRootSelector: state => state.differentKey,
 });
 
 const store = createStore(
@@ -67,7 +69,9 @@ import { connect } from 'react-redux';
 import { CLONE_LIST } from './mutations';
 import { viewList } from './actions';
 
-const List = function({ listId, onSelectList });
+const List = ({ listId, cloneList }) => (
+  <div>List ID: {listId} <button onClick={cloneList}>Clone</button></div>
+);
 
 const withCloneList = graphql(CLONE_LIST, {
   props: ({ ownProps, mutate }) => ({

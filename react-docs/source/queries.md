@@ -13,8 +13,10 @@ When we are running a basic query we can use the `graphql` container in a very s
 For instance, in GitHunt, we want to display the currently logged-in user in the `Profile` component:
 
 ```js
-import React, { Component, PropTypes } from 'react';
-import { gql, graphql } from 'react-apollo';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 
 class Profile extends Component { ... }
 
@@ -172,8 +174,10 @@ However, if you want to decouple your UI components from Apollo and make them mo
 If you want to change the name of the default `data` prop, but keep the exact same shape, you can use `name` option to the `graphql` container. This is especially useful when one component is using multiple queries via nested `graphql` containers, where the `data` prop would otherwise be overwritten.
 
 ```js
-import React, { Component, PropTypes } from 'react';
-import { gql, graphql } from 'react-apollo';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 
 class Profile extends Component { ... }
 
@@ -205,8 +209,10 @@ If you want complete control over the props of the child component, use the `pro
 
 ```js
 
-import React, { Component, PropTypes } from 'react';
-import { gql, graphql } from 'react-apollo';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 
 // Here Profile has a more generic API, that's not coupled to Apollo or the
 // shape of the query that we've used

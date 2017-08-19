@@ -70,9 +70,8 @@ We'll see how to take your component tree and turn it into a string in the next 
 Once you put that all together, you'll end up with initialization code that looks like this:
 
 ```js
-/* This example uses React Router v4, although it should work equally well with other
-   routers that support SSR
-*/
+// This example uses React Router v4, although it should work
+// equally well with other routers that support SSR
 
 import { ApolloClient, createNetworkInterface, ApolloProvider } from 'react-apollo';
 import Express from 'express';
@@ -140,19 +139,16 @@ const App = () =>
       </ul>
     </nav>
 
-    /* New <Switch> behavior introduced in React Router v4
-       https://reacttraining.com/react-router/web/api/Switch
-    */
+    {/* New <Switch> behavior introduced in React Router v4
+       https://reacttraining.com/react-router/web/api/Switch */}
     <Switch>
-      {routes.map(props => <Route {...props} />)}
+      {routes.map(route => <Route key={route.name} {...route} />)}
     </Switch>
   </div>;
 
 export default App;
 
 ```
-
-
 
 You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/ui/server.js) for a complete working example with React Router v3, which has a slightly different API.
 

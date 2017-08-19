@@ -76,7 +76,7 @@ Once you put that all together, you'll end up with initialization code that look
 import { ApolloClient, createNetworkInterface, ApolloProvider } from 'react-apollo';
 import Express from 'express';
 import { StaticRouter } from 'react-router';
-import App from './app';
+import Layout from './routes/Layout';
 
 // Note you don't have to use any particular http server, but
 // we're using Express in this example
@@ -103,9 +103,11 @@ app.use((req, res) => {
 
   // The client-side app will instead use <BrowserRouter>
   const app = (
-    <StaticRouter location={req.url} context={context}>
-      <App />
-    </StaticRouter>
+    <ApolloProvider client={client}>
+      <StaticRouter location={req.url} context={context}>
+        <Layout />
+      </StaticRouter>
+    </ApolloProvider>
   );
 
   // rendering code (see below)
@@ -117,7 +119,7 @@ app.listen(basePort, () => console.log( // eslint-disable-line no-console
 ```
 
 ```js
-// app.jsx
+// ./routes/Layout.js
 
 import { Route, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -126,7 +128,7 @@ import React from 'react';
 // A Routes file is a good shared entry-point between client and server
 import routes from './routes';
 
-const App = () =>
+const Layout = () =>
   <div>
     <nav>
       <ul>
@@ -146,7 +148,31 @@ const App = () =>
     </Switch>
   </div>;
 
-export default App;
+export default Layout;
+
+```
+
+```js
+// ./routes/index.js
+
+import MainPage from './MainPage';
+import AnotherPage from './AnotherPage';
+
+const routes = [
+  {
+    path: '/',
+    name: 'home',
+    exact: true,
+    component: MainPage,
+  },
+  {
+    path: '/another',
+    name: 'another',
+    component: AnotherPage,
+  },
+];
+
+export default routes;
 
 ```
 

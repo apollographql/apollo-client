@@ -59,13 +59,15 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
   });
 }
 
-export function getOperationName(doc: DocumentNode): string | undefined {
-  return doc.definitions
-    .filter(
-      definition =>
-        definition.kind === 'OperationDefinition' && definition.name,
-    )
-    .map((x: OperationDefinitionNode) => x.name.value)[0];
+export function getOperationName(doc: DocumentNode): string | null {
+  return (
+    doc.definitions
+      .filter(
+        definition =>
+          definition.kind === 'OperationDefinition' && definition.name,
+      )
+      .map((x: OperationDefinitionNode) => x.name.value)[0] || null
+  );
 }
 
 // Returns the FragmentDefinitions from a particular document as an array

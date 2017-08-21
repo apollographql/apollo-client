@@ -20,14 +20,10 @@
   },
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
-    "pretest": "npm run build",
-    "test": "npm run test-only --",
+    "test": "jest",
     "posttest": "npm run lint",
-    "test-only": "mocha --reporter spec --full-trace dist/tests/tests.js",
-    "test-watch": "mocha --reporter spec --full-trace dist/tests/tests.js --watch",
-    "coverage": "istanbul cover ./node_modules/.bin/_mocha -- --reporter dot --full-trace dist/tests/tests.js",
-    "postcoverage": "remap-istanbul --input coverage/coverage.json --type lcovonly --output coverage/lcov.info",
-    "lint": "tslint --type-check -p tsconfig.json src/*.ts && tslint --type-check -p tsconfig.json tests/*.ts",
+    "coverage": "jest --coverage",
+    "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean:dist",
     "build": "tsc -p .",
     "postbuild": "cp -R ./dist/src/. ./lib",
@@ -45,6 +41,7 @@
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "0.0.31",
     "@types/graphql": "~0.9.0",
+    "@types/jest": "^20.0.7",
     "@types/lodash": "^4.14.72",
     "@types/mocha": "^2.2.31",
     "@types/node": "^8.0.20",
@@ -55,14 +52,23 @@
     "graphql": "^0.10.3",
     "graphql-tag": "^2.4.2",
     "istanbul": "^0.4.4",
+    "jest": "^20.0.4",
     "lodash": "^4.17.4",
     "mocha": "^3.2.0",
     "remap-istanbul": "^0.9.0",
     "rimraf": "^2.5.4",
     "sinon": "^2.3.4",
     "source-map-support": "^0.4.5",
+    "ts-jest": "^20.0.10",
     "tslint": "^5.0.0",
     "typescript": "^2.2.1",
     "uglifyjs": "^2.4.11"
+  },
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"]
   }
 }

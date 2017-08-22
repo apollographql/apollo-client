@@ -1,10 +1,8 @@
-import { assert } from 'chai';
-import { IntrospectionFragmentMatcher } from '../src/fragmentMatcher';
-
+import { IntrospectionFragmentMatcher } from '../fragmentMatcher';
 describe('IntrospectionFragmentMatcher', () => {
   it('will throw an error if match is called if it is not ready', () => {
     const ifm = new IntrospectionFragmentMatcher();
-    assert.throws(() => (ifm.match as any)(), /called before/);
+    expect(() => (ifm.match as any)()).toThrowError(/called before/);
   });
 
   it('can be seeded with an introspection query result', () => {
@@ -48,9 +46,8 @@ describe('IntrospectionFragmentMatcher', () => {
       customResolvers: {},
     };
 
-    assert.equal(ifm.match(idValue as any, 'Item', readStoreContext), true);
-    assert.equal(
-      ifm.match(idValue as any, 'NotAnItem', readStoreContext),
+    expect(ifm.match(idValue as any, 'Item', readStoreContext)).toBe(true);
+    expect(ifm.match(idValue as any, 'NotAnItem', readStoreContext)).toBe(
       false,
     );
   });

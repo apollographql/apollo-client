@@ -1,16 +1,26 @@
-import { assert } from 'chai';
+import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { diffQueryAgainstStore, ID_KEY } from '../src/readFromStore';
+import { diffQueryAgainstStore, ID_KEY } from '../readFromStore';
+import { writeQueryToStore } from '../writeToStore';
+import { HeuristicFragmentMatcher } from '../fragmentMatcher';
 
-import { writeQueryToStore } from '../src/writeToStore';
-
-import { toIdValue } from '../src';
-
-import gql from 'graphql-tag';
-import { withError } from './util';
-
-import { HeuristicFragmentMatcher } from '../src/fragmentMatcher';
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
+
+disableFragmentWarnings();
+export function withError(func: Function, regex: RegExp) {
+  let message: string = null as never;
+  const oldError = console.error;
+
+  console.error = (m: string) => (message = m);
+
+  try {
+    const result = func();
+    expect(message).toMatch(regex);
+    return result;
+  } finally {
+    console.error = oldError;
+  }
+}
 
 describe('diffing queries against the store', () => {
   it('returns nothing when the store is enough', () => {
@@ -33,12 +43,12 @@ describe('diffing queries against the store', () => {
       query,
     });
 
-    assert.notOk(
+    expect(
       diffQueryAgainstStore({
         store,
         query,
       }).isMissing,
-    );
+    ).not.toBeTruthy();
   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
@@ -83,8 +93,8 @@ describe('diffing queries against the store', () => {
       query: secondQuery,
     });
 
-    assert.notOk(isMissing);
-    assert.deepEqual(store['1'], result.people_one);
+    expect(isMissing).not.toBeTruthy();
+    expect(store['1']).toEqual(result.people_one);
   });
 
   it('does not swallow errors other than field errors', () => {
@@ -109,12 +119,12 @@ describe('diffing queries against the store', () => {
         ...notARealFragment
       }
     `;
-    return assert.throws(() => {
+    return expect(() => {
       diffQueryAgainstStore({
         store,
         query: unionQuery,
       });
-    }, /No fragment/);
+    }).toThrowError(/No fragment/);
   });
 
   it('does not error on a correct query with union typed fragments', () => {
@@ -160,7 +170,7 @@ describe('diffing queries against the store', () => {
         fragmentMatcherFunction,
       });
 
-      assert.isTrue(isMissing);
+      expect(isMissing).toBe(true);
     }, /IntrospectionFragmentMatcher/);
   });
 
@@ -208,7 +218,7 @@ describe('diffing queries against the store', () => {
       query: unionQuery,
     });
 
-    assert.isTrue(isMissing);
+    expect(isMissing).toBe(true);
   });
 
   it('throws an error on a query with fields missing from matching named fragments', () => {
@@ -250,13 +260,13 @@ describe('diffing queries against the store', () => {
         jedi
       }
     `;
-    assert.throw(() => {
+    expect(() => {
       diffQueryAgainstStore({
         store,
         query: unionQuery,
         returnPartialData: false,
       });
-    });
+    }).toThrow();
   });
 
   it('returns available fields if returnPartialData is true', () => {
@@ -323,7 +333,7 @@ describe('diffing queries against the store', () => {
       query: simpleQuery,
     });
 
-    assert.deepEqual(simpleDiff.result, {
+    expect(simpleDiff.result).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -334,7 +344,7 @@ describe('diffing queries against the store', () => {
       query: inlineFragmentQuery,
     });
 
-    assert.deepEqual(inlineDiff.result, {
+    expect(inlineDiff.result).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
@@ -345,19 +355,19 @@ describe('diffing queries against the store', () => {
       query: namedFragmentQuery,
     });
 
-    assert.deepEqual(namedDiff.result, {
+    expect(namedDiff.result).toEqual({
       people_one: {
         name: 'Luke Skywalker',
       },
     });
 
-    assert.throws(function() {
+    expect(function() {
       diffQueryAgainstStore({
         store,
         query: simpleQuery,
         returnPartialData: false,
       });
-    });
+    }).toThrow();
   });
 
   it('will add a private id property', () => {
@@ -406,18 +416,18 @@ describe('diffing queries against the store', () => {
       query,
     });
 
-    assert.deepEqual(result, queryResult);
-    assert.equal(result[ID_KEY], 'ROOT_QUERY');
-    assert.equal(result.a[0][ID_KEY], 'a:1');
-    assert.equal(result.a[1][ID_KEY], 'a:2');
-    assert.equal(result.a[2][ID_KEY], 'a:3');
-    assert.equal(result.c[ID_KEY], '$ROOT_QUERY.c');
-    assert.equal(result.c.e[0][ID_KEY], 'e:1');
-    assert.equal(result.c.e[1][ID_KEY], 'e:2');
-    assert.equal(result.c.e[2][ID_KEY], 'e:3');
-    assert.equal(result.c.e[3][ID_KEY], 'e:4');
-    assert.equal(result.c.e[4][ID_KEY], 'e:5');
-    assert.equal(result.c.g[ID_KEY], '$ROOT_QUERY.c.g');
+    expect(result).toEqual(queryResult);
+    expect(result[ID_KEY]).toBe('ROOT_QUERY');
+    expect(result.a[0][ID_KEY]).toBe('a:1');
+    expect(result.a[1][ID_KEY]).toBe('a:2');
+    expect(result.a[2][ID_KEY]).toBe('a:3');
+    expect(result.c[ID_KEY]).toBe('$ROOT_QUERY.c');
+    expect(result.c.e[0][ID_KEY]).toBe('e:1');
+    expect(result.c.e[1][ID_KEY]).toBe('e:2');
+    expect(result.c.e[2][ID_KEY]).toBe('e:3');
+    expect(result.c.e[3][ID_KEY]).toBe('e:4');
+    expect(result.c.e[4][ID_KEY]).toBe('e:5');
+    expect(result.c.g[ID_KEY]).toBe('$ROOT_QUERY.c.g');
   });
 
   describe('referential equality preservation', () => {
@@ -457,8 +467,8 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.strictEqual(result, previousResult);
+      expect(result).toEqual(queryResult);
+      expect(result).toEqual(previousResult);
     });
 
     it('will return parts of the previous result that changed', () => {
@@ -497,11 +507,11 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.notStrictEqual(result, previousResult);
-      assert.strictEqual(result.a, previousResult.a);
-      assert.notStrictEqual(result.c, previousResult.c);
-      assert.strictEqual(result.c.e, previousResult.c.e);
+      expect(result).toEqual(queryResult);
+      expect(result).not.toEqual(previousResult);
+      expect(result.a).toEqual(previousResult.a);
+      expect(result.c).not.toEqual(previousResult.c);
+      expect(result.c.e).toEqual(previousResult.c.e);
     });
 
     it('will return the previous result if there are no changes in child arrays', () => {
@@ -546,8 +556,8 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.strictEqual(result, previousResult);
+      expect(result).toEqual(queryResult);
+      expect(result).toEqual(previousResult);
     });
 
     it('will not add zombie items when previousResult starts with the same items', () => {
@@ -578,9 +588,9 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.strictEqual(result.a[0], previousResult.a[0]);
-      assert.strictEqual(result.a[1], previousResult.a[1]);
+      expect(result).toEqual(queryResult);
+      expect(result.a[0]).toEqual(previousResult.a[0]);
+      expect(result.a[1]).toEqual(previousResult.a[1]);
     });
 
     it('will return the previous result if there are no changes in nested child arrays', () => {
@@ -625,8 +635,8 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.strictEqual(result, previousResult);
+      expect(result).toEqual(queryResult);
+      expect(result).toEqual(previousResult);
     });
 
     it('will return parts of the previous result if there are changes in child arrays', () => {
@@ -671,19 +681,19 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.notStrictEqual(result, previousResult);
-      assert.notStrictEqual(result.a, previousResult.a);
-      assert.strictEqual(result.a[0], previousResult.a[0]);
-      assert.notStrictEqual(result.a[1], previousResult.a[1]);
-      assert.strictEqual(result.a[2], previousResult.a[2]);
-      assert.notStrictEqual(result.c, previousResult.c);
-      assert.notStrictEqual(result.c.e, previousResult.c.e);
-      assert.strictEqual(result.c.e[0], previousResult.c.e[0]);
-      assert.strictEqual(result.c.e[1], previousResult.c.e[1]);
-      assert.strictEqual(result.c.e[2], previousResult.c.e[2]);
-      assert.strictEqual(result.c.e[3], previousResult.c.e[3]);
-      assert.strictEqual(result.c.e[4], previousResult.c.e[4]);
+      expect(result).toEqual(queryResult);
+      expect(result).not.toEqual(previousResult);
+      expect(result.a).not.toEqual(previousResult.a);
+      expect(result.a[0]).toEqual(previousResult.a[0]);
+      expect(result.a[1]).not.toEqual(previousResult.a[1]);
+      expect(result.a[2]).toEqual(previousResult.a[2]);
+      expect(result.c).not.toEqual(previousResult.c);
+      expect(result.c.e).toEqual(previousResult.c.e);
+      expect(result.c.e[0]).toEqual(previousResult.c.e[0]);
+      expect(result.c.e[1]).toEqual(previousResult.c.e[1]);
+      expect(result.c.e[2]).toEqual(previousResult.c.e[2]);
+      expect(result.c.e[3]).toEqual(previousResult.c.e[3]);
+      expect(result.c.e[4]).toEqual(previousResult.c.e[4]);
     });
 
     it('will return the same items in a different order with `dataIdFromObject`', () => {
@@ -756,20 +766,20 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.notStrictEqual(result, previousResult);
-      assert.notStrictEqual(result.a, previousResult.a);
-      assert.strictEqual(result.a[0], previousResult.a[2]);
-      assert.strictEqual(result.a[1], previousResult.a[1]);
-      assert.strictEqual(result.a[2], previousResult.a[0]);
-      assert.notStrictEqual(result.c, previousResult.c);
-      assert.notStrictEqual(result.c.e, previousResult.c.e);
-      assert.strictEqual(result.c.e[0], previousResult.c.e[4]);
-      assert.strictEqual(result.c.e[1], previousResult.c.e[1]);
-      assert.strictEqual(result.c.e[2], previousResult.c.e[3]);
-      assert.strictEqual(result.c.e[3], previousResult.c.e[0]);
-      assert.strictEqual(result.c.e[4], previousResult.c.e[2]);
-      assert.strictEqual(result.c.g, previousResult.c.g);
+      expect(result).toEqual(queryResult);
+      expect(result).not.toEqual(previousResult);
+      expect(result.a).not.toEqual(previousResult.a);
+      expect(result.a[0]).toEqual(previousResult.a[2]);
+      expect(result.a[1]).toEqual(previousResult.a[1]);
+      expect(result.a[2]).toEqual(previousResult.a[0]);
+      expect(result.c).not.toEqual(previousResult.c);
+      expect(result.c.e).not.toEqual(previousResult.c.e);
+      expect(result.c.e[0]).toEqual(previousResult.c.e[4]);
+      expect(result.c.e[1]).toEqual(previousResult.c.e[1]);
+      expect(result.c.e[2]).toEqual(previousResult.c.e[3]);
+      expect(result.c.e[3]).toEqual(previousResult.c.e[0]);
+      expect(result.c.e[4]).toEqual(previousResult.c.e[2]);
+      expect(result.c.g).toEqual(previousResult.c.g);
     });
 
     it('will return the same JSON scalar field object', () => {
@@ -807,72 +817,11 @@ describe('diffing queries against the store', () => {
         previousResult,
       });
 
-      assert.deepEqual(result, queryResult);
-      assert.notStrictEqual(result, previousResult);
-      assert.strictEqual(result.a, previousResult.a);
-      assert.notStrictEqual(result.d, previousResult.d);
-      assert.strictEqual(result.d.f, previousResult.d.f);
-    });
-
-    it('will preserve equality with custom resolvers', () => {
-      const listQuery = gql`
-        {
-          people {
-            id
-            name
-            __typename
-          }
-        }
-      `;
-
-      const listResult = {
-        people: [
-          {
-            id: '4',
-            name: 'Luke Skywalker',
-            __typename: 'Person',
-          },
-        ],
-      };
-
-      const itemQuery = gql`
-        {
-          person(id: 4) {
-            id
-            name
-            __typename
-          }
-        }
-      `;
-
-      const dataIdFromObject = (obj: any) => obj.id;
-
-      const store = writeQueryToStore({
-        query: listQuery,
-        result: listResult,
-        dataIdFromObject,
-      });
-
-      const previousResult = {
-        person: listResult.people[0],
-      };
-
-      const customResolvers = {
-        Query: {
-          person: (_: any, args: any) => toIdValue(args['id']),
-        },
-      };
-
-      const config = { dataIdFromObject, customResolvers };
-
-      const { result } = diffQueryAgainstStore({
-        store,
-        query: itemQuery,
-        previousResult,
-        config,
-      });
-
-      assert.strictEqual(result, previousResult);
+      expect(result).toEqual(queryResult);
+      expect(result).not.toEqual(previousResult);
+      expect(result.a).toEqual(previousResult.a);
+      expect(result.d).not.toEqual(previousResult.d);
+      expect(result.d.f).toEqual(previousResult.d.f);
     });
   });
 });

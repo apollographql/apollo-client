@@ -734,6 +734,45 @@ describe('ObservableQuery', () => {
       });
     });
 
+    fit(
+      'reruns observer callback if the variables change and change back',
+      done => {
+        const observable: ObservableQuery<any> = mockWatchQuery(
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables: differentVariables },
+            result: { data: dataTwo },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+        );
+
+        subscribeAndCount(done, observable, (handleCount, result) => {
+          if (handleCount === 1) {
+            expect(result.data).toEqual(dataOne);
+            observable.setVariables(differentVariables);
+          } else if (handleCount === 2) {
+            expect(result.loading).toBe(true);
+            expect(result.data).toEqual(dataOne);
+          } else if (handleCount === 3) {
+            expect(result.data).toEqual(dataTwo);
+            observable
+              .setVariables(variables)
+              .then(console.log)
+              .catch(console.error);
+          } else if (handleCount === 4) {
+            expect(result.data).toEqual(dataOne);
+            done();
+          }
+        });
+      },
+    );
+
     it('does not rerun observer callback if the variables change but new data is in store', done => {
       const manager = mockQueryManager(
         {

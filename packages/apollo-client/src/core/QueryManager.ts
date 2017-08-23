@@ -171,7 +171,7 @@ export class QueryManager {
     const request = {
       query: mutation,
       variables,
-      operationName: getOperationName(mutation),
+      operationName: getOperationName(mutation) || undefined,
     } as Request;
 
     this.queryDocuments[mutationId] = mutation;
@@ -848,7 +848,7 @@ export class QueryManager {
     const request: Request = {
       query: transformedDoc,
       variables,
-      operationName: getOperationName(transformedDoc),
+      operationName: getOperationName(transformedDoc) || undefined,
     };
 
     let sub: Subscription;
@@ -1046,7 +1046,7 @@ export class QueryManager {
     const request = {
       query: document,
       variables,
-      operationName: getOperationName(document),
+      operationName: getOperationName(document) || undefined,
       context: context || {},
     };
 

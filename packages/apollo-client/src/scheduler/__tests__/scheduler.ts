@@ -1,13 +1,13 @@
-import { QueryScheduler } from '../src/scheduler/scheduler';
-import { assert } from 'chai';
-import { QueryManager } from '../src/core/QueryManager';
-import { WatchQueryOptions } from '../src/core/watchQueryOptions';
-import { mockSingleLink } from './mocks/mockLinks';
-import { NetworkStatus } from '../src/core/networkStatus';
+import InMemoryCache from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 
-import { DataStore } from '../src/data/store';
-import InMemoryCache from 'apollo-cache-inmemory';
+import { QueryScheduler } from '../scheduler';
+import { QueryManager } from '../../core/QueryManager';
+import { WatchQueryOptions } from '../../core/watchQueryOptions';
+import { mockSingleLink } from '../../__mocks__/mockLinks';
+import { NetworkStatus } from '../../core/networkStatus';
+
+import { DataStore } from '../../data/store';
 
 describe('QueryScheduler', () => {
   it('should throw an error if we try to start polling a non-polling query', () => {
@@ -32,9 +32,9 @@ describe('QueryScheduler', () => {
     const queryOptions: WatchQueryOptions = {
       query,
     };
-    assert.throws(() => {
+    expect(() => {
       scheduler.startPollingQuery(queryOptions, null as never);
-    });
+    }).toThrow();
   });
 
   it('should correctly start polling queries', done => {
@@ -76,7 +76,7 @@ describe('QueryScheduler', () => {
       timesFired += 1;
     });
     setTimeout(() => {
-      assert.isAtLeast(timesFired, 0);
+      expect(timesFired).toBeGreaterThanOrEqual(0);
       scheduler.stopPollingQuery(queryId);
       done();
     }, 120);
@@ -108,9 +108,9 @@ describe('QueryScheduler', () => {
       result: { data },
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache()),
-
+      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       link: link,
+      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -128,7 +128,7 @@ describe('QueryScheduler', () => {
     );
 
     setTimeout(() => {
-      assert.equal(timesFired, 1);
+      expect(timesFired).toEqual(1);
       done();
     }, 170);
   });
@@ -170,13 +170,13 @@ describe('QueryScheduler', () => {
     let subscription = observableQuery.subscribe({
       next(result) {
         timesFired += 1;
-        assert.deepEqual(result.data, data);
+        expect(result.data).toEqual(data);
         subscription.unsubscribe();
       },
     });
 
     setTimeout(() => {
-      assert.equal(timesFired, 1);
+      expect(timesFired).toEqual(1);
       done();
     }, 100);
   });
@@ -214,12 +214,9 @@ describe('QueryScheduler', () => {
       },
 
       error(errorVal) {
-        assert(errorVal);
+        expect(errorVal).toBeDefined();
         const queryId = scheduler.intervalQueries[queryOptions.pollInterval][0];
-        assert.isFalse(
-          scheduler.checkInFlight(queryId),
-          'Should be able to poll after an error',
-        );
+        expect(scheduler.checkInFlight(queryId)).toBe(false);
         subscription.unsubscribe();
         done();
       },
@@ -255,7 +252,7 @@ describe('QueryScheduler', () => {
     const subscription = observableQuery.subscribe({
       error(errorVal) {
         subscription.unsubscribe();
-        assert(errorVal);
+        expect(errorVal).toBeDefined();
         done();
       },
     });
@@ -320,16 +317,15 @@ describe('QueryScheduler', () => {
     });
     const queryId = 'fake-id';
     scheduler.addQueryOnInterval<any>(queryId, queryOptions);
-    assert.equal(Object.keys(scheduler.intervalQueries).length, 1);
-    assert.equal(
-      Object.keys(scheduler.intervalQueries)[0],
+    expect(Object.keys(scheduler.intervalQueries).length).toEqual(1);
+    expect(Object.keys(scheduler.intervalQueries)[0]).toEqual(
       queryOptions.pollInterval.toString(),
     );
     const queries = (<any>scheduler.intervalQueries)[
       queryOptions.pollInterval.toString()
     ];
-    assert.equal(queries.length, 1);
-    assert.equal(queries[0], queryId);
+    expect(queries.length).toEqual(1);
+    expect(queries[0]).toEqual(queryId);
   });
 
   it('should add multiple queries to an interval correctly', () => {
@@ -396,13 +392,13 @@ describe('QueryScheduler', () => {
     });
 
     const keys = Object.keys(scheduler.intervalQueries);
-    assert.equal(keys.length, 1);
-    assert.equal(keys[0], String(interval));
+    expect(keys.length).toEqual(1);
+    expect(keys[0]).toEqual(String(interval));
 
     const queryIds = (<any>scheduler.intervalQueries)[keys[0]];
-    assert.equal(queryIds.length, 2);
-    assert.deepEqual(scheduler.registeredQueries[queryIds[0]], queryOptions1);
-    assert.deepEqual(scheduler.registeredQueries[queryIds[1]], queryOptions2);
+    expect(queryIds.length).toEqual(2);
+    expect(scheduler.registeredQueries[queryIds[0]]).toEqual(queryOptions1);
+    expect(scheduler.registeredQueries[queryIds[1]]).toEqual(queryOptions2);
   });
 
   it('should remove queries from the interval list correctly', done => {
@@ -439,14 +435,14 @@ describe('QueryScheduler', () => {
     const subscription = observable.subscribe({
       next(result) {
         timesFired += 1;
-        assert.deepEqual(result.data, data);
+        expect(result.data).toEqual(data);
         subscription.unsubscribe();
-        assert.equal(Object.keys(scheduler.registeredQueries).length, 0);
+        expect(Object.keys(scheduler.registeredQueries).length).toEqual(0);
       },
     });
 
     setTimeout(() => {
-      assert.equal(timesFired, 1);
+      expect(timesFired).toEqual(1);
       done();
     }, 100);
   });
@@ -470,10 +466,16 @@ describe('QueryScheduler', () => {
       query,
       pollInterval: 20,
     };
-    const link = mockSingleLink({
+    const networkResult = {
       request: queryOptions,
       result: { data },
-    });
+    };
+    const link = mockSingleLink(
+      networkResult,
+      networkResult,
+      networkResult,
+      networkResult,
+    );
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       link: link,
@@ -494,12 +496,12 @@ describe('QueryScheduler', () => {
           timesFired += 1;
         },
       );
-      assert.equal(scheduler.intervalQueries[20].length, 1);
+      expect(scheduler.intervalQueries[20].length).toEqual(1);
       setTimeout(() => {
-        assert.isAtLeast(timesFired, 1);
+        expect(timesFired).toBeGreaterThanOrEqual(1);
         scheduler.stopPollingQuery(queryId2);
         done();
-      }, 300);
+      }, 80);
     }, 200);
   });
 });

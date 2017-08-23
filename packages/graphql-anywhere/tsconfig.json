@@ -8,10 +8,13 @@
     "sourceMap": true,
     "declaration": true,
     "noImplicitAny": false,
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "lib",
     "allowSyntheticDefaultImports": true,
-    "removeComments": true
+    "removeComments": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": true
   },
-  "files": ["typings.d.ts", "src/index.ts", "test/tests.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/__tests__/*.ts"]
 }

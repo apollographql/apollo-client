@@ -1,9 +1,6 @@
-import * as chai from 'chai';
-const { assert } = chai;
-
 // I'm not sure why mocha doesn't provide something like this, you can't
 // always use promises
-export default (done: MochaDone, cb: (...args: any[]) => any) => (
+export default (done: (...args) => void, cb: (...args: any[]) => any) => (
   ...args: any[]
 ) => {
   try {
@@ -20,7 +17,7 @@ export function withWarning(func: Function, regex: RegExp) {
   console.warn = (m: string) => (message = m);
 
   return Promise.resolve(func()).then(val => {
-    assert.match(message, regex);
+    expect(message).toMatch(regex);
     console.warn = oldWarn;
     return val;
   });
@@ -34,7 +31,7 @@ export function withError(func: Function, regex: RegExp) {
 
   try {
     const result = func();
-    assert.match(message, regex);
+    expect(message).toMatch(regex);
     return result;
   } finally {
     console.error = oldError;

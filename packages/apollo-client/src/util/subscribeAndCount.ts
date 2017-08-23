@@ -3,7 +3,7 @@ import { ApolloQueryResult } from '../../src/core/types';
 import { Subscription } from '../../src/util/Observable';
 
 export default function subscribeAndCount(
-  done: MochaDone,
+  done: (...args) => void,
   observable: ObservableQuery<any>,
   cb: (handleCount: number, result: ApolloQueryResult<any>) => any,
 ): Subscription {

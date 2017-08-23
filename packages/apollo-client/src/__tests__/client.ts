@@ -1,32 +1,24 @@
-import * as chai from 'chai';
-const { assert } = chai;
-import * as sinon from 'sinon';
-import * as chaiAsPromised from 'chai-as-promised';
 import { cloneDeep, assign } from 'lodash';
-
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
 import { ApolloLink, Observable } from 'apollo-link-core';
-
-import { QueryManager } from '../src/core/QueryManager';
-import { WatchQueryOptions } from '../src/core/watchQueryOptions';
-
-import { ApolloError } from '../src/errors/ApolloError';
-
 import InMemoryCache, {
   IntrospectionFragmentMatcher,
   FragmentMatcherInterface,
 } from 'apollo-cache-inmemory';
 
-import ApolloClient, { printAST } from '../src';
+import { QueryManager } from '../core/QueryManager';
+import { WatchQueryOptions } from '../core/watchQueryOptions';
 
-import subscribeAndCount from './util/subscribeAndCount';
-import { withWarning } from './util/wrap';
-import { mockSingleLink } from './mocks/mockLinks';
+import { ApolloError } from '../errors/ApolloError';
 
-// make it easy to assert with promises
-chai.use(chaiAsPromised);
+import ApolloClient, { printAST } from '..';
+
+import subscribeAndCount from '../util/subscribeAndCount';
+import { withWarning } from '../util/wrap';
+
+import { mockSingleLink } from '../__mocks__/mockLinks';
 
 describe('client', () => {
   it('creates query manager lazily', () => {
@@ -35,17 +27,17 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    assert.isUndefined(client.queryManager);
+    expect(client.queryManager).toBeUndefined();
 
     // We only create the query manager on the first query
     client.initQueryManager();
-    assert.isDefined(client.queryManager);
-    assert.isDefined(client.queryManager.dataStore.getCache());
+    expect(client.queryManager).toBeDefined();
+    expect(client.queryManager.dataStore.getCache()).toBeDefined();
   });
 
   it('can be loaded via require', () => {
     /* tslint:disable */
-    const ApolloClientRequire = require('../src').default;
+    const ApolloClientRequire = require('../').default;
     /* tslint:enable */
 
     const client = new ApolloClientRequire({
@@ -53,12 +45,12 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    assert.isUndefined(client.queryManager);
+    expect(client.queryManager).toBeUndefined();
 
     // We only create the query manager on the first query
     client.initQueryManager();
-    assert.isDefined(client.queryManager);
-    assert.isDefined(client.queryManager.dataStore.getCache());
+    expect(client.queryManager).toBeDefined();
+    expect(client.queryManager.dataStore.getCache()).toBeDefined();
   });
 
   it('can allow passing in a link', () => {
@@ -68,90 +60,7 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    assert.instanceOf(client.link, ApolloLink);
-  });
-
-  it('can allow passing in a store', () => {
-    const client = new ApolloClient();
-
-    const store: ReduxStore<any> = createStore(
-      combineReducers({
-        todos: todosReducer,
-        apollo: client.reducer() as any,
-      }),
-      applyMiddleware(client.middleware()),
-    );
-
-    assert.deepEqual(client.store.getState(), store.getState());
-  });
-
-  it('throws an error if you pass in a store without apolloReducer', () => {
-    try {
-      const client = new ApolloClient();
-
-      createStore(
-        combineReducers({
-          todos: todosReducer,
-        }),
-        applyMiddleware(client.middleware()),
-      );
-
-      assert.fail();
-    } catch (error) {
-      assert.equal(
-        error.message,
-        'Existing store does not use apolloReducer. Please make sure the store ' +
-          'is properly configured and "reduxRootSelector" is correctly specified.',
-      );
-    }
-  });
-
-  it('has a top level key by default', () => {
-    const client = new ApolloClient();
-
-    client.initStore();
-
-    assert.deepEqual(client.store.getState(), {
-      apollo: {},
-    });
-  });
-
-  it('should allow passing in a selector function for apollo state', () => {
-    const reduxRootSelector = (state: any) => state.testApollo;
-    const client = new ApolloClient({
-      reduxRootSelector,
-    });
-
-    // shouldn't throw
-    createStore(
-      combineReducers({
-        testApollo: client.reducer(),
-      } as any),
-      // here "client.setStore(store)" will be called internally,
-      // this method throws if "reduxRootSelector" or "reduxRootKey"
-      // are not configured properly
-      applyMiddleware(client.middleware()),
-    );
-  });
-
-  it('should throw an error if "reduxRootSelector" is provided and the client tries to create the store', () => {
-    const reduxRootSelector = (state: any) => state.testApollo;
-    const client = new ApolloClient({
-      reduxRootSelector,
-    });
-    try {
-      client.initStore();
-
-      assert.fail();
-    } catch (error) {
-      assert.equal(
-        error.message,
-        'Cannot initialize the store because "reduxRootSelector" is provided. ' +
-          'reduxRootSelector should only be used when the store is created outside of the client. ' +
-          'This may lead to unexpected results when querying the store internally. ' +
-          `Please remove that option from ApolloClient constructor.`,
-      );
-    }
+    expect(client.link).toBeInstanceOf(ApolloLink);
   });
 
   it('should throw an error if query option is missing or not wrapped with a "gql" tag', () => {
@@ -160,14 +69,20 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    assert.throws(() => {
-      client.query(gql`{
-          a
-        }` as any);
-    }, 'query option is required. You must specify your GraphQL document in the query option.');
-    assert.throws(() => {
+    expect(() => {
+      client.query(
+        gql`
+          {
+            a
+          }
+        ` as any,
+      );
+    }).toThrowError(
+      'query option is required. You must specify your GraphQL document in the query option.',
+    );
+    expect(() => {
       client.query({ query: '{ a }' } as any);
-    }, 'You must wrap the query string in a "gql" tag.');
+    }).toThrowError('You must wrap the query string in a "gql" tag.');
   });
 
   it('should throw an error if mutation option is missing', () => {
@@ -176,15 +91,19 @@ describe('client', () => {
       cache: new InMemoryCache(),
     });
 
-    assert.throws(() => {
-      client.mutate({
-        query: gql`
-          {
-            a
-          }
-        `,
-      } as any);
-    }, 'mutation option is required. You must specify your GraphQL document in the mutation option.');
+    expect(() => {
+      client.mutate(
+        {
+          query: gql`
+            {
+              a
+            }
+          `,
+        } as any,
+      );
+    }).toThrowError(
+      'mutation option is required. You must specify your GraphQL document in the mutation option.',
+    );
   });
 
   it('should allow for a single query to take place', () => {
@@ -251,86 +170,8 @@ describe('client', () => {
     });
 
     client.query({ query, variables }).then(actualResult => {
-      assert.deepEqual(actualResult.data, data);
+      expect(actualResult.data).toEqual(data);
       done();
-    });
-  });
-
-  it('should allow multiple queries with an apollo-link enabled network interface', done => {
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-            __typename
-          }
-          __typename
-        }
-      }
-    `;
-
-    const query2 = gql`
-      query people {
-        people {
-          id
-        }
-      }
-    `;
-
-    const data = {
-      allPeople: {
-        people: [
-          {
-            name: 'Luke Skywalker',
-            __typename: 'Person',
-          },
-        ],
-        __typename: 'People',
-      },
-    };
-
-    const data2 = {
-      people: {
-        id: 'People',
-      },
-    };
-
-    const variables = { first: 1 };
-
-    const networkInterface = ApolloLink.from([
-      operation => {
-        if (operation.query === query) {
-          return Observable.of({
-            data,
-          });
-        } else {
-          return Observable.of({
-            data: data2,
-          });
-        }
-      },
-    ]);
-
-    const client = new ApolloClient({
-      networkInterface,
-      addTypename: false,
-    });
-
-    let done1 = false,
-      done2 = false;
-    client.query({ query, variables }).then(actualResult => {
-      assert.deepEqual(actualResult.data, data);
-      done1 = true;
-      if (done2) {
-        done();
-      }
-    });
-    client.query({ query: query2, variables }).then(actualResult2 => {
-      assert.deepEqual(actualResult2.data, data2);
-      done2 = true;
-      if (done1) {
-        done();
-      }
     });
   });
 
@@ -376,11 +217,11 @@ describe('client', () => {
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
 
     const withDefault = client.query({ query }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
 
     return Promise.all([basic, withDefault]);
@@ -441,17 +282,17 @@ describe('client', () => {
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
 
     const withDefault = client.query({ query }).then(actualResult => {
-      return assert.deepEqual(actualResult.data, result);
+      return expect(actualResult.data).toEqual(result);
     });
 
     const withOverride = client
       .query({ query, variables: override })
       .then(actualResult => {
-        return assert.deepEqual(actualResult.data, overriddenResult);
+        return expect(actualResult.data).toEqual(overriddenResult);
       });
 
     return Promise.all([basic, withDefault, withOverride]);
@@ -568,9 +409,8 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(result => {
-      assert.deepEqual(result.data, data);
-      assert.deepEqual(
-        finalState.data,
+      expect(result.data).toEqual(data);
+      expect(finalState.data).toEqual(
         (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
       );
     });
@@ -606,7 +446,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).catch((error: ApolloError) => {
-      assert.deepEqual(error.graphQLErrors, errors);
+      expect(error.graphQLErrors).toEqual(errors);
     });
   });
 
@@ -653,7 +493,7 @@ describe('client', () => {
     });
 
     client.query({ query }).catch((error: ApolloError) => {
-      assert.deepEqual(error.graphQLErrors, errors);
+      expect(error.graphQLErrors).toEqual(errors);
       done();
     });
   });
@@ -687,8 +527,8 @@ describe('client', () => {
       });
 
       client.query({ query }).catch((error: ApolloError) => {
-        assert(error.networkError);
-        assert.deepEqual(error.networkError!.message, networkError.message);
+        expect(error.networkError).toBeDefined();
+        expect(error.networkError!.message).toEqual(networkError.message);
         done();
       });
     }, /deprecated/);
@@ -722,8 +562,8 @@ describe('client', () => {
     });
 
     client.query({ query }).catch((error: ApolloError) => {
-      assert(error.networkError);
-      assert.deepEqual(error.networkError!.message, networkError.message);
+      expect(error.networkError).toBeDefined();
+      expect(error.networkError!.message).toEqual(networkError.message);
       done();
     });
   });
@@ -759,18 +599,20 @@ describe('client', () => {
 
     return withWarning(() => {
       return client.query({ query }).then((result: ExecutionResult) => {
-        assert.deepEqual(result.data, data);
+        expect(result.data).toEqual(data);
       });
     }, /multiple results/);
   });
 
-  it('should surface errors in observer.next as uncaught', done => {
+  xit('should surface errors in observer.next as uncaught', done => {
     const expectedError = new Error('this error should not reach the store');
     const listeners = process.listeners('uncaughtException');
     const oldHandler = listeners[listeners.length - 1];
     const handleUncaught = (e: Error) => {
+      console.log(e);
       process.removeListener('uncaughtException', handleUncaught);
-      process.addListener('uncaughtException', oldHandler);
+      if (typeof oldHandler === 'function')
+        process.addListener('uncaughtException', oldHandler);
       if (e === expectedError) {
         done();
       } else {
@@ -779,6 +621,7 @@ describe('client', () => {
     };
     process.removeListener('uncaughtException', oldHandler);
     process.addListener('uncaughtException', handleUncaught);
+
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -819,7 +662,7 @@ describe('client', () => {
     });
   });
 
-  it('should surfaces errors in observer.error as uncaught', done => {
+  xit('should surfaces errors in observer.error as uncaught', done => {
     const expectedError = new Error('this error should not reach the store');
     const listeners = process.listeners('uncaughtException');
     const oldHandler = listeners[listeners.length - 1];
@@ -903,7 +746,7 @@ describe('client', () => {
 
     handle.subscribe({
       next(result) {
-        assert.deepEqual(result.data, data);
+        expect(result.data).toEqual(data);
         done();
       },
     });
@@ -960,7 +803,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      assert.deepEqual(actualResult.data, transformedResult);
+      expect(actualResult.data).toEqual(transformedResult);
     });
   });
 
@@ -1015,7 +858,7 @@ describe('client', () => {
     return client
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
-        assert.deepEqual(actualResult.data, transformedResult);
+        expect(actualResult.data).toEqual(transformedResult);
       });
   });
 
@@ -1055,7 +898,7 @@ describe('client', () => {
     });
 
     return client.mutate({ mutation }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
   });
 
@@ -1095,7 +938,7 @@ describe('client', () => {
     return client
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
-        assert.deepEqual(actualResult.data, result);
+        expect(actualResult.data).toEqual(result);
       });
   });
 
@@ -1138,7 +981,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
   });
 
@@ -1175,7 +1018,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
   });
 
@@ -1252,7 +1095,7 @@ describe('client', () => {
       ),
     });
     return client.query({ query }).then((actualResult: any) => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
   });
 
@@ -1320,7 +1163,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
   });
 
@@ -1402,7 +1245,7 @@ describe('client', () => {
       cache: new InMemoryCache({}, { fragmentMatcher: ifm.match }),
     });
 
-    const queryUpdaterSpy = sinon.spy();
+    const queryUpdaterSpy = jest.fn();
     const queryUpdater = (prev: any) => {
       queryUpdaterSpy();
       return prev;
@@ -1411,7 +1254,7 @@ describe('client', () => {
       items: queryUpdater,
     };
 
-    const updateSpy = sinon.spy();
+    const updateSpy = jest.fn();
 
     const obs = client.watchQuery({ query });
 
@@ -1420,8 +1263,8 @@ describe('client', () => {
         client
           .mutate({ mutation, updateQueries, update: updateSpy })
           .then(() => {
-            assert.isTrue(queryUpdaterSpy.called);
-            assert.isTrue(updateSpy.called);
+            expect(queryUpdaterSpy).toBeCalled();
+            expect(updateSpy).toBeCalled();
             sub.unsubscribe();
             done();
           })
@@ -1446,7 +1289,7 @@ describe('client', () => {
     };
     const link = ApolloLink.from([
       request => {
-        assert.equal(request.operationName, 'myQueryName');
+        expect(request.operationName).toBe('myQueryName');
         return Observable.of({ data });
       },
     ]);
@@ -1457,7 +1300,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      assert.deepEqual(actualResult.data, data);
+      expect(actualResult.data).toEqual(data);
     });
   });
 
@@ -1472,7 +1315,7 @@ describe('client', () => {
     };
     const link = ApolloLink.from([
       request => {
-        assert.equal(request.operationName, 'myMutationName');
+        expect(request.operationName).toBe('myMutationName');
         return Observable.of({ data });
       },
     ]);
@@ -1483,7 +1326,7 @@ describe('client', () => {
     });
 
     return client.mutate({ mutation }).then(actualResult => {
-      assert.deepEqual(actualResult.data, data);
+      expect(actualResult.data).toEqual(data);
     });
   });
 
@@ -1531,8 +1374,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      assert.deepEqual(result1.data, data);
-      assert.deepEqual(result2.data, data2);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data2);
     });
   });
 
@@ -1579,7 +1422,7 @@ describe('client', () => {
 
     // if deduplication didn't happen, result.data will equal data2.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      assert.deepEqual(result1.data, result2.data);
+      expect(result1.data).toEqual(result2.data);
     });
   });
 
@@ -1595,9 +1438,9 @@ describe('client', () => {
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-      assert.throws(() => {
+      expect(() => {
         client.query({ query, returnPartialData: true } as WatchQueryOptions);
-      }, /returnPartialData/);
+      }).toThrowError(/returnPartialData/);
     });
 
     it('errors when returnPartialData is used on watchQuery', () => {
@@ -1605,9 +1448,9 @@ describe('client', () => {
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-      assert.throws(() => {
+      expect(() => {
         client.query({ query, returnPartialData: true } as WatchQueryOptions);
-      }, /returnPartialData/);
+      }).toThrowError(/returnPartialData/);
     });
   });
 
@@ -1654,16 +1497,15 @@ describe('client', () => {
       });
 
       return client.query({ query }).then(result => {
-        assert.deepEqual(result.data, data);
-        assert.deepEqual(
+        expect(result.data).toEqual(data);
+        expect(
           (client.queryManager.dataStore.getCache() as InMemoryCache).getData()[
             '1'
           ],
-          {
-            id: '1',
-            name: 'Luke Skywalker',
-          },
-        );
+        ).toEqual({
+          id: '1',
+          name: 'Luke Skywalker',
+        });
       });
     });
   });
@@ -1694,7 +1536,7 @@ describe('client', () => {
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-      assert.throws(() => {
+      expect(() => {
         client.query({ query, fetchPolicy: 'cache-and-network' });
       });
     });
@@ -1722,9 +1564,9 @@ describe('client', () => {
 
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          assert.deepEqual(result.data, initialData);
+          expect(result.data).toEqual(initialData);
         } else if (handleCount === 2) {
-          assert.deepEqual(result.data, networkFetch);
+          expect(result.data).toEqual(networkFetch);
           done();
         }
       });
@@ -1748,11 +1590,11 @@ describe('client', () => {
 
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          assert.equal(result.data, undefined);
-          assert(result.loading);
+          expect(result.data).toBe(undefined);
+          expect(result.loading).toBe(true);
         } else if (handleCount === 2) {
-          assert.deepEqual(result.data, networkFetch);
-          assert(!result.loading);
+          expect(result.data).toEqual(networkFetch);
+          expect(!result.loading).toBe(true);
           done();
         }
       });
@@ -1774,13 +1616,13 @@ describe('client', () => {
       let count = 0;
       obs.subscribe({
         next: result => {
-          assert.equal(result.data, undefined);
-          assert(result.loading);
+          expect(result.data).toBe(undefined);
+          expect(result.loading).toBe(true);
           count++;
         },
         error: e => {
-          assert.match(e.message, /No more mocked responses/);
-          assert.equal(count, 1); // make sure next was called.
+          expect(e.message).toMatch(/No more mocked responses/);
+          expect(count).toBe(1); // make sure next was called.
           done();
         },
       });
@@ -1796,16 +1638,16 @@ describe('client', () => {
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
-      assert.throws(
-        () =>
-          client.watchQuery({
-            query: gql`
-              {
-                abc
-              }
-            `,
-            fetchPolicy: 'standby',
-          }),
+      expect(() =>
+        client.watchQuery({
+          query: gql`
+            {
+              abc
+            }
+          `,
+          fetchPolicy: 'standby',
+        }),
+      ).toThrowError(
         'client.watchQuery cannot be called with fetchPolicy set to "standby"',
       );
     });
@@ -1831,7 +1673,7 @@ describe('client', () => {
       let handleCalled = false;
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          assert.deepEqual(result.data, data);
+          expect(result.data).toEqual(data);
           obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
@@ -1870,7 +1712,7 @@ describe('client', () => {
       let handleCalled = false;
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          assert.deepEqual(result.data, data);
+          expect(result.data).toEqual(data);
           obs.setOptions({ fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
@@ -1881,7 +1723,7 @@ describe('client', () => {
         }
         if (handleCount === 2) {
           handleCalled = true;
-          assert.deepEqual(result.data, data2);
+          expect(result.data).toEqual(data2);
           done();
         }
       });
@@ -1909,7 +1751,6 @@ describe('client', () => {
     };
 
     let link: any;
-    let clock: any;
     beforeEach(() => {
       link = mockSingleLink(
         {
@@ -1921,13 +1762,10 @@ describe('client', () => {
           result: { data: secondFetch },
         },
       );
+      //
     });
 
-    afterEach(() => {
-      if (clock) {
-        clock.restore();
-      }
-    });
+    afterAll(() => jest.useRealTimers());
 
     it('forces the query to rerun', () => {
       const client = new ApolloClient({
@@ -1943,7 +1781,7 @@ describe('client', () => {
           // then query for real
           .then(() => client.query({ query, fetchPolicy: 'network-only' }))
           .then(result => {
-            assert.deepEqual<{}>(result.data, { myNumber: { n: 2 } });
+            expect(result.data).toEqual({ myNumber: { n: 2 } });
           })
       );
     });
@@ -1965,10 +1803,10 @@ describe('client', () => {
           // then query for real
           .then(() => client.query(options))
           .then(result => {
-            assert.deepEqual<{}>(result.data, { myNumber: { n: 1 } });
+            expect(result.data).toEqual({ myNumber: { n: 1 } });
 
             // Test that options weren't mutated, issue #339
-            assert.deepEqual<WatchQueryOptions>(options, {
+            expect(options).toEqual({
               query,
               fetchPolicy: 'network-only',
             });
@@ -1977,8 +1815,7 @@ describe('client', () => {
     });
 
     it('can temporarily be disabled with ssrForceFetchDelay', () => {
-      clock = sinon.useFakeTimers();
-
+      jest.useFakeTimers();
       const client = new ApolloClient({
         link,
         ssrForceFetchDelay: 100,
@@ -1992,20 +1829,20 @@ describe('client', () => {
         // then query for real
         .then(() => {
           const promise = client.query({ query, fetchPolicy: 'network-only' });
-          clock.tick(0);
+          jest.runTimersToTime(0);
           return promise;
         })
         .then(result => {
-          assert.deepEqual<{}>(result.data, { myNumber: { n: 1 } });
-          clock.tick(100);
+          expect(result.data).toEqual({ myNumber: { n: 1 } });
+          jest.runTimersToTime(100);
           const promise = client.query({ query, fetchPolicy: 'network-only' });
-          clock.tick(0);
+          jest.runTimersToTime(0);
           return promise;
         })
         .then(result => {
-          assert.deepEqual<{}>(result.data, { myNumber: { n: 2 } });
+          expect(result.data).toEqual({ myNumber: { n: 2 } });
         });
-      clock.tick(0);
+      jest.runTimersToTime(0);
       return outerPromise;
     });
   });
@@ -2017,7 +1854,7 @@ describe('client', () => {
       }
     `;
 
-    assert.equal(printAST(query), print(query));
+    expect(printAST(query)).toBe(print(query));
   });
 
   it('should pass a network error correctly on a mutation', done => {
@@ -2052,8 +1889,8 @@ describe('client', () => {
         done(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
-        assert(error.networkError);
-        assert.equal(error.networkError!.message, networkError.message);
+        expect(error.networkError).toBeDefined();
+        expect(error.networkError!.message).toBe(networkError.message);
         done();
       });
   });
@@ -2090,9 +1927,9 @@ describe('client', () => {
         done(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
-        assert(error.graphQLErrors);
-        assert.equal(error.graphQLErrors.length, 1);
-        assert.equal(error.graphQLErrors[0].message, errors[0].message);
+        expect(error.graphQLErrors).toBeDefined();
+        expect(error.graphQLErrors.length).toBe(1);
+        expect(error.graphQLErrors[0].message).toBe(errors[0].message);
         done();
       });
   });
@@ -2136,19 +1973,17 @@ describe('client', () => {
         },
       },
     });
-    assert.equal(
+    expect(
       (client.queryManager.dataStore.getCache() as any).optimistic.length,
-      1,
-    );
+    ).toBe(1);
     mutatePromise
       .then(_ => {
         done(new Error('Returned a result when it should not have.'));
       })
       .catch((_: ApolloError) => {
-        assert.equal(
+        expect(
           (client.queryManager.dataStore.getCache() as any).optimistic.length,
-          0,
-        );
+        ).toBe(0);
         done();
       });
   });
@@ -2205,8 +2040,8 @@ describe('client', () => {
       });
 
       return client.query({ query }).then(() => {
-        assert.equal(log.length, 2);
-        assert.equal(log[1].state.queries['0'].loading, false);
+        expect(log.length).toBe(2);
+        expect(log[1].state.queries['0'].loading).toBe(false);
       });
     });
   });
@@ -2238,7 +2073,7 @@ describe('client', () => {
 
     handle.subscribe({
       error(error) {
-        assert.equal(error.message, 'Network error: Uh oh!');
+        expect(error.message).toBe('Network error: Uh oh!');
         done();
       },
     });
@@ -2269,8 +2104,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).catch(err => {
-      assert.equal(
-        err.message,
+      expect(err.message).toBe(
         'GraphQL error: Cannot query field "foo" on type "Post".',
       );
     });
@@ -2352,7 +2186,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
   });
 
@@ -2394,53 +2228,54 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      assert.deepEqual(actualResult.data, result);
+      expect(actualResult.data).toEqual(result);
     });
   });
 });
 
-it('should run a query with the connection directive and write the result to the store key defined in the directive', () => {
-  const query = gql`
-    {
-      books(skip: 0, limit: 2) @connection(key: "abc") {
-        name
-      }
-    }
-  `;
-
-  const transformedQuery = gql`
-    {
-      books(skip: 0, limit: 2) @connection(key: "abc") {
-        name
-        __typename
-      }
-    }
-  `;
-
-  const result = {
-    books: [
+describe('@connect', () => {
+  it('should run a query with the connection directive and write the result to the store key defined in the directive', () => {
+    const query = gql`
       {
-        name: 'abcd',
-        __typename: 'Book',
-      },
-    ],
-  };
+        books(skip: 0, limit: 2) @connection(key: "abc") {
+          name
+        }
+      }
+    `;
 
-  const link = mockSingleLink({
-    request: { query: transformedQuery },
-    result: { data: result },
-  });
-
-  const client = new ApolloClient({
-    link,
-    cache: new InMemoryCache(),
-  });
-
-  return client.query({ query }).then(actualResult => {
-    assert.deepEqual(actualResult.data, result);
-    assert.deepEqual(
-      (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+    const transformedQuery = gql`
       {
+        books(skip: 0, limit: 2) @connection(key: "abc") {
+          name
+          __typename
+        }
+      }
+    `;
+
+    const result = {
+      books: [
+        {
+          name: 'abcd',
+          __typename: 'Book',
+        },
+      ],
+    };
+
+    const link = mockSingleLink({
+      request: { query: transformedQuery },
+      result: { data: result },
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    return client.query({ query }).then(actualResult => {
+      expect(actualResult.data).toEqual(result);
+      expect(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+      ).toEqual({
         'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
         ROOT_QUERY: {
           abc: [
@@ -2451,48 +2286,47 @@ it('should run a query with the connection directive and write the result to the
             },
           ],
         },
-      },
-    );
+      });
+    });
   });
-});
 
-it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => {
-  const query = gql`
-    query books($order: string) {
-      books(skip: 0, limit: 2, order: $order)
-        @connection(key: "abc", filter: ["order"]) {
-        name
-        __typename
+  it('should run a query with the connection directive and filter arguments and write the result to the correct store key', () => {
+    const query = gql`
+      query books($order: string) {
+        books(skip: 0, limit: 2, order: $order)
+          @connection(key: "abc", filter: ["order"]) {
+          name
+          __typename
+        }
       }
-    }
-  `;
+    `;
 
-  const result = {
-    books: [
-      {
-        name: 'abcd',
-        __typename: 'Book',
-      },
-    ],
-  };
+    const result = {
+      books: [
+        {
+          name: 'abcd',
+          __typename: 'Book',
+        },
+      ],
+    };
 
-  const variables = { order: 'popularity' };
+    const variables = { order: 'popularity' };
 
-  const link = mockSingleLink({
-    request: { query: query, variables },
-    result: { data: result },
-  });
+    const link = mockSingleLink({
+      request: { query: query, variables },
+      result: { data: result },
+    });
 
-  const client = new ApolloClient({
-    link,
-    cache: new InMemoryCache(),
-  });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
 
-  return client.query({ query, variables }).then(actualResult => {
-    assert.deepEqual(actualResult.data, result);
-    assert.deepEqual(
-      (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
-      {
+    return client.query({ query, variables }).then(actualResult => {
+      expect(actualResult.data).toEqual(result);
+      expect(
+        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+      ).toEqual({
         'ROOT_QUERY.abc({"order":"popularity"}).0': {
           name: 'abcd',
           __typename: 'Book',
@@ -2506,8 +2340,8 @@ it('should run a query with the connection directive and filter arguments and wr
             },
           ],
         },
-      },
-    );
+      });
+    });
   });
 });
 
@@ -2531,6 +2365,6 @@ function clientRoundtrip(
   });
 
   return client.query({ query, variables }).then(result => {
-    assert.deepEqual(result.data, data.data);
+    expect(result.data).toEqual(data.data);
   });
 }

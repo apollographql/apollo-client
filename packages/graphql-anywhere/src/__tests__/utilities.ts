@@ -1,4 +1,7 @@
-import gql from 'graphql-tag';
+import gql, { disableFragmentWarnings } from 'graphql-tag';
+
+// Turn off warnings for repeated fragment names
+disableFragmentWarnings();
 
 import { filter, check } from '../utilities';
 

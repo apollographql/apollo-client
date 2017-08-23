@@ -1,16 +1,9 @@
-import * as chai from 'chai';
-const { assert } = chai;
-
 import InMemoryCache from 'apollo-cache-inmemory';
-
-import { mockSingleLink } from './mocks/mockLinks';
-import ApolloClient from '../src';
-import { ObservableQuery } from '../src/core/ObservableQuery';
-import { NetworkStatus } from '../src/core/networkStatus';
-
 import { assign, cloneDeep } from 'lodash';
-
 import gql from 'graphql-tag';
+
+import { mockSingleLink } from '../__mocks__/mockLinks';
+import ApolloClient, { NetworkStatus, ObservableQuery } from '../';
 
 describe('updateQuery on a simple query', () => {
   const query = gql`
@@ -58,14 +51,14 @@ describe('updateQuery on a simple query', () => {
     return new Promise(resolve => setTimeout(resolve, 5))
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
-        assert.equal(latestResult.data.entry.value, 1);
+        expect(latestResult.data.entry.value).toBe(1);
         watchedQuery.updateQuery((prevResult: any) => {
           const res = cloneDeep(prevResult);
           res.entry.value = 2;
           return res;
         });
 
-        assert.equal(latestResult.data.entry.value, 2);
+        expect(latestResult.data.entry.value).toBe(2);
       })
       .then(() => sub.unsubscribe());
   });
@@ -126,14 +119,14 @@ describe('updateQuery on a query with required and optional variables', () => {
     return new Promise(resolve => setTimeout(resolve, 5))
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
-        assert.equal(latestResult.data.entry.value, 1);
+        expect(latestResult.data.entry.value).toBe(1);
         watchedQuery.updateQuery((prevResult: any) => {
           const res = cloneDeep(prevResult);
           res.entry.value = 2;
           return res;
         });
 
-        assert.equal(latestResult.data.entry.value, 2);
+        expect(latestResult.data.entry.value).toBe(2);
       })
       .then(() => sub.unsubscribe());
   });
@@ -270,12 +263,12 @@ describe('fetchMore on an observable query', () => {
         });
       })
       .then(data => {
-        assert.lengthOf(data.data.entry.comments, 10); // this is the server result
-        assert.isFalse(data.loading);
+        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
+        expect(data.loading).toBe(false);
         const comments = latestResult.data.entry.comments;
-        assert.lengthOf(comments, 20);
+        expect(comments).toHaveLength(20);
         for (let i = 1; i <= 20; i++) {
-          assert.equal(comments[i - 1].text, `comment ${i}`);
+          expect(comments[i - 1].text).toEqual(`comment ${i}`);
         }
         unsetup();
       });
@@ -306,12 +299,12 @@ describe('fetchMore on an observable query', () => {
       })
       .then(() => {
         const comments = latestResult.data.entry.comments;
-        assert.lengthOf(comments, 20);
+        expect(comments).toHaveLength(20);
         for (let i = 1; i <= 10; i++) {
-          assert.equal(comments[i - 1].text, `comment ${i}`);
+          expect(comments[i - 1].text).toEqual(`comment ${i}`);
         }
         for (let i = 11; i <= 20; i++) {
-          assert.equal(comments[i - 1].text, `new comment ${i}`);
+          expect(comments[i - 1].text).toEqual(`new comment ${i}`);
         }
         unsetup();
       });
@@ -344,8 +337,8 @@ describe('fetchMore on an observable query', () => {
       next: ({ data, networkStatus }) => {
         switch (count++) {
           case 0:
-            assert.equal(networkStatus, NetworkStatus.ready);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(10);
             observable.fetchMore({
               variables: { start: 10 },
               updateQuery: (prev, options) => {
@@ -359,16 +352,16 @@ describe('fetchMore on an observable query', () => {
             });
             break;
           case 1:
-            assert.equal(networkStatus, NetworkStatus.fetchMore);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.fetchMore);
+            expect((data as any).entry.comments.length).toBe(10);
             break;
           case 2:
-            assert.equal(networkStatus, NetworkStatus.ready);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(10);
             break;
           case 3:
-            assert.equal(networkStatus, NetworkStatus.ready);
-            assert.equal((data as any).entry.comments.length, 20);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(20);
             done();
             break;
           default:
@@ -407,8 +400,8 @@ describe('fetchMore on an observable query', () => {
       next: ({ data, networkStatus }) => {
         switch (count++) {
           case 0:
-            assert.equal(networkStatus, NetworkStatus.ready);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(10);
             observable.fetchMore({
               variables: { start: 10 },
               updateQuery: (prev, options) => {
@@ -422,8 +415,8 @@ describe('fetchMore on an observable query', () => {
             });
             break;
           case 1:
-            assert.equal(networkStatus, NetworkStatus.fetchMore);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.fetchMore);
+            expect((data as any).entry.comments.length).toBe(10);
             break;
           default:
             done(new Error('`next` called when it wasn’t supposed to be.'));
@@ -433,7 +426,7 @@ describe('fetchMore on an observable query', () => {
         try {
           switch (count++) {
             case 2:
-              assert.equal(error.message, 'Network error: Uh, oh!');
+              expect(error.message).toBe('Network error: Uh, oh!');
               done();
               break;
             default:
@@ -560,12 +553,12 @@ describe('fetchMore on an observable query with connection', () => {
         });
       })
       .then(data => {
-        assert.lengthOf(data.data.entry.comments, 10); // this is the server result
-        assert.isFalse(data.loading);
+        expect(data.data.entry.comments).toHaveLength(10); // this is the server result
+        expect(data.loading).toBe(false);
         const comments = latestResult.data.entry.comments;
-        assert.lengthOf(comments, 20);
+        expect(comments).toHaveLength(20);
         for (let i = 1; i <= 20; i++) {
-          assert.equal(comments[i - 1].text, `comment ${i}`);
+          expect(comments[i - 1].text).toBe(`comment ${i}`);
         }
         unsetup();
       });
@@ -598,8 +591,8 @@ describe('fetchMore on an observable query with connection', () => {
       next: ({ data, networkStatus }) => {
         switch (count++) {
           case 0:
-            assert.equal(networkStatus, NetworkStatus.ready);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(10);
             observable.fetchMore({
               variables: { start: 10 },
               updateQuery: (prev, options) => {
@@ -613,16 +606,16 @@ describe('fetchMore on an observable query with connection', () => {
             });
             break;
           case 1:
-            assert.equal(networkStatus, NetworkStatus.fetchMore);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.fetchMore);
+            expect((data as any).entry.comments.length).toBe(10);
             break;
           case 2:
-            assert.equal(networkStatus, NetworkStatus.ready);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(10);
             break;
           case 3:
-            assert.equal(networkStatus, NetworkStatus.ready);
-            assert.equal((data as any).entry.comments.length, 20);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(20);
             done();
             break;
           default:
@@ -661,8 +654,8 @@ describe('fetchMore on an observable query with connection', () => {
       next: ({ data, networkStatus }) => {
         switch (count++) {
           case 0:
-            assert.equal(networkStatus, NetworkStatus.ready);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.ready);
+            expect((data as any).entry.comments.length).toBe(10);
             observable.fetchMore({
               variables: { start: 10 },
               updateQuery: (prev, options) => {
@@ -676,8 +669,8 @@ describe('fetchMore on an observable query with connection', () => {
             });
             break;
           case 1:
-            assert.equal(networkStatus, NetworkStatus.fetchMore);
-            assert.equal((data as any).entry.comments.length, 10);
+            expect(networkStatus).toBe(NetworkStatus.fetchMore);
+            expect((data as any).entry.comments.length).toBe(10);
             break;
           default:
             done(new Error('`next` called when it wasn’t supposed to be.'));
@@ -687,7 +680,7 @@ describe('fetchMore on an observable query with connection', () => {
         try {
           switch (count++) {
             case 2:
-              assert.equal(error.message, 'Network error: Uh, oh!');
+              expect(error.message).toBe('Network error: Uh, oh!');
               done();
               break;
             default:

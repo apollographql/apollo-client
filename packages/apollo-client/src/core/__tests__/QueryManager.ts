@@ -1,0 +1,3550 @@
+// externals
+import * as Rx from 'rxjs';
+import { assign } from 'lodash';
+import gql from 'graphql-tag';
+import { DocumentNode, ExecutionResult } from 'graphql';
+import { ApolloLink, Operation, Observable } from 'apollo-link-core';
+import InMemoryCache, { ApolloReducerConfig } from 'apollo-cache-inmemory';
+
+// mocks
+import mockQueryManager from '../../__mocks__/mockQueryManager';
+import mockWatchQuery from '../../__mocks__/mockWatchQuery';
+import { mockSingleLink } from '../../__mocks__/mockLinks';
+
+// core
+import { ApolloQueryResult } from '../types';
+import { NetworkStatus } from '../networkStatus';
+import { ObservableQuery } from '../ObservableQuery';
+import { WatchQueryOptions } from '../watchQueryOptions';
+import { QueryManager } from '../QueryManager';
+
+import { ApolloError } from '../../errors/ApolloError';
+import { DataStore } from '../../data/store';
+import { Observer } from '../../util/Observable';
+
+// testing utils
+import wrap from '../../util/wrap';
+import observableToPromise, {
+  observableToPromiseAndSubscription,
+} from '../../util/observableToPromise';
+
+describe('QueryManager', () => {
+  // Standard "get id from object" method.
+  const dataIdFromObject = (object: any) => {
+    if (object.__typename && object.id) {
+      return object.__typename + '__' + object.id;
+    }
+    return undefined;
+  };
+
+  // Helper method that serves as the constructor method for
+  // QueryManager but has defaults that make sense for these
+  // tests.
+  const createQueryManager = ({
+    link,
+    addTypename = false,
+    config = {},
+  }: {
+    link?: ApolloLink;
+    addTypename?: boolean;
+    config?: ApolloReducerConfig;
+  }) => {
+    return new QueryManager({
+      link: link || mockSingleLink(),
+      store: new DataStore(new InMemoryCache({}, config)),
+      addTypename,
+    });
+  };
+
+  // Helper method that sets up a mockQueryManager and then passes on the
+  // results to an observer.
+  const assertWithObserver = ({
+    done,
+    query,
+    variables = {},
+    queryOptions = {},
+    result,
+    error,
+    delay,
+    observer,
+  }: {
+    done: () => void;
+    query: DocumentNode;
+    variables?: Object;
+    queryOptions?: Object;
+    error?: Error;
+    result?: ExecutionResult;
+    delay?: number;
+    observer: Observer<ApolloQueryResult<any>>;
+  }) => {
+    const queryManager = mockQueryManager({
+      request: { query, variables },
+      result,
+      error,
+      delay,
+    });
+    const finalOptions = assign(
+      { query, variables },
+      queryOptions,
+    ) as WatchQueryOptions;
+    return queryManager.watchQuery<any>(finalOptions).subscribe({
+      next: wrap(done, observer.next!),
+      error: observer.error,
+    });
+  };
+
+  const mockMutation = ({
+    mutation,
+    data,
+    variables = {},
+    config = {},
+  }: {
+    mutation: DocumentNode;
+    data: Object;
+    variables?: Object;
+    config?: ApolloReducerConfig;
+  }) => {
+    const link = mockSingleLink({
+      request: { query: mutation, variables },
+      result: { data },
+    });
+    const queryManager = createQueryManager({
+      link,
+      config,
+    });
+    return new Promise<{
+      result: ExecutionResult;
+      queryManager: QueryManager;
+    }>((resolve, reject) => {
+      queryManager
+        .mutate({ mutation, variables })
+        .then(result => {
+          resolve({ result, queryManager });
+        })
+        .catch(error => {
+          reject(error);
+        });
+    });
+  };
+
+  const assertMutationRoundtrip = (opts: {
+    mutation: DocumentNode;
+    data: Object;
+    variables?: Object;
+  }) => {
+    return mockMutation(opts).then(({ result }) => {
+      expect(result.data).toEqual(opts.data);
+    });
+  };
+
+  // Helper method that takes a query with a first response and a second response.
+  // Used to assert stuff about refetches.
+  const mockRefetch = ({
+    request,
+    firstResult,
+    secondResult,
+    thirdResult,
+  }: {
+    request: Operation;
+    firstResult: ExecutionResult;
+    secondResult: ExecutionResult;
+    thirdResult?: ExecutionResult;
+  }) => {
+    const args = [
+      {
+        request,
+        result: firstResult,
+      },
+      {
+        request,
+        result: secondResult,
+      },
+    ];
+
+    if (thirdResult) {
+      args.push({ request, result: thirdResult });
+    }
+
+    return mockQueryManager(...args);
+  };
+
+  it('handles GraphQL errors', done => {
+    assertWithObserver({
+      done,
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      variables: {},
+      result: {
+        errors: [
+          {
+            name: 'Name',
+            message: 'This is an error message.',
+          },
+        ],
+      },
+      observer: {
+        next() {
+          done(
+            new Error('Returned a result when it was supposed to error out'),
+          );
+        },
+
+        error(apolloError) {
+          expect(apolloError).toBeDefined();
+          done();
+        },
+      },
+    });
+  });
+
+  it('handles GraphQL errors with data returned', done => {
+    assertWithObserver({
+      done,
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      result: {
+        data: {
+          allPeople: {
+            people: {
+              name: 'Ada Lovelace',
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'Name',
+            message: 'This is an error message.',
+          },
+        ],
+      },
+      observer: {
+        next() {
+          done(new Error('Returned data when it was supposed to error out.'));
+        },
+
+        error(apolloError) {
+          expect(apolloError).toBeDefined();
+          done();
+        },
+      },
+    });
+  });
+
+  it('empty error array (handle non-spec-compliant server) #156', done => {
+    assertWithObserver({
+      done,
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      result: {
+        data: {
+          allPeople: {
+            people: {
+              name: 'Ada Lovelace',
+            },
+          },
+        },
+        errors: [],
+      },
+      observer: {
+        next(result) {
+          expect(result.data['allPeople'].people.name).toBe('Ada Lovelace');
+          expect(result['errors']).toBeUndefined();
+          done();
+        },
+      },
+    });
+  });
+
+  // Easy to get into this state if you write an incorrect `formatError`
+  // function with graphql-server or express-graphql
+  it('error array with nulls (handle non-spec-compliant server) #1185', done => {
+    assertWithObserver({
+      done,
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      result: {
+        errors: [null as any],
+      },
+      observer: {
+        next() {
+          done(new Error('Should not fire next for an error'));
+        },
+        error(error) {
+          expect((error as any).graphQLErrors).toEqual([null]);
+          expect(error.message).toBe('GraphQL error: Error message not found.');
+          done();
+        },
+      },
+    });
+  });
+
+  it('handles network errors', done => {
+    assertWithObserver({
+      done,
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      error: new Error('Network error'),
+      observer: {
+        next: () => {
+          done(new Error('Should not deliver result'));
+        },
+        error: error => {
+          const apolloError = error as ApolloError;
+          expect(apolloError.networkError).toBeDefined();
+          expect(apolloError.networkError!.message).toMatch('Network error');
+          done();
+        },
+      },
+    });
+  });
+
+  it('uses console.error to log unhandled errors', done => {
+    const oldError = console.error;
+    let printed: any;
+    console.error = (...args: any[]) => {
+      printed = args;
+    };
+
+    assertWithObserver({
+      done,
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      error: new Error('Network error'),
+      observer: {
+        next: () => {
+          done(new Error('Should not deliver result'));
+        },
+      },
+    });
+
+    setTimeout(() => {
+      expect(printed[0]).toMatch(/error/);
+      console.error = oldError;
+      done();
+    }, 10);
+  });
+
+  it('handles an unsubscribe action that happens before data returns', done => {
+    const subscription = assertWithObserver({
+      done,
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      delay: 1000,
+      observer: {
+        next: () => {
+          done(new Error('Should not deliver result'));
+        },
+        error: () => {
+          done(new Error('Should not deliver result'));
+        },
+      },
+    });
+
+    expect(subscription.unsubscribe).not.toThrow();
+    done();
+  });
+
+  it('supports interoperability with other Observable implementations like RxJS', done => {
+    const expResult = {
+      data: {
+        allPeople: {
+          people: [
+            {
+              name: 'Luke Skywalker',
+            },
+          ],
+        },
+      },
+    };
+
+    const handle = mockWatchQuery({
+      request: {
+        query: gql`
+          query people {
+            allPeople(first: 1) {
+              people {
+                name
+              }
+            }
+          }
+        `,
+      },
+      result: expResult,
+    });
+
+    const observable = Rx.Observable.from(handle as any);
+
+    observable.map(result => assign({ fromRx: true }, result)).subscribe({
+      next: wrap(done, newResult => {
+        const expectedResult = assign(
+          { fromRx: true, loading: false, networkStatus: 7, stale: false },
+          expResult,
+        );
+        expect(newResult).toEqual(expectedResult);
+        done();
+      }),
+    });
+  });
+
+  it('allows you to subscribe twice to one query', done => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `,
+      variables: {
+        id: '1',
+      },
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Luke Skywalker has another name',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request,
+        result: { data: data1 },
+      },
+      {
+        request,
+        result: { data: data2 },
+
+        // Wait for both to subscribe
+        delay: 100,
+      },
+      {
+        request,
+        result: { data: data3 },
+      },
+    );
+
+    let subOneCount = 0;
+
+    // pre populate data to avoid contention
+    queryManager.query<any>(request).then(() => {
+      const handle = queryManager.watchQuery<any>(request);
+
+      const subOne = handle.subscribe({
+        next(result) {
+          subOneCount++;
+
+          if (subOneCount === 1) {
+            expect(result.data).toEqual(data1);
+          } else if (subOneCount === 2) {
+            expect(result.data).toEqual(data2);
+          }
+        },
+      });
+
+      let subTwoCount = 0;
+      handle.subscribe({
+        next(result) {
+          subTwoCount++;
+          if (subTwoCount === 1) {
+            expect(result.data).toEqual(data1);
+            handle.refetch();
+          } else if (subTwoCount === 2) {
+            expect(result.data).toEqual(data2);
+            setTimeout(() => {
+              try {
+                expect(subOneCount).toBe(2);
+
+                subOne.unsubscribe();
+                handle.refetch();
+              } catch (e) {
+                done(e);
+              }
+            }, 0);
+          } else if (subTwoCount === 3) {
+            setTimeout(() => {
+              try {
+                expect(subOneCount).toBe(2);
+                done();
+              } catch (e) {
+                done(e);
+              }
+            }, 0);
+          }
+        },
+      });
+    });
+  });
+
+  it('allows you to refetch queries', () => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `,
+      variables: {
+        id: '1',
+      },
+      notifyOnNetworkStatusChange: false,
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    const observable = queryManager.watchQuery<any>(request);
+    return observableToPromise(
+      { observable },
+      result => {
+        expect(result.data).toEqual(data1);
+        observable.refetch();
+      },
+      result => expect(result.data).toEqual(data2),
+    );
+  });
+
+  it('will return referentially equivalent data if nothing changed in a refetch', done => {
+    const request = {
+      query: gql`
+        {
+          a
+          b {
+            c
+          }
+          d {
+            e
+            f {
+              g
+            }
+          }
+        }
+      `,
+      notifyOnNetworkStatusChange: false,
+    };
+
+    const data1 = {
+      a: 1,
+      b: { c: 2 },
+      d: { e: 3, f: { g: 4 } },
+    };
+
+    const data2 = {
+      a: 1,
+      b: { c: 2 },
+      d: { e: 30, f: { g: 4 } },
+    };
+
+    const data3 = {
+      a: 1,
+      b: { c: 2 },
+      d: { e: 3, f: { g: 4 } },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+      thirdResult: { data: data3 },
+    });
+
+    const observable = queryManager.watchQuery<any>(request);
+
+    let count = 0;
+    let firstResultData: any;
+
+    observable.subscribe({
+      next: result => {
+        try {
+          switch (count++) {
+            case 0:
+              expect(result.data).toEqual(data1);
+              firstResultData = result.data;
+              observable.refetch();
+              break;
+            case 1:
+              expect(result.data).toEqual(data2);
+              expect(result.data).not.toEqual(firstResultData);
+              expect(result.data.b).toEqual(firstResultData.b);
+              expect(result.data.d).not.toEqual(firstResultData.d);
+              expect(result.data.d.f).toEqual(firstResultData.d.f);
+              observable.refetch();
+              break;
+            case 2:
+              expect(result.data).toEqual(data3);
+              expect(result.data).not.toEqual(firstResultData);
+              expect(result.data.b).toEqual(firstResultData.b);
+              expect(result.data.d).not.toEqual(firstResultData.d);
+              expect(result.data.d.f).toEqual(firstResultData.d.f);
+              done();
+              break;
+            default:
+              throw new Error('Next run too many times.');
+          }
+        } catch (error) {
+          done(error);
+        }
+      },
+      error: error => done(error),
+    });
+  });
+
+  it('will return referentially equivalent data in getCurrentResult if nothing changed', done => {
+    const request = {
+      query: gql`
+        {
+          a
+          b {
+            c
+          }
+          d {
+            e
+            f {
+              g
+            }
+          }
+        }
+      `,
+      notifyOnNetworkStatusChange: false,
+    };
+
+    const data1 = {
+      a: 1,
+      b: { c: 2 },
+      d: { e: 3, f: { g: 4 } },
+    };
+
+    const queryManager = mockQueryManager({
+      request,
+      result: { data: data1 },
+    });
+
+    const observable = queryManager.watchQuery<any>(request);
+
+    observable.subscribe({
+      next: result => {
+        try {
+          expect(result.data).toEqual(data1);
+          expect(result.data).toEqual(observable.currentResult().data);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+      error: error => done(error),
+    });
+  });
+
+  it('sets networkStatus to `refetch` when refetching', () => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `,
+      variables: {
+        id: '1',
+      },
+      notifyOnNetworkStatusChange: true,
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    const observable = queryManager.watchQuery<any>(request);
+    return observableToPromise(
+      { observable },
+      result => {
+        expect(result.data).toEqual(data1);
+        observable.refetch();
+      },
+      result => expect(result.networkStatus).toBe(NetworkStatus.refetch),
+      result => {
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data).toEqual(data2);
+      },
+    );
+  });
+
+  it('allows you to refetch queries with promises', () => {
+    const request = {
+      query: gql`
+        {
+          people_one(id: 1) {
+            name
+          }
+        }
+      `,
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    const handle = queryManager.watchQuery<any>(request);
+    handle.subscribe({});
+
+    return handle.refetch().then(result => expect(result.data).toEqual(data2));
+  });
+
+  it('returns frozen results from refetch', () => {
+    const request = {
+      query: gql`
+        {
+          people_one(id: 1) {
+            name
+          }
+        }
+      `,
+    };
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockRefetch({
+      request,
+      firstResult: { data: data1 },
+      secondResult: { data: data2 },
+    });
+
+    const handle = queryManager.watchQuery<any>(request);
+    handle.subscribe({});
+
+    return handle.refetch().then(result => {
+      expect(result.data).toEqual(data2);
+      expect(() => ((result.data as any).stuff = 'awful')).toThrow();
+    });
+  });
+
+  it('allows you to refetch queries with new variables', () => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name and age',
+      },
+    };
+
+    const data4 = {
+      people_one: {
+        name: 'Luke Skywalker has a whole new bag',
+      },
+    };
+
+    const variables1 = {
+      test: 'I am your father',
+    };
+
+    const variables2 = {
+      test: "No. No! That's not true! That's impossible!",
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query: query },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query },
+        result: { data: data2 },
+      },
+      {
+        request: { query: query, variables: variables1 },
+        result: { data: data3 },
+      },
+      {
+        request: { query: query, variables: variables2 },
+        result: { data: data4 },
+      },
+    );
+
+    const observable = queryManager.watchQuery<any>({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
+    return observableToPromise(
+      { observable },
+      result => {
+        expect(result.data).toEqual(data1);
+        observable.refetch();
+      },
+      result => {
+        expect(result.data).toEqual(data2);
+        observable.refetch(variables1);
+      },
+      result => {
+        expect(result.loading).toBe(true);
+        expect(result.data).toEqual(data2);
+      },
+      result => {
+        expect(result.data).toEqual(data3);
+        observable.refetch(variables2);
+      },
+      result => {
+        expect(result.loading).toBe(true);
+        expect(result.data).toEqual(data3);
+      },
+      result => {
+        expect(result.data).toEqual(data4);
+      },
+    );
+  });
+
+  it('only modifies varaibles when refetching', () => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query: query },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query },
+        result: { data: data2 },
+      },
+    );
+
+    const observable = queryManager.watchQuery<any>({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
+    const originalOptions = assign({}, observable.options);
+    return observableToPromise(
+      { observable },
+      result => {
+        expect(result.data).toEqual(data1);
+        observable.refetch();
+      },
+      result => {
+        expect(result.data).toEqual(data2);
+        const updatedOptions = assign({}, observable.options);
+        delete originalOptions.variables;
+        delete updatedOptions.variables;
+        expect(updatedOptions).toEqual(originalOptions);
+      },
+    );
+  });
+
+  it('continues to poll after refetch', () => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Patsy',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data: data1 },
+      },
+      {
+        request: { query },
+        result: { data: data2 },
+      },
+      {
+        request: { query },
+        result: { data: data3 },
+      },
+    );
+
+    const observable = queryManager.watchQuery<any>({
+      query,
+      pollInterval: 200,
+      notifyOnNetworkStatusChange: false,
+    });
+
+    return observableToPromise(
+      { observable },
+      result => {
+        expect(result.data).toEqual(data1);
+        observable.refetch();
+      },
+      result => expect(result.data).toEqual(data2),
+      result => {
+        expect(result.data).toEqual(data3);
+        observable.stopPolling();
+      },
+    );
+  });
+
+  it('sets networkStatus to `poll` if a polling query is in flight', done => {
+    const query = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+      },
+    };
+
+    const data3 = {
+      people_one: {
+        name: 'Patsy',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data: data1 },
+      },
+      {
+        request: { query },
+        result: { data: data2 },
+      },
+      {
+        request: { query },
+        result: { data: data3 },
+      },
+    );
+
+    const observable = queryManager.watchQuery<any>({
+      query,
+      pollInterval: 30,
+      notifyOnNetworkStatusChange: true,
+    });
+
+    let counter = 0;
+    const handle = observable.subscribe({
+      next(result) {
+        counter += 1;
+
+        if (counter === 1) {
+          expect(result.networkStatus).toBe(NetworkStatus.ready);
+        } else if (counter === 2) {
+          expect(result.networkStatus).toBe(NetworkStatus.poll);
+          handle.unsubscribe();
+          done();
+        }
+      },
+    });
+  });
+
+  it('can handle null values in arrays (#1551)', done => {
+    const query = gql`
+      {
+        list {
+          value
+        }
+      }
+    `;
+    const data = { list: [null, { value: 1 }] };
+    const queryManager = mockQueryManager({
+      request: { query },
+      result: { data },
+    });
+    const observable = queryManager.watchQuery({ query });
+
+    observable.subscribe({
+      next: result => {
+        expect(result.data).toEqual(data);
+        expect(observable.currentResult().data).toEqual(data);
+        done();
+      },
+    });
+  });
+
+  it('deepFreezes results in development mode', () => {
+    const query = gql`
+      {
+        stuff
+      }
+    `;
+    const data = { stuff: 'wonderful' };
+    const queryManager = mockQueryManager({
+      request: { query },
+      result: { data },
+    });
+
+    return queryManager.query({ query }).then(result => {
+      expect(result.data).toEqual(data);
+      expect(() => ((result.data as any).stuff = 'awful')).toThrow();
+    });
+  });
+
+  it('should error if we pass fetchPolicy = cache-first or cache-only on a polling query', done => {
+    expect(() => {
+      assertWithObserver({
+        done,
+        observer: {
+          next() {
+            done(new Error('Returned a result when it should not have.'));
+          },
+        },
+        query: gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `,
+        queryOptions: { pollInterval: 200, fetchPolicy: 'cache-only' },
+      });
+    }).toThrow();
+    expect(() => {
+      assertWithObserver({
+        done,
+        observer: {
+          next() {
+            done(new Error('Returned a result when it should not have.'));
+          },
+        },
+        query: gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `,
+        queryOptions: { pollInterval: 200, fetchPolicy: 'cache-first' },
+      });
+    }).toThrow();
+    done();
+  });
+
+  it('supports cache-only fetchPolicy fetching only cached data', () => {
+    const primeQuery = gql`
+      query primeQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const complexQuery = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      luke: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const queryManager = mockQueryManager({
+      request: { query: primeQuery },
+      result: { data: data1 },
+    });
+
+    // First, prime the cache
+    return queryManager
+      .query<any>({
+        query: primeQuery,
+      })
+      .then(() => {
+        const handle = queryManager.watchQuery<any>({
+          query: complexQuery,
+          fetchPolicy: 'cache-only',
+        });
+
+        return handle.result().then(result => {
+          expect(result.data['luke'].name).toBe('Luke Skywalker');
+          expect(result.data).not.toHaveProperty('vader');
+        });
+      });
+  });
+
+  it('runs a mutation', () => {
+    return assertMutationRoundtrip({
+      mutation: gql`
+        mutation makeListPrivate {
+          makeListPrivate(id: "5")
+        }
+      `,
+      data: { makeListPrivate: true },
+    });
+  });
+
+  it('runs a mutation with variables', () => {
+    return assertMutationRoundtrip({
+      mutation: gql`
+        mutation makeListPrivate($listId: ID!) {
+          makeListPrivate(id: $listId)
+        }
+      `,
+      variables: { listId: '1' },
+      data: { makeListPrivate: true },
+    });
+  });
+
+  const getIdField = ({ id }: { id: string }) => id;
+
+  it('runs a mutation with object parameters and puts the result in the store', () => {
+    const data = {
+      makeListPrivate: {
+        id: '5',
+        isPrivate: true,
+      },
+    };
+    return mockMutation({
+      mutation: gql`
+        mutation makeListPrivate {
+          makeListPrivate(input: { id: "5" }) {
+            id
+            isPrivate
+          }
+        }
+      `,
+      data,
+      config: { dataIdFromObject: getIdField },
+    }).then(({ result, queryManager }) => {
+      expect(result.data).toEqual(data);
+
+      // Make sure we updated the store with the new data
+      expect(
+        (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+      ).toEqual({
+        id: '5',
+        isPrivate: true,
+      });
+    });
+  });
+
+  it('runs a mutation and puts the result in the store', () => {
+    const data = {
+      makeListPrivate: {
+        id: '5',
+        isPrivate: true,
+      },
+    };
+
+    return mockMutation({
+      mutation: gql`
+        mutation makeListPrivate {
+          makeListPrivate(id: "5") {
+            id
+            isPrivate
+          }
+        }
+      `,
+      data,
+      config: { dataIdFromObject: getIdField },
+    }).then(({ result, queryManager }) => {
+      expect(result.data).toEqual(data);
+
+      // Make sure we updated the store with the new data
+      expect(
+        (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+      ).toEqual({
+        id: '5',
+        isPrivate: true,
+      });
+    });
+  });
+
+  it('runs a mutation and puts the result in the store with root key', () => {
+    const mutation = gql`
+      mutation makeListPrivate {
+        makeListPrivate(id: "5") {
+          id
+          isPrivate
+        }
+      }
+    `;
+
+    const data = {
+      makeListPrivate: {
+        id: '5',
+        isPrivate: true,
+      },
+    };
+
+    const queryManager = createQueryManager({
+      link: mockSingleLink({
+        request: { query: mutation },
+        result: { data },
+      }),
+      config: { dataIdFromObject: getIdField },
+    });
+
+    return queryManager
+      .mutate({
+        mutation,
+      })
+      .then(result => {
+        expect(result.data).toEqual(data);
+
+        // Make sure we updated the store with the new data
+        expect(
+          (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+        ).toEqual({
+          id: '5',
+          isPrivate: true,
+        });
+      });
+  });
+
+  it(`doesn't return data while query is loading`, () => {
+    const query1 = gql`
+      {
+        people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+
+    const query2 = gql`
+      {
+        people_one(id: 5) {
+          name
+        }
+      }
+    `;
+
+    const data2 = {
+      people_one: {
+        name: 'Darth Vader',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query: query1 },
+        result: { data: data1 },
+        delay: 10,
+      },
+      {
+        request: { query: query2 },
+        result: { data: data2 },
+      },
+    );
+
+    const observable1 = queryManager.watchQuery<any>({ query: query1 });
+    const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+    return Promise.all([
+      observableToPromise({ observable: observable1 }, result =>
+        expect(result.data).toEqual(data1),
+      ),
+      observableToPromise({ observable: observable2 }, result =>
+        expect(result.data).toEqual(data2),
+      ),
+    ]);
+  });
+
+  it(`updates result of previous query if the result of a new query overlaps`, () => {
+    const query1 = gql`
+      {
+        people_one(id: 1) {
+          name
+          age
+        }
+      }
+    `;
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+        age: 50,
+      },
+    };
+
+    const query2 = gql`
+      {
+        people_one(id: 1) {
+          name
+          username
+        }
+      }
+    `;
+
+    const data2 = {
+      people_one: {
+        name: 'Luke Skywalker has a new name',
+        username: 'luke',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query: query1 },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query2 },
+        result: { data: data2 },
+        delay: 10,
+      },
+    );
+
+    const observable = queryManager.watchQuery<any>({ query: query1 });
+    return observableToPromise(
+      { observable },
+      result => {
+        expect(result.data).toEqual(data1);
+        queryManager.query<any>({ query: query2 });
+      },
+      // 3 because the query init action for the second query causes a callback
+      result =>
+        expect(result.data).toEqual({
+          people_one: {
+            name: 'Luke Skywalker has a new name',
+            age: 50,
+          },
+        }),
+    );
+  });
+
+  describe('polling queries', () => {
+    it('allows you to poll queries', () => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '1',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      return observableToPromise(
+        { observable },
+        result => expect(result.data).toEqual(data1),
+        result => expect(result.data).toEqual(data2),
+      );
+    });
+
+    it('does not poll during SSR', done => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '1',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+
+      const queryManager = new QueryManager({
+        link: mockSingleLink(
+          {
+            request: { query, variables },
+            result: { data: data1 },
+          },
+          {
+            request: { query, variables },
+            result: { data: data2 },
+          },
+          {
+            request: { query, variables },
+            result: { data: data2 },
+          },
+        ),
+        store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+        addTypename: false,
+        ssrMode: true,
+      });
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        pollInterval: 10,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      let count = 1;
+      let doneCalled = false;
+      const subHandle = observable.subscribe({
+        next: (result: any) => {
+          switch (count) {
+            case 1:
+              expect(result.data).toEqual(data1);
+              setTimeout(() => {
+                subHandle.unsubscribe();
+                if (!doneCalled) {
+                  done();
+                }
+              }, 15);
+              count++;
+              break;
+            case 2:
+            default:
+              doneCalled = true;
+              done(new Error('Only expected one result, not multiple'));
+          }
+        },
+      });
+    });
+
+    it('should let you handle multiple polled queries and unsubscribe from one of them', done => {
+      const query1 = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const query2 = gql`
+        query {
+          person {
+            name
+          }
+        }
+      `;
+      const data11 = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const data12 = {
+        author: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const data13 = {
+        author: {
+          firstName: 'Jolly',
+          lastName: 'Smith',
+        },
+      };
+      const data14 = {
+        author: {
+          firstName: 'Jared',
+          lastName: 'Smith',
+        },
+      };
+      const data21 = {
+        person: {
+          name: 'Jane Smith',
+        },
+      };
+      const data22 = {
+        person: {
+          name: 'Josey Smith',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query: query1 },
+          result: { data: data11 },
+        },
+        {
+          request: { query: query1 },
+          result: { data: data12 },
+        },
+        {
+          request: { query: query1 },
+          result: { data: data13 },
+        },
+        {
+          request: { query: query1 },
+          result: { data: data14 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data21 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data22 },
+        },
+      );
+      let handle1Count = 0;
+      let handleCount = 0;
+      let setMilestone = false;
+
+      const subscription1 = queryManager
+        .watchQuery({
+          query: query1,
+          pollInterval: 150,
+        })
+        .subscribe({
+          next() {
+            handle1Count++;
+            handleCount++;
+            if (handle1Count > 1 && !setMilestone) {
+              subscription1.unsubscribe();
+              setMilestone = true;
+            }
+          },
+        });
+
+      const subscription2 = queryManager
+        .watchQuery({
+          query: query2,
+          pollInterval: 2000,
+        })
+        .subscribe({
+          next() {
+            handleCount++;
+          },
+        });
+
+      setTimeout(() => {
+        expect(handleCount).toBe(3);
+        subscription1.unsubscribe();
+        subscription2.unsubscribe();
+
+        done();
+      }, 400);
+    });
+
+    it('allows you to unsubscribe from polled queries', () => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '1',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+      );
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      const { promise, subscription } = observableToPromiseAndSubscription(
+        {
+          observable,
+          wait: 60,
+        },
+        result => expect(result.data).toEqual(data1),
+        result => {
+          expect(result.data).toEqual(data2);
+
+          // we unsubscribe here manually, rather than waiting for the timeout.
+          subscription.unsubscribe();
+        },
+      );
+
+      return promise;
+    });
+
+    it('allows you to unsubscribe from polled query errors', () => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '1',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          error: new Error('Network error'),
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+      );
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        pollInterval: 50,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      const { promise, subscription } = observableToPromiseAndSubscription(
+        {
+          observable,
+          wait: 60,
+          errorCallbacks: [
+            error => {
+              expect(error.message).toMatch('Network error');
+              subscription.unsubscribe();
+            },
+          ],
+        },
+        result => expect(result.data).toEqual(data1),
+      );
+
+      return promise;
+    });
+
+    it('exposes a way to start a polling query', () => {
+      const query = gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '1',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Luke Skywalker has a new name',
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+      );
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        notifyOnNetworkStatusChange: false,
+      });
+      observable.startPolling(50);
+
+      return observableToPromise(
+        { observable },
+        result => expect(result.data).toEqual(data1),
+        result => expect(result.data).toEqual(data2),
+      );
+    });
+
+    it('exposes a way to stop a polling query', () => {
+      const query = gql`
+        query fetchLeia($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '2',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Leia Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Leia Skywalker has a new name',
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        pollInterval: 50,
+      });
+
+      return observableToPromise({ observable, wait: 60 }, result => {
+        expect(result.data).toEqual(data1);
+        observable.stopPolling();
+      });
+    });
+
+    it('stopped polling queries still get updates', () => {
+      const query = gql`
+        query fetchLeia($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `;
+
+      const variables = {
+        id: '2',
+      };
+
+      const data1 = {
+        people_one: {
+          name: 'Leia Skywalker',
+        },
+      };
+
+      const data2 = {
+        people_one: {
+          name: 'Leia Skywalker has a new name',
+        },
+      };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: data1 },
+        },
+        {
+          request: { query, variables },
+          result: { data: data2 },
+        },
+      );
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        pollInterval: 50,
+      });
+
+      let timeout: Function;
+      return Promise.race([
+        observableToPromise(
+          { observable },
+          result => {
+            expect(result.data).toEqual(data1);
+            queryManager
+              .query({ query, variables, fetchPolicy: 'network-only' })
+              .then(() => timeout(new Error('Should have two results by now')));
+          },
+          result => expect(result.data).toEqual(data2),
+        ),
+        // Ensure that the observable has recieved 2 results *before*
+        // the rejection triggered above
+        new Promise((_, reject) => {
+          timeout = (error: Error) => reject(error);
+        }),
+      ]);
+    });
+  });
+
+  it('warns if you forget the template literal tag', () => {
+    const queryManager = mockQueryManager();
+    expect(() => {
+      queryManager.query<any>({
+        // Bamboozle TypeScript into letting us do this
+        query: ('string' as any) as DocumentNode,
+      });
+    }).toThrowError(/wrap the query string in a "gql" tag/);
+
+    expect(() => {
+      queryManager.mutate({
+        // Bamboozle TypeScript into letting us do this
+        mutation: ('string' as any) as DocumentNode,
+      });
+    }).toThrowError(/wrap the query string in a "gql" tag/);
+
+    expect(() => {
+      queryManager.watchQuery<any>({
+        // Bamboozle TypeScript into letting us do this
+        query: ('string' as any) as DocumentNode,
+      });
+    }).toThrowError(/wrap the query string in a "gql" tag/);
+  });
+
+  it('should transform queries correctly when given a QueryTransformer', done => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+    const transformedQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+          __typename
+        }
+      }
+    `;
+    const unmodifiedQueryResult = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const transformedQueryResult = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        __typename: 'Author',
+      },
+    };
+
+    //make sure that the query is transformed within the query
+    //manager
+    createQueryManager({
+      link: mockSingleLink(
+        {
+          request: { query },
+          result: { data: unmodifiedQueryResult },
+        },
+        {
+          request: { query: transformedQuery },
+          result: { data: transformedQueryResult },
+        },
+      ),
+      addTypename: true,
+    })
+      .query({ query: query })
+      .then(result => {
+        expect(result.data).toEqual(transformedQueryResult);
+        done();
+      });
+  });
+
+  it('should transform mutations correctly', done => {
+    const mutation = gql`
+      mutation {
+        createAuthor(firstName: "John", lastName: "Smith") {
+          firstName
+          lastName
+        }
+      }
+    `;
+    const transformedMutation = gql`
+      mutation {
+        createAuthor(firstName: "John", lastName: "Smith") {
+          firstName
+          lastName
+          __typename
+        }
+      }
+    `;
+    const unmodifiedMutationResult = {
+      createAuthor: {
+        firstName: 'It works!',
+        lastName: 'It works!',
+      },
+    };
+    const transformedMutationResult = {
+      createAuthor: {
+        firstName: 'It works!',
+        lastName: 'It works!',
+        __typename: 'Author',
+      },
+    };
+
+    createQueryManager({
+      link: mockSingleLink(
+        {
+          request: { query: mutation },
+          result: { data: unmodifiedMutationResult },
+        },
+        {
+          request: { query: transformedMutation },
+          result: { data: transformedMutationResult },
+        },
+      ),
+      addTypename: true,
+    })
+      .mutate({ mutation: mutation })
+      .then(result => {
+        expect(result.data).toEqual(transformedMutationResult);
+        done();
+      });
+  });
+
+  describe('store resets', () => {
+    it('returns a promise resolving when all queries have been refetched', () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const dataChanged = {
+        author: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const query2 = gql`
+        query {
+          author2 {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data2 = {
+        author2: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      const data2Changed = {
+        author2: {
+          firstName: 'John changed',
+          lastName: 'Smith',
+        },
+      };
+
+      const queryManager = createQueryManager({
+        link: mockSingleLink(
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query: query2 },
+            result: { data: data2 },
+          },
+          {
+            request: { query },
+            result: { data: dataChanged },
+          },
+          {
+            request: { query: query2 },
+            result: { data: data2Changed },
+          },
+        ),
+      });
+
+      const observable = queryManager.watchQuery<any>({ query });
+      const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+      return Promise.all([
+        observableToPromise({ observable }, result =>
+          expect(result.data).toEqual(data),
+        ),
+        observableToPromise({ observable: observable2 }, result =>
+          expect(result.data).toEqual(data2),
+        ),
+      ]).then(() => {
+        observable.subscribe({ next: () => null });
+        observable2.subscribe({ next: () => null });
+
+        return queryManager.resetStore().then(() => {
+          const result = queryManager.getCurrentQueryResult(observable);
+          expect(result.partial).toBe(false);
+          expect(result.data).toEqual(dataChanged);
+
+          const result2 = queryManager.getCurrentQueryResult(observable2);
+          expect(result2.partial).toBe(false);
+          expect(result2.data).toEqual(data2Changed);
+        });
+      });
+    });
+
+    it('should change the store state to an empty state', () => {
+      const queryManager = createQueryManager({});
+
+      queryManager.resetStore();
+
+      expect(
+        (queryManager.dataStore.getCache() as InMemoryCache).getData(),
+      ).toEqual({});
+      expect(queryManager.queryStore.getStore()).toEqual({});
+      expect(queryManager.mutationStore.getStore()).toEqual({});
+    });
+
+    it('should only refetch once when we store reset', () => {
+      let queryManager: QueryManager;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const link: ApolloLink = ApolloLink.from([
+        () =>
+          new Observable(observer => {
+            if (timesFired === 0) {
+              timesFired += 1;
+              queryManager.resetStore();
+            } else {
+              timesFired += 1;
+            }
+            observer.next({ data });
+            return;
+          }),
+      ]);
+      queryManager = createQueryManager({ link });
+      const observable = queryManager.watchQuery<any>({ query });
+
+      // wait just to make sure the observable doesn't fire again
+      return observableToPromise({ observable, wait: 0 }, result =>
+        expect(result.data).toEqual(data),
+      ).then(() => {
+        expect(timesFired).toBe(2);
+      });
+    });
+
+    it('should not refetch toredown queries', done => {
+      let queryManager: QueryManager;
+      let observable: ObservableQuery<any>;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const link: ApolloLink = ApolloLink.from([
+        () =>
+          new Observable(observer => {
+            timesFired += 1;
+            observer.next({ data });
+            return;
+          }),
+      ]);
+
+      queryManager = createQueryManager({ link });
+      observable = queryManager.watchQuery({ query });
+
+      observableToPromise({ observable, wait: 0 }, result =>
+        expect(result.data).toEqual(data),
+      ).then(() => {
+        expect(timesFired).toBe(1);
+
+        // at this point the observable query has been toredown
+        // because observableToPromise unsubscribe before resolving
+        queryManager.resetStore();
+
+        setTimeout(() => {
+          expect(timesFired).toBe(1);
+
+          done();
+        }, 50);
+      });
+    });
+
+    it('should not error on queries that are already in the store', () => {
+      let queryManager: QueryManager;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+
+      let timesFired = 0;
+      const link = ApolloLink.from([
+        () =>
+          new Observable(observer => {
+            if (timesFired === 0) {
+              timesFired += 1;
+              setTimeout(queryManager.resetStore.bind(queryManager), 10);
+            } else {
+              timesFired += 1;
+            }
+            observer.next({ data });
+            return;
+          }),
+      ]);
+      queryManager = createQueryManager({ link });
+      const observable = queryManager.watchQuery<any>({
+        query,
+        notifyOnNetworkStatusChange: false,
+      });
+
+      // wait to make sure store reset happened
+      return observableToPromise({ observable, wait: 20 }, result =>
+        expect(result.data).toEqual(data),
+      ).then(() => {
+        expect(timesFired).toBe(2);
+      });
+    });
+
+    it('should throw an error on an inflight fetch query if the store is reset', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const queryManager = mockQueryManager({
+        request: { query },
+        result: { data },
+        delay: 10000, //i.e. forever
+      });
+      queryManager
+        .fetchQuery('made up id', { query })
+        .then(() => {
+          done(new Error('Returned a result.'));
+        })
+        .catch(error => {
+          expect(error.message).toMatch('Store reset');
+          done();
+        });
+      queryManager.resetStore();
+    });
+
+    it('should call refetch on a mocked Observable if the store is reset', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const queryManager = mockQueryManager();
+
+      const mockObservableQuery: ObservableQuery<any> = ({
+        refetch(_: any): Promise<ExecutionResult> {
+          done();
+          return null as never;
+        },
+        options: {
+          query: query,
+        },
+        scheduler: queryManager.scheduler,
+      } as any) as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.resetStore();
+    });
+
+    it('should not call refetch on a cache-only Observable if the store is reset', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({});
+      const options = assign({}) as WatchQueryOptions;
+      options.fetchPolicy = 'cache-only';
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery<any> = ({
+        refetch(_: any): Promise<ExecutionResult> {
+          refetchCount++;
+          return null as never;
+        },
+        options,
+        queryManager: queryManager,
+      } as any) as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.resetStore();
+      setTimeout(() => {
+        expect(refetchCount).toEqual(0);
+        done();
+      }, 50);
+    });
+
+    it('should not call refetch on a standby Observable if the store is reset', done => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const queryManager = createQueryManager({});
+      const options = assign({}) as WatchQueryOptions;
+      options.fetchPolicy = 'standby';
+      options.query = query;
+      let refetchCount = 0;
+      const mockObservableQuery: ObservableQuery<any> = ({
+        refetch(_: any): Promise<ExecutionResult> {
+          refetchCount++;
+          return null as never;
+        },
+        options,
+        queryManager: queryManager,
+      } as any) as ObservableQuery<any>;
+
+      const queryId = 'super-fake-id';
+      queryManager.addObservableQuery<any>(queryId, mockObservableQuery);
+      queryManager.resetStore();
+      setTimeout(() => {
+        expect(refetchCount).toEqual(0);
+        done();
+      }, 50);
+    });
+
+    it('should throw an error on an inflight query() if the store is reset', done => {
+      let queryManager: QueryManager;
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const link = ApolloLink.from([
+        () =>
+          new Observable(observer => {
+            // reset the store as soon as we hear about the query
+            queryManager.resetStore();
+            observer.next({ data });
+            return;
+          }),
+      ]);
+
+      queryManager = createQueryManager({ link });
+      queryManager
+        .query<any>({ query })
+        .then(() => {
+          done(new Error('query() gave results on a store reset'));
+        })
+        .catch(() => {
+          done();
+        });
+    });
+  });
+
+  it('should reject a query promise given a network error', done => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+    const networkError = new Error('Network error');
+    mockQueryManager({
+      request: { query },
+      error: networkError,
+    })
+      .query({ query })
+      .then(() => {
+        done(new Error('Returned result on an errored fetchQuery'));
+      })
+      .catch(error => {
+        const apolloError = error as ApolloError;
+
+        expect(apolloError.message).toBeDefined();
+        expect(apolloError.networkError).toBe(networkError);
+        expect(apolloError.graphQLErrors).toEqual([]);
+        done();
+      })
+      .catch(done);
+  });
+
+  it('should error when we attempt to give an id beginning with $', done => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+          id
+          __typename
+        }
+      }
+    `;
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const reducerConfig = {
+      dataIdFromObject: (x: any) => '$' + dataIdFromObject(x),
+    };
+    createQueryManager({
+      link: mockSingleLink({
+        request: { query },
+        result: { data },
+      }),
+      config: reducerConfig,
+    })
+      .query({ query })
+      .then(() => {
+        done(new Error('Returned a result when it should not have.'));
+      })
+      .catch(() => {
+        done();
+      });
+  });
+
+  it('should reject a query promise given a GraphQL error', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+    const graphQLErrors = [new Error('GraphQL error')];
+    return mockQueryManager({
+      request: { query },
+      result: { errors: graphQLErrors },
+    })
+      .query({ query })
+      .then(
+        () => {
+          throw new Error('Returned result on an errored fetchQuery');
+        },
+        // don't use .catch() for this or it will catch the above error
+        error => {
+          const apolloError = error as ApolloError;
+          expect(apolloError.graphQLErrors).toBe(graphQLErrors);
+          expect(!apolloError.networkError).toBeTruthy();
+        },
+      );
+  });
+
+  it('should not empty the store when a non-polling query fails due to a network error', done => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+    const data = {
+      author: {
+        firstName: 'Dhaivat',
+        lastName: 'Pandya',
+      },
+    };
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data },
+      },
+      {
+        request: { query },
+        error: new Error('Network error ocurred'),
+      },
+    );
+    queryManager
+      .query<any>({ query })
+      .then(result => {
+        expect(result.data).toEqual(data);
+
+        queryManager
+          .query<any>({ query, fetchPolicy: 'network-only' })
+          .then(() => {
+            done(new Error('Returned a result when it was not supposed to.'));
+          })
+          .catch(() => {
+            // make that the error thrown doesn't empty the state
+            expect(
+              (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+                '$ROOT_QUERY.author'
+              ] as Object,
+            ).toEqual(data['author']);
+            done();
+          });
+      })
+      .catch(() => {
+        done(new Error('Threw an error on the first query.'));
+      });
+  });
+
+  it('should be able to unsubscribe from a polling query subscription', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+
+    const observable = mockQueryManager({
+      request: { query },
+      result: { data },
+    }).watchQuery({ query, pollInterval: 20 });
+
+    const { promise, subscription } = observableToPromiseAndSubscription(
+      {
+        observable,
+        wait: 60,
+      },
+      (result: any) => {
+        expect(result.data).toEqual(data);
+        subscription.unsubscribe();
+      },
+    );
+    return promise;
+  });
+
+  it('should not empty the store when a polling query fails due to a network error', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data },
+      },
+      {
+        request: { query },
+        error: new Error('Network error occurred.'),
+      },
+    );
+    const observable = queryManager.watchQuery<any>({
+      query,
+      pollInterval: 20,
+      notifyOnNetworkStatusChange: false,
+    });
+
+    return observableToPromise(
+      {
+        observable,
+        errorCallbacks: [
+          () => {
+            expect(
+              (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+                '$ROOT_QUERY.author'
+              ] as Object,
+            ).toEqual(data.author);
+          },
+        ],
+      },
+      result => {
+        expect(result.data).toEqual(data);
+        expect(
+          (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+            '$ROOT_QUERY.author'
+          ] as Object,
+        ).toEqual(data.author);
+      },
+    );
+  });
+
+  it('should not fire next on an observer if there is no change in the result', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const queryManager = mockQueryManager(
+      {
+        request: { query },
+        result: { data },
+      },
+      {
+        request: { query },
+        result: { data },
+      },
+    );
+
+    const observable = queryManager.watchQuery<any>({ query });
+    return Promise.all<any[] | void>([
+      // we wait for a little bit to ensure the result of the second query
+      // don't trigger another subscription event
+      observableToPromise({ observable, wait: 100 }, result => {
+        expect(result.data).toEqual(data);
+      }),
+      queryManager.query<any>({ query }).then(result => {
+        expect(result.data).toEqual(data);
+      }),
+    ]);
+  });
+
+  it('should store metadata with watched queries', () => {
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const data = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const queryManager = mockQueryManager({
+      request: { query },
+      result: { data },
+    });
+
+    const observable = queryManager.watchQuery({
+      query,
+      metadata: { foo: 'bar' },
+    });
+    return observableToPromise({ observable }, result => {
+      expect(result.data).toEqual(data);
+      expect(queryManager.queryStore.get(observable.queryId).metadata).toEqual({
+        foo: 'bar',
+      });
+    });
+  });
+
+  it('should return stale data when we orphan a real-id node in the store with a real-id node', () => {
+    const query1 = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+          age
+          id
+          __typename
+        }
+      }
+    `;
+    const query2 = gql`
+      query {
+        author {
+          name {
+            firstName
+          }
+          id
+          __typename
+        }
+      }
+    `;
+    const data1 = {
+      author: {
+        name: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        age: 18,
+        id: '187',
+        __typename: 'Author',
+      },
+    };
+    const data2 = {
+      author: {
+        name: {
+          firstName: 'John',
+        },
+        id: '197',
+        __typename: 'Author',
+      },
+    };
+    const reducerConfig = { dataIdFromObject };
+    const queryManager = createQueryManager({
+      link: mockSingleLink(
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+        },
+      ),
+      config: reducerConfig,
+    });
+
+    const observable1 = queryManager.watchQuery<any>({ query: query1 });
+    const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise(
+        {
+          observable: observable1,
+          wait: 60,
+        },
+        result => {
+          expect(result).toEqual({
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+        result => {
+          expect(result).toEqual({
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: true,
+          });
+        },
+      ),
+      observableToPromise(
+        {
+          observable: observable2,
+          wait: 60,
+        },
+        result => {
+          expect(result).toEqual({
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            stale: false,
+          });
+        },
+      ),
+    ]);
+  });
+
+  it('should error if we replace a real id node in the store with a generated id node', () => {
+    const queryWithId = gql`
+      query {
+        author {
+          firstName
+          lastName
+          __typename
+          id
+        }
+      }
+    `;
+    const dataWithId = {
+      author: {
+        firstName: 'John',
+        lastName: 'Smith',
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const queryWithoutId = gql`
+      query {
+        author {
+          address
+        }
+      }
+    `;
+    const dataWithoutId = {
+      author: {
+        address: 'fake address',
+      },
+    };
+    const reducerConfig = { dataIdFromObject };
+    const queryManager = createQueryManager({
+      link: mockSingleLink(
+        {
+          request: { query: queryWithId },
+          result: { data: dataWithId },
+        },
+        {
+          request: { query: queryWithoutId },
+          result: { data: dataWithoutId },
+        },
+      ),
+      config: reducerConfig,
+    });
+
+    const observableWithId = queryManager.watchQuery<any>({
+      query: queryWithId,
+    });
+    const observableWithoutId = queryManager.watchQuery<any>({
+      query: queryWithoutId,
+    });
+
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise({ observable: observableWithId, wait: 60 }, result =>
+        expect(result.data).toEqual(dataWithId),
+      ),
+      observableToPromise({
+        observable: observableWithoutId,
+        errorCallbacks: [error => expect(error.message).toMatch('Store error')],
+        wait: 60,
+      }),
+    ]);
+  });
+
+  it('should not error when merging a generated id store node  with a real id node', () => {
+    const queryWithoutId = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+          age
+          __typename
+        }
+      }
+    `;
+    const queryWithId = gql`
+      query {
+        author {
+          name {
+            firstName
+          }
+          id
+          __typename
+        }
+      }
+    `;
+    const dataWithoutId = {
+      author: {
+        name: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        age: '124',
+        __typename: 'Author',
+      },
+    };
+    const dataWithId = {
+      author: {
+        name: {
+          firstName: 'Jane',
+        },
+        id: '129',
+        __typename: 'Author',
+      },
+    };
+    const mergedDataWithoutId = {
+      author: {
+        name: {
+          firstName: 'Jane',
+          lastName: 'Smith',
+        },
+        age: '124',
+        __typename: 'Author',
+      },
+    };
+    const queryManager = createQueryManager({
+      link: mockSingleLink(
+        {
+          request: { query: queryWithoutId },
+          result: { data: dataWithoutId },
+        },
+        {
+          request: { query: queryWithId },
+          result: { data: dataWithId },
+        },
+      ),
+    });
+
+    const observableWithId = queryManager.watchQuery<any>({
+      query: queryWithId,
+    });
+    const observableWithoutId = queryManager.watchQuery<any>({
+      query: queryWithoutId,
+    });
+
+    // I'm not sure the waiting 60 here really is required, but the test used to do it
+    return Promise.all([
+      observableToPromise(
+        { observable: observableWithoutId, wait: 120 },
+        result => expect(result.data).toEqual(dataWithoutId),
+        result => expect(result.data).toEqual(mergedDataWithoutId),
+      ),
+      observableToPromise({ observable: observableWithId, wait: 120 }, result =>
+        expect(result.data).toEqual(dataWithId),
+      ),
+    ]);
+  });
+
+  describe('loading state', () => {
+    it('should be passed as false if we are not watching a query', () => {
+      const query = gql`
+        query {
+          fortuneCookie
+        }
+      `;
+      const data = {
+        fortuneCookie: 'Buy it',
+      };
+      return mockQueryManager({
+        request: { query },
+        result: { data },
+      })
+        .query({ query })
+        .then(result => {
+          expect(!result.loading).toBeTruthy();
+          expect(result.data).toEqual(data);
+        });
+    });
+
+    it('should be passed to the observer as false if we are returning all the data', done => {
+      assertWithObserver({
+        done,
+        query: gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `,
+        result: {
+          data: {
+            author: {
+              firstName: 'John',
+              lastName: 'Smith',
+            },
+          },
+        },
+        observer: {
+          next(result) {
+            expect(!result.loading).toBeTruthy();
+            done();
+          },
+        },
+      });
+    });
+
+    it('will update on `resetStore`', done => {
+      const testQuery = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data1 = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const data2 = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith 2',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query: testQuery },
+          result: { data: data1 },
+        },
+        {
+          request: { query: testQuery },
+          result: { data: data2 },
+        },
+      );
+      let count = 0;
+
+      queryManager
+        .watchQuery({
+          query: testQuery,
+          notifyOnNetworkStatusChange: false,
+        })
+        .subscribe({
+          next: result => {
+            switch (count++) {
+              case 0:
+                expect(result.loading).toBe(false);
+                expect(result.data).toEqual(data1);
+                setTimeout(() => {
+                  queryManager.resetStore();
+                }, 0);
+                break;
+              case 1:
+                expect(result.loading).toBe(false);
+                expect(result.data).toEqual(data2);
+                done();
+                break;
+              default:
+                done(new Error('`next` was called to many times.'));
+            }
+          },
+          error: error => done(error),
+        });
+    });
+  });
+
+  describe('refetchQueries', () => {
+    const oldWarn = console.warn;
+    let warned: any;
+    let timesWarned = 0;
+
+    beforeEach(done => {
+      // clear warnings
+      warned = null;
+      timesWarned = 0;
+      // mock warn method
+      console.warn = (...args: any[]) => {
+        warned = args;
+        timesWarned++;
+      };
+      done();
+    });
+
+    it('should refetch the right query when a result is successfully returned', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({
+        query,
+        notifyOnNetworkStatusChange: false,
+      });
+      return observableToPromise(
+        { observable },
+        result => {
+          expect(result.data).toEqual(data);
+          queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
+        },
+        result => expect(result.data).toEqual(secondReqData),
+      );
+    });
+
+    it('should warn but continue when an unknown query name is asked to refetch', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({
+        query,
+        notifyOnNetworkStatusChange: false,
+      });
+      return observableToPromise(
+        { observable },
+        result => {
+          expect(result.data).toEqual(data);
+          queryManager.mutate({
+            mutation,
+            refetchQueries: ['fakeQuery', 'getAuthors'],
+          });
+        },
+        result => {
+          expect(result.data).toEqual(secondReqData);
+          expect(warned[0]).toMatch(
+            'Warning: unknown query with name fakeQuery',
+          );
+          expect(timesWarned).toBe(1);
+        },
+      );
+    });
+
+    it('should ignore without warning a query name that is asked to refetch with no active subscriptions', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+
+      const observable = queryManager.watchQuery<any>({ query });
+      return observableToPromise({ observable }, result => {
+        expect(result.data).toEqual(data);
+      })
+        .then(() => {
+          // The subscription has been stopped already
+          return queryManager.mutate({
+            mutation,
+            refetchQueries: ['getAuthors'],
+          });
+        })
+        .then(() => expect(timesWarned).toBe(0));
+    });
+
+    it('also works with a query document and variables', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({ query });
+      return observableToPromise(
+        { observable },
+        result => {
+          expect(result.data).toEqual(data);
+          queryManager.mutate({ mutation, refetchQueries: [{ query }] });
+        },
+        result => expect(result.data).toEqual(secondReqData),
+      );
+    });
+
+    afterEach(done => {
+      // restore standard method
+      console.warn = oldWarn;
+      done();
+    });
+  });
+
+  it('exposes errors on a refetch as a rejection', done => {
+    const request = {
+      query: gql`
+        {
+          people_one(id: 1) {
+            name
+          }
+        }
+      `,
+    };
+    const firstResult = {
+      data: {
+        people_one: {
+          name: 'Luke Skywalker',
+        },
+      },
+    };
+    const secondResult = {
+      errors: [
+        {
+          name: 'PeopleError',
+          message: 'This is not the person you are looking for.',
+        },
+      ],
+    };
+
+    const queryManager = mockRefetch({ request, firstResult, secondResult });
+
+    const handle = queryManager.watchQuery<any>(request);
+
+    handle.subscribe({
+      error: () => {
+        /* nothing */
+      },
+    });
+
+    handle
+      .refetch()
+      .then(() => {
+        done(new Error('Error on refetch should reject promise'));
+      })
+      .catch(error => {
+        expect(error.graphQLErrors).toEqual([
+          {
+            name: 'PeopleError',
+            message: 'This is not the person you are looking for.',
+          },
+        ]);
+        done();
+      });
+
+    // We have an unhandled error warning from the `subscribe` above, which has no `error` cb
+  });
+});

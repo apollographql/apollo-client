@@ -1,7 +1,7 @@
 const globals = {};
 
 export default {
-  entry: 'lib/src/index.js',
+  entry: 'lib/index.js',
   dest: 'lib/apollo.umd.js',
   format: 'umd',
   sourceMap: true,

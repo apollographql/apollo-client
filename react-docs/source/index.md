@@ -20,9 +20,9 @@ Dive into a basic app that displays one view with React Native and Apollo. It's 
 
 This tutorial covers how to set up Apollo Client, how to write a simple server, and how to connect them together, and more parts are being produced almost every week. It's written by [Jonas Helfer](https://twitter.com/helferjs), the main developer behind React-Apollo.
 
-<h3 id="learn-apollo">[3. Learn Apollo](https://www.learnapollo.com)</h3>
+<h3 id="how-to-graphql">[3. How to GraphQL](https://www.howtographql.com)</h3>
 
-This community-developed tutorial covers building the client side of a simple Pokedex app from start to finish. It's available for [React](https://www.learnapollo.com/tutorial-react/react-01), [React Native](https://www.learnapollo.com/tutorial-react-native/react-native-01), and other platforms. Learn Apollo is maintained by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform that lets you stand up a GraphQL server without writing any code.
+This community-developed tutorial covers building the client side of a simple Hacker News app from start to finish. It's available for [React](https://www.howtographql.com/react-apollo/0-introduction/), and other platforms. How to GraphQL is maintained by the team and community around [Graphcool](https://www.graph.cool/), a hosted GraphQL backend platform that lets you stand up a GraphQL server without writing any code.
 
 <h3 id="usage-recipes">[4. Usage and recipes](queries.html)</h3>
 

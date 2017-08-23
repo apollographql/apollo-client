@@ -196,7 +196,7 @@ describe('mutation results', () => {
     );
   });
 
-  it('correctly integrates field changes by default', () => {
+  fit('correctly integrates field changes by default', () => {
     const mutation = gql`
       mutation setCompleted {
         setCompleted(todoId: "3") {

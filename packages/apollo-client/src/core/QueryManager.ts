@@ -305,7 +305,6 @@ export class QueryManager {
 
       // If we're in here, only fetch if we have missing fields
       needToFetch = isMissing || fetchPolicy === 'cache-and-network';
-
       storeResult = result;
     }
 
@@ -346,12 +345,14 @@ export class QueryManager {
     // fetchPolicy is cache-only), we just write the store result as the final result.
     const shouldDispatchClientResult =
       !shouldFetch || fetchPolicy === 'cache-and-network';
+
     if (shouldDispatchClientResult) {
       this.queryStore.markQueryResultClient(queryId, !shouldFetch);
       this.queryListenerInvalidated[queryId] = true;
       if (fetchMoreForQueryId) {
         this.queryListenerInvalidated[fetchMoreForQueryId] = true;
       }
+
       this.broadcastQueries();
     }
 
@@ -390,6 +391,7 @@ export class QueryManager {
         return networkResult;
       }
     }
+
     // If we have no query to send to the server, we should return the result
     // found within the store.
     return Promise.resolve<ExecutionResult>({ data: storeResult });
@@ -910,9 +912,7 @@ export class QueryManager {
 
   public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
     const { variables, document } = this.getQueryParts(observableQuery);
-
     const lastResult = observableQuery.getLastResult();
-
     if (lastResult && lastResult.data) {
       return maybeDeepFreeze({ data: lastResult.data, partial: false });
     } else {

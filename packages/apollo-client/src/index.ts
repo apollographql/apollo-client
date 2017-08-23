@@ -13,6 +13,7 @@ export {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
 } from './core/watchQueryOptions';
+export { NetworkStatus } from './core/networkStatus';
 export * from './core/types';
 
 export { ApolloError } from './errors/ApolloError';

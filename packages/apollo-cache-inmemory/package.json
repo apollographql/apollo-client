@@ -20,17 +20,18 @@
   },
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
+    "coverage": "jest --coverage",
+    "coverage:upload": "bash <(curl -s https://codecov.io/bash) -cF apollo-cache-inmemory",
     "test": "jest",
-    "posttest": "npm run lint && npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run build",
-    "compile:browser": "browserify ./lib/index.js --i apollo-cache-core --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
+    "build:browser": "browserify ./lib/index.js --i apollo-cache-core --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
     "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
-    "filesize": "npm run compile:browser"
+    "filesize": "npm run build:browser"
   },
   "dependencies": {
     "apollo-utilities": "0.1.0",

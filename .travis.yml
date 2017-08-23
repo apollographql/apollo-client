@@ -14,11 +14,13 @@ script:
     # test flow types (validity and use cases)
   - npm run type-check
 
+    # make sure files don't get too large
+  - npm run filesize
+
     # run coverage and file size checks
     # XXX how do we do coverage here?
-  # - npm run coverage
-  # - coveralls < ./coverage/lcov.info || true # ignore coveralls error
-  - npm run filesize
+  - npm run coverage
+  - npm run coverage:upload || true #ignore failures
 
 # Allow Travis tests to run in containers.
 sudo: false

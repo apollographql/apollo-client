@@ -7,12 +7,13 @@
     "removeComments": true,
     "sourceMap": true,
     "declaration": true,
-    "rootDir": ".",
-    "outDir": "dist",
+    "rootDir": "./src",
+    "outDir": "lib",
     "noImplicitAny": true,
     "noUnusedParameters": false,
     "noUnusedLocals": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/__tests__/*.ts"]
 }

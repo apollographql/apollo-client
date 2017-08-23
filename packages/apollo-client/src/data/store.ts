@@ -147,7 +147,7 @@ export class DataStore {
             const nextQueryResult = tryFunctionOrLogError(() =>
               updater(currentQueryResult, {
                 mutationResult: mutation.result,
-                queryName: getOperationName(query.document),
+                queryName: getOperationName(query.document) || undefined,
                 queryVariables: query.variables,
               }),
             );

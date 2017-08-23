@@ -3,12 +3,17 @@
   "license": "MIT",
   "scripts": {
     "bootstrap": "npm i && lerna bootstrap",
+    "postbootstrap": "npm run build",
+    "build": "lerna run -- build",
     "test": "lerna run -- test",
+    "prelint": "npm run lint-fix",
+    "lint": "lerna run -- lint",
     "lint-fix": "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
     "filesize": "lerna run -- filesize && bundlesize",
     "type-check": "lerna run -- type-check",
     "coverage": "lerna run -- coverage",
+    "coverage:upload": "lerna run -- coverage:upload",
     "danger": "danger run --verbose"
   },
   "bundlesize": [

@@ -29,8 +29,8 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run clean && npm run build",
-    "build:browser": "browserify ./lib/index.js --i apollo-utilities -o=./lib.bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib.bundle.min.js -- ./lib.bundle.js",
+    "build:browser": "browserify ./lib/index.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {

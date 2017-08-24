@@ -12,8 +12,8 @@
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
-    "build:browser": "browserify ./lib/index.js -o=./lib/index.js --i apollo-utilities && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/index.min.js -- ./lib/index.js",
+    "build:browser": "browserify ./lib/index.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "repository": {

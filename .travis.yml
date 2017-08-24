@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "6"
+  - "8"
 
 install:
   - npm run bootstrap
@@ -11,16 +11,12 @@ script:
   - npm run danger
   - npm test
 
-    # test flow types (validity and use cases)
-  - npm run type-check
+    # run coverage and file size checks
+  - npm run coverage
+  # - npm run coverage:upload || true #ignore failures
 
     # make sure files don't get too large
   - npm run filesize
-
-    # run coverage and file size checks
-    # XXX how do we do coverage here?
-  - npm run coverage
-  - npm run coverage:upload || true #ignore failures
 
 # Allow Travis tests to run in containers.
 sudo: false

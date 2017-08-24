@@ -499,24 +499,16 @@ export class QueryManager {
               data = newData.result;
               isMissing = newData.isMissing ? newData.isMissing : false;
             } else {
-              if (lastResult && lastResult.data) {
-                // no new data, use what we already have
-                data = lastResult.data;
-                isMissing = false;
-              } else {
-                // this is called when a query has just started,
-                // so we try to see if the data is already in the cache
-                const readResult = this.dataStore.getCache().diffQuery({
-                  query: this.queryDocuments[queryId],
-                  variables:
-                    queryStoreValue.previousVariables ||
-                    queryStoreValue.variables,
-                  optimistic: true,
-                });
+              const readResult = this.dataStore.getCache().diffQuery({
+                query: this.queryDocuments[queryId],
+                variables:
+                  queryStoreValue.previousVariables ||
+                  queryStoreValue.variables,
+                optimistic: true,
+              });
 
-                data = readResult.result;
-                isMissing = readResult.isMissing;
-              }
+              data = readResult.result;
+              isMissing = readResult.isMissing;
             }
 
             let resultFromStore: ApolloQueryResult<T>;

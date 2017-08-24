@@ -478,7 +478,7 @@ query DetailView {
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```
-import ApolloClient, { toIdValue } from 'apollo-client';
+import { ApolloClient, toIdValue } from 'apollo-client';
 
 const client = new ApolloClient({
   networkInterface,

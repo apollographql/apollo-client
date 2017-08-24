@@ -1,6 +1,5 @@
 language: node_js
 node_js:
-  - "6"
   - "8"
 
 install:
@@ -14,7 +13,7 @@ script:
 
     # run coverage and file size checks
   - npm run coverage
-  - npm run coverage:upload || true #ignore failures
+  # - npm run coverage:upload || true #ignore failures
 
     # make sure files don't get too large
   - npm run filesize

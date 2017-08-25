@@ -874,15 +874,13 @@ export class QueryManager {
         sub = execute(this.link, request).subscribe(handler);
       }
 
-      return {
-        unsubscribe: () => {
-          observers = observers.filter(obs => obs !== observer);
+      return () => {
+        observers = observers.filter(obs => obs !== observer);
 
-          // If we removed the last observer, tear down the network subscription
-          if (observers.length === 0 && sub) {
-            sub.unsubscribe();
-          }
-        },
+        // If we removed the last observer, tear down the network subscription
+        if (observers.length === 0 && sub) {
+          sub.unsubscribe();
+        }
       };
     });
   }

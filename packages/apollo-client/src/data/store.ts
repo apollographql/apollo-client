@@ -102,9 +102,11 @@ export class DataStore {
         const orig = this.cache;
         this.cache = c;
 
-        changeFn();
-
-        this.cache = orig;
+        try {
+          changeFn();
+        } finally {
+          this.cache = orig;
+        }
       }, mutation.mutationId);
     }
   }

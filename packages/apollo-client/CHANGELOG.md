@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Remove internal Observable implemenation [BREAKING]. `next` is no longer called after `error` or `complete` is fired
 - Convert tests to use Jest
 - Replace core utils with apollo-utilities
 - Cleanup InMemoryCache to remove unused methods and minimize cache reads in QueryManager's getCurrentResult [PR 2035](https://github.com/apollographql/apollo-client/pull/2035)

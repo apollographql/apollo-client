@@ -3,10 +3,9 @@ import {
   tryFunctionOrLogError,
   maybeDeepFreeze,
 } from 'apollo-utilities';
-import { Observer, Subscription } from 'apollo-link-core';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 
-import { Observable } from '../util/Observable';
+import { Observable, Observer, Subscription } from '../util/Observable';
 
 import { QueryScheduler } from '../scheduler/scheduler';
 
@@ -97,7 +96,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   public result(): Promise<ApolloQueryResult<T>> {
     const that = this;
     return new Promise((resolve, reject) => {
-      let subscription: Subscription | null = null;
+      let subscription: Subscription;
       const observer: Observer<ApolloQueryResult<T>> = {
         next(result) {
           resolve(result);

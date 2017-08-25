@@ -366,32 +366,34 @@ describe('QueryManager', () => {
     }, 10);
   });
 
-  it('handles an unsubscribe action that happens before data returns', done => {
-    const subscription = assertWithObserver({
-      done,
-      query: gql`
-        query people {
-          allPeople(first: 1) {
-            people {
-              name
+  xit(
+    'handles an unsubscribe action that happens before data returns',
+    done => {
+      const subscription = assertWithObserver({
+        done,
+        query: gql`
+          query people {
+            allPeople(first: 1) {
+              people {
+                name
+              }
             }
           }
-        }
-      `,
-      delay: 1000,
-      observer: {
-        next: () => {
-          done(new Error('Should not deliver result'));
+        `,
+        delay: 1000,
+        observer: {
+          next: () => {
+            done(new Error('Should not deliver result'));
+          },
+          error: () => {
+            done(new Error('Should not deliver result'));
+          },
         },
-        error: () => {
-          done(new Error('Should not deliver result'));
-        },
-      },
-    });
+      });
 
-    expect(subscription.unsubscribe).not.toThrow();
-    done();
-  });
+      expect(subscription.unsubscribe).not.toThrow();
+    },
+  );
 
   it('supports interoperability with other Observable implementations like RxJS', done => {
     const expResult = {

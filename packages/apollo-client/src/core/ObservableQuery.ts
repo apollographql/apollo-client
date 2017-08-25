@@ -4,7 +4,6 @@ import {
   maybeDeepFreeze,
 } from 'apollo-utilities';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-
 import { Observable, Observer, Subscription } from '../util/Observable';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -75,8 +74,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     const queryId = queryManager.generateQueryId();
 
     const subscriberFunction = (observer: Observer<ApolloQueryResult<T>>) => {
-      const observable = this.onSubscribe(observer);
-      return observable;
+      return this.onSubscribe(observer);
     };
 
     super(subscriberFunction);

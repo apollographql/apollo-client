@@ -28,6 +28,7 @@ We have put together some basic example apps using various parts of Apollo; chec
 - [A production-ready starter-kit using React and Webpack](https://github.com/saikat/react-apollo-starter-kit)
 - [Apollo Universal Starter Kit with Hot Code Reload for backend & frontend, uses React, Webpack, Babel and SQL](https://github.com/sysgears/apollo-fullstack-starter-kit)
 - [Apollo Client example that uses Github GraphQL API with create-react-app](https://github.com/katopz/react-apollo-graphql-github-example)
+- [vanilla Apollo client and server. Just the bare-bones, no database or UI](https://github.com/farskipper/vanilla-js-apollo-graphql-full-stack-playground)
 
 ### Meteor Examples
 - [A bare-bones Meteor starter kit](https://github.com/apollostack/meteor-starter-kit)

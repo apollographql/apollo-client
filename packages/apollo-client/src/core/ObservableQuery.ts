@@ -3,10 +3,10 @@ import {
   tryFunctionOrLogError,
   maybeDeepFreeze,
 } from 'apollo-utilities';
-
+import { Observer, Subscription } from 'apollo-link-core';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 
-import { Observable, Observer, Subscription } from '../util/Observable';
+import { Observable } from '../util/Observable';
 
 import { QueryScheduler } from '../scheduler/scheduler';
 
@@ -54,6 +54,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
   private isCurrentlyPolling: boolean;
   private shouldSubscribe: boolean;
+  private isTornDown: boolean;
   private scheduler: QueryScheduler;
   private queryManager: QueryManager;
   private observers: Observer<ApolloQueryResult<T>>[];
@@ -75,7 +76,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     const queryId = queryManager.generateQueryId();
 
     const subscriberFunction = (observer: Observer<ApolloQueryResult<T>>) => {
-      return this.onSubscribe(observer);
+      const observable = this.onSubscribe(observer);
+      return observable;
     };
 
     super(subscriberFunction);
@@ -86,6 +88,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     this.scheduler = scheduler;
     this.queryManager = queryManager;
     this.queryId = queryId;
+    this.isTornDown = false;
     this.shouldSubscribe = shouldSubscribe;
     this.observers = [];
     this.subscriptionHandles = [];
@@ -135,6 +138,15 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
    * @return {result: Object, loading: boolean, networkStatus: number, partial: boolean}
    */
   public currentResult(): ApolloCurrentResult<T> {
+    if (this.isTornDown) {
+      return {
+        data: this.lastError ? {} : this.lastResult,
+        error: this.lastError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      };
+    }
+
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);
     const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
 
@@ -170,9 +182,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       (this.options.fetchPolicy === 'network-only' && queryLoading) ||
       (partial && this.options.fetchPolicy !== 'cache-only');
 
-    // if there is nothing in the query store, it means this query hasn't fired yet. Therefore the
+    // if there is nothing in the query store, it means this query hasn't fired yet or it has been cleaned up. Therefore the
     // network status is dependent on queryLoading.
-    // XXX querying the currentResult before having fired the query is kind of weird and makes our code a lot more complicated.
     let networkStatus: NetworkStatus;
     if (queryStoreValue) {
       networkStatus = queryStoreValue.networkStatus;
@@ -483,6 +494,20 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   private onSubscribe(observer: Observer<ApolloQueryResult<T>>) {
+    // Zen Observable has its own error function, in order to log correctly
+    // we need to declare a custom error if nothing is passed
+    if (
+      (observer as any)._subscription &&
+      (observer as any)._subscription._observer &&
+      !(observer as any)._subscription._observer.error
+    ) {
+      (observer as any)._subscription._observer.error = (
+        error: ApolloError,
+      ) => {
+        console.error('Unhandled error', error.message, error.stack);
+      };
+    }
+
     this.observers.push(observer);
 
     // Deliver initial result
@@ -498,22 +523,19 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       this.setUpQuery();
     }
 
-    const retQuerySubscription = {
-      unsubscribe: () => {
-        if (!this.observers.some(el => el === observer)) {
-          // XXX can't unsubscribe if you've already unsubscribed...
-          // for some reason unsubscribe gets called multiple times by some of the tests
-          return;
-        }
-        this.observers = this.observers.filter(obs => obs !== observer);
+    return () => {
+      this.isTornDown = true;
+      if (!this.observers.some(el => el === observer)) {
+        // XXX can't unsubscribe if you've already unsubscribed...
+        // for some reason unsubscribe gets called multiple times by some of the tests
+        return;
+      }
+      this.observers = this.observers.filter(obs => obs !== observer);
 
-        if (this.observers.length === 0) {
-          this.tearDownQuery();
-        }
-      },
+      if (this.observers.length === 0) {
+        this.tearDownQuery();
+      }
     };
-
-    return retQuerySubscription;
   }
 
   private setUpQuery() {
@@ -546,11 +568,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       },
       error: (error: ApolloError) => {
         this.observers.forEach(obs => {
-          if (obs.error) {
-            obs.error(error);
-          } else {
-            console.error('Unhandled error', error.message, error.stack);
-          }
+          if (obs.error) obs.error(error);
         });
 
         this.lastError = error;

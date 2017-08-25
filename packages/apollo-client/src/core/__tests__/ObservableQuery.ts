@@ -228,7 +228,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('if query is refetched, and an error is returned, a second refetch without error will trigger the observer callback', done => {
+    it('if query is refetched, and an error is returned, no other observer callbacks will be called', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
@@ -252,14 +252,14 @@ describe('ObservableQuery', () => {
             expect(result.data).toEqual(dataOne);
             observable.refetch();
           } else if (handleCount === 3) {
-            expect(result.data).toEqual(dataOne);
-            done();
+            throw new Error("next shouldn't fire after an error");
           }
         },
         error: () => {
           handleCount++;
           expect(handleCount).toBe(2);
           observable.refetch();
+          setTimeout(done, 25);
         },
       });
     });
@@ -1095,7 +1095,6 @@ describe('ObservableQuery', () => {
         expect(theError.graphQLErrors).toEqual([error]);
 
         const currentResult = observable.currentResult();
-
         expect(currentResult.loading).toBe(false);
         expect(currentResult.error!.graphQLErrors).toEqual([error]);
       });

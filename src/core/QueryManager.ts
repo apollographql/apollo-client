@@ -911,6 +911,30 @@ export class QueryManager {
     }
   }
 
+  public reFetchObservableQueries(): Promise<ApolloQueryResult<any>[]> {
+    // We have to have to refetch each of the queries currently being
+    // observed. We refetch instead of error'ing on these since the assumption is that
+    // resetting the store doesn't eliminate the need for the queries currently being
+    // watched. If there is an existing query in flight when the store is reset,
+    // the promise for it will be rejected and its results will not be written to the
+    // store.
+    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
+    Object.keys(this.observableQueries).forEach(queryId => {
+      const storeQuery = this.queryStore.get(queryId);
+
+      const fetchPolicy = this.observableQueries[queryId].observableQuery
+        .options.fetchPolicy;
+
+      if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
+        observableQueryPromises.push(
+          this.observableQueries[queryId].observableQuery.refetch(),
+        );
+      }
+    });
+
+    return Promise.all(observableQueryPromises);
+  }
+
   public resetStore(): Promise<ApolloQueryResult<any>[]> {
     // Before we have sent the reset action to the store,
     // we can no longer rely on the results returned by in-flight
@@ -932,27 +956,7 @@ export class QueryManager {
 
     this.mutationStore.reset();
 
-    // Similarly, we have to have to refetch each of the queries currently being
-    // observed. We refetch instead of error'ing on these since the assumption is that
-    // resetting the store doesn't eliminate the need for the queries currently being
-    // watched. If there is an existing query in flight when the store is reset,
-    // the promise for it will be rejected and its results will not be written to the
-    // store.
-    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
-    Object.keys(this.observableQueries).forEach(queryId => {
-      const storeQuery = this.queryStore.get(queryId);
-
-      const fetchPolicy = this.observableQueries[queryId].observableQuery
-        .options.fetchPolicy;
-
-      if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
-        observableQueryPromises.push(
-          this.observableQueries[queryId].observableQuery.refetch(),
-        );
-      }
-    });
-
-    return Promise.all(observableQueryPromises);
+    return this.reFetchObservableQueries();
   }
 
   public startQuery<T>(

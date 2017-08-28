@@ -242,6 +242,7 @@ export default class ApolloClient implements DataProxy {
     this.mutate = this.mutate.bind(this);
     this.setStore = this.setStore.bind(this);
     this.resetStore = this.resetStore.bind(this);
+    this.reFetchObservedQueries = this.reFetchObservedQueries.bind(this);
 
     // Attach the client instance to window to let us be found by chrome devtools, but only in
     // development mode
@@ -497,6 +498,10 @@ export default class ApolloClient implements DataProxy {
    */
   public resetStore(): Promise<ApolloQueryResult<any>[]>|null {
     return this.queryManager ? this.queryManager.resetStore() : null;
+  }
+
+  public reFetchObservedQueries(): Promise<ApolloQueryResult<any>[]>|null {
+    return this.queryManager ? this.queryManager.reFetchObservedQueries() : null;
   }
 
   public getInitialState(): { data: Object } {

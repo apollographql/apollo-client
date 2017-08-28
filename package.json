@@ -67,13 +67,13 @@
   "pre-commit": "lint-staged",
   "dependencies": {},
   "devDependencies": {
-    "bundlesize": "0.13.2",
-    "danger": "1.1.0",
+    "bundlesize": "^0.14.1",
+    "danger": "^1.1.0",
     "lerna": "^2.0.0",
     "lint-staged": "^4.0.2",
     "pre-commit": "^1.2.2",
     "prettier": "^1.5.3",
-    "ts-jest": "20.0.7",
+    "ts-jest": "^20.0.7",
     "typescript": "^2.4.2"
   }
 }

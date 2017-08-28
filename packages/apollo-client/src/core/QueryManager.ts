@@ -1,7 +1,6 @@
 import {
   execute,
   ApolloLink,
-  makePromise,
   Operation as Request,
   FetchResult,
 } from 'apollo-link-core';

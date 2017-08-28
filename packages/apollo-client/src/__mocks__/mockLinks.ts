@@ -95,13 +95,11 @@ export class MockLink extends ApolloLink {
 }
 
 export class MockSubscriptionLink extends ApolloLink {
-  public mockedSubscription: MockedSubscription;
   // private observer: Observer<any>;
   private observer: any;
 
-  constructor(mockedSubscription: MockedSubscription) {
+  constructor() {
     super();
-    this.mockedSubscription = mockedSubscription;
   }
 
   public request() {

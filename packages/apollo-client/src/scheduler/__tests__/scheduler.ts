@@ -200,9 +200,9 @@ describe('QueryScheduler', () => {
       error,
     });
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache()),
-
+      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       link,
+      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,

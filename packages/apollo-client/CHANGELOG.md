@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Support multiple results from the network layer (links)
 - Remove internal Observable implemenation [BREAKING]. `next` is no longer called after `error` or `complete` is fired
 - Convert tests to use Jest
 - Replace core utils with apollo-utilities

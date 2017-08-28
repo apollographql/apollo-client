@@ -798,24 +798,8 @@ export class QueryManager {
     }
   }
 
-  public resetStore(): Promise<ApolloQueryResult<any>[]> {
-    // Before we have sent the reset action to the store,
-    // we can no longer rely on the results returned by in-flight
-    // requests since these may depend on values that previously existed
-    // in the data portion of the store. So, we cancel the promises and observers
-    // that we have issued so far and not yet resolved (in the case of
-    // queries).
-    Object.keys(this.fetchQueryPromises).forEach((key) => {
-      const { reject } = this.fetchQueryPromises[key];
-      reject(new Error('Store reset while query was in flight.'));
-    });
-
-    this.store.dispatch({
-      type: 'APOLLO_STORE_RESET',
-      observableQueryIds: Object.keys(this.observableQueries),
-    });
-
-    // Similarly, we have to have to refetch each of the queries currently being
+  public reFetchObservedQueries(): Promise<ApolloQueryResult<any>[]> {
+    // We have to have to refetch each of the queries currently being
     // observed. We refetch instead of error'ing on these since the assumption is that
     // resetting the store doesn't eliminate the need for the queries currently being
     // watched. If there is an existing query in flight when the store is reset,
@@ -833,6 +817,26 @@ export class QueryManager {
     });
 
     return Promise.all(observableQueryPromises);
+  }
+
+    public resetStore(): Promise<ApolloQueryResult<any>[]> {
+    // Before we have sent the reset action to the store,
+    // we can no longer rely on the results returned by in-flight
+    // requests since these may depend on values that previously existed
+    // in the data portion of the store. So, we cancel the promises and observers
+    // that we have issued so far and not yet resolved (in the case of
+    // queries).
+    Object.keys(this.fetchQueryPromises).forEach((key) => {
+      const { reject } = this.fetchQueryPromises[key];
+      reject(new Error('Store reset while query was in flight.'));
+    });
+
+    this.store.dispatch({
+      type: 'APOLLO_STORE_RESET',
+      observableQueryIds: Object.keys(this.observableQueries),
+    });
+
+    return this.reFetchObservedQueries();
   }
 
   public startQuery<T>(queryId: string, options: WatchQueryOptions, listener: QueryListener) {

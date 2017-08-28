@@ -134,6 +134,8 @@ export class QueryManager {
     this.queryIdsByName = {};
   }
 
+  // XXX while mutate supports multiple results, there is not an API for
+  // watching a mutation yet.
   public mutate<T>({
     mutation,
     variables,
@@ -208,10 +210,10 @@ export class QueryManager {
 
     this.broadcastQueries();
 
-    const observable = execute(this.link, request);
     return new Promise((resolve, reject) => {
-      makePromise(observable)
-        .then((result: ExecutionResult) => {
+      let storeResult: FetchResult<T> | null;
+      execute(this.link, request).subscribe({
+        next: (result: ExecutionResult) => {
           if (result.errors) {
             const error = new ApolloError({
               graphQLErrors: result.errors,
@@ -252,10 +254,9 @@ export class QueryManager {
             });
           }
 
-          delete this.queryDocuments[mutationId];
-          resolve(result as FetchResult<T>);
-        })
-        .catch((err: Error) => {
+          storeResult = result as FetchResult<T>;
+        },
+        error: (err: Error) => {
           this.mutationStore.markMutationError(mutationId, err);
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
@@ -266,7 +267,12 @@ export class QueryManager {
               networkError: err,
             }),
           );
-        });
+        },
+        complete: () => {
+          delete this.queryDocuments[mutationId];
+          resolve(storeResult as FetchResult<T>);
+        },
+      });
     });
   }
 

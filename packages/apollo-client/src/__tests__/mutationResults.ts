@@ -745,10 +745,12 @@ describe('mutation results', () => {
               case 0:
                 expect(variables).toEqual({ a: 1, b: 2 });
                 observer.next({ data: { result: 'hello' } });
+                observer.complete();
                 return;
               case 1:
                 expect(variables).toEqual({ a: 1, c: 3 });
                 observer.next({ data: { result: 'world' } });
+                observer.complete();
                 return;
               case 2:
                 expect(variables).toEqual({
@@ -757,10 +759,12 @@ describe('mutation results', () => {
                   c: 3,
                 });
                 observer.next({ data: { result: 'goodbye' } });
+                observer.complete();
                 return;
               case 3:
                 expect(variables).toEqual({});
                 observer.next({ data: { result: 'moon' } });
+                observer.complete();
                 return;
               default:
                 observer.error(new Error('Too many network calls.'));
@@ -825,6 +829,7 @@ describe('mutation results', () => {
                   b: 'water',
                 });
                 observer.next({ data: { result: 'hello' } });
+                observer.complete();
                 return;
               case 1:
                 expect(variables).toEqual({
@@ -833,6 +838,7 @@ describe('mutation results', () => {
                   c: 3,
                 });
                 observer.next({ data: { result: 'world' } });
+                observer.complete();
                 return;
               case 2:
                 expect(variables).toEqual({
@@ -841,6 +847,7 @@ describe('mutation results', () => {
                   c: 3,
                 });
                 observer.next({ data: { result: 'goodbye' } });
+                observer.complete();
                 return;
               default:
                 observer.error(new Error('Too many network calls.'));
@@ -902,6 +909,7 @@ describe('mutation results', () => {
                   c: null,
                 });
                 observer.next({ data: { result: 'hello' } });
+                observer.complete();
                 return;
               case 1:
                 expect(variables).toEqual({
@@ -910,6 +918,7 @@ describe('mutation results', () => {
                   c: 3,
                 });
                 observer.next({ data: { result: 'world' } });
+                observer.complete();
                 return;
               case 2:
                 expect(variables).toEqual({
@@ -918,6 +927,7 @@ describe('mutation results', () => {
                   c: null,
                 });
                 observer.next({ data: { result: 'moon' } });
+                observer.complete();
                 return;
               default:
                 observer.error(new Error('Too many network calls.'));

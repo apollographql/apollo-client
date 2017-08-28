@@ -499,16 +499,25 @@ export class QueryManager {
               data = newData.result;
               isMissing = newData.isMissing ? newData.isMissing : false;
             } else {
-              const readResult = this.dataStore.getCache().diffQuery({
-                query: this.queryDocuments[queryId],
-                variables:
-                  queryStoreValue.previousVariables ||
-                  queryStoreValue.variables,
-                optimistic: true,
-              });
+              if (
+                lastResult &&
+                lastResult.data &&
+                queryStoreValue.previousVariables === queryStoreValue.variables
+              ) {
+                data = lastResult.data;
+                isMissing = false;
+              } else {
+                const readResult = this.dataStore.getCache().diffQuery({
+                  query: this.queryDocuments[queryId],
+                  variables:
+                    queryStoreValue.previousVariables ||
+                    queryStoreValue.variables,
+                  optimistic: true,
+                });
 
-              data = readResult.result;
-              isMissing = readResult.isMissing;
+                data = readResult.result;
+                isMissing = readResult.isMissing;
+              }
             }
 
             let resultFromStore: ApolloQueryResult<T>;
@@ -612,13 +621,11 @@ export class QueryManager {
 
     let transformedOptions = { ...options } as WatchQueryOptions;
 
-    let observableQuery = new ObservableQuery<T>({
+    return new ObservableQuery<T>({
       scheduler: this.scheduler,
       options: transformedOptions,
       shouldSubscribe: shouldSubscribe,
     });
-
-    return observableQuery;
   }
 
   public query<T>(options: WatchQueryOptions): Promise<ApolloQueryResult<T>> {
@@ -1039,21 +1046,24 @@ export class QueryManager {
 
     request.context.forceFetch = !this.queryDeduplication;
 
+    let resultFromStore: any;
     const retPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, retPromise, resolve, reject);
-
-      makePromise(execute(this.deduplicator, request))
-        .then((result: ExecutionResult) => {
+      execute(this.deduplicator, request).subscribe({
+        next: (result: ExecutionResult) => {
           // default the lastRequestId to 1
           if (requestId >= (this.lastRequestId[queryId] || 1)) {
-            // XXX handle multiple ApolloQueryResults
-
-            this.dataStore.markQueryResult(
-              result,
-              document,
-              variables,
-              fetchMoreForQueryId,
-            );
+            try {
+              this.dataStore.markQueryResult(
+                result,
+                document,
+                variables,
+                fetchMoreForQueryId,
+              );
+            } catch (e) {
+              reject(e);
+              return;
+            }
 
             this.queryStore.markQueryResult(
               queryId,
@@ -1070,41 +1080,33 @@ export class QueryManager {
             this.broadcastQueries();
           }
 
-          this.removeFetchQueryPromise(requestId);
-
-          // XXX this duplicates some logic in the store about identifying errors
+          // XXX remove to support errors in the store via policy
           if (result.errors) {
-            throw new ApolloError({
-              graphQLErrors: result.errors,
-            });
+            reject(
+              new ApolloError({
+                graphQLErrors: result.errors,
+              }),
+            );
+            return;
           }
 
-          return result;
-        })
-        .then(result => {
-          let resultFromStore: any;
-
           if (fetchMoreForQueryId) {
-            // XXX We don't write fetchMore results to the store because this would overwrite
+            // We don't write fetchMore results to the store because this would overwrite
             // the original result in case an @connection directive is used.
             resultFromStore = result.data;
           } else {
-            try {
-              // ensure result is combined with data already in store
-              // this will throw an error if there are missing fields in
-              // the results if returnPartialData is false.
-              resultFromStore = this.dataStore.getCache().read({
-                variables,
-                query: document,
-                optimistic: false,
-              });
-              // ensure multiple errors don't get thrown
-              /* tslint:disable */
-            } catch (e) {}
-            /* tslint:enable */
+            // ensure result is combined with data already in store
+            resultFromStore = this.dataStore.getCache().read({
+              variables,
+              query: document,
+              optimistic: false,
+            });
           }
-
-          // return a chainable promise
+        },
+        error: (error: ApolloError) => {
+          reject(error);
+        },
+        complete: () => {
           this.removeFetchQueryPromise(requestId);
           resolve({
             data: resultFromStore,
@@ -1112,11 +1114,8 @@ export class QueryManager {
             networkStatus: NetworkStatus.ready,
             stale: false,
           });
-          return Promise.resolve();
-        })
-        .catch((error: Error) => {
-          reject(error);
-        });
+        },
+      });
     });
 
     return retPromise;

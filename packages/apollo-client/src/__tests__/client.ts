@@ -568,7 +568,7 @@ describe('client', () => {
     });
   });
 
-  it('should warn when receiving multiple results from apollo-link network interface', () => {
+  it('should not warn when receiving multiple results from apollo-link network interface', () => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -597,11 +597,9 @@ describe('client', () => {
       addTypename: false,
     });
 
-    return withWarning(() => {
-      return client.query({ query }).then((result: ExecutionResult) => {
-        expect(result.data).toEqual(data);
-      });
-    }, /multiple results/);
+    return client.query({ query }).then((result: ExecutionResult) => {
+      expect(result.data).toEqual(data);
+    });
   });
 
   xit('should surface errors in observer.next as uncaught', done => {

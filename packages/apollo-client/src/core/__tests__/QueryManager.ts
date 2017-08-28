@@ -9,7 +9,10 @@ import InMemoryCache, { ApolloReducerConfig } from 'apollo-cache-inmemory';
 // mocks
 import mockQueryManager from '../../__mocks__/mockQueryManager';
 import mockWatchQuery from '../../__mocks__/mockWatchQuery';
-import { mockSingleLink } from '../../__mocks__/mockLinks';
+import {
+  mockSingleLink,
+  MockSubscriptionLink,
+} from '../../__mocks__/mockLinks';
 
 // core
 import { ApolloQueryResult } from '../types';
@@ -1480,6 +1483,66 @@ describe('QueryManager', () => {
     );
   });
 
+  describe('mutiple results', () => {
+    it('allows multiple query results from link', done => {
+      const query = gql`
+        query LazyLoadLuke {
+          people_one(id: 1) {
+            name
+            friends @defer {
+              name
+            }
+          }
+        }
+      `;
+
+      const initialData = {
+        people_one: {
+          name: 'Luke Skywalker',
+          friends: null,
+        },
+      };
+
+      const laterData = {
+        people_one: {
+          // XXX true defer's wouldn't send this
+          name: 'Luke Skywalker',
+          friends: [{ name: 'Leia Skywalker' }],
+        },
+      };
+      const link = new MockSubscriptionLink();
+      const queryManager = new QueryManager({
+        store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+        link,
+        addTypename: false,
+      });
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables: {},
+      });
+
+      let count = 0;
+      observable.subscribe({
+        next: result => {
+          count++;
+          if (count === 1) {
+            link.simulateResult({ result: { data: laterData } });
+          }
+          if (count === 2) {
+            done();
+          }
+        },
+        error: e => {
+          console.error(e);
+        },
+      });
+
+      // fire off first result
+      link.simulateResult({ result: { data: initialData } });
+    });
+  });
+
   describe('polling queries', () => {
     it('allows you to poll queries', () => {
       const query = gql`
@@ -2262,12 +2325,7 @@ describe('QueryManager', () => {
       const link: ApolloLink = ApolloLink.from([
         () =>
           new Observable(observer => {
-            if (timesFired === 0) {
-              timesFired += 1;
-              queryManager.resetStore();
-            } else {
-              timesFired += 1;
-            }
+            timesFired += 1;
             observer.next({ data });
             return;
           }),
@@ -2276,11 +2334,20 @@ describe('QueryManager', () => {
       const observable = queryManager.watchQuery<any>({ query });
 
       // wait just to make sure the observable doesn't fire again
-      return observableToPromise({ observable, wait: 0 }, result =>
-        expect(result.data).toEqual(data),
-      ).then(() => {
-        expect(timesFired).toBe(2);
-      });
+      return observableToPromise(
+        { observable, wait: 0 },
+        result => {
+          expect(result.data).toEqual(data);
+          expect(timesFired).toBe(1);
+          // reset the store after data has returned
+          queryManager.resetStore();
+        },
+        result => {
+          // only refetch once and make sure data hasn't changed
+          expect(result.data).toEqual(data);
+          expect(timesFired).toBe(2);
+        },
+      );
     });
 
     it('should not refetch toredown queries', done => {
@@ -2352,12 +2419,7 @@ describe('QueryManager', () => {
       const link = ApolloLink.from([
         () =>
           new Observable(observer => {
-            if (timesFired === 0) {
-              timesFired += 1;
-              setTimeout(queryManager.resetStore.bind(queryManager), 10);
-            } else {
-              timesFired += 1;
-            }
+            timesFired += 1;
             observer.next({ data });
             return;
           }),
@@ -2369,11 +2431,18 @@ describe('QueryManager', () => {
       });
 
       // wait to make sure store reset happened
-      return observableToPromise({ observable, wait: 20 }, result =>
-        expect(result.data).toEqual(data),
-      ).then(() => {
-        expect(timesFired).toBe(2);
-      });
+      return observableToPromise(
+        { observable, wait: 20 },
+        result => {
+          expect(result.data).toEqual(data);
+          expect(timesFired).toBe(1);
+          setTimeout(queryManager.resetStore.bind(queryManager), 10);
+        },
+        result => {
+          expect(result.data).toEqual(data);
+          expect(timesFired).toBe(2);
+        },
+      );
     });
 
     it('should throw an error on an inflight fetch query if the store is reset', done => {

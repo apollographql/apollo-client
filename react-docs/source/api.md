@@ -17,7 +17,7 @@ import { gql } from 'react-apollo';
 
 The `gql` template tag is what you use to define GraphQL queries in your Apollo Client apps. It parses your GraphQL query into the [GraphQL.js AST format][] which may then be consumed by Apollo Client methods. Whenever Apollo Client is asking for a GraphQL query you will always want to wrap it in a `gql` template tag.
 
-You may embed a GraphQL document containing only fragments inside of another GraphQL document using template string interpolation. This allows you to use fragments defined in one part of your codebase inside of a query define in a completely different file. See the example below for a demonstration of how this works.
+You can embed a GraphQL document containing only fragments inside of another GraphQL document using template string interpolation. This allows you to use fragments defined in one part of your codebase inside of a query define in a completely different file. See the example below for a demonstration of how this works.
 
 For convenience the `gql` tag is re-exported in `react-apollo` from the [`graphql-tag`][] package.
 

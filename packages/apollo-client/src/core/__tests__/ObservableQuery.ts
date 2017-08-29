@@ -1100,6 +1100,50 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('returns errors with data if errorPolicy is all', () => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        errorPolicy: 'all',
+      });
+
+      return observable.result().then(result => {
+        expect(result.data).toBeUndefined();
+        expect(result.errors).toEqual([error]);
+        const currentResult = observable.currentResult();
+        expect(currentResult.loading).toBe(false);
+        expect(currentResult.errors).toEqual([error]);
+        expect(currentResult.error).toBeUndefined();
+      });
+    });
+
+    it('ignores errors with data if errorPolicy is ignore', () => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { errors: [error], data: dataOne },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        errorPolicy: 'ignore',
+      });
+
+      return observable.result().then(result => {
+        expect(result.data).toEqual(dataOne);
+        expect(result.errors).toBeUndefined();
+        const currentResult = observable.currentResult();
+        expect(currentResult.loading).toBe(false);
+        expect(currentResult.errors).toBeUndefined();
+        expect(currentResult.error).toBeUndefined();
+      });
+    });
+
     it('returns loading even if full data is available when using network-only fetchPolicy', done => {
       const queryManager = mockQueryManager(
         {

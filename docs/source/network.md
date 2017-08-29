@@ -404,14 +404,7 @@ Query batching is a transport-level mechanism that works only with servers that 
  ```
 
  <h2 id="query-deduplication">Query deduplication</h2>
- Query deduplication can help reduce the number of queries that are sent over the wire. It is turned off by default, but can be turned on by passing the `queryDeduplication` option to Apollo Client. If turned on, query deduplication happens before the query hits the network layer.
-
-```js
-const apolloClient = new ApolloClient({
-  networkInterface: batchingNetworkInterface,
-  queryDeduplication: true,
-});
- ```
+ Query deduplication can help reduce the number of queries that are sent over the wire. It is turned on by default, but can be turned off by passing `queryDeduplication: false` to the Apollo Client constructor. If turned on, query deduplication happens before the query hits the network layer.
 
  Query deduplication can be useful if many components display the same data, but you don't want to fetch that data from the server many times. It works by comparing a query to all queries currently in flight. If an identical query is currently in flight, the new query will be mapped to the same promise and resolved when the currently in-flight query returns.
 

@@ -3,6 +3,7 @@ import {
   tryFunctionOrLogError,
   maybeDeepFreeze,
 } from 'apollo-utilities';
+import { GraphQLError } from 'graphql';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { Observable, Observer, Subscription } from '../util/Observable';
 
@@ -21,6 +22,7 @@ import {
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
+  errors?: GraphQLError[];
   loading: boolean;
   networkStatus: NetworkStatus;
   error?: ApolloError;
@@ -147,10 +149,13 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     const { data, partial } = this.queryManager.getCurrentQueryResult(this);
     const queryStoreValue = this.queryManager.queryStore.get(this.queryId);
 
+    const { errorPolicy } = this.options;
+
     if (
       queryStoreValue &&
       ((queryStoreValue.graphQLErrors &&
-        queryStoreValue.graphQLErrors.length > 0) ||
+        queryStoreValue.graphQLErrors.length > 0 &&
+        errorPolicy === 'none') ||
         queryStoreValue.networkError)
     ) {
       const error = new ApolloError({
@@ -192,14 +197,22 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       data,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-    };
+    } as ApolloQueryResult<T>;
+
+    if (
+      queryStoreValue &&
+      queryStoreValue.graphQLErrors &&
+      errorPolicy === 'all'
+    ) {
+      result.errors = queryStoreValue.graphQLErrors;
+    }
 
     if (!partial) {
       const stale = false;
       this.lastResult = { ...result, stale };
     }
 
-    return { ...result, partial };
+    return { ...result, partial } as ApolloCurrentResult<T>;
   }
 
   // Returns the last result that observer.next was called with. This is not the same as

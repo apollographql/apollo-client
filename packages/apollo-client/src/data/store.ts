@@ -38,9 +38,13 @@ export class DataStore {
     document: DocumentNode,
     variables: any,
     fetchMoreForQueryId: string | undefined,
+    ignoreErrors: boolean = false,
   ) {
-    // XXX handle partial result due to errors
-    if (!fetchMoreForQueryId && !graphQLResultHasError(result)) {
+    let writeWithErrors = !graphQLResultHasError(result);
+    if (ignoreErrors && graphQLResultHasError(result) && result.data) {
+      writeWithErrors = true;
+    }
+    if (!fetchMoreForQueryId && writeWithErrors) {
       this.cache.writeResult({
         result: result.data,
         dataId: 'ROOT_QUERY',

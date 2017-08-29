@@ -1931,6 +1931,82 @@ describe('client', () => {
         done();
       });
   });
+  it('should allow errors to be returned from a mutation', done => {
+    const mutation = gql`
+      mutation {
+        newPerson {
+          person {
+            firstName
+            lastName
+          }
+        }
+      }
+    `;
+    const data = {
+      person: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const errors = [new Error('Some kind of GraphQL error.')];
+    const client = new ApolloClient({
+      link: mockSingleLink({
+        request: { query: mutation },
+        result: { data, errors },
+      }),
+      cache: new InMemoryCache({}, { addTypename: false }),
+      addTypename: false,
+    });
+    client
+      .mutate({ mutation, errorPolicy: 'all' })
+      .then(result => {
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toBe(1);
+        expect(result.errors[0].message).toBe(errors[0].message);
+        expect(result.data).toEqual(data);
+        done();
+      })
+      .catch((error: ApolloError) => {
+        throw error;
+      });
+  });
+  it('should strip errors on a mutation if ignored', done => {
+    const mutation = gql`
+      mutation {
+        newPerson {
+          person {
+            firstName
+            lastName
+          }
+        }
+      }
+    `;
+    const data = {
+      person: {
+        firstName: 'John',
+        lastName: 'Smith',
+      },
+    };
+    const errors = [new Error('Some kind of GraphQL error.')];
+    const client = new ApolloClient({
+      link: mockSingleLink({
+        request: { query: mutation },
+        result: { data, errors },
+      }),
+      cache: new InMemoryCache({}, { addTypename: false }),
+      addTypename: false,
+    });
+    client
+      .mutate({ mutation, errorPolicy: 'ignore' })
+      .then(result => {
+        expect(result.errors).toBeUndefined();
+        expect(result.data).toEqual(data);
+        done();
+      })
+      .catch((error: ApolloError) => {
+        throw error;
+      });
+  });
 
   it('should rollback optimistic after mutation got a GraphQL error', done => {
     const mutation = gql`

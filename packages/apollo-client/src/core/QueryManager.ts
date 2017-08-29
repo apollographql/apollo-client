@@ -7,7 +7,7 @@ import {
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
 import Deduplicator from 'apollo-link-dedup';
-import { DataProxy, DiffResult } from 'apollo-cache-core';
+import { DiffResult } from 'apollo-cache-core';
 import {
   addTypenameToDocument,
   assign,
@@ -30,7 +30,11 @@ import { QueryWithUpdater, DataStore } from '../data/store';
 import { MutationStore } from '../data/mutations';
 import { QueryStore, QueryStoreValue } from '../data/queries';
 
-import { WatchQueryOptions, SubscriptionOptions } from './watchQueryOptions';
+import {
+  WatchQueryOptions,
+  SubscriptionOptions,
+  MutationOptions,
+} from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import {
@@ -38,7 +42,6 @@ import {
   ApolloQueryResult,
   PureQueryOptions,
   FetchType,
-  MutationQueryReducersMap,
 } from './types';
 
 export class QueryManager {
@@ -142,14 +145,8 @@ export class QueryManager {
     updateQueries: updateQueriesByName,
     refetchQueries = [],
     update: updateWithProxyFn,
-  }: {
-    mutation: DocumentNode;
-    variables?: Object;
-    optimisticResponse?: Object | Function;
-    updateQueries?: MutationQueryReducersMap<T>;
-    refetchQueries?: string[] | PureQueryOptions[];
-    update?: (proxy: DataProxy, mutationResult: Object) => void;
-  }): Promise<FetchResult<T>> {
+    errorPolicy = 'ignore',
+  }: MutationOptions): Promise<FetchResult<T>> {
     if (!mutation) {
       throw new Error(
         'mutation option is required. You must specify your GraphQL document in the mutation option.',
@@ -213,7 +210,7 @@ export class QueryManager {
       let storeResult: FetchResult<T> | null;
       execute(this.link, request).subscribe({
         next: (result: ExecutionResult) => {
-          if (result.errors) {
+          if (result.errors && errorPolicy === 'none') {
             const error = new ApolloError({
               graphQLErrors: result.errors,
             });
@@ -269,6 +266,9 @@ export class QueryManager {
         },
         complete: () => {
           delete this.queryDocuments[mutationId];
+          if (errorPolicy === 'ignore' && storeResult && storeResult.errors) {
+            delete storeResult.errors;
+          }
           resolve(storeResult as FetchResult<T>);
         },
       });
@@ -416,9 +416,7 @@ export class QueryManager {
 
       // The query store value can be undefined in the event of a store
       // reset.
-      if (!queryStoreValue) {
-        return;
-      }
+      if (!queryStoreValue) return;
 
       // XXX This is to fix a strange race condition that was the root cause of react-apollo/#170
       // queryStoreValue was sometimes the old queryStoreValue and not what's currently in the store.
@@ -430,6 +428,10 @@ export class QueryManager {
       const fetchPolicy = observableQuery
         ? observableQuery.options.fetchPolicy
         : options.fetchPolicy;
+
+      const errorPolicy = observableQuery
+        ? observableQuery.options.errorPolicy
+        : options.errorPolicy;
 
       if (fetchPolicy === 'standby') {
         // don't watch the store for queries on standby
@@ -454,13 +456,11 @@ export class QueryManager {
         (networkStatusChanged && options.notifyOnNetworkStatusChange) ||
         shouldNotifyIfLoading
       ) {
-        // XXX Currently, returning errors and data is exclusive because we
-        // don't handle partial results
-
         // If we have either a GraphQL error or a network error, we create
         // an error and tell the observer about it.
         if (
-          (queryStoreValue.graphQLErrors &&
+          ((!errorPolicy || errorPolicy === 'none') &&
+            queryStoreValue.graphQLErrors &&
             queryStoreValue.graphQLErrors.length > 0) ||
           queryStoreValue.networkError
         ) {
@@ -509,6 +509,7 @@ export class QueryManager {
                 lastResult.data &&
                 queryStoreValue.previousVariables === queryStoreValue.variables
               ) {
+                console.log('here');
                 data = lastResult.data;
                 isMissing = false;
               } else {
@@ -548,6 +549,15 @@ export class QueryManager {
                 networkStatus: queryStoreValue.networkStatus,
                 stale: false,
               };
+            }
+
+            // if the query wants updates on errors we need to add it to the result
+            if (
+              errorPolicy === 'all' &&
+              queryStoreValue.graphQLErrors &&
+              queryStoreValue.graphQLErrors.length > 0
+            ) {
+              resultFromStore.errors = queryStoreValue.graphQLErrors;
             }
 
             if (observer.next) {
@@ -1041,7 +1051,7 @@ export class QueryManager {
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
   }): Promise<ExecutionResult> {
-    const { variables, context } = options;
+    const { variables, context, errorPolicy = 'none' } = options;
     const request = {
       query: document,
       variables,
@@ -1052,6 +1062,7 @@ export class QueryManager {
     request.context.forceFetch = !this.queryDeduplication;
 
     let resultFromStore: any;
+    let errorsFromStore: any;
     const retPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, retPromise, resolve, reject);
       execute(this.deduplicator, request).subscribe({
@@ -1064,6 +1075,7 @@ export class QueryManager {
                 document,
                 variables,
                 fetchMoreForQueryId,
+                errorPolicy === 'ignore',
               );
             } catch (e) {
               reject(e);
@@ -1085,14 +1097,15 @@ export class QueryManager {
             this.broadcastQueries();
           }
 
-          // XXX remove to support errors in the store via policy
-          if (result.errors) {
+          if (result.errors && errorPolicy === 'none') {
             reject(
               new ApolloError({
                 graphQLErrors: result.errors,
               }),
             );
             return;
+          } else if (errorPolicy === 'all') {
+            errorsFromStore = result.errors;
           }
 
           if (fetchMoreForQueryId) {
@@ -1100,12 +1113,14 @@ export class QueryManager {
             // the original result in case an @connection directive is used.
             resultFromStore = result.data;
           } else {
-            // ensure result is combined with data already in store
-            resultFromStore = this.dataStore.getCache().read({
-              variables,
-              query: document,
-              optimistic: false,
-            });
+            try {
+              // ensure result is combined with data already in store
+              resultFromStore = this.dataStore.getCache().read({
+                variables,
+                query: document,
+                optimistic: false,
+              });
+            } catch (e) {}
           }
         },
         error: (error: ApolloError) => {
@@ -1115,6 +1130,7 @@ export class QueryManager {
           this.removeFetchQueryPromise(requestId);
           resolve({
             data: resultFromStore,
+            errors: errorsFromStore,
             loading: false,
             networkStatus: NetworkStatus.ready,
             stale: false,

@@ -1522,7 +1522,6 @@ describe('ApolloClient', () => {
             addTypename: false,
           },
         ),
-        addTypename: false,
       });
 
       client.writeQuery({
@@ -1872,7 +1871,6 @@ describe('ApolloClient', () => {
             addTypename: false,
           },
         ),
-        addTypename: false,
       });
 
       client.writeQuery({
@@ -1936,7 +1934,6 @@ describe('ApolloClient', () => {
             addTypename: false,
           },
         ),
-        addTypename: false,
       });
 
       client.writeQuery({
@@ -2000,7 +1997,6 @@ describe('ApolloClient', () => {
             addTypename: false,
           },
         ),
-        addTypename: false,
       });
 
       client.writeQuery({

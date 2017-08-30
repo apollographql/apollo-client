@@ -45,17 +45,10 @@ describe('ObservableQuery', () => {
     message: 'is offline.',
   };
 
-  const createQueryManager = ({
-    link,
-    addTypename = false,
-  }: {
-    link?: ApolloLink;
-    addTypename?: boolean;
-  }) => {
+  const createQueryManager = ({ link }: { link?: ApolloLink }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
-      store: new DataStore(new InMemoryCache()),
-      addTypename,
+      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
     });
   };
 

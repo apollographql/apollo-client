@@ -81,7 +81,6 @@ describe('GraphQL Subscriptions', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({}, { addTypename: false }),
-      addTypename: false,
     });
 
     let count = 0;
@@ -108,7 +107,6 @@ describe('GraphQL Subscriptions', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({}, { addTypename: false }),
-      addTypename: false,
     });
 
     let count = 0;
@@ -134,7 +132,6 @@ describe('GraphQL Subscriptions', () => {
     const queryManager = new QueryManager({
       link,
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
-      addTypename: false,
     });
 
     const obs = queryManager.startGraphQLSubscription(options);
@@ -173,7 +170,6 @@ describe('GraphQL Subscriptions', () => {
     const queryManager = new QueryManager({
       link,
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
-      addTypename: false,
     });
 
     // tslint:disable-next-line

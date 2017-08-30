@@ -131,7 +131,6 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       link,
-      addTypename: true,
       cache: new InMemoryCache(
         {},
         {
@@ -163,7 +162,6 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       link,
-      addTypename: true,
       cache: new InMemoryCache(
         {},
         {
@@ -689,7 +687,6 @@ describe('mutation results', () => {
     client = new ApolloClient({
       link,
       cache: new InMemoryCache({}, { addTypename: false }),
-      addTypename: false,
     });
 
     const watchedQuery = client.watchQuery({
@@ -736,7 +733,6 @@ describe('mutation results', () => {
     let count = 0;
 
     client = new ApolloClient({
-      addTypename: false,
       cache: new InMemoryCache({}, { addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>
@@ -817,7 +813,6 @@ describe('mutation results', () => {
     let count = 0;
 
     client = new ApolloClient({
-      addTypename: false,
       cache: new InMemoryCache({}, { addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>
@@ -896,7 +891,6 @@ describe('mutation results', () => {
     let count = 0;
 
     client = new ApolloClient({
-      addTypename: false,
       cache: new InMemoryCache({}, { addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>

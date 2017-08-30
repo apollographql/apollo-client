@@ -1066,6 +1066,8 @@ export class QueryManager {
                 query: document,
                 optimistic: false,
               });
+              // this will throw an error if there are missing fields in
+              // the results which can happen with errors from the server.
             } catch (e) {}
           }
         },

@@ -60,6 +60,11 @@ export class InMemoryCache extends Cache {
     this.data = initialStore;
   }
 
+  public transformDocument(document: DocumentNode): DocumentNode {
+    if (this.addTypename) return addTypenameToDocument(document);
+    return document;
+  }
+
   public getData(): NormalizedCache {
     return this.data;
   }
@@ -89,7 +94,7 @@ export class InMemoryCache extends Cache {
   }): DiffResult<T> {
     return diffQueryAgainstStore({
       store: query.optimistic ? this.getOptimisticData() : this.data,
-      query: query.query,
+      query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
@@ -111,7 +116,7 @@ export class InMemoryCache extends Cache {
 
     return readQueryFromStore({
       store: query.optimistic ? this.getOptimisticData() : this.data,
-      query: query.query,
+      query: this.transformDocument(query.query),
       variables: query.variables,
       rootId: query.rootId,
       fragmentMatcherFunction: this.config.fragmentMatcher,
@@ -125,10 +130,6 @@ export class InMemoryCache extends Cache {
     optimistic: boolean = false,
   ): QueryType {
     let query = options.query;
-    if (this.addTypename) {
-      query = addTypenameToDocument(query);
-    }
-
     return this.read({
       query,
       variables: options.variables,
@@ -144,12 +145,9 @@ export class InMemoryCache extends Cache {
       options.fragment,
       options.fragmentName,
     );
-    if (this.addTypename) {
-      document = addTypenameToDocument(document);
-    }
 
     return this.read({
-      query: document,
+      query: this.transformDocument(document),
       variables: options.variables,
       rootId: options.id,
       optimistic,
@@ -169,14 +167,10 @@ export class InMemoryCache extends Cache {
 
   public writeQuery(options: DataProxyWriteQueryOptions): void {
     let query = options.query;
-    if (this.addTypename) {
-      query = addTypenameToDocument(query);
-    }
-
     this.writeResult({
       dataId: 'ROOT_QUERY',
       result: options.data,
-      document: query,
+      document: this.transformDocument(query),
       variables: options.variables,
     });
   }
@@ -186,14 +180,11 @@ export class InMemoryCache extends Cache {
       options.fragment,
       options.fragmentName,
     );
-    if (this.addTypename) {
-      document = addTypenameToDocument(document);
-    }
 
     this.writeResult({
       dataId: options.id,
       result: options.data,
-      document,
+      document: this.transformDocument(document),
       variables: options.variables,
     });
   }

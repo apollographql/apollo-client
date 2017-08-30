@@ -45,17 +45,16 @@ describe('QueryManager', () => {
   // tests.
   const createQueryManager = ({
     link,
-    addTypename = false,
     config = {},
   }: {
     link?: ApolloLink;
-    addTypename?: boolean;
     config?: ApolloReducerConfig;
   }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
-      store: new DataStore(new InMemoryCache({}, config)),
-      addTypename,
+      store: new DataStore(
+        new InMemoryCache({}, { addTypename: false, ...config }),
+      ),
     });
   };
 
@@ -1554,7 +1553,6 @@ describe('QueryManager', () => {
       const queryManager = new QueryManager({
         store: new DataStore(new InMemoryCache({}, { addTypename: false })),
         link,
-        addTypename: false,
       });
 
       const observable = queryManager.watchQuery<any>({
@@ -1612,7 +1610,6 @@ describe('QueryManager', () => {
       const queryManager = new QueryManager({
         store: new DataStore(new InMemoryCache({}, { addTypename: false })),
         link,
-        addTypename: false,
       });
 
       const observable = queryManager.watchQuery<any>({
@@ -1682,7 +1679,6 @@ describe('QueryManager', () => {
       const queryManager = new QueryManager({
         store: new DataStore(new InMemoryCache({}, { addTypename: false })),
         link,
-        addTypename: false,
       });
 
       const observable = queryManager.watchQuery<any>({
@@ -1753,7 +1749,6 @@ describe('QueryManager', () => {
       const queryManager = new QueryManager({
         store: new DataStore(new InMemoryCache({}, { addTypename: false })),
         link,
-        addTypename: false,
       });
 
       const observable = queryManager.watchQuery<any>({
@@ -1825,7 +1820,6 @@ describe('QueryManager', () => {
       const queryManager = new QueryManager({
         store: new DataStore(new InMemoryCache({}, { addTypename: false })),
         link,
-        addTypename: false,
       });
 
       const observable = queryManager.watchQuery<any>({
@@ -1953,7 +1947,6 @@ describe('QueryManager', () => {
           },
         ),
         store: new DataStore(new InMemoryCache({}, { addTypename: false })),
-        addTypename: false,
         ssrMode: true,
       });
 
@@ -2428,12 +2421,7 @@ describe('QueryManager', () => {
         }
       }
     `;
-    const unmodifiedQueryResult = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-      },
-    };
+
     const transformedQueryResult = {
       author: {
         firstName: 'John',
@@ -2445,17 +2433,11 @@ describe('QueryManager', () => {
     //make sure that the query is transformed within the query
     //manager
     createQueryManager({
-      link: mockSingleLink(
-        {
-          request: { query },
-          result: { data: unmodifiedQueryResult },
-        },
-        {
-          request: { query: transformedQuery },
-          result: { data: transformedQueryResult },
-        },
-      ),
-      addTypename: true,
+      link: mockSingleLink({
+        request: { query: transformedQuery },
+        result: { data: transformedQueryResult },
+      }),
+      config: { addTypename: true },
     })
       .query({ query: query })
       .then(result => {
@@ -2482,12 +2464,7 @@ describe('QueryManager', () => {
         }
       }
     `;
-    const unmodifiedMutationResult = {
-      createAuthor: {
-        firstName: 'It works!',
-        lastName: 'It works!',
-      },
-    };
+
     const transformedMutationResult = {
       createAuthor: {
         firstName: 'It works!',
@@ -2497,17 +2474,11 @@ describe('QueryManager', () => {
     };
 
     createQueryManager({
-      link: mockSingleLink(
-        {
-          request: { query: mutation },
-          result: { data: unmodifiedMutationResult },
-        },
-        {
-          request: { query: transformedMutation },
-          result: { data: transformedMutationResult },
-        },
-      ),
-      addTypename: true,
+      link: mockSingleLink({
+        request: { query: transformedMutation },
+        result: { data: transformedMutationResult },
+      }),
+      config: { addTypename: true },
     })
       .mutate({ mutation: mutation })
       .then(result => {

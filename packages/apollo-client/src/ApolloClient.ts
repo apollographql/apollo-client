@@ -38,7 +38,6 @@ export default class ApolloClient implements DataProxy {
   public link: ApolloLink;
   public store: DataStore;
   public queryManager: QueryManager;
-  public addTypename: boolean;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
@@ -61,8 +60,6 @@ export default class ApolloClient implements DataProxy {
    * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
    * server side render.
    *
-   * @param addTypename Adds the __typename field to every level of a GraphQL document, required
-   * to support certain queries that contain fragments.
    *
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
@@ -75,7 +72,6 @@ export default class ApolloClient implements DataProxy {
     cache: Cache;
     ssrMode?: boolean;
     ssrForceFetchDelay?: number;
-    addTypename?: boolean;
     connectToDevTools?: boolean;
     queryDeduplication?: boolean;
   }) {
@@ -84,14 +80,12 @@ export default class ApolloClient implements DataProxy {
       cache,
       ssrMode = false,
       ssrForceFetchDelay = 0,
-      addTypename = true,
       connectToDevTools,
       queryDeduplication = true,
     } = options;
 
     this.link = link;
     this.store = new DataStore(cache);
-    this.addTypename = addTypename;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
@@ -300,7 +294,6 @@ export default class ApolloClient implements DataProxy {
 
     this.queryManager = new QueryManager({
       link: this.link,
-      addTypename: this.addTypename,
       store: this.store,
       queryDeduplication: this.queryDeduplication,
       ssrMode: this.ssrMode,

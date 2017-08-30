@@ -9,7 +9,6 @@ import { print } from 'graphql/language/printer';
 import Deduplicator from 'apollo-link-dedup';
 import { DiffResult } from 'apollo-cache-core';
 import {
-  addTypenameToDocument,
   assign,
   getDefaultValues,
   getMutationDefinition,
@@ -53,7 +52,6 @@ export class QueryManager {
   public queryStore: QueryStore = new QueryStore();
   public dataStore: DataStore;
 
-  private addTypename: boolean;
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
 
@@ -101,27 +99,22 @@ export class QueryManager {
 
   constructor({
     link,
-    addTypename = true,
     queryDeduplication = false,
     ssrMode = false,
     store,
     onBroadcast = () => undefined,
   }: {
     link: ApolloLink;
-    addTypename?: boolean;
     queryDeduplication?: boolean;
     ssrMode?: boolean;
     store: DataStore;
     onBroadcast?: () => void;
   }) {
-    // XXX this might be the place to do introspection for inserting the `id` into the query? or
-    // is that the network interface?
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
     this.pollingTimers = {};
     this.queryListeners = {};
     this.queryDocuments = {};
-    this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
     this.dataStore = store;
@@ -154,10 +147,7 @@ export class QueryManager {
     }
 
     const mutationId = this.generateQueryId();
-
-    if (this.addTypename) {
-      mutation = addTypenameToDocument(mutation);
-    }
+    mutation = this.dataStore.getCache().transformDocument(mutation);
 
     variables = assign(
       {},
@@ -290,9 +280,7 @@ export class QueryManager {
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
     } = options;
 
-    const { queryDoc } = this.transformQueryDocument(options);
-
-    const queryString = print(queryDoc);
+    const query = this.dataStore.getCache().transformDocument(options.query);
 
     let storeResult: any;
     let needToFetch: boolean = fetchPolicy === 'network-only';
@@ -302,7 +290,7 @@ export class QueryManager {
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
     if (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only') {
       const { isMissing, result } = this.dataStore.getCache().diffQuery({
-        query: queryDoc,
+        query,
         variables,
         returnPartialData: true,
         optimistic: false,
@@ -319,15 +307,15 @@ export class QueryManager {
     const requestId = this.generateRequestId();
 
     // Initialize query in store with unique requestId
-    this.queryDocuments[queryId] = queryDoc;
+    this.queryDocuments[queryId] = query;
 
     // set up a watcher to listen to cache updates
     this.updateQueryWatch(queryId, options);
 
     this.queryStore.initQuery({
       queryId,
-      queryString,
-      document: queryDoc,
+      queryString: print(query),
+      document: query,
       storePreviousVariables: shouldFetch,
       variables,
       isPoll: fetchType === FetchType.poll,
@@ -365,7 +353,7 @@ export class QueryManager {
       const networkResult = this.fetchRequest({
         requestId,
         queryId,
-        document: queryDoc,
+        document: query,
         options,
         fetchMoreForQueryId,
       }).catch(error => {
@@ -509,7 +497,6 @@ export class QueryManager {
                 lastResult.data &&
                 queryStoreValue.previousVariables === queryStoreValue.variables
               ) {
-                console.log('here');
                 data = lastResult.data;
                 isMissing = false;
               } else {
@@ -846,11 +833,7 @@ export class QueryManager {
     options: SubscriptionOptions,
   ): Observable<any> {
     const { query } = options;
-    let transformedDoc = query;
-    // Apply the query transformer if one has been provided.
-    if (this.addTypename) {
-      transformedDoc = addTypenameToDocument(transformedDoc);
-    }
+    let transformedDoc = this.dataStore.getCache().transformDocument(query);
 
     const variables = assign(
       {},
@@ -920,7 +903,7 @@ export class QueryManager {
   }
 
   public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
-    const { variables, document } = this.getQueryParts(observableQuery);
+    const { variables, query } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
     if (lastResult && lastResult.data) {
       return maybeDeepFreeze({ data: lastResult.data, partial: false });
@@ -934,7 +917,7 @@ export class QueryManager {
         try {
           // the query is brand new, so we read from the store to see if anything is there
           const diffResult = this.dataStore.getCache().read({
-            query: document,
+            query,
             variables,
             optimistic: true,
           });
@@ -964,14 +947,14 @@ export class QueryManager {
       observableQuery = queryIdOrObservable;
     }
 
-    const { variables, document } = this.getQueryParts(observableQuery);
+    const { variables, query } = observableQuery.options;
 
     const { data } = this.getCurrentQueryResult(observableQuery);
 
     return {
       previousResult: data,
       variables,
-      document,
+      document: query,
     };
   }
 
@@ -996,43 +979,6 @@ export class QueryManager {
         });
       }
     });
-  }
-
-  // XXX: I think we just store this on the observable query at creation time
-  // TODO LATER: rename this function. Its main role is to apply the transform, nothing else!
-  private getQueryParts<T>(observableQuery: ObservableQuery<T>) {
-    const queryOptions = observableQuery.options;
-
-    let transformedDoc = observableQuery.options.query;
-
-    if (this.addTypename) {
-      // TODO XXX: do we need to make a copy of the document before transforming it?
-      transformedDoc = addTypenameToDocument(transformedDoc);
-    }
-
-    return {
-      variables: queryOptions.variables,
-      document: transformedDoc,
-    };
-  }
-
-  // Takes a set of WatchQueryOptions and transforms the query document
-  // accordingly. Specifically, it applies the queryTransformer (if there is one defined)
-  private transformQueryDocument(
-    options: WatchQueryOptions,
-  ): {
-    queryDoc: DocumentNode;
-  } {
-    let queryDoc = options.query;
-
-    // Apply the query transformer if one has been provided
-    if (this.addTypename) {
-      queryDoc = addTypenameToDocument(queryDoc);
-    }
-
-    return {
-      queryDoc,
-    };
   }
 
   // Takes a request id, query id, a query document and information associated with the query

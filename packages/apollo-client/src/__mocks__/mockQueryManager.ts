@@ -11,6 +11,5 @@ export default (...mockedResponses: MockedResponse[]) => {
   return new QueryManager({
     link: mockSingleLink(...mockedResponses),
     store: new DataStore(new InMemoryCache({}, { addTypename: false })),
-    addTypename: false,
   });
 };

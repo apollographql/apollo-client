@@ -35,7 +35,6 @@ describe('updateQuery on a simple query', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      addTypename: true,
     });
 
     const obsHandle = client.watchQuery({
@@ -102,7 +101,6 @@ describe('updateQuery on a query with required and optional variables', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      addTypename: true,
     });
 
     const obsHandle = client.watchQuery({
@@ -218,7 +216,6 @@ describe('fetchMore on an observable query', () => {
     client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      addTypename: true,
     });
 
     const obsHandle = client.watchQuery<any>({
@@ -323,7 +320,6 @@ describe('fetchMore on an observable query', () => {
     client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      addTypename: true,
     });
 
     const observable = client.watchQuery({
@@ -386,7 +382,6 @@ describe('fetchMore on an observable query', () => {
     client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      addTypename: true,
     });
 
     const observable = client.watchQuery({
@@ -508,7 +503,6 @@ describe('fetchMore on an observable query with connection', () => {
     client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      addTypename: true,
     });
 
     const obsHandle = client.watchQuery<any>({
@@ -577,7 +571,6 @@ describe('fetchMore on an observable query with connection', () => {
     client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      addTypename: true,
     });
 
     const observable = client.watchQuery({
@@ -640,7 +633,6 @@ describe('fetchMore on an observable query with connection', () => {
     client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      addTypename: true,
     });
 
     const observable = client.watchQuery({

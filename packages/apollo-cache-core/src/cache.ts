@@ -30,6 +30,8 @@ export type QueryWatch = {
 export abstract class Cache implements DataProxy {
   public abstract reset(): Promise<void>;
 
+  public abstract transformDocument(document: DocumentNode): DocumentNode;
+
   public abstract diffQuery(query: {
     query: DocumentNode;
     variables: any;

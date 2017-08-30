@@ -14,7 +14,6 @@ describe('QueryScheduler', () => {
     const queryManager = new QueryManager({
       link: mockSingleLink(),
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
-      addTypename: false,
     });
 
     const scheduler = new QueryScheduler({
@@ -66,7 +65,6 @@ describe('QueryScheduler', () => {
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
 
       link: link,
-      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -110,7 +108,6 @@ describe('QueryScheduler', () => {
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       link: link,
-      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -160,7 +157,6 @@ describe('QueryScheduler', () => {
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
 
       link,
-      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -202,7 +198,6 @@ describe('QueryScheduler', () => {
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       link,
-      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -361,7 +356,7 @@ describe('QueryScheduler', () => {
       pollInterval: interval,
     };
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache()),
+      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       link: mockSingleLink(
         {
           request: { query: query1 },
@@ -372,7 +367,6 @@ describe('QueryScheduler', () => {
           result: { data: data2 },
         },
       ),
-      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -422,7 +416,6 @@ describe('QueryScheduler', () => {
         request: { query },
         result: { data },
       }),
-      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,
@@ -479,7 +472,6 @@ describe('QueryScheduler', () => {
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({}, { addTypename: false })),
       link: link,
-      addTypename: false,
     });
     const scheduler = new QueryScheduler({
       queryManager,

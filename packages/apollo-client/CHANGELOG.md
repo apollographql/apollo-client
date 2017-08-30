@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Remove internal typename usage in favor of cache transformers [BREAKING]
 - Introduce new ErrorPolicy to allow for errors from execution results to trigger observers
 - Support multiple results from the network layer (links)
 - Remove internal Observable implemenation [BREAKING]. `next` is no longer called after `error` or `complete` is fired

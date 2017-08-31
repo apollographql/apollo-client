@@ -1,6 +1,8 @@
 # Change log
 
 ### vNEXT
+
+### 1.9.2
 - Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)
 - Fix referential equality bug for queries with custom resolvers [PR #2053](https://github.com/apollographql/apollo-client/pull/2053)
 

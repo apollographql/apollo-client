@@ -176,11 +176,9 @@ describe('client', () => {
 
     // shouldn't throw
     createStore(
-      combineReducers(
-        {
-          testApollo: client.reducer(),
-        } as any,
-      ),
+      combineReducers({
+        testApollo: client.reducer(),
+      } as any),
       // here "client.setStore(store)" will be called internally,
       // this method throws if "reduxRootSelector" or "reduxRootKey"
       // are not configured properly
@@ -212,13 +210,9 @@ describe('client', () => {
     const client = new ApolloClient();
 
     assert.throws(() => {
-      client.query(
-        gql`
-          {
-            a
-          }
-        ` as any,
-      );
+      client.query(gql`{
+          a
+        }` as any);
     }, 'query option is required. You must specify your GraphQL document in the query option.');
     assert.throws(() => {
       client.query({ query: '{ a }' } as any);
@@ -229,15 +223,13 @@ describe('client', () => {
     const client = new ApolloClient();
 
     assert.throws(() => {
-      client.mutate(
-        {
-          query: gql`
-            {
-              a
-            }
-          `,
-        } as any,
-      );
+      client.mutate({
+        query: gql`
+          {
+            a
+          }
+        `,
+      } as any);
     }, 'mutation option is required. You must specify your GraphQL document in the mutation option.');
   });
 
@@ -315,86 +307,83 @@ describe('client', () => {
     });
   });
 
-  it(
-    'should allow multiple queries with an apollo-link enabled network interface',
-    done => {
-      const query = gql`
-        query people {
-          allPeople(first: 1) {
-            people {
-              name
-              __typename
-            }
+  it('should allow multiple queries with an apollo-link enabled network interface', done => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
             __typename
           }
+          __typename
         }
-      `;
+      }
+    `;
 
-      const query2 = gql`
-        query people {
-          people {
-            id
-          }
+    const query2 = gql`
+      query people {
+        people {
+          id
         }
-      `;
+      }
+    `;
 
-      const data = {
-        allPeople: {
-          people: [
-            {
-              name: 'Luke Skywalker',
-              __typename: 'Person',
-            },
-          ],
-          __typename: 'People',
-        },
-      };
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: 'Luke Skywalker',
+            __typename: 'Person',
+          },
+        ],
+        __typename: 'People',
+      },
+    };
 
-      const data2 = {
-        people: {
-          id: 'People',
-        },
-      };
+    const data2 = {
+      people: {
+        id: 'People',
+      },
+    };
 
-      const variables = { first: 1 };
+    const variables = { first: 1 };
 
-      const networkInterface = ApolloLink.from([
-        operation => {
-          if (operation.query === query) {
-            return Observable.of({
-              data,
-            });
-          } else {
-            return Observable.of({
-              data: data2,
-            });
-          }
-        },
-      ]);
-
-      const client = new ApolloClient({
-        networkInterface,
-        addTypename: false,
-      });
-
-      let done1 = false,
-        done2 = false;
-      client.query({ query, variables }).then(actualResult => {
-        assert.deepEqual(actualResult.data, data);
-        done1 = true;
-        if (done2) {
-          done();
+    const networkInterface = ApolloLink.from([
+      operation => {
+        if (operation.query === query) {
+          return Observable.of({
+            data,
+          });
+        } else {
+          return Observable.of({
+            data: data2,
+          });
         }
-      });
-      client.query({ query: query2, variables }).then(actualResult2 => {
-        assert.deepEqual(actualResult2.data, data2);
-        done2 = true;
-        if (done1) {
-          done();
-        }
-      });
-    },
-  );
+      },
+    ]);
+
+    const client = new ApolloClient({
+      networkInterface,
+      addTypename: false,
+    });
+
+    let done1 = false,
+      done2 = false;
+    client.query({ query, variables }).then(actualResult => {
+      assert.deepEqual(actualResult.data, data);
+      done1 = true;
+      if (done2) {
+        done();
+      }
+    });
+    client.query({ query: query2, variables }).then(actualResult2 => {
+      assert.deepEqual(actualResult2.data, data2);
+      done2 = true;
+      if (done1) {
+        done();
+      }
+    });
+  });
 
   it('should allow for a single query with complex default variables to take place', () => {
     const query = gql`

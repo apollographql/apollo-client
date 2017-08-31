@@ -431,13 +431,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
       // Use the same options as before, but with new variables
       return this.queryManager
-        .fetchQuery(
-          this.queryId,
-          {
-            ...this.options,
-            variables: this.variables,
-          } as WatchQueryOptions,
-        )
+        .fetchQuery(this.queryId, {
+          ...this.options,
+          variables: this.variables,
+        } as WatchQueryOptions)
         .then(result => maybeDeepFreeze(result));
     }
   }

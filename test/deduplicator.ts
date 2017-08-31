@@ -31,16 +31,14 @@ describe('query deduplication', () => {
     };
 
     let called = 0;
-    const deduper = new Deduplicator(
-      {
-        query: () => {
-          called += 1;
-          return new Promise((resolve, reject) => {
-            setTimeout(resolve, 5);
-          });
-        },
-      } as any,
-    );
+    const deduper = new Deduplicator({
+      query: () => {
+        called += 1;
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, 5);
+        });
+      },
+    } as any);
 
     deduper.query(request1);
     deduper.query(request2);
@@ -62,28 +60,23 @@ describe('query deduplication', () => {
     };
 
     let called = 0;
-    const deduper = new Deduplicator(
-      {
-        query: () => {
-          called += 1;
-          switch (called) {
-            case 1:
-              return new Promise((resolve, reject) => {
-                setTimeout(reject);
-              });
-            case 2:
-              return new Promise((resolve, reject) => {
-                setTimeout(resolve);
-              });
-            default:
-              return assert(
-                false,
-                'Should not have been called more than twice',
-              );
-          }
-        },
-      } as any,
-    );
+    const deduper = new Deduplicator({
+      query: () => {
+        called += 1;
+        switch (called) {
+          case 1:
+            return new Promise((resolve, reject) => {
+              setTimeout(reject);
+            });
+          case 2:
+            return new Promise((resolve, reject) => {
+              setTimeout(resolve);
+            });
+          default:
+            return assert(false, 'Should not have been called more than twice');
+        }
+      },
+    } as any);
 
     return deduper.query(request).catch(() => {
       deduper.query(request);
@@ -113,16 +106,14 @@ describe('query deduplication', () => {
     };
 
     let called = 0;
-    const deduper = new Deduplicator(
-      {
-        query: () => {
-          called += 1;
-          return new Promise((resolve, reject) => {
-            setTimeout(resolve, 5);
-          });
-        },
-      } as any,
-    );
+    const deduper = new Deduplicator({
+      query: () => {
+        called += 1;
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, 5);
+        });
+      },
+    } as any);
 
     deduper.query(request1);
     deduper.query(request2);
@@ -151,16 +142,14 @@ describe('query deduplication', () => {
     };
 
     let called = 0;
-    const deduper = new Deduplicator(
-      {
-        query: () => {
-          called += 1;
-          return new Promise((resolve, reject) => {
-            setTimeout(resolve, 5);
-          });
-        },
-      } as any,
-    );
+    const deduper = new Deduplicator({
+      query: () => {
+        called += 1;
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, 5);
+        });
+      },
+    } as any);
 
     deduper.query(request1, false);
     deduper.query(request2, false);

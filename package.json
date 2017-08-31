@@ -113,7 +113,7 @@
     "mocha": "3.5.0",
     "nodemon": "1.11.0",
     "pre-commit": "1.2.2",
-    "prettier": "1.5.3",
+    "prettier": "1.6.1",
     "pretty-bytes": "4.0.2",
     "remap-istanbul": "0.9.5",
     "request": "2.81.0",

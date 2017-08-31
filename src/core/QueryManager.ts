@@ -95,7 +95,11 @@ import { tryFunctionOrLogError } from '../util/errorHandling';
 
 import { isApolloError, ApolloError } from '../errors/ApolloError';
 
-import { WatchQueryOptions, SubscriptionOptions } from './watchQueryOptions';
+import {
+  WatchQueryOptions,
+  FetchPolicy,
+  SubscriptionOptions,
+} from './watchQueryOptions';
 
 import { ObservableQuery } from './ObservableQuery';
 
@@ -109,6 +113,7 @@ export class QueryManager {
   public ssrMode: boolean;
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
+  public defaultFetchPolicy: FetchPolicy;
 
   private addTypename: boolean;
   private deduplicator: Deduplicator;
@@ -163,6 +168,7 @@ export class QueryManager {
     addTypename = true,
     queryDeduplication = false,
     ssrMode = false,
+    defaultFetchPolicy = 'cache-first',
   }: {
     networkInterface: NetworkInterface;
     store: ApolloStore;
@@ -172,6 +178,7 @@ export class QueryManager {
     addTypename?: boolean;
     queryDeduplication?: boolean;
     ssrMode?: boolean;
+    defaultFetchPolicy?: FetchPolicy;
   }) {
     // XXX this might be the place to do introspection for inserting the `id` into the query? or
     // is that the network interface?
@@ -186,6 +193,7 @@ export class QueryManager {
     this.addTypename = addTypename;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
+    this.defaultFetchPolicy = defaultFetchPolicy;
 
     // XXX This logic is duplicated in ApolloClient.ts for two reasons:
     // 1. we need it in ApolloClient.ts for readQuery and readFragment of the data proxy.
@@ -394,7 +402,7 @@ export class QueryManager {
     const {
       variables = {},
       metadata = null,
-      fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
+      fetchPolicy = this.defaultFetchPolicy, // cache-first is the default fetch policy.
     } = options;
 
     const { queryDoc } = this.transformQueryDocument(options);

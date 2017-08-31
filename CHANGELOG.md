@@ -3,6 +3,7 @@
 ### vNEXT
 - Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)
 - Fix referential equality bug for queries with custom resolvers [PR #2053](https://github.com/apollographql/apollo-client/pull/2053)
+- Add `defaultFetchPolicy` option to `ApolloClient` and `QueryManager` [PR #2099](https://github.com/apollographql/apollo-client/pull/2099)
 
 ### 1.9.1
 - Add support for subscriptions with Apollo Link network stack [PR #1992](https://github.com/apollographql/apollo-client/pull/1992)

@@ -93,7 +93,7 @@
     "all-contributors-cli": "4.4.0",
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
-    "bundlesize": "0.14.1",
+    "bundlesize": "0.14.3",
     "chai": "4.1.1",
     "chai-as-promised": "7.1.1",
     "colors": "1.1.2",

@@ -8,8 +8,7 @@
   "typings": "./lib/index.d.ts",
   "scripts": {
     "coverage": "jest --coverage",
-    "coverage:upload":
-      "bash <(curl -s https://codecov.io/bash) -cF apollo-client",
+    "coverage:upload": "codecov -cF apollo-client",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
     "test": "jest",
@@ -69,6 +68,7 @@
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
     "bundlesize": "0.13.2",
+    "codecov": "^2.3.0",
     "danger": "1.1.0",
     "flow-bin": "0.50.0",
     "graphql-tag": "^2.0.0",
@@ -94,7 +94,6 @@
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
     "moduleFileExtensions": ["ts", "tsx", "js", "json"],
-    "setupFiles": ["<rootDir>/scripts/tests.js"],
-    "collectCoverageFrom": ["<rootDir>/src/**/*.{ts|tsx|js}"]
+    "setupFiles": ["<rootDir>/scripts/tests.js"]
   }
 }

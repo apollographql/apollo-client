@@ -802,7 +802,7 @@ describe('optimistic mutation results', () => {
       },
     };
 
-    fit('will insert a single item to the beginning', () => {
+    it('will insert a single item to the beginning', () => {
       let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },

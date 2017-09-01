@@ -22,7 +22,6 @@
   "scripts": {
     "test": "jest",
     "coverage": "jest --coverage",
-    "coverage:upload": "codecov -cF apollo-utilities",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
@@ -42,7 +41,6 @@
     "@types/lodash": "^4.14.72",
     "@types/node": "^8.0.20",
     "browserify": "^14.4.0",
-    "codecov": "^2.3.0",
     "graphql": "^0.10.3",
     "graphql-tag": "^2.4.2",
     "jest": "^20.0.4",

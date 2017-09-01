@@ -8,7 +8,6 @@
   "typings": "./lib/index.d.ts",
   "scripts": {
     "coverage": "jest --coverage",
-    "coverage:upload": "codecov -cF apollo-client",
     "dev": "./scripts/dev.sh",
     "deploy": "./scripts/deploy.sh",
     "test": "jest",
@@ -68,7 +67,6 @@
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
     "bundlesize": "0.13.2",
-    "codecov": "^2.3.0",
     "danger": "1.1.0",
     "flow-bin": "0.50.0",
     "graphql-tag": "^2.0.0",

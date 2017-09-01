@@ -18,7 +18,11 @@ import {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
+  ErrorPolicy,
+  UpdateQueryFn,
 } from './watchQueryOptions';
+
+import { QueryStoreValue } from '../data/queries';
 
 export type ApolloCurrentResult<T> = {
   data: T | {};
@@ -31,10 +35,10 @@ export type ApolloCurrentResult<T> = {
 
 export interface FetchMoreOptions {
   updateQuery: (
-    previousQueryResult: Object,
+    previousQueryResult: { [key: string]: any },
     options: {
-      fetchMoreResult: Object;
-      queryVariables: Object;
+      fetchMoreResult?: { [key: string]: any };
+      variables: { [key: string]: any };
     },
   ) => Object;
 }
@@ -43,7 +47,7 @@ export interface UpdateQueryOptions {
   variables?: Object;
 }
 
-export const hasError = (storeValue, policy) =>
+export const hasError = (storeValue: QueryStoreValue, policy?: ErrorPolicy) =>
   storeValue &&
   ((storeValue.graphQLErrors &&
     storeValue.graphQLErrors.length > 0 &&
@@ -292,11 +296,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         );
       })
       .then(fetchMoreResult => {
-        this.updateQuery((previousResult: any, { variables }: any) =>
-          fetchMoreOptions.updateQuery(previousResult, {
-            fetchMoreResult: fetchMoreResult.data,
-            variables,
-          }),
+        this.updateQuery(
+          (previousResult: any, { variables }: { [key: string]: any }) =>
+            fetchMoreOptions.updateQuery(previousResult, {
+              fetchMoreResult: fetchMoreResult.data,
+              variables,
+            }),
         );
 
         return fetchMoreResult as ApolloQueryResult<T>;
@@ -316,7 +321,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         next: data => {
           if (options.updateQuery) {
             this.updateQuery((previous: Object, { variables }) =>
-              options.updateQuery(previous, {
+              (options.updateQuery as UpdateQueryFn)(previous, {
                 subscriptionData: data,
                 variables,
               }),

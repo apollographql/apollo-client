@@ -96,16 +96,18 @@ export interface FetchMoreQueryOptions {
   variables?: { [key: string]: any };
 }
 
+export type UpdateQueryFn = (
+  previousQueryResult: Object,
+  options: {
+    subscriptionData: { data: any };
+    variables?: { [key: string]: any };
+  },
+) => Object;
+
 export type SubscribeToMoreOptions = {
   document: DocumentNode;
   variables?: { [key: string]: any };
-  updateQuery?: (
-    previousQueryResult: Object,
-    options: {
-      subscriptionData: { data: any };
-      variables: { [key: string]: any };
-    },
-  ) => Object;
+  updateQuery?: UpdateQueryFn;
   onError?: (error: Error) => void;
 };
 
@@ -161,7 +163,7 @@ export interface MutationOptions<T = { [key: string]: any }> {
    * refetch the queries that will be affected and achieve a consistent store
    * once these queries return.
    */
-  refetchQueries?: string[] | PureQueryOptions[];
+  refetchQueries?: Array<string | PureQueryOptions>;
 
   /**
    * A function which provides a {@link DataProxy} and the result of the

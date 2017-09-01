@@ -98,11 +98,13 @@ export class QueryManager {
     queryDeduplication = false,
     store,
     onBroadcast = () => undefined,
+    ssrMode = false,
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
     store: DataStore;
     onBroadcast?: () => void;
+    ssrMode: boolean;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
@@ -110,7 +112,7 @@ export class QueryManager {
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
 
-    this.scheduler = new QueryScheduler({ queryManager: this });
+    this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
   }
 
   public mutate<T>({
@@ -688,7 +690,7 @@ export class QueryManager {
 
         return previousResult;
       },
-      callback: newData => {
+      callback: (newData: ApolloQueryResult<any>) => {
         this.setQuery(queryId, () => ({ invalidated: true, newData }));
       },
     });
@@ -871,6 +873,10 @@ export class QueryManager {
 
   public stopQuery(queryId: string) {
     this.stopQueryInStore(queryId);
+    this.removeQuery(queryId);
+  }
+
+  public removeQuery(queryId: string) {
     this.queries.delete(queryId);
   }
 
@@ -1027,6 +1033,7 @@ export class QueryManager {
               });
               // this will throw an error if there are missing fields in
               // the results which can happen with errors from the server.
+              // tslint:disable-next-line
             } catch (e) {}
           }
         },

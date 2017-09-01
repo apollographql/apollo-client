@@ -21,8 +21,7 @@
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
     "coverage": "jest --coverage",
-    "coverage:upload":
-      "bash <(curl -s https://codecov.io/bash) -cF apollo-cache-inmemory",
+    "coverage:upload": "codecov -cF apollo-cache-inmemory",
     "test": "jest",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
@@ -46,6 +45,7 @@
     "@types/jest": "^20.0.7",
     "@types/lodash": "^4.14.72",
     "browserify": "^14.4.0",
+    "codecov": "^2.3.0",
     "graphql": "^0.10.3",
     "graphql-tag": "^2.4.2",
     "jest": "^20.0.4",

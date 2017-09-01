@@ -6,8 +6,7 @@
   "typings": "./lib/index.d.ts",
   "scripts": {
     "coverage": "jest --coverage",
-    "coverage:upload":
-      "bash <(curl -s https://codecov.io/bash) -cF graphql-anywhere",
+    "coverage:upload": "codecov -cF graphql-anywhere",
     "test": "jest",
     "build": "tsc",
     "watch": "tsc -w",
@@ -46,6 +45,7 @@
     "@types/react": "^15.0.14",
     "@types/react-dom": "^15.5.0",
     "browserify": "^14.4.0",
+    "codecov": "^2.3.0",
     "graphql": "^0.10.0",
     "graphql-tag": "^2.0.0",
     "jest": "^20.0.4",

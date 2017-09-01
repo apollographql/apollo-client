@@ -36,18 +36,33 @@ import {
 } from './watchQueryOptions';
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import {
-  QueryListener,
-  ApolloQueryResult,
-  PureQueryOptions,
-  FetchType,
-} from './types';
+import { QueryListener, ApolloQueryResult, FetchType } from './types';
+
+export interface QueryInfo {
+  listeners: QueryListener[];
+  invalidated: boolean;
+  newData: ApolloQueryResult<any> | null;
+  document: DocumentNode | null;
+  lastRequestId: number | null;
+  // A map going from queryId to an observer for a query issued by watchQuery. We use
+  // these to keep track of queries that are inflight and error on the observers associated
+  // with them in case of some destabalizing action (e.g. reset of the Apollo store).
+  observableQuery: ObservableQuery<any> | null;
+  cancel?: (() => void);
+}
+
+const defaultQueryInfo = {
+  listeners: [],
+  invalidated: false,
+  document: null,
+  newData: null,
+  lastRequestId: null,
+  observableQuery: null,
+};
 
 export class QueryManager {
-  public pollingTimers: { [queryId: string]: any };
   public scheduler: QueryScheduler;
   public link: ApolloLink;
-  public ssrMode: boolean;
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
   public dataStore: DataStore;
@@ -57,18 +72,10 @@ export class QueryManager {
 
   private onBroadcast: () => void;
 
-  // TODO REFACTOR collect all operation-related info in one place (e.g. all these maps)
-  // this should be combined with ObservableQuery, but that needs to be expanded to support
-  // mutations and subscriptions as well.
-  private queryListeners: { [queryId: string]: QueryListener[] };
-  private queryListenerWatchCancel: { [queryId: string]: (() => void) } = {};
-  private queryListenerInvalidated: { [queryId: string]: boolean } = {};
-  private queryListenerInvalidatedNewData: {
-    [queryId: string]: ApolloQueryResult<any> | null;
-  } = {};
-  private queryDocuments: { [queryId: string]: DocumentNode };
-
-  private idCounter = 1; // XXX let's not start at zero to avoid pain with bad checks
+  // XXX merge with ObservableQuery but that needs to be expanded to support mutations and
+  // subscriptions as well
+  private queries: Map<string, QueryInfo> = new Map();
+  private idCounter = 1; // let's not start at zero to avoid pain with bad checks
 
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
@@ -79,58 +86,33 @@ export class QueryManager {
       resolve: (result: ApolloQueryResult<any>) => void;
       reject: (error: Error) => void;
     };
-  };
-
-  // A map going from queryId to an observer for a query issued by watchQuery. We use
-  // these to keep track of queries that are inflight and error on the observers associated
-  // with them in case of some destabalizing action (e.g. reset of the Apollo store).
-  private observableQueries: {
-    [queryId: string]: {
-      observableQuery: ObservableQuery<any>;
-    };
-  };
+  } = {};
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
   // generally used to refetches for refetchQueries and to update mutation results through
   // updateQueries.
-  private queryIdsByName: { [queryName: string]: string[] };
-
-  private lastRequestId: { [queryId: string]: number } = {};
+  private queryIdsByName: { [queryName: string]: string[] } = {};
 
   constructor({
     link,
     queryDeduplication = false,
-    ssrMode = false,
     store,
     onBroadcast = () => undefined,
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
-    ssrMode?: boolean;
     store: DataStore;
     onBroadcast?: () => void;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
-    this.pollingTimers = {};
-    this.queryListeners = {};
-    this.queryDocuments = {};
     this.queryDeduplication = queryDeduplication;
-    this.ssrMode = ssrMode;
     this.dataStore = store;
     this.onBroadcast = onBroadcast;
 
-    this.scheduler = new QueryScheduler({
-      queryManager: this,
-    });
-
-    this.fetchQueryPromises = {};
-    this.observableQueries = {};
-    this.queryIdsByName = {};
+    this.scheduler = new QueryScheduler({ queryManager: this });
   }
 
-  // XXX while mutate supports multiple results, there is not an API for
-  // watching a mutation yet.
   public mutate<T>({
     mutation,
     variables,
@@ -162,7 +144,7 @@ export class QueryManager {
       operationName: getOperationName(mutation) || undefined,
     } as Request;
 
-    this.queryDocuments[mutationId] = mutation;
+    this.setQuery(mutationId, () => ({ document: mutation }));
 
     // Create a map of update queries by id to the query instead of by name.
     const generateUpdateQueriesInfo: () => {
@@ -208,13 +190,13 @@ export class QueryManager {
             this.mutationStore.markMutationError(mutationId, error);
             this.dataStore.markMutationComplete(mutationId);
             this.broadcastQueries();
-
-            delete this.queryDocuments[mutationId];
+            this.setQuery(mutationId, () => ({ document: undefined }));
             reject(error);
             return;
           }
 
           this.mutationStore.markMutationResult(mutationId);
+
           this.dataStore.markMutationResult({
             mutationId,
             result,
@@ -226,19 +208,18 @@ export class QueryManager {
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
 
-          if (typeof refetchQueries[0] === 'string') {
-            (refetchQueries as string[]).forEach(name => {
-              this.refetchQueryByName(name);
+          refetchQueries.forEach(refetchQuery => {
+            if (typeof refetchQuery === 'string') {
+              this.refetchQueryByName(refetchQuery);
+              return;
+            }
+
+            this.query({
+              query: refetchQuery.query,
+              variables: refetchQuery.variables,
+              fetchPolicy: 'network-only',
             });
-          } else {
-            (refetchQueries as PureQueryOptions[]).forEach(pureQuery => {
-              this.query({
-                query: pureQuery.query,
-                variables: pureQuery.variables,
-                fetchPolicy: 'network-only',
-              });
-            });
-          }
+          });
 
           storeResult = result as FetchResult<T>;
         },
@@ -247,7 +228,7 @@ export class QueryManager {
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
 
-          delete this.queryDocuments[mutationId];
+          this.setQuery(mutationId, () => ({ document: undefined }));
           reject(
             new ApolloError({
               networkError: err,
@@ -255,7 +236,7 @@ export class QueryManager {
           );
         },
         complete: () => {
-          delete this.queryDocuments[mutationId];
+          this.setQuery(mutationId, () => ({ document: undefined }));
           if (errorPolicy === 'ignore' && storeResult && storeResult.errors) {
             delete storeResult.errors;
           }
@@ -307,7 +288,10 @@ export class QueryManager {
     const requestId = this.generateRequestId();
 
     // Initialize query in store with unique requestId
-    this.queryDocuments[queryId] = query;
+    this.setQuery(queryId, () => ({
+      document: query,
+      lastRequestId: requestId,
+    }));
 
     // set up a watcher to listen to cache updates
     this.updateQueryWatch(queryId, options);
@@ -324,15 +308,10 @@ export class QueryManager {
       fetchMoreForQueryId,
     });
 
-    this.queryListenerInvalidated[queryId] = true;
-
-    if (fetchMoreForQueryId) {
-      this.queryListenerInvalidated[fetchMoreForQueryId] = true;
-    }
+    // XXX can we batch query updates here?
+    this.invalidate(true, queryId, fetchMoreForQueryId);
 
     this.broadcastQueries();
-
-    this.lastRequestId[queryId] = requestId;
 
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
@@ -341,10 +320,8 @@ export class QueryManager {
 
     if (shouldDispatchClientResult) {
       this.queryStore.markQueryResultClient(queryId, !shouldFetch);
-      this.queryListenerInvalidated[queryId] = true;
-      if (fetchMoreForQueryId) {
-        this.queryListenerInvalidated[fetchMoreForQueryId] = true;
-      }
+
+      this.invalidate(true, queryId, fetchMoreForQueryId);
 
       this.broadcastQueries();
     }
@@ -362,12 +339,11 @@ export class QueryManager {
         if (isApolloError(error)) {
           throw error;
         } else {
-          if (requestId >= (this.lastRequestId[queryId] || 1)) {
+          const { lastRequestId } = this.getQuery(queryId);
+          if (requestId >= (lastRequestId || 1)) {
             this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
-            this.queryListenerInvalidated[queryId] = true;
-            if (fetchMoreForQueryId) {
-              this.queryListenerInvalidated[fetchMoreForQueryId] = true;
-            }
+
+            this.invalidate(true, queryId, fetchMoreForQueryId);
 
             this.broadcastQueries();
           }
@@ -400,7 +376,7 @@ export class QueryManager {
     let previouslyHadError: boolean = false;
     return (queryStoreValue: QueryStoreValue, newData?: DiffResult<T>) => {
       // we're going to take a look at the data, so the query is no longer invalidated
-      this.queryListenerInvalidated[queryId] = false;
+      this.invalidate(false, queryId);
 
       // The query store value can be undefined in the event of a store
       // reset.
@@ -410,8 +386,7 @@ export class QueryManager {
       // queryStoreValue was sometimes the old queryStoreValue and not what's currently in the store.
       queryStoreValue = this.queryStore.get(queryId);
 
-      const storedQuery = this.observableQueries[queryId];
-      const observableQuery = storedQuery ? storedQuery.observableQuery : null;
+      const { observableQuery } = this.getQuery(queryId);
 
       const fetchPolicy = observableQuery
         ? observableQuery.options.fetchPolicy
@@ -421,10 +396,8 @@ export class QueryManager {
         ? observableQuery.options.errorPolicy
         : options.errorPolicy;
 
-      if (fetchPolicy === 'standby') {
-        // don't watch the store for queries on standby
-        return;
-      }
+      // don't watch the store for queries on standby
+      if (fetchPolicy === 'standby') return;
 
       const lastResult = observableQuery
         ? observableQuery.getLastResult()
@@ -487,7 +460,7 @@ export class QueryManager {
 
             if (newData) {
               // clear out the latest new data, since we're now using it
-              this.queryListenerInvalidatedNewData[queryId] = null;
+              this.setQuery(queryId, () => ({ newData: null }));
 
               data = newData.result;
               isMissing = newData.isMissing ? newData.isMissing : false;
@@ -500,8 +473,9 @@ export class QueryManager {
                 data = lastResult.data;
                 isMissing = false;
               } else {
+                const { document } = this.getQuery(queryId);
                 const readResult = this.dataStore.getCache().diffQuery({
-                  query: this.queryDocuments[queryId],
+                  query: document as DocumentNode,
                   variables:
                     queryStoreValue.previousVariables ||
                     queryStoreValue.variables,
@@ -683,31 +657,30 @@ export class QueryManager {
 
   public stopQueryInStore(queryId: string) {
     this.queryStore.stopQuery(queryId);
-    this.queryListenerInvalidated[queryId] = true;
+    this.invalidate(true, queryId);
     this.broadcastQueries();
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
-    this.queryListeners[queryId] = this.queryListeners[queryId] || [];
-
-    this.queryListenerInvalidated[queryId] = false;
-    this.queryListeners[queryId].push(listener);
+    this.setQuery(queryId, ({ listeners = [] }) => ({
+      listeners: [...listeners, listener],
+      invalidate: false,
+    }));
   }
 
   public updateQueryWatch(queryId: string, options: WatchQueryOptions) {
-    if (this.queryListenerWatchCancel[queryId]) {
-      this.queryListenerWatchCancel[queryId]();
-    }
+    let { cancel, document } = this.getQuery(queryId);
+    if (cancel) cancel();
 
-    this.queryListenerWatchCancel[queryId] = this.dataStore.getCache().watch({
-      query: this.queryDocuments[queryId],
+    cancel = this.dataStore.getCache().watch({
+      query: document as DocumentNode,
       variables: options.variables,
       optimistic: true,
       previousResult: () => {
         let previousResult = null;
-        const observableQueryWrap = this.observableQueries[queryId];
-        if (observableQueryWrap && observableQueryWrap.observableQuery) {
-          const lastResult = observableQueryWrap.observableQuery.getLastResult();
+        const { observableQuery } = this.getQuery(queryId);
+        if (observableQuery) {
+          const lastResult = observableQuery.getLastResult();
           if (lastResult) {
             previousResult = lastResult.data;
           }
@@ -716,10 +689,11 @@ export class QueryManager {
         return previousResult;
       },
       callback: newData => {
-        this.queryListenerInvalidated[queryId] = true;
-        this.queryListenerInvalidatedNewData[queryId] = newData;
+        this.setQuery(queryId, () => ({ invalidated: true, newData }));
       },
     });
+
+    this.setQuery(queryId, () => ({ cancel }));
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.
@@ -746,7 +720,7 @@ export class QueryManager {
     queryId: string,
     observableQuery: ObservableQuery<T>,
   ) {
-    this.observableQueries[queryId] = { observableQuery };
+    this.setQuery(queryId, () => ({ observableQuery }));
 
     // Insert the ObservableQuery into this.observableQueriesByName if the query has a name
     const queryDef = getQueryDefinition(observableQuery.options.query);
@@ -760,10 +734,12 @@ export class QueryManager {
   }
 
   public removeObservableQuery(queryId: string) {
-    const observableQuery = this.observableQueries[queryId].observableQuery;
+    const { observableQuery } = this.getQuery(queryId);
+    if (!observableQuery) return;
+
     const definition = getQueryDefinition(observableQuery.options.query);
     const queryName = definition.name ? definition.name.value : null;
-    delete this.observableQueries[queryId];
+    this.setQuery(queryId, () => ({ observableQuery: null }));
     if (queryName) {
       this.queryIdsByName[queryName] = this.queryIdsByName[
         queryName
@@ -785,7 +761,12 @@ export class QueryManager {
       reject(new Error('Store reset while query was in flight.'));
     });
 
-    this.queryStore.reset(Object.keys(this.observableQueries));
+    const resetIds: string[] = [];
+    this.queries.forEach(({ observableQuery }, queryId) => {
+      if (observableQuery) resetIds.push(queryId);
+    });
+
+    this.queryStore.reset(resetIds);
     this.mutationStore.reset();
     const dataStoreReset = this.dataStore.reset();
 
@@ -796,17 +777,15 @@ export class QueryManager {
     // the promise for it will be rejected and its results will not be written to the
     // store.
     const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
-    Object.keys(this.observableQueries).forEach(queryId => {
-      const fetchPolicy = this.observableQueries[queryId].observableQuery
-        .options.fetchPolicy;
+    this.queries.forEach(({ observableQuery }, queryId) => {
+      if (!observableQuery) return;
+      const fetchPolicy = observableQuery.options.fetchPolicy;
 
       if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
-        observableQueryPromises.push(
-          this.observableQueries[queryId].observableQuery.refetch(),
-        );
+        observableQueryPromises.push(observableQuery.refetch());
       }
 
-      this.queryListenerInvalidated[queryId] = true;
+      this.invalidate(true, queryId);
     });
 
     this.broadcastQueries();
@@ -890,16 +869,9 @@ export class QueryManager {
     });
   }
 
-  public removeQuery(queryId: string) {
-    delete this.queryListeners[queryId];
-    delete this.queryDocuments[queryId];
-  }
-
   public stopQuery(queryId: string) {
-    // XXX in the future if we should cancel the request
-    // so that it never tries to return data
-    this.removeQuery(queryId);
     this.stopQueryInStore(queryId);
+    this.queries.delete(queryId);
   }
 
   public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
@@ -908,11 +880,9 @@ export class QueryManager {
     if (lastResult && lastResult.data) {
       return maybeDeepFreeze({ data: lastResult.data, partial: false });
     } else {
-      const maybeNewData = this.queryListenerInvalidatedNewData[
-        observableQuery.queryId
-      ];
-      if (maybeNewData) {
-        return maybeDeepFreeze({ data: maybeNewData.data, partial: false });
+      const { newData } = this.getQuery(observableQuery.queryId);
+      if (newData) {
+        return maybeDeepFreeze({ data: newData.data, partial: false });
       } else {
         try {
           // the query is brand new, so we read from the store to see if anything is there
@@ -935,14 +905,15 @@ export class QueryManager {
   ) {
     let observableQuery: ObservableQuery<T>;
     if (typeof queryIdOrObservable === 'string') {
-      if (!this.observableQueries[queryIdOrObservable]) {
+      const { observableQuery: foundObserveableQuery } = this.getQuery(
+        queryIdOrObservable,
+      );
+      if (!foundObserveableQuery) {
         throw new Error(
           `ObservableQuery with this id doesn't exist: ${queryIdOrObservable}`,
         );
       }
-
-      observableQuery = this.observableQueries[queryIdOrObservable]
-        .observableQuery;
+      observableQuery = foundObserveableQuery;
     } else {
       observableQuery = queryIdOrObservable;
     }
@@ -960,24 +931,15 @@ export class QueryManager {
 
   public broadcastQueries() {
     this.onBroadcast();
-    Object.keys(this.queryListeners).forEach((queryId: string) => {
-      const listeners = this.queryListeners[queryId];
-      // XXX due to an unknown race condition listeners can sometimes be undefined here.
-      // this prevents a crash but doesn't solve the root cause
-      // see: https://github.com/apollostack/apollo-client/issues/833
-      if (listeners && this.queryListenerInvalidated[queryId]) {
-        listeners.forEach((listener: QueryListener) => {
+    this.queries.forEach((info, id) => {
+      if (!info.invalidated || !info.listeners) return;
+      info.listeners
+        .filter((x: QueryListener) => !!x)
+        .forEach((listener: QueryListener) => {
           // it's possible for the listener to be undefined if the query is being stopped
           // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
-          if (listener) {
-            const queryStoreValue = this.queryStore.get(queryId);
-            listener(
-              queryStoreValue,
-              this.queryListenerInvalidatedNewData[queryId],
-            );
-          }
+          listener(this.queryStore.get(id), info.newData);
         });
-      }
     });
   }
 
@@ -1014,7 +976,8 @@ export class QueryManager {
       execute(this.deduplicator, request).subscribe({
         next: (result: ExecutionResult) => {
           // default the lastRequestId to 1
-          if (requestId >= (this.lastRequestId[queryId] || 1)) {
+          const { lastRequestId } = this.getQuery(queryId);
+          if (requestId >= (lastRequestId || 1)) {
             try {
               this.dataStore.markQueryResult(
                 result,
@@ -1034,11 +997,7 @@ export class QueryManager {
               fetchMoreForQueryId,
             );
 
-            this.queryListenerInvalidated[queryId] = true;
-
-            if (fetchMoreForQueryId) {
-              this.queryListenerInvalidated[fetchMoreForQueryId] = true;
-            }
+            this.invalidate(true, queryId, fetchMoreForQueryId);
 
             this.broadcastQueries();
           }
@@ -1102,9 +1061,10 @@ export class QueryManager {
       return;
     } else {
       return Promise.all(
-        refetchedQueries.map(queryId =>
-          this.observableQueries[queryId].observableQuery.refetch(),
-        ),
+        refetchedQueries
+          .map(id => this.getQuery(id).observableQuery)
+          .filter(x => !!x)
+          .map((x: ObservableQuery<any>) => x.refetch()),
       );
     }
   }
@@ -1113,5 +1073,27 @@ export class QueryManager {
     const requestId = this.idCounter;
     this.idCounter++;
     return requestId;
+  }
+
+  private getQuery(queryId: string) {
+    return this.queries.get(queryId) || { ...defaultQueryInfo };
+  }
+
+  private setQuery(queryId: string, updater: (prev: QueryInfo) => any) {
+    const prev = this.getQuery(queryId);
+    const newInfo = { ...prev, ...updater(prev) };
+    this.queries.set(queryId, newInfo);
+  }
+
+  private invalidate(
+    invalidated: boolean,
+    queryId: string,
+    fetchMoreForQueryId?: string,
+  ) {
+    this.setQuery(queryId, () => ({ invalidated }));
+
+    if (fetchMoreForQueryId) {
+      this.setQuery(fetchMoreForQueryId, () => ({ invalidated }));
+    }
   }
 }

@@ -8,7 +8,8 @@
     "test": "lerna run -- test",
     "prelint": "npm run lint-fix",
     "lint": "lerna run -- lint",
-    "lint-fix": "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+    "lint-fix":
+      "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "lint-staged": "lint-staged",
     "filesize": "lerna run -- filesize && bundlesize",
     "type-check": "lerna run -- type-check",

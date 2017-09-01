@@ -3122,11 +3122,9 @@ describe('QueryManager', () => {
       },
       result => {
         expect(result.data).toEqual(data);
-        expect(
-          (queryManager.dataStore.getCache() as InMemoryCache).getData()[
-            '$ROOT_QUERY.author'
-          ] as Object,
-        ).toEqual(data.author);
+        expect((queryManager.dataStore.getCache() as InMemoryCache).getData()[
+          '$ROOT_QUERY.author'
+        ] as Object).toEqual(data.author);
       },
     );
   });

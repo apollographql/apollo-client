@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Refactor query tracking internally to QueryManager
 - Remove internal typename usage in favor of cache transformers [BREAKING]
 - Introduce new ErrorPolicy to allow for errors from execution results to trigger observers
 - Support multiple results from the network layer (links)

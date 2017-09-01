@@ -97,6 +97,7 @@ export class MockLink extends ApolloLink {
 export class MockSubscriptionLink extends ApolloLink {
   // private observer: Observer<any>;
   private observer: any;
+  public onUnsubscribe: any = () => {};
 
   constructor() {
     super();
@@ -105,6 +106,9 @@ export class MockSubscriptionLink extends ApolloLink {
   public request() {
     return new Observable<FetchResult>(observer => {
       this.observer = observer;
+      return () => {
+        this.onUnsubscribe();
+      };
     });
   }
 

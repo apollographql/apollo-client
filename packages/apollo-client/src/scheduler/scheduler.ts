@@ -20,29 +20,34 @@ import { NetworkStatus } from '../core/networkStatus';
 
 export class QueryScheduler {
   // Map going from queryIds to query options that are in flight.
-  public inFlightQueries: { [queryId: string]: WatchQueryOptions };
+  public inFlightQueries: { [queryId: string]: WatchQueryOptions } = {};
 
   // Map going from query ids to the query options associated with those queries. Contains all of
   // the queries, both in flight and not in flight.
-  public registeredQueries: { [queryId: string]: WatchQueryOptions };
+  public registeredQueries: { [queryId: string]: WatchQueryOptions } = {};
 
   // Map going from polling interval with to the query ids that fire on that interval.
   // These query ids are associated with a set of options in the this.registeredQueries.
-  public intervalQueries: { [interval: number]: string[] };
+  public intervalQueries: { [interval: number]: string[] } = {};
 
   // We use this instance to actually fire queries (i.e. send them to the batching
   // mechanism).
   public queryManager: QueryManager;
 
   // Map going from polling interval widths to polling timers.
-  private pollingTimers: { [interval: number]: any };
+  private pollingTimers: { [interval: number]: any } = {};
 
-  constructor({ queryManager }: { queryManager: QueryManager }) {
+  private ssrMode: boolean = false;
+
+  constructor({
+    queryManager,
+    ssrMode,
+  }: {
+    queryManager: QueryManager;
+    ssrMode: boolean;
+  }) {
     this.queryManager = queryManager;
-    this.pollingTimers = {};
-    this.inFlightQueries = {};
-    this.registeredQueries = {};
-    this.intervalQueries = {};
+    this.ssrMode = ssrMode;
   }
 
   public checkInFlight(queryId: string) {
@@ -83,10 +88,8 @@ export class QueryScheduler {
       );
     }
 
-    if (this.queryManager.ssrMode) {
-      // Do not poll in SSR mode
-      return queryId;
-    }
+    // Do not poll in SSR mode
+    if (this.ssrMode) return queryId;
 
     this.registeredQueries[queryId] = options;
 

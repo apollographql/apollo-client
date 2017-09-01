@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-inmemory",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.1",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -21,7 +21,8 @@
   "homepage": "https://github.com/apollographql/apollo-client#readme",
   "scripts": {
     "coverage": "jest --coverage",
-    "coverage:upload": "bash <(curl -s https://codecov.io/bash) -cF apollo-cache-inmemory",
+    "coverage:upload":
+      "bash <(curl -s https://codecov.io/bash) -cF apollo-cache-inmemory",
     "test": "jest",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
@@ -29,14 +30,16 @@
     "watch": "tsc -w -p .",
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run build",
-    "build:browser": "browserify ./lib/index.js --i apollo-cache-core --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/index.js --i apollo-cache-core --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "dependencies": {
-    "apollo-utilities": "0.1.0",
-    "apollo-cache-core": "0.1.0",
-    "graphql-anywhere": "4.0.0"
+    "apollo-utilities": "0.2.0-alpha.1",
+    "apollo-cache-core": "0.2.0-alpha.1",
+    "graphql-anywhere": "4.0.0-alpha.1"
   },
   "devDependencies": {
     "@types/graphql": "~0.9.0",

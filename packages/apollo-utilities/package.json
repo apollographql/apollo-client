@@ -1,6 +1,6 @@
 {
   "name": "apollo-utilities",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.1",
   "description": "Utilities for working with GraphQL ASTs",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -22,15 +22,18 @@
   "scripts": {
     "test": "jest",
     "coverage": "jest --coverage",
-    "coverage:upload": "bash <(curl -s https://codecov.io/bash) -cF apollo-utilities",
+    "coverage:upload":
+      "bash <(curl -s https://codecov.io/bash) -cF apollo-utilities",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
     "watch": "tsc -w -p .",
     "clean": "rimraf lib/* && rimraf coverage/*",
     "prepublishOnly": "npm run clean && npm run build",
-    "build:browser": "browserify ./lib/index.js -o=./lib/bundle.js && npm run minify:browser",
-    "minify:browser": "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
+    "build:browser":
+      "browserify ./lib/index.js -o=./lib/bundle.js && npm run minify:browser",
+    "minify:browser":
+      "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {},

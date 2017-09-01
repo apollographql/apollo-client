@@ -4,7 +4,6 @@ node_js:
 
 install:
   - npm run bootstrap
-  - npm install -g coveralls
   - npm prune
 
 script:
@@ -13,7 +12,7 @@ script:
 
     # run coverage and file size checks
   - npm run coverage
-  # - npm run coverage:upload || true #ignore failures
+  - npm run coverage:upload || true #ignore failures
 
     # make sure files don't get too large
   - npm run filesize

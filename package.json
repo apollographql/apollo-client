@@ -14,7 +14,7 @@
     "filesize": "lerna run -- filesize && bundlesize",
     "type-check": "lerna run -- type-check",
     "coverage": "lerna run -- coverage",
-    "coverage:upload": "lerna run -- coverage:upload",
+    "coverage:upload": "codecov",
     "danger": "danger run --verbose"
   },
   "bundlesize": [
@@ -69,6 +69,7 @@
   "dependencies": {},
   "devDependencies": {
     "bundlesize": "0.14.1",
+    "codecov": "2.3.0",
     "danger": "1.2.0",
     "lerna": "2.1.2",
     "lint-staged": "4.0.4",

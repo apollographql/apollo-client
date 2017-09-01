@@ -167,14 +167,17 @@ export class QueryStore {
       .filter(queryId => {
         return observableQueryIds.indexOf(queryId) > -1;
       })
-      .reduce((res, key) => {
-        // XXX set loading to true so listeners don't trigger unless they want results with partial data
-        res[key] = {
-          ...this.store[key],
-          networkStatus: NetworkStatus.loading,
-        };
+      .reduce(
+        (res, key) => {
+          // XXX set loading to true so listeners don't trigger unless they want results with partial data
+          res[key] = {
+            ...this.store[key],
+            networkStatus: NetworkStatus.loading,
+          };
 
-        return res;
-      }, {} as { [queryId: string]: QueryStoreValue });
+          return res;
+        },
+        {} as { [queryId: string]: QueryStoreValue },
+      );
   }
 }

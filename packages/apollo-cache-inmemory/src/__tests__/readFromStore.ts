@@ -220,17 +220,13 @@ describe('reading from the store', () => {
     };
 
     const store = {
-      ROOT_QUERY: assign(
-        {},
-        assign({}, omit(result, 'nestedObj')),
-        {
-          nestedObj: {
-            type: 'id',
-            id: 'abcde',
-            generated: false,
-          },
-        } as StoreObject,
-      ),
+      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
+        nestedObj: {
+          type: 'id',
+          id: 'abcde',
+          generated: false,
+        },
+      } as StoreObject),
       abcde: result.nestedObj,
     } as NormalizedCache;
 

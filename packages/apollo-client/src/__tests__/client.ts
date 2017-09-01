@@ -70,13 +70,9 @@ describe('client', () => {
     });
 
     expect(() => {
-      client.query(
-        gql`
-          {
-            a
-          }
-        ` as any,
-      );
+      client.query(gql`{
+          a
+        }` as any);
     }).toThrowError(
       'query option is required. You must specify your GraphQL document in the query option.',
     );
@@ -92,15 +88,13 @@ describe('client', () => {
     });
 
     expect(() => {
-      client.mutate(
-        {
-          query: gql`
-            {
-              a
-            }
-          `,
-        } as any,
-      );
+      client.mutate({
+        query: gql`
+          {
+            a
+          }
+        `,
+      } as any);
     }).toThrowError(
       'mutation option is required. You must specify your GraphQL document in the mutation option.',
     );

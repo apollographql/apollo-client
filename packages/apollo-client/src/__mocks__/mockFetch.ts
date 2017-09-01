@@ -95,19 +95,21 @@ export class MockFetch {
 }
 
 function sortByKey(obj: any): Object {
-  return Object.keys(obj).sort().reduce(
-    (ret: any, key: string): Object =>
-      Object.assign(
-        {
-          [key]:
-            Object.prototype.toString.call(obj[key]).slice(8, -1) === 'Object'
-              ? sortByKey(obj[key])
-              : obj[key],
-        },
-        ret,
-      ),
-    {},
-  );
+  return Object.keys(obj)
+    .sort()
+    .reduce(
+      (ret: any, key: string): Object =>
+        Object.assign(
+          {
+            [key]:
+              Object.prototype.toString.call(obj[key]).slice(8, -1) === 'Object'
+                ? sortByKey(obj[key])
+                : obj[key],
+          },
+          ret,
+        ),
+      {},
+    );
 }
 
 export function createMockFetch(...mockedResponses: MockedFetchResponse[]) {

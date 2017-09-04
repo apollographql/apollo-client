@@ -45,7 +45,6 @@ export default class ApolloClient implements DataProxy {
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
   private ssrMode: boolean;
-  private subscriptionMap: Map<string, ZenObservable.Subscription>;
 
   /**
    * Constructs an instance of {@link ApolloClient}.

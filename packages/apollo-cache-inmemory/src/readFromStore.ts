@@ -80,10 +80,9 @@ const readStoreResolver: Resolver = (
       );
     }
 
-      context.hasMissingField = true;
+    context.hasMissingField = true;
 
-      return fieldValue;
-    }
+    return fieldValue;
   }
 
   // if this is an object scalar, it must be a json blob and we have to unescape it

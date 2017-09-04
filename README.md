@@ -30,7 +30,7 @@ To use this client in a web browser or mobile app, you'll need a build system ca
 
 ## Usage
 
-If you know you want to use the core `apollo-client` package you can get started by constructing an instance of the core class [`ApolloClient`][] with a network interface created by network interface you may call the [`createNetworkInterface`][] function like so:
+If you know you want to use the core `apollo-client` package you can get started by constructing an instance of the core class [`ApolloClient`][] with a network interface created by the [`createNetworkInterface`][] function like so:
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';

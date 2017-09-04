@@ -17,6 +17,14 @@
 - Introduce a new Cache API that makes it possible to plug in custom cache implementations into the client [PR 1921](https://github.com/apollographql/apollo-client/pull/1921)
 - Migrated the cache away from Redux in preparation for the generic store API [PR 1907](https://github.com/apollographql/apollo-client/pull/1907)
 
+### 1.9.2
+- Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)
+- Fix referential equality bug for queries with custom resolvers [PR #2053](https://github.com/apollographql/apollo-client/pull/2053)
+
+### 1.9.1
+- Add support for subscriptions with Apollo Link network stack [PR #1992](https://github.com/apollographql/apollo-client/pull/1992)
+- fixed `resolved` scoping issue for multiple queries in flight with Apollo Link [PR #2002](https://github.com/apollographql/apollo-client/pull/2002)
+
 ### 1.9.0
 - Move to `apollo-link-core` from `apollo-link` to reduce bundle size [PR #1955](https://github.com/apollographql/apollo-client/pull/1955)
 - Document ApolloClient.prototype.subscribe [PR #1932](https://github.com/apollographql/apollo-client/pull/1932)
@@ -30,6 +38,7 @@
 - added prettier to manage formatting of project [PR #1904](https://github.com/apollographql/apollo-client/pull/1904)
 - Replace use of `Object` with `Record<string, any>` in mutation types
 - Fix loss of referential equality for results returned by `currentResults()` before an ObservableQuery is setup [PR #1927](https://github.com/apollographql/apollo-client/pull/1927)
+- Fix networkInterface applying in constructor [PR #2014](https://github.com/apollographql/apollo-client/pull/2014)
 
 ### 1.9.0-0
 - Remove query tracking from the Redux store. Query status tracking is now handled outside of Redux in the QueryStore class. [PR #1859](https://github.com/apollographql/apollo-client/pull/1859)

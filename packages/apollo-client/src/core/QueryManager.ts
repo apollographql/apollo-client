@@ -670,7 +670,7 @@ export class QueryManager {
 
   public addQueryListener(queryId: string, listener: QueryListener) {
     this.setQuery(queryId, ({ listeners = [] }) => ({
-      listeners: [...listeners, listener],
+      listeners: listeners.concat([listener]),
       invalidate: false,
     }));
   }

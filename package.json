@@ -15,7 +15,10 @@
     "type-check": "lerna run -- type-check",
     "coverage": "lerna run -- coverage",
     "coverage:upload": "codecov",
-    "danger": "danger run --verbose"
+    "danger": "danger run --verbose",
+    "predeploy": "npm run build && npm test",
+    "deploy":
+      "lerna publish -m \"chore: Publish\" --independent --cd-version=prepatch --preid=alpha --npm-tag=alpha"
   },
   "bundlesize": [
     {

@@ -48,6 +48,7 @@ export interface QueryInfo {
   // these to keep track of queries that are inflight and error on the observers associated
   // with them in case of some destabalizing action (e.g. reset of the Apollo store).
   observableQuery: ObservableQuery<any> | null;
+  subscriptions: Subscription[];
   cancel?: (() => void);
 }
 
@@ -58,7 +59,14 @@ const defaultQueryInfo = {
   newData: null,
   lastRequestId: null,
   observableQuery: null,
+  subscriptions: [],
 };
+
+export interface QueryPromise {
+  promise: Promise<ApolloQueryResult<any>>;
+  resolve: (result: ApolloQueryResult<any>) => void;
+  reject: (error: Error) => void;
+}
 
 export class QueryManager {
   public scheduler: QueryScheduler;
@@ -72,21 +80,17 @@ export class QueryManager {
 
   private onBroadcast: () => void;
 
+  // let's not start at zero to avoid pain with bad checks
+  private idCounter = 1;
+
   // XXX merge with ObservableQuery but that needs to be expanded to support mutations and
   // subscriptions as well
   private queries: Map<string, QueryInfo> = new Map();
-  private idCounter = 1; // let's not start at zero to avoid pain with bad checks
 
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
   // destabalizing action occurs (e.g. reset of the Apollo store).
-  private fetchQueryPromises: {
-    [requestId: string]: {
-      promise: Promise<ApolloQueryResult<any>>;
-      resolve: (result: ApolloQueryResult<any>) => void;
-      reject: (error: Error) => void;
-    };
-  } = {};
+  private fetchQueryPromises: Map<string, QueryPromise> = new Map();
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
   // generally used to refetches for refetchQueries and to update mutation results through
@@ -104,7 +108,7 @@ export class QueryManager {
     queryDeduplication?: boolean;
     store: DataStore;
     onBroadcast?: () => void;
-    ssrMode: boolean;
+    ssrMode?: boolean;
   }) {
     this.link = link;
     this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
@@ -289,14 +293,18 @@ export class QueryManager {
 
     const requestId = this.generateRequestId();
 
+    // set up a watcher to listen to cache updates
+    const cancel = this.updateQueryWatch(queryId, query, options);
+
     // Initialize query in store with unique requestId
     this.setQuery(queryId, () => ({
       document: query,
       lastRequestId: requestId,
+      invalidated: true,
+      cancel,
     }));
 
-    // set up a watcher to listen to cache updates
-    this.updateQueryWatch(queryId, options);
+    this.invalidate(true, fetchMoreForQueryId);
 
     this.queryStore.initQuery({
       queryId,
@@ -309,9 +317,6 @@ export class QueryManager {
       metadata,
       fetchMoreForQueryId,
     });
-
-    // XXX can we batch query updates here?
-    this.invalidate(true, queryId, fetchMoreForQueryId);
 
     this.broadcastQueries();
 
@@ -670,11 +675,15 @@ export class QueryManager {
     }));
   }
 
-  public updateQueryWatch(queryId: string, options: WatchQueryOptions) {
-    let { cancel, document } = this.getQuery(queryId);
+  public updateQueryWatch(
+    queryId: string,
+    document: DocumentNode,
+    options: WatchQueryOptions,
+  ) {
+    const { cancel } = this.getQuery(queryId);
     if (cancel) cancel();
 
-    cancel = this.dataStore.getCache().watch({
+    return this.dataStore.getCache().watch({
       query: document as DocumentNode,
       variables: options.variables,
       optimistic: true,
@@ -694,8 +703,6 @@ export class QueryManager {
         this.setQuery(queryId, () => ({ invalidated: true, newData }));
       },
     });
-
-    this.setQuery(queryId, () => ({ cancel }));
   }
 
   // Adds a promise to this.fetchQueryPromises for a given request ID.
@@ -705,16 +712,16 @@ export class QueryManager {
     resolve: (result: ApolloQueryResult<T>) => void,
     reject: (error: Error) => void,
   ) {
-    this.fetchQueryPromises[requestId.toString()] = {
+    this.fetchQueryPromises.set(requestId.toString(), {
       promise,
       resolve,
       reject,
-    };
+    });
   }
 
   // Removes the promise in this.fetchQueryPromises for a particular request ID.
   public removeFetchQueryPromise(requestId: number) {
-    delete this.fetchQueryPromises[requestId.toString()];
+    this.fetchQueryPromises.delete(requestId.toString());
   }
 
   // Adds an ObservableQuery to this.observableQueries and to this.observableQueriesByName.
@@ -758,8 +765,7 @@ export class QueryManager {
     // in the data portion of the store. So, we cancel the promises and observers
     // that we have issued so far and not yet resolved (in the case of
     // queries).
-    Object.keys(this.fetchQueryPromises).forEach(key => {
-      const { reject } = this.fetchQueryPromises[key];
+    this.fetchQueryPromises.forEach(({ reject }) => {
       reject(new Error('Store reset while query was in flight.'));
     });
 
@@ -877,6 +883,9 @@ export class QueryManager {
   }
 
   public removeQuery(queryId: string) {
+    const { subscriptions } = this.getQuery(queryId);
+    // teardown all links
+    subscriptions.forEach(x => x.unsubscribe());
     this.queries.delete(queryId);
   }
 
@@ -975,11 +984,14 @@ export class QueryManager {
 
     request.context.forceFetch = !this.queryDeduplication;
 
+    // add the cache to the context to links can do things with it
+    request.context.cache = this.dataStore.getCache();
+
     let resultFromStore: any;
     let errorsFromStore: any;
     const retPromise = new Promise<ApolloQueryResult<T>>((resolve, reject) => {
       this.addFetchQueryPromise<T>(requestId, retPromise, resolve, reject);
-      execute(this.deduplicator, request).subscribe({
+      const subscription = execute(this.deduplicator, request).subscribe({
         next: (result: ExecutionResult) => {
           // default the lastRequestId to 1
           const { lastRequestId } = this.getQuery(queryId);
@@ -1038,10 +1050,18 @@ export class QueryManager {
           }
         },
         error: (error: ApolloError) => {
+          this.removeFetchQueryPromise(requestId);
+          this.setQuery(queryId, ({ subscriptions }) => ({
+            subscriptions: subscriptions.filter(x => x !== subscription),
+          }));
+
           reject(error);
         },
         complete: () => {
           this.removeFetchQueryPromise(requestId);
+          this.setQuery(queryId, ({ subscriptions }) => ({
+            subscriptions: subscriptions.filter(x => x !== subscription),
+          }));
           resolve({
             data: resultFromStore,
             errors: errorsFromStore,
@@ -1051,6 +1071,10 @@ export class QueryManager {
           });
         },
       });
+
+      this.setQuery(queryId, ({ subscriptions }) => ({
+        subscriptions: subscriptions.concat([subscription]),
+      }));
     });
 
     return retPromise;
@@ -1094,10 +1118,10 @@ export class QueryManager {
 
   private invalidate(
     invalidated: boolean,
-    queryId: string,
+    queryId?: string,
     fetchMoreForQueryId?: string,
   ) {
-    this.setQuery(queryId, () => ({ invalidated }));
+    if (queryId) this.setQuery(queryId, () => ({ invalidated }));
 
     if (fetchMoreForQueryId) {
       this.setQuery(fetchMoreForQueryId, () => ({ invalidated }));

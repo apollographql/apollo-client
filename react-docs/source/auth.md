@@ -139,7 +139,7 @@ const PROFILE_QUERY = gql`
 `;
 
 export default withApollo(graphql(PROFILE_QUERY, {
-  options: { forceFetch: true },
+  options: { fetchPolicy: 'network-only' },
   props: ({ data: { loading, currentUser } }) => ({
     loading, currentUser,
   }),

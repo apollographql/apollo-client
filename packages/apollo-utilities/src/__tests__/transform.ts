@@ -5,7 +5,10 @@ import { disableFragmentWarnings } from 'graphql-tag';
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
 
-import { addTypenameToDocument } from '../transform';
+import {
+  addTypenameToDocument,
+  removeConnectionDirectiveFromDocument,
+} from '../transform';
 import { getQueryDefinition } from '../getFromAST';
 
 describe('query transforms', () => {
@@ -37,6 +40,21 @@ describe('query transforms', () => {
     const expectedQueryStr = print(expectedQuery);
 
     expect(expectedQueryStr).toBe(print(newQueryDoc));
+  });
+  it('should memoize and return cached results', () => {
+    let testQuery = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+        }
+      }
+    `;
+    const newQueryDoc = addTypenameToDocument(testQuery);
+    const secondCall = addTypenameToDocument(testQuery);
+    expect(newQueryDoc).toBe(secondCall);
   });
 
   it('should not add duplicates', () => {
@@ -250,5 +268,47 @@ describe('query transforms', () => {
     `);
     const modifiedQuery = addTypenameToDocument(testQuery);
     expect(print(expectedQuery)).toBe(print(getQueryDefinition(modifiedQuery)));
+  });
+  it('should correctly remove connections', () => {
+    let testQuery = gql`
+      query {
+        author {
+          name @connection(key: "foo") {
+            firstName
+            lastName
+          }
+        }
+      }
+    `;
+    const newQueryDoc = removeConnectionDirectiveFromDocument(testQuery);
+
+    const expectedQuery = gql`
+      query {
+        author {
+          name {
+            firstName
+            lastName
+          }
+        }
+      }
+    `;
+    const expectedQueryStr = print(expectedQuery);
+
+    expect(expectedQueryStr).toBe(print(newQueryDoc));
+  });
+  it('should memoize and return cached results', () => {
+    let testQuery = gql`
+      query {
+        author {
+          name @connection(key: "foo") {
+            firstName
+            lastName
+          }
+        }
+      }
+    `;
+    const newQueryDoc = removeConnectionDirectiveFromDocument(testQuery);
+    const secondCall = removeConnectionDirectiveFromDocument(testQuery);
+    expect(newQueryDoc).toBe(secondCall);
   });
 });

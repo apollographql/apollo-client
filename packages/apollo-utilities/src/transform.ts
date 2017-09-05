@@ -97,8 +97,12 @@ function removeConnectionDirectiveFromSelectionSet(
   }
 }
 
+const added = new Map();
 export function addTypenameToDocument(doc: DocumentNode) {
   checkDocument(doc);
+  const cached = added.get(doc);
+  if (cached) return cached;
+
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
@@ -109,11 +113,15 @@ export function addTypenameToDocument(doc: DocumentNode) {
     );
   });
 
+  added.set(doc, docClone);
   return docClone;
 }
 
+const removed = new Map();
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   checkDocument(doc);
+  const cached = removed.get(doc);
+  if (cached) return cached;
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
@@ -122,5 +130,6 @@ export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
     );
   });
 
+  removed.set(doc, docClone);
   return docClone;
 }

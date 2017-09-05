@@ -231,6 +231,7 @@ export function writeSelectionSetToStore({
           store: { self: result },
           returnPartialData: false,
           hasMissingField: false,
+          customResolvers: {},
         };
         matches = context.fragmentMatcherFunction(
           idValue,

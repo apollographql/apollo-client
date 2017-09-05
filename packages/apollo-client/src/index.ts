@@ -20,4 +20,6 @@ export { ApolloError } from './errors/ApolloError';
 
 import ApolloClient from './ApolloClient';
 
+// export the client as both default and named
+export { ApolloClient };
 export default ApolloClient;

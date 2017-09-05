@@ -149,7 +149,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   public currentResult(): ApolloCurrentResult<T> {
     if (this.isTornDown) {
       return {
-        data: this.lastError ? {} : this.lastResult,
+        data: this.lastError ? {} : this.lastResult ? this.lastResult.data : {},
         error: this.lastError,
         loading: false,
         networkStatus: NetworkStatus.error,

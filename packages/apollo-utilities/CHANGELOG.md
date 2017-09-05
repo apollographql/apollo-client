@@ -1,3 +1,4 @@
+# Change log
 
-# 0.2.0-alpha.3
+### vNEXT
 - Improved performance of common store actions by memoizing addTypename and removeConnectionDirective

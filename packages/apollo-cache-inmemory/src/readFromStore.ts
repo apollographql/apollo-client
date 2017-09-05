@@ -70,6 +70,26 @@ const readStoreResolver: Resolver = (
   let fieldValue = (obj || {})[storeKeyName];
 
   if (typeof fieldValue === 'undefined') {
+    if (
+      context.customResolvers &&
+      obj &&
+      (obj.__typename || objId === 'ROOT_QUERY')
+    ) {
+      const typename = obj.__typename || 'Query';
+
+      // Look for the type in the custom resolver map
+      const type = context.customResolvers[typename];
+      if (type) {
+        // Look for the field in the custom resolver map
+        const resolver = type[fieldName];
+        if (resolver) {
+          fieldValue = resolver(obj, args);
+        }
+      }
+    }
+  }
+
+  if (typeof fieldValue === 'undefined') {
     if (!context.returnPartialData) {
       throw new Error(
         `Can't find field ${storeKeyName} on object (${objId}) ${JSON.stringify(
@@ -141,6 +161,7 @@ export function diffQueryAgainstStore<T>({
     // Global settings
     store,
     returnPartialData,
+    customResolvers: (config && config.customResolvers) || {},
     // Flag set during execution
     hasMissingField: false,
   };

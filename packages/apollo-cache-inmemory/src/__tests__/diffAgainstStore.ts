@@ -1,4 +1,5 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
+import { toIdValue } from 'apollo-utilities';
 
 import { diffQueryAgainstStore, ID_KEY } from '../readFromStore';
 import { writeQueryToStore } from '../writeToStore';
@@ -822,6 +823,66 @@ describe('diffing queries against the store', () => {
       expect(result.a).toEqual(previousResult.a);
       expect(result.d).not.toEqual(previousResult.d);
       expect(result.d.f).toEqual(previousResult.d.f);
+    });
+    it('will preserve equality with custom resolvers', () => {
+      const listQuery = gql`
+        {
+          people {
+            id
+            name
+            __typename
+          }
+        }
+      `;
+
+      const listResult = {
+        people: [
+          {
+            id: '4',
+            name: 'Luke Skywalker',
+            __typename: 'Person',
+          },
+        ],
+      };
+
+      const itemQuery = gql`
+        {
+          person(id: 4) {
+            id
+            name
+            __typename
+          }
+        }
+      `;
+
+      const dataIdFromObject = (obj: any) => obj.id;
+
+      const store = writeQueryToStore({
+        query: listQuery,
+        result: listResult,
+        dataIdFromObject,
+      });
+
+      const previousResult = {
+        person: listResult.people[0],
+      };
+
+      const customResolvers = {
+        Query: {
+          person: (_: any, args: any) => toIdValue(args['id']),
+        },
+      };
+
+      const config = { dataIdFromObject, customResolvers };
+
+      const { result } = diffQueryAgainstStore({
+        store,
+        query: itemQuery,
+        previousResult,
+        config,
+      });
+
+      expect(result).toEqual(previousResult);
     });
   });
 });

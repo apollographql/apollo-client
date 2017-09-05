@@ -42,12 +42,14 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   fragmentMatcher?: FragmentMatcher;
   addTypename?: boolean;
+  customResolvers?: CustomResolverMap;
 };
 
 export type ReadStoreContext = {
   store: NormalizedCache;
   returnPartialData: boolean;
   hasMissingField: boolean;
+  customResolvers: CustomResolverMap;
 };
 
 export interface FragmentMatcherInterface {
@@ -90,5 +92,16 @@ export type IntrospectionResultData = {
         }[];
       }
     ];
+  };
+};
+
+export type CustomResolver = (
+  rootValue: any,
+  args: { [argName: string]: any },
+) => any;
+
+export type CustomResolverMap = {
+  [typeName: string]: {
+    [fieldName: string]: CustomResolver;
   };
 };

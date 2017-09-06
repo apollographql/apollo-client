@@ -469,7 +469,7 @@ export default class ApolloClient implements DataProxy {
    * the store. This method will start at the root query. To start at a a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
    */
-  public writeQuery(options: DataProxyWriteQueryOptions): void {
+  public writeQuery<T>(options: DataProxyWriteQueryOptions<T>): void {
     return this.initProxy().writeQuery(options);
   }
 
@@ -484,7 +484,7 @@ export default class ApolloClient implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public writeFragment(options: DataProxyWriteFragmentOptions): void {
+  public writeFragment<T>(options: DataProxyWriteFragmentOptions<T>): void {
     return this.initProxy().writeFragment(options);
   }
 

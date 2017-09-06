@@ -56,11 +56,11 @@ export interface DataProxyReadFragmentOptions {
   variables?: Object;
 }
 
-export interface DataProxyWriteQueryOptions {
+export interface DataProxyWriteQueryOptions<QueryType = any> {
   /**
    * The data you will be writing to the store.
    */
-  data: any;
+  data: QueryType;
 
   /**
    * The GraphQL query shape to be used constructed using the `gql` template
@@ -75,11 +75,11 @@ export interface DataProxyWriteQueryOptions {
   variables?: Object;
 }
 
-export interface DataProxyWriteFragmentOptions {
+export interface DataProxyWriteFragmentOptions<FragmentType = any> {
   /**
    * The data you will be writing to the store.
    */
-  data: any;
+  data: FragmentType;
 
   /**
    * The root id to be used. This id should take the same form as the  value
@@ -132,14 +132,16 @@ export interface DataProxy {
   /**
    * Writes a GraphQL query to the root query id.
    */
-  writeQuery(options: DataProxyWriteQueryOptions): void;
+  writeQuery<QueryType>(options: DataProxyWriteQueryOptions<QueryType>): void;
 
   /**
    * Writes a GraphQL fragment to any arbitrary id. If there are more then
    * one fragments in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  writeFragment(options: DataProxyWriteFragmentOptions): void;
+  writeFragment<FragmentType>(
+    options: DataProxyWriteFragmentOptions<FragmentType>,
+  ): void;
 }
 
 /**

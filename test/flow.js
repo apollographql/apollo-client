@@ -18,7 +18,8 @@ import type {
     Request,
     HTTPNetworkInterface,
     Store as ApolloState,
-    ApolloAction
+    ApolloAction,
+    PureQueryOptions
 } from "../src";
 import {combineReducers, createStore, applyMiddleware} from 'redux';
 import type {Store as ReduxStore} from 'redux';
@@ -140,4 +141,14 @@ new ApolloClient({
             credentials: 'same-origin',
         }
     }),
+});
+
+client5.mutate({
+    mutation,
+    refetchQueries: ([{query}]: Array<PureQueryOptions>)
+});
+
+client.mutate({
+    mutation,
+    refetchQueries: (['{ foo }']: Array<string>)
 });

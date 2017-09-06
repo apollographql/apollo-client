@@ -1561,6 +1561,32 @@ describe('writing to the store', () => {
 
       expect(newStore['ROOT_QUERY']).toEqual({ todos: null });
     });
+    it('should not warn if a field is defered', () => {
+      let originalWarn = console.warn;
+      console.warn = jest.fn((...args) => {});
+      const defered = gql`
+        query LazyLoad {
+          id
+          expensive @defer
+        }
+      `;
+      const result: any = {
+        id: 1,
+      };
+
+      const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
+      const newStore = writeResultToStore({
+        dataId: 'ROOT_QUERY',
+        result,
+        document: defered,
+        dataIdFromObject: getIdField,
+        fragmentMatcherFunction,
+      });
+
+      expect(newStore['ROOT_QUERY']).toEqual({ id: 1 });
+      expect(console.warn).not.toBeCalled();
+      console.warn = originalWarn;
+    });
   });
 
   it('throws when trying to write an object without id that was previously queried with id', () => {

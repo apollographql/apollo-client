@@ -878,8 +878,8 @@ export class QueryManager {
   }
 
   public stopQuery(queryId: string) {
-    this.stopQueryInStore(queryId);
     this.removeQuery(queryId);
+    this.stopQueryInStore(queryId);
   }
 
   public removeQuery(queryId: string) {

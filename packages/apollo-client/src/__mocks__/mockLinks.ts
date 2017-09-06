@@ -106,8 +106,10 @@ export class MockSubscriptionLink extends ApolloLink {
   public request() {
     return new Observable<FetchResult>(observer => {
       this.observer = observer;
-      return () => {
-        this.unsubscribers.forEach(x => x());
+      return {
+        unsubscribe: () => {
+          this.unsubscribers.forEach(x => x());
+        },
       };
     });
   }

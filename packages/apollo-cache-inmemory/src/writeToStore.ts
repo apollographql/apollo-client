@@ -190,7 +190,14 @@ export function writeSelectionSetToStore({
             context,
           });
         } else {
-          if (context.fragmentMatcherFunction) {
+          // if this is a defered field we don't need to throw / wanr
+          const isDefered =
+            selection.directives.length &&
+            selection.directives.some(
+              directive => directive.name && directive.name.value === 'defer',
+            );
+
+          if (!isDefered && context.fragmentMatcherFunction) {
             // XXX We'd like to throw an error, but for backwards compatibility's sake
             // we just print a warning for the time being.
             //throw new WriteError(`Missing field ${resultFieldKey} in ${JSON.stringify(result, null, 2).substring(0, 100)}`);

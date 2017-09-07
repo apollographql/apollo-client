@@ -129,6 +129,6 @@
     "webpack-bundle-analyzer": "2.9.0"
   },
   "optionalDependencies": {
-    "@types/graphql": "0.10.2"
+    "@types/graphql": "0.11.1"
   }
 }

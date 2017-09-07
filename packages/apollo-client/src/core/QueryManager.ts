@@ -111,7 +111,8 @@ export class QueryManager {
     ssrMode?: boolean;
   }) {
     this.link = link;
-    this.deduplicator = ApolloLink.from([new Deduplicator(), link]);
+    // XXX typescript if erroring for dedup link for some reason?
+    this.deduplicator = ApolloLink.from([new Deduplicator() as any, link]);
     this.queryDeduplication = queryDeduplication;
     this.dataStore = store;
     this.onBroadcast = onBroadcast;

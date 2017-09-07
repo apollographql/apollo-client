@@ -50,7 +50,7 @@
   "license": "MIT",
   "dependencies": {
     "apollo-cache-core": "^0.2.0-alpha.3",
-    "apollo-link-core": "^0.5.0",
+    "apollo-link-core": "^0.5.2",
     "apollo-link-dedup": "^0.3.2",
     "apollo-utilities": "^0.2.0-alpha.3",
     "graphql": "^0.10.0",

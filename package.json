@@ -83,7 +83,7 @@
   "devDependencies": {
     "@types/benchmark": "1.0.30",
     "@types/chai": "4.0.4",
-    "@types/chai-as-promised": "0.0.31",
+    "@types/chai-as-promised": "7.1.0",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/lodash": "4.14.74",
     "@types/mocha": "2.2.42",

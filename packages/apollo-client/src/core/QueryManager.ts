@@ -17,6 +17,7 @@ import {
   getQueryDefinition,
   isProduction,
   maybeDeepFreeze,
+  hasDirectives,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -288,8 +289,11 @@ export class QueryManager {
       storeResult = result;
     }
 
-    const shouldFetch =
+    let shouldFetch =
       needToFetch && fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby';
+
+    // we need to check to see if this is an operation that uses the @live directive
+    if (hasDirectives(['live'], query)) shouldFetch = true;
 
     const requestId = this.generateRequestId();
 

@@ -98,6 +98,7 @@ export class MockSubscriptionLink extends ApolloLink {
   // private observer: Observer<any>;
   private observer: any;
   public unsubscribers: any[] = [];
+  public setups: any[] = [];
 
   constructor() {
     super();
@@ -105,6 +106,7 @@ export class MockSubscriptionLink extends ApolloLink {
 
   public request() {
     return new Observable<FetchResult>(observer => {
+      this.setups.forEach(x => x());
       this.observer = observer;
       return {
         unsubscribe: () => {
@@ -121,6 +123,10 @@ export class MockSubscriptionLink extends ApolloLink {
       if (result.result && observer.next) observer.next(result.result);
       if (result.error && observer.error) observer.error(result.error);
     }, result.delay || 0);
+  }
+
+  public onSetup(listener): void {
+    this.setups = this.setups.concat([listener]);
   }
 
   public onUnsubscribe(listener): void {

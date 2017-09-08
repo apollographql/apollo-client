@@ -4,6 +4,7 @@ import {
   DefinitionNode,
   OperationDefinitionNode,
   FieldNode,
+  DirectiveNode,
 } from 'graphql';
 
 import { cloneDeep } from './util/cloneDeep';
@@ -54,47 +55,58 @@ function addTypenameToSelectionSet(
   }
 }
 
-function removeConnectionDirectiveFromSelectionSet(
+export type RemoveDirectiveConfig = {
+  name?: string;
+  test?: (directive: DirectiveNode) => boolean;
+};
+
+function removeDirectivesFromSelectionSet(
+  directives: RemoveDirectiveConfig[],
   selectionSet: SelectionSetNode,
-) {
-  if (selectionSet.selections) {
-    selectionSet.selections.forEach(selection => {
-      if (
-        selection.kind === 'Field' &&
-        (selection as FieldNode) &&
-        selection.directives
-      ) {
-        selection.directives = selection.directives.filter(directive => {
-          const willRemove = directive.name.value === 'connection';
-          if (willRemove) {
-            if (
-              !directive.arguments ||
-              !directive.arguments.some(arg => arg.name.value === 'key')
-            ) {
-              console.warn(
-                'Removing an @connection directive even though it does not have a key. ' +
-                  'You may want to use the key parameter to specify a store key.',
-              );
-            }
-          }
+): SelectionSetNode {
+  if (!selectionSet.selections) return selectionSet;
+  selectionSet.selections.forEach(selection => {
+    if (
+      selection.kind !== 'Field' ||
+      !(selection as FieldNode) ||
+      !selection.directives
+    )
+      return;
+    selection.directives = selection.directives.filter(
+      directive =>
+        !directives.some((dir: RemoveDirectiveConfig) => {
+          if (dir.name && dir.name === directive.name.value) return true;
+          if (dir.test && dir.test(directive)) return true;
+          return false;
+        }),
+    );
+  });
 
-          return !willRemove;
-        });
-      }
-    });
+  selectionSet.selections.forEach(selection => {
+    if (
+      (selection.kind === 'Field' || selection.kind === 'InlineFragment') &&
+      selection.selectionSet
+    ) {
+      removeDirectivesFromSelectionSet(directives, selection.selectionSet);
+    }
+  });
+  return selectionSet;
+}
 
-    selectionSet.selections.forEach(selection => {
-      if (selection.kind === 'Field') {
-        if (selection.selectionSet) {
-          removeConnectionDirectiveFromSelectionSet(selection.selectionSet);
-        }
-      } else if (selection.kind === 'InlineFragment') {
-        if (selection.selectionSet) {
-          removeConnectionDirectiveFromSelectionSet(selection.selectionSet);
-        }
-      }
-    });
-  }
+export function removeDirectivesFromDocument(
+  directives: RemoveDirectiveConfig[],
+  doc: DocumentNode,
+): DocumentNode {
+  const docClone = cloneDeep(doc);
+
+  docClone.definitions.forEach((definition: DefinitionNode) => {
+    removeDirectivesFromSelectionSet(
+      directives,
+      (definition as OperationDefinitionNode).selectionSet,
+    );
+  });
+
+  return docClone;
 }
 
 const added = new Map();
@@ -117,19 +129,30 @@ export function addTypenameToDocument(doc: DocumentNode) {
   return docClone;
 }
 
+const connectionRemoveConfig = {
+  test: (directive: DirectiveNode) => {
+    const willRemove = directive.name.value === 'connection';
+    if (willRemove) {
+      if (
+        !directive.arguments ||
+        !directive.arguments.some(arg => arg.name.value === 'key')
+      ) {
+        console.warn(
+          'Removing an @connection directive even though it does not have a key. ' +
+            'You may want to use the key parameter to specify a store key.',
+        );
+      }
+    }
+
+    return willRemove;
+  },
+};
 const removed = new Map();
 export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
   checkDocument(doc);
   const cached = removed.get(doc);
   if (cached) return cached;
-  const docClone = cloneDeep(doc);
-
-  docClone.definitions.forEach((definition: DefinitionNode) => {
-    removeConnectionDirectiveFromSelectionSet(
-      (definition as OperationDefinitionNode).selectionSet,
-    );
-  });
-
+  const docClone = removeDirectivesFromDocument([connectionRemoveConfig], doc);
   removed.set(doc, docClone);
   return docClone;
 }

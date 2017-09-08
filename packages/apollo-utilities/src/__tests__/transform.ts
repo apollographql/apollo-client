@@ -44,7 +44,7 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument([{ test }], query);
     expect(print(doc)).toBe(print(expected));
   });
-  fit('should remove only the wanted directive', () => {
+  it('should remove only the wanted directive', () => {
     const query = gql`
       query Simple {
         maybe @skip(if: false)
@@ -109,7 +109,7 @@ describe('removeDirectivesFromDocument', () => {
 
     const expected = gql`
       query Simple {
-        maybe
+        maybe @skip(if: false)
         field
         other: field
       }

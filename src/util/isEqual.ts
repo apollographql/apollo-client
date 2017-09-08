@@ -6,6 +6,10 @@ export function isEqual(a: any, b: any): boolean {
   if (a === b) {
     return true;
   }
+  // Dates are equivalent if their difference is zero.
+  if (a instanceof Date && b instanceof Date) {
+    return a - b === 0;
+  }
   // If a and b are both objects, we will compare their properties. This will compare arrays as
   // well.
   if (

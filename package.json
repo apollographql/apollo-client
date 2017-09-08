@@ -44,7 +44,7 @@
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "threshold": "4.2 Kb"
+      "threshold": "4.3 Kb"
     },
     {
       "name": "graphql-anywhere",

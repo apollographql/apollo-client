@@ -6,7 +6,11 @@ import {
 } from 'graphql';
 import { assign } from './util/assign';
 
-import { valueToObjectRepresentation } from './storeUtils';
+import {
+  valueToObjectRepresentation,
+  JsonValue,
+  valueFromNode,
+} from './storeUtils';
 
 export function getMutationDefinition(
   doc: DocumentNode,
@@ -33,30 +37,41 @@ export function checkDocument(doc: DocumentNode) {
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`);
   }
 
-  let foundOperation = false;
-
-  doc.definitions.forEach(definition => {
-    switch (definition.kind) {
-      // If this is a fragment that’s fine.
-      case 'FragmentDefinition':
-        break;
-      // We can only find one operation, so the first time nothing happens. The second time we
-      // encounter an operation definition we throw an error.
-      case 'OperationDefinition':
-        if (foundOperation) {
-          throw new Error(
-            'Queries must have exactly one operation definition.',
-          );
-        }
-        foundOperation = true;
-        break;
-      // If this is any other operation kind, throw an error.
-      default:
+  const operations = doc.definitions
+    .filter(d => d.kind !== 'FragmentDefinition')
+    .map(definition => {
+      if (definition.kind !== 'OperationDefinition') {
         throw new Error(
           `Schema type definitions not allowed in queries. Found: "${definition.kind}"`,
         );
-    }
-  });
+      }
+      return definition;
+    });
+
+  if (operations.length > 1) {
+    throw new Error(
+      `Ambiguous GraphQL document: contains ${operations.length} operations`,
+    );
+  }
+}
+
+export function getOperationDefinition(
+  doc: DocumentNode,
+): OperationDefinitionNode | undefined {
+  checkDocument(doc);
+  return doc.definitions.filter(
+    definition => definition.kind === 'OperationDefinition',
+  )[0] as OperationDefinitionNode;
+}
+
+export function getOperationDefinitionOrDie(
+  document: DocumentNode,
+): OperationDefinitionNode {
+  const def = getOperationDefinition(document);
+  if (!def) {
+    throw new Error(`GraphQL document is missing an operation`);
+  }
+  return def;
 }
 
 export function getOperationName(doc: DocumentNode): string | null {
@@ -80,33 +95,13 @@ export function getFragmentDefinitions(
 }
 
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
-  checkDocument(doc);
+  const queryDef = getOperationDefinition(doc) as OperationDefinitionNode;
 
-  let queryDef: OperationDefinitionNode | null = doc.definitions.filter(
-    definition =>
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'query',
-  )[0] as OperationDefinitionNode;
-
-  if (!queryDef) {
+  if (!queryDef || queryDef.operation !== 'query') {
     throw new Error('Must contain a query definition.');
   }
 
   return queryDef;
-}
-
-export function getOperationDefinition(
-  doc: DocumentNode,
-): OperationDefinitionNode {
-  checkDocument(doc);
-
-  let opDef: OperationDefinitionNode | null = doc.definitions.filter(
-    definition => definition.kind === 'OperationDefinition',
-  )[0] as OperationDefinitionNode;
-  if (!opDef) {
-    throw new Error('Must contain a query definition.');
-  }
-  return opDef;
 }
 
 export function getFragmentDefinition(
@@ -191,12 +186,12 @@ export function createFragmentMap(
 
 export function getDefaultValues(
   definition: OperationDefinitionNode,
-): { [key: string]: any } {
+): { [key: string]: JsonValue } {
   if (definition.variableDefinitions && definition.variableDefinitions.length) {
     const defaultValues = definition.variableDefinitions
       .filter(({ defaultValue }) => defaultValue)
-      .map(({ variable, defaultValue }): { [key: string]: any } => {
-        const defaultValueObj: { [key: string]: any } = {};
+      .map(({ variable, defaultValue }): { [key: string]: JsonValue } => {
+        const defaultValueObj: { [key: string]: JsonValue } = {};
         valueToObjectRepresentation(
           defaultValueObj,
           variable.name,
@@ -210,4 +205,20 @@ export function getDefaultValues(
   }
 
   return {};
+}
+
+/**
+ * Returns the names of all variables declared by the operation.
+ */
+export function variablesInOperation(
+  operation: OperationDefinitionNode,
+): Set<string> {
+  const names = new Set<string>();
+  if (operation.variableDefinitions) {
+    for (const definition of operation.variableDefinitions) {
+      names.add(definition.variable.name.value);
+    }
+  }
+
+  return names;
 }

@@ -257,3 +257,39 @@ export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
     (jsonObject as IdValue | JsonValue).type === 'json'
   );
 }
+
+function _defaultValueFromVariable(node: VariableNode) {
+  throw new Error(`Variable nodes are not supported by valueFromNode`);
+}
+
+export type VariableValue = (node: VariableNode) => any;
+
+/**
+ * Evaluate a ValueNode and yield its value in its natural JS form.
+ */
+export function valueFromNode(
+  node: ValueNode,
+  onVariable: VariableValue = _defaultValueFromVariable,
+): any {
+  switch (node.kind) {
+    case 'Variable':
+      return onVariable(node);
+    case 'NullValue':
+      return null;
+    case 'IntValue':
+      return parseInt(node.value);
+    case 'FloatValue':
+      return parseFloat(node.value);
+    case 'ListValue':
+      return node.values.map(v => valueFromNode(v, onVariable));
+    case 'ObjectValue': {
+      const value = {};
+      for (const field of node.fields) {
+        value[field.name.value] = valueFromNode(field.value, onVariable);
+      }
+      return value;
+    }
+    default:
+      return node.value;
+  }
+}

@@ -8,7 +8,7 @@ export function isEqual(a: any, b: any): boolean {
   }
   // Dates are equivalent if their difference is zero.
   if (a instanceof Date && b instanceof Date) {
-    return a.getTime() - b.getTime() === 0;
+    return a.getTime() === b.getTime();
   }
   // If a and b are both objects, we will compare their properties. This will compare arrays as
   // well.

@@ -7,9 +7,123 @@ disableFragmentWarnings();
 
 import {
   addTypenameToDocument,
+  removeDirectivesFromDocument,
   removeConnectionDirectiveFromDocument,
 } from '../transform';
 import { getQueryDefinition } from '../getFromAST';
+
+describe('removeDirectivesFromDocument', () => {
+  it('should remove a simple directive', () => {
+    const query = gql`
+      query Simple {
+        field @storage(if: true)
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        field
+      }
+    `;
+    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+  it('should remove a simple directive [test function]', () => {
+    const query = gql`
+      query Simple {
+        field @storage(if: true)
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        field
+      }
+    `;
+    const test = ({ name: { value } }) => value === 'storage';
+    const doc = removeDirectivesFromDocument([{ test }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+  fit('should remove only the wanted directive', () => {
+    const query = gql`
+      query Simple {
+        maybe @skip(if: false)
+        field @storage(if: true)
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        maybe @skip(if: false)
+        field
+      }
+    `;
+    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it('should remove only the wanted directive [test function]', () => {
+    const query = gql`
+      query Simple {
+        maybe @skip(if: false)
+        field @storage(if: true)
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        maybe @skip(if: false)
+        field
+      }
+    `;
+    const test = ({ name: { value } }) => value === 'storage';
+    const doc = removeDirectivesFromDocument([{ test }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it('should remove multiple directives in the query', () => {
+    const query = gql`
+      query Simple {
+        field @storage(if: true)
+        other: field @storage
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        field
+        other: field
+      }
+    `;
+    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+  it('should remove multiple directives of different kinds in the query', () => {
+    const query = gql`
+      query Simple {
+        maybe @skip(if: false)
+        field @storage(if: true)
+        other: field @client
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        maybe
+        field
+        other: field
+      }
+    `;
+    const removed = [
+      { name: 'storage' },
+      {
+        test: directive => directive.name.value === 'client',
+      },
+    ];
+    const doc = removeDirectivesFromDocument(removed, query);
+    expect(print(doc)).toBe(print(expected));
+  });
+});
 
 describe('query transforms', () => {
   it('should correctly add typenames', () => {

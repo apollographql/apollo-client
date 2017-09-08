@@ -6,7 +6,7 @@ export function isEqual(a: any, b: any): boolean {
   if (a === b) {
     return true;
   }
-  // Dates are equivalent if their difference is zero.
+  // Dates are equivalent if their time values are equal.
   if (a instanceof Date && b instanceof Date) {
     return a.getTime() === b.getTime();
   }

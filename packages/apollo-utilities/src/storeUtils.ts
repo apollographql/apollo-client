@@ -258,7 +258,7 @@ export function isJsonValue(jsonObject: StoreValue): jsonObject is JsonValue {
   );
 }
 
-function _defaultValueFromVariable(node: VariableNode) {
+function defaultValueFromVariable(node: VariableNode) {
   throw new Error(`Variable nodes are not supported by valueFromNode`);
 }
 
@@ -269,7 +269,7 @@ export type VariableValue = (node: VariableNode) => any;
  */
 export function valueFromNode(
   node: ValueNode,
-  onVariable: VariableValue = _defaultValueFromVariable,
+  onVariable: VariableValue = defaultValueFromVariable,
 ): any {
   switch (node.kind) {
     case 'Variable':
@@ -283,7 +283,7 @@ export function valueFromNode(
     case 'ListValue':
       return node.values.map(v => valueFromNode(v, onVariable));
     case 'ObjectValue': {
-      const value = {};
+      const value: { [key: string]: any } = {};
       for (const field of node.fields) {
         value[field.name.value] = valueFromNode(field.value, onVariable);
       }

@@ -6,11 +6,7 @@ import {
 } from 'graphql';
 import { assign } from './util/assign';
 
-import {
-  valueToObjectRepresentation,
-  JsonValue,
-  valueFromNode,
-} from './storeUtils';
+import { valueToObjectRepresentation, JsonValue } from './storeUtils';
 
 export function getMutationDefinition(
   doc: DocumentNode,

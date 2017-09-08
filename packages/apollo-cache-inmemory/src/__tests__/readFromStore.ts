@@ -82,7 +82,7 @@ describe('reading from the store', () => {
           }
         `,
       });
-    }).toThrowError(/exactly one/);
+    }).toThrowError(/2 operations/);
 
     expect(() => {
       readQueryFromStore({

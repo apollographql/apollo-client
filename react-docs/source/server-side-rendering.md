@@ -176,7 +176,7 @@ export default routes;
 
 ```
 
-You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/ui/server.js) for a complete working example with React Router v3, which has a slightly different API.
+You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollographql/GitHunt-React/blob/master/ui/server.js) for a complete working example.
 
 Next we'll see what that rendering code actually does.
 

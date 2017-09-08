@@ -106,7 +106,7 @@ mutate({
         }
       }
     `,
-    variables: { repoFullName: 'apollographql/apollo-client' },
+    variables: { repoName: 'apollographql/apollo-client' },
   }],
 })
 ```

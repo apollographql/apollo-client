@@ -181,9 +181,13 @@ export function createFragmentMap(
 }
 
 export function getDefaultValues(
-  definition: OperationDefinitionNode,
+  definition: OperationDefinitionNode | undefined,
 ): { [key: string]: JsonValue } {
-  if (definition.variableDefinitions && definition.variableDefinitions.length) {
+  if (
+    definition &&
+    definition.variableDefinitions &&
+    definition.variableDefinitions.length
+  ) {
     const defaultValues = definition.variableDefinitions
       .filter(({ defaultValue }) => defaultValue)
       .map(({ variable, defaultValue }): { [key: string]: JsonValue } => {

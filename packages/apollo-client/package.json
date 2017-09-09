@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "2.0.0-alpha.7",
+  "version": "2.0.0-alpha.8",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/index.js",
@@ -49,7 +49,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "apollo-cache-core": "^0.2.0-alpha.6",
+    "apollo-cache-core": "^0.2.0-alpha.7",
     "apollo-link-core": "^0.5.4",
     "apollo-link-dedup": "^0.3.4",
     "apollo-utilities": "^0.2.0-alpha.6",
@@ -63,7 +63,7 @@
     "@types/jest": "^20.0.7",
     "@types/lodash": "4.14.71",
     "@types/node": "8.0.19",
-    "apollo-cache-inmemory": "^0.2.0-alpha.6",
+    "apollo-cache-inmemory": "^0.2.0-alpha.7",
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
     "bundlesize": "0.13.2",

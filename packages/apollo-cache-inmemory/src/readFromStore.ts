@@ -10,7 +10,7 @@ import {
   isIdValue,
   getStoreKeyName,
 } from 'apollo-utilities';
-import { DiffResult } from 'apollo-cache-core';
+import { Cache } from 'apollo-cache-core';
 
 import {
   ReadQueryOptions,
@@ -46,7 +46,7 @@ export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
  */
 export function readQueryFromStore<QueryType>(
   options: ReadQueryOptions,
-): DiffResult<QueryType> {
+): Cache.DiffResult<QueryType> {
   const optsPatch = { returnPartialData: false };
 
   return diffQueryAgainstStore({
@@ -151,7 +151,7 @@ export function diffQueryAgainstStore<T>({
   rootId = 'ROOT_QUERY',
   fragmentMatcherFunction,
   config,
-}: DiffQueryAgainstStoreOptions): DiffResult<T> {
+}: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
   // Throw the right validation error by trying to find a query in the document
   const queryDefinition = getQueryDefinition(query);
 

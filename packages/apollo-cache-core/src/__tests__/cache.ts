@@ -1,4 +1,4 @@
-import { Cache } from '../cache';
+import { ApolloCache as Cache } from '../cache';
 
 class TestCache extends Cache {}
 

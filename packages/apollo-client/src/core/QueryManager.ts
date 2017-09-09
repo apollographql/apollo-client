@@ -7,7 +7,7 @@ import {
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
 import Deduplicator from 'apollo-link-dedup';
-import { DiffResult } from 'apollo-cache-core';
+import { Cache } from 'apollo-cache-core';
 import {
   assign,
   getDefaultValues,
@@ -385,7 +385,10 @@ export class QueryManager {
     observer: Observer<ApolloQueryResult<T>>,
   ): QueryListener {
     let previouslyHadError: boolean = false;
-    return (queryStoreValue: QueryStoreValue, newData?: DiffResult<T>) => {
+    return (
+      queryStoreValue: QueryStoreValue,
+      newData?: Cache.DiffResult<T>,
+    ) => {
       // we're going to take a look at the data, so the query is no longer invalidated
       this.invalidate(false, queryId);
 
@@ -494,7 +497,7 @@ export class QueryManager {
                 });
 
                 data = readResult.result;
-                isMissing = readResult.isMissing;
+                isMissing = !!readResult.isMissing;
               }
             }
 

@@ -1,15 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import {
-  Cache,
-  CacheWrite,
-  DataProxyReadFragmentOptions,
-  DataProxyReadQueryOptions,
-  DataProxyWriteQueryOptions,
-  DataProxyWriteFragmentOptions,
-  QueryWatch,
-  DiffResult,
-} from 'apollo-cache-core';
+import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache-core';
 
 import {
   getFragmentQueryDocument,
@@ -43,11 +34,11 @@ export function defaultDataIdFromObject(result: any): string | null {
   return null;
 }
 
-export class InMemoryCache extends Cache {
+export class InMemoryCache extends ApolloCache {
   private data: NormalizedCache;
   private config: ApolloReducerConfig;
   private optimistic: OptimisticStoreItem[] = [];
-  private watches: QueryWatch[] = [];
+  private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
 
   constructor(
@@ -85,13 +76,7 @@ export class InMemoryCache extends Cache {
     return Promise.resolve();
   }
 
-  public diffQuery<T>(query: {
-    query: DocumentNode;
-    variables: any;
-    returnPartialData?: boolean;
-    previousResult?: any;
-    optimistic: boolean;
-  }): DiffResult<T> {
+  public diffQuery<T>(query: Cache.DiffQueryOptions): Cache.DiffResult<T> {
     return diffQueryAgainstStore({
       store: query.optimistic ? this.getOptimisticData() : this.data,
       query: this.transformDocument(query.query),
@@ -103,13 +88,7 @@ export class InMemoryCache extends Cache {
     });
   }
 
-  public read(query: {
-    query: DocumentNode;
-    variables: any;
-    rootId?: string;
-    previousResult?: any;
-    optimistic: boolean;
-  }): any {
+  public read<T>(query: Cache.ReadOptions): Cache.DiffResult<T> {
     if (query.rootId && typeof this.data[query.rootId] === 'undefined') {
       return null;
     }
@@ -126,9 +105,9 @@ export class InMemoryCache extends Cache {
   }
 
   public readQuery<QueryType>(
-    options: DataProxyReadQueryOptions,
+    options: DataProxy.ReadQueryOptions,
     optimistic: boolean = false,
-  ): QueryType {
+  ): Cache.DiffResult<QueryType> {
     let query = options.query;
     return this.read({
       query,
@@ -138,9 +117,9 @@ export class InMemoryCache extends Cache {
   }
 
   public readFragment<FragmentType>(
-    options: DataProxyReadFragmentOptions,
+    options: DataProxy.ReadFragmentOptions,
     optimistic: boolean = false,
-  ): FragmentType | null {
+  ): Cache.DiffResult<FragmentType> | null {
     let document = getFragmentQueryDocument(
       options.fragment,
       options.fragmentName,
@@ -154,7 +133,7 @@ export class InMemoryCache extends Cache {
     });
   }
 
-  public writeResult(write: CacheWrite): void {
+  public writeResult(write: Cache.WriteResult): void {
     writeResultToStore({
       ...write,
       store: this.data,
@@ -165,7 +144,7 @@ export class InMemoryCache extends Cache {
     this.broadcastWatches();
   }
 
-  public writeQuery(options: DataProxyWriteQueryOptions): void {
+  public writeQuery(options: DataProxy.WriteQueryOptions): void {
     let query = options.query;
     this.writeResult({
       dataId: 'ROOT_QUERY',
@@ -175,7 +154,7 @@ export class InMemoryCache extends Cache {
     });
   }
 
-  public writeFragment(options: DataProxyWriteFragmentOptions): void {
+  public writeFragment(options: DataProxy.WriteFragmentOptions): void {
     let document = getFragmentQueryDocument(
       options.fragment,
       options.fragmentName,
@@ -203,15 +182,12 @@ export class InMemoryCache extends Cache {
     this.broadcastWatches();
   }
 
-  public performTransaction(transaction: (c: Cache) => void) {
+  public performTransaction(transaction: Transaction) {
     // TODO: does this need to be different, or is this okay for an in-memory cache?
     transaction(this);
   }
 
-  public recordOptimisticTransaction(
-    transaction: (c: Cache) => void,
-    id: string,
-  ) {
+  public recordOptimisticTransaction(transaction: Transaction, id: string) {
     const before = this.getOptimisticData();
 
     const orig = this.data;
@@ -237,7 +213,7 @@ export class InMemoryCache extends Cache {
     this.broadcastWatches();
   }
 
-  public watch(watch: QueryWatch): () => void {
+  public watch(watch: Cache.WatchOptions): () => void {
     this.watches.push(watch);
 
     return () => {

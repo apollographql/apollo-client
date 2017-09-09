@@ -1,5 +1,5 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
-import { Cache, CacheWrite, DataProxy } from 'apollo-cache-core';
+import { ApolloCache, Cache, DataProxy } from 'apollo-cache-core';
 
 import { QueryStoreValue } from '../data/queries';
 import {
@@ -23,13 +23,13 @@ export interface DataWrite {
 }
 
 export class DataStore {
-  private cache: Cache;
+  private cache: ApolloCache;
 
-  constructor(initialCache: Cache) {
+  constructor(initialCache: ApolloCache) {
     this.cache = initialCache;
   }
 
-  public getCache(): Cache {
+  public getCache(): ApolloCache {
     return this.cache;
   }
 
@@ -121,7 +121,7 @@ export class DataStore {
   }) {
     // Incorporate the result from this mutation into the store
     if (!mutation.result.errors) {
-      const cacheWrites: CacheWrite[] = [];
+      const cacheWrites: Cache.WriteResult[] = [];
       cacheWrites.push({
         result: mutation.result.data,
         dataId: 'ROOT_MUTATION',

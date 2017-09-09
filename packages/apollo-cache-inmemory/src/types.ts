@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 import { FragmentMatcher } from 'graphql-anywhere';
-import { Cache } from 'apollo-cache-core';
+import { Transaction } from 'apollo-cache-core';
 import { StoreValue, IdValue } from 'apollo-utilities';
 
 export type IdGetter = (value: Object) => string | null | undefined;
@@ -16,7 +16,7 @@ export interface NormalizedCache {
 export type OptimisticStoreItem = {
   id: string;
   data: NormalizedCache;
-  transaction: (c: Cache) => void;
+  transaction: Transaction;
 };
 
 export type ReadQueryOptions = {

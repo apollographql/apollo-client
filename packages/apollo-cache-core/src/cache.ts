@@ -2,82 +2,35 @@ import { DocumentNode } from 'graphql';
 
 import { getFragmentQueryDocument } from 'apollo-utilities';
 
-import {
-  DataProxy,
-  DataProxyReadQueryOptions,
-  DataProxyReadFragmentOptions,
-  DataProxyWriteQueryOptions,
-  DataProxyWriteFragmentOptions,
-  DiffResult,
-} from './types';
+import { DataProxy, Cache } from './types';
 
-export type CacheWrite = {
-  dataId: string;
-  result: any;
-  document: DocumentNode;
-  variables?: Object;
-};
+export type Transaction = (c: ApolloCache) => void;
 
-export type QueryWatch = {
-  query: DocumentNode;
-  variables: any;
-  rootId?: string;
-  previousResult: () => any;
-  optimistic: boolean;
-  callback: (newData: any) => void;
-};
-
-export abstract class Cache implements DataProxy {
+export abstract class ApolloCache implements DataProxy {
   public abstract reset(): Promise<void>;
 
   public abstract transformDocument(document: DocumentNode): DocumentNode;
 
-  public abstract diffQuery(query: {
-    query: DocumentNode;
-    variables: any;
-    returnPartialData?: boolean;
-    previousResult?: any;
-    optimistic: boolean;
-  }): any;
+  public abstract diffQuery<T>(
+    query: Cache.DiffQueryOptions,
+  ): Cache.DiffResult<T>;
 
-  public abstract read<T>(query: {
-    query: DocumentNode;
-    variables: any;
-    rootId?: string;
-    previousResult?: any;
-    optimistic: boolean;
-  }): DiffResult<T>;
+  public abstract read<T>(query: Cache.ReadOptions): Cache.DiffResult<T>;
 
-  public readQuery<QueryType>(
-    options: DataProxyReadQueryOptions,
-    optimistic: boolean = false,
-  ): DiffResult<QueryType> {
-    return this.read({
-      query: options.query,
-      variables: options.variables,
-      optimistic,
-    });
-  }
+  public abstract writeResult(write: Cache.WriteResult): void;
 
-  public readFragment<FragmentType>(
-    options: DataProxyReadFragmentOptions,
-    optimistic: boolean = false,
-  ): DiffResult<FragmentType> | null {
-    let document = getFragmentQueryDocument(
-      options.fragment,
-      options.fragmentName,
-    );
-    return this.read({
-      query: document,
-      variables: options.variables,
-      rootId: options.id,
-      optimistic,
-    });
-  }
+  public abstract removeOptimistic(id: string): void;
+  public abstract getOptimisticData(): any;
 
-  public abstract writeResult(write: CacheWrite): void;
+  public abstract performTransaction(transaction: Transaction): void;
+  public abstract recordOptimisticTransaction(
+    transaction: Transaction,
+    id: string,
+  ): void;
 
-  public writeQuery(options: DataProxyWriteQueryOptions): void {
+  public abstract watch(watch: Cache.WatchOptions): () => void;
+
+  public writeQuery(options: Cache.WriteQueryOptions): void {
     this.writeResult({
       dataId: 'ROOT_QUERY',
       result: options.data,
@@ -86,7 +39,7 @@ export abstract class Cache implements DataProxy {
     });
   }
 
-  public writeFragment(options: DataProxyWriteFragmentOptions): void {
+  public writeFragment(options: Cache.WriteFragmentOptions): void {
     let document = getFragmentQueryDocument(
       options.fragment,
       options.fragmentName,
@@ -99,14 +52,30 @@ export abstract class Cache implements DataProxy {
     });
   }
 
-  public abstract removeOptimistic(id: string): void;
-  public abstract getOptimisticData(): any;
+  public readQuery<QueryType>(
+    options: DataProxy.ReadQueryOptions,
+    optimistic: boolean = false,
+  ): Cache.DiffResult<QueryType> {
+    return this.read({
+      query: options.query,
+      variables: options.variables,
+      optimistic,
+    });
+  }
 
-  public abstract performTransaction(transaction: (c: Cache) => void): void;
-  public abstract recordOptimisticTransaction(
-    transaction: (c: Cache) => void,
-    id: string,
-  ): void;
-
-  public abstract watch(watch: QueryWatch): () => void;
+  public readFragment<FragmentType>(
+    options: DataProxy.ReadFragmentOptions,
+    optimistic: boolean = false,
+  ): Cache.DiffResult<FragmentType> | null {
+    let document = getFragmentQueryDocument(
+      options.fragment,
+      options.fragmentName,
+    );
+    return this.read({
+      query: document,
+      variables: options.variables,
+      rootId: options.id,
+      optimistic,
+    });
+  }
 }

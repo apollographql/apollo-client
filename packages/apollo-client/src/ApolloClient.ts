@@ -1,13 +1,5 @@
 import { ApolloLink, FetchResult } from 'apollo-link-core';
-import {
-  Cache,
-  DataProxy,
-  DataProxyReadQueryOptions,
-  DataProxyReadFragmentOptions,
-  DataProxyWriteQueryOptions,
-  DataProxyWriteFragmentOptions,
-  DiffResult,
-} from 'apollo-cache-core';
+import { Cache, ApolloCache, DataProxy } from 'apollo-cache-core';
 import { isProduction } from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';
@@ -69,7 +61,7 @@ export default class ApolloClient implements DataProxy {
 
   constructor(options: {
     link: ApolloLink;
-    cache: Cache;
+    cache: ApolloCache;
     ssrMode?: boolean;
     ssrForceFetchDelay?: number;
     connectToDevTools?: boolean;
@@ -235,7 +227,9 @@ export default class ApolloClient implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    */
-  public readQuery<T>(options: DataProxyReadQueryOptions): DiffResult<T> {
+  public readQuery<T>(
+    options: DataProxy.ReadQueryOptions,
+  ): Cache.DiffResult<T> {
     return this.initProxy().readQuery<T>(options);
   }
 
@@ -251,8 +245,8 @@ export default class ApolloClient implements DataProxy {
    * `fragmentName`.
    */
   public readFragment<T>(
-    options: DataProxyReadFragmentOptions,
-  ): DiffResult<T> | null {
+    options: DataProxy.ReadFragmentOptions,
+  ): Cache.DiffResult<T> | null {
     return this.initProxy().readFragment<T>(options);
   }
 
@@ -261,7 +255,7 @@ export default class ApolloClient implements DataProxy {
    * the store. This method will start at the root query. To start at a a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
    */
-  public writeQuery(options: DataProxyWriteQueryOptions): void {
+  public writeQuery(options: DataProxy.WriteQueryOptions): void {
     return this.initProxy().writeQuery(options);
   }
 
@@ -276,7 +270,7 @@ export default class ApolloClient implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public writeFragment(options: DataProxyWriteFragmentOptions): void {
+  public writeFragment(options: DataProxy.WriteFragmentOptions): void {
     return this.initProxy().writeFragment(options);
   }
 

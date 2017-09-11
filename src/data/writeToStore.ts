@@ -184,11 +184,13 @@ export function writeSelectionSetToStore({
   dataId,
   selectionSet,
   context,
+  selectionSetBreadCrumbs,
 }: {
   dataId: string,
   result: any,
   selectionSet: SelectionSetNode,
   context: WriteContext,
+  selectionSetBreadCrumbs?: string[],
 }): NormalizedCache {
   const { variables, store, dataIdFromObject, fragmentMap } = context;
 
@@ -212,9 +214,16 @@ export function writeSelectionSetToStore({
             // XXX We'd like to throw an error, but for backwards compatibility's sake
             // we just print a warning for the time being.
             //throw new WriteError(`Missing field ${resultFieldKey}`);
-            if (!isProduction()) {
-              console.warn(`Missing field ${resultFieldKey}`);
-            }
+            // edit: We actually throw the error now
+              let errorMessage: string;
+              if (selectionSetBreadCrumbs) {
+                selectionSetBreadCrumbs.push(resultFieldKey);
+                errorMessage = `Missing field ${resultFieldKey}, with breadcrumbs: ${selectionSetBreadCrumbs.join(' => ')}`;
+              } else {
+                errorMessage = `Missing field ${resultFieldKey}`;
+              }
+              console.warn(errorMessage);
+              throw new WriteError(errorMessage);
           }
         }
       }
@@ -256,11 +265,18 @@ export function writeSelectionSetToStore({
       }
 
       if (included && matches) {
+        if (!selectionSetBreadCrumbs) {
+          selectionSetBreadCrumbs = [];
+        }
+        if (selection && (selection as any).name) {
+          selectionSetBreadCrumbs.push((selection as any).name.value);
+        }
         writeSelectionSetToStore({
           result,
           selectionSet: fragment.selectionSet,
           dataId,
           context,
+          selectionSetBreadCrumbs,
         });
       }
     }

@@ -1,7 +1,8 @@
 # Change log
 
 ### vNEXT
-- Support @live queries via watchQuery
+- Fix errors when `isEqual` called with object having no prototype [PR #2138](https://github.com/apollographql/apollo-client/pull/2138)
+- Support @live and @defer queries via watchQuery
 - Refactor query tracking internally to QueryManager
 - Remove internal typename usage in favor of cache transformers [BREAKING]
 - Introduce new ErrorPolicy to allow for errors from execution results to trigger observers
@@ -17,6 +18,14 @@
 - Remove dependency on Redux as well as store reducers (update and updateQueries are still supported and should be used instead) [PR 1949](https://github.com/apollographql/apollo-client/pull/1949)
 - Introduce a new Cache API that makes it possible to plug in custom cache implementations into the client [PR 1921](https://github.com/apollographql/apollo-client/pull/1921)
 - Migrated the cache away from Redux in preparation for the generic store API [PR 1907](https://github.com/apollographql/apollo-client/pull/1907)
+
+### 1.9.2
+- Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)
+- Fix referential equality bug for queries with custom resolvers [PR #2053](https://github.com/apollographql/apollo-client/pull/2053)
+
+### 1.9.1
+- Add support for subscriptions with Apollo Link network stack [PR #1992](https://github.com/apollographql/apollo-client/pull/1992)
+- fixed `resolved` scoping issue for multiple queries in flight with Apollo Link [PR #2002](https://github.com/apollographql/apollo-client/pull/2002)
 
 ### 1.9.0
 - Move to `apollo-link-core` from `apollo-link` to reduce bundle size [PR #1955](https://github.com/apollographql/apollo-client/pull/1955)

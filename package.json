@@ -110,7 +110,7 @@
     "lint-staged": "4.0.4",
     "lodash": "4.17.4",
     "minimist": "1.2.0",
-    "mocha": "3.5.0",
+    "mocha": "3.5.2",
     "nodemon": "1.11.0",
     "pre-commit": "1.2.2",
     "prettier": "1.6.1",

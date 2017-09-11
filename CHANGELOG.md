@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix Date handling in isEqual [PR #2131](https://github.com/apollographql/apollo-client/pull/2131)
 
 ### 1.9.2
 - Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)

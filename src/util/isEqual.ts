@@ -17,8 +17,8 @@ export function isEqual(a: any, b: any): boolean {
     // Compare all of the keys in `a`. If one of the keys has a different value, or that key does
     // not exist in `b` return false immediately.
     for (const key in a) {
-      if (a.hasOwnProperty(key)) {
-        if (!b.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(a, key)) {
+        if (!Object.prototype.hasOwnProperty.call(b, key)) {
           return false;
         }
         if (!isEqual(a[key], b[key])) {
@@ -28,7 +28,7 @@ export function isEqual(a: any, b: any): boolean {
     }
     // Look through all the keys in `b`. If `b` has a key that `a` does not, return false.
     for (const key in b) {
-      if (!a.hasOwnProperty(key)) {
+      if (!Object.prototype.hasOwnProperty.call(a, key)) {
         return false;
       }
     }

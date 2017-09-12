@@ -120,7 +120,7 @@
     "rollup": "0.49.2",
     "rxjs": "5.4.3",
     "sinon": "3.2.1",
-    "source-map-support": "0.4.16",
+    "source-map-support": "0.4.18",
     "ts-jest": "20.0.13",
     "tslint": "5.7.0",
     "typescript": "2.4.2",

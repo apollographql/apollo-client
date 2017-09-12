@@ -277,7 +277,7 @@ export class QueryManager {
     // store before we fetch it from the network interface.
     // TODO we hit the cache even if the policy is network-first. This could be unnecessary if the network is up.
     if (fetchType !== FetchType.refetch && fetchPolicy !== 'network-only') {
-      const { isMissing, result } = this.dataStore.getCache().diffQuery({
+      const { complete, result } = this.dataStore.getCache().diff({
         query,
         variables,
         returnPartialData: true,
@@ -285,7 +285,7 @@ export class QueryManager {
       });
 
       // If we're in here, only fetch if we have missing fields
-      needToFetch = isMissing || fetchPolicy === 'cache-and-network';
+      needToFetch = !complete || fetchPolicy === 'cache-and-network';
       storeResult = result;
     }
 
@@ -477,7 +477,7 @@ export class QueryManager {
               this.setQuery(queryId, () => ({ newData: null }));
 
               data = newData.result;
-              isMissing = newData.isMissing ? newData.isMissing : false;
+              isMissing = !newData.complete ? !newData.complete : false;
             } else {
               if (
                 lastResult &&
@@ -488,7 +488,7 @@ export class QueryManager {
                 isMissing = false;
               } else {
                 const { document } = this.getQuery(queryId);
-                const readResult = this.dataStore.getCache().diffQuery({
+                const readResult = this.dataStore.getCache().diff({
                   query: document as DocumentNode,
                   variables:
                     queryStoreValue.previousVariables ||
@@ -497,7 +497,7 @@ export class QueryManager {
                 });
 
                 data = readResult.result;
-                isMissing = !!readResult.isMissing;
+                isMissing = !readResult.complete;
               }
             }
 

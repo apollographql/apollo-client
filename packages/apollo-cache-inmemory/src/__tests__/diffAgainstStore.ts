@@ -48,8 +48,8 @@ describe('diffing queries against the store', () => {
       diffQueryAgainstStore({
         store,
         query,
-      }).isMissing,
-    ).not.toBeTruthy();
+      }).complete,
+    ).toBeTruthy();
   });
 
   it('caches root queries both under the ID of the node and the query name', () => {
@@ -89,12 +89,12 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    const { isMissing } = diffQueryAgainstStore({
+    const { complete } = diffQueryAgainstStore({
       store,
       query: secondQuery,
     });
 
-    expect(isMissing).not.toBeTruthy();
+    expect(complete).toBeTruthy();
     expect(store['1']).toEqual(result.people_one);
   });
 
@@ -164,14 +164,14 @@ describe('diffing queries against the store', () => {
           }
         }
       `;
-      const { isMissing } = diffQueryAgainstStore({
+      const { complete } = diffQueryAgainstStore({
         store,
         query: unionQuery,
         returnPartialData: false,
         fragmentMatcherFunction,
       });
 
-      expect(isMissing).toBe(true);
+      expect(complete).toBe(false);
     }, /IntrospectionFragmentMatcher/);
   });
 
@@ -214,12 +214,12 @@ describe('diffing queries against the store', () => {
       }
     `;
 
-    const { isMissing } = diffQueryAgainstStore({
+    const { complete } = diffQueryAgainstStore({
       store,
       query: unionQuery,
     });
 
-    expect(isMissing).toBe(true);
+    expect(complete).toBe(false);
   });
 
   it('throws an error on a query with fields missing from matching named fragments', () => {

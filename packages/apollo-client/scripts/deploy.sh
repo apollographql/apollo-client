@@ -59,4 +59,4 @@ cp src/index.js.flow npm/apollo.umd.js.flow
 cp -R flow-typed npm/
 
 echo 'deploying to npm...'
-cd npm && npm publish --tag alpha && git push --tags
+cd npm && npm publish --tag alpha

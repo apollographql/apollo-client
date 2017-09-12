@@ -140,7 +140,7 @@ const readStoreResolver: Resolver = (
  * @param  {DocumentNode} query A parsed GraphQL query document
  * @param  {Store} store The Apollo Client store object
  * @param  {any} previousResult The previous result returned by this function for the same query
- * @return {result: Object, isMissing: [boolean]}
+ * @return {result: Object, complete: [boolean]}
  */
 export function diffQueryAgainstStore<T>({
   store,
@@ -186,7 +186,7 @@ export function diffQueryAgainstStore<T>({
 
   return {
     result,
-    isMissing: context.hasMissingField,
+    complete: !context.hasMissingField,
   };
 }
 

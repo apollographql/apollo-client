@@ -27,6 +27,7 @@
     "bundle": "rollup -c",
     "postbuild": "npm run bundle",
     "prepublishOnly": "npm run build",
+    "publish": "./scripts/deploy.sh",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "testonly": "jest",
     "preanalyze": "npm run build",

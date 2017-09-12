@@ -51,43 +51,6 @@ export class InMemoryCache extends ApolloCache {
     this.data = initialStore;
   }
 
-  public transformDocument(document: DocumentNode): DocumentNode {
-    if (this.addTypename) return addTypenameToDocument(document);
-    return document;
-  }
-
-  public getData(): NormalizedCache {
-    return this.data;
-  }
-
-  public getOptimisticData(): NormalizedCache {
-    if (this.optimistic.length === 0) {
-      return this.data;
-    }
-
-    const patches = this.optimistic.map(opt => opt.data);
-    return Object.assign({}, this.data, ...patches) as NormalizedCache;
-  }
-
-  public reset(): Promise<void> {
-    this.data = {};
-    this.broadcastWatches();
-
-    return Promise.resolve();
-  }
-
-  public diffQuery<T>(query: Cache.DiffQueryOptions): Cache.DiffResult<T> {
-    return diffQueryAgainstStore({
-      store: query.optimistic ? this.getOptimisticData() : this.data,
-      query: this.transformDocument(query.query),
-      variables: query.variables,
-      returnPartialData: query.returnPartialData,
-      previousResult: query.previousResult,
-      fragmentMatcherFunction: this.config.fragmentMatcher,
-      config: this.config,
-    });
-  }
-
   public read<T>(query: Cache.ReadOptions): Cache.DiffResult<T> {
     if (query.rootId && typeof this.data[query.rootId] === 'undefined') {
       return null;
@@ -104,39 +67,13 @@ export class InMemoryCache extends ApolloCache {
     });
   }
 
-  public readQuery<QueryType>(
-    options: DataProxy.ReadQueryOptions,
-    optimistic: boolean = false,
-  ): Cache.DiffResult<QueryType> {
-    let query = options.query;
-    return this.read({
-      query,
-      variables: options.variables,
-      optimistic,
-    });
-  }
-
-  public readFragment<FragmentType>(
-    options: DataProxy.ReadFragmentOptions,
-    optimistic: boolean = false,
-  ): Cache.DiffResult<FragmentType> | null {
-    let document = getFragmentQueryDocument(
-      options.fragment,
-      options.fragmentName,
-    );
-
-    return this.read({
-      query: this.transformDocument(document),
-      variables: options.variables,
-      rootId: options.id,
-      optimistic,
-    });
-  }
-
-  public writeResult(write: Cache.WriteResult): void {
+  public write(write: Cache.WriteOptions): void {
     writeResultToStore({
-      ...write,
-      store: this.data,
+      dataId: write.dataId,
+      result: write.result,
+      variables: write.variables,
+      document: write.query,
+      store: this.getData(),
       dataIdFromObject: this.config.dataIdFromObject,
       fragmentMatcherFunction: this.config.fragmentMatcher,
     });
@@ -144,28 +81,39 @@ export class InMemoryCache extends ApolloCache {
     this.broadcastWatches();
   }
 
-  public writeQuery(options: DataProxy.WriteQueryOptions): void {
-    let query = options.query;
-    this.writeResult({
-      dataId: 'ROOT_QUERY',
-      result: options.data,
-      document: this.transformDocument(query),
-      variables: options.variables,
+  public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
+    return diffQueryAgainstStore({
+      store: query.optimistic ? this.getOptimisticData() : this.data,
+      query: this.transformDocument(query.query),
+      variables: query.variables,
+      returnPartialData: query.returnPartialData,
+      previousResult: query.previousResult,
+      fragmentMatcherFunction: this.config.fragmentMatcher,
+      config: this.config,
     });
   }
 
-  public writeFragment(options: DataProxy.WriteFragmentOptions): void {
-    let document = getFragmentQueryDocument(
-      options.fragment,
-      options.fragmentName,
-    );
+  public watch(watch: Cache.WatchOptions): () => void {
+    this.watches.push(watch);
 
-    this.writeResult({
-      dataId: options.id,
-      result: options.data,
-      document: this.transformDocument(document),
-      variables: options.variables,
-    });
+    return () => {
+      this.watches = this.watches.filter(c => c !== watch);
+    };
+  }
+
+  public evict(query: Cache.EvictOptions): Cache.EvictionResult {
+    throw new Error(`eviction is not implemented on InMemory Cache`);
+  }
+
+  public getData(): NormalizedCache {
+    return this.data;
+  }
+
+  public reset(): Promise<void> {
+    this.data = {};
+    this.broadcastWatches();
+
+    return Promise.resolve();
   }
 
   public removeOptimistic(id: string) {
@@ -180,6 +128,15 @@ export class InMemoryCache extends ApolloCache {
     });
 
     this.broadcastWatches();
+  }
+
+  public getOptimisticData(): NormalizedCache {
+    if (this.optimistic.length === 0) {
+      return this.getData();
+    }
+
+    const patches = this.optimistic.map(opt => opt.data);
+    return Object.assign({}, this.data, ...patches) as NormalizedCache;
   }
 
   public performTransaction(transaction: Transaction) {
@@ -213,18 +170,64 @@ export class InMemoryCache extends ApolloCache {
     this.broadcastWatches();
   }
 
-  public watch(watch: Cache.WatchOptions): () => void {
-    this.watches.push(watch);
+  public transformDocument(document: DocumentNode): DocumentNode {
+    if (this.addTypename) return addTypenameToDocument(document);
+    return document;
+  }
 
-    return () => {
-      this.watches = this.watches.filter(c => c !== watch);
-    };
+  public readQuery<QueryType>(
+    options: DataProxy.Query,
+    optimistic: boolean = false,
+  ): Cache.DiffResult<QueryType> {
+    let query = options.query;
+    return this.read({
+      query,
+      variables: options.variables,
+      optimistic,
+    });
+  }
+
+  public readFragment<FragmentType>(
+    options: DataProxy.Fragment,
+    optimistic: boolean = false,
+  ): Cache.DiffResult<FragmentType> | null {
+    let document = getFragmentQueryDocument(
+      options.fragment,
+      options.fragmentName,
+    );
+
+    return this.read({
+      query: this.transformDocument(document),
+      variables: options.variables,
+      rootId: options.id,
+      optimistic,
+    });
+  }
+
+  public writeQuery(options: DataProxy.WriteQueryOptions): void {
+    this.write({
+      dataId: 'ROOT_QUERY',
+      result: options.data,
+      query: this.transformDocument(options.query),
+      variables: options.variables,
+    });
+  }
+
+  public writeFragment(options: DataProxy.WriteFragmentOptions): void {
+    this.write({
+      dataId: options.id,
+      result: options.data,
+      query: this.transformDocument(
+        getFragmentQueryDocument(options.fragment, options.fragmentName),
+      ),
+      variables: options.variables,
+    });
   }
 
   private broadcastWatches() {
     // right now, we invalidate all queries whenever anything changes
     this.watches.forEach(c => {
-      const newData = this.diffQuery({
+      const newData = this.diff({
         query: c.query,
         variables: c.variables,
         previousResult: c.previousResult(),

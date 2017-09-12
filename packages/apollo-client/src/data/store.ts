@@ -45,10 +45,10 @@ export class DataStore {
       writeWithErrors = true;
     }
     if (!fetchMoreForQueryId && writeWithErrors) {
-      this.cache.writeResult({
+      this.cache.write({
         result: result.data,
         dataId: 'ROOT_QUERY',
-        document: document,
+        query: document,
         variables: variables,
       });
     }
@@ -62,10 +62,10 @@ export class DataStore {
     // the subscription interface should handle not sending us results we no longer subscribe to.
     // XXX I don't think we ever send in an object with errors, but we might in the future...
     if (!graphQLResultHasError(result)) {
-      this.cache.writeResult({
+      this.cache.write({
         result: result.data,
         dataId: 'ROOT_SUBSCRIPTION',
-        document: document,
+        query: document,
         variables: variables,
       });
     }
@@ -121,11 +121,11 @@ export class DataStore {
   }) {
     // Incorporate the result from this mutation into the store
     if (!mutation.result.errors) {
-      const cacheWrites: Cache.WriteResult[] = [];
+      const cacheWrites: Cache.WriteOptions[] = [];
       cacheWrites.push({
         result: mutation.result.data,
         dataId: 'ROOT_MUTATION',
-        document: mutation.document,
+        query: mutation.document,
         variables: mutation.variables,
       });
 
@@ -135,17 +135,14 @@ export class DataStore {
           .forEach(queryId => {
             const { query, updater } = mutation.updateQueries[queryId];
             // Read the current query result from the store.
-            const {
-              result: currentQueryResult,
-              isMissing,
-            } = this.cache.diffQuery({
+            const { result: currentQueryResult, complete } = this.cache.diff({
               query: query.document,
               variables: query.variables,
               returnPartialData: true,
               optimistic: false,
             });
 
-            if (isMissing) {
+            if (!complete) {
               return;
             }
 
@@ -163,7 +160,7 @@ export class DataStore {
               cacheWrites.push({
                 result: nextQueryResult,
                 dataId: 'ROOT_QUERY',
-                document: query.document,
+                query: query.document,
                 variables: query.variables,
               });
             }
@@ -171,9 +168,7 @@ export class DataStore {
       }
 
       this.cache.performTransaction(c => {
-        cacheWrites.forEach(write => {
-          c.writeResult(write);
-        });
+        cacheWrites.forEach(write => c.write(write));
       });
 
       // If the mutation has some writes associated with it then we need to
@@ -197,11 +192,11 @@ export class DataStore {
     variables: any,
     newResult: any,
   ) {
-    this.cache.writeResult({
+    this.cache.write({
       result: newResult,
       dataId: 'ROOT_QUERY',
       variables,
-      document,
+      query: document,
     });
   }
 

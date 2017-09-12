@@ -1,7 +1,7 @@
 import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 
 export namespace DataProxy {
-  export interface ReadQueryOptions {
+  export interface Query {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
      * string tag from `graphql-tag`. The query will be used to determine the
@@ -15,7 +15,7 @@ export namespace DataProxy {
     variables?: Object;
   }
 
-  export interface ReadFragmentOptions {
+  export interface Fragment {
     /**
      * The root id to be used. This id should take the same form as the
      * value returned by your `dataIdFromObject` function. If a value with your
@@ -44,61 +44,23 @@ export namespace DataProxy {
     variables?: Object;
   }
 
-  export interface WriteQueryOptions {
+  export interface WriteQueryOptions extends Query {
     /**
      * The data you will be writing to the store.
      */
     data: any;
-
-    /**
-     * The GraphQL query shape to be used constructed using the `gql` template
-     * string tag from `graphql-tag`. The query will be used to determine the
-     * shape of the data to be written.
-     */
-    query: DocumentNode;
-
-    /**
-     * Any variables that the GraphQL query may depend on.
-     */
-    variables?: Object;
   }
 
-  export interface WriteFragmentOptions {
+  export interface WriteFragmentOptions extends Fragment {
     /**
      * The data you will be writing to the store.
      */
     data: any;
-
-    /**
-     * The root id to be used. This id should take the same form as the  value
-     * returned by your `dataIdFromObject` function.
-     */
-    id: string;
-
-    /**
-     * A GraphQL document created using the `gql` template string tag from
-     * `graphql-tag` with one or more fragments which will be used to determine
-     * the shape of data to write. If you provide more then one fragment in this
-     * document then you must also specify `fragmentName` to select a single.
-     */
-    fragment: DocumentNode;
-
-    /**
-     * The name of the fragment in your GraphQL document to be used. If you do
-     * not provide a `fragmentName` and there is only one fragment in your
-     * `fragment` document then that fragment will be used.
-     */
-    fragmentName?: string;
-
-    /**
-     * Any variables that your GraphQL fragments depend on.
-     */
-    variables?: Object;
   }
 
   export type DiffResult<T> = {
     result?: T;
-    isMissing?: boolean;
+    complete?: boolean;
   };
 }
 
@@ -113,7 +75,8 @@ export interface DataProxy {
    * Reads a GraphQL query from the root query id.
    */
   readQuery<QueryType>(
-    options: DataProxy.ReadQueryOptions,
+    options: DataProxy.Query,
+    optimistic?: boolean,
   ): DataProxy.DiffResult<QueryType>;
 
   /**
@@ -122,7 +85,8 @@ export interface DataProxy {
    * provided to select the correct fragment.
    */
   readFragment<FragmentType>(
-    options: DataProxy.ReadFragmentOptions,
+    options: DataProxy.Fragment,
+    optimistic?: boolean,
   ): DataProxy.DiffResult<FragmentType> | null;
 
   /**

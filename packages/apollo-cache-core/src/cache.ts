@@ -1,5 +1,4 @@
 import { DocumentNode } from 'graphql';
-
 import { getFragmentQueryDocument } from 'apollo-utilities';
 
 import { DataProxy, Cache } from './types';
@@ -7,53 +6,34 @@ import { DataProxy, Cache } from './types';
 export type Transaction = (c: ApolloCache) => void;
 
 export abstract class ApolloCache implements DataProxy {
+  // required to implement
+  // core API
+  public abstract read<T>(query: Cache.ReadOptions): Cache.DiffResult<T>;
+  public abstract write(write: Cache.WriteOptions): void;
+  public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
+  public abstract watch(watch: Cache.WatchOptions): () => void;
+  public abstract evict(query: Cache.EvictOptions): Cache.EvictionResult;
+  public abstract getData(): any;
   public abstract reset(): Promise<void>;
 
-  public abstract transformDocument(document: DocumentNode): DocumentNode;
-
-  public abstract diffQuery<T>(
-    query: Cache.DiffQueryOptions,
-  ): Cache.DiffResult<T>;
-
-  public abstract read<T>(query: Cache.ReadOptions): Cache.DiffResult<T>;
-
-  public abstract writeResult(write: Cache.WriteResult): void;
-
+  // optimistic API
   public abstract removeOptimistic(id: string): void;
   public abstract getOptimisticData(): any;
 
+  // transactional API
   public abstract performTransaction(transaction: Transaction): void;
   public abstract recordOptimisticTransaction(
     transaction: Transaction,
     id: string,
   ): void;
 
-  public abstract watch(watch: Cache.WatchOptions): () => void;
-
-  public writeQuery(options: Cache.WriteQueryOptions): void {
-    this.writeResult({
-      dataId: 'ROOT_QUERY',
-      result: options.data,
-      document: options.query,
-      variables: options.variables,
-    });
-  }
-
-  public writeFragment(options: Cache.WriteFragmentOptions): void {
-    let document = getFragmentQueryDocument(
-      options.fragment,
-      options.fragmentName,
-    );
-    this.writeResult({
-      dataId: options.id,
-      result: options.data,
-      document,
-      variables: options.variables,
-    });
+  // optional API
+  public transformDocument(document: DocumentNode): DocumentNode {
+    return document;
   }
 
   public readQuery<QueryType>(
-    options: DataProxy.ReadQueryOptions,
+    options: DataProxy.Query,
     optimistic: boolean = false,
   ): Cache.DiffResult<QueryType> {
     return this.read({
@@ -64,18 +44,32 @@ export abstract class ApolloCache implements DataProxy {
   }
 
   public readFragment<FragmentType>(
-    options: DataProxy.ReadFragmentOptions,
+    options: DataProxy.Fragment,
     optimistic: boolean = false,
   ): Cache.DiffResult<FragmentType> | null {
-    let document = getFragmentQueryDocument(
-      options.fragment,
-      options.fragmentName,
-    );
     return this.read({
-      query: document,
+      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
       variables: options.variables,
       rootId: options.id,
       optimistic,
+    });
+  }
+
+  public writeQuery(options: Cache.WriteQueryOptions): void {
+    this.write({
+      dataId: 'ROOT_QUERY',
+      result: options.data,
+      query: options.query,
+      variables: options.variables,
+    });
+  }
+
+  public writeFragment(options: Cache.WriteFragmentOptions): void {
+    this.write({
+      dataId: options.id,
+      result: options.data,
+      variables: options.variables,
+      query: getFragmentQueryDocument(options.fragment, options.fragmentName),
     });
   }
 }

@@ -227,9 +227,7 @@ export default class ApolloClient implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    */
-  public readQuery<T>(
-    options: DataProxy.ReadQueryOptions,
-  ): Cache.DiffResult<T> {
+  public readQuery<T>(options: DataProxy.Query): Cache.DiffResult<T> {
     return this.initProxy().readQuery<T>(options);
   }
 
@@ -245,7 +243,7 @@ export default class ApolloClient implements DataProxy {
    * `fragmentName`.
    */
   public readFragment<T>(
-    options: DataProxy.ReadFragmentOptions,
+    options: DataProxy.Fragment,
   ): Cache.DiffResult<T> | null {
     return this.initProxy().readFragment<T>(options);
   }
@@ -274,7 +272,7 @@ export default class ApolloClient implements DataProxy {
     return this.initProxy().writeFragment(options);
   }
 
-  public __actionHookForDevTools(cb: Function) {
+  public __actionHookForDevTools(cb: () => any) {
     this.devToolsHookCb = cb;
   }
 

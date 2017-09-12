@@ -35,7 +35,7 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache-core-inmemory": "^0.2.0-alpha.11",
+    "apollo-cache-inmemory": "^0.2.0-alpha.11",
     "apollo-client": "^2.0.0-alpha.26",
     "apollo-link": "^0.5.0",
     "graphql-tag": "^2.4.2"

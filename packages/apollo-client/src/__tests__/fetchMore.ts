@@ -1,4 +1,4 @@
-import InMemoryCache from 'apollo-cache-core-inmemory';
+import InMemoryCache from 'apollo-cache-inmemory';
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 

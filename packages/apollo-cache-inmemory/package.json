@@ -1,5 +1,5 @@
 {
-  "name": "apollo-cache-core-inmemory",
+  "name": "apollo-cache-inmemory",
   "version": "0.2.0-alpha.11",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
@@ -29,13 +29,13 @@
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run build",
     "build:browser":
-      "browserify ./lib/index.js --i apollo-cache-core-core --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
+      "browserify ./lib/index.js --i apollo-cache-core --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
     "minify:browser":
       "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache-core": "^0.2.0-alpha.11",
+    "apollo-cache": "^0.2.0-alpha.11",
     "apollo-utilities": "^0.2.0-alpha.6",
     "graphql-anywhere": "^4.0.0-alpha.6"
   },

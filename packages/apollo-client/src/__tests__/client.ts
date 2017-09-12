@@ -6,7 +6,7 @@ import { ApolloLink, Observable } from 'apollo-link-core';
 import InMemoryCache, {
   IntrospectionFragmentMatcher,
   FragmentMatcherInterface,
-} from 'apollo-cache-core-inmemory';
+} from 'apollo-cache-inmemory';
 
 import { QueryManager } from '../core/QueryManager';
 import { WatchQueryOptions } from '../core/watchQueryOptions';
@@ -2375,6 +2375,106 @@ describe('@connect', () => {
             },
           ],
         },
+      });
+    });
+  });
+
+  describe('default settings', () => {
+    const query = gql`
+      query number {
+        myNumber {
+          n
+        }
+      }
+    `;
+
+    const initialData = {
+      myNumber: {
+        n: 1,
+      },
+    };
+    const networkFetch = {
+      myNumber: {
+        n: 2,
+      },
+    };
+    it('allows setting default options for watchQuery', done => {
+      const link = mockSingleLink({
+        request: { query },
+        result: { data: networkFetch },
+      });
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({}, { addTypename: false }),
+        defaultOptions: {
+          watchQuery: {
+            fetchPolicy: 'cache-and-network',
+          },
+        },
+      });
+
+      client.writeQuery({
+        query,
+        data: initialData,
+      });
+
+      const obs = client.watchQuery({ query });
+
+      subscribeAndCount(done, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.data).toEqual(initialData);
+        } else if (handleCount === 2) {
+          expect(result.data).toEqual(networkFetch);
+          done();
+        }
+      });
+    });
+    it('allows setting default options for query', () => {
+      const errors = [{ message: 'failure', name: 'failure' }];
+      const link = mockSingleLink({
+        request: { query },
+        result: { errors },
+      });
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({}, { addTypename: false }),
+        defaultOptions: {
+          query: { errorPolicy: 'all' },
+        },
+      });
+
+      return client.query({ query }).then(result => {
+        expect(result.errors).toEqual(errors);
+      });
+    });
+    it('allows setting default options for mutation', () => {
+      const mutation = gql`
+        mutation upVote($id: ID!) {
+          upvote(id: $id) {
+            success
+          }
+        }
+      `;
+
+      const data = {
+        upvote: { success: true },
+      };
+
+      const link = mockSingleLink({
+        request: { query: mutation, variables: { id: 1 } },
+        result: { data },
+      });
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({}, { addTypename: false }),
+        defaultOptions: {
+          mutate: { variables: { id: 1 } },
+        },
+      });
+
+      return client.mutate({ mutation }).then(result => {
+        expect(result.data).toEqual(data);
       });
     });
   });

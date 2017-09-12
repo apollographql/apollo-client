@@ -1,7 +1,7 @@
 import { ApolloLink, Observable } from 'apollo-link-core';
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
-import InMemoryCache from 'apollo-cache-core-inmemory';
+import InMemoryCache from 'apollo-cache-inmemory';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
 import ApolloClient from '..';

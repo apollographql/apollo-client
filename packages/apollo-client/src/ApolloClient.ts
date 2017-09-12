@@ -1,5 +1,5 @@
 import { ApolloLink, FetchResult } from 'apollo-link-core';
-import { Cache, ApolloCache, DataProxy } from 'apollo-cache-core';
+import { Cache, ApolloCache, DataProxy } from 'apollo-cache';
 import { isProduction } from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';
@@ -12,11 +12,19 @@ import {
   WatchQueryOptions,
   SubscriptionOptions,
   MutationOptions,
+  ModifiableWatchQueryOptions,
+  MutationBaseOptions,
 } from './core/watchQueryOptions';
 
 import { DataStore } from './data/store';
 
 import { version } from './version';
+
+export interface DefaultOptions {
+  watchQuery?: ModifiableWatchQueryOptions;
+  query?: ModifiableWatchQueryOptions;
+  mutate?: MutationBaseOptions;
+}
 
 let hasSuggestedDevtools = false;
 
@@ -33,6 +41,7 @@ export default class ApolloClient implements DataProxy {
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
+  public defaultOptions: DefaultOptions = {};
 
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
@@ -66,6 +75,7 @@ export default class ApolloClient implements DataProxy {
     ssrForceFetchDelay?: number;
     connectToDevTools?: boolean;
     queryDeduplication?: boolean;
+    defaultOptions?: DefaultOptions;
   }) {
     const {
       link,
@@ -74,6 +84,7 @@ export default class ApolloClient implements DataProxy {
       ssrForceFetchDelay = 0,
       connectToDevTools,
       queryDeduplication = true,
+      defaultOptions,
     } = options;
 
     this.link = link;
@@ -81,6 +92,7 @@ export default class ApolloClient implements DataProxy {
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
+    this.defaultOptions = defaultOptions || {};
 
     if (ssrForceFetchDelay) {
       setTimeout(
@@ -158,6 +170,10 @@ export default class ApolloClient implements DataProxy {
   public watchQuery<T>(options: WatchQueryOptions): ObservableQuery<T> {
     this.initQueryManager();
 
+    if (this.defaultOptions.watchQuery) {
+      options = { ...this.defaultOptions.watchQuery, ...options };
+    }
+
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = {
@@ -187,6 +203,10 @@ export default class ApolloClient implements DataProxy {
       );
     }
 
+    if (this.defaultOptions.query) {
+      options = { ...this.defaultOptions.query, ...options };
+    }
+
     // XXX Overwriting options is probably not the best way to do this long term...
     if (this.disableNetworkFetches && options.fetchPolicy === 'network-only') {
       options = {
@@ -207,6 +227,10 @@ export default class ApolloClient implements DataProxy {
    */
   public mutate<T>(options: MutationOptions<T>): Promise<FetchResult<T>> {
     this.initQueryManager();
+
+    if (this.defaultOptions.mutate) {
+      options = { ...this.defaultOptions.mutate, ...options };
+    }
 
     return this.queryManager.mutate<T>(options);
   }

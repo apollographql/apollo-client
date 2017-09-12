@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 import { FetchResult } from 'apollo-link-core';
-import { DataProxy } from 'apollo-cache-core';
+import { DataProxy } from 'apollo-cache';
 
 import { MutationQueryReducersMap } from './types';
 
@@ -125,19 +125,7 @@ export interface SubscriptionOptions {
   variables?: { [key: string]: any };
 }
 
-export interface MutationOptions<T = { [key: string]: any }> {
-  /**
-   * A GraphQL document, often created with `gql` from the `graphql-tag`
-   * package, that contains a single mutation inside of it.
-   */
-  mutation: DocumentNode;
-
-  /**
-   * An object that maps from the name of a variable as used in the mutation
-   * GraphQL document to that variable's value.
-   */
-  variables?: Object;
-
+export interface MutationBaseOptions<T = { [key: string]: any }> {
   /**
    * An object that represents the result of this mutation that will be
    * optimistically stored before the server has actually returned a result.
@@ -188,6 +176,21 @@ export interface MutationOptions<T = { [key: string]: any }> {
    * Specifies the {@link ErrorPolicy} to be used for this operation
    */
   errorPolicy?: ErrorPolicy;
+
+  /**
+   * An object that maps from the name of a variable as used in the mutation
+   * GraphQL document to that variable's value.
+   */
+  variables?: any;
+}
+
+export interface MutationOptions<T = { [key: string]: any }>
+  extends MutationBaseOptions<T> {
+  /**
+   * A GraphQL document, often created with `gql` from the `graphql-tag`
+   * package, that contains a single mutation inside of it.
+   */
+  mutation: DocumentNode;
 }
 
 // Add a level of indirection for `typedoc`.

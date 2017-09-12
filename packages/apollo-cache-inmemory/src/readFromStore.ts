@@ -10,7 +10,7 @@ import {
   isIdValue,
   getStoreKeyName,
 } from 'apollo-utilities';
-import { Cache } from 'apollo-cache-core';
+import { Cache } from 'apollo-cache';
 
 import {
   ReadQueryOptions,

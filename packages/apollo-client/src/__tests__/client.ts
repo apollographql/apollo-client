@@ -159,7 +159,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     client.query({ query, variables }).then(actualResult => {
@@ -205,7 +205,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
@@ -269,7 +269,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
@@ -395,13 +395,15 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(initialState.data, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }).restore(
+        initialState.data,
+      ),
     });
 
     return client.query({ query }).then(result => {
       expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       );
     });
   });
@@ -431,7 +433,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     return client.query({ query }).catch((error: ApolloError) => {
@@ -477,7 +479,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     client.query({ query }).catch((error: ApolloError) => {
@@ -510,7 +512,7 @@ describe('client', () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       client.query({ query }).catch((error: ApolloError) => {
@@ -544,7 +546,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     client.query({ query }).catch((error: ApolloError) => {
@@ -579,7 +581,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     return client.query({ query }).then((result: ExecutionResult) => {
@@ -632,7 +634,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const handle = client.watchQuery({ query });
@@ -677,7 +679,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const handle = client.watchQuery({ query });
@@ -719,7 +721,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const handle = client.watchQuery({ query });
@@ -778,8 +780,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
-      addTypename: true,
+      cache: new InMemoryCache({ addTypename: true }),
     });
 
     return client.query({ query }).then(actualResult => {
@@ -831,8 +832,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(),
-      addTypename: true,
+      cache: new InMemoryCache({ addTypename: true }),
     });
 
     return client
@@ -873,7 +873,7 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     return client.mutate({ mutation }).then(actualResult => {
@@ -910,7 +910,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     return client
@@ -954,7 +954,7 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     return client.query({ query }).then(actualResult => {
@@ -990,7 +990,7 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1063,12 +1063,9 @@ describe('client', () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache(
-        {},
-        {
-          fragmentMatcher: fancyFragmentMatcher,
-        },
-      ),
+      cache: new InMemoryCache({
+        fragmentMatcher: fancyFragmentMatcher,
+      }),
     });
     return client.query({ query }).then((actualResult: any) => {
       expect(actualResult.data).toEqual(result);
@@ -1135,7 +1132,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { fragmentMatcher: ifm.match }),
+      cache: new InMemoryCache({ fragmentMatcher: ifm.match }),
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1218,7 +1215,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { fragmentMatcher: ifm.match }),
+      cache: new InMemoryCache({ fragmentMatcher: ifm.match }),
     });
 
     const queryUpdaterSpy = jest.fn();
@@ -1271,7 +1268,7 @@ describe('client', () => {
     ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1296,7 +1293,7 @@ describe('client', () => {
     ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     return client.mutate({ mutation }).then(actualResult => {
@@ -1338,7 +1335,7 @@ describe('client', () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
 
       queryDeduplication: false,
     });
@@ -1387,7 +1384,7 @@ describe('client', () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const q1 = client.query({ query: queryDoc });
@@ -1459,19 +1456,16 @@ describe('client', () => {
       const client = new ApolloClient({
         link,
 
-        cache: new InMemoryCache(
-          {},
-          {
-            dataIdFromObject: (obj: { id: any }) => obj.id,
-            addTypename: false,
-          },
-        ),
+        cache: new InMemoryCache({
+          dataIdFromObject: (obj: { id: any }) => obj.id,
+          addTypename: false,
+        }),
       });
 
       return client.query({ query }).then(result => {
         expect(result.data).toEqual(data);
         expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).getData()[
+          (client.queryManager.dataStore.getCache() as InMemoryCache).extract()[
             '1'
           ],
         ).toEqual({
@@ -1520,7 +1514,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       client.writeQuery({
@@ -1550,7 +1544,7 @@ describe('client', () => {
       });
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       const obs = client.watchQuery({
@@ -1574,7 +1568,7 @@ describe('client', () => {
       const link = mockSingleLink(); // no queries = no replies.
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       const obs = client.watchQuery({
@@ -1739,7 +1733,7 @@ describe('client', () => {
     it('forces the query to rerun', () => {
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       // Run a query first to initialize the store
@@ -1758,7 +1752,7 @@ describe('client', () => {
       const client = new ApolloClient({
         link,
         ssrMode: true,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       const options: WatchQueryOptions = { query, fetchPolicy: 'network-only' };
@@ -1786,7 +1780,7 @@ describe('client', () => {
       const client = new ApolloClient({
         link,
         ssrForceFetchDelay: 100,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       // Run a query first to initialize the store
@@ -1845,7 +1839,7 @@ describe('client', () => {
         result: { data },
         error: networkError,
       }),
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     client
@@ -1883,7 +1877,7 @@ describe('client', () => {
         request: { query: mutation },
         result: { data, errors },
       }),
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
     client
       .mutate({ mutation })
@@ -1920,7 +1914,7 @@ describe('client', () => {
         request: { query: mutation },
         result: { data, errors },
       }),
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
     client
       .mutate({ mutation, errorPolicy: 'all' })
@@ -1958,7 +1952,7 @@ describe('client', () => {
         request: { query: mutation },
         result: { data, errors },
       }),
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
     client
       .mutate({ mutation, errorPolicy: 'ignore' })
@@ -1997,7 +1991,7 @@ describe('client', () => {
         request: { query: mutation },
         result: { data, errors },
       }),
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
     const mutatePromise = client.mutate({
       mutation,
@@ -2067,7 +2061,7 @@ describe('client', () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
       });
 
       const log: any[] = [];
@@ -2093,7 +2087,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const handle = client.watchQuery({
@@ -2309,7 +2303,7 @@ describe('@connect', () => {
     return client.query({ query }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
         ROOT_QUERY: {
@@ -2360,7 +2354,7 @@ describe('@connect', () => {
     return client.query({ query, variables }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         'ROOT_QUERY.abc({"order":"popularity"}).0': {
           name: 'abcd',
@@ -2405,7 +2399,7 @@ describe('@connect', () => {
       });
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
         defaultOptions: {
           watchQuery: {
             fetchPolicy: 'cache-and-network',
@@ -2437,7 +2431,7 @@ describe('@connect', () => {
       });
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
         defaultOptions: {
           query: { errorPolicy: 'all' },
         },
@@ -2467,7 +2461,7 @@ describe('@connect', () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({}, { addTypename: false }),
+        cache: new InMemoryCache({ addTypename: false }),
         defaultOptions: {
           mutate: { variables: { id: 1 } },
         },
@@ -2493,10 +2487,9 @@ function clientRoundtrip(
 
   const client = new ApolloClient({
     link,
-    cache: new InMemoryCache(
-      {},
-      { fragmentMatcher: fragmentMatcher && fragmentMatcher.match },
-    ),
+    cache: new InMemoryCache({
+      fragmentMatcher: fragmentMatcher && fragmentMatcher.match,
+    }),
   });
 
   return client.query({ query, variables }).then(result => {

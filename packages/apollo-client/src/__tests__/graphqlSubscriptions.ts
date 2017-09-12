@@ -80,7 +80,7 @@ describe('GraphQL Subscriptions', () => {
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     let count = 0;
@@ -106,7 +106,7 @@ describe('GraphQL Subscriptions', () => {
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     let count = 0;
@@ -131,7 +131,7 @@ describe('GraphQL Subscriptions', () => {
     const link = mockObservableLink(sub1);
     const queryManager = new QueryManager({
       link,
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
     });
 
     const obs = queryManager.startGraphQLSubscription(options);
@@ -169,7 +169,7 @@ describe('GraphQL Subscriptions', () => {
     let numResults = 0;
     const queryManager = new QueryManager({
       link,
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
     });
 
     // tslint:disable-next-line

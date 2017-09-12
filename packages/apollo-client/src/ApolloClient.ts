@@ -34,10 +34,10 @@ let hasSuggestedDevtools = false;
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
-export default class ApolloClient implements DataProxy {
+export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
-  public store: DataStore;
-  public queryManager: QueryManager;
+  public store: DataStore<TCacheShape>;
+  public queryManager: QueryManager<TCacheShape>;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
@@ -70,7 +70,7 @@ export default class ApolloClient implements DataProxy {
 
   constructor(options: {
     link: ApolloLink;
-    cache: ApolloCache;
+    cache: ApolloCache<TCacheShape>;
     ssrMode?: boolean;
     ssrForceFetchDelay?: number;
     connectToDevTools?: boolean;
@@ -323,7 +323,7 @@ export default class ApolloClient implements DataProxy {
             },
             dataWithOptimisticResults: this.queryManager.dataStore
               .getCache()
-              .getOptimisticData(),
+              .extract(true),
           });
         }
       },
@@ -346,8 +346,10 @@ export default class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<ApolloQueryResult<any>[]> | null {
-    return this.queryManager ? this.queryManager.resetStore() : null;
+  public resetStore(): Promise<ApolloQueryResult<any>[]> | Promise<null> {
+    return this.queryManager
+      ? this.queryManager.resetStore()
+      : Promise.resolve(null);
   }
 
   /**
@@ -358,7 +360,7 @@ export default class ApolloClient implements DataProxy {
   private initProxy(): DataProxy {
     if (!this.proxy) {
       this.initQueryManager();
-      this.proxy = this.queryManager.dataStore.getCache();
+      this.proxy = this.queryManager.dataStore.getCache() as DataProxy;
     }
     return this.proxy;
   }

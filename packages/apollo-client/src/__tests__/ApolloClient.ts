@@ -11,7 +11,7 @@ describe('ApolloClient', () => {
     it('will read some data from the store', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
+        cache: new InMemoryCache().restore({
           ROOT_QUERY: {
             a: 1,
             b: 2,
@@ -55,7 +55,7 @@ describe('ApolloClient', () => {
     it('will read some deeply nested data from the store', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
+        cache: new InMemoryCache().restore({
           ROOT_QUERY: {
             a: 1,
             b: 2,
@@ -153,7 +153,7 @@ describe('ApolloClient', () => {
     it('will read some data from the store with variables', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
+        cache: new InMemoryCache().restore({
           ROOT_QUERY: {
             'field({"literal":true,"value":42})': 1,
             'field({"literal":false,"value":42})': 2,
@@ -181,7 +181,7 @@ describe('ApolloClient', () => {
   it('will read some data from the store with default values', () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
-      cache: new InMemoryCache({
+      cache: new InMemoryCache().restore({
         ROOT_QUERY: {
           'field({"literal":true,"value":-1})': 1,
           'field({"literal":false,"value":42})': 2,
@@ -299,7 +299,7 @@ describe('ApolloClient', () => {
     it('will read some deeply nested data from the store at any id', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
+        cache: new InMemoryCache().restore({
           ROOT_QUERY: {
             __typename: 'Foo',
             a: 1,
@@ -448,7 +448,7 @@ describe('ApolloClient', () => {
     it('will read some data from the store with variables', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
+        cache: new InMemoryCache().restore({
           foo: {
             __typename: 'Foo',
             'field({"literal":true,"value":42})': 1,
@@ -481,13 +481,13 @@ describe('ApolloClient', () => {
       });
       const client2 = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
+        cache: new InMemoryCache().restore({
           bar: { __typename: 'Foo', a: 1, b: 2, c: 3 },
         }),
       });
       const client3 = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
+        cache: new InMemoryCache().restore({
           foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
         }),
       });
@@ -548,7 +548,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -566,7 +566,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -587,7 +587,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 4,
@@ -616,7 +616,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -647,7 +647,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -710,7 +710,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -766,7 +766,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 1,
@@ -811,7 +811,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 2,
@@ -937,7 +937,7 @@ describe('ApolloClient', () => {
     it('will write some deeply nested data into the store at any id', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({}, { dataIdFromObject: (o: any) => o.id }),
+        cache: new InMemoryCache({ dataIdFromObject: (o: any) => o.id }),
       });
 
       client.writeFragment({
@@ -958,7 +958,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         foo: {
           __typename: 'Foo',
@@ -996,7 +996,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         foo: {
           __typename: 'Foo',
@@ -1028,7 +1028,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         foo: {
           __typename: 'Foo',
@@ -1061,7 +1061,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         foo: {
           __typename: 'Foo',
@@ -1113,7 +1113,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         foo: {
           __typename: 'Foo',
@@ -1159,7 +1159,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         foo: {
           __typename: 'Foo',
@@ -1207,7 +1207,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         foo: {
           __typename: 'Foo',
@@ -1242,7 +1242,7 @@ describe('ApolloClient', () => {
     it('will write data locally which will then be read back', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
+        cache: new InMemoryCache().restore({
           foo: {
             __typename: 'Foo',
             a: 1,
@@ -1392,7 +1392,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         foo: {
           __typename: 'Foo',
@@ -1417,12 +1417,9 @@ describe('ApolloClient', () => {
     it('will write data to a specific id', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(
-          {},
-          {
-            dataIdFromObject: (o: any) => o.key,
-          },
-        ),
+        cache: new InMemoryCache({
+          dataIdFromObject: (o: any) => o.key,
+        }),
       });
 
       client.writeQuery({
@@ -1483,7 +1480,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -1516,12 +1513,9 @@ describe('ApolloClient', () => {
     it('will not use a default id getter if __typename is not present', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(
-          {},
-          {
-            addTypename: false,
-          },
-        ),
+        cache: new InMemoryCache({
+          addTypename: false,
+        }),
       });
 
       client.writeQuery({
@@ -1571,7 +1565,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -1681,7 +1675,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -1767,7 +1761,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -1832,7 +1826,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -1865,12 +1859,9 @@ describe('ApolloClient', () => {
     it('will not use a default id getter if id is present and __typename is not present', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(
-          {},
-          {
-            addTypename: false,
-          },
-        ),
+        cache: new InMemoryCache({
+          addTypename: false,
+        }),
       });
 
       client.writeQuery({
@@ -1897,7 +1888,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -1928,12 +1919,9 @@ describe('ApolloClient', () => {
     it('will not use a default id getter if _id is present but __typename is not present', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(
-          {},
-          {
-            addTypename: false,
-          },
-        ),
+        cache: new InMemoryCache({
+          addTypename: false,
+        }),
       });
 
       client.writeQuery({
@@ -1960,7 +1948,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -1991,12 +1979,9 @@ describe('ApolloClient', () => {
     it('will not use a default id getter if either _id or id is present when __typename is not also present', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache(
-          {},
-          {
-            addTypename: false,
-          },
-        ),
+        cache: new InMemoryCache({
+          addTypename: false,
+        }),
       });
 
       client.writeQuery({
@@ -2050,7 +2035,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,
@@ -2162,7 +2147,7 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({
         ROOT_QUERY: {
           a: 1,

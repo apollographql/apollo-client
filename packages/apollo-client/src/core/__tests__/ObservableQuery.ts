@@ -48,7 +48,7 @@ describe('ObservableQuery', () => {
   const createQueryManager = ({ link }: { link?: ApolloLink }) => {
     return new QueryManager({
       link: link || mockSingleLink(),
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
     });
   };
 
@@ -960,24 +960,21 @@ describe('ObservableQuery', () => {
 
       const client = new ApolloClient({
         link: ni,
-        cache: new InMemoryCache(
-          {},
-          {
-            fragmentMatcher: new IntrospectionFragmentMatcher({
-              introspectionQueryResultData: {
-                __schema: {
-                  types: [
-                    {
-                      kind: 'UNION',
-                      name: 'Creature',
-                      possibleTypes: [{ name: 'Person' }],
-                    },
-                  ],
-                },
+        cache: new InMemoryCache({
+          fragmentMatcher: new IntrospectionFragmentMatcher({
+            introspectionQueryResultData: {
+              __schema: {
+                types: [
+                  {
+                    kind: 'UNION',
+                    name: 'Creature',
+                    possibleTypes: [{ name: 'Person' }],
+                  },
+                ],
               },
-            }).match,
-          },
-        ),
+            },
+          }).match,
+        }),
       });
 
       const observable = client.watchQuery({

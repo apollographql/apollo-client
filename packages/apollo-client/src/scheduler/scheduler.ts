@@ -18,7 +18,7 @@ import { WatchQueryOptions } from '../core/watchQueryOptions';
 
 import { NetworkStatus } from '../core/networkStatus';
 
-export class QueryScheduler {
+export class QueryScheduler<TCacheShape> {
   // Map going from queryIds to query options that are in flight.
   public inFlightQueries: { [queryId: string]: WatchQueryOptions } = {};
 
@@ -32,7 +32,7 @@ export class QueryScheduler {
 
   // We use this instance to actually fire queries (i.e. send them to the batching
   // mechanism).
-  public queryManager: QueryManager;
+  public queryManager: QueryManager<TCacheShape>;
 
   // Map going from polling interval widths to polling timers.
   private pollingTimers: { [interval: number]: any } = {};
@@ -43,11 +43,11 @@ export class QueryScheduler {
     queryManager,
     ssrMode,
   }: {
-    queryManager: QueryManager;
-    ssrMode: boolean;
+    queryManager: QueryManager<TCacheShape>;
+    ssrMode?: boolean;
   }) {
     this.queryManager = queryManager;
-    this.ssrMode = ssrMode;
+    this.ssrMode = ssrMode || false;
   }
 
   public checkInFlight(queryId: string) {

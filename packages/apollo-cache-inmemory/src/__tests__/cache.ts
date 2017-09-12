@@ -16,10 +16,9 @@ describe('Cache', () => {
     } = {},
   ): DataProxy {
     return new InMemoryCache(
-      // XXX this is the old format. The tests need to be updated but since it is mapped down
-      initialState ? initialState.apollo.data : {},
       config || { addTypename: false },
-    );
+      // XXX this is the old format. The tests need to be updated but since it is mapped down
+    ).restore(initialState ? initialState.apollo.data : {});
   }
 
   describe('readQuery', () => {
@@ -509,7 +508,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
         },
@@ -525,7 +524,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -544,7 +543,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 4,
           b: 5,
@@ -568,7 +567,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           d: {
@@ -596,7 +595,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           d: {
@@ -644,7 +643,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -693,7 +692,7 @@ describe('Cache', () => {
         },
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
@@ -797,7 +796,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
           e: 4,
           h: {
@@ -825,7 +824,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
           e: 4,
           f: 5,
@@ -853,7 +852,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
           e: 4,
           f: 5,
@@ -882,7 +881,7 @@ describe('Cache', () => {
         `,
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
           e: 4,
           f: 5,
@@ -930,7 +929,7 @@ describe('Cache', () => {
         fragmentName: 'fooFragment',
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
           e: 4,
           f: 5,
@@ -972,7 +971,7 @@ describe('Cache', () => {
         fragmentName: 'barFragment',
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
           e: 4,
           f: 5,
@@ -1015,7 +1014,7 @@ describe('Cache', () => {
         },
       });
 
-      expect((proxy as InMemoryCache).getData()).toEqual({
+      expect((proxy as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,

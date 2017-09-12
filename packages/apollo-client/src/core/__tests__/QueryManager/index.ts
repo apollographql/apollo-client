@@ -53,7 +53,7 @@ describe('QueryManager', () => {
     return new QueryManager({
       link: link || mockSingleLink(),
       store: new DataStore(
-        new InMemoryCache({}, { addTypename: false, ...config }),
+        new InMemoryCache({ addTypename: false, ...config }),
       ),
     });
   };
@@ -1323,7 +1323,7 @@ describe('QueryManager', () => {
 
       // Make sure we updated the store with the new data
       expect(
-        (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+        (queryManager.dataStore.getCache() as InMemoryCache).extract()['5'],
       ).toEqual({
         id: '5',
         isPrivate: true,
@@ -1355,7 +1355,7 @@ describe('QueryManager', () => {
 
       // Make sure we updated the store with the new data
       expect(
-        (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+        (queryManager.dataStore.getCache() as InMemoryCache).extract()['5'],
       ).toEqual({
         id: '5',
         isPrivate: true,
@@ -1397,7 +1397,7 @@ describe('QueryManager', () => {
 
         // Make sure we updated the store with the new data
         expect(
-          (queryManager.dataStore.getCache() as InMemoryCache).getData()['5'],
+          (queryManager.dataStore.getCache() as InMemoryCache).extract()['5'],
         ).toEqual({
           id: '5',
           isPrivate: true,
@@ -1763,7 +1763,7 @@ describe('QueryManager', () => {
           .catch(() => {
             // make that the error thrown doesn't empty the state
             expect(
-              (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+              (queryManager.dataStore.getCache() as InMemoryCache).extract()[
                 '$ROOT_QUERY.author'
               ] as Object,
             ).toEqual(data['author']);
@@ -1846,7 +1846,7 @@ describe('QueryManager', () => {
         errorCallbacks: [
           () => {
             expect(
-              (queryManager.dataStore.getCache() as InMemoryCache).getData()[
+              (queryManager.dataStore.getCache() as InMemoryCache).extract()[
                 '$ROOT_QUERY.author'
               ] as Object,
             ).toEqual(data.author);
@@ -1855,7 +1855,7 @@ describe('QueryManager', () => {
       },
       result => {
         expect(result.data).toEqual(data);
-        expect((queryManager.dataStore.getCache() as InMemoryCache).getData()[
+        expect((queryManager.dataStore.getCache() as InMemoryCache).extract()[
           '$ROOT_QUERY.author'
         ] as Object).toEqual(data.author);
       },
@@ -2335,7 +2335,7 @@ describe('QueryManager', () => {
             result: { data: data2 },
           },
         ),
-        store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+        store: new DataStore(new InMemoryCache({ addTypename: false })),
         ssrMode: true,
       });
 
@@ -2868,7 +2868,7 @@ describe('QueryManager', () => {
       queryManager.resetStore();
 
       expect(
-        (queryManager.dataStore.getCache() as InMemoryCache).getData(),
+        (queryManager.dataStore.getCache() as InMemoryCache).extract(),
       ).toEqual({});
       expect(queryManager.queryStore.getStore()).toEqual({});
       expect(queryManager.mutationStore.getStore()).toEqual({});

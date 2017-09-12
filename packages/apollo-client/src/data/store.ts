@@ -22,14 +22,14 @@ export interface DataWrite {
   variables: Object;
 }
 
-export class DataStore {
-  private cache: ApolloCache;
+export class DataStore<TSerialized> {
+  private cache: ApolloCache<TSerialized>;
 
-  constructor(initialCache: ApolloCache) {
+  constructor(initialCache: ApolloCache<TSerialized>) {
     this.cache = initialCache;
   }
 
-  public getCache(): ApolloCache {
+  public getCache(): ApolloCache<TSerialized> {
     return this.cache;
   }
 

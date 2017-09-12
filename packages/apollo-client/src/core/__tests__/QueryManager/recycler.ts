@@ -42,7 +42,7 @@ describe('Subscription lifecycles', () => {
 
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
 

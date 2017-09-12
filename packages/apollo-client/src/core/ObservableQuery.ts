@@ -66,8 +66,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   private isCurrentlyPolling: boolean;
   private shouldSubscribe: boolean;
   private isTornDown: boolean;
-  private scheduler: QueryScheduler;
-  private queryManager: QueryManager;
+  private scheduler: QueryScheduler<any>;
+  private queryManager: QueryManager<any>;
   private observers: Observer<ApolloQueryResult<T>>[];
   private subscriptionHandles: Subscription[];
 
@@ -79,7 +79,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     options,
     shouldSubscribe = true,
   }: {
-    scheduler: QueryScheduler;
+    scheduler: QueryScheduler<any>;
     options: WatchQueryOptions;
     shouldSubscribe?: boolean;
   }) {

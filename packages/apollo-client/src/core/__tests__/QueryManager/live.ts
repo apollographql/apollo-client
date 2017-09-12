@@ -48,7 +48,7 @@ describe('Live queries', () => {
     };
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
 
@@ -114,7 +114,7 @@ describe('Live queries', () => {
     let count = 0;
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
 
@@ -198,7 +198,7 @@ describe('Live queries', () => {
     link.onUnsubscribe(() => cleanedupTimes++);
 
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
 

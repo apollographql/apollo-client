@@ -85,7 +85,7 @@ describe('subscribeToMore', () => {
     let counter = 0;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
       link,
     });
 
@@ -137,7 +137,7 @@ describe('subscribeToMore', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const obsHandle = client.watchQuery({
@@ -196,7 +196,7 @@ describe('subscribeToMore', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const obsHandle = client.watchQuery({

@@ -10,6 +10,6 @@ import InMemoryCache from 'apollo-cache-inmemory';
 export default (...mockedResponses: MockedResponse[]) => {
   return new QueryManager({
     link: mockSingleLink(...mockedResponses),
-    store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+    store: new DataStore(new InMemoryCache({ addTypename: false })),
   });
 };

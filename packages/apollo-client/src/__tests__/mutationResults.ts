@@ -131,17 +131,14 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       link,
-      cache: new InMemoryCache(
-        {},
-        {
-          dataIdFromObject: (obj: any) => {
-            if (obj.id && obj.__typename) {
-              return obj.__typename + obj.id;
-            }
-            return null;
-          },
+      cache: new InMemoryCache({
+        dataIdFromObject: (obj: any) => {
+          if (obj.id && obj.__typename) {
+            return obj.__typename + obj.id;
+          }
+          return null;
         },
-      ),
+      }),
     });
 
     return client.watchQuery({
@@ -162,17 +159,14 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       link,
-      cache: new InMemoryCache(
-        {},
-        {
-          dataIdFromObject: (obj: any) => {
-            if (obj.id && obj.__typename) {
-              return obj.__typename + obj.id;
-            }
-            return null;
-          },
+      cache: new InMemoryCache({
+        dataIdFromObject: (obj: any) => {
+          if (obj.id && obj.__typename) {
+            return obj.__typename + obj.id;
+          }
+          return null;
         },
-      ),
+      }),
     });
 
     return client.watchQuery({
@@ -686,7 +680,7 @@ describe('mutation results', () => {
 
     client = new ApolloClient({
       link,
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
     const watchedQuery = client.watchQuery({
@@ -733,7 +727,7 @@ describe('mutation results', () => {
     let count = 0;
 
     client = new ApolloClient({
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>
           new Observable(observer => {
@@ -795,7 +789,7 @@ describe('mutation results', () => {
     ])
       .then(() => {
         expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+          (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
         ).toEqual({
           ROOT_MUTATION: {
             'result({"a":1,"b":2})': 'hello',
@@ -813,7 +807,7 @@ describe('mutation results', () => {
     let count = 0;
 
     client = new ApolloClient({
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>
           new Observable(observer => {
@@ -874,7 +868,7 @@ describe('mutation results', () => {
     ])
       .then(() => {
         expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+          (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
         ).toEqual({
           ROOT_MUTATION: {
             'result({"a":1,"b":"water"})': 'hello',
@@ -891,7 +885,7 @@ describe('mutation results', () => {
     let count = 0;
 
     client = new ApolloClient({
-      cache: new InMemoryCache({}, { addTypename: false }),
+      cache: new InMemoryCache({ addTypename: false }),
       link: ApolloLink.from([
         ({ variables }) =>
           new Observable(observer => {
@@ -953,7 +947,7 @@ describe('mutation results', () => {
     ])
       .then(() => {
         expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).getData(),
+          (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
         ).toEqual({
           ROOT_MUTATION: {
             'result({"a":1,"b":2,"c":null})': 'hello',
@@ -1059,7 +1053,7 @@ describe('mutation results', () => {
         });
     });
 
-    it('does not fail if optional query variables are not supplied', () => {
+    fit('does not fail if optional query variables are not supplied', () => {
       let subscriptionHandle: Subscription;
       const mutationWithVars = gql`
         mutation createTodo($requiredVar: String!, $optionalVar: String) {

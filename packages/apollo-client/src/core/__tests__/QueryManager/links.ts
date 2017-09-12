@@ -70,7 +70,7 @@ describe('Link interactions', () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
 
@@ -113,7 +113,7 @@ describe('Link interactions', () => {
 
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
 
@@ -184,7 +184,7 @@ describe('Link interactions', () => {
 
     const link = new MockSubscriptionLink();
     const queryManager = new QueryManager({
-      store: new DataStore(new InMemoryCache({}, { addTypename: false })),
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
       link,
     });
 

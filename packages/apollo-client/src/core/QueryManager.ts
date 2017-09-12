@@ -69,12 +69,12 @@ export interface QueryPromise {
   reject: (error: Error) => void;
 }
 
-export class QueryManager {
-  public scheduler: QueryScheduler;
+export class QueryManager<TStore> {
+  public scheduler: QueryScheduler<TStore>;
   public link: ApolloLink;
   public mutationStore: MutationStore = new MutationStore();
   public queryStore: QueryStore = new QueryStore();
-  public dataStore: DataStore;
+  public dataStore: DataStore<TStore>;
 
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
@@ -107,7 +107,7 @@ export class QueryManager {
   }: {
     link: ApolloLink;
     queryDeduplication?: boolean;
-    store: DataStore;
+    store: DataStore<TStore>;
     onBroadcast?: () => void;
     ssrMode?: boolean;
   }) {

@@ -34,21 +34,31 @@ export function defaultDataIdFromObject(result: any): string | null {
   return null;
 }
 
-export class InMemoryCache extends ApolloCache {
-  private data: NormalizedCache;
+export class InMemoryCache extends ApolloCache<NormalizedCache> {
+  private data: NormalizedCache = {};
   private config: ApolloReducerConfig;
   private optimistic: OptimisticStoreItem[] = [];
   private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
 
-  constructor(
-    initialStore: NormalizedCache = {},
-    config: ApolloReducerConfig = {},
-  ) {
+  constructor(config: ApolloReducerConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
     this.addTypename = this.config.addTypename ? true : false;
-    this.data = initialStore;
+  }
+
+  public restore(data: NormalizedCache): ApolloCache<NormalizedCache> {
+    this.data = data;
+    return this;
+  }
+
+  public extract(optimistic: boolean = false): NormalizedCache {
+    if (optimistic && this.optimistic.length > 0) {
+      const patches = this.optimistic.map(opt => opt.data);
+      return Object.assign({}, this.data, ...patches) as NormalizedCache;
+    }
+
+    return this.data;
   }
 
   public read<T>(query: Cache.ReadOptions): Cache.DiffResult<T> {
@@ -57,7 +67,7 @@ export class InMemoryCache extends ApolloCache {
     }
 
     return readQueryFromStore({
-      store: query.optimistic ? this.getOptimisticData() : this.data,
+      store: this.extract(query.optimistic),
       query: this.transformDocument(query.query),
       variables: query.variables,
       rootId: query.rootId,
@@ -73,7 +83,7 @@ export class InMemoryCache extends ApolloCache {
       result: write.result,
       variables: write.variables,
       document: write.query,
-      store: this.getData(),
+      store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
       fragmentMatcherFunction: this.config.fragmentMatcher,
     });
@@ -83,7 +93,7 @@ export class InMemoryCache extends ApolloCache {
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
     return diffQueryAgainstStore({
-      store: query.optimistic ? this.getOptimisticData() : this.data,
+      store: this.extract(query.optimistic),
       query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
@@ -103,10 +113,6 @@ export class InMemoryCache extends ApolloCache {
 
   public evict(query: Cache.EvictOptions): Cache.EvictionResult {
     throw new Error(`eviction is not implemented on InMemory Cache`);
-  }
-
-  public getData(): NormalizedCache {
-    return this.data;
   }
 
   public reset(): Promise<void> {
@@ -130,22 +136,16 @@ export class InMemoryCache extends ApolloCache {
     this.broadcastWatches();
   }
 
-  public getOptimisticData(): NormalizedCache {
-    if (this.optimistic.length === 0) {
-      return this.getData();
-    }
-
-    const patches = this.optimistic.map(opt => opt.data);
-    return Object.assign({}, this.data, ...patches) as NormalizedCache;
-  }
-
-  public performTransaction(transaction: Transaction) {
+  public performTransaction(transaction: Transaction<NormalizedCache>) {
     // TODO: does this need to be different, or is this okay for an in-memory cache?
     transaction(this);
   }
 
-  public recordOptimisticTransaction(transaction: Transaction, id: string) {
-    const before = this.getOptimisticData();
+  public recordOptimisticTransaction(
+    transaction: Transaction<NormalizedCache>,
+    id: string,
+  ) {
+    const before = this.extract(true);
 
     const orig = this.data;
     this.data = { ...before };
@@ -179,9 +179,8 @@ export class InMemoryCache extends ApolloCache {
     options: DataProxy.Query,
     optimistic: boolean = false,
   ): Cache.DiffResult<QueryType> {
-    let query = options.query;
     return this.read({
-      query,
+      query: options.query,
       variables: options.variables,
       optimistic,
     });
@@ -191,13 +190,10 @@ export class InMemoryCache extends ApolloCache {
     options: DataProxy.Fragment,
     optimistic: boolean = false,
   ): Cache.DiffResult<FragmentType> | null {
-    let document = getFragmentQueryDocument(
-      options.fragment,
-      options.fragmentName,
-    );
-
     return this.read({
-      query: this.transformDocument(document),
+      query: this.transformDocument(
+        getFragmentQueryDocument(options.fragment, options.fragmentName),
+      ),
       variables: options.variables,
       rootId: options.id,
       optimistic,

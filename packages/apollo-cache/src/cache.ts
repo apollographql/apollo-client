@@ -3,9 +3,9 @@ import { getFragmentQueryDocument } from 'apollo-utilities';
 
 import { DataProxy, Cache } from './types';
 
-export type Transaction = (c: ApolloCache) => void;
+export type Transaction<T> = (c: ApolloCache<T>) => void;
 
-export abstract class ApolloCache implements DataProxy {
+export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
   public abstract read<T>(query: Cache.ReadOptions): Cache.DiffResult<T>;
@@ -13,17 +13,34 @@ export abstract class ApolloCache implements DataProxy {
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
   public abstract evict(query: Cache.EvictOptions): Cache.EvictionResult;
-  public abstract getData(): any;
   public abstract reset(): Promise<void>;
+
+  // intializer / offline / ssr API
+  /**
+   * Replaces existing state in the cache (if any) with the values expressed by
+   * `serializedState`.
+   *
+   * Called when hydrating a cache (server side rendering, or offline storage),
+   * and also (potentially) during hot reloads.
+   */
+  public abstract restore(
+    serializedState: TSerialized,
+  ): ApolloCache<TSerialized>;
+
+  /**
+   * Exposes the cache's complete state, in a serializable format for later restoration.
+   */
+  public abstract extract(optimistic: boolean): TSerialized;
 
   // optimistic API
   public abstract removeOptimistic(id: string): void;
-  public abstract getOptimisticData(): any;
 
   // transactional API
-  public abstract performTransaction(transaction: Transaction): void;
+  public abstract performTransaction(
+    transaction: Transaction<TSerialized>,
+  ): void;
   public abstract recordOptimisticTransaction(
-    transaction: Transaction,
+    transaction: Transaction<TSerialized>,
     id: string,
   ): void;
 
@@ -32,6 +49,12 @@ export abstract class ApolloCache implements DataProxy {
     return document;
   }
 
+  // DataProxy API
+  /**
+   *
+   * @param options
+   * @param optimistic
+   */
   public readQuery<QueryType>(
     options: DataProxy.Query,
     optimistic: boolean = false,

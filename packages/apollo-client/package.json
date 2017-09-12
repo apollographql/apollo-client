@@ -49,7 +49,7 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "apollo-cache-core": "^0.2.0-alpha.9",
+    "apollo-cache": "^0.2.0-alpha.9",
     "apollo-link-core": "^0.5.4",
     "apollo-link-dedup": "^0.3.4",
     "apollo-utilities": "^0.2.0-alpha.6",

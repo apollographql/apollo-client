@@ -1,6 +1,6 @@
 {
   "name": "apollo-client",
-  "version": "2.0.0-alpha.10",
+  "version": "2.0.0-alpha.11",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/index.js",
@@ -26,7 +26,7 @@
     "watch": "tsc -w",
     "bundle": "rollup -c",
     "postbuild": "npm run bundle",
-    "prepublish": "./scripts/deploy.sh && cd npm",
+    "prepublishOnly": "./scripts/deploy.sh && cd npm",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "testonly": "jest",
     "preanalyze": "npm run build",

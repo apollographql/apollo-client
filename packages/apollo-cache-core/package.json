@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-core",
-  "version": "0.2.0-alpha.8",
+  "version": "0.2.0-alpha.9",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [

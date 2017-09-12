@@ -1,5 +1,5 @@
 #!/bin/sh -e
-
+cd "$(dirname "$0")" && cd ../
 
 # When we publish to npm, the published files are available in the root
 # directory, which allows for a clean include or require of sub-modules.
@@ -16,16 +16,15 @@ node -e "var package = require('./package.json'); \
 "
 
 # Compile new files
-npm run compile
+npm run build
 
 # Make sure the ./npm directory is empty
 rm -rf ./npm
 mkdir ./npm
 
 # Copy all files from ./lib/src to /npm
-cd ./lib/src && cp -r ./ ../../npm/
+cd ./lib && cp -r ./ ../npm/
 # Copy also the umd bundle with the source map file
-cd ../
 cp apollo.umd.js ../npm/ && cp apollo.umd.js.map ../npm/
 
 # Back to the root directory
@@ -35,6 +34,8 @@ cd ../
 # The built output as requiring any further transformation.
 node -e "var package = require('./package.json'); \
   delete package.babel; \
+  delete package.jest; \
+  delete package.private; \
   delete package.scripts; \
   delete package.options; \
   package.main = 'apollo.umd.js'; \
@@ -50,13 +51,12 @@ node -e "var package = require('./package.json'); \
 
 
 # Copy few more files to ./npm
-cp README.md npm/
-cp LICENSE npm/
-cp src/index.js.flow npm/
+cp ../../README.md npm/
+cp ../../LICENSE npm/
 # please keep this in sync with the filename used in package.main
-cp src/index.js.flow npm/apollo.umd.js.flow
+# cp src/index.js.flow npm/
+# cp src/index.js.flow npm/apollo.umd.js.flow
 # flow typings
-cp -R flow-typed npm/
+# cp -R flow-typed npm/
 
-echo 'deploying to npm...'
-cd npm && npm publish --tag alpha
+cd npm && npm publish --tag=alpha

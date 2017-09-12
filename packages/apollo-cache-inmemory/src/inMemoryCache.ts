@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';
+import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache-core';
 
 import {
   getFragmentQueryDocument,

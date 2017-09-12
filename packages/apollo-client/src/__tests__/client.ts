@@ -6,7 +6,7 @@ import { ApolloLink, Observable } from 'apollo-link-core';
 import InMemoryCache, {
   IntrospectionFragmentMatcher,
   FragmentMatcherInterface,
-} from 'apollo-cache-inmemory';
+} from 'apollo-cache-core-inmemory';
 
 import { QueryManager } from '../core/QueryManager';
 import { WatchQueryOptions } from '../core/watchQueryOptions';

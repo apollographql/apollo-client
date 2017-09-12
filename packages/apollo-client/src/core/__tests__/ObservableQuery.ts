@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link-core';
 import InMemoryCache, {
   IntrospectionFragmentMatcher,
-} from 'apollo-cache-inmemory';
+} from 'apollo-cache-core-inmemory';
 
 import mockQueryManager from '../../__mocks__/mockQueryManager';
 import mockWatchQuery from '../../__mocks__/mockWatchQuery';

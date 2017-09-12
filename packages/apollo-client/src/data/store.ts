@@ -1,5 +1,5 @@
 import { ExecutionResult, DocumentNode } from 'graphql';
-import { ApolloCache, Cache, DataProxy } from 'apollo-cache';
+import { ApolloCache, Cache, DataProxy } from 'apollo-cache-core';
 
 import { QueryStoreValue } from '../data/queries';
 import {

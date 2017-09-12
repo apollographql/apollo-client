@@ -1,6 +1,6 @@
 import { assign, cloneDeep } from 'lodash';
 import { addTypenameToDocument } from 'apollo-utilities';
-import InMemoryCache from 'apollo-cache-inmemory';
+import InMemoryCache from 'apollo-cache-core-inmemory';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
 

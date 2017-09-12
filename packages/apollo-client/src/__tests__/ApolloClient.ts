@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { ApolloLink } from 'apollo-link-core';
-import InMemoryCache from 'apollo-cache-inmemory';
+import InMemoryCache from 'apollo-cache-core-inmemory';
 
 import { withWarning } from '../util/wrap';
 

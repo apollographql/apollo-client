@@ -7,7 +7,7 @@ import {
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
 import Deduplicator from 'apollo-link-dedup';
-import { Cache } from 'apollo-cache';
+import { Cache } from 'apollo-cache-core';
 import {
   assign,
   getDefaultValues,

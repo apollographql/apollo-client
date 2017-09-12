@@ -35,7 +35,7 @@
     "filesize": "npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache-core": "^0.2.0-alpha.9",
+    "apollo-cache": "^0.2.0-alpha.9",
     "apollo-utilities": "^0.2.0-alpha.6",
     "graphql-anywhere": "^4.0.0-alpha.6"
   },

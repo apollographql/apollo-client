@@ -12,7 +12,7 @@ export namespace DataProxy {
     /**
      * Any variables that the GraphQL query may depend on.
      */
-    variables?: Object;
+    variables?: any;
   }
 
   export interface Fragment {
@@ -41,7 +41,7 @@ export namespace DataProxy {
     /**
      * Any variables that your GraphQL fragments depend on.
      */
-    variables?: Object;
+    variables?: any;
   }
 
   export interface WriteQueryOptions extends Query {

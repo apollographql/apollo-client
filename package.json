@@ -16,7 +16,7 @@
     "coverage": "lerna run -- coverage",
     "coverage:upload": "codecov",
     "danger": "danger run --verbose",
-    "prexdeploy": "npm run build && npm test",
+    "predeploy": "npm run build && npm test",
     "deploy":
       "lerna publish -m \"chore: Publish\" --independent --cd-version=prerelease --preid=alpha --npm-tag=alpha && cd packages/apollo-client && npm run deploy"
   },

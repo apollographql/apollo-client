@@ -1,5 +1,5 @@
 import { ApolloLink, FetchResult } from 'apollo-link-core';
-import { Cache, ApolloCache, DataProxy } from 'apollo-cache-core';
+import { Cache, ApolloCache, DataProxy } from 'apollo-cache';
 import { isProduction } from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';

@@ -2239,6 +2239,25 @@ describe('client', () => {
       clock.tick(0);
       return outerPromise;
     });
+
+    it('uses defaultFetchPolicy', () => {
+      const client = new ApolloClient({
+        networkInterface,
+        addTypename: false,
+        defaultFetchPolicy: 'network-only',
+      });
+
+      // Run a query first to initialize the store
+      return (
+        client
+          .query({ query })
+          // then query for real
+          .then(() => client.query({ query }))
+          .then(result => {
+            assert.deepEqual<{}>(result.data, { myNumber: { n: 2 } });
+          })
+      );
+    });
   });
 
   it('should expose a method called printAST that is prints graphql queries', () => {

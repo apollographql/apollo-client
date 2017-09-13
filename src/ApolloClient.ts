@@ -58,6 +58,7 @@ import { isProduction } from './util/environment';
 
 import {
   WatchQueryOptions,
+  FetchPolicy,
   SubscriptionOptions,
   MutationOptions,
 } from './core/watchQueryOptions';
@@ -120,6 +121,7 @@ export default class ApolloClient implements DataProxy {
   public reducerConfig: ApolloReducerConfig;
   public addTypename: boolean;
   public disableNetworkFetches: boolean;
+  public defaultFetchPolicy: FetchPolicy;
   /**
    * The dataIdFromObject function used by this client instance.
    */
@@ -183,6 +185,7 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools?: boolean;
       queryDeduplication?: boolean;
       fragmentMatcher?: FragmentMatcherInterface;
+      defaultFetchPolicy?: FetchPolicy;
     } = {},
   ) {
     let { dataIdFromObject } = options;
@@ -197,6 +200,7 @@ export default class ApolloClient implements DataProxy {
       connectToDevTools,
       fragmentMatcher,
       queryDeduplication = true,
+      defaultFetchPolicy = 'cache-first',
     } = options;
 
     if (typeof reduxRootSelector === 'function') {
@@ -289,6 +293,7 @@ export default class ApolloClient implements DataProxy {
     this.fieldWithArgs = getStoreKeyName;
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
+    this.defaultFetchPolicy = defaultFetchPolicy;
 
     if (ssrForceFetchDelay) {
       setTimeout(
@@ -624,6 +629,7 @@ export default class ApolloClient implements DataProxy {
       queryDeduplication: this.queryDeduplication,
       fragmentMatcher: this.fragmentMatcher,
       ssrMode: this.ssrMode,
+      defaultFetchPolicy: this.defaultFetchPolicy,
     });
   }
 

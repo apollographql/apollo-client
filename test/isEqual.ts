@@ -55,4 +55,17 @@ describe('isEqual', () => {
     assert(!isEqual({ x: { a: 1, b: 2, c: 3 } }, { x: { a: 1, b: 2 } }));
     assert(!isEqual({ x: { a: 1, b: 2 } }, { x: { a: 1, b: 2, c: 3 } }));
   });
+
+  it('should correctly compare deep objects without object prototype ', () => {
+    // Solves https://github.com/apollographql/apollo-client/issues/2132
+    const objNoProto = Object.create(null);
+    objNoProto.a = { b: 2, c: [3, 4] };
+    objNoProto.e = Object.create(null);
+    objNoProto.e.f = 5;
+    assert(isEqual(objNoProto, { a: { b: 2, c: [3, 4] }, e: { f: 5 } }));
+    assert(!isEqual(objNoProto, { a: { b: 2, c: [3, 4] }, e: { f: 6 } }));
+    assert(!isEqual(objNoProto, { a: { b: 2, c: [3, 4] }, e: null }));
+    assert(!isEqual(objNoProto, { a: { b: 2, c: [3] }, e: { f: 5 } }));
+    assert(!isEqual(objNoProto, null));
+  });
 });

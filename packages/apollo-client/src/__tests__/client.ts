@@ -2,7 +2,7 @@ import { cloneDeep, assign } from 'lodash';
 import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
-import { ApolloLink, Observable } from 'apollo-link-core';
+import { ApolloLink, Observable } from 'apollo-link';
 import InMemoryCache, {
   IntrospectionFragmentMatcher,
   FragmentMatcherInterface,

@@ -1,4 +1,4 @@
-import { ApolloLink, Observable } from 'apollo-link-core';
+import { ApolloLink, Observable } from 'apollo-link';
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 import InMemoryCache from 'apollo-cache-inmemory';

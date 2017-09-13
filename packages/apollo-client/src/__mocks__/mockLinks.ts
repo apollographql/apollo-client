@@ -4,7 +4,7 @@ import {
   FetchResult,
   Observable,
   // Observer,
-} from 'apollo-link-core';
+} from 'apollo-link';
 
 import { print } from 'graphql/language/printer';
 

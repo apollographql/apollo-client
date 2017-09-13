@@ -1,4 +1,4 @@
-import { ApolloLink, FetchResult } from 'apollo-link-core';
+import { ApolloLink, FetchResult } from 'apollo-link';
 import { Cache, ApolloCache, DataProxy } from 'apollo-cache';
 import { isProduction } from 'apollo-utilities';
 

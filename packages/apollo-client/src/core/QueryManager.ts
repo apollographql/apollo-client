@@ -3,7 +3,7 @@ import {
   ApolloLink,
   Operation as Request,
   FetchResult,
-} from 'apollo-link-core';
+} from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
 import Deduplicator from 'apollo-link-dedup';

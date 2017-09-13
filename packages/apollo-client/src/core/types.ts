@@ -1,7 +1,7 @@
 import { DocumentNode, GraphQLError } from 'graphql';
 import { QueryStoreValue } from '../data/queries';
 import { NetworkStatus } from './networkStatus';
-import { FetchResult } from 'apollo-link-core';
+import { FetchResult } from 'apollo-link';
 
 export type QueryListener = (
   queryStoreValue: QueryStoreValue,

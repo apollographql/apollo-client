@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { ApolloLink, Observable } from 'apollo-link-core';
+import { ApolloLink, Observable } from 'apollo-link';
 import InMemoryCache, {
   IntrospectionFragmentMatcher,
 } from 'apollo-cache-inmemory';

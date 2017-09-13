@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix Date handling in isEqual [PR #2131](https://github.com/apollographql/apollo-client/pull/2131)
 - Fix errors when `isEqual` called with object having no prototype [PR #2138](https://github.com/apollographql/apollo-client/pull/2138)
 - Support @live and @defer queries via watchQuery
 - Refactor query tracking internally to QueryManager

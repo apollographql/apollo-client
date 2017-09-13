@@ -2,6 +2,8 @@
 
 **The master branch is the beta version of Apollo Client 2.0, to find the current @latest, take a look at the `latest` branch. For update information, check out the [upgrade guide](Upgrade.md)**
 
+**The documentation site still references the 1.0 API until we are out of beta for the 2.0**
+
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, etc. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client` you should use it with one of its view layer integrations.
 
 To get started with the React integration go to our [**React Apollo documentation website**](http://dev.apollodata.com/react/).
@@ -32,14 +34,14 @@ To use this client in a web browser or mobile app, you'll need a build system ca
 
 ## Usage
 
-If you know you want to use the core `apollo-client` package you can get started by constructing an instance of the core class [`ApolloClient`][] with a network interface created by network interface you may call the [`createNetworkInterface`][] function like so:
+If you know you want to use the core `apollo-client` package you can get started by constructing an instance of the core class [`ApolloClient`][] with a link created by HttpLink you may creaete a new [`HttpLink`][] instance like so:
 
 ```js
-import ApolloClient, { createNetworkInterface } from 'apollo-client';
+import ApolloClient, { HttpLink } from 'apollo-client-preset';
 import gql from 'graphql-tag';
 
 const client = new ApolloClient({
-  networkInterface: createNetworkInterface({
+  link: new HttpLink({
     uri: 'https://graphql.example.com',
   }),
 });

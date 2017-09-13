@@ -1,24 +1,24 @@
 # [Apollo client](http://dev.apollodata.com/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-**The master branch is the beta version of Apollo Client 2.0, to find the current @latest, take a look at the `latest` branch. For update information, check out the [upgrade guide](Upgrade.md)**
+**The master branch is the beta version of Apollo Client 2.0. To find the current @latest, take a look at the `latest` branch. For update information, check out the [upgrade guide](Upgrade.md).**
 
-**The documentation site still references the 1.0 API until we are out of beta for the 2.0**
+**The documentation site still references the 1.0 API until we are out of beta for 2.0.**
 
-Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, etc. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client` you should use it with one of its view layer integrations.
+Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
 
-To get started with the React integration go to our [**React Apollo documentation website**](http://dev.apollodata.com/react/).
+To get started with the React integration, go to our [**React Apollo documentation website**](http://dev.apollodata.com/react/).
 
-Apollo Client also has view layer integrations for [all the popular frontend frameworks](#learn-how-to-use-apollo-client-with-your-favorite-framework). For the best experience make sure to use the view integration layer for your frontend framework of choice.
+Apollo Client also has view layer integrations for [all the popular frontend frameworks](#learn-how-to-use-apollo-client-with-your-favorite-framework). For the best experience, make sure to use the view integration layer for your frontend framework of choice.
 
 Apollo Client can be used in any JavaScript frontend where you want to use data from a GraphQL server. It's:
 
 1. **Incrementally adoptable**, so that you can drop it into an existing JavaScript app and start using GraphQL for just part of your UI.
 2. **Universally compatible**, so that Apollo works with any build setup, any GraphQL server, and any GraphQL schema.
-2. **Simple to get started with**, you can start loading data right away and learn about advanced features later.
-3. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
-4. **Built for interactive apps**, so your users can make changes and see them reflected in the UI immediately.
-4. **Small and flexible**, so you don't get stuff you don't need. The core is under 25kb compressed.
-5. **Community driven**, Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
+3. **Simple to get started with**, so you can start loading data right away and learn about advanced features later.
+4. **Inspectable and understandable**, so that you can have great developer tools to understand exactly what is happening in your app.
+5. **Built for interactive apps**, so your users can make changes and see them reflected in the UI immediately.
+6. **Small and flexible**, so you don't get stuff you don't need. The core is under 25kb compressed.
+7. **Community driven**, because Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
 
 Get started on the [home page](http://dev.apollodata.com/), which has great examples for a variety of frameworks.
 
@@ -28,17 +28,25 @@ Get started on the [home page](http://dev.apollodata.com/), which has great exam
 npm install apollo-client graphql-tag --save
 ```
 
-To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3.
+To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3+.
 
 **NEW:** Install the [Apollo Client Developer tools for Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) for a great GraphQL developer experience!
 
 ## Usage
 
-If you know you want to use the core `apollo-client` package you can get started by constructing an instance of the core class [`ApolloClient`][] with a link created by HttpLink you may creaete a new [`HttpLink`][] instance like so:
+You get started by constructing an instance of the core class [`ApolloClient`][]. If you load `ApolloClient` from the [`apollo-client-preset`][] package, it will be configured with a few reasonable defaults such as our standard in-memory cache and a link to a GraphQL API at `/graphql`.
+
+```js
+import ApolloClient from 'apollo-client-preset';
+
+const client = new ApolloClient();
+```
+
+
+To point `ApolloClient` at a different URL, just create your own `HttpLink` instance, like so, replacing `https://graphql.example.com` with your GraphQL API's URL:
 
 ```js
 import ApolloClient, { HttpLink } from 'apollo-client-preset';
-import gql from 'graphql-tag';
 
 const client = new ApolloClient({
   link: new HttpLink({
@@ -47,11 +55,11 @@ const client = new ApolloClient({
 });
 ```
 
-Replace `https://graphql.example.com` with your GraphQL APIs URL and you’re off to the moon!
-
-To execute a query with your client you may now call the `client.query` method like this:
+Most of the time you'll hook up your client to a frontend integration. But if you'd like to directly execute a query with your client, you may now call the `client.query` method like this:
 
 ```js
+import gql from 'graphql-tag';
+
 client.query({
   query: gql`
     query TodoApp {
@@ -69,10 +77,10 @@ client.query({
 
 Now your client will be primed with some data in its cache. You can continue to make queries, or you can get your `client` instance to perform all sorts of advanced tasks on your GraphQL data. Such as [reactively watching queries with `watchQuery`][], [changing data on your server with `mutate`][], or [reading a fragment from your local cache with `readFragment`][].
 
-To learn more about all of the features available to you through the `apollo-client` package be sure to read through the [**`apollo-client` API reference**][].
+To learn more about all of the features available to you through the `apollo-client` package, be sure to read through the [**`apollo-client` API reference**][].
 
 [`ApolloClient`]: http://dev.apollodata.com/core/apollo-client-api.html
-[`createNetworkInterface`]: http://dev.apollodata.com/core/network.html
+[`apollo-client-preset`]: https://www.npmjs.com/package/apollo-client-preset
 [reactively watching queries with `watchQuery`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.watchQuery
 [changing data on your server with `mutate`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.mutate
 [reading a fragment from your local cache with `readFragment`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.readFragment

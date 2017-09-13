@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-inmemory",
-  "version": "0.2.0-alpha.12",
+  "version": "0.2.0-alpha.13",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -35,7 +35,7 @@
     "filesize": "npm run build:browser"
   },
   "dependencies": {
-    "apollo-cache": "^0.2.0-alpha.12",
+    "apollo-cache": "^0.2.0-alpha.13",
     "apollo-utilities": "^0.2.0-alpha.6",
     "graphql-anywhere": "^4.0.0-alpha.6"
   },

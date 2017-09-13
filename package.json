@@ -34,17 +34,17 @@
     {
       "name": "apollo-client",
       "path": "./packages/apollo-client/lib/bundle.min.js",
-      "threshold": "11 Kb"
+      "threshold": "11.1 Kb"
     },
     {
       "name": "apollo-client-preset",
       "path": "./packages/apollo-client-preset/lib/bundle.min.js",
-      "threshold": "35 Kb"
+      "threshold": "28 Kb"
     },
     {
       "name": "apollo-utilities",
       "path": "./packages/apollo-utilities/lib/bundle.min.js",
-      "threshold": "4.6 Kb"
+      "threshold": "4.65 Kb"
     },
     {
       "name": "graphql-anywhere",

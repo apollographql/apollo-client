@@ -22,8 +22,8 @@
   },
   "bundlesize": [
     {
-      "name": "apollo-cache-core",
-      "path": "./packages/apollo-cache-core/lib/bundle.min.js",
+      "name": "apollo-cache",
+      "path": "./packages/apollo-cache/lib/bundle.min.js",
       "threshold": "1 Kb"
     },
     {

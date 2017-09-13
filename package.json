@@ -18,7 +18,7 @@
     "danger": "danger run --verbose",
     "predeploy": "npm run build && npm test",
     "deploy":
-      "lerna publish -m \"chore: Publish\" --independent --cd-version=prerelease --preid=alpha --npm-tag=alpha && cd packages/apollo-client && npm run deploy"
+      "lerna publish -m \"chore: Publish\" --independent --cd-version=prerelease --preid=beta --npm-tag=beta && cd packages/apollo-client && npm run deploy"
   },
   "bundlesize": [
     {

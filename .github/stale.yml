@@ -4,7 +4,7 @@ daysUntilStale: 21
 daysUntilClose: 14
 staleLabel: no-recent-activity
 # whitelist of lables to not mark stale
-exemptLables:
+exemptLabels:
   - discussion
   - good-first-issue
   - revisit

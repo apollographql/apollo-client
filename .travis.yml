@@ -8,10 +8,11 @@ install:
 
 script:
   - npm run danger
-  - npm test
+
+    # using jest --coverage also runs the tests so this will cut down CI time
+  - npm run coverage
 
     # run coverage and file size checks
-  - npm run coverage
   - npm run coverage:upload || true #ignore failures
 
     # make sure files don't get too large

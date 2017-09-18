@@ -141,6 +141,6 @@ const cache = new InMemoryCache({
 });
 
 const client = new ApolloClient({
-  cache: cache.restore(window.__APOLLO_STATE || {})
+  cache: cache.restore(window.__APOLLO_STATE__ || {})
 });
 ```

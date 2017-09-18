@@ -92,11 +92,8 @@ import { App } from '/imports/app';
 export const start = () => {
   const client = new ApolloClient({
     link: new Link({ uri: 'http://localhost:3000' }),
-    cache: new Cache(window.__APOLLO_STATE__),
+    cache: new Cache().restore(window.__APOLLO_STATE__),
   });
-
-  // XXX this will have to be updated in react-apollo
-  client.initStore = () => {}
 
   const WrappedApp = (
     <ApolloProvider client={client}>
@@ -144,3 +141,32 @@ const client = new ApolloClient({
   cache: cache.restore(window.__APOLLO_STATE__ || {})
 });
 ```
+
+
+If you have previously used `getInitialState` for SSR, that API has been moved to the cache itself instead of on the client. The before:
+
+```js
+import ApolloClient from "apollo-client";
+
+const client = new ApolloClient();
+
+// do some data loading things using getDataFromTree
+
+const state = client.getInitialState();
+```
+
+becomes
+
+```js
+import ApolloClient from "apollo-client";
+import InMemoryCache from "apollo-cache-inmemory";
+
+const cache = new InMemoryCache();
+const client = new ApolloClient({ cache });
+
+// do some data loading things using getDataFromTree
+
+const state = cache.extract();
+```
+
+

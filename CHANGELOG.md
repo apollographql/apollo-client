@@ -5,6 +5,8 @@
 
 - Fix errors when `isEqual` called with object having no prototype [PR #2138](https://github.com/apollographql/apollo-client/pull/2138)
 
+- Allow middleware to terminate the request early [PR #2176](https://github.com/apollographql/apollo-client/pull/2176)
+
 ### 1.9.2
 - Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)
 - Fix referential equality bug for queries with custom resolvers [PR #2053](https://github.com/apollographql/apollo-client/pull/2053)

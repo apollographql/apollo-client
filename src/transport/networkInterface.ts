@@ -134,8 +134,10 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
     return new Promise((resolve, reject) => {
       const { request, options } = requestAndOptions;
       const queue = (funcs: MiddlewareInterface[], scope: any) => {
-        const next = () => {
-          if (funcs.length > 0) {
+        const next = (err?: Error | Object) => {
+          if (err) {
+            reject(err);
+          } else if (funcs.length > 0) {
             const f = funcs.shift();
             if (f) {
               f.applyMiddleware.apply(scope, [{ request, options }, next]);

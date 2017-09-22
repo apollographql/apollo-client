@@ -321,6 +321,24 @@ describe('network interface', () => {
       });
     });
 
+    it('should cause the parent request to fail', () => {
+      const testWare1 = TestErrorWare([]);
+
+      const swapi = createNetworkInterface({
+        uri: 'http://graphql-swapi.test/',
+      });
+      swapi.use([testWare1]);
+      const simpleRequest = {
+        query: simpleQueryWithVar,
+        variables: { personNum: 1 },
+        debugName: 'People query',
+      };
+
+      return swapi.query(simpleRequest).catch(data => {
+        return assert.equal(data.message, 'uh oh');
+      });
+    });
+
     it('handle multiple middlewares', () => {
       const testWare1 = TestWare([{ key: 'personNum', val: 1 }]);
       const testWare2 = TestWare([{ key: 'filmNum', val: 1 }]);
@@ -572,6 +590,14 @@ function TestWare(
       });
 
       next();
+    },
+  };
+}
+
+function TestErrorWare(options: Array<{ key: string; val: any }> = []) {
+  return {
+    applyMiddleware: (request: MiddlewareRequest, next: Function): void => {
+      next(new Error('uh oh'));
     },
   };
 }

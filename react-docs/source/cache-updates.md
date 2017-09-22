@@ -43,7 +43,7 @@ const client = new ApolloClient({
 
 These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.
 
-If you want to get the dataIdFromObjectFunction (for instance when using the [`readFragment` function](/core/apollo-client-api.html#ApolloClient\.readFragment)), you can access it as `client.dataIdFromObject`.
+If you want to get the dataIdFromObjectFunction (for instance when using the [`readFragment` function](/core/apollo-client-api.html#ApolloClient.readFragment)), you can access it as `client.dataIdFromObject`.
 ```js
 const person = {
   __typename: 'Person',

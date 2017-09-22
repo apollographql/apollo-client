@@ -257,7 +257,7 @@ export interface SubscriptionOptions {
   },
 }
 
-export interface MutationOptions<T = { [key: string]: any}> {
+export type MutationOptions<T = { [key: string]: any}> = {
   mutation: DocumentNode,
   variables?: Object,
   optimisticResponse?: Object,

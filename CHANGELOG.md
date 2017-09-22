@@ -1,6 +1,8 @@
 # Change log
 
 ### vNEXT
+
+### 1.9.3
 - Fix Date handling in isEqual [PR #2131](https://github.com/apollographql/apollo-client/pull/2131)
 
 - Fix errors when `isEqual` called with object having no prototype [PR #2138](https://github.com/apollographql/apollo-client/pull/2138)

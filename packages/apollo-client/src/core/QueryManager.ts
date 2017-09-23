@@ -127,7 +127,7 @@ export class QueryManager<TStore> {
     updateQueries: updateQueriesByName,
     refetchQueries = [],
     update: updateWithProxyFn,
-    errorPolicy = 'ignore',
+    errorPolicy = 'none',
   }: MutationOptions): Promise<FetchResult<T>> {
     if (!mutation) {
       throw new Error(

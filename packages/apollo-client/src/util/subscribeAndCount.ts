@@ -19,11 +19,11 @@ export default function subscribeAndCount(
         // to be defined.
         setImmediate(() => {
           subscription.unsubscribe();
-          done(e);
+          done.fail(e);
         });
       }
     },
-    error: done,
+    error: done.fail,
   });
   return subscription;
 }

@@ -205,7 +205,9 @@ describe('QueryScheduler', () => {
     let observableQuery = scheduler.registerPollingQuery(queryOptions);
     const subscription = observableQuery.subscribe({
       next() {
-        done(new Error('Observer provided a result despite a network error.'));
+        done.fail(
+          new Error('Observer provided a result despite a network error.'),
+        );
       },
 
       error(errorVal) {

@@ -123,7 +123,7 @@ describe('ObservableQuery', () => {
             jest.runTimersToTime(100);
             done();
           } else if (handleCount === 2) {
-            done(new Error('Should not get more than one result'));
+            done.fail(new Error('Should not get more than one result'));
           }
         });
 
@@ -604,7 +604,7 @@ describe('ObservableQuery', () => {
         expect(result2.data).toEqual(dataTwo);
         try {
           (result2.data as any).stuff = 'awful';
-          done(
+          done.fail(
             new Error(
               'results from setVariables should be frozen in development mode',
             ),
@@ -993,7 +993,7 @@ describe('ObservableQuery', () => {
             stale: false,
           });
         } catch (e) {
-          done(e);
+          done.fail(e);
         }
 
         if (count === 1) {
@@ -1003,7 +1003,7 @@ describe('ObservableQuery', () => {
           setTimeout(done, 5);
         }
         if (count > 3) {
-          done(new Error('Observable.next called too many times'));
+          done.fail(new Error('Observable.next called too many times'));
         }
       });
     });
@@ -1292,7 +1292,7 @@ describe('ObservableQuery', () => {
         } else if (handleCount === 2) {
           // oops! we are polling for data, this should not happen.
           startedPolling = true;
-          done(new Error('should not start polling, already stopped'));
+          done.fail(new Error('should not start polling, already stopped'));
         }
       });
 

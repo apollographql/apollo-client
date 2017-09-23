@@ -573,7 +573,7 @@ describe('mutation results', () => {
               () => done.fail(new Error('Mutation should have failed')),
               () => obsHandle.refetch(),
             )
-            .then(() => done(), done);
+            .then(() => done(), done.fail);
         },
       });
     });
@@ -690,7 +690,7 @@ describe('mutation results', () => {
 
     const firstSubs = watchedQuery.subscribe({
       next: () => null,
-      error: done,
+      error: done.fail,
     });
 
     // Cancel the query right away!
@@ -800,7 +800,7 @@ describe('mutation results', () => {
         });
         done();
       })
-      .catch(done);
+      .catch(done.fail);
   });
 
   it('allows mutations with default values', done => {
@@ -878,7 +878,7 @@ describe('mutation results', () => {
         });
         done();
       })
-      .catch(done);
+      .catch(done.fail);
   });
 
   it('will pass null to the network interface when provided', done => {
@@ -957,7 +957,7 @@ describe('mutation results', () => {
         });
         done();
       })
-      .catch(done);
+      .catch(done.fail);
   });
 
   describe('store transaction updater', () => {

@@ -1212,7 +1212,7 @@ describe('QueryManager', () => {
       done: () => {},
       observer: {
         next() {
-          // done(new Error('Returned a result when it should not have.'));
+          // done.fail(new Error('Returned a result when it should not have.'));
         },
         error(error) {
           expect(error).toBeInstanceOf(Error);
@@ -1682,7 +1682,7 @@ describe('QueryManager', () => {
         expect(apolloError.graphQLErrors).toEqual([]);
         done();
       })
-      .catch(done);
+      .catch(done.fail);
   });
 
   it('should error when we attempt to give an id beginning with $', done => {
@@ -3197,7 +3197,7 @@ describe('QueryManager', () => {
       queryManager
         .query<any>({ query })
         .then(() => {
-          done(new Error('query() gave results on a store reset'));
+          done.fail(new Error('query() gave results on a store reset'));
         })
         .catch(() => {
           done();
@@ -3307,10 +3307,10 @@ describe('QueryManager', () => {
                 done();
                 break;
               default:
-                done(new Error('`next` was called to many times.'));
+                done.fail(new Error('`next` was called to many times.'));
             }
           },
-          error: error => done(error),
+          error: error => done.fail(error),
         });
     });
   });

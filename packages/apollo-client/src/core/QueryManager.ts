@@ -1,9 +1,4 @@
-import {
-  execute,
-  ApolloLink,
-  Operation as Request,
-  FetchResult,
-} from 'apollo-link';
+import { execute, ApolloLink, GraphQLRequest, FetchResult } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
 import Deduplicator from 'apollo-link-dedup';
@@ -149,7 +144,7 @@ export class QueryManager<TStore> {
       query: mutation,
       variables,
       operationName: getOperationName(mutation) || undefined,
-    } as Request;
+    } as GraphQLRequest;
 
     this.setQuery(mutationId, () => ({ document: mutation }));
 
@@ -835,7 +830,7 @@ export class QueryManager<TStore> {
       options.variables,
     );
 
-    const request: Request = {
+    const request: GraphQLRequest = {
       query: transformedDoc,
       variables,
       operationName: getOperationName(transformedDoc) || undefined,

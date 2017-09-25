@@ -882,69 +882,69 @@ describe('ObservableQuery', () => {
   describe('currentResult', () => {
     it('returns the same value as observableQuery.next got', done => {
       const queryWithFragment = gql`
-        fragment MaleInfo on Man {
-          trouserSize
+        fragment CatInfo on Cat {
+          isTabby
           __typename
         }
 
-        fragment FemaleInfo on Woman {
-          skirtSize
+        fragment DogInfo on Dog {
+          hasBrindleCoat
           __typename
         }
 
-        fragment PersonInfo on Person {
+        fragment PetInfo on Pet {
           id
           name
-          sex
-          ... on Man {
-            ...MaleInfo
+          age
+          ... on Cat {
+            ...CatInfo
             __typename
           }
-          ... on Woman {
-            ...FemaleInfo
+          ... on Dog {
+            ...DogInfo
             __typename
           }
           __typename
         }
 
         {
-          people {
-            ...PersonInfo
+          pets {
+            ...PetInfo
             __typename
           }
         }
       `;
 
-      const peopleData = [
+      const petData = [
         {
           id: 1,
-          name: 'John Smith',
-          sex: 'male',
-          trouserSize: 6,
-          __typename: 'Man',
+          name: 'Phoenix',
+          age: 6,
+          isTabby: true,
+          __typename: 'Cat',
         },
         {
           id: 2,
-          name: 'Sara Smith',
-          sex: 'female',
-          skirtSize: 4,
-          __typename: 'Woman',
+          name: 'Tempe',
+          age: 3,
+          isTabby: false,
+          __typename: 'Cat',
         },
         {
           id: 3,
-          name: 'Budd Deey',
-          sex: 'male',
-          trouserSize: 10,
-          __typename: 'Man',
+          name: 'Robin',
+          age: 10,
+          hasBrindleCoat: true,
+          __typename: 'Dog',
         },
       ];
 
       const dataOneWithTypename = {
-        people: peopleData.slice(0, 2),
+        pets: petData.slice(0, 2),
       };
 
       const dataTwoWithTypename = {
-        people: peopleData.slice(0, 3),
+        pets: petData.slice(0, 3),
       };
 
       const ni = mockSingleLink(
@@ -968,7 +968,7 @@ describe('ObservableQuery', () => {
                   {
                     kind: 'UNION',
                     name: 'Creature',
-                    possibleTypes: [{ name: 'Person' }],
+                    possibleTypes: [{ name: 'Pet' }],
                   },
                 ],
               },

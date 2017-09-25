@@ -52,7 +52,7 @@ describe('Link interactions', () => {
     };
 
     const evictionLink = (operation, forward) => {
-      const { cache } = operation.context;
+      const { cache } = operation.getContext();
       expect(cache).toBeDefined();
       return forward(operation).map(result => {
         setTimeout(() => {

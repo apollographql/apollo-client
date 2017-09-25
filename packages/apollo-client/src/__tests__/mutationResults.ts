@@ -1053,7 +1053,7 @@ describe('mutation results', () => {
         });
     });
 
-    fit('does not fail if optional query variables are not supplied', () => {
+    it('does not fail if optional query variables are not supplied', () => {
       let subscriptionHandle: Subscription;
       const mutationWithVars = gql`
         mutation createTodo($requiredVar: String!, $optionalVar: String) {

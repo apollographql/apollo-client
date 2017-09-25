@@ -2,7 +2,7 @@
 import * as Rx from 'rxjs';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
-import { DocumentNode, ExecutionResult } from 'graphql';
+import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
 import InMemoryCache, { ApolloReducerConfig } from 'apollo-cache-inmemory';
 
@@ -98,17 +98,19 @@ describe('QueryManager', () => {
   const mockMutation = ({
     mutation,
     data,
+    errors,
     variables = {},
     config = {},
   }: {
     mutation: DocumentNode;
-    data: Object;
+    data?: Object;
+    errors?: GraphQLError[],
     variables?: Object;
     config?: ApolloReducerConfig;
   }) => {
     const link = mockSingleLink({
       request: { query: mutation, variables },
-      result: { data },
+      result: { data, errors },
     });
     const queryManager = createQueryManager({
       link,
@@ -1283,6 +1285,23 @@ describe('QueryManager', () => {
         }
       `,
       data: { makeListPrivate: true },
+    });
+  });
+
+  it('runs a mutation with default errorPolicy equal to "none"', () => {
+    const errors = [new GraphQLError('foo')];
+
+    return mockMutation({
+      mutation: gql`
+        mutation makeListPrivate {
+          makeListPrivate(id: "5")
+        }
+      `,
+      errors
+    }).then(result => {
+      throw new Error('Mutation should not be successful with default errorPolicy');
+    }, error => {
+      expect(error.graphQLErrors).toEqual(errors);
     });
   });
 

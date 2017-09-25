@@ -82,7 +82,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
       dataId: write.dataId,
       result: write.result,
       variables: write.variables,
-      document: write.query,
+      document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
       fragmentMatcherFunction: this.config.fragmentMatcher,

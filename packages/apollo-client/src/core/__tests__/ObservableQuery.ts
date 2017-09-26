@@ -583,6 +583,72 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('does not invalidate the currentResult data if the variables change', done => {
+      const observable: ObservableQuery<any> = mockWatchQuery(
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query, variables: differentVariables },
+          result: { data: dataTwo },
+          delay: 25,
+        },
+      );
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.data).toEqual(dataOne);
+          expect(observable.currentResult().data).toEqual(dataOne);
+          observable.setVariables(differentVariables);
+          expect(observable.currentResult().data).toEqual(dataOne);
+          expect(observable.currentResult().loading).toBe(true);
+        }
+        // after loading is false and data has returned
+        if (handleCount === 3) {
+          expect(result.data).toEqual(dataTwo);
+          expect(observable.currentResult().data).toEqual(dataTwo);
+          expect(observable.currentResult().loading).toBe(false);
+          done();
+        }
+      });
+    });
+
+    it('does not invalidate the currentResult errors if the variables change', done => {
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { errors: [error] },
+        },
+        {
+          request: { query, variables: differentVariables },
+          result: { data: dataTwo },
+        },
+      );
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        errorPolicy: 'all',
+      });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.errors).toEqual([error]);
+          expect(observable.currentResult().errors).toEqual([error]);
+          observable.setVariables(differentVariables);
+          expect(observable.currentResult().errors).toEqual([error]);
+        }
+        // after loading is done and new results are returned
+        if (handleCount === 3) {
+          expect(result.data).toEqual(dataTwo);
+          expect(observable.currentResult().data).toEqual(dataTwo);
+          expect(observable.currentResult().loading).toBe(false);
+          done();
+        }
+      });
+    });
+
     it('returns results that are frozen in development mode', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
@@ -840,7 +906,6 @@ describe('ObservableQuery', () => {
           // Nothing should happen, so we'll wait a moment to check that
           setTimeout(() => !errored && done(), 10);
         } else if (handleCount === 2) {
-          console.log(result);
           errored = true;
           throw new Error('Observable callback should not fire twice');
         }

@@ -407,6 +407,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     tryFetch: boolean = false,
     fetchResults = true,
   ): Promise<ApolloQueryResult<T>> {
+    // since setVariables restarts the subscription, we reset the tornDown status
+    this.isTornDown = false;
+
     const newVariables = {
       ...this.variables,
       ...variables,
@@ -514,7 +517,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     if (this.observers.length === 1) this.setUpQuery();
 
     return () => {
-      this.isTornDown = true;
       this.observers = this.observers.filter(obs => obs !== observer);
 
       if (this.observers.length === 0) {
@@ -565,6 +567,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   private tearDownQuery() {
+    this.isTornDown = true;
+
     if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
       this.isCurrentlyPolling = false;

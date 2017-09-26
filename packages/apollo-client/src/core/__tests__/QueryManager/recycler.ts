@@ -78,6 +78,7 @@ describe('Subscription lifecycles', () => {
         if (count === 2) {
           expect(result.loading).toBe(false);
           expect(result.data).toEqual(initialData);
+          expect(observable.currentResult().data).toEqual(initialData);
 
           // step 2, recycle it
           observable.setOptions({
@@ -98,6 +99,7 @@ describe('Subscription lifecycles', () => {
             // step 4, start new Subscription;
             const recyled = resubscribe();
             const currentResult = recyled.currentResult();
+            expect(recyled.isTornDown).toEqual(false);
             expect(currentResult.data).toEqual(initialData);
             done();
           }, 10);

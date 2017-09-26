@@ -412,7 +412,9 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       ...variables,
     };
 
-    if (isEqual(newVariables, this.variables) && !tryFetch) {
+    const sameVariables = isEqual(newVariables, this.variables);
+
+    if (sameVariables && !tryFetch) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
@@ -423,6 +425,12 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     } else {
       this.variables = newVariables;
       this.options.variables = newVariables;
+
+      // When the query variables change, we must invalidate our last result and error
+      if (!sameVariables) {
+        this.lastResult = null;
+        this.lastError = null;
+      }
 
       // See comment above
       if (this.observers.length === 0) {
@@ -504,6 +512,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       };
     }
 
+    this.isTornDown = false;
     this.observers.push(observer);
 
     // Deliver initial result
@@ -514,7 +523,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     if (this.observers.length === 1) this.setUpQuery();
 
     return () => {
-      this.isTornDown = true;
       this.observers = this.observers.filter(obs => obs !== observer);
 
       if (this.observers.length === 0) {
@@ -565,6 +573,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
   }
 
   private tearDownQuery() {
+    this.isTornDown = true;
+
     if (this.isCurrentlyPolling) {
       this.scheduler.stopPollingQuery(this.queryId);
       this.isCurrentlyPolling = false;

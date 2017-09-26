@@ -583,6 +583,60 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('invalidates the currentResult data if the variables change', done => {
+      const observable: ObservableQuery<any> = mockWatchQuery(
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query, variables: differentVariables },
+          result: { data: dataTwo },
+          delay: 100,
+        },
+      );
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.data).toEqual(dataOne);
+          expect(observable.currentResult().data).toEqual(dataOne);
+          observable.setVariables(differentVariables);
+          expect(observable.currentResult().data).toBeNull();
+          done();
+        }
+      });
+    });
+
+    it('invalidates the currentResult errors if the variables change', done => {
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { errors: [error] },
+        },
+        {
+          request: { query, variables: differentVariables },
+          result: { data: dataTwo },
+          delay: 100,
+        },
+      );
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        errorPolicy: 'all',
+      });
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.errors).toEqual([error]);
+          expect(observable.currentResult().errors).toEqual([error]);
+          observable.setVariables(differentVariables);
+          expect(observable.currentResult().errors).toBeNull();
+          done();
+        }
+      });
+    });
+
     it('returns results that are frozen in development mode', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {

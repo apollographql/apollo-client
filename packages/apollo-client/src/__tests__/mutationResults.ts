@@ -555,7 +555,7 @@ describe('mutation results', () => {
               },
             })
             .then(
-              () => done(new Error('Mutation should have failed')),
+              () => done.fail(new Error('Mutation should have failed')),
               () =>
                 client.mutate({
                   mutation,
@@ -570,7 +570,7 @@ describe('mutation results', () => {
                 }),
             )
             .then(
-              () => done(new Error('Mutation should have failed')),
+              () => done.fail(new Error('Mutation should have failed')),
               () => obsHandle.refetch(),
             )
             .then(() => done(), done);
@@ -1192,7 +1192,7 @@ describe('mutation results', () => {
               },
             })
             .then(
-              () => done(new Error('Mutation should have failed')),
+              () => done.fail(new Error('Mutation should have failed')),
               () =>
                 client.mutate({
                   mutation,
@@ -1228,10 +1228,10 @@ describe('mutation results', () => {
                 }),
             )
             .then(
-              () => done(new Error('Mutation should have failed')),
+              () => done.fail(new Error('Mutation should have failed')),
               () => obsHandle.refetch(),
             )
-            .then(() => done(), done);
+            .then(() => done(), done.fail);
         },
       });
     });

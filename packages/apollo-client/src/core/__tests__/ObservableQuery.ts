@@ -123,7 +123,7 @@ describe('ObservableQuery', () => {
             jest.runTimersToTime(100);
             done();
           } else if (handleCount === 2) {
-            done(new Error('Should not get more than one result'));
+            done.fail(new Error('Should not get more than one result'));
           }
         });
 
@@ -604,7 +604,7 @@ describe('ObservableQuery', () => {
         expect(result2.data).toEqual(dataTwo);
         try {
           (result2.data as any).stuff = 'awful';
-          done(
+          done.fail(
             new Error(
               'results from setVariables should be frozen in development mode',
             ),
@@ -760,40 +760,43 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not rerun observer callback if the variables change but new data is in store', done => {
-      const manager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables: differentVariables },
-          result: { data: dataOne },
-        },
-      );
+    fit(
+      'does not rerun observer callback if the variables change but new data is in store',
+      done => {
+        const manager = mockQueryManager(
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables: differentVariables },
+            result: { data: dataOne },
+          },
+        );
 
-      manager.query({ query, variables: differentVariables }).then(() => {
-        const observable: ObservableQuery<any> = manager.watchQuery({
-          query,
-          variables,
-          notifyOnNetworkStatusChange: false,
+        manager.query({ query, variables: differentVariables }).then(() => {
+          const observable: ObservableQuery<any> = manager.watchQuery({
+            query,
+            variables,
+            notifyOnNetworkStatusChange: false,
+          });
+
+          let errored = false;
+          subscribeAndCount(done, observable, (handleCount, result) => {
+            if (handleCount === 1) {
+              expect(result.data).toEqual(dataOne);
+              observable.setVariables(differentVariables);
+
+              // Nothing should happen, so we'll wait a moment to check that
+              setTimeout(() => !errored && done(), 10);
+            } else if (handleCount === 2) {
+              errored = true;
+              throw new Error('Observable callback should not fire twice');
+            }
+          });
         });
-
-        let errored = false;
-        subscribeAndCount(done, observable, (handleCount, result) => {
-          if (handleCount === 1) {
-            expect(result.data).toEqual(dataOne);
-            observable.setVariables(differentVariables);
-
-            // Nothing should happen, so we'll wait a moment to check that
-            setTimeout(() => !errored && done(), 10);
-          } else if (handleCount === 2) {
-            errored = true;
-            throw new Error('Observable callback should not fire twice');
-          }
-        });
-      });
-    });
+      },
+    );
 
     it('does not rerun query if variables do not change', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
@@ -838,11 +841,12 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(dataOne);
-          observable.setVariables(variables, true, false);
+          observable.setVariables(variables, false, false);
 
           // Nothing should happen, so we'll wait a moment to check that
           setTimeout(() => !errored && done(), 10);
         } else if (handleCount === 2) {
+          console.log(result);
           errored = true;
           throw new Error('Observable callback should not fire twice');
         }
@@ -993,7 +997,7 @@ describe('ObservableQuery', () => {
             stale: false,
           });
         } catch (e) {
-          done(e);
+          done.fail(e);
         }
 
         if (count === 1) {
@@ -1003,7 +1007,7 @@ describe('ObservableQuery', () => {
           setTimeout(done, 5);
         }
         if (count > 3) {
-          done(new Error('Observable.next called too many times'));
+          done.fail(new Error('Observable.next called too many times'));
         }
       });
     });
@@ -1292,7 +1296,7 @@ describe('ObservableQuery', () => {
         } else if (handleCount === 2) {
           // oops! we are polling for data, this should not happen.
           startedPolling = true;
-          done(new Error('should not start polling, already stopped'));
+          done.fail(new Error('should not start polling, already stopped'));
         }
       });
 

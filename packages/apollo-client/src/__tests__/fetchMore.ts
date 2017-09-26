@@ -361,11 +361,11 @@ describe('fetchMore on an observable query', () => {
             done();
             break;
           default:
-            done(new Error('`next` called too many times'));
+            done.fail(new Error('`next` called too many times'));
         }
       },
-      error: error => done(error),
-      complete: () => done(new Error('Should not have completed')),
+      error: error => done.fail(error),
+      complete: () => done.fail(new Error('Should not have completed')),
     });
   });
 
@@ -414,7 +414,9 @@ describe('fetchMore on an observable query', () => {
             expect((data as any).entry.comments.length).toBe(10);
             break;
           default:
-            done(new Error('`next` called when it wasn’t supposed to be.'));
+            done.fail(
+              new Error('`next` called when it wasn’t supposed to be.'),
+            );
         }
       },
       error: error => {
@@ -425,14 +427,18 @@ describe('fetchMore on an observable query', () => {
               done();
               break;
             default:
-              done(new Error('`error` called when it wasn’t supposed to be.'));
+              done.fail(
+                new Error('`error` called when it wasn’t supposed to be.'),
+              );
           }
         } catch (error) {
-          done(error);
+          done.fail(error);
         }
       },
       complete: () =>
-        done(new Error('`complete` called when it wasn’t supposed to be.')),
+        done.fail(
+          new Error('`complete` called when it wasn’t supposed to be.'),
+        ),
     });
   });
 });
@@ -612,11 +618,11 @@ describe('fetchMore on an observable query with connection', () => {
             done();
             break;
           default:
-            done(new Error('`next` called too many times'));
+            done.fail(new Error('`next` called too many times'));
         }
       },
-      error: error => done(error),
-      complete: () => done(new Error('Should not have completed')),
+      error: error => done.fail(error),
+      complete: () => done.fail(new Error('Should not have completed')),
     });
   });
 
@@ -665,7 +671,9 @@ describe('fetchMore on an observable query with connection', () => {
             expect((data as any).entry.comments.length).toBe(10);
             break;
           default:
-            done(new Error('`next` called when it wasn’t supposed to be.'));
+            done.fail(
+              new Error('`next` called when it wasn’t supposed to be.'),
+            );
         }
       },
       error: error => {
@@ -676,14 +684,18 @@ describe('fetchMore on an observable query with connection', () => {
               done();
               break;
             default:
-              done(new Error('`error` called when it wasn’t supposed to be.'));
+              done.fail(
+                new Error('`error` called when it wasn’t supposed to be.'),
+              );
           }
         } catch (error) {
-          done(error);
+          done.fail(error);
         }
       },
       complete: () =>
-        done(new Error('`complete` called when it wasn’t supposed to be.')),
+        done.fail(
+          new Error('`complete` called when it wasn’t supposed to be.'),
+        ),
     });
   });
 });

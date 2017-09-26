@@ -601,7 +601,7 @@ describe('client', () => {
       if (e === expectedError) {
         done();
       } else {
-        done(e);
+        done.fail(e);
       }
     };
     process.removeListener('uncaughtException', oldHandler);
@@ -656,7 +656,7 @@ describe('client', () => {
       if (e === expectedError) {
         done();
       } else {
-        done(e);
+        done.fail(e);
       }
     };
     process.removeListener('uncaughtException', oldHandler);
@@ -685,7 +685,7 @@ describe('client', () => {
     const handle = client.watchQuery({ query });
     handle.subscribe({
       next() {
-        done(new Error('did not expect next to be called'));
+        done.fail(new Error('did not expect next to be called'));
       },
       error() {
         throw expectedError;
@@ -1242,11 +1242,11 @@ describe('client', () => {
             done();
           })
           .catch(err => {
-            done(err);
+            done.fail(err);
           });
       },
       error(err) {
-        done(err);
+        done.fail(err);
       },
     });
   });
@@ -1512,15 +1512,13 @@ describe('client', () => {
         request: { query },
         result: { data: networkFetch },
       });
+
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
       });
 
-      client.writeQuery({
-        query,
-        data: initialData,
-      });
+      client.writeQuery({ query, data: initialData });
 
       const obs = client.watchQuery({
         query,
@@ -1530,7 +1528,7 @@ describe('client', () => {
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(initialData);
-        } else if (handleCount === 2) {
+        } else if (handleCount === 3) {
           expect(result.data).toEqual(networkFetch);
           done();
         }
@@ -1649,7 +1647,9 @@ describe('client', () => {
         }
         if (handleCount === 2) {
           handleCalled = true;
-          done(new Error('Handle should never be called on standby query'));
+          done.fail(
+            new Error('Handle should never be called on standby query'),
+          );
         }
       });
     });
@@ -1845,7 +1845,7 @@ describe('client', () => {
     client
       .mutate({ mutation })
       .then(_ => {
-        done(new Error('Returned a result when it should not have.'));
+        done.fail(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
         expect(error.networkError).toBeDefined();
@@ -1882,7 +1882,7 @@ describe('client', () => {
     client
       .mutate({ mutation })
       .then(_ => {
-        done(new Error('Returned a result when it should not have.'));
+        done.fail(new Error('Returned a result when it should not have.'));
       })
       .catch((error: ApolloError) => {
         expect(error.graphQLErrors).toBeDefined();
@@ -2009,7 +2009,7 @@ describe('client', () => {
     ).toBe(1);
     mutatePromise
       .then(_ => {
-        done(new Error('Returned a result when it should not have.'));
+        done.fail(new Error('Returned a result when it should not have.'));
       })
       .catch((_: ApolloError) => {
         expect(
@@ -2417,7 +2417,7 @@ describe('@connect', () => {
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(initialData);
-        } else if (handleCount === 2) {
+        } else if (handleCount === 3) {
           expect(result.data).toEqual(networkFetch);
           done();
         }

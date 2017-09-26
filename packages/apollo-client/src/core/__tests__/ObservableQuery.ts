@@ -119,8 +119,7 @@ describe('ObservableQuery', () => {
             expect(result.data).toEqual(dataOne);
             observable.setOptions({ pollInterval: 0 });
 
-            // big number just to be sure
-            jest.runTimersToTime(100);
+            jest.runTimersToTime(5);
             done();
           } else if (handleCount === 2) {
             done.fail(new Error('Should not get more than one result'));
@@ -760,43 +759,38 @@ describe('ObservableQuery', () => {
       });
     });
 
-    fit(
-      'does not rerun observer callback if the variables change but new data is in store',
-      done => {
-        const manager = mockQueryManager(
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            request: { query, variables: differentVariables },
-            result: { data: dataOne },
-          },
-        );
+    it('does rerun observer callback if the variables change and new data is in store', done => {
+      const manager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query, variables: differentVariables },
+          result: { data: dataOne },
+        },
+      );
 
-        manager.query({ query, variables: differentVariables }).then(() => {
-          const observable: ObservableQuery<any> = manager.watchQuery({
-            query,
-            variables,
-            notifyOnNetworkStatusChange: false,
-          });
-
-          let errored = false;
-          subscribeAndCount(done, observable, (handleCount, result) => {
-            if (handleCount === 1) {
-              expect(result.data).toEqual(dataOne);
-              observable.setVariables(differentVariables);
-
-              // Nothing should happen, so we'll wait a moment to check that
-              setTimeout(() => !errored && done(), 10);
-            } else if (handleCount === 2) {
-              errored = true;
-              throw new Error('Observable callback should not fire twice');
-            }
-          });
+      manager.query({ query, variables: differentVariables }).then(() => {
+        const observable: ObservableQuery<any> = manager.watchQuery({
+          query,
+          variables,
+          notifyOnNetworkStatusChange: false,
         });
-      },
-    );
+
+        let errored = false;
+        subscribeAndCount(done, observable, (handleCount, result) => {
+          if (handleCount === 1) {
+            expect(result.data).toEqual(dataOne);
+            observable.setVariables(differentVariables);
+
+            // Nothing should happen, so we'll wait a moment to check that
+          } else if (handleCount === 2) {
+            done();
+          }
+        });
+      });
+    });
 
     it('does not rerun query if variables do not change', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
@@ -1258,8 +1252,6 @@ describe('ObservableQuery', () => {
   });
 
   describe('stopPolling', () => {
-    beforeEach(() => jest.useFakeTimers());
-    afterEach(() => jest.useRealTimers());
     it('does not restart polling after stopping and resubscribing', done => {
       const observable = mockWatchQuery(
         {
@@ -1272,7 +1264,7 @@ describe('ObservableQuery', () => {
         },
       );
 
-      observable.startPolling(100);
+      observable.startPolling(50);
       observable.stopPolling();
 
       let startedPolling = false;
@@ -1282,26 +1274,21 @@ describe('ObservableQuery', () => {
           // subscribing. later calls to this callback indicate that
           // we will be polling.
 
-          jest.runTimersToTime(101);
-
           // Wait a bit to see if the subscription's `next` was called
           // again, indicating that we are polling for data.
-          setImmediate(() => {
+          setTimeout(() => {
             if (!startedPolling) {
               // if we're not polling for data, it means this test
               // is ok
               done();
             }
-          });
+          }, 60);
         } else if (handleCount === 2) {
           // oops! we are polling for data, this should not happen.
           startedPolling = true;
           done.fail(new Error('should not start polling, already stopped'));
         }
       });
-
-      // trigger the first subscription callback
-      jest.runTimersToTime(1);
     });
   });
 });

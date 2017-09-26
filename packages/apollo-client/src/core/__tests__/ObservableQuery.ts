@@ -119,11 +119,10 @@ describe('ObservableQuery', () => {
             expect(result.data).toEqual(dataOne);
             observable.setOptions({ pollInterval: 0 });
 
-            // big number just to be sure
-            jest.runTimersToTime(100);
+            jest.runTimersToTime(5);
             done();
           } else if (handleCount === 2) {
-            done(new Error('Should not get more than one result'));
+            done.fail(new Error('Should not get more than one result'));
           }
         });
 
@@ -658,7 +657,7 @@ describe('ObservableQuery', () => {
         expect(result2.data).toEqual(dataTwo);
         try {
           (result2.data as any).stuff = 'awful';
-          done(
+          done.fail(
             new Error(
               'results from setVariables should be frozen in development mode',
             ),
@@ -814,7 +813,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not rerun observer callback if the variables change but new data is in store', done => {
+    it('does rerun observer callback if the variables change and new data is in store', done => {
       const manager = mockQueryManager(
         {
           request: { query, variables },
@@ -840,10 +839,8 @@ describe('ObservableQuery', () => {
             observable.setVariables(differentVariables);
 
             // Nothing should happen, so we'll wait a moment to check that
-            setTimeout(() => !errored && done(), 10);
           } else if (handleCount === 2) {
-            errored = true;
-            throw new Error('Observable callback should not fire twice');
+            done();
           }
         });
       });
@@ -892,11 +889,12 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(dataOne);
-          observable.setVariables(variables, true, false);
+          observable.setVariables(variables, false, false);
 
           // Nothing should happen, so we'll wait a moment to check that
           setTimeout(() => !errored && done(), 10);
         } else if (handleCount === 2) {
+          console.log(result);
           errored = true;
           throw new Error('Observable callback should not fire twice');
         }
@@ -936,69 +934,69 @@ describe('ObservableQuery', () => {
   describe('currentResult', () => {
     it('returns the same value as observableQuery.next got', done => {
       const queryWithFragment = gql`
-        fragment MaleInfo on Man {
-          trouserSize
+        fragment CatInfo on Cat {
+          isTabby
           __typename
         }
 
-        fragment FemaleInfo on Woman {
-          skirtSize
+        fragment DogInfo on Dog {
+          hasBrindleCoat
           __typename
         }
 
-        fragment PersonInfo on Person {
+        fragment PetInfo on Pet {
           id
           name
-          sex
-          ... on Man {
-            ...MaleInfo
+          age
+          ... on Cat {
+            ...CatInfo
             __typename
           }
-          ... on Woman {
-            ...FemaleInfo
+          ... on Dog {
+            ...DogInfo
             __typename
           }
           __typename
         }
 
         {
-          people {
-            ...PersonInfo
+          pets {
+            ...PetInfo
             __typename
           }
         }
       `;
 
-      const peopleData = [
+      const petData = [
         {
           id: 1,
-          name: 'John Smith',
-          sex: 'male',
-          trouserSize: 6,
-          __typename: 'Man',
+          name: 'Phoenix',
+          age: 6,
+          isTabby: true,
+          __typename: 'Cat',
         },
         {
           id: 2,
-          name: 'Sara Smith',
-          sex: 'female',
-          skirtSize: 4,
-          __typename: 'Woman',
+          name: 'Tempe',
+          age: 3,
+          isTabby: false,
+          __typename: 'Cat',
         },
         {
           id: 3,
-          name: 'Budd Deey',
-          sex: 'male',
-          trouserSize: 10,
-          __typename: 'Man',
+          name: 'Robin',
+          age: 10,
+          hasBrindleCoat: true,
+          __typename: 'Dog',
         },
       ];
 
       const dataOneWithTypename = {
-        people: peopleData.slice(0, 2),
+        pets: petData.slice(0, 2),
       };
 
       const dataTwoWithTypename = {
-        people: peopleData.slice(0, 3),
+        pets: petData.slice(0, 3),
       };
 
       const ni = mockSingleLink(
@@ -1022,7 +1020,7 @@ describe('ObservableQuery', () => {
                   {
                     kind: 'UNION',
                     name: 'Creature',
-                    possibleTypes: [{ name: 'Person' }],
+                    possibleTypes: [{ name: 'Pet' }],
                   },
                 ],
               },
@@ -1047,7 +1045,7 @@ describe('ObservableQuery', () => {
             stale: false,
           });
         } catch (e) {
-          done(e);
+          done.fail(e);
         }
 
         if (count === 1) {
@@ -1057,7 +1055,7 @@ describe('ObservableQuery', () => {
           setTimeout(done, 5);
         }
         if (count > 3) {
-          done(new Error('Observable.next called too many times'));
+          done.fail(new Error('Observable.next called too many times'));
         }
       });
     });
@@ -1308,8 +1306,6 @@ describe('ObservableQuery', () => {
   });
 
   describe('stopPolling', () => {
-    beforeEach(() => jest.useFakeTimers());
-    afterEach(() => jest.useRealTimers());
     it('does not restart polling after stopping and resubscribing', done => {
       const observable = mockWatchQuery(
         {
@@ -1322,7 +1318,7 @@ describe('ObservableQuery', () => {
         },
       );
 
-      observable.startPolling(100);
+      observable.startPolling(50);
       observable.stopPolling();
 
       let startedPolling = false;
@@ -1332,26 +1328,21 @@ describe('ObservableQuery', () => {
           // subscribing. later calls to this callback indicate that
           // we will be polling.
 
-          jest.runTimersToTime(101);
-
           // Wait a bit to see if the subscription's `next` was called
           // again, indicating that we are polling for data.
-          setImmediate(() => {
+          setTimeout(() => {
             if (!startedPolling) {
               // if we're not polling for data, it means this test
               // is ok
               done();
             }
-          });
+          }, 60);
         } else if (handleCount === 2) {
           // oops! we are polling for data, this should not happen.
           startedPolling = true;
-          done(new Error('should not start polling, already stopped'));
+          done.fail(new Error('should not start polling, already stopped'));
         }
       });
-
-      // trigger the first subscription callback
-      jest.runTimersToTime(1);
     });
   });
 });

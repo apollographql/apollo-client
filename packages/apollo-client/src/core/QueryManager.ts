@@ -1,9 +1,4 @@
-import {
-  execute,
-  ApolloLink,
-  Operation as Request,
-  FetchResult,
-} from 'apollo-link';
+import { execute, ApolloLink, GraphQLRequest, FetchResult } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
 import Deduplicator from 'apollo-link-dedup';
@@ -127,7 +122,7 @@ export class QueryManager<TStore> {
     updateQueries: updateQueriesByName,
     refetchQueries = [],
     update: updateWithProxyFn,
-    errorPolicy = 'ignore',
+    errorPolicy = 'none',
   }: MutationOptions): Promise<FetchResult<T>> {
     if (!mutation) {
       throw new Error(
@@ -149,7 +144,7 @@ export class QueryManager<TStore> {
       query: mutation,
       variables,
       operationName: getOperationName(mutation) || undefined,
-    } as Request;
+    } as GraphQLRequest;
 
     this.setQuery(mutationId, () => ({ document: mutation }));
 
@@ -835,7 +830,7 @@ export class QueryManager<TStore> {
       options.variables,
     );
 
-    const request: Request = {
+    const request: GraphQLRequest = {
       query: transformedDoc,
       variables,
       operationName: getOperationName(transformedDoc) || undefined,
@@ -956,10 +951,10 @@ export class QueryManager<TStore> {
     this.queries.forEach((info, id) => {
       if (!info.invalidated || !info.listeners) return;
       info.listeners
+        // it's possible for the listener to be undefined if the query is being stopped
+        // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
         .filter((x: QueryListener) => !!x)
         .forEach((listener: QueryListener) => {
-          // it's possible for the listener to be undefined if the query is being stopped
-          // See here for more detail: https://github.com/apollostack/apollo-client/issues/231
           listener(this.queryStore.get(id), info.newData);
         });
     });

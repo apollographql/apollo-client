@@ -2,7 +2,7 @@
 import * as Rx from 'rxjs';
 import { assign } from 'lodash';
 import gql from 'graphql-tag';
-import { DocumentNode, ExecutionResult } from 'graphql';
+import { DocumentNode, ExecutionResult, GraphQLError } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
 import InMemoryCache, { ApolloReducerConfig } from 'apollo-cache-inmemory';
 
@@ -98,17 +98,19 @@ describe('QueryManager', () => {
   const mockMutation = ({
     mutation,
     data,
+    errors,
     variables = {},
     config = {},
   }: {
     mutation: DocumentNode;
-    data: Object;
+    data?: Object;
+    errors?: GraphQLError[];
     variables?: Object;
     config?: ApolloReducerConfig;
   }) => {
     const link = mockSingleLink({
       request: { query: mutation, variables },
-      result: { data },
+      result: { data, errors },
     });
     const queryManager = createQueryManager({
       link,
@@ -193,7 +195,7 @@ describe('QueryManager', () => {
       },
       observer: {
         next() {
-          done(
+          done.fail(
             new Error('Returned a result when it was supposed to error out'),
           );
         },
@@ -275,7 +277,9 @@ describe('QueryManager', () => {
       },
       observer: {
         next() {
-          done(new Error('Returned data when it was supposed to error out.'));
+          done.fail(
+            new Error('Returned data when it was supposed to error out.'),
+          );
         },
 
         error(apolloError) {
@@ -337,7 +341,7 @@ describe('QueryManager', () => {
       },
       observer: {
         next() {
-          done(new Error('Should not fire next for an error'));
+          done.fail(new Error('Should not fire next for an error'));
         },
         error(error) {
           expect((error as any).graphQLErrors).toEqual([null]);
@@ -363,7 +367,7 @@ describe('QueryManager', () => {
       error: new Error('Network error'),
       observer: {
         next: () => {
-          done(new Error('Should not deliver result'));
+          done.fail(new Error('Should not deliver result'));
         },
         error: error => {
           const apolloError = error as ApolloError;
@@ -396,7 +400,7 @@ describe('QueryManager', () => {
       error: new Error('Network error'),
       observer: {
         next: () => {
-          done(new Error('Should not deliver result'));
+          done.fail(new Error('Should not deliver result'));
         },
       },
     });
@@ -425,10 +429,10 @@ describe('QueryManager', () => {
         delay: 1000,
         observer: {
           next: () => {
-            done(new Error('Should not deliver result'));
+            done.fail(new Error('Should not deliver result'));
           },
           error: () => {
-            done(new Error('Should not deliver result'));
+            done.fail(new Error('Should not deliver result'));
           },
         },
       });
@@ -562,7 +566,7 @@ describe('QueryManager', () => {
                 subOne.unsubscribe();
                 handle.refetch();
               } catch (e) {
-                done(e);
+                done.fail(e);
               }
             }, 0);
           } else if (subTwoCount === 3) {
@@ -571,7 +575,7 @@ describe('QueryManager', () => {
                 expect(subOneCount).toBe(2);
                 done();
               } catch (e) {
-                done(e);
+                done.fail(e);
               }
             }, 0);
           }
@@ -691,9 +695,9 @@ describe('QueryManager', () => {
               break;
             case 2:
               expect(result.data).toEqual(data3);
-              expect(result.data).not.toEqual(firstResultData);
+              expect(result.data).not.toBe(firstResultData);
               expect(result.data.b).toEqual(firstResultData.b);
-              expect(result.data.d).not.toEqual(firstResultData.d);
+              expect(result.data.d).not.toBe(firstResultData.d);
               expect(result.data.d.f).toEqual(firstResultData.d.f);
               done();
               break;
@@ -701,10 +705,10 @@ describe('QueryManager', () => {
               throw new Error('Next run too many times.');
           }
         } catch (error) {
-          done(error);
+          done.fail(error);
         }
       },
-      error: error => done(error),
+      error: error => done.fail(error),
     });
   });
 
@@ -747,10 +751,10 @@ describe('QueryManager', () => {
           expect(result.data).toEqual(observable.currentResult().data);
           done();
         } catch (error) {
-          done(error);
+          done.fail(error);
         }
       },
-      error: error => done(error),
+      error: error => done.fail(error),
     });
   });
 
@@ -1208,7 +1212,7 @@ describe('QueryManager', () => {
       done: () => {},
       observer: {
         next() {
-          // done(new Error('Returned a result when it should not have.'));
+          // done.fail(new Error('Returned a result when it should not have.'));
         },
         error(error) {
           expect(error).toBeInstanceOf(Error);
@@ -1284,6 +1288,28 @@ describe('QueryManager', () => {
       `,
       data: { makeListPrivate: true },
     });
+  });
+
+  it('runs a mutation with default errorPolicy equal to "none"', () => {
+    const errors = [new GraphQLError('foo')];
+
+    return mockMutation({
+      mutation: gql`
+        mutation makeListPrivate {
+          makeListPrivate(id: "5")
+        }
+      `,
+      errors,
+    }).then(
+      result => {
+        throw new Error(
+          'Mutation should not be successful with default errorPolicy',
+        );
+      },
+      error => {
+        expect(error.graphQLErrors).toEqual(errors);
+      },
+    );
   });
 
   it('runs a mutation with variables', () => {
@@ -1646,7 +1672,7 @@ describe('QueryManager', () => {
     })
       .query({ query })
       .then(() => {
-        done(new Error('Returned result on an errored fetchQuery'));
+        done.fail(new Error('Returned result on an errored fetchQuery'));
       })
       .catch(error => {
         const apolloError = error as ApolloError;
@@ -1656,7 +1682,7 @@ describe('QueryManager', () => {
         expect(apolloError.graphQLErrors).toEqual([]);
         done();
       })
-      .catch(done);
+      .catch(done.fail);
   });
 
   it('should error when we attempt to give an id beginning with $', done => {
@@ -1690,7 +1716,7 @@ describe('QueryManager', () => {
     })
       .query({ query })
       .then(() => {
-        done(new Error('Returned a result when it should not have.'));
+        done.fail(new Error('Returned a result when it should not have.'));
       })
       .catch(() => {
         done();
@@ -1758,7 +1784,9 @@ describe('QueryManager', () => {
         queryManager
           .query<any>({ query, fetchPolicy: 'network-only' })
           .then(() => {
-            done(new Error('Returned a result when it was not supposed to.'));
+            done.fail(
+              new Error('Returned a result when it was not supposed to.'),
+            );
           })
           .catch(() => {
             // make that the error thrown doesn't empty the state
@@ -1771,7 +1799,7 @@ describe('QueryManager', () => {
           });
       })
       .catch(() => {
-        done(new Error('Threw an error on the first query.'));
+        done.fail(new Error('Threw an error on the first query.'));
       });
   });
 
@@ -2230,7 +2258,7 @@ describe('QueryManager', () => {
     handle
       .refetch()
       .then(() => {
-        done(new Error('Error on refetch should reject promise'));
+        done.fail(new Error('Error on refetch should reject promise'));
       })
       .catch(error => {
         expect(error.graphQLErrors).toEqual([
@@ -2364,7 +2392,7 @@ describe('QueryManager', () => {
             case 2:
             default:
               doneCalled = true;
-              done(new Error('Only expected one result, not multiple'));
+              done.fail(new Error('Only expected one result, not multiple'));
           }
         },
       });
@@ -3038,7 +3066,7 @@ describe('QueryManager', () => {
       queryManager
         .fetchQuery('made up id', { query })
         .then(() => {
-          done(new Error('Returned a result.'));
+          done.fail(new Error('Returned a result.'));
         })
         .catch(error => {
           expect(error.message).toMatch('Store reset');
@@ -3169,7 +3197,7 @@ describe('QueryManager', () => {
       queryManager
         .query<any>({ query })
         .then(() => {
-          done(new Error('query() gave results on a store reset'));
+          done.fail(new Error('query() gave results on a store reset'));
         })
         .catch(() => {
           done();
@@ -3279,10 +3307,10 @@ describe('QueryManager', () => {
                 done();
                 break;
               default:
-                done(new Error('`next` was called to many times.'));
+                done.fail(new Error('`next` was called to many times.'));
             }
           },
-          error: error => done(error),
+          error: error => done.fail(error),
         });
     });
   });

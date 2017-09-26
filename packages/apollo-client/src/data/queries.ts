@@ -75,6 +75,11 @@ export class QueryStore {
       networkStatus = NetworkStatus.loading;
     }
 
+    let graphQLErrors: GraphQLError[] = [];
+    if (previousQuery && previousQuery.graphQLErrors) {
+      graphQLErrors = previousQuery.graphQLErrors;
+    }
+
     // XXX right now if QUERY_INIT is fired twice, like in a refetch situation, we just overwrite
     // the store. We probably want a refetch action instead, because I suspect that if you refetch
     // before the initial fetch is done, you'll get an error.
@@ -84,7 +89,7 @@ export class QueryStore {
       variables: query.variables,
       previousVariables,
       networkError: null,
-      graphQLErrors: [],
+      graphQLErrors: graphQLErrors,
       networkStatus,
       metadata: query.metadata,
     };
@@ -107,9 +112,7 @@ export class QueryStore {
     result: ExecutionResult,
     fetchMoreForQueryId: string | undefined,
   ) {
-    if (!this.store[queryId]) {
-      return;
-    }
+    if (!this.store[queryId]) return;
 
     this.store[queryId].networkError = null;
     this.store[queryId].graphQLErrors =
@@ -130,9 +133,7 @@ export class QueryStore {
     error: Error,
     fetchMoreForQueryId: string | undefined,
   ) {
-    if (!this.store[queryId]) {
-      return;
-    }
+    if (!this.store[queryId]) return;
 
     this.store[queryId].networkError = error;
     this.store[queryId].networkStatus = NetworkStatus.error;
@@ -146,9 +147,7 @@ export class QueryStore {
   }
 
   public markQueryResultClient(queryId: string, complete: boolean) {
-    if (!this.store[queryId]) {
-      return;
-    }
+    if (!this.store[queryId]) return;
 
     this.store[queryId].networkError = null;
     this.store[queryId].previousVariables = null;

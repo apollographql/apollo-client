@@ -583,7 +583,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('invalidates the currentResult data if the variables change', done => {
+    it('does not invalidate the currentResult data if the variables change', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
@@ -592,7 +592,7 @@ describe('ObservableQuery', () => {
         {
           request: { query, variables: differentVariables },
           result: { data: dataTwo },
-          delay: 100,
+          delay: 25,
         },
       );
 
@@ -601,13 +601,20 @@ describe('ObservableQuery', () => {
           expect(result.data).toEqual(dataOne);
           expect(observable.currentResult().data).toEqual(dataOne);
           observable.setVariables(differentVariables);
-          expect(observable.currentResult().data).toBeNull();
+          expect(observable.currentResult().data).toEqual(dataOne);
+          expect(observable.currentResult().loading).toBe(true);
+        }
+        // after loading is false and data has returned
+        if (handleCount === 3) {
+          expect(result.data).toEqual(dataTwo);
+          expect(observable.currentResult().data).toEqual(dataTwo);
+          expect(observable.currentResult().loading).toBe(false);
           done();
         }
       });
     });
 
-    it('invalidates the currentResult errors if the variables change', done => {
+    it('does not invalidate the currentResult errors if the variables change', done => {
       const queryManager = mockQueryManager(
         {
           request: { query, variables },
@@ -616,7 +623,6 @@ describe('ObservableQuery', () => {
         {
           request: { query, variables: differentVariables },
           result: { data: dataTwo },
-          delay: 100,
         },
       );
 
@@ -631,7 +637,13 @@ describe('ObservableQuery', () => {
           expect(result.errors).toEqual([error]);
           expect(observable.currentResult().errors).toEqual([error]);
           observable.setVariables(differentVariables);
-          expect(observable.currentResult().errors).toBeNull();
+          expect(observable.currentResult().errors).toEqual([error]);
+        }
+        // after loading is done and new results are returned
+        if (handleCount === 3) {
+          expect(result.data).toEqual(dataTwo);
+          expect(observable.currentResult().data).toEqual(dataTwo);
+          expect(observable.currentResult().loading).toBe(false);
           done();
         }
       });
@@ -894,7 +906,6 @@ describe('ObservableQuery', () => {
           // Nothing should happen, so we'll wait a moment to check that
           setTimeout(() => !errored && done(), 10);
         } else if (handleCount === 2) {
-          console.log(result);
           errored = true;
           throw new Error('Observable callback should not fire twice');
         }

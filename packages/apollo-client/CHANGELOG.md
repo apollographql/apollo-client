@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Fix currentResult when errorPolicy is set to 'all'
 - Fix default ErrorPolicy in QueryManager#mutate [PR #2194](https://github.com/apollographql/apollo-client/pull/2194)
 - Fix Date handling in isEqual [PR #2131](https://github.com/apollographql/apollo-client/pull/2131)
 - Fix errors when `isEqual` called with object having no prototype [PR #2138](https://github.com/apollographql/apollo-client/pull/2138)

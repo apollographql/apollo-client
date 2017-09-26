@@ -407,14 +407,15 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     tryFetch: boolean = false,
     fetchResults = true,
   ): Promise<ApolloQueryResult<T>> {
+    // since setVariables restarts the subscription, we reset the tornDown status
+    this.isTornDown = false;
+
     const newVariables = {
       ...this.variables,
       ...variables,
     };
 
-    const sameVariables = isEqual(newVariables, this.variables);
-
-    if (sameVariables && !tryFetch) {
+    if (isEqual(newVariables, this.variables) && !tryFetch) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
@@ -425,12 +426,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     } else {
       this.variables = newVariables;
       this.options.variables = newVariables;
-
-      // When the query variables change, we must invalidate our last result and error
-      if (!sameVariables) {
-        this.lastResult = null;
-        this.lastError = null;
-      }
 
       // See comment above
       if (this.observers.length === 0) {
@@ -512,7 +507,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       };
     }
 
-    this.isTornDown = false;
     this.observers.push(observer);
 
     // Deliver initial result

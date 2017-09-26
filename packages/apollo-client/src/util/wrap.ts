@@ -6,7 +6,7 @@ export default (done: (...args) => void, cb: (...args: any[]) => any) => (
   try {
     return cb(...args);
   } catch (e) {
-    done(e);
+    done.fail(e);
   }
 };
 

@@ -1175,10 +1175,10 @@ describe('optimistic mutation results', () => {
               done();
               break;
             default:
-              done(new Error('Next should not have been called again.'));
+              done.fail(new Error('Next should not have been called again.'));
           }
         },
-        error: error => done(error),
+        error: error => done.fail(error),
       });
 
       function twoMutations() {
@@ -1188,7 +1188,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse: customOptimisticResponse1,
             updateQueries,
           })
-          .catch(error => done(error));
+          .catch(error => done.fail(error));
 
         client
           .mutate({
@@ -1196,7 +1196,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse: customOptimisticResponse2,
             updateQueries,
           })
-          .catch(error => done(error));
+          .catch(error => done.fail(error));
       }
     });
   });
@@ -1681,10 +1681,10 @@ describe('optimistic mutation results', () => {
               done();
               break;
             default:
-              done(new Error('Next should not have been called again.'));
+              done.fail(new Error('Next should not have been called again.'));
           }
         },
-        error: error => done(error),
+        error: error => done.fail(error),
       });
 
       function twoMutations() {
@@ -1694,7 +1694,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse: customOptimisticResponse1,
             update,
           })
-          .catch(error => done(error));
+          .catch(error => done.fail(error));
 
         client
           .mutate({
@@ -1702,7 +1702,7 @@ describe('optimistic mutation results', () => {
             optimisticResponse: customOptimisticResponse2,
             update,
           })
-          .catch(error => done(error));
+          .catch(error => done.fail(error));
       }
     });
   });

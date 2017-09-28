@@ -412,6 +412,8 @@ describe('QueryManager', () => {
     }, 10);
   });
 
+  // XXX this looks like a bug in zen-observable but we should figure
+  // out a solution for it
   xit(
     'handles an unsubscribe action that happens before data returns',
     done => {
@@ -2919,15 +2921,27 @@ describe('QueryManager', () => {
         },
       };
 
+      const data2 = {
+        author: {
+          firstName: 'Johnny',
+          lastName: 'Smith',
+        },
+      };
+
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
-        () =>
+      const link: ApolloLink = new ApolloLink(
+        op =>
           new Observable(observer => {
             timesFired += 1;
-            observer.next({ data });
+            if (timesFired > 1) {
+              observer.next({ data: data2 });
+            } else {
+              observer.next({ data });
+            }
+            observer.complete();
             return;
           }),
-      ]);
+      );
       queryManager = createQueryManager({ link });
       const observable = queryManager.watchQuery<any>({ query });
 
@@ -2941,11 +2955,13 @@ describe('QueryManager', () => {
           queryManager.resetStore();
         },
         result => {
-          // only refetch once and make sure data hasn't changed
-          expect(result.data).toEqual(data);
+          // only refetch once and make sure data has changed
+          expect(result.data).toEqual(data2);
           expect(timesFired).toBe(2);
         },
-      );
+      ).catch(e => {
+        done.fail(e);
+      });
     });
 
     it('should not refetch toredown queries', done => {
@@ -3095,6 +3111,7 @@ describe('QueryManager', () => {
           query: query,
         },
         scheduler: queryManager.scheduler,
+        resetLastResults: jest.fn(() => {}),
       } as any) as ObservableQuery<any>;
 
       const queryId = 'super-fake-id';
@@ -3123,6 +3140,8 @@ describe('QueryManager', () => {
         },
         options,
         queryManager: queryManager,
+
+        resetLastResults: jest.fn(() => {}),
       } as any) as ObservableQuery<any>;
 
       const queryId = 'super-fake-id';
@@ -3155,6 +3174,8 @@ describe('QueryManager', () => {
         },
         options,
         queryManager: queryManager,
+
+        resetLastResults: jest.fn(() => {}),
       } as any) as ObservableQuery<any>;
 
       const queryId = 'super-fake-id';
@@ -3183,7 +3204,7 @@ describe('QueryManager', () => {
           lastName: 'Smith',
         },
       };
-      const link = ApolloLink.from([
+      const link = new ApolloLink(
         () =>
           new Observable(observer => {
             // reset the store as soon as we hear about the query
@@ -3191,7 +3212,7 @@ describe('QueryManager', () => {
             observer.next({ data });
             return;
           }),
-      ]);
+      );
 
       queryManager = createQueryManager({ link });
       queryManager

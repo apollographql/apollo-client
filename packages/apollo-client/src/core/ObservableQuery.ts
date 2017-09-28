@@ -223,6 +223,16 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     return this.lastResult;
   }
 
+  public getLastError(): ApolloError {
+    return this.lastError;
+  }
+
+  public resetLastResults(): void {
+    delete this.lastResult;
+    delete this.lastError;
+    this.isTornDown = false;
+  }
+
   public refetch(variables?: any): Promise<ApolloQueryResult<T>> {
     // early return if trying to read from cache during refetch
     if (this.options.fetchPolicy === 'cache-only') {
@@ -233,17 +243,21 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       );
     }
 
-    // update observable variables
-    this.variables = {
-      ...this.variables,
-      ...variables,
-    };
+    if (!isEqual(this.variables, variables)) {
+      // update observable variables
+      this.variables = {
+        ...this.variables,
+        ...variables,
+      };
+    }
 
-    // Update the existing options with new variables
-    this.options.variables = {
-      ...this.options.variables,
-      ...this.variables,
-    };
+    if (!isEqual(this.options.variables, this.variables)) {
+      // Update the existing options with new variables
+      this.options.variables = {
+        ...this.options.variables,
+        ...this.variables,
+      };
+    }
 
     // Override fetchPolicy for this call only
     const combinedOptions: WatchQueryOptions = {

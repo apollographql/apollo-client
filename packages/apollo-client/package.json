@@ -1,7 +1,7 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0-beta.3",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/index.js",
@@ -63,7 +63,7 @@
     "@types/jest": "21.1.1",
     "@types/lodash": "4.14.76",
     "@types/node": "8.0.31",
-    "apollo-cache-inmemory": "^0.2.0-beta.2",
+    "apollo-cache-inmemory": "^0.2.0-beta.3",
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
     "bundlesize": "0.13.2",

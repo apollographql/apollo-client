@@ -39,7 +39,7 @@
     {
       "name": "apollo-client-preset",
       "path": "./packages/apollo-client-preset/lib/bundle.min.js",
-      "threshold": "28 Kb"
+      "threshold": "30 Kb"
     },
     {
       "name": "apollo-utilities",

@@ -387,10 +387,6 @@ export class QueryManager<TStore> {
       // reset.
       if (!queryStoreValue) return;
 
-      // XXX This is to fix a strange race condition that was the root cause of react-apollo/#170
-      // queryStoreValue was sometimes the old queryStoreValue and not what's currently in the store.
-      // queryStoreValue = this.queryStore.get(queryId);
-
       const { observableQuery } = this.getQuery(queryId);
 
       const fetchPolicy = observableQuery
@@ -480,12 +476,7 @@ export class QueryManager<TStore> {
             data = newData.result;
             isMissing = !newData.complete ? !newData.complete : false;
           } else {
-            if (
-              lastResult &&
-              lastResult.data &&
-              !errorStatusChanged
-              // && queryStoreValue.previousVariables === queryStoreValue.variables
-            ) {
+            if (lastResult && lastResult.data && !errorStatusChanged) {
               data = lastResult.data;
               isMissing = false;
             } else {

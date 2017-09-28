@@ -9,7 +9,11 @@ import {
 } from 'graphql';
 
 import gql from 'graphql-tag';
-import { storeKeyNameFromField, IdValue } from 'apollo-utilities';
+import {
+  storeKeyNameFromField,
+  IdValue,
+  addTypenameToDocument
+} from "apollo-utilities";
 
 import {
   writeQueryToStore,
@@ -1545,6 +1549,32 @@ describe('writing to the store', () => {
 
         expect(newStore['1']).toEqual(result.todos[0]);
       }, /Missing field price/);
+    });
+
+    it('should warn if a result is missing __typename when required (using an heuristic matcher)', () => {
+      const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
+
+      const result: any = {
+        todos: [
+          {
+            id: '1',
+            name: 'Todo 1',
+            description: 'Description 1'
+          }
+        ],
+      };
+
+      return withWarning(() => {
+        const newStore = writeResultToStore({
+          dataId: 'ROOT_QUERY',
+          result,
+          document: addTypenameToDocument(query),
+          dataIdFromObject: getIdField,
+          fragmentMatcherFunction
+        });
+
+        expect(newStore['1']).toEqual(result.todos[0]);
+      }, /Missing field __typename/);
     });
 
     it('should not warn if a field is null', () => {

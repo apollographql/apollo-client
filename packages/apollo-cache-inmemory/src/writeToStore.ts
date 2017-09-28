@@ -192,6 +192,7 @@ export function writeSelectionSetToStore({
         } else {
           // if this is a defered field we don't need to throw / wanr
           const isDefered =
+            selection.directives &&
             selection.directives.length &&
             selection.directives.some(
               directive => directive.name && directive.name.value === 'defer',

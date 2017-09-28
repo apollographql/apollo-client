@@ -845,7 +845,6 @@ describe('ObservableQuery', () => {
       });
     });
 
-    // need to validate this test
     xit(
       'reruns observer callback if the variables change and change back',
       done => {
@@ -877,8 +876,6 @@ describe('ObservableQuery', () => {
           } else if (handleCount === 3) {
             expect(result.data).toEqual(dataTwo);
             observable.setVariables(variables);
-            console.log(dataTwo);
-            console.log(observable.currentResult());
             // back to first request
           } else if (handleCount === 4) {
             expect(result.data).toEqual(dataOne);

@@ -356,15 +356,11 @@ export class QueryManager<TStore> {
 
           this.removeFetchQueryPromise(requestId);
 
-          throw new ApolloError({
-            networkError: error,
-          });
+          throw new ApolloError({ networkError: error });
         }
       });
 
-      if (fetchPolicy !== 'cache-and-network') {
-        return networkResult;
-      }
+      if (fetchPolicy !== 'cache-and-network') return networkResult;
     }
 
     // If we have no query to send to the server, we should return the result
@@ -391,26 +387,24 @@ export class QueryManager<TStore> {
       // reset.
       if (!queryStoreValue) return;
 
-      // XXX This is to fix a strange race condition that was the root cause of react-apollo/#170
-      // queryStoreValue was sometimes the old queryStoreValue and not what's currently in the store.
-      queryStoreValue = this.queryStore.get(queryId);
-
       const { observableQuery } = this.getQuery(queryId);
 
       const fetchPolicy = observableQuery
         ? observableQuery.options.fetchPolicy
         : options.fetchPolicy;
 
+      // don't watch the store for queries on standby
+      if (fetchPolicy === 'standby') return;
+
       const errorPolicy = observableQuery
         ? observableQuery.options.errorPolicy
         : options.errorPolicy;
 
-      // don't watch the store for queries on standby
-      if (fetchPolicy === 'standby') return;
-
       const lastResult = observableQuery
         ? observableQuery.getLastResult()
         : null;
+
+      const lastError = observableQuery ? observableQuery.getLastError() : null;
 
       const shouldNotifyIfLoading =
         queryStoreValue.previousVariables ||
@@ -420,6 +414,12 @@ export class QueryManager<TStore> {
       const networkStatusChanged =
         lastResult &&
         queryStoreValue.networkStatus !== lastResult.networkStatus;
+
+      const errorStatusChanged =
+        errorPolicy &&
+        (lastError && lastError.graphQLErrors) !==
+          queryStoreValue.graphQLErrors &&
+        errorPolicy !== 'none';
 
       if (
         !isNetworkRequestInFlight(queryStoreValue.networkStatus) ||
@@ -462,109 +462,97 @@ export class QueryManager<TStore> {
               );
             }
           }
-        } else {
-          try {
-            let data: any;
-            let isMissing: boolean;
+          return;
+        }
 
-            if (newData) {
-              // clear out the latest new data, since we're now using it
-              this.setQuery(queryId, () => ({ newData: null }));
+        try {
+          let data: any;
+          let isMissing: boolean;
 
-              data = newData.result;
-              isMissing = !newData.complete ? !newData.complete : false;
+          if (newData) {
+            // clear out the latest new data, since we're now using it
+            this.setQuery(queryId, () => ({ newData: null }));
+
+            data = newData.result;
+            isMissing = !newData.complete ? !newData.complete : false;
+          } else {
+            if (lastResult && lastResult.data && !errorStatusChanged) {
+              data = lastResult.data;
+              isMissing = false;
             } else {
-              if (
-                lastResult &&
-                lastResult.data &&
-                queryStoreValue.previousVariables === queryStoreValue.variables
-              ) {
-                data = lastResult.data;
-                isMissing = false;
-              } else {
-                const { document } = this.getQuery(queryId);
-                const readResult = this.dataStore.getCache().diff({
-                  query: document as DocumentNode,
-                  variables:
-                    queryStoreValue.previousVariables ||
-                    queryStoreValue.variables,
-                  optimistic: true,
-                });
+              const { document } = this.getQuery(queryId);
+              const readResult = this.dataStore.getCache().diff({
+                query: document as DocumentNode,
+                variables:
+                  queryStoreValue.previousVariables ||
+                  queryStoreValue.variables,
+                optimistic: true,
+              });
 
-                data = readResult.result;
-                isMissing = !readResult.complete;
-              }
+              data = readResult.result;
+              isMissing = !readResult.complete;
             }
-
-            let resultFromStore: ApolloQueryResult<T>;
-
-            // If there is some data missing and the user has told us that they
-            // do not tolerate partial data then we want to return the previous
-            // result and mark it as stale.
-            if (isMissing && fetchPolicy !== 'cache-only') {
-              resultFromStore = {
-                data: lastResult && lastResult.data,
-                loading: isNetworkRequestInFlight(
-                  queryStoreValue.networkStatus,
-                ),
-                networkStatus: queryStoreValue.networkStatus,
-                stale: true,
-              };
-            } else {
-              resultFromStore = {
-                data,
-                loading: isNetworkRequestInFlight(
-                  queryStoreValue.networkStatus,
-                ),
-                networkStatus: queryStoreValue.networkStatus,
-                stale: false,
-              };
-            }
-
-            // if the query wants updates on errors we need to add it to the result
-            if (
-              errorPolicy === 'all' &&
-              queryStoreValue.graphQLErrors &&
-              queryStoreValue.graphQLErrors.length > 0
-            ) {
-              resultFromStore.errors = queryStoreValue.graphQLErrors;
-            }
-
-            if (observer.next) {
-              const isDifferentResult = !(
-                lastResult &&
-                resultFromStore &&
-                lastResult.networkStatus === resultFromStore.networkStatus &&
-                lastResult.stale === resultFromStore.stale &&
-                // We can do a strict equality check here because we include a `previousResult`
-                // with `readQueryFromStore`. So if the results are the same they will be
-                // referentially equal.
-                lastResult.data === resultFromStore.data
-              );
-
-              if (isDifferentResult || previouslyHadError) {
-                try {
-                  observer.next(maybeDeepFreeze(resultFromStore));
-                } catch (e) {
-                  // Throw error outside this control flow to avoid breaking Apollo's state
-                  setTimeout(() => {
-                    throw e;
-                  }, 0);
-                }
-              }
-            }
-            previouslyHadError = false;
-          } catch (error) {
-            previouslyHadError = true;
-            if (observer.error) {
-              observer.error(
-                new ApolloError({
-                  networkError: error,
-                }),
-              );
-            }
-            return;
           }
+
+          let resultFromStore: ApolloQueryResult<T>;
+
+          // If there is some data missing and the user has told us that they
+          // do not tolerate partial data then we want to return the previous
+          // result and mark it as stale.
+          if (isMissing && fetchPolicy !== 'cache-only') {
+            resultFromStore = {
+              data: lastResult && lastResult.data,
+              loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
+              networkStatus: queryStoreValue.networkStatus,
+              stale: true,
+            };
+          } else {
+            resultFromStore = {
+              data,
+              loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
+              networkStatus: queryStoreValue.networkStatus,
+              stale: false,
+            };
+          }
+
+          // if the query wants updates on errors we need to add it to the result
+          if (
+            errorPolicy === 'all' &&
+            queryStoreValue.graphQLErrors &&
+            queryStoreValue.graphQLErrors.length > 0
+          ) {
+            resultFromStore.errors = queryStoreValue.graphQLErrors;
+          }
+
+          if (observer.next) {
+            const isDifferentResult = !(
+              lastResult &&
+              resultFromStore &&
+              lastResult.networkStatus === resultFromStore.networkStatus &&
+              lastResult.stale === resultFromStore.stale &&
+              // We can do a strict equality check here because we include a `previousResult`
+              // with `readQueryFromStore`. So if the results are the same they will be
+              // referentially equal.
+              lastResult.data === resultFromStore.data
+            );
+
+            if (isDifferentResult || previouslyHadError) {
+              try {
+                observer.next(maybeDeepFreeze(resultFromStore));
+              } catch (e) {
+                // Throw error outside this control flow to avoid breaking Apollo's state
+                setTimeout(() => {
+                  throw e;
+                }, 0);
+              }
+            }
+          }
+          previouslyHadError = false;
+        } catch (error) {
+          previouslyHadError = true;
+          if (observer.error)
+            observer.error(new ApolloError({ networkError: error }));
+          return;
         }
       }
     };
@@ -778,6 +766,7 @@ export class QueryManager<TStore> {
 
     this.queryStore.reset(resetIds);
     this.mutationStore.reset();
+    // begin removing data from the store
     const dataStoreReset = this.dataStore.reset();
 
     // Similarly, we have to have to refetch each of the queries currently being
@@ -791,6 +780,7 @@ export class QueryManager<TStore> {
       if (!observableQuery) return;
       const fetchPolicy = observableQuery.options.fetchPolicy;
 
+      observableQuery.resetLastResults();
       if (fetchPolicy !== 'cache-only' && fetchPolicy !== 'standby') {
         observableQueryPromises.push(observableQuery.refetch());
       }

@@ -12,6 +12,7 @@ export {
   FetchPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
+  MutationUpdaterFn,
 } from './core/watchQueryOptions';
 export { NetworkStatus } from './core/networkStatus';
 export * from './core/types';

@@ -199,11 +199,17 @@ describe('ObservableQuery', () => {
 
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
-          request: { query: queryWithVars, variables: variables1 },
+          request: {
+            query: queryWithVars,
+            variables: variables1,
+          },
           result: { data },
         },
         {
-          request: { query: queryWithVars, variables: variables2 },
+          request: {
+            query: queryWithVars,
+            variables: variables2,
+          },
           result: { data: data2 },
         },
       );
@@ -212,8 +218,55 @@ describe('ObservableQuery', () => {
         if (handleCount === 1) {
           expect(result.data).toEqual(data);
           observable.refetch(variables2);
+        } else if (handleCount === 2) {
+          expect(result.data).toEqual(data);
+          expect(result.loading).toBe(true);
         } else if (handleCount === 3) {
-          // 3 because there is an intermediate loading state
+          expect(result.data).toEqual(data2);
+          done();
+        }
+      });
+    });
+
+    it('rerenders when refetch is called', done => {
+      // This query and variables are copied from react-apollo
+      const query = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const variables = { first: 0 };
+
+      const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+
+      const observable: ObservableQuery<any> = mockWatchQuery(
+        {
+          request: {
+            query,
+            variables,
+          },
+          result: { data },
+        },
+        {
+          request: {
+            query,
+            variables,
+          },
+          result: { data: data2 },
+        },
+      );
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.data).toEqual(data);
+          observable.refetch();
+        } else if (handleCount === 2) {
           expect(result.data).toEqual(data2);
           done();
         }
@@ -792,40 +845,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('reruns observer callback if the variables change and change back', done => {
-      const observable: ObservableQuery<any> = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-      );
-
-      subscribeAndCount(done, observable, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.data).toEqual(dataOne);
-          observable.setVariables(differentVariables);
-        } else if (handleCount === 2) {
-          expect(result.loading).toBe(true);
-          expect(result.data).toEqual(dataOne);
-        } else if (handleCount === 3) {
-          expect(result.data).toEqual(dataTwo);
-          observable.setVariables(variables);
-        } else if (handleCount === 4) {
-          expect(result.data).toEqual(dataOne);
-          done();
-        }
-      });
-    });
-
-    it('does rerun observer callback if the variables change and new data is in store', done => {
+    it('does not rerun observer callback if the variables change but new data is in store', done => {
       const manager = mockQueryManager(
         {
           request: { query, variables },
@@ -851,8 +871,9 @@ describe('ObservableQuery', () => {
             observable.setVariables(differentVariables);
 
             // Nothing should happen, so we'll wait a moment to check that
+            setTimeout(() => !errored && done(), 10);
           } else if (handleCount === 2) {
-            done();
+            throw new Error('Observable callback should not fire twice');
           }
         });
       });
@@ -901,7 +922,7 @@ describe('ObservableQuery', () => {
       subscribeAndCount(done, observable, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(dataOne);
-          observable.setVariables(variables, false, false);
+          observable.setVariables(variables, true, false);
 
           // Nothing should happen, so we'll wait a moment to check that
           setTimeout(() => !errored && done(), 10);

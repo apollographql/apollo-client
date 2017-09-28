@@ -1528,7 +1528,7 @@ describe('client', () => {
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(initialData);
-        } else if (handleCount === 3) {
+        } else if (handleCount === 2) {
           expect(result.data).toEqual(networkFetch);
           done();
         }
@@ -2417,7 +2417,7 @@ describe('@connect', () => {
       subscribeAndCount(done, obs, (handleCount, result) => {
         if (handleCount === 1) {
           expect(result.data).toEqual(initialData);
-        } else if (handleCount === 3) {
+        } else if (handleCount === 2) {
           expect(result.data).toEqual(networkFetch);
           done();
         }

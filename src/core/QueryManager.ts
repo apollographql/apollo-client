@@ -352,7 +352,7 @@ export class QueryManager {
           }
 
           if (typeof refetchQueries === 'function') {
-            refetchQueries = refetchQueries(result);
+            refetchQueries = refetchQueries(result) || [];
           }
           if (typeof refetchQueries[0] === 'string') {
             (refetchQueries as string[]).forEach(name => {

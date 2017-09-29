@@ -27,10 +27,10 @@ const TYPENAME_FIELD: FieldNode = {
 
 function addTypenameToSelectionSet(
   selectionSet: SelectionSetNode,
-  isRoot = false,
+  isRootMutation = false,
 ) {
   if (selectionSet.selections) {
-    if (!isRoot) {
+    if (!isRootMutation) {
       const alreadyHasThisField = selectionSet.selections.some(selection => {
         return (
           selection.kind === 'Field' &&
@@ -158,13 +158,13 @@ export function addTypenameToDocument(doc: DocumentNode) {
 
   const docClone = cloneDeep(doc);
 
-  docClone.definitions.forEach((definition: DefinitionNode) => {
-    const isRoot = definition.kind === 'OperationDefinition';
-    addTypenameToSelectionSet(
-      (definition as OperationDefinitionNode).selectionSet,
-      isRoot,
-    );
-  });
+  docClone.definitions.forEach(
+    ({ kind, operation, selectionSet }: OperationDefinitionNode) => {
+      const isRootMutation =
+        kind === 'OperationDefinition' && operation === 'mutation';
+      addTypenameToSelectionSet(selectionSet, isRootMutation);
+    },
+  );
 
   added.set(doc, docClone);
   return docClone;

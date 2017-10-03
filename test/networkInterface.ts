@@ -513,6 +513,27 @@ describe('network interface', () => {
       });
     });
 
+    it('should throw an error with the response body when request is forbidden', () => {
+      const unauthorizedUrlWithBody = 'http://unauthorized.test.with.body/';
+      const unauthorizedResponse = {
+        status: 403,
+        body: { message: 'Forbidden message' },
+      };
+      fetchMock.mock(unauthorizedUrlWithBody, unauthorizedResponse);
+      const unauthorizedInterface = createNetworkInterface({
+        uri: unauthorizedUrlWithBody,
+      });
+
+      return unauthorizedInterface.query(doomedToFail).catch(err => {
+        assert.isOk(err.response);
+        assert.equal(err.response.status, unauthorizedResponse.status);
+        assert.equal(
+          err.message,
+          'Network request failed with status 403 - "Forbidden"',
+        );
+      });
+    });
+
     it('should throw an error with the response when service is unavailable', () => {
       const unauthorizedInterface = createNetworkInterface({
         uri: serviceUnavailableUrl,

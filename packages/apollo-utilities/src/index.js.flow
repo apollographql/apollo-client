@@ -52,16 +52,16 @@ declare module 'apollo-utilities' {
 
   declare type isValueFn = (value: ValueNode) => boolean;
 
-  declare export type isScalarValue = typeof isValueFn;
-  declare export type isNumberValue = typeof isValueFn;
-  declare export type isStringValue = typeof isValueFn;
-  declare export type isBooleanValue = typeof isValueFn;
-  declare export type isIntValue = typeof isValueFn;
-  declare export type isFloatValue = typeof isValueFn;
-  declare export type isVariable = typeof isValueFn;
-  declare export type isObjectValue = typeof isValueFn;
-  declare export type isListValue = typeof isValueFn;
-  declare export type isEnumValue = typeof isValueFn;
+  declare export type isScalarValue = isValueFn;
+  declare export type isNumberValue = isValueFn;
+  declare export type isStringValue = isValueFn;
+  declare export type isBooleanValue = isValueFn;
+  declare export type isIntValue = isValueFn;
+  declare export type isFloatValue = isValueFn;
+  declare export type isVariable = isValueFn;
+  declare export type isObjectValue = isValueFn;
+  declare export type isListValue = isValueFn;
+  declare export type isEnumValue = isValueFn;
 
   declare export function valueToObjectRepresentation(
     argObj: any,

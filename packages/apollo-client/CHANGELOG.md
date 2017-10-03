@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Update to latest stable link package
 - Fix error handling when recycling observables
 - Fix currentResult when errorPolicy is set to 'all'
 - Fix default ErrorPolicy in QueryManager#mutate [PR #2194](https://github.com/apollographql/apollo-client/pull/2194)

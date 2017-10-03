@@ -50,8 +50,8 @@
   "license": "MIT",
   "dependencies": {
     "apollo-cache": "^0.2.0-beta.2",
-    "apollo-link": "0.6.1-beta.6",
-    "apollo-link-dedup": "0.4.1-beta.6",
+    "apollo-link": "0.7.0",
+    "apollo-link-dedup": "0.5.0",
     "apollo-utilities": "^0.2.0-beta.2",
     "graphql": "^0.11.0",
     "symbol-observable": "^1.0.2"

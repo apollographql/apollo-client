@@ -45,7 +45,7 @@
     "@types/graphql": "0.9.4",
     "@types/jest": "21.1.1",
     "browserify": "14.4.0",
-    "graphql": "0.11.3",
+    "graphql": "0.11.7",
     "jest": "20.0.4",
     "lodash": "4.17.4",
     "rimraf": "2.6.2",

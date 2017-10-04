@@ -321,6 +321,24 @@ describe('network interface', () => {
       });
     });
 
+    it('should cause the parent request to fail', () => {
+      const testWare1 = TestErrorWare([]);
+
+      const swapi = createNetworkInterface({
+        uri: 'http://graphql-swapi.test/',
+      });
+      swapi.use([testWare1]);
+      const simpleRequest = {
+        query: simpleQueryWithVar,
+        variables: { personNum: 1 },
+        debugName: 'People query',
+      };
+
+      return swapi.query(simpleRequest).catch(data => {
+        return assert.equal(data.message, 'uh oh');
+      });
+    });
+
     it('handle multiple middlewares', () => {
       const testWare1 = TestWare([{ key: 'personNum', val: 1 }]);
       const testWare2 = TestWare([{ key: 'filmNum', val: 1 }]);
@@ -495,6 +513,27 @@ describe('network interface', () => {
       });
     });
 
+    it('should throw an error with the response body when request is forbidden', () => {
+      const unauthorizedUrlWithBody = 'http://unauthorized.test.with.body/';
+      const unauthorizedResponse = {
+        status: 403,
+        body: { message: 'Forbidden message' },
+      };
+      fetchMock.mock(unauthorizedUrlWithBody, unauthorizedResponse);
+      const unauthorizedInterface = createNetworkInterface({
+        uri: unauthorizedUrlWithBody,
+      });
+
+      return unauthorizedInterface.query(doomedToFail).catch(err => {
+        assert.isOk(err.response);
+        assert.equal(err.response.status, unauthorizedResponse.status);
+        assert.equal(
+          err.message,
+          'Network request failed with status 403 - "Forbidden"',
+        );
+      });
+    });
+
     it('should throw an error with the response when service is unavailable', () => {
       const unauthorizedInterface = createNetworkInterface({
         uri: serviceUnavailableUrl,
@@ -572,6 +611,14 @@ function TestWare(
       });
 
       next();
+    },
+  };
+}
+
+function TestErrorWare(options: Array<{ key: string; val: any }> = []) {
+  return {
+    applyMiddleware: (request: MiddlewareRequest, next: Function): void => {
+      next(new Error('uh oh'));
     },
   };
 }

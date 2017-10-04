@@ -134,8 +134,10 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
     return new Promise((resolve, reject) => {
       const { request, options } = requestAndOptions;
       const queue = (funcs: MiddlewareInterface[], scope: any) => {
-        const next = () => {
-          if (funcs.length > 0) {
+        const next = (err?: Error | Object) => {
+          if (err) {
+            reject(err);
+          } else if (funcs.length > 0) {
             const f = funcs.shift();
             if (f) {
               f.applyMiddleware.apply(scope, [{ request, options }, next]);
@@ -223,27 +225,29 @@ export class HTTPFetchNetworkInterface extends BaseNetworkInterface {
       .then(({ response }) => {
         const httpResponse = response as Response;
 
-        return httpResponse.json().catch(error => {
-          const httpError = new Error(
-            `Network request failed with status ${response.status} - "${response.statusText}"`,
-          );
-          (httpError as any).response = httpResponse;
-          (httpError as any).parseError = error;
+        return httpResponse
+          .json()
+          .then((payload: ExecutionResult) => {
+            if (
+              !payload.hasOwnProperty('data') &&
+              !payload.hasOwnProperty('errors')
+            ) {
+              throw new Error(
+                `Server response was missing for query '${request.debugName}'.`,
+              );
+            } else {
+              return payload as ExecutionResult;
+            }
+          })
+          .catch(error => {
+            const httpError = new Error(
+              `Network request failed with status ${response.status} - "${response.statusText}"`,
+            );
+            (httpError as any).response = httpResponse;
+            (httpError as any).parseError = error;
 
-          throw httpError;
-        });
-      })
-      .then((payload: ExecutionResult) => {
-        if (
-          !payload.hasOwnProperty('data') &&
-          !payload.hasOwnProperty('errors')
-        ) {
-          throw new Error(
-            `Server response was missing for query '${request.debugName}'.`,
-          );
-        } else {
-          return payload as ExecutionResult;
-        }
+            throw httpError;
+          });
       });
   }
 

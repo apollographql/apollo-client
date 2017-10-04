@@ -1,9 +1,14 @@
 # Change log
 
 ### vNEXT
+- Fix response not being included with errors that have response body [PR #2239](https://github.com/apollographql/apollo-client/pull/2239)
+
+### 1.9.3
 - Fix Date handling in isEqual [PR #2131](https://github.com/apollographql/apollo-client/pull/2131)
 
 - Fix errors when `isEqual` called with object having no prototype [PR #2138](https://github.com/apollographql/apollo-client/pull/2138)
+
+- Allow middleware to terminate the request early [PR #2176](https://github.com/apollographql/apollo-client/pull/2176)
 
 ### 1.9.2
 - Fix FetchMoreQueryOptions and IntrospectionResultData flow annotations [PR #2034](https://github.com/apollographql/apollo-client/pull/2034)

@@ -71,7 +71,7 @@
   "pre-commit": "lint-staged",
   "dependencies": {},
   "devDependencies": {
-    "bundlesize": "0.14.1",
+    "bundlesize": "0.15.1",
     "codecov": "2.3.0",
     "danger": "1.2.0",
     "lerna": "2.3.1",

@@ -66,7 +66,7 @@
     "apollo-cache-inmemory": "^0.2.0-beta.4",
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
-    "bundlesize": "0.13.2",
+    "bundlesize": "0.15.1",
     "danger": "1.1.0",
     "flow-bin": "0.56.0",
     "graphql-tag": "2.4.2",

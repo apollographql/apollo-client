@@ -74,7 +74,7 @@
     "bundlesize": "0.15.2",
     "codecov": "2.3.0",
     "danger": "1.2.0",
-    "lerna": "2.3.1",
+    "lerna": "2.4.0",
     "lint-staged": "4.2.3",
     "pre-commit": "1.2.2",
     "prettier": "1.7.0",

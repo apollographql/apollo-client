@@ -33,4 +33,5 @@ export enum FetchType {
   poll = 3,
 }
 
-export type IdGetter = (value: Object) => string | null | undefined;
+export interface IdGetterObj extends Object { __typename?: string; id?: number; }
+export declare type IdGetter = (value: IdGetterObj) => string | null | undefined;

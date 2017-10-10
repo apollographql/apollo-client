@@ -241,7 +241,10 @@ export class QueryManager {
     variables?: Object;
     optimisticResponse?: Object | Function;
     updateQueries?: MutationQueryReducersMap<T>;
-    refetchQueries?: string[] | PureQueryOptions[];
+    refetchQueries?:
+      | string[]
+      | PureQueryOptions[]
+      | ((mutationResult: Object) => string[] | PureQueryOptions[]);
     update?: (proxy: DataProxy, mutationResult: Object) => void;
   }): Promise<ApolloExecutionResult<T>> {
     if (!mutation) {
@@ -348,6 +351,9 @@ export class QueryManager {
             return;
           }
 
+          if (typeof refetchQueries === 'function') {
+            refetchQueries = refetchQueries(result) || [];
+          }
           if (typeof refetchQueries[0] === 'string') {
             (refetchQueries as string[]).forEach(name => {
               this.refetchQueryByName(name);

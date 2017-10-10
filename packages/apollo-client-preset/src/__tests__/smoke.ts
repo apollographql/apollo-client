@@ -1,5 +1,8 @@
 import ApolloClient, { gql, HttpLink, InMemoryCache } from '../';
 
+global.fetch = jest.fn(() =>
+  Promise.resolve({ json: () => Promise.resolve({}) }),
+);
 it('should have the required exports', () => {
   expect(ApolloClient).toBeDefined();
   expect(gql).toBeDefined();

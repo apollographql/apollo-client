@@ -48,7 +48,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   }
 
   public restore(data: NormalizedCache): ApolloCache<NormalizedCache> {
-    this.data = data;
+    if (data) this.data = data;
     return this;
   }
 

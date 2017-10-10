@@ -241,7 +241,7 @@ import { logout } from './logout';
 
 const httpLink = createHttpLink({ uri: '/graphql' });
 const errorLink = onError(({ networkError }) => {
-  if (networkError.status === 401) {
+  if (networkError.statusCode === 401) {
     logout();
   }
 })

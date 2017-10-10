@@ -3,6 +3,8 @@
 ### vNEXT
 - Fix response not being included with errors that have response body [PR #2239](https://github.com/apollographql/apollo-client/pull/2239)
 
+- Allow conditional refetchQueries [PR #2234](https://github.com/apollographql/apollo-client/pull/2234)
+
 ### 1.9.3
 - Fix Date handling in isEqual [PR #2131](https://github.com/apollographql/apollo-client/pull/2131)
 

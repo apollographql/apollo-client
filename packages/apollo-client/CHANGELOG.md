@@ -5,6 +5,7 @@
 ### 2.0.0-beta.7
 - Move graphql to peerDependency
 - Ensure network errors don't cause unhandled rejections on polled queries
+- Improve performance of mutation broadcasts
 
 ### 2.0.0-beta.6
 - Support conditional refetches for mutations

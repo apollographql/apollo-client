@@ -2219,7 +2219,7 @@ describe('client', () => {
 
     const transformedQuery = gql`
       {
-        books(skip: 0, limit: 2) @connection(key: "abc") {
+        books(skip: 0, limit: 2) {
           name
           __typename
         }
@@ -2250,7 +2250,7 @@ describe('client', () => {
     });
   });
 
-  it('should not remove the connection directive at the store level', () => {
+  it('should remove the connection directive before the link is sent', () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection {
@@ -2261,7 +2261,7 @@ describe('client', () => {
 
     const transformedQuery = gql`
       {
-        books(skip: 0, limit: 2) @connection {
+        books(skip: 0, limit: 2) {
           name
           __typename
         }
@@ -2305,7 +2305,7 @@ describe('@connect', () => {
 
     const transformedQuery = gql`
       {
-        books(skip: 0, limit: 2) @connection(key: "abc") {
+        books(skip: 0, limit: 2) {
           name
           __typename
         }
@@ -2354,6 +2354,13 @@ describe('@connect', () => {
         books(skip: 0, limit: 2, order: $order)
           @connection(key: "abc", filter: ["order"]) {
           name
+        }
+      }
+    `;
+    const transformedQuery = gql`
+      query books($order: string) {
+        books(skip: 0, limit: 2, order: $order) {
+          name
           __typename
         }
       }
@@ -2371,7 +2378,7 @@ describe('@connect', () => {
     const variables = { order: 'popularity' };
 
     const link = mockSingleLink({
-      request: { query: query, variables },
+      request: { query: transformedQuery, variables },
       result: { data: result },
     });
 

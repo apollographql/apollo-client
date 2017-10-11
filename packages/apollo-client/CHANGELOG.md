@@ -1,9 +1,12 @@
 # Change log
 
 ### vNext
+
+### 2.0.0-beta.6
 - Support conditional refetches for mutations
 - Ensure network errors don't cause unhandled rejections on cache-and-network policies
 - Added the cache to the client for easier SSR
+- Strip connection directive out before reqest sent to link
 
 ### 2.0.0-beta.5
 - Fix argument for FragmentMatcher

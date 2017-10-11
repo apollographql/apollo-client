@@ -42,7 +42,7 @@ If you are interested in contributing to the 2.0 release that is SO great!! Ther
 ## Installation instructions
 The 2.0 of apollo is split into a few packages. To try it out in your app you can install the following
 ```bash
-npm i --save apollo-client@beta apollo-cache-inmemory@beta apollo-link-http@beta
+npm i --save apollo-client@next apollo-cache-inmemory@next apollo-link-http
 ```
 
 This will give you the replacement for networkInterfaces (links), the current apollo-cache (cache-inmemory) and the new client.

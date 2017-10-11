@@ -2,7 +2,7 @@
 
 ### vNext
 
-### 2.0.0-beta.7
+### 2.0.0-beta.8
 - Move graphql to peerDependency
 - Ensure network errors don't cause unhandled rejections on polled queries
 - Improve performance of mutation broadcasts

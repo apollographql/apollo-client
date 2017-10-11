@@ -32,7 +32,7 @@ describe('client', () => {
     // We only create the query manager on the first query
     client.initQueryManager();
     expect(client.queryManager).toBeDefined();
-    expect(client.queryManager.dataStore.getCache()).toBeDefined();
+    expect(client.cache).toBeDefined();
   });
 
   it('can be loaded via require', () => {
@@ -50,7 +50,7 @@ describe('client', () => {
     // We only create the query manager on the first query
     client.initQueryManager();
     expect(client.queryManager).toBeDefined();
-    expect(client.queryManager.dataStore.getCache()).toBeDefined();
+    expect(client.cache).toBeDefined();
   });
 
   it('can allow passing in a link', () => {
@@ -403,7 +403,7 @@ describe('client', () => {
     return client.query({ query }).then(result => {
       expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
+        (client.cache as InMemoryCache).extract(),
       );
     });
   });
@@ -1464,11 +1464,7 @@ describe('client', () => {
 
       return client.query({ query }).then(result => {
         expect(result.data).toEqual(data);
-        expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).extract()[
-            '1'
-          ],
-        ).toEqual({
+        expect((client.cache as InMemoryCache).extract()['1']).toEqual({
           id: '1',
           name: 'Luke Skywalker',
         });
@@ -2043,17 +2039,13 @@ describe('client', () => {
         },
       },
     });
-    expect(
-      (client.queryManager.dataStore.getCache() as any).optimistic.length,
-    ).toBe(1);
+    expect((client.cache as any).optimistic.length).toBe(1);
     mutatePromise
       .then(_ => {
         done.fail(new Error('Returned a result when it should not have.'));
       })
       .catch((_: ApolloError) => {
-        expect(
-          (client.queryManager.dataStore.getCache() as any).optimistic.length,
-        ).toBe(0);
+        expect((client.cache as any).optimistic.length).toBe(0);
         done();
       });
   });
@@ -2341,9 +2333,7 @@ describe('@connect', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
         ROOT_QUERY: {
           abc: [
@@ -2392,9 +2382,7 @@ describe('@connect', () => {
 
     return client.query({ query, variables }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         'ROOT_QUERY.abc({"order":"popularity"}).0': {
           name: 'abcd',
           __typename: 'Book',

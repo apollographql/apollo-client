@@ -83,7 +83,7 @@ import { onPageLoad } from 'meteor/server-render';
 
 // apollo imports
 import ApolloClient from 'apollo-client';
-import Link from 'apollo-link-http';
+import { HttpLink } from 'apollo-link-http';
 import Cache from 'apollo-cache-inmemory'
 import { ApolloProvider } from 'react-apollo';
 
@@ -91,7 +91,7 @@ import { App } from '/imports/app';
 
 export const start = () => {
   const client = new ApolloClient({
-    link: new Link({ uri: 'http://localhost:3000' }),
+    link: new HttpLink({ uri: 'http://localhost:3000' }),
     cache: new Cache().restore(window.__APOLLO_STATE__),
   });
 
@@ -161,12 +161,11 @@ becomes
 import ApolloClient from "apollo-client";
 import InMemoryCache from "apollo-cache-inmemory";
 
-const cache = new InMemoryCache();
-const client = new ApolloClient({ cache });
+const client = new ApolloClient({ cache: new InMemoryCache() });
 
 // do some data loading things using getDataFromTree
 
-const state = cache.extract();
+const state = client.cache.extract();
 ```
 
 

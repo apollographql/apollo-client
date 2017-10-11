@@ -37,6 +37,7 @@ let hasSuggestedDevtools = false;
 export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
+  public cache: ApolloCache<TCacheShape>;
   public queryManager: QueryManager<TCacheShape>;
   public disableNetworkFetches: boolean;
   public version: string;
@@ -88,6 +89,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     } = options;
 
     this.link = link;
+    this.cache = cache;
     this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
@@ -304,9 +306,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * This initializes the query manager that tracks queries and the cache
    */
   public initQueryManager() {
-    if (this.queryManager) {
-      return;
-    }
+    if (this.queryManager) return;
 
     this.queryManager = new QueryManager({
       link: this.link,
@@ -360,7 +360,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private initProxy(): DataProxy {
     if (!this.proxy) {
       this.initQueryManager();
-      this.proxy = this.queryManager.dataStore.getCache() as DataProxy;
+      this.proxy = this.cache as DataProxy;
     }
     return this.proxy;
   }

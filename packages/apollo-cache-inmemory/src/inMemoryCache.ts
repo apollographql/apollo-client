@@ -44,6 +44,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   constructor(config: ApolloReducerConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
+    // backwards compat
+    if ((this.config as any).customResolvers)
+      this.config.cacheResolvers = (this.config as any).customResolvers;
     this.addTypename = this.config.addTypename ? true : false;
   }
 

@@ -71,14 +71,14 @@ const readStoreResolver: Resolver = (
 
   if (typeof fieldValue === 'undefined') {
     if (
-      context.customResolvers &&
+      context.cacheResolvers &&
       obj &&
       (obj.__typename || objId === 'ROOT_QUERY')
     ) {
       const typename = obj.__typename || 'Query';
 
       // Look for the type in the custom resolver map
-      const type = context.customResolvers[typename];
+      const type = context.cacheResolvers[typename];
       if (type) {
         // Look for the field in the custom resolver map
         const resolver = type[fieldName];
@@ -161,7 +161,7 @@ export function diffQueryAgainstStore<T>({
     // Global settings
     store,
     returnPartialData,
-    customResolvers: (config && config.customResolvers) || {},
+    cacheResolvers: (config && config.cacheResolvers) || {},
     // Flag set during execution
     hasMissingField: false,
   };

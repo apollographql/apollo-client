@@ -134,13 +134,15 @@ const cache = new InMemoryCache({
   fragmentMatcher: // matcher,
   dataIdFromObject: // custom function,
   addTypename: true,
-  customResolvers: // custom resolvers
+  cacheResolvers: // cache resolvers
 });
 
 const client = new ApolloClient({
   cache: cache.restore(window.__APOLLO_STATE__ || {})
 });
 ```
+
+*Note* If you were using `customResolvers`, the name of that has been changed to be `cacheResolvers` to be more descriptive of what it does. `customResolvers` will still be supported throughout the 2.0 though to be backwards compatible and ease the upgrade path
 
 
 If you have previously used `getInitialState` for SSR, that API has been moved to the cache itself instead of on the client. The before:

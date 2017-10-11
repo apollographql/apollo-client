@@ -42,14 +42,14 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   fragmentMatcher?: FragmentMatcherInterface;
   addTypename?: boolean;
-  customResolvers?: CustomResolverMap;
+  cacheResolvers?: CacheResolverMap;
 };
 
 export type ReadStoreContext = {
   store: NormalizedCache;
   returnPartialData: boolean;
   hasMissingField: boolean;
-  customResolvers: CustomResolverMap;
+  cacheResolvers: CacheResolverMap;
 };
 
 export interface FragmentMatcherInterface {
@@ -95,13 +95,17 @@ export type IntrospectionResultData = {
   };
 };
 
-export type CustomResolver = (
+export type CacheResolver = (
   rootValue: any,
   args: { [argName: string]: any },
 ) => any;
 
-export type CustomResolverMap = {
+export type CacheResolverMap = {
   [typeName: string]: {
-    [fieldName: string]: CustomResolver;
+    [fieldName: string]: CacheResolver;
   };
 };
+
+// backwards compat
+export type CustomResolver = CacheResolver;
+export type CustomResolverMap = CacheResolverMap;

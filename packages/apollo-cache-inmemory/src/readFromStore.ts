@@ -221,7 +221,7 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
       previousResult,
     };
   } else if (Array.isArray(value)) {
-    const idToPreviousResult: { [id: string]: any } = {};
+    const idToPreviousResult: Map<string, any> = new Map();
 
     // If the previous result was an array, we want to build up our map of ids to previous results
     // using the private `ID_KEY` property that is added in `resultMapper`.
@@ -229,7 +229,8 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
       previousResult.forEach(item => {
         // item can be null
         if (item && item[ID_KEY]) {
-          idToPreviousResult[item[ID_KEY]] = item;
+          idToPreviousResult.set(item[ID_KEY], item);
+          // idToPreviousResult[item[ID_KEY]] = item;
         }
       });
     }
@@ -243,7 +244,8 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
       // If the item is an id value, we should check to see if there is a previous result for this
       // specific id. If there is, that will be the value for `itemPreviousResult`.
       if (isIdValue(item)) {
-        itemPreviousResult = idToPreviousResult[item.id] || itemPreviousResult;
+        itemPreviousResult =
+          idToPreviousResult.get(item.id) || itemPreviousResult;
       }
 
       return addPreviousResultToIdValues(item, itemPreviousResult);

@@ -172,6 +172,7 @@ export class QueryManager<TStore> {
     };
 
     this.mutationStore.initMutation(mutationId, mutationString, variables);
+
     this.dataStore.markMutationInit({
       mutationId,
       document: mutation,
@@ -185,18 +186,13 @@ export class QueryManager<TStore> {
 
     return new Promise((resolve, reject) => {
       let storeResult: FetchResult<T> | null;
+      let error: ApolloError;
       execute(this.link, request).subscribe({
         next: (result: ExecutionResult) => {
           if (result.errors && errorPolicy === 'none') {
-            const error = new ApolloError({
+            error = new ApolloError({
               graphQLErrors: result.errors,
             });
-
-            this.mutationStore.markMutationError(mutationId, error);
-            this.dataStore.markMutationComplete(mutationId);
-            this.broadcastQueries();
-            this.setQuery(mutationId, () => ({ document: undefined }));
-            reject(error);
             return;
           }
 
@@ -210,13 +206,44 @@ export class QueryManager<TStore> {
             updateQueries: generateUpdateQueriesInfo(),
             update: updateWithProxyFn,
           });
-          this.dataStore.markMutationComplete(mutationId);
+          storeResult = result as FetchResult<T>;
+        },
+        error: (err: Error) => {
+          this.mutationStore.markMutationError(mutationId, err);
+          this.dataStore.markMutationComplete({
+            mutationId,
+            optimisticResponse,
+          });
           this.broadcastQueries();
+
+          this.setQuery(mutationId, () => ({ document: undefined }));
+          reject(
+            new ApolloError({
+              networkError: err,
+            }),
+          );
+        },
+        complete: () => {
+          if (error) {
+            this.mutationStore.markMutationError(mutationId, error);
+          }
+
+          this.dataStore.markMutationComplete({
+            mutationId,
+            optimisticResponse,
+          });
+
+          this.broadcastQueries();
+
+          if (error) {
+            reject(error);
+            return;
+          }
 
           // allow for conditional refetches
           // XXX do we want to make this the only API one day?
           if (typeof refetchQueries === 'function')
-            refetchQueries = refetchQueries(result);
+            refetchQueries = refetchQueries(storeResult as ExecutionResult);
 
           refetchQueries.forEach(refetchQuery => {
             if (typeof refetchQuery === 'string') {
@@ -230,22 +257,6 @@ export class QueryManager<TStore> {
               fetchPolicy: 'network-only',
             });
           });
-
-          storeResult = result as FetchResult<T>;
-        },
-        error: (err: Error) => {
-          this.mutationStore.markMutationError(mutationId, err);
-          this.dataStore.markMutationComplete(mutationId);
-          this.broadcastQueries();
-
-          this.setQuery(mutationId, () => ({ document: undefined }));
-          reject(
-            new ApolloError({
-              networkError: err,
-            }),
-          );
-        },
-        complete: () => {
           this.setQuery(mutationId, () => ({ document: undefined }));
           if (errorPolicy === 'ignore' && storeResult && storeResult.errors) {
             delete storeResult.errors;

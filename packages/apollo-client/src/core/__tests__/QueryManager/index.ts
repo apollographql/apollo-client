@@ -2670,7 +2670,7 @@ describe('QueryManager', () => {
       return promise;
     });
 
-    it('allows you to unsubscribe from polled query errors', () => {
+    it('allows you to unsubscribe from polled query errors', done => {
       const query = gql`
         query fetchLuke($id: String) {
           people_one(id: $id) {
@@ -2717,6 +2717,11 @@ describe('QueryManager', () => {
         notifyOnNetworkStatusChange: false,
       });
 
+      let isFinished;
+      process.once('unhandledRejection', () => {
+        if (!isFinished) done.fail('unhandledRejection from network');
+      });
+
       const { promise, subscription } = observableToPromiseAndSubscription(
         {
           observable,
@@ -2731,7 +2736,12 @@ describe('QueryManager', () => {
         result => expect(result.data).toEqual(data1),
       );
 
-      return promise;
+      promise.then(() => {
+        setTimeout(() => {
+          isFinished = true;
+          done();
+        }, 4);
+      });
     });
 
     it('exposes a way to start a polling query', () => {

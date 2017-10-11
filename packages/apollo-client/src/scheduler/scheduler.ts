@@ -132,7 +132,12 @@ export class QueryScheduler<TCacheShape> {
       const queryOptions = this.registeredQueries[queryId];
       const pollingOptions = { ...queryOptions } as WatchQueryOptions;
       pollingOptions.fetchPolicy = 'network-only';
-      this.fetchQuery<T>(queryId, pollingOptions, FetchType.poll);
+      // don't let unhandled rejections happen
+      this.fetchQuery<T>(
+        queryId,
+        pollingOptions,
+        FetchType.poll,
+      ).catch(() => {});
       return true;
     });
 

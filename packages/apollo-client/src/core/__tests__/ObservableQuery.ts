@@ -1173,6 +1173,27 @@ describe('ObservableQuery', () => {
         expect(currentResult.error!.graphQLErrors).toEqual([error]);
       });
     });
+    it('returns referentially equal errors', () => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+      });
+
+      return observable.result().catch((theError: any) => {
+        expect(theError.graphQLErrors).toEqual([error]);
+
+        const currentResult = observable.currentResult();
+        expect(currentResult.loading).toBe(false);
+        expect(currentResult.error!.graphQLErrors).toEqual([error]);
+        const currentResult2 = observable.currentResult();
+        expect(currentResult.error === currentResult2.error).toBe(true);
+      });
+    });
 
     it('returns errors with data if errorPolicy is all', () => {
       const queryManager = mockQueryManager({

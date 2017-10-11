@@ -1584,7 +1584,46 @@ describe('client', () => {
         error: e => {
           expect(e.message).toMatch(/No more mocked responses/);
           expect(count).toBe(1); // make sure next was called.
-          done();
+          setTimeout(done, 100);
+        },
+      });
+    });
+
+    it('fetches from cache first, then network and does not have an unhandled error', done => {
+      const link = mockSingleLink({
+        request: { query },
+        result: { errors: [{ message: 'network failure' }] },
+      });
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+      });
+
+      client.writeQuery({ query, data: initialData });
+
+      const obs = client.watchQuery({
+        query,
+        fetchPolicy: 'cache-and-network',
+      });
+      let shouldFail = true;
+      process.once('unhandledRejection', rejection => {
+        if (shouldFail) done.fail('promise had an unhandledRejection');
+      });
+      let count = 0;
+      obs.subscribe({
+        next: result => {
+          expect(result.data).toEqual(initialData);
+          expect(result.loading).toBe(true);
+          count++;
+        },
+        error: e => {
+          expect(e.message).toMatch(/network failure/);
+          expect(count).toBe(1); // make sure next was called.
+          setTimeout(() => {
+            shouldFail = false;
+            done();
+          }, 0);
         },
       });
     });

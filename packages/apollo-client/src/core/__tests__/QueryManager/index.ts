@@ -3520,7 +3520,7 @@ describe('QueryManager', () => {
       );
     });
 
-    it('should warn but continue when an unknown query name is asked to refetch', () => {
+    it('should not warn and continue when an unknown query name is asked to refetch', () => {
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -3584,10 +3584,7 @@ describe('QueryManager', () => {
         },
         result => {
           expect(result.data).toEqual(secondReqData);
-          expect(warned[0]).toMatch(
-            'Warning: unknown query with name fakeQuery',
-          );
-          expect(timesWarned).toBe(1);
+          expect(timesWarned).toBe(0);
         },
       );
     });

@@ -6,6 +6,7 @@
 - Move graphql to peerDependency
 - Ensure network errors don't cause unhandled rejections on polled queries
 - Improve performance of mutation broadcasts
+- Remove warning on refetching unfetched queries after a mutation
 
 ### 2.0.0-beta.6
 - Support conditional refetches for mutations

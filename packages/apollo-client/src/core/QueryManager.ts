@@ -1103,20 +1103,16 @@ export class QueryManager<TStore> {
   // all ObservableQuery instances associated with the query name.
   private refetchQueryByName(queryName: string) {
     const refetchedQueries = this.queryIdsByName[queryName];
-    // Warn if the query named does not exist (misnamed, or merely not yet fetched)
-    if (refetchedQueries === undefined) {
-      console.warn(
-        `Warning: unknown query with name ${queryName} asked to refetch`,
-      );
-      return;
-    } else {
-      return Promise.all(
-        refetchedQueries
-          .map(id => this.getQuery(id).observableQuery)
-          .filter(x => !!x)
-          .map((x: ObservableQuery<any>) => x.refetch()),
-      );
-    }
+    // early return if the query named does not exist (not yet fetched)
+    // this used to warn but it may be inteneded behavoir to try and refetch
+    // un called queries because they could be on different routes
+    if (refetchedQueries === undefined) return;
+    return Promise.all(
+      refetchedQueries
+        .map(id => this.getQuery(id).observableQuery)
+        .filter(x => !!x)
+        .map((x: ObservableQuery<any>) => x.refetch()),
+    );
   }
 
   private generateRequestId() {

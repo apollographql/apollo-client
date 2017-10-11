@@ -3611,6 +3611,131 @@ describe('QueryManager', () => {
       );
     });
 
+    it('also works with a conditional function that returns false', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({ query });
+      const conditional = result => {
+        expect(result.data).toEqual(mutationData);
+        return false;
+      };
+
+      return observableToPromise({ observable }, result => {
+        expect(result.data).toEqual(data);
+        queryManager.mutate({ mutation, refetchQueries: conditional });
+      });
+    });
+    it('also works with a conditional function that returns an array of refetches', () => {
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: 'Jack',
+          lastName: 'Smith',
+        },
+      };
+      const query = gql`
+        query getAuthors {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: 'Jane',
+          lastName: 'Johnson',
+        },
+      };
+      const queryManager = mockQueryManager(
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data: secondReqData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+      );
+      const observable = queryManager.watchQuery<any>({ query });
+      const conditional = result => {
+        expect(result.data).toEqual(mutationData);
+        return [{ query }];
+      };
+
+      return observableToPromise(
+        { observable },
+        result => {
+          expect(result.data).toEqual(data);
+          queryManager.mutate({ mutation, refetchQueries: conditional });
+        },
+        result => expect(result.data).toEqual(secondReqData),
+      );
+    });
+
     afterEach(done => {
       // restore standard method
       console.warn = oldWarn;

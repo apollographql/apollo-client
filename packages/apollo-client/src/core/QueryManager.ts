@@ -210,6 +210,11 @@ export class QueryManager<TStore> {
           this.dataStore.markMutationComplete(mutationId);
           this.broadcastQueries();
 
+          // allow for conditional refetches
+          // XXX do we want to make this the only API one day?
+          if (typeof refetchQueries === 'function')
+            refetchQueries = refetchQueries(result);
+
           refetchQueries.forEach(refetchQuery => {
             if (typeof refetchQuery === 'string') {
               this.refetchQueryByName(refetchQuery);

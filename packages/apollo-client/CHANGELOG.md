@@ -1,6 +1,9 @@
 # Change log
 
 ### vNext
+- Support conditional refetches for mutations
+
+### 2.0.0-beta.5
 - Fix argument for FragmentMatcher
 
 ### 2.0.0-beta.4 (alpha.2 -> beta.4)

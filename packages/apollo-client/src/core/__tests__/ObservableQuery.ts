@@ -1057,7 +1057,7 @@ describe('ObservableQuery', () => {
                 ],
               },
             },
-          }).match,
+          }),
         }),
       });
 

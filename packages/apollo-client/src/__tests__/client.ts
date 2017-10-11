@@ -1064,7 +1064,7 @@ describe('client', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
-        fragmentMatcher: fancyFragmentMatcher,
+        fragmentMatcher: { match: fancyFragmentMatcher },
       }),
     });
     return client.query({ query }).then((actualResult: any) => {
@@ -1132,7 +1132,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ fragmentMatcher: ifm.match }),
+      cache: new InMemoryCache({ fragmentMatcher: ifm }),
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1215,7 +1215,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ fragmentMatcher: ifm.match }),
+      cache: new InMemoryCache({ fragmentMatcher: ifm }),
     });
 
     const queryUpdaterSpy = jest.fn();
@@ -2485,11 +2485,12 @@ function clientRoundtrip(
     result: data,
   });
 
+  const config = {};
+  if (fragmentMatcher) config.fragmentMatcher = fragmentMatcher;
+
   const client = new ApolloClient({
     link,
-    cache: new InMemoryCache({
-      fragmentMatcher: fragmentMatcher && fragmentMatcher.match,
-    }),
+    cache: new InMemoryCache(config),
   });
 
   return client.query({ query, variables }).then(result => {

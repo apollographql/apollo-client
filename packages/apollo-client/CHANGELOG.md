@@ -1,6 +1,9 @@
 # Change log
 
-### vNEXT
+### vNext
+- Fix argument for FragmentMatcher
+
+### 2.0.0-beta.4 (alpha.2 -> beta.4)
 - Update to latest stable link package
 - Fix error handling when recycling observables
 - Fix currentResult when errorPolicy is set to 'all'

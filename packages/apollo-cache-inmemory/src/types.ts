@@ -22,7 +22,7 @@ export type OptimisticStoreItem = {
 export type ReadQueryOptions = {
   store: NormalizedCache;
   query: DocumentNode;
-  fragmentMatcherFunction?: FragmentMatcher; // TODO make this required to prevent bugs
+  fragmentMatcherFunction?: FragmentMatcher;
   variables?: Object;
   previousResult?: any;
   rootId?: string;
@@ -40,7 +40,7 @@ export interface StoreObject {
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
-  fragmentMatcher?: FragmentMatcher;
+  fragmentMatcher?: FragmentMatcherInterface;
   addTypename?: boolean;
   customResolvers?: CustomResolverMap;
 };

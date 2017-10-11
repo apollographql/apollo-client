@@ -2,6 +2,9 @@
 
 ### vNext
 
+### 2.0.0-rc.1
+- Fix bug where changed variables with different cache data didn't rerender properly
+
 ### 2.0.0-beta.8
 - Move graphql to peerDependency
 - Ensure network errors don't cause unhandled rejections on polled queries

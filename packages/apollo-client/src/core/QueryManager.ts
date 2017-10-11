@@ -908,10 +908,13 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
+  public getCurrentQueryResult<T>(
+    observableQuery: ObservableQuery<T>,
+    sameVariables: boolean = true,
+  ) {
     const { variables, query } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
-    if (lastResult && lastResult.data) {
+    if (lastResult && lastResult.data && sameVariables) {
       return maybeDeepFreeze({ data: lastResult.data, partial: false });
     } else {
       const { newData } = this.getQuery(observableQuery.queryId);

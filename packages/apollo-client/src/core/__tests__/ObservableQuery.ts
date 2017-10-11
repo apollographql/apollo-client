@@ -273,6 +273,59 @@ describe('ObservableQuery', () => {
       });
     });
 
+    it('rerenders with new variables then shows correct data for previous variables', done => {
+      // This query and variables are copied from react-apollo
+      const query = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const variables = { first: 0 };
+
+      const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+      const variables2 = { first: 1 };
+
+      const observable: ObservableQuery<any> = mockWatchQuery(
+        {
+          request: {
+            query,
+            variables,
+          },
+          result: { data },
+        },
+        {
+          request: {
+            query,
+            variables: variables2,
+          },
+          result: { data: data2 },
+        },
+      );
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.data).toEqual(data);
+          observable.setOptions({ variables: variables2 });
+        } else if (handleCount === 2) {
+          expect(result.data).toEqual(data);
+          expect(result.loading).toBe(true);
+        } else if (handleCount === 3) {
+          expect(result.data).toEqual(data2);
+          // go back to first set of variables
+          observable.setOptions({ variables });
+          const current = observable.currentResult();
+          expect(current.data).toEqual(data);
+          done();
+        }
+      });
+    });
+
     it('if query is refetched, and an error is returned, no other observer callbacks will be called', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
@@ -636,7 +689,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not invalidate the currentResult data if the variables change', done => {
+    it('does invalidate the currentResult data if the variables change', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
@@ -654,7 +707,7 @@ describe('ObservableQuery', () => {
           expect(result.data).toEqual(dataOne);
           expect(observable.currentResult().data).toEqual(dataOne);
           observable.setVariables(differentVariables);
-          expect(observable.currentResult().data).toEqual(dataOne);
+          expect(observable.currentResult().data).toEqual({});
           expect(observable.currentResult().loading).toBe(true);
         }
         // after loading is false and data has returned
@@ -906,7 +959,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not rerun query if set to not refetch', done => {
+    xit('does not rerun query if set to not refetch', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },

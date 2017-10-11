@@ -585,6 +585,101 @@ describe('QueryManager', () => {
       });
     });
   });
+  it('resolves all queries when one finishes after another', done => {
+    const request = {
+      query: gql`
+        query fetchLuke($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `,
+      variables: {
+        id: '1',
+      },
+      notifyOnNetworkStatusChange: true,
+    };
+    const request2 = {
+      query: gql`
+        query fetchLeia($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `,
+      variables: {
+        id: '2',
+      },
+      notifyOnNetworkStatusChange: true,
+    };
+    const request3 = {
+      query: gql`
+        query fetchHan($id: String) {
+          people_one(id: $id) {
+            name
+          }
+        }
+      `,
+      variables: {
+        id: '3',
+      },
+      notifyOnNetworkStatusChange: true,
+    };
+
+    const data1 = {
+      people_one: {
+        name: 'Luke Skywalker',
+      },
+    };
+    const data2 = {
+      people_one: {
+        name: 'Leia Skywalker',
+      },
+    };
+    const data3 = {
+      people_one: {
+        name: 'Han Solo',
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request,
+        result: { data: data1 },
+        delay: 10,
+      },
+      {
+        request: request2,
+        result: { data: data2 },
+        // make the second request the slower one
+        delay: 100,
+      },
+      {
+        request: request3,
+        result: { data: data3 },
+        delay: 10,
+      },
+    );
+
+    const ob1 = queryManager.watchQuery(request);
+    const ob2 = queryManager.watchQuery(request2);
+    const ob3 = queryManager.watchQuery(request3);
+
+    let finishCount = 0;
+    ob1.subscribe(result => {
+      expect(result.data).toEqual(data1);
+      finishCount++;
+    });
+    ob2.subscribe(result => {
+      expect(result.data).toEqual(data2);
+      expect(finishCount).toBe(2);
+      done();
+    });
+    ob3.subscribe(result => {
+      expect(result.data).toEqual(data3);
+      finishCount++;
+    });
+  });
 
   it('allows you to refetch queries', () => {
     const request = {

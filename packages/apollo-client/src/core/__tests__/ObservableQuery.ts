@@ -959,7 +959,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    xit('does not rerun query if set to not refetch', done => {
+    it('does not rerun query if set to not refetch', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },

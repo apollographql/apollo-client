@@ -2,6 +2,9 @@
 
 ### vNext
 
+### 2.0.0-rc.3
+- Only include `data` on subscriptionData when using `subscribeToMore`
+
 ### 2.0.0-rc.2
 - Support devTools with `_renderRaw` to execute link directly (bypass store)
 

@@ -340,7 +340,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           if (options.updateQuery) {
             this.updateQuery((previous: Object, { variables }) =>
               (options.updateQuery as UpdateQueryFn)(previous, {
-                subscriptionData: data,
+                subscriptionData: data.data,
+                subscriptionErrors: data.errors,
                 variables,
               }),
             );

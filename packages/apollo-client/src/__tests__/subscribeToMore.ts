@@ -105,7 +105,7 @@ describe('subscribeToMore', () => {
         }
       `,
       updateQuery: (_, { subscriptionData }) => {
-        return { entry: { value: subscriptionData.data.name } };
+        return { entry: { value: subscriptionData.name } };
       },
     });
 
@@ -159,7 +159,7 @@ describe('subscribeToMore', () => {
         }
       `,
       updateQuery: (_, { subscriptionData }) => {
-        return { entry: { value: subscriptionData.data.name } };
+        return { entry: { value: subscriptionData.name } };
       },
       onError: () => {
         errorCount += 1;

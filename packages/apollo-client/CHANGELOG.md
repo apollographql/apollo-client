@@ -1,6 +1,7 @@
 # Change log
 
 ### vNext
+- Define and expose `ApolloClientOptions`, Type of an object that represents ApolloClient's constructor argument.
 
 ### 2.0.0-rc.1
 - Fix bug where changed variables with different cache data didn't rerender properly

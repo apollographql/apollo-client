@@ -1,4 +1,5 @@
-import { ApolloLink, FetchResult } from 'apollo-link';
+import { ApolloLink, FetchResult, GraphQLRequest, execute } from 'apollo-link';
+import { ExecutionResult } from 'graphql';
 import { Cache, ApolloCache, DataProxy } from 'apollo-cache';
 import { isProduction } from 'apollo-utilities';
 
@@ -302,6 +303,10 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.devToolsHookCb = cb;
   }
 
+  public __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult> {
+    return execute(this.link, payload);
+  }
+
   /**
    * This initializes the query manager that tracks queries and the cache
    */
@@ -321,9 +326,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
               queries: this.queryManager.queryStore.getStore(),
               mutations: this.queryManager.mutationStore.getStore(),
             },
-            dataWithOptimisticResults: this.queryManager.dataStore
-              .getCache()
-              .extract(true),
+            dataWithOptimisticResults: this.cache.extract(true),
           });
         }
       },

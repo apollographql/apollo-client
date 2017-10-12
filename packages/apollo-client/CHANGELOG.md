@@ -2,6 +2,9 @@
 
 ### vNext
 
+### 2.0.0-rc.2
+- Support devTools with `_renderRaw` to execute link directly (bypass store)
+
 ### 2.0.0-rc.1
 - Fix bug where changed variables with different cache data didn't rerender properly
 

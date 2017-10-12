@@ -29,6 +29,16 @@ export interface DefaultOptions {
 
 let hasSuggestedDevtools = false;
 
+export type ApolloClientOptions<TCacheShape> = {
+  link: ApolloLink;
+  cache: ApolloCache<TCacheShape>;
+  ssrMode?: boolean;
+  ssrForceFetchDelay?: number;
+  connectToDevTools?: boolean;
+  queryDeduplication?: boolean;
+  defaultOptions?: DefaultOptions;
+};
+
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -70,15 +80,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
    */
 
-  constructor(options: {
-    link: ApolloLink;
-    cache: ApolloCache<TCacheShape>;
-    ssrMode?: boolean;
-    ssrForceFetchDelay?: number;
-    connectToDevTools?: boolean;
-    queryDeduplication?: boolean;
-    defaultOptions?: DefaultOptions;
-  }) {
+  constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
       link,
       cache,

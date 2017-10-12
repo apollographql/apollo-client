@@ -19,7 +19,9 @@ export * from './core/types';
 
 export { ApolloError } from './errors/ApolloError';
 
-import ApolloClient from './ApolloClient';
+import ApolloClient, { ApolloClientOptions } from './ApolloClient';
+
+export { ApolloClientOptions };
 
 // export the client as both default and named
 export { ApolloClient };

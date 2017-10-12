@@ -13,9 +13,9 @@
     "deploy": "./scripts/deploy.sh",
     "test": "jest",
     "benchmark":
-      "npm run build:benchmark && node --stack-size=20000 benchmark_lib/benchmark/index.js",
+      "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect":
-      "npm run build:benchmark && node --stack-size=20000 --inspect --debug-brk benchmark_lib/benchmark/index.js",
+      "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run build && npm run build:browser",
     "type-check": "flow check",
     "build": "tsc",

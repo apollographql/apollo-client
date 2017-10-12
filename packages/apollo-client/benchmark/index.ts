@@ -18,13 +18,7 @@ import { times, cloneDeep } from 'lodash';
 
 import InMemoryCache from 'apollo-cache-inmemory';
 
-import {
-  Operation,
-  ApolloLink,
-  FetchResult,
-  Observable,
-  // Observer,
-} from 'apollo-link';
+import { Operation, ApolloLink, FetchResult, Observable } from 'apollo-link';
 
 import { print } from 'graphql/language/printer';
 
@@ -129,7 +123,7 @@ const getClientInstance = () => {
 
   return new ApolloClient({
     link,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ addTypename: false }),
   });
 };
 
@@ -367,6 +361,7 @@ times(50, index => {
       }),
       cache: new InMemoryCache({
         dataIdFromObject,
+        addTypename: false,
       }),
     });
 
@@ -430,6 +425,7 @@ times(50, index => {
       }),
       cache: new InMemoryCache({
         dataIdFromObject,
+        addTypename: false,
       }),
     });
 

@@ -84,7 +84,7 @@ import { onPageLoad } from 'meteor/server-render';
 // apollo imports
 import ApolloClient from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
-import Cache from 'apollo-cache-inmemory'
+import { InMemoryCache } from 'apollo-cache-inmemory'
 import { ApolloProvider } from 'react-apollo';
 
 import { App } from '/imports/app';
@@ -92,7 +92,7 @@ import { App } from '/imports/app';
 export const start = () => {
   const client = new ApolloClient({
     link: new HttpLink({ uri: 'http://localhost:3000' }),
-    cache: new Cache().restore(window.__APOLLO_STATE__),
+    cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
   });
 
   const WrappedApp = (
@@ -128,7 +128,7 @@ becomes
 
 ```js
 import ApolloClient from "apollo-client";
-import InMemoryCache from "apollo-cache-inmemory";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
 const cache = new InMemoryCache({
   fragmentMatcher: // matcher,
@@ -161,7 +161,7 @@ becomes
 
 ```js
 import ApolloClient from "apollo-client";
-import InMemoryCache from "apollo-cache-inmemory";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
 const client = new ApolloClient({ cache: new InMemoryCache() });
 

@@ -1,7 +1,7 @@
 import { DataProxy } from 'apollo-cache';
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import InMemoryCache, { ApolloReducerConfig } from '..';
+import { InMemoryCache, ApolloReducerConfig } from '..';
 
 disableFragmentWarnings();
 

@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 0.2.0-rc.1
+- move to named export to be consistent with rest of apollo ecosystem
+
 ### 0.2.0-beta.6
 - rename customResolvers to cacheResolvers with backwards compat
 

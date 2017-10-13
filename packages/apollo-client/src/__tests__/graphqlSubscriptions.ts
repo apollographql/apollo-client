@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { mockObservableLink, MockedSubscription } from '../__mocks__/mockLinks';
 

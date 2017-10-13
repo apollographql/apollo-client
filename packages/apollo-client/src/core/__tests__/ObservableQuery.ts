@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
-import InMemoryCache, {
+import {
+  InMemoryCache,
   IntrospectionFragmentMatcher,
 } from 'apollo-cache-inmemory';
 

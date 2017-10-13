@@ -3,7 +3,8 @@ import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
 import { ApolloLink, Observable } from 'apollo-link';
-import InMemoryCache, {
+import {
+  InMemoryCache,
   IntrospectionFragmentMatcher,
   FragmentMatcherInterface,
 } from 'apollo-cache-inmemory';

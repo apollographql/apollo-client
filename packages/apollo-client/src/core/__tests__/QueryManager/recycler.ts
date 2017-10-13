@@ -8,7 +8,7 @@
 import gql from 'graphql-tag';
 import { DocumentNode, ExecutionResult } from 'graphql';
 import { ApolloLink, Operation, Observable } from 'apollo-link';
-import InMemoryCache, { ApolloReducerConfig } from 'apollo-cache-inmemory';
+import { InMemoryCache, ApolloReducerConfig } from 'apollo-cache-inmemory';
 
 import { MockSubscriptionLink } from '../../../__mocks__/mockLinks';
 

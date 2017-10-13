@@ -1,6 +1,6 @@
 // This simplified polyfill attempts to follow the ECMAScript Observable proposal.
 // See https://github.com/zenparsing/es-observable
-import { Observable as LinkObservable, ZenObservable } from 'apollo-link';
+import { Observable as LinkObservable } from 'apollo-link';
 
 export type Subscription = ZenObservable.Subscription;
 export type Observer<T> = ZenObservable.Observer<T>;

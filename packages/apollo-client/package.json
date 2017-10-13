@@ -65,6 +65,7 @@
     "@types/jest": "21.1.2",
     "@types/lodash": "4.14.77",
     "@types/node": "8.0.34",
+    "@types/zen-observable": "^0.5.3",
     "apollo-cache-inmemory": "^0.2.0-rc.0",
     "benchmark": "2.1.4",
     "browserify": "14.4.0",

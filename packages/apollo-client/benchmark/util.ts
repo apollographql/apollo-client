@@ -1,7 +1,5 @@
 import * as Benchmark from 'benchmark';
 
-import { times, cloneDeep, merge } from 'lodash';
-
 // This file implements utilities around benchmark.js that make it
 // easier to use for our benchmarking needs.
 
@@ -113,10 +111,10 @@ export const group = (groupFn: GroupFunction) => {
       (description as DescriptionObject).name || (description as string);
     log('Adding benchmark: ', name);
 
-    const scopes: Object[] = [];
+    // const scopes: Object[] = [];
     let cycleCount = 0;
     benchmarkPromises.push(
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve, _) => {
         bsuite.add(name, {
           defer: true,
           fn: (deferred: any) => {
@@ -140,7 +138,7 @@ export const group = (groupFn: GroupFunction) => {
   };
 
   groupPromises.push(
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve, _) => {
       const groupDone = () => {
         Promise.all(benchmarkPromises).then(() => {
           if (afterAllFn) {

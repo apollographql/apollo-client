@@ -13,13 +13,13 @@
     "deploy": "./scripts/deploy.sh",
     "test": "jest",
     "benchmark":
-      "npm run build:benchmark && node --stack-size=20000 lib/benchmark/index.js",
+      "npm run build:benchmark && node benchmark_lib/benchmark/index.js",
     "benchmark:inspect":
-      "npm run build:benchmark && node --stack-size=20000 --inspect --debug-brk lib/benchmark/index.js",
+      "npm run build:benchmark && node --inspect --debug-brk benchmark_lib/benchmark/index.js",
     "filesize": "npm run build && npm run build:browser",
     "type-check": "flow check",
     "build": "tsc",
-    "build:benchmark": "tsc -p tsconfig.test.json",
+    "build:benchmark": "tsc -p tsconfig.benchmark.json",
     "build:browser":
       "browserify ./lib/apollo.umd.js -o=./lib/bundle.js --i apollo-utilities --i apollo-cache --i apollo-link && npm run minify:browser",
     "minify:browser":

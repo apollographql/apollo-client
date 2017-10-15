@@ -2,6 +2,7 @@
 
 ### vNext
 - Define and expose `ApolloClientOptions`, Type of an object that represents ApolloClient's constructor argument.
+- Expose `ApolloCurrentResult`
 
 ### 2.0.0-rc.3
 - Only include `data` on subscriptionData when using `subscribeToMore`

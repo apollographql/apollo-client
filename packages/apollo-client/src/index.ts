@@ -4,6 +4,7 @@ export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
+  ApolloCurrentResult,
 } from './core/ObservableQuery';
 export {
   WatchQueryOptions,

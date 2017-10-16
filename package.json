@@ -72,7 +72,7 @@
   "dependencies": {},
   "devDependencies": {
     "bundlesize": "0.15.3",
-    "codecov": "2.3.0",
+    "codecov": "2.3.1",
     "danger": "1.2.0",
     "lerna": "2.4.0",
     "lint-staged": "4.2.3",

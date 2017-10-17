@@ -103,7 +103,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
       previousResult: query.previousResult,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
       config: this.config,
-    });
+    }).result;
   }
 
   public watch(watch: Cache.WatchOptions): () => void {
@@ -192,7 +192,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   public readFragment<FragmentType>(
     options: DataProxy.Fragment,
     optimistic: boolean = false,
-  ): Cache.DiffResult<FragmentType> | null {
+  ): FragmentType | null {
     return this.read({
       query: this.transformDocument(
         getFragmentQueryDocument(options.fragment, options.fragmentName),

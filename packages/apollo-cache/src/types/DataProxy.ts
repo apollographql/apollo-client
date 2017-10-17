@@ -87,7 +87,7 @@ export interface DataProxy {
   readFragment<FragmentType>(
     options: DataProxy.Fragment,
     optimistic?: boolean,
-  ): DataProxy.DiffResult<FragmentType> | null;
+  ): FragmentType | null;
 
   /**
    * Writes a GraphQL query to the root query id.

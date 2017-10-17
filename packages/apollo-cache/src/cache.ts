@@ -69,7 +69,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readFragment<FragmentType>(
     options: DataProxy.Fragment,
     optimistic: boolean = false,
-  ): Cache.DiffResult<FragmentType> | null {
+  ): FragmentType | null {
     return this.read({
       query: getFragmentQueryDocument(options.fragment, options.fragmentName),
       variables: options.variables,

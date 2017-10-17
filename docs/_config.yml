@@ -28,16 +28,15 @@ sidebar_categories:
     - polymer
     - ember
 
-# not sure if we should rename this?
-github_repo: apollostack/docs
+github_repo: apollographql/apollo-client
 content_root: source
 
 typescript_api_box:
   data_file: docs.json
 
 social_links:
-  github: 'https://github.com/apollostack'
-  twitter: '@apollostack'
+  github: 'https://github.com/apollographql'
+  twitter: '@apollographql'
 
 # API keys
 apis:
@@ -46,14 +45,14 @@ apis:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://dev.apollodata.com/core
-root: /core/
+url: https://www.apollographql.com/docs/core
+root: /docs/core/
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 
 # Directory
 source_dir: source
-public_dir: public
+public_dir: public/docs/core
 tag_dir: tags
 archive_dir: archives
 category_dir: categories

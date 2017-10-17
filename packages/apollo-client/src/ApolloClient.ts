@@ -265,7 +265,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    */
-  public readQuery<T>(options: DataProxy.Query): Cache.DiffResult<T> {
+  public readQuery<T>(options: DataProxy.Query): T {
     return this.initProxy().readQuery<T>(options);
   }
 

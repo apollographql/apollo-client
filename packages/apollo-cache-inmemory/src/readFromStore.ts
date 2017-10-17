@@ -46,10 +46,10 @@ export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
  */
 export function readQueryFromStore<QueryType>(
   options: ReadQueryOptions,
-): Cache.DiffResult<QueryType> {
+): QueryType {
   const optsPatch = { returnPartialData: false };
 
-  return diffQueryAgainstStore({
+  return diffQueryAgainstStore<QueryType>({
     ...options,
     ...optsPatch,
   }).result;

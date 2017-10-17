@@ -64,7 +64,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
     return this.data;
   }
 
-  public read<T>(query: Cache.ReadOptions): Cache.DiffResult<T> {
+  public read<T>(query: Cache.ReadOptions): T {
     if (query.rootId && typeof this.data[query.rootId] === 'undefined') {
       return null;
     }
@@ -181,7 +181,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   public readQuery<QueryType>(
     options: DataProxy.Query,
     optimistic: boolean = false,
-  ): Cache.DiffResult<QueryType> {
+  ): QueryType {
     return this.read({
       query: options.query,
       variables: options.variables,

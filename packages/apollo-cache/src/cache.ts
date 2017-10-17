@@ -8,7 +8,7 @@ export type Transaction<T> = (c: ApolloCache<T>) => void;
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
-  public abstract read<T>(query: Cache.ReadOptions): Cache.DiffResult<T>;
+  public abstract read<T>(query: Cache.ReadOptions): T;
   public abstract write(write: Cache.WriteOptions): void;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch(watch: Cache.WatchOptions): () => void;
@@ -58,7 +58,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readQuery<QueryType>(
     options: DataProxy.Query,
     optimistic: boolean = false,
-  ): Cache.DiffResult<QueryType> {
+  ): QueryType {
     return this.read({
       query: options.query,
       variables: options.variables,

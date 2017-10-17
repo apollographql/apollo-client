@@ -45,3 +45,11 @@ yarn.lock
 
 # npm
 package-lock.json
+
+# docs
+db.json
+*.log
+public/
+.deploy*/
+.idea/
+docs.json

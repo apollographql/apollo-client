@@ -1,0 +1,25 @@
+machine:
+  node:
+    version: 4
+
+checkout:
+  post:
+    - git submodule update --init
+
+dependencies:
+  cache_directories:
+    - "site/node_modules"
+  override:
+    - npm install -g hexo-cli
+    - npm install
+
+test:
+  override:
+    # maybe we will need tests in the future
+    - echo 'ok!'
+
+deployment:
+  s3:
+    branch: /^(master|version-.*)/
+    commands:
+      - npm run deploy

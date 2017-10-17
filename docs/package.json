@@ -12,11 +12,12 @@
     "hexo-generator-index": "^0.2.0",
     "hexo-generator-tag": "^0.2.0",
     "hexo-renderer-ejs": "^0.2.0",
-    "hexo-renderer-marked": "^0.2.4",
     "hexo-renderer-less": "^0.2.0",
+    "hexo-renderer-marked": "^0.2.4",
     "hexo-server": "^0.2.0",
     "hexo-typescript-api-box": "0.9.1",
-    "typedoc": "^0.7.0"
+    "typedoc": "^0.7.0",
+    "typescript": "^2.5.3"
   },
   "devDependencies": {
     "hexo-s3-deploy": "^1.2.1"

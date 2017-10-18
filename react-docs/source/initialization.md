@@ -128,60 +128,78 @@ query {
           
 ```
 
-In the query above, `all_people` returns a result of type `Character[]`. Both `Jedi` and `Droid` are possible concrete types of `Character`, but on the client there is no way to know that without having some information about the schema. By default, Apollo Client will use a heuristic fragment matcher, which assumes that a fragment matched if the result included all the fields in its selection set, and didn't match when any field was missing. This works in most cases, but it also means that Apollo Client cannot check the server response for you, and it cannot tell you when you're manually writing an invalid data into the store using `update`, `updateQuery`, `writeQuery`, etc.
+In the query above, `all_people` returns a result of type `Character[]`. Both `Jedi` and `Droid` are possible concrete types of `Character`, but on the client there is no way to know that without having some information about the schema. By default, Apollo Client's cache will use a heuristic fragment matcher, which assumes that a fragment matched if the result included all the fields in its selection set, and didn't match when any field was missing. This works in most cases, but it also means that Apollo Client cannot check the server response for you, and it cannot tell you when you're manually writing an invalid data into the store using `update`, `updateQuery`, `writeQuery`, etc.
 
-The section below explains how to pass the necessary schema knowledge to Apollo Client so unions and interfaces can be accurately matched and results validated before writing them into the store.
+The section below explains how to pass the necessary schema knowledge to the Apollo Client cache so unions and interfaces can be accurately matched and results validated before writing them into the store.
 
-To support result validation and accurate fragment matching on unions and interfaces, a special fragment matcher called the `IntrospectionFragmentMatcher` can be used. To set it up, follow the three steps below:
+To support result validation and accurate fragment matching on unions and interfaces, a special fragment matcher called the `IntrospectionFragmentMatcher` can be used. If there are any changes related to union or interface types in your schema, you will have to update the fragment matcher accordingly.
 
-1. Query your server / schema to obtain the necessary information about unions and interfaces:
+We recommend setting up a build step that extracts the necessary information from the schema into a JSON file, where it can be imported from when constructing the fragment matcher. To set it up, follow the three steps below:
 
-```graphql
-{
-  __schema {
-    types {
-      kind
-      name
-      possibleTypes {
-        name
+1. Query your server / schema to obtain the necessary information about unions and interfaces and write it to a file. You can set this up as a script to run at build time.
+
+```js
+const fetch = require('node-fetch');
+const fs = require('fs');
+
+fetch(`${YOUR_API_HOST}/graphql`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    query: `
+      {
+        __schema {
+          types {
+            kind
+            name
+            possibleTypes {
+              name
+            }
+          }
+        }
       }
-    }
-  }
-}
-```
-
-2. Create a new IntrospectionFragment matcher using the information just obtained (you can filter out any types that are not of kind INTERFACE or UNION if you like):
-
-
-```js
-import { IntrospectionFragmentMatcher } from 'react-apollo';
-
-const myFragmentMatcher = new IntrospectionFragmentMatcher({
-  introspectionQueryResultData: {
-    __schema: {
-      types: [
-        {
-          kind: "INTERFACE",
-          name: "Character",
-          possibleTypes: [
-            { name: "Jedi" },
-            { name: "Droid" },
-          ],
-        }, // this is just an example, put your own INTERFACE and UNION types here!
-      ],
-    },
-  }
+    `,
+  }),
 })
+  .then(result => result.json())
+  .then(result => {
+    // here we're filtering out any type information unrelated to unions or interfaces
+    const filteredData = result.data.__schema.types.filter(
+      type => type.possibleTypes !== null,
+    );
+    result.data.__schema.types = filteredData;
+    fs.writeFile('./fragmentTypes.json', JSON.stringify(result.data), err => {
+      if (err) console.error('Error writing fragmentTypes file', err);
+      console.log('Fragment types successfully extracted!');
+    });
+  });
 ```
 
-3. Pass the newly created `IntrospectionFragmentMatcher` to Apollo Client during construction:
+2. Create a new IntrospectionFragment matcher by passing in the `fragmentTypes.json` file you just created. You'll want to do this in the same file where you initialize the cache for Apollo Client.
+
 
 ```js
-const client = new ApolloClient({
-  fragmentMatcher: myFragmentMatcher,
+import { IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
+import introspectionQueryResultData from './fragmentTypes.json';
+
+const fragmentMatcher = new IntrospectionFragmentMatcher({
+  introspectionQueryResultData
 });
 ```
 
-If there are any changes related to union or interface types in your schema, you will have to update the fragment matcher accordingly. To keep this information automatically updated, we recommend setting up a build step that extracts the necessary information from the schema, and includes it as a JSON file in the client bundle, where it can be imported from when constructing the fragment matcher.
+3. Pass in the newly created `IntrospectionFragmentMatcher` to configure your cache during construction. Then, you pass your newly configured cache to `ApolloClient` to complete the process.
 
-(note: if anyone has set up a build step already, please consider making a PR to the docs here to share your instructions with the rest of the community!)
+```js
+import ApolloClient from 'apollo-client';
+import Cache from 'apollo-cache-inmemory';
+import { HttpLink } from 'apollo-link-http';
+
+// add fragmentMatcher code from step 2 here
+
+const cache = new Cache({ fragmentMatcher });
+
+const client = new ApolloClient({
+  cache,
+  link: new HttpLink(),
+});
+```

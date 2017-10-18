@@ -185,6 +185,8 @@ Forces your component to refetch the query you defined in the `graphql()` functi
 
 The `data.refetch` function takes a single `variables` object argument. The `variables` argument will replace `variables` used with either the `query` option or the query from your `graphql()` HOC (depending on whether or not you specified a `query`) option to refetch the query you defined in the `graphql()` function.
 
+By default `data.refetch` or `data.fetchMore` merges the variables passed as an argument so if a variable is missed out in subsequent requests that variable will still pick the old value set before for that specific query. Old values of the nullable variables can be cleared by passing `null` or `undefined`.
+
 **Example:**
 
 ```js

@@ -3,9 +3,10 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Apollo Vanilla JS Guide
-subtitle: Core API Documentation for the Apollo JS GraphQL Client
-description:
+title: Apollo Client Guide
+propertytitle: Using GraphQL with Apollo Client
+subtitle: React Guide
+description: A guide to using the Apollo GraphQL Client with React.
 author:
 language:
 timezone:
@@ -14,19 +15,44 @@ versions:
 
 # This setting also defines the page order used to generate the Previous/Next links at the bottom of each page
 sidebar_categories:
+  # Basics
   null:
-    - index
-    - apollo-client-api
-  'Technical Documentation':
-    - network
-    - read-and-write
-    - devtools
-    - how-it-works
-  Integrations:
-    - meteor
-    - vue
-    - polymer
-    - ember
+    - basics/overview
+    - basics/integrations
+    - basics/setup
+    - basics/queries
+    - basics/mutations
+    - basics/network-layer
+    - basics/error-handling
+    - basics/fragments
+    - basics/subscriptions
+    - basics/developer-tooling
+    - basics/changelog
+  Features:
+    - features/customization
+    - features/caching
+    - features/request-lifecycle
+    - features/updating-the-cache
+    - features/optimistic-ui
+    - features/static-typing
+    - features/react-native
+  Recipes:
+    - recipes/authenticaion
+    - recipes/security
+    - recipes/pagination
+    - recipes/prefetching
+    - recipes/server-side-rendering
+    - recipes/webpack
+    - recipes/logging
+    - recipes/custom-fetching
+    - recipes/examples
+    # - recipes/client-side-data
+    # - recipes/using-with-rest
+    # - recipes/offline
+  Reference:
+    - reference
+
+
 
 github_repo: apollographql/apollo-client
 content_root: source

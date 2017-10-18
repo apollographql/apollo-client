@@ -102,7 +102,7 @@ The `graphql-anywhere` package gives us tools to easily construct a single query
 
 <h3 id="creating-fragments">Creating Fragments</h3>
 
-To create the fragments, we again use the `gql` helper and attach to subfields of `ComponentClass.fragment`, for example:
+To create the fragments, we again use the `gql` helper and attach to subfields of `ComponentClass.fragments`, for example:
 
 ```js
 VoteButtons.fragments = {

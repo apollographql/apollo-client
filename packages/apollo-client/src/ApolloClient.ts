@@ -95,7 +95,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       throw new Error(`
         In order to initialize Apollo Client, you must specify link & cache properties on the config object.
         For more information, please visit:
-          http://dev.apollodata.com/react/initialization.html#creating-client
+          https://apollographql.com/docs/react/setup
         to help you get started.
       `);
     }

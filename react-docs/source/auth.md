@@ -75,8 +75,7 @@ Another option is to reload the page, which will have a similar effect.
 
 
 ```js
-import { withApollo, graphql, gql } from 'react-apollo';
-import ApolloClient from 'apollo-client';
+import { ApolloClient, withApollo, graphql, gql } from 'react-apollo';
 
 class Profile extends React.Component {
   constructor(props) {
@@ -85,7 +84,7 @@ class Profile extends React.Component {
     this.logout = () => {
       App.logout() // or whatever else your logout flow is
       .then(() =>
-        props.client.resetStore();
+        props.client.resetStore()
       )
       .catch(err =>
         console.error('Logout failed', err);

@@ -402,7 +402,7 @@ const withCharacter = graphql<Response, InputProps>(HERO_QUERY, {
   })
 });
 
-export default class Character extends React.Component<ChildProps<InputProps, Response>, {}> {
+class Character extends React.Component<ChildProps<InputProps, Response>, {}> {
   render(){
     const { loading, hero, error } = this.props.data;
     if (loading) return <div>Loading</div>;
@@ -410,6 +410,8 @@ export default class Character extends React.Component<ChildProps<InputProps, Re
     return ...// actual component with data;
   }
 }
+
+export default withCharacter(Character);
 ```
 
 <h2 id="using-name">using the `name` property</h2>

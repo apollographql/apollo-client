@@ -53,6 +53,9 @@ export default graphql(currentUserQuery)(Profile)
 
 [FuseBox](http://fuse-box.org) can't use the Webpack loaders. To make the same transformation work in FuseBox, use [fuse-box-graphql-plugin](https://github.com/otothea/fuse-box-graphql-plugin).
 
+## React native
+[React native](https://facebook.github.io/react-native/) can't use the Webpack loaders. To make the same transformation work in React native, use [babel-plugin-inline-import-graphql-ast](https://github.com/detrohutt/babel-plugin-inline-import-graphql-ast).
+
 ## Fragments
 
 You can use and include fragments in .graphql files and have webpack include those dependencies for you, similar to how you would use fragments and queries with the gql tag in plain JS.

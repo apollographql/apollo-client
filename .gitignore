@@ -49,8 +49,6 @@ package-lock.json
 # docs
 db.json
 *.log
-public/*
-!public/_redirects
-.deploy*/
+docs/public/*
+!docs/public/_redirects
 .idea/
-docs.json

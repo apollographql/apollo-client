@@ -10,10 +10,10 @@ To get started with Apollo and React, you will need to install a few packages fr
 
 ```bash
 # installing the preset package and react integration
-npm install apollo-client-preset react-apollo --save
+npm install apollo-client-preset react-apollo graphql-tag --save
 
 # installing each piece independently
-npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo ---save
+npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo graphql-tag ---save
 ```
 
 > Note: You don't have to do anything special to get Apollo Client to work in React Native, just install and import it as usual.
@@ -80,6 +80,47 @@ ReactDOM.render(
   document.getElementById('root')
 )
 ```
+<h3 id="gql">Creating Operations using `graphql-tag`</h3>
+
+```js
+import gql from 'graphql-tag';
+```
+
+The `gql` template tag is what you use to define GraphQL queries in your Apollo Client apps. It parses your GraphQL query into the [GraphQL.js AST format][] which may then be consumed by Apollo Client methods. Whenever Apollo Client is asking for a GraphQL query you will always want to wrap it in a `gql` template tag.
+
+You can embed a GraphQL document containing only fragments inside of another GraphQL document using template string interpolation. This allows you to use fragments defined in one part of your codebase inside of a query define in a completely different file. See the example below for a demonstration of how this works.
+
+[GraphQL.js AST format]: https://github.com/graphql/graphql-js/blob/d92dd9883b76e54babf2b0ffccdab838f04fc46c/src/language/ast.js
+[`graphql-tag`]: https://www.npmjs.com/package/graphql-tag
+
+**Example:**
+
+Notice how in the `query` variable we not only include the `fragments` variable through template string interpolation (`${fragments}`), but we also include a spread for the `foo` fragment in our query.
+
+```js
+const fragments = gql`
+  fragment foo on Foo {
+    a
+    b
+    c
+    ...bar
+  }
+
+  fragment bar on Bar {
+    d
+    e
+    f
+  }
+`;
+
+const query = gql`
+  query {
+    ...foo
+  }
+
+  ${fragments}
+`;
+```
 
 <h2 id="connecting-data">Requesting data</h2>
 
@@ -114,8 +155,35 @@ const MyComponentWithMutation = graphql(MyMutation)(MyComponent);
 <h3 title="ApolloClient">`ApolloClient`</h3>
 XXX new docs here
 
-<h3 title="ApolloProvider">`ApolloProvider`</h3>
-XXX docs for ApolloProvider
+<h3 id="ApolloProvider" title="ApolloProvider">`ApolloProvider`</h3>
+React-Apollo includes a component for providing a client instance to a React component tree, and a higher-order component for retrieving that client instance.
+
+```js
+import { ApolloProvider } from 'react-apollo';
+```
+
+Makes the GraphQL client available to any of your components enhanced by the `graphql()` function. The `<ApolloProvider/>` component works the same as the [`react-redux` `<Provider/>` component][]. It provides an [`ApolloClient`][] instance to all of your GraphQL components that either use the [`graphql()`](#graphql) function, or the [`withApollo`](#withApollo) function. You may also provide your Redux store using the `<ApolloProvider/>` component in addition to providing your GraphQL client.
+
+If you do not add this component to the root of your React tree then your components enhanced with Apollo capabilities will not be able to function.
+
+To learn more about initializing an instance of [`ApolloClient`][], be sure to read the [setup and options guide](initialization.html).
+
+The `<ApolloProvider/>` component takes the following props:
+
+- `client`: The required [`ApolloClient`][] instance. This [`ApolloClient`][] instance will be used by all of your components enhanced with GraphQL capabilties.
+
+If you want to get direct access to your [`ApolloClient`][] instance that is provided by `<ApolloProvider/>` in your components then be sure to look at the [`withApollo()`](#withApollo) enhancer function.
+
+**Example:**
+
+```js
+ReactDOM.render(
+  <ApolloProvider client={client}>
+    <MyRootComponent />
+  </ApolloProvider>,
+  document.getElementById('root'),
+);
+```
 
 <h3 id="graphql" title="graphql(...)">`graphql(query, [config])(component)`</h3>
 
@@ -390,4 +458,28 @@ export default compose(
   graphql(`mutation { ... }`),
   connect(...),
 )(MyComponent);
+```
+
+<h3 id="withApollo">`withApollo(component)`</h3>
+
+```js
+import { withApollo } from 'react-apollo';
+```
+
+A simple enhancer which provides direct access to your [`ApolloClient`][] instance. This is useful if you want to do custom logic with Apollo. Such as calling one-off queries. By calling this function with the component you want to enhance, `withApollo()` will create a new component which passes in an instance of [`ApolloClient`][] as a `client` prop.
+
+If you are wondering when to use `withApollo()` and when to use [`graphql()`](#graphql) the answer is that most of the time you will want to use [`graphql()`](#graphql). [`graphql()`](#graphql) provides many of the advanced features you need to work with your GraphQL data. You should only use `withApollo()` if you want the GraphQL client without any of the other features.
+
+This will only be able to provide access to your client if there is an [`<ApolloProvider/>`](#ApolloProvider) component higher up in your tree to actually provide the client.
+
+[`ApolloClient`]: ../core/apollo-client-api.html#apollo-client
+
+**Example:**
+
+```js
+export default withApollo(MyComponent);
+
+function MyComponent({ client }) {
+  console.log(client);
+}
 ```

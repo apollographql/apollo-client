@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <!-- Basic -->
+    <title>Updating the Store | Apollo Client Guide</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="images/favicon.png" sizes="16x16 32x32 64x64">
+
+    <!-- Social -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://www.apollographql.com/docs/react">
+    <meta property="og:title" content="Updating the Store | Apollo Client Guide">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+    <meta name="twitter:card" content="summary_image_large">
+    <meta name="twitter:site" content="@apollographql">
+    <meta name="twitter:title" content="Updating the Store | Apollo Client Guide">
+    <meta name="twitter:description" content="">
+    <meta name="twitter:image" content="">
+
+    <!-- Misc -->
+    <meta name="google-site-verification" content="" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,200,300italic,400italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/docs/react/style/style.css">
+  </head>
+  <body class="">
+    
+
+<div class="nav dark">
+  <div class="nav-group">
+    <div class="nav-item show-mobile">
+      <span class="js-sidebar-toggle ">
+        <span class="icon-menu"></span>
+      </span>
+    </div>
+    <div class="nav-item">
+      
+      <a class="logo-wrapper" href="http://dev.apollodata.com/" title="Apollo Developers"  >
+        <img src="../images/logo-apollo-space-left.svg" alt="Apollo" class="logo"/><img src="../images/logo-apollo-subbrands-developers-space.svg" class="logo-subbrand" alt="Developers"/>
+      </a>
+    </div>
+  </div>
+
+  <div class="nav-group right">
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/react"  >
+          <span>React</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/angular2"  >
+          <span>Angular</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/ios"  >
+          <span>iOS</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/android"  >
+          <span>Android</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/core"  >
+          <span>Vanilla JS</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false separator">
+        <a class="link" href="http://dev.apollodata.com/tools"  >
+          <span>Server</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="https://medium.com/apollo-stack" target=_new >
+          <span>Blog</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/community"  >
+          <span>Community</span>
+        </a>
+      </div>
+    
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="panel">
+    <div class="panel-item">
+      <a class="" href="../http:/dev.apollodata.com/" title="Apollo"  >
+        <span>Apollo Developers</span>
+      </a>
+    </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/react"  >
+          <span>React</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/angular2"  >
+          <span>Angular</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/ios"  >
+          <span>iOS</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/android"  >
+          <span>Android</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/core"  >
+          <span>Vanilla JS</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/tools"  >
+          <span>Server</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="https://medium.com/apollo-stack" target=_new >
+          <span>Blog</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/community"  >
+          <span>Community</span>
+        </a>
+      </div>
+    
+  </div>
+
+  <div class="sidebar-content">
+    <div class="topcap">
+      <span class="title-sidebar">Apollo Client Guide</span>
+      
+    </div>
+
+    
+
+    <ul class="toc">
+      
+        <li>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../index.html" class="sidebar-link ">
+                  <span>Apollo Client</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/integrations.html" class="sidebar-link ">
+                  <span>View Integrations</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/setup.html" class="sidebar-link ">
+                  <span>Setup and options</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/queries.html" class="sidebar-link ">
+                  <span>Queries</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/mutations.html" class="sidebar-link ">
+                  <span>Mutations</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/network-layer.html" class="sidebar-link ">
+                  <span>Network layer</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/error-handling.html" class="sidebar-link ">
+                  <span>Error Handling</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/fragments.html" class="sidebar-link ">
+                  <span>Using Fragments</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/subscriptions.html" class="sidebar-link ">
+                  <span>Subscriptions</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Features</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="changelog.html" class="sidebar-link ">
+                  <span>Changelog</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="caching.html" class="sidebar-link ">
+                  <span>Direct Cache Access</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="developer-tooling.html" class="sidebar-link ">
+                  <span>Developer tools</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="network-customization.html" class="sidebar-link ">
+                  <span></span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="optimistic-ui.html" class="sidebar-link ">
+                  <span>Optimistic UI</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="react-native.html" class="sidebar-link ">
+                  <span>Integrating with React Native</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="static-typing.html" class="sidebar-link ">
+                  <span>Using TypeScript and Flow</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Recipes</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/authentication.html" class="sidebar-link ">
+                  <span>Authentication</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/babel.html" class="sidebar-link ">
+                  <span>Precompilation with babel</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/meteor.html" class="sidebar-link ">
+                  <span>Meteor</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/pagination.html" class="sidebar-link ">
+                  <span>Pagination</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/prefetching.html" class="sidebar-link ">
+                  <span>Prefetching data</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/query-splitting.html" class="sidebar-link ">
+                  <span>Query Splitting</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/server-side-rendering.html" class="sidebar-link ">
+                  <span>Server Side Rendering</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/simple-example.html" class="sidebar-link ">
+                  <span>Small Example: Snack</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../recipes/webpack.html" class="sidebar-link ">
+                  <span>Webpack loader</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Reference</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../reference/index.html" class="sidebar-link ">
+                  <span>Title</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="content">
+  <div class="content-wrapper">
+    <div class="header-content">
+      <h1 class="title-page">Updating the Store</h1>
+      
+
+      <div class="page-actions">
+        <div class="actions-group">
+          <a class="btn tertiary small round lowercase" href="https://github.com/apollographql/apollo-client/tree/master/docs/source/features/cache-updates.md" target="_blank"><span class="icon-github"></span> <span>Edit on GitHub</span></a>
+          
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="document-formatting">
+      <p>Apollo performs two important core tasks: Executing queries and mutations, and caching the results.</p>
+<p>Thanks to Apollo’s store design, it’s possible for the results of a query or mutation to update your UI in all the right places. In many cases it’s possible for that to happen automatically, whereas in others you need to help the client out a little in doing so.</p>
+<h2 id="normalization">Normalization with <code>dataIdFromObject</code></h2>
+
+<p>Apollo does result caching based on two things:</p>
+<ol>
+<li>The shape of GraphQL queries and their results.</li>
+<li>The identities of the objects returned from the server.</li>
+</ol>
+<p>Flattening out the cache based on object identity is referred to as cache normalization. You can read about our caching model in detail in our blog post, <a href="https://medium.com/apollo-stack/the-concepts-of-graphql-bc68bd819be3" target="_blank" rel="external">“GraphQL Concepts Visualized”</a>.</p>
+<p>By default, Apollo identifies objects based on two properties: The <code>__typename</code> and an ID field, either <code>id</code> or <code>_id</code>. The client automatically adds the <code>__typename</code> field to your queries, so you just have to make sure to fetch the <code>id</code> field if you have one.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// This result</span></div><div class="line">&#123;</div><div class="line">  __typename: <span class="string">'Person'</span>,</div><div class="line">  id: <span class="string">'1234'</span>,</div><div class="line">  name: <span class="string">'Jonas'</span>,</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">// Will get the following ID</span></div><div class="line"><span class="string">'Person:1234'</span></div></pre></td></tr></table></figure>
+<p>You can also specify a custom function to generate IDs from each object, and supply it as the <code>dataIdFromObject</code> in the <a href="initialization.html#creating-client"><code>ApolloClient</code> constructor</a>, if you want to specify how Apollo will identify and de-duplicate the objects returned from the server.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; ApolloClient &#125; <span class="keyword">from</span> <span class="string">'react-apollo'</span>;</div><div class="line"></div><div class="line"><span class="comment">// If your database has unique IDs across all types of objects, you can use</span></div><div class="line"><span class="comment">// a very simple function!</span></div><div class="line"><span class="keyword">const</span> client = <span class="keyword">new</span> ApolloClient(&#123;</div><div class="line">  dataIdFromObject: <span class="function"><span class="params">o</span> =&gt;</span> o.id</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.</p>
+<p>If you want to get the dataIdFromObjectFunction (for instance when using the <a href="/core/apollo-client-api.html#ApolloClient.readFragment"><code>readFragment</code> function</a>), you can access it as <code>client.dataIdFromObject</code>.<br><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> person = &#123;</div><div class="line">  __typename: <span class="string">'Person'</span>,</div><div class="line">  id: <span class="string">'1234'</span>,</div><div class="line">&#125;;</div><div class="line"></div><div class="line">client.dataIdFromObject(person); <span class="comment">// 'Person:1234'</span></div></pre></td></tr></table></figure></p>
+<h3 id="automatic-updates">Automatic store updates</h3>
+
+<p>Let’s look at a case where just using the cache normalization results in the correct update to our store. Let’s say we do the following query:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  post(id: &apos;5&apos;) &#123;</div><div class="line">    id</div><div class="line">    score</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Then, we do the following mutation:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">mutation &#123;</div><div class="line">  upvotePost(id: &apos;5&apos;) &#123;</div><div class="line">    id</div><div class="line">    score</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>If the <code>id</code> field on both results matches up, then the <code>score</code> field everywhere in our UI will be updated automatically! One nice way to take advantage of this property as much as possible is to make your mutation results have all of the data necessary to update the queries previously fetched. A simple trick for this is to use <a href="fragments.html">fragments</a> to share fields between the query and the mutation that affects it.</p>
+<h2 id="after-mutations">Updating after a mutation</h2>
+
+<p>In some cases, just using <code>dataIdFromObject</code> is not enough for your application UI to update correctly. For example, if you want to add something to a list of objects without refetching the entire list, or if there are some objects that to which you can’t assign an object identifier, Apollo Client cannot update existing queries for you. Read on to learn about the other tools at your disposal.</p>
+<h3 id="refetchQueries"><code>refetchQueries</code></h3>
+
+<p><code>refetchQueries</code> is the simplest way of updating the cache. With <code>refetchQueries</code> you can specify one or more queries that you want to run after a mutation is completed in order to refetch the parts of the store that may have been affected by the mutation:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">mutate(&#123;</div><div class="line">  <span class="comment">//... insert comment mutation</span></div><div class="line">  refetchQueries: [&#123;</div><div class="line">    query: gql<span class="string">`</span></div><div class="line"><span class="string">      query updateCache($repoName: String!) &#123;</span></div><div class="line"><span class="string">        entry(repoFullName: $repoName) &#123;</span></div><div class="line"><span class="string">          id</span></div><div class="line"><span class="string">          comments &#123;</span></div><div class="line"><span class="string">            postedBy &#123;</span></div><div class="line"><span class="string">              login</span></div><div class="line"><span class="string">              html_url</span></div><div class="line"><span class="string">            &#125;</span></div><div class="line"><span class="string">            createdAt</span></div><div class="line"><span class="string">            content</span></div><div class="line"><span class="string">          &#125;</span></div><div class="line"><span class="string">        &#125;</span></div><div class="line"><span class="string">      &#125;</span></div><div class="line"><span class="string">    `</span>,</div><div class="line">    variables: &#123; <span class="attr">repoName</span>: <span class="string">'apollographql/apollo-client'</span> &#125;,</div><div class="line">  &#125;],</div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<p>A very common way of using <code>refetchQueries</code> is to import queries defined for other components to make sure that those components will be updated:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> RepoCommentsQuery <span class="keyword">from</span> <span class="string">'../queries/RepoCommentsQuery'</span>;</div><div class="line"></div><div class="line">mutate(&#123;</div><div class="line">  <span class="comment">//... insert comment mutation</span></div><div class="line">  refetchQueries: [&#123;</div><div class="line">    query: RepoCommentsQuery,</div><div class="line">    variables: &#123; <span class="attr">repoFullName</span>: <span class="string">'apollographql/apollo-client'</span> &#125;,</div><div class="line">  &#125;],</div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<h3 id="directAccess"><code>update</code></h3>
+
+<p>Using <code>update</code> gives you full control over the cache, allowing you to make changes to your data model in response to a mutation in any way you like. <code>update</code> is the recommended way of updating the cache after a query. It is explained in full <a href="http://dev.apollodata.com/react/api-mutations.html#graphql-mutation-options-update" target="_blank" rel="external">here</a>.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> CommentAppQuery <span class="keyword">from</span> <span class="string">'../queries/CommentAppQuery'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> SUBMIT_COMMENT_MUTATION = gql<span class="string">`</span></div><div class="line"><span class="string">  mutation submitComment($repoFullName: String!, $commentContent: String!) &#123;</span></div><div class="line"><span class="string">    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) &#123;</span></div><div class="line"><span class="string">      postedBy &#123;</span></div><div class="line"><span class="string">        login</span></div><div class="line"><span class="string">        html_url</span></div><div class="line"><span class="string">      &#125;</span></div><div class="line"><span class="string">      createdAt</span></div><div class="line"><span class="string">      content</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string">  &#125;</span></div><div class="line"><span class="string">`</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, &#123;</div><div class="line">  props(&#123; ownProps, mutate &#125;) &#123;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      submit(&#123; repoFullName, commentContent &#125;) &#123;</div><div class="line">        <span class="keyword">return</span> mutate(&#123;</div><div class="line">          variables: &#123; repoFullName, commentContent &#125;,</div><div class="line"></div><div class="line">          update: <span class="function">(<span class="params">store, &#123; data: &#123; submitComment &#125; &#125;</span>) =&gt;</span> &#123;</div><div class="line">            <span class="comment">// Read the data from our cache for this query.</span></div><div class="line">            <span class="keyword">const</span> data = store.readQuery(&#123; <span class="attr">query</span>: CommentAppQuery &#125;);</div><div class="line">            <span class="comment">// Add our comment from the mutation to the end.</span></div><div class="line">            data.comments.push(submitComment);</div><div class="line">            <span class="comment">// Write our data back to the cache.</span></div><div class="line">            store.writeQuery(&#123; <span class="attr">query</span>: CommentAppQuery, data &#125;);</div><div class="line">          &#125;,</div><div class="line">        &#125;);</div><div class="line">      &#125;,</div><div class="line">    &#125;;</div><div class="line">  &#125;,</div><div class="line">&#125;)(CommentsPage);</div></pre></td></tr></table></figure>
+<h3 id="updateQueries"><code>updateQueries</code></h3>
+
+<p><strong>NOTE: We recommend using the more flexible <code>update</code> API instead of <code>updateQueries</code>. The <code>updateQueries</code> API may be deprecated in the future.</strong></p>
+<p>As its name suggests, <code>updateQueries</code> lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI will update automatically based on mutation results, as long as the object IDs in the result match up with the IDs you already have in your store. See the <a href="#normalization"><code>normalization</code></a> documentation above for more information about how to take advantage of this feature.</p>
+<p>However, if you are removing or adding items to a list with a mutation or can’t assign object identifiers to the relevant objects, you’ll have to use <code>updateQueries</code> to make sure that your UI reflects the change correctly.</p>
+<p>We’ll take the comments page within GitHunt as our example. When we submit a new comment, the “submit” button fires a mutation which adds a new comment to the “list” of the comments held on the server. In reality, the server doesn’t know there’s a list–it just knows that something is added to the <code>comments</code> table in SQL–so the server can’t really tell us exactly where to put the result. The original query that fetched the comments for the list also doesn’t know about this new comment yet, so Apollo can’t automatically add it to the list for us.</p>
+<p>In this case, we can use <code>updateQueries</code> to make sure that query result is updated, which will also update Apollo’s normalized store to make everything remain consistent.</p>
+<p>If you’re familiar with Redux, think of the <code>updateQueries</code> option as a reducer, except instead of updating the store directly we’re updating the query result shape, which means we don’t have to worry about how the store internals work.</p>
+<p>We expose this mutation through a function prop that the <code>CommentsPage</code> component can call. This is what the code looks like:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> update <span class="keyword">from</span> <span class="string">'immutability-helper'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> SUBMIT_COMMENT_MUTATION = gql<span class="string">`</span></div><div class="line"><span class="string">  mutation submitComment($repoFullName: String!, $commentContent: String!) &#123;</span></div><div class="line"><span class="string">    submitComment(repoFullName: $repoFullName, commentContent: $commentContent) &#123;</span></div><div class="line"><span class="string">      postedBy &#123;</span></div><div class="line"><span class="string">        login</span></div><div class="line"><span class="string">        html_url</span></div><div class="line"><span class="string">      &#125;</span></div><div class="line"><span class="string">      createdAt</span></div><div class="line"><span class="string">      content</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string">  &#125;</span></div><div class="line"><span class="string">`</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, &#123;</div><div class="line">  props(&#123; ownProps, mutate &#125;) &#123;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      submit(&#123; repoFullName, commentContent &#125;) &#123;</div><div class="line">        <span class="keyword">return</span> mutate(&#123;</div><div class="line">          variables: &#123; repoFullName, commentContent &#125;,</div><div class="line"></div><div class="line">          updateQueries: &#123;</div><div class="line">            Comment: <span class="function">(<span class="params">prev, &#123; mutationResult &#125;</span>) =&gt;</span> &#123;</div><div class="line">              <span class="keyword">const</span> newComment = mutationResult.data.submitComment;</div><div class="line"></div><div class="line">              <span class="keyword">return</span> update(prev, &#123;</div><div class="line">                entry: &#123;</div><div class="line">                  comments: &#123;</div><div class="line">                    $unshift: [newComment],</div><div class="line">                  &#125;,</div><div class="line">                &#125;,</div><div class="line">              &#125;);</div><div class="line">            &#125;,</div><div class="line">          &#125;,</div><div class="line">        &#125;);</div><div class="line">      &#125;,</div><div class="line">    &#125;;</div><div class="line">  &#125;,</div><div class="line">&#125;)(CommentsPage);</div></pre></td></tr></table></figure>
+<p>If we were to look carefully at the server schema, we’d see that the mutation actually returns information about the single new comment that was added; it doesn’t refetch the whole list of comments. This makes a lot of sense: if we have a thousand comments on a page, we don’t want to refetch all of them if we add a single new comment.</p>
+<p>The comments page itself is rendered with the following query:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> COMMENT_QUERY = gql<span class="string">`</span></div><div class="line"><span class="string">  query Comment($repoName: String!) &#123;</span></div><div class="line"><span class="string">    currentUser &#123;</span></div><div class="line"><span class="string">      login</span></div><div class="line"><span class="string">      html_url</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">    entry(repoFullName: $repoName) &#123;</span></div><div class="line"><span class="string">      id</span></div><div class="line"><span class="string">      postedBy &#123;</span></div><div class="line"><span class="string">        login</span></div><div class="line"><span class="string">        html_url</span></div><div class="line"><span class="string">      &#125;</span></div><div class="line"><span class="string">      createdAt</span></div><div class="line"><span class="string">      comments &#123;</span></div><div class="line"><span class="string">        postedBy &#123;</span></div><div class="line"><span class="string">          login</span></div><div class="line"><span class="string">          html_url</span></div><div class="line"><span class="string">        &#125;</span></div><div class="line"><span class="string">        createdAt</span></div><div class="line"><span class="string">        content</span></div><div class="line"><span class="string">      &#125;</span></div><div class="line"><span class="string">      repository &#123;</span></div><div class="line"><span class="string">        full_name</span></div><div class="line"><span class="string">        html_url</span></div><div class="line"><span class="string">        description</span></div><div class="line"><span class="string">        open_issues_count</span></div><div class="line"><span class="string">        stargazers_count</span></div><div class="line"><span class="string">      &#125;</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string">  &#125;`</span>;</div></pre></td></tr></table></figure>
+<p>Now, we have to incorporate the newly added comment returned by the mutation into the information that was already returned by the <code>COMMENT_QUERY</code> that was fired when the page was loaded. We accomplish this through <code>updateQueries</code>. Zooming in on that portion of the code:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">mutate(&#123;</div><div class="line">  <span class="comment">//...</span></div><div class="line">  updateQueries: &#123;</div><div class="line">    Comment: <span class="function">(<span class="params">prev, &#123; mutationResult &#125;</span>) =&gt;</span> &#123;</div><div class="line">      <span class="keyword">const</span> newComment = mutationResult.data.submitComment;</div><div class="line">      <span class="keyword">return</span> update(prev, &#123;</div><div class="line">        entry: &#123;</div><div class="line">          comments: &#123;</div><div class="line">            $unshift: [newComment],</div><div class="line">          &#125;,</div><div class="line">        &#125;,</div><div class="line">      &#125;);</div><div class="line">    &#125;,</div><div class="line">  &#125;,</div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<p>Fundamentally, <code>updateQueries</code> is a map going from the name of a query (in our case, <code>Comment</code>) to a function that receives the previous result that this query received as well as the result returned by the mutation. In our case, the mutation returns information about the new comment. This function should then incorporate the mutation result into a new object containing the result previously received by the query (<code>prev</code>) and return that new object.</p>
+<p>Note that the function must not alter the <code>prev</code> object (because <code>prev</code> is compared with the new object returned to see what changes the function made and hence what prop updates are needed).</p>
+<p>In our <code>updateQueries</code> function for the <code>Comment</code> query, we’re doing something really simple: just adding the comment we just submitted to the list of comments that the query asks for. We’re doing that using the <code>update</code> function from the <a href="https://github.com/kolodny/immutability-helper" target="_blank" rel="external">immutability-helper</a> package, just to do it concisely. But, if you wanted to, you could write some no-helper Javascript to combine the two incoming objects into a new one for the result.</p>
+<p>Once the mutation fires and the result arrives from the server (or, a result is provided through optimistic UI), our <code>updateQueries</code> function for the <code>Comment</code> query will be called and the <code>Comment</code> query will be updated accordingly. These changes in the result will be mapped to React props and our UI will update as well with the new information!</p>
+<h3 id="resultReducers">Query <code>reducer</code></h3>
+
+<p><strong>NOTE: We recommend using the more flexible <code>update</code> API instead of <code>reducer</code>. The <code>reducer</code> API may be deprecated in the future.</strong></p>
+<p>While <code>updateQueries</code> and <code>update</code> can only be used to update other queries based on the result of a mutation, the <code>reducer</code> option is a way that lets you update the query result based on any Apollo action, including results of other queries, mutations or subscriptions. It acts just like a Redux reducer on the denormalized query result:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> update <span class="keyword">from</span> <span class="string">'immutability-helper'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> CommentsPageWithData = graphql(CommentsPageQuery, &#123;</div><div class="line">  props(&#123; data &#125;) &#123;</div><div class="line">    <span class="comment">// ...</span></div><div class="line">  &#125;,</div><div class="line">  options(&#123; params &#125;) &#123;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      reducer: <span class="function">(<span class="params">previousResult, action, variables</span>) =&gt;</span> &#123;</div><div class="line">        <span class="keyword">if</span> (action.type === <span class="string">'APOLLO_MUTATION_RESULT'</span> &amp;&amp; action.operationName === <span class="string">'submitComment'</span>)&#123;</div><div class="line">          <span class="comment">// <span class="doctag">NOTE:</span> some more sanity checks are usually recommended here to make</span></div><div class="line">          <span class="comment">// sure the previousResult is not empty and that the mutation results</span></div><div class="line">          <span class="comment">// contains the data we expect.</span></div><div class="line"></div><div class="line">          <span class="comment">// <span class="doctag">NOTE:</span> variables contains the current query variables,</span></div><div class="line">          <span class="comment">// not the variables of the query or mutation that caused the action.</span></div><div class="line">          <span class="comment">// Those can be found on the `action` argument.</span></div><div class="line"></div><div class="line">          <span class="keyword">return</span> update(previousResult, &#123;</div><div class="line">            entry: &#123;</div><div class="line">              comments: &#123;</div><div class="line">                $unshift: [action.result.data.submitComment],</div><div class="line">              &#125;,</div><div class="line">            &#125;,</div><div class="line">          &#125;);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> previousResult;</div><div class="line">      &#125;,</div><div class="line">    &#125;;</div><div class="line">  &#125;,</div><div class="line">&#125;)(CommentsPage);</div></pre></td></tr></table></figure>
+<p>As you can see, the <code>reducer</code> option can be used to achieve the same goal as <code>updateQueries</code>, but it is more flexible and works with any type of Apollo action, not just mutations. For example, the query result can be updated based on another query’s result.</p>
+<blockquote>
+<p>It is not currently possible to respond to your custom Redux actions arriving from outside of Apollo in a result reducer. See <a href="https://github.com/apollographql/apollo-client/issues/1013" target="_blank" rel="external">this thread</a> for more information.</p>
+</blockquote>
+<p><strong>When should you use update vs. reducer vs. updateQueries vs. refetchQueries?</strong></p>
+<p><code>refetchQueries</code> should be used whenever the mutation result alone is not enough to infer all the changes to the cache. <code>refetchQueries</code> is also a very good option if an extra roundtrip and possible overfetching are not of concern for your application, which is often true during prototyping. Compared with <code>update</code>, <code>updateQueries</code> and <code>reducer</code>, <code>refetchQueries</code> is the easiest to write and maintain.</p>
+<p><code>updateQueries</code>, <code>reducer</code> and <code>update</code> all provide similar functionality. They were introduced in that order and each tried to address shortcomings in the previous one. While all three APIs are currently available, we strongly recommend using <code>update</code> wherever possible, as the other two APIs (<code>updateQueries</code> and <code>reducer</code>) may be deprecated in the future. We recommend <code>update</code> because its API is both the most powerful and easiest to understand of all three. The reason we are considering deprecating <code>reducer</code> and <code>updateQueries</code> is that they both depend on state internal to the client, which makes them harder to understand and maintain than <code>update</code>, without providing any extra functionality.</p>
+<h2 id="fetchMore">Incremental loading: <code>fetchMore</code></h2>
+
+<p><code>fetchMore</code> can be used to update the result of a query based on the data returned by another query. Most often, it is used to handle infinite-scroll pagination or other situations where you are loading more data when you already have some.</p>
+<p>In our GitHunt example, we have a paginated feed that displays a list of GitHub repositories. When we hit the “Load More” button, we don’t want Apollo Client to throw away the repository information it has already loaded. Instead, it should just append the newly loaded repositories to the list that Apollo Client already has in the store. With this update, our UI component should re-render and show us all of the available repositories.</p>
+<p>Let’s see how to do that with the <code>fetchMore</code> method on a query:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> FeedQuery = gql<span class="string">`</span></div><div class="line"><span class="string">  query Feed($type: FeedType!, $offset: Int, $limit: Int) &#123;</span></div><div class="line"><span class="string">    # ...</span></div><div class="line"><span class="string">  &#125;`</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> FeedWithData = graphql(FeedQuery, &#123;</div><div class="line">  props(&#123; <span class="attr">data</span>: &#123; loading, feed, currentUser, fetchMore &#125; &#125;) &#123;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      loading,</div><div class="line">      feed,</div><div class="line">      currentUser,</div><div class="line">      loadNextPage() &#123;</div><div class="line">        <span class="keyword">return</span> fetchMore(&#123;</div><div class="line">          variables: &#123;</div><div class="line">            offset: feed.length,</div><div class="line">          &#125;,</div><div class="line"></div><div class="line">          updateQuery: <span class="function">(<span class="params">previousResult, &#123; fetchMoreResult &#125;</span>) =&gt;</span> &#123;</div><div class="line">            <span class="keyword">if</span> (!fetchMoreResult) &#123; <span class="keyword">return</span> previousResult; &#125;</div><div class="line"></div><div class="line">            <span class="keyword">return</span> <span class="built_in">Object</span>.assign(&#123;&#125;, previousResult, &#123;</div><div class="line">              feed: [...previousResult.feed, ...fetchMoreResult.feed],</div><div class="line">            &#125;);</div><div class="line">          &#125;,</div><div class="line">        &#125;);</div><div class="line">      &#125;,</div><div class="line">    &#125;;</div><div class="line">  &#125;,</div><div class="line">&#125;)(Feed);</div></pre></td></tr></table></figure>
+<p>We have two components here: <code>FeedWithData</code> and <code>Feed</code>. The <code>FeedWithData</code> container implementation produces the <code>props</code> to be passed to the presentational <code>Feed</code> component. Specifically, we’re mapping the <code>loadNextPage</code> prop to the following:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">return</span> fetchMore(&#123;</div><div class="line">  variables: &#123;</div><div class="line">    offset: feed.length,</div><div class="line">  &#125;,</div><div class="line">  updateQuery: <span class="function">(<span class="params">prev, &#123; fetchMoreResult &#125;</span>) =&gt;</span> &#123;</div><div class="line">    <span class="keyword">if</span> (!fetchMoreResult.data) &#123; <span class="keyword">return</span> prev; &#125;</div><div class="line">    <span class="keyword">return</span> <span class="built_in">Object</span>.assign(&#123;&#125;, prev, &#123;</div><div class="line">      feed: [...prev.feed, ...fetchMoreResult.feed],</div><div class="line">    &#125;);</div><div class="line">  &#125;,</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>The <code>fetchMore</code> method takes a map of <code>variables</code> to be sent with the new query. Here, we’re setting the offset to <code>feed.length</code> so that we fetch items that aren’t already displayed on the feed. This variable map is merged with the one that’s been specified for the query associated with the component. This means that other variables, e.g. the <code>limit</code> variable, will have the same value as they do within the component query.</p>
+<p>It can also take a <code>query</code> named argument, which can be a GraphQL document containing a query that will be fetched in order to fetch more information; we refer to this as the <code>fetchMore</code> query. By default, the <code>fetchMore</code> query is the query associated with the container, in this case the <code>FEED_QUERY</code>.</p>
+<p>When we call <code>fetchMore</code>, Apollo Client will fire the <code>fetchMore</code> query and use the logic in the <code>updateQuery</code> option to incorporate that into the original result. The named argument <code>updateQuery</code> should be a function that takes the previous result of the query associated with your component (i.e. <code>FEED_QUERY</code> in this case) and the information returned by the <code>fetchMore</code> query and return a combination of the two.</p>
+<p>Here, the <code>fetchMore</code> query is the same as the query associated with the component. Our <code>updateQuery</code> takes the new feed items returned and just appends them onto the feed items that we’d asked for previously. With this, the UI will update and the feed will contain the next page of items!</p>
+<p>Although <code>fetchMore</code> is often used for pagination, there are many other cases in which it is applicable. For example, suppose you have a list of items (say, a collaborative todo list) and you have a way to fetch items that have been updated after a certain time. Then, you don’t have to refetch the whole todo list to get updates: you can just incorporate the newly added items with <code>fetchMore</code>, as long as your <code>updateQuery</code> function correctly merges the new results.</p>
+<p></p><h3 id="connection-directive">The <code>@connection</code> directive</h3><br>By default, the result of a <code>fetchMore</code> will be stored in the cache according to the initial query executed and its parameters. Due to this behavior, it can be hard to know the location in the cache to run an imperative update on if the variables from the initial query are not known, which often happens if we are running store updates from a different place than where the queries are executed.<p></p>
+<p>To have a stable cache location for query results, Apollo Client 1.6 introduced the <code>@connection</code> directive, which can be used to specify a custom store key for results. To use the <code>@connection</code> directive, simply add the directive to the segment of the query you want a custom store key for and provide the <code>key</code> parameter to specify the store key. In addition to the <code>key</code> parameter, you can also include the optional <code>filter</code> parameter, which takes an array of query argument names to include in the generated custom store key.</p>
+<figure class="highlight autoit"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> query = gql`query Feed($type: FeedType!, $offset: <span class="built_in">Int</span>, $limit: <span class="built_in">Int</span>) &#123;</div><div class="line">  feed(type: $type, offset: $offset, limit: $limit) <span class="symbol">@connection</span>(key: <span class="string">"feed"</span>, filter: [<span class="string">"type"</span>]) &#123;</div><div class="line">    ...FeedEntry</div><div class="line">  &#125;</div><div class="line">&#125;`</div></pre></td></tr></table></figure>
+<p>With the above query, even with multiple <code>fetchMore</code>s, the results of each feed update will always result in the <code>feed</code> key in the store being updated with the latest accumulated values. In this example, we also use the <code>@connection</code> directive’s optional <code>filter</code> argument to include the <code>type</code> query argument in the store key, which results in multiple store values that accumulate queries from each type of feed.</p>
+<p>Now that we have a stable store key, we can easily use <code>writeQuery</code> to perform a store update, in this case clearing out the feed.</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="selector-tag">client</span><span class="selector-class">.writeQuery</span>(&#123;</div><div class="line">  <span class="attribute">query</span>: gql`</div><div class="line">    query <span class="built_in">Feed</span>($type: FeedType!) &#123;</div><div class="line">      <span class="built_in">feed</span>(type: $type) @<span class="built_in">connection</span>(key: <span class="string">"feed"</span>, filter: [<span class="string">"type"</span>]) &#123;</div><div class="line">        id</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  `,</div><div class="line">  <span class="selector-tag">variables</span>: &#123;</div><div class="line">    <span class="attribute">type</span>: <span class="string">"top"</span>,</div><div class="line">  &#125;,</div><div class="line">  <span class="selector-tag">data</span>: &#123;</div><div class="line">    <span class="attribute">feed</span>: [],</div><div class="line">  &#125;,</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>Note that because we are only using the <code>type</code> argument in the store key, we don’t have to provide <code>offset</code> or <code>limit</code>.</p>
+<h2 id="cacheRedirect">Cache redirects with <code>customResolvers</code></h2>
+
+<p>In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">query</span> ListView &#123;</div><div class="line">  <span class="section">books</span> &#123;</div><div class="line">    id</div><div class="line">    title</div><div class="line">    abstract</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>When a specific book is selected, the detail view displays an individual item using this query:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">query DetailView &#123;</div><div class="line">  book(<span class="built_in">id</span>: $<span class="built_in">id</span>) &#123;</div><div class="line">    <span class="built_in">id</span></div><div class="line">    title</div><div class="line">    abstract</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>Note: The data returned by the list query has to include all the data the specific query needs. If the specific book query fetches a field that the list query doesn’t return Apollo Client cannot return the data from the cache.</p>
+</blockquote>
+<p>We know that the data is most likely already in the client cache, but because it’s requested with a different query, Apollo Client doesn’t know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; ApolloClient, toIdValue &#125; <span class="keyword">from</span> <span class="string">'apollo-client'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> client = <span class="keyword">new</span> ApolloClient(&#123;</div><div class="line">  networkInterface,</div><div class="line">  customResolvers: &#123;</div><div class="line">    Query: &#123;</div><div class="line">      book: <span class="function">(<span class="params">_, args</span>) =&gt;</span> toIdValue(client.dataIdFromObject(&#123; <span class="attr">__typename</span>: <span class="string">'Book'</span>, <span class="attr">id</span>: args.id &#125;)),</div><div class="line">    &#125;,</div><div class="line">  &#125;,</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<blockquote>
+<p>Note: This’ll also work with custom <code>dataIdFromObject</code> methods as long as you use the same one.</p>
+</blockquote>
+<p>Apollo Client will use the return value of the custom resolver to look up the item in its cache. <code>toIdValue</code> must be used to indicate that the value returned should be interpreted as an id, and not as a scalar value or an object. “Query” key in this example is your root query type name.</p>
+<p>To figure out what you should put in the <code>__typename</code> property run one of the queries in GraphiQL and get the <code>__typename</code> field:</p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">query ListView &#123;</div><div class="line">  books &#123;</div><div class="line">    __<span class="keyword">typename</span></div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="meta"># or</span></div><div class="line"></div><div class="line">query DetailView &#123;</div><div class="line">  book(<span class="keyword">id</span>: $<span class="keyword">id</span>) &#123;</div><div class="line">    __<span class="keyword">typename</span></div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>The value that’s returned (the name of your type) is what you need to put into the <code>__typename</code> property.</p>
+<p>It is also possible to return a list of IDs:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="selector-tag">customResolvers</span>: &#123;</div><div class="line">  <span class="attribute">Query</span>: &#123;</div><div class="line">    books: (_, args) =&gt; args.ids.<span class="built_in">map</span>(id =&gt;</div><div class="line">      toIdValue(dataIdFromObject(&#123; __typename: <span class="string">'Book'</span>, id: id &#125;))),</div><div class="line">  &#125;,</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+
+    </div>
+  </div>
+
+  <div class="pagination">
+    <div class="content-wrapper">
+      
+      
+      
+        <a class="link primary next"
+          href="../index.html">
+          <span class="subtitle-pagination">Next</span>
+          Apollo Client
+          <span class="icon-arrow-right-alt"></span>
+        </a>
+      
+    </div>
+  </div>
+
+  <div class="github">
+    <a class="link tertiary " href="https://github.com/apollographql/apollo-client/tree/master/docs/source/features/cache-updates.md" target="_blank">
+      <span class="icon-github"></span>Edit on GitHub</a>
+  </div>
+
+  
+</div>
+
+    <script src="/docs/react/script/smooth-scroll.min.js"></script>
+    <script src="/docs/react/script/main.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/fastclick/1.0.6/fastclick.min.js"></script>
+
+    <script>
+      // nectar ninja
+      (function(){
+        var handle = '@meteorjs';
+        var a = document.createElement('script');
+        var m = document.getElementsByTagName('script')[0];
+        a.async = 1;
+        a.src = 'https://nectar.ninja/api/v1/' + handle.slice(1);
+        m.parentNode.insertBefore(a, m);
+      })();
+
+     
+
+      
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-PNFDVBB');
+      
+
+      
+        // Segment Tracking
+        !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="3.1.0";
+        analytics.load("wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg");
+        analytics.page()
+        }}();
+      
+
+      // search box
+      
+
+      
+    </script>
+  </body>
+</html>

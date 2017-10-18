@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <!-- Basic -->
+    <title>Small Example: Snack | Apollo Client Guide</title>
+    <meta name="description" content="A tiny app that implements one view from our GitHunt example app, that you can run and edit right from your browser.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="images/favicon.png" sizes="16x16 32x32 64x64">
+
+    <!-- Social -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://www.apollographql.com/docs/react">
+    <meta property="og:title" content="Small Example: Snack | Apollo Client Guide">
+    <meta property="og:description" content="A tiny app that implements one view from our GitHunt example app, that you can run and edit right from your browser.">
+    <meta property="og:image" content="">
+    <meta name="twitter:card" content="summary_image_large">
+    <meta name="twitter:site" content="@apollographql">
+    <meta name="twitter:title" content="Small Example: Snack | Apollo Client Guide">
+    <meta name="twitter:description" content="A tiny app that implements one view from our GitHunt example app, that you can run and edit right from your browser.">
+    <meta name="twitter:image" content="">
+
+    <!-- Misc -->
+    <meta name="google-site-verification" content="" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,200,300italic,400italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/docs/react/style/style.css">
+  </head>
+  <body class="">
+    
+
+<div class="nav dark">
+  <div class="nav-group">
+    <div class="nav-item show-mobile">
+      <span class="js-sidebar-toggle ">
+        <span class="icon-menu"></span>
+      </span>
+    </div>
+    <div class="nav-item">
+      
+      <a class="logo-wrapper" href="http://dev.apollodata.com/" title="Apollo Developers"  >
+        <img src="../images/logo-apollo-space-left.svg" alt="Apollo" class="logo"/><img src="../images/logo-apollo-subbrands-developers-space.svg" class="logo-subbrand" alt="Developers"/>
+      </a>
+    </div>
+  </div>
+
+  <div class="nav-group right">
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/react"  >
+          <span>React</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/angular2"  >
+          <span>Angular</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/ios"  >
+          <span>iOS</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/android"  >
+          <span>Android</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/core"  >
+          <span>Vanilla JS</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false separator">
+        <a class="link" href="http://dev.apollodata.com/tools"  >
+          <span>Server</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="https://medium.com/apollo-stack" target=_new >
+          <span>Blog</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/community"  >
+          <span>Community</span>
+        </a>
+      </div>
+    
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="panel">
+    <div class="panel-item">
+      <a class="" href="../http:/dev.apollodata.com/" title="Apollo"  >
+        <span>Apollo Developers</span>
+      </a>
+    </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/react"  >
+          <span>React</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/angular2"  >
+          <span>Angular</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/ios"  >
+          <span>iOS</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/android"  >
+          <span>Android</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/core"  >
+          <span>Vanilla JS</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/tools"  >
+          <span>Server</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="https://medium.com/apollo-stack" target=_new >
+          <span>Blog</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/community"  >
+          <span>Community</span>
+        </a>
+      </div>
+    
+  </div>
+
+  <div class="sidebar-content">
+    <div class="topcap">
+      <span class="title-sidebar">Apollo Client Guide</span>
+      
+    </div>
+
+    
+
+    <ul class="toc">
+      
+        <li>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../index.html" class="sidebar-link ">
+                  <span>Apollo Client</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/integrations.html" class="sidebar-link ">
+                  <span>View Integrations</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/setup.html" class="sidebar-link ">
+                  <span>Setup and options</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/queries.html" class="sidebar-link ">
+                  <span>Queries</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/mutations.html" class="sidebar-link ">
+                  <span>Mutations</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/network-layer.html" class="sidebar-link ">
+                  <span>Network layer</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/error-handling.html" class="sidebar-link ">
+                  <span>Error Handling</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/fragments.html" class="sidebar-link ">
+                  <span>Using Fragments</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/subscriptions.html" class="sidebar-link ">
+                  <span>Subscriptions</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Features</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../features/changelog.html" class="sidebar-link ">
+                  <span>Changelog</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/caching.html" class="sidebar-link ">
+                  <span>Direct Cache Access</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/developer-tooling.html" class="sidebar-link ">
+                  <span>Developer tools</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/network-customization.html" class="sidebar-link ">
+                  <span></span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/optimistic-ui.html" class="sidebar-link ">
+                  <span>Optimistic UI</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/react-native.html" class="sidebar-link ">
+                  <span>Integrating with React Native</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/static-typing.html" class="sidebar-link ">
+                  <span>Using TypeScript and Flow</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Recipes</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="authentication.html" class="sidebar-link ">
+                  <span>Authentication</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="babel.html" class="sidebar-link ">
+                  <span>Precompilation with babel</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="meteor.html" class="sidebar-link ">
+                  <span>Meteor</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="pagination.html" class="sidebar-link ">
+                  <span>Pagination</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="prefetching.html" class="sidebar-link ">
+                  <span>Prefetching data</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="query-splitting.html" class="sidebar-link ">
+                  <span>Query Splitting</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="server-side-rendering.html" class="sidebar-link ">
+                  <span>Server Side Rendering</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc  current">
+                <a href="" class="sidebar-link  current">
+                  <span>Small Example: Snack</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="webpack.html" class="sidebar-link ">
+                  <span>Webpack loader</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Reference</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../reference/index.html" class="sidebar-link ">
+                  <span>Title</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="content">
+  <div class="content-wrapper">
+    <div class="header-content">
+      <h1 class="title-page">Small Example: Snack</h1>
+      
+        <div class="subtitle-page">A tiny app that implements one view from our GitHunt example app, that you can run and edit right from your browser.</div>
+      
+
+      <div class="page-actions">
+        <div class="actions-group">
+          <a class="btn tertiary small round lowercase" href="https://github.com/apollographql/apollo-client/tree/master/docs/source/recipes/simple-example.md" target="_blank"><span class="icon-github"></span> <span>Edit on GitHub</span></a>
+          
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="document-formatting">
+      <p>The easiest way to see what Apollo Client and GraphQL can do for you is to try them for yourself. Below is a simple example of a single React Native view that uses Apollo Client to talk to our hosted example app, <a href="example-schema.html">GitHunt</a>. We’ve embedded it in the page with the <a href="https://blog.expo.io/sketch-a-playground-for-react-native-16b2401f44a2" target="_blank" rel="external">Snack</a> editor from <a href="https://expo.io/" target="_blank" rel="external">Expo</a>.</p>
+<p><div data-snack-id="HkhGxRFhe" data-snack-platform="ios" data-snack-preview="true" style="overflow:hidden;background:#fafafa;border:1px solid rgba(0,0,0,.16);border-radius:4px;height:514px;width:100%"></div></p>
+<script async src="https://snack.expo.io/embed.js"></script>
+
+<p>To start, let’s run the app. There are two ways:</p>
+<ol>
+<li>Click the “Tap to Play” button to run the app in the simulator.</li>
+<li>Open the editor <a href="https://snack.expo.io/HkhGxRFhe" target="_blank" rel="external">in a new window</a> and install the <a href="https://expo.io/" target="_blank" rel="external">Expo app</a> to run it on your iOS or Android device.</li>
+</ol>
+<p>Either way, the app will automatically reload as you type.</p>
+<h2 id="first-edit">First edit</h2>
+
+<p>Fortunately, the app is set up for us to make our first code change. Hopefully, after launching the app you see a view with a scrollable list of some GitHub repositories. This is fetched from the server using a GraphQL query. Let’s edit the query by removing the <code>#</code> in front of <code>stargazers_count</code>, so that the app also loads the number of stars from GitHub. The query should now look like this:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  feed (type: TOP, limit: 10) &#123;</div><div class="line">    repository &#123;</div><div class="line">      name, owner &#123; login &#125;</div><div class="line"></div><div class="line">      # Uncomment the line below to get number of stars!</div><div class="line">      stargazers_count</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    postedBy &#123; login &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Because in this example we’ve developed the UI in such a way that it knows how to display that new information, you should see the app refresh and show the number of GitHub stars from each repository!</p>
+<h2 id="github-api">Multiple backends</h2>
+
+<p>One of the coolest things about GraphQL is that it can be an abstraction layer on top of multiple backends. The query you did above is actually loading from two totally separate data sources at once: A PostgreSQL database that stores the list of submissions, and the GitHub REST API to fetch the information about the actual repositories.</p>
+<p>Let’s verify that the app is <em>actually</em> reading from GitHub. Pick one of the repositories in the list, for example <a href="https://github.com/apollographql/apollo-client" target="_blank" rel="external">apollographql/apollo-client</a> or <a href="https://github.com/facebook/graphql" target="_blank" rel="external">facebook/graphql</a>, and star it. Then, pull down the list in the app to refresh. You should see the number change! That’s because our GraphQL server is fetching from the real GitHub API every time, with some nice caching and ETag handling to avoid hitting a rate limit.</p>
+<h2 id="code-explanation">Explaining the code</h2>
+
+<p>Before you go off and build your own awesome GraphQL app with Apollo, let’s take a look at the code in this simple example.</p>
+<p>This bit of code uses the <code>graphql</code> higher-order component from <code>react-apollo</code> to attach a GraphQL query result to the <code>Feed</code> component:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> FeedWithData = graphql(gql<span class="string">`&#123;</span></div><div class="line"><span class="string">  feed (type: TOP, limit: 10) &#123;</span></div><div class="line"><span class="string">    repository &#123;</span></div><div class="line"><span class="string">      name, owner &#123; login &#125;</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">      # Uncomment the line below to get number of stars!</span></div><div class="line"><span class="string">      # stargazers_count</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">    postedBy &#123; login &#125;</span></div><div class="line"><span class="string">  &#125;</span></div><div class="line"><span class="string">&#125;`</span>, &#123; <span class="attr">options</span>: &#123; <span class="attr">notifyOnNetworkStatusChange</span>: <span class="literal">true</span> &#125; &#125;)(Feed);</div></pre></td></tr></table></figure>
+<p>This is the main <code>App</code> component that React Native is rendering. It creates a network interface with the server URL, initializes an instance of <code>ApolloClient</code>, and attaches that to our React component tree with <code>ApolloProvider</code>. If you’ve used Redux, this should be familiar, since it’s similar to how the Redux provider works.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="class"><span class="keyword">class</span> <span class="title">App</span> </span>&#123;</div><div class="line">  createClient() &#123;</div><div class="line">    <span class="comment">// Initialize Apollo Client with URL to our server</span></div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ApolloClient(&#123;</div><div class="line">      networkInterface: createNetworkInterface(&#123;</div><div class="line">        uri: <span class="string">'http://api.githunt.com/graphql'</span>,</div><div class="line">      &#125;),</div><div class="line">    &#125;);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  render() &#123;</div><div class="line">    <span class="keyword">return</span> (</div><div class="line">      <span class="comment">// Feed the client instance into your React component tree</span></div><div class="line">      &lt;ApolloProvider client=&#123;<span class="keyword">this</span>.createClient()&#125;&gt;</div><div class="line">        &lt;FeedWithData /&gt;</div><div class="line">      &lt;<span class="regexp">/ApolloProvider&gt;</span></div><div class="line"><span class="regexp">    );</span></div><div class="line"><span class="regexp">  &#125;</span></div><div class="line"><span class="regexp">&#125;</span></div></pre></td></tr></table></figure>
+<p>Next, we get to a component that is actually dealing with some data loading concerns. Mostly, this is just passing through the <code>data</code> prop down to <code>FeedList</code>, which will actually display the items. But there is also an interesting React Native <code>RefreshControl</code> component here, which uses the built-in <code>data.refetch</code> method from Apollo to refetch data when you pull down the list. It also uses the <code>data.networkStatus</code> prop to display the correct loading state, which Apollo tracks for us.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// The data prop here comes from the Apollo HoC. It has the data</span></div><div class="line"><span class="comment">// we asked for, and also useful methods like refetch().</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">Feed</span>(<span class="params">&#123; data &#125;</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> (</div><div class="line">    &lt;ScrollView style=&#123;styles.container&#125; refreshControl=&#123;</div><div class="line">      <span class="comment">// This enables the pull-to-refresh functionality</span></div><div class="line">      &lt;RefreshControl</div><div class="line">        refreshing=&#123;data.networkStatus === <span class="number">4</span>&#125;</div><div class="line">        onRefresh=&#123;data.refetch&#125;</div><div class="line">      /&gt;</div><div class="line">    &#125;&gt;</div><div class="line">      &lt;Text style=&#123;styles.title&#125;&gt;GitHunt&lt;<span class="regexp">/Text&gt;</span></div><div class="line"><span class="regexp">      &lt;FeedList data=&#123;data&#125; /</span>&gt;</div><div class="line">      &lt;Text style=&#123;styles.fullApp&#125;&gt;See the full app at www.githunt.com&lt;<span class="regexp">/Text&gt;</span></div><div class="line"><span class="regexp">      &lt;Button</span></div><div class="line"><span class="regexp">        buttonStyle=&#123;styles.learnMore&#125;</span></div><div class="line"><span class="regexp">        onPress=&#123;goToApolloWebsite&#125;</span></div><div class="line"><span class="regexp">        icon=&#123;&#123;name: 'code'&#125;&#125;</span></div><div class="line"><span class="regexp">        raised</span></div><div class="line"><span class="regexp">        backgroundColor="#22A699"</span></div><div class="line"><span class="regexp">        title="Learn more about Apollo"</span></div><div class="line"><span class="regexp">      /</span>&gt;</div><div class="line">    &lt;<span class="regexp">/ScrollView&gt;</span></div><div class="line"><span class="regexp">  );</span></div><div class="line"><span class="regexp">&#125;</span></div></pre></td></tr></table></figure>
+<p>Finally, we get to the place that actually displays the items, the <code>FeedList</code> component. This consumes the <code>data</code> prop from Apollo, and maps over it to display list items. You can see that thanks to GraphQL, we got the data in exactly the shape that we expected.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">FeedList</span>(<span class="params">&#123; data &#125;</span>) </span>&#123;</div><div class="line">  <span class="keyword">if</span> (data.networkStatus === <span class="number">1</span>) &#123;</div><div class="line">    <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">ActivityIndicator</span> <span class="attr">style</span>=<span class="string">&#123;styles.loading&#125;</span> /&gt;</span>;</span></div><div class="line"><span class="xml">  &#125;</span></div><div class="line"><span class="xml"></span></div><div class="line"><span class="xml">  if (data.error) &#123;</span></div><div class="line"><span class="xml">    return <span class="tag">&lt;<span class="name">Text</span>&gt;</span>Error! &#123;data.error.message&#125;<span class="tag">&lt;/<span class="name">Text</span>&gt;</span>;</span></div><div class="line"><span class="xml">  &#125;</span></div><div class="line"><span class="xml"></span></div><div class="line"><span class="xml">  return (</span></div><div class="line">    &lt;List containerStyle=&#123;styles.list&#125;&gt;</div><div class="line">      &#123; data.feed.map((item) =&gt; &#123;</div><div class="line">          const badge = item.repository.stargazers_count &amp;&amp; &#123;</div><div class="line">            value: `☆ $&#123;item.repository.stargazers_count&#125;`,</div><div class="line">            badgeContainerStyle: &#123; right: 10, backgroundColor: '#56579B' &#125;,</div><div class="line">            badgeTextStyle: &#123; fontSize: 12 &#125;,</div><div class="line">          &#125;;</div><div class="line"></div><div class="line">          return &lt;ListItem</div><div class="line">            hideChevron</div><div class="line">            title=&#123;`$&#123;item.repository.owner.login&#125;/$&#123;item.repository.name&#125;`&#125;</div><div class="line">            subtitle=&#123;`Posted by $&#123;item.postedBy.login&#125;`&#125;</div><div class="line">            badge=&#123;badge&#125;</div><div class="line">          /&gt;;</div><div class="line">        &#125;</div><div class="line">      ) &#125;</div><div class="line">    &lt;/List&gt;</div><div class="line">  )</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Now you’ve seen all of the code you need to build a React Native app that loads a list of items and displays it in a list with pull-to-refresh functionality. As you can see, we had to write very little data loading code! We think that Apollo and GraphQL can help data loading get out of your way so you can build apps faster than ever before.</p>
+<h2 id="next-steps">Next steps</h2>
+
+<p>Let’s get you building your own app from scratch! You have two tutorials to go through, and we recommend doing them in the following order:</p>
+<ol>
+<li><a href="https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc" target="_blank" rel="external">Full-Stack GraphQL + React tutorial</a> by <a href="https://twitter.com/helferjs" target="_blank" rel="external">Jonas Helfer</a>.</li>
+<li><a href="https://www.howtographql.com/react-apollo/0-introduction/" target="_blank" rel="external">How to GraphQL</a> by the team and community around <a href="https://www.graph.cool/" target="_blank" rel="external">Graphcool</a>, a hosted GraphQL backend platform.</li>
+</ol>
+<p>Have fun!</p>
+
+    </div>
+  </div>
+
+  <div class="pagination">
+    <div class="content-wrapper">
+      
+      
+        <a class="link primary prev"
+          href="server-side-rendering.html">
+          <span class="icon-arrow-left-alt"></span>
+          <span class="subtitle-pagination">Previous</span>
+          Server Side Rendering
+        </a>
+      
+      
+        <a class="link primary next"
+          href="webpack.html">
+          <span class="subtitle-pagination">Next</span>
+          Webpack loader
+          <span class="icon-arrow-right-alt"></span>
+        </a>
+      
+    </div>
+  </div>
+
+  <div class="github">
+    <a class="link tertiary " href="https://github.com/apollographql/apollo-client/tree/master/docs/source/recipes/simple-example.md" target="_blank">
+      <span class="icon-github"></span>Edit on GitHub</a>
+  </div>
+
+  
+</div>
+
+    <script src="/docs/react/script/smooth-scroll.min.js"></script>
+    <script src="/docs/react/script/main.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/fastclick/1.0.6/fastclick.min.js"></script>
+
+    <script>
+      // nectar ninja
+      (function(){
+        var handle = '@meteorjs';
+        var a = document.createElement('script');
+        var m = document.getElementsByTagName('script')[0];
+        a.async = 1;
+        a.src = 'https://nectar.ninja/api/v1/' + handle.slice(1);
+        m.parentNode.insertBefore(a, m);
+      })();
+
+     
+
+      
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-PNFDVBB');
+      
+
+      
+        // Segment Tracking
+        !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="3.1.0";
+        analytics.load("wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg");
+        analytics.page()
+        }}();
+      
+
+      // search box
+      
+
+      
+    </script>
+  </body>
+</html>

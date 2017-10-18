@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <!-- Basic -->
+    <title>Pagination | Apollo Client Guide</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="images/favicon.png" sizes="16x16 32x32 64x64">
+
+    <!-- Social -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://www.apollographql.com/docs/react">
+    <meta property="og:title" content="Pagination | Apollo Client Guide">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+    <meta name="twitter:card" content="summary_image_large">
+    <meta name="twitter:site" content="@apollographql">
+    <meta name="twitter:title" content="Pagination | Apollo Client Guide">
+    <meta name="twitter:description" content="">
+    <meta name="twitter:image" content="">
+
+    <!-- Misc -->
+    <meta name="google-site-verification" content="" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,200,300italic,400italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/docs/react/style/style.css">
+  </head>
+  <body class="">
+    
+
+<div class="nav dark">
+  <div class="nav-group">
+    <div class="nav-item show-mobile">
+      <span class="js-sidebar-toggle ">
+        <span class="icon-menu"></span>
+      </span>
+    </div>
+    <div class="nav-item">
+      
+      <a class="logo-wrapper" href="http://dev.apollodata.com/" title="Apollo Developers"  >
+        <img src="../images/logo-apollo-space-left.svg" alt="Apollo" class="logo"/><img src="../images/logo-apollo-subbrands-developers-space.svg" class="logo-subbrand" alt="Developers"/>
+      </a>
+    </div>
+  </div>
+
+  <div class="nav-group right">
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/react"  >
+          <span>React</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/angular2"  >
+          <span>Angular</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/ios"  >
+          <span>iOS</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/android"  >
+          <span>Android</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/core"  >
+          <span>Vanilla JS</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false separator">
+        <a class="link" href="http://dev.apollodata.com/tools"  >
+          <span>Server</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="https://medium.com/apollo-stack" target=_new >
+          <span>Blog</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/community"  >
+          <span>Community</span>
+        </a>
+      </div>
+    
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="panel">
+    <div class="panel-item">
+      <a class="" href="../http:/dev.apollodata.com/" title="Apollo"  >
+        <span>Apollo Developers</span>
+      </a>
+    </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/react"  >
+          <span>React</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/angular2"  >
+          <span>Angular</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/ios"  >
+          <span>iOS</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/android"  >
+          <span>Android</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/core"  >
+          <span>Vanilla JS</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/tools"  >
+          <span>Server</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="https://medium.com/apollo-stack" target=_new >
+          <span>Blog</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/community"  >
+          <span>Community</span>
+        </a>
+      </div>
+    
+  </div>
+
+  <div class="sidebar-content">
+    <div class="topcap">
+      <span class="title-sidebar">Apollo Client Guide</span>
+      
+    </div>
+
+    
+
+    <ul class="toc">
+      
+        <li>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../index.html" class="sidebar-link ">
+                  <span>Apollo Client</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/integrations.html" class="sidebar-link ">
+                  <span>View Integrations</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/setup.html" class="sidebar-link ">
+                  <span>Setup and options</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/queries.html" class="sidebar-link ">
+                  <span>Queries</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/mutations.html" class="sidebar-link ">
+                  <span>Mutations</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/network-layer.html" class="sidebar-link ">
+                  <span>Network layer</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/error-handling.html" class="sidebar-link ">
+                  <span>Error Handling</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/fragments.html" class="sidebar-link ">
+                  <span>Using Fragments</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/subscriptions.html" class="sidebar-link ">
+                  <span>Subscriptions</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Features</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../features/changelog.html" class="sidebar-link ">
+                  <span>Changelog</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/caching.html" class="sidebar-link ">
+                  <span>Direct Cache Access</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/developer-tooling.html" class="sidebar-link ">
+                  <span>Developer tools</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/network-customization.html" class="sidebar-link ">
+                  <span></span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/optimistic-ui.html" class="sidebar-link ">
+                  <span>Optimistic UI</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/react-native.html" class="sidebar-link ">
+                  <span>Integrating with React Native</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/static-typing.html" class="sidebar-link ">
+                  <span>Using TypeScript and Flow</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Recipes</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="authentication.html" class="sidebar-link ">
+                  <span>Authentication</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="babel.html" class="sidebar-link ">
+                  <span>Precompilation with babel</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="meteor.html" class="sidebar-link ">
+                  <span>Meteor</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc  current">
+                <a href="" class="sidebar-link  current">
+                  <span>Pagination</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="prefetching.html" class="sidebar-link ">
+                  <span>Prefetching data</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="query-splitting.html" class="sidebar-link ">
+                  <span>Query Splitting</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="server-side-rendering.html" class="sidebar-link ">
+                  <span>Server Side Rendering</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="simple-example.html" class="sidebar-link ">
+                  <span>Small Example: Snack</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="webpack.html" class="sidebar-link ">
+                  <span>Webpack loader</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Reference</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../reference/index.html" class="sidebar-link ">
+                  <span>Title</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="content">
+  <div class="content-wrapper">
+    <div class="header-content">
+      <h1 class="title-page">Pagination</h1>
+      
+
+      <div class="page-actions">
+        <div class="actions-group">
+          <a class="btn tertiary small round lowercase" href="https://github.com/apollographql/apollo-client/tree/master/docs/source/recipes/pagination.md" target="_blank"><span class="icon-github"></span> <span>Edit on GitHub</span></a>
+          
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="document-formatting">
+      <p>Often, you will have some views in your application where you need to display a list that contains too much data to be either fetched or displayed at once. Pagination is the most common solution to this problem, and Apollo Client has built-in functionality that makes it quite easy to do.</p>
+<p>There are basically two ways of fetching paginated data: numbered pages, and cursors. There are also two ways for displaying paginated data: discrete pages, and infinite scrolling. For a more in-depth explanation of the difference and when you might want to use one vs. the other, we recommend that you read our blog post on the subject: <a href="https://medium.com/apollo-stack/understanding-pagination-rest-graphql-and-relay-b10f835549e7" target="_blank" rel="external">Understanding Pagination</a>.</p>
+<p>In this article, we’ll cover the technical details of using Apollo to implement both approaches.</p>
+<h2 id="fetch-more">Using <code>fetchMore</code></h2>
+
+<p>In Apollo, the easiest way to do pagination is with a function called <a href="cache-updates.html#fetchMore"><code>fetchMore</code></a>, which is provided on the <code>data</code> prop by the <code>graphql</code> higher order component. This basically allows you to do a new GraphQL query and merge the result into the original result.</p>
+<p>You can specify what query and variables to use for the new query, and how to merge the new query result with the existing data on the client. How exactly you do that will determine what kind of pagination you are implementing.</p>
+<h2 id="numbered-pages">Offset-based</h2>
+
+<p>Offset-based pagination — also called numbered pages — is a very common pattern, found on many websites, because it is usually the easiest to implement on the backend. In SQL for example, numbered pages can easily be generated by using <a href="https://www.postgresql.org/docs/8.2/static/queries-limit.html" target="_blank" rel="external">OFFSET and LIMIT</a>.</p>
+<p>Here is an example with numbered pages taken from <a href="https://github.com/apollographql/GitHunt-React" target="_blank" rel="external">GitHunt</a>:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">const</span> FEED_QUERY = gql<span class="string">`</span></div><div class="line"><span class="string">  query Feed($type: FeedType!, $offset: Int, $limit: Int) &#123;</span></div><div class="line"><span class="string">    currentUser &#123;</span></div><div class="line"><span class="string">      login</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string">    feed(type: $type, offset: $offset, limit: $limit) &#123;</span></div><div class="line"><span class="string">      id</span></div><div class="line"><span class="string">      # ...</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string">  &#125;</span></div><div class="line"><span class="string">`</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> ITEMS_PER_PAGE = <span class="number">10</span>;</div><div class="line"><span class="keyword">const</span> FeedWithData = graphql(FEED_QUERY, &#123;</div><div class="line">  options(props) &#123;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      variables: &#123;</div><div class="line">        type: (</div><div class="line">          props.params &amp;&amp;</div><div class="line">          props.params.type &amp;&amp;</div><div class="line">          props.params.type.toUpperCase()</div><div class="line">        ) || <span class="string">'TOP'</span>,</div><div class="line">        offset: <span class="number">0</span>,</div><div class="line">        limit: ITEMS_PER_PAGE,</div><div class="line">      &#125;,</div><div class="line">      fetchPolicy: <span class="string">'network-only'</span>,</div><div class="line">    &#125;;</div><div class="line">  &#125;,</div><div class="line">  props(&#123; <span class="attr">data</span>: &#123; loading, feed, currentUser, fetchMore &#125; &#125;) &#123;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      loading,</div><div class="line">      feed,</div><div class="line">      currentUser,</div><div class="line">      loadMoreEntries() &#123;</div><div class="line">        <span class="keyword">return</span> fetchMore(&#123;</div><div class="line">          <span class="comment">// query: ... (you can specify a different query. FEED_QUERY is used by default)</span></div><div class="line">          variables: &#123;</div><div class="line">            <span class="comment">// We are able to figure out which offset to use because it matches</span></div><div class="line">            <span class="comment">// the feed length, but we could also use state, or the previous</span></div><div class="line">            <span class="comment">// variables to calculate this (see the cursor example below)</span></div><div class="line">            offset: feed.length,</div><div class="line">          &#125;,</div><div class="line">          updateQuery: <span class="function">(<span class="params">previousResult, &#123; fetchMoreResult &#125;</span>) =&gt;</span> &#123;</div><div class="line">            <span class="keyword">if</span> (!fetchMoreResult) &#123; <span class="keyword">return</span> previousResult; &#125;</div><div class="line">            <span class="keyword">return</span> <span class="built_in">Object</span>.assign(&#123;&#125;, previousResult, &#123;</div><div class="line">              <span class="comment">// Append the new feed results to the old one</span></div><div class="line">              feed: [...previousResult.feed, ...fetchMoreResult.feed],</div><div class="line">            &#125;);</div><div class="line">          &#125;,</div><div class="line">        &#125;);</div><div class="line">      &#125;,</div><div class="line">    &#125;;</div><div class="line">  &#125;,</div><div class="line">&#125;)(Feed);</div></pre></td></tr></table></figure>
+<p><a href="https://github.com/apollographql/GitHunt-React/blob/c0b18795a18b3da42dc90cf7c63b29b14965206d/ui/Feed.js#L165" target="_blank" rel="external">See this code in context in GitHunt.</a></p>
+<p>As you can see, <code>fetchMore</code> is accessible through the <code>data</code> argument to the <code>props</code> function. So that our presentational component can remain unaware of Apollo, we use <code>props</code> to define a simple “load more” function, named <code>loadMoreEntries</code>, that can be called by the child component, <code>Feed</code>. This way we don’t need to change the <code>Feed</code> component at all if we need to change our pagination logic.</p>
+<p>In the example above, <code>loadMoreEntries</code> is a function which calls <code>fetchMore</code> with the length of the current feed as a variable. By default, <code>fetchMore</code> more will use the original <code>query</code>, so we just pass in new variables. Once the new data is returned from the server, the <code>updateQuery</code> function is used to merge it with the existing data, which will cause a re-render of your UI component with an expanded list.</p>
+<p>Here is how the <code>loadMoreEntries</code> function from above is called from the UI component:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> Feed = <span class="function">(<span class="params">&#123; vote, loading, currentUser, feed, loadMoreEntries &#125;</span>) =&gt;</span> &#123;</div><div class="line">  <span class="keyword">return</span> (</div><div class="line">    &lt;div&gt;</div><div class="line">      &lt;FeedContent</div><div class="line">        entries=&#123;feed || []&#125;</div><div class="line">        currentUser=&#123;currentUser&#125;</div><div class="line">        onVote=&#123;vote&#125;</div><div class="line">      /&gt;</div><div class="line">      &lt;a onClick=&#123;loadMoreEntries&#125;&gt;Load more&lt;<span class="regexp">/a&gt;</span></div><div class="line"><span class="regexp">      &#123;loading ? &lt;Loading /</span>&gt; : <span class="literal">null</span>&#125;</div><div class="line">    &lt;<span class="regexp">/div&gt;</span></div><div class="line"><span class="regexp">  );</span></div><div class="line"><span class="regexp">&#125;</span></div></pre></td></tr></table></figure>
+<p>The above approach works great for limit/offset pagination. One downside of pagination with numbered pages or offsets is that an item can be skipped or returned twice when items are inserted into or removed from the list at the same time. That can be avoided with cursor-based pagination.</p>
+<h2 id="cursor-pages">Cursor-based</h2>
+
+<p>In cursor-based pagination, a “cursor” is used to keep track of where in the data set the next items should be fetched from. Sometimes the cursor can be quite simple and just refer to the ID of the last object fetched, but in some cases — for example lists sorted according to some criteria — the cursor needs to encode the sorting criteria in addition to the ID of the last object fetched.</p>
+<p>Implementing cursor-based pagination on the client isn’t all that different from offset-based pagination, but instead of using an absolute offset, we keep a reference to the last object fetched and information about the sort order used.</p>
+<p>In the example below, we use a <code>fetchMore</code> query to continuously load new comments, which will be prepended to the list. The cursor to be used in the <code>fetchMore</code> query is provided in the initial server response, and is updated whenever more data is fetched.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> MoreCommentsQuery = gql<span class="string">`</span></div><div class="line"><span class="string">  query MoreComments($cursor: String) &#123;</span></div><div class="line"><span class="string">    moreComments(cursor: $cursor) &#123;</span></div><div class="line"><span class="string">      cursor</span></div><div class="line"><span class="string">      comments &#123;</span></div><div class="line"><span class="string">        author</span></div><div class="line"><span class="string">        text</span></div><div class="line"><span class="string">      &#125;</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string">  &#125;</span></div><div class="line"><span class="string">`</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> CommentsWithData = graphql(CommentsQuery, &#123;</div><div class="line">  <span class="comment">// This function re-runs every time `data` changes, including after `updateQuery`,</span></div><div class="line">  <span class="comment">// meaning our loadMoreEntries function will always have the right cursor</span></div><div class="line">  props(&#123; <span class="attr">data</span>: &#123; loading, cursor, comments, fetchMore &#125; &#125;) &#123;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      loading,</div><div class="line">      comments,</div><div class="line">      loadMoreEntries: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">return</span> fetchMore(&#123;</div><div class="line">          query: MoreCommentsQuery,</div><div class="line">          variables: &#123;</div><div class="line">            cursor: cursor,</div><div class="line">          &#125;,</div><div class="line">          updateQuery: <span class="function">(<span class="params">previousResult, &#123; fetchMoreResult &#125;</span>) =&gt;</span> &#123;</div><div class="line">            <span class="keyword">const</span> previousEntry = previousResult.entry;</div><div class="line">            <span class="keyword">const</span> newComments = fetchMoreResult.moreComments.comments;</div><div class="line">            <span class="keyword">const</span> newCursor = fetchMoreResult.moreComments.cursor;</div><div class="line"></div><div class="line">            <span class="keyword">return</span> &#123;</div><div class="line">              <span class="comment">// By returning `cursor` here, we update the `loadMore` function</span></div><div class="line">              <span class="comment">// to the new cursor.</span></div><div class="line">              cursor: newCursor,</div><div class="line"></div><div class="line">              entry: &#123;</div><div class="line">                <span class="comment">// Put the new comments in the front of the list</span></div><div class="line">                comments: [...newComments, ...previousEntry.comments],</div><div class="line">              &#125;,</div><div class="line">            &#125;;</div><div class="line">          &#125;,</div><div class="line">        &#125;);</div><div class="line">      &#125;,</div><div class="line">    &#125;;</div><div class="line">  &#125;,</div><div class="line">&#125;)(Comments);</div></pre></td></tr></table></figure>
+<h2 id="relay-cursors">Relay-style cursor pagination</h2>
+
+<p>Relay, another popular GraphQL client, is opinionated about the input and output of paginated queries, so people sometimes build their server’s pagination model around Relay’s needs. If you have a server that is designed to work with the <a href="https://facebook.github.io/relay/graphql/connections.htm" target="_blank" rel="external">Relay Cursor Connections</a> spec, you can also call that server from Apollo Client with no problems.</p>
+<p>Using Relay-style cursors is very similar to basic cursor-based pagination.  The main difference is in the format of the query response which affects where you get the cursor.</p>
+<p>Relay provides a <code>pageInfo</code> object on the returned cursor connection which contains the cursor of the first and last items returned as the properties <code>startCursor</code> and <code>endCursor</code> respectively.  This object also contains a boolean property <code>hasNextPage</code> which can be used to determine if there are more results available.</p>
+<p>The following example specifies a request of 10 items at a time and that results should start after the provided <code>cursor</code>.  If <code>null</code> is passed for the cursor relay will ignore it and provide results starting from the beginning of the data set which allows the use of the same query for both initial and subsequent requests.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> CommentsQuery = gql<span class="string">`</span></div><div class="line"><span class="string">  query Comments($cursor: String) &#123;</span></div><div class="line"><span class="string">    Comments(first: 10, after: $cursor) &#123;</span></div><div class="line"><span class="string">      comments &#123;</span></div><div class="line"><span class="string">        edges &#123;</span></div><div class="line"><span class="string">          node &#123;</span></div><div class="line"><span class="string">            author</span></div><div class="line"><span class="string">            text</span></div><div class="line"><span class="string">          &#125;</span></div><div class="line"><span class="string">        &#125;</span></div><div class="line"><span class="string">        pageInfo &#123;</span></div><div class="line"><span class="string">          endCursor</span></div><div class="line"><span class="string">          hasNextPage</span></div><div class="line"><span class="string">        &#125;</span></div><div class="line"><span class="string">      &#125;</span></div><div class="line"><span class="string">    &#125;</span></div><div class="line"><span class="string">  &#125;</span></div><div class="line"><span class="string">`</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> CommentsWithData = graphql(CommentsQuery, &#123;</div><div class="line">  <span class="comment">// This function re-runs every time `data` changes, including after `updateQuery`,</span></div><div class="line">  <span class="comment">// meaning our loadMoreEntries function will always have the right cursor</span></div><div class="line">  props(&#123; <span class="attr">data</span>: &#123; loading, comments, fetchMore &#125; &#125;) &#123;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      loading,</div><div class="line">      comments,</div><div class="line">      loadMoreEntries: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">return</span> fetchMore(&#123;</div><div class="line">          query: CommentsQuery,</div><div class="line">          variables: &#123;</div><div class="line">            cursor: comments.pageInfo.endCursor,</div><div class="line">          &#125;,</div><div class="line">          updateQuery: <span class="function">(<span class="params">previousResult, &#123; fetchMoreResult &#125;</span>) =&gt;</span> &#123;</div><div class="line">            <span class="keyword">const</span> newEdges = fetchMoreResult.comments.edges;</div><div class="line">            <span class="keyword">const</span> pageInfo = fetchMoreResult.comments.pageInfo;</div><div class="line"></div><div class="line">            <span class="keyword">return</span> &#123;</div><div class="line">              <span class="comment">// Put the new comments at the end of the list and update `pageInfo`</span></div><div class="line">              <span class="comment">// so we have the new `endCursor` and `hasNextPage` values</span></div><div class="line">              comments: &#123;</div><div class="line">                edges: [...previousResult.comments.edges, ...newEdges],</div><div class="line">                pageInfo,</div><div class="line">              &#125;,</div><div class="line">            &#125;;</div><div class="line">          &#125;,</div><div class="line">        &#125;);</div><div class="line">      &#125;,</div><div class="line">    &#125;;</div><div class="line">  &#125;,</div><div class="line">&#125;)(Feed);</div></pre></td></tr></table></figure>
+<p></p><h2 id="connection-directive">The <code>@connection</code> directive</h2><br>When using paginated queries, results from accumulated queries can be hard to find in the store, as the parameters passed to the query are used to determine the default store key but are usually not known outside the piece of code that executes the query. This is problematic for imperative store updates, as there is no stable store key for updates to target. To direct Apollo Client to use a stable store key for paginated queries, you can use the optional <code>@connection</code> directive to specify a store key for parts of your queries. For example, if we wanted to have a stable store key for the feed query earlier, we could adjust our query to use the <code>@connection</code> directive:<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">const</span> FEED_QUERY = gql`</div><div class="line">  query Feed(<span class="variable">$type</span>: FeedType!, <span class="variable">$offset</span>: Int, <span class="variable">$limit</span>: Int) &#123;</div><div class="line">    <span class="section">currentUser</span> &#123;</div><div class="line">      login</div><div class="line">    &#125;</div><div class="line">    feed(type: $type, offset: $offset, limit: $limit) @connection(key: "feed", filter: ["type"]) &#123;</div><div class="line">      id</div><div class="line">      <span class="comment"># ...</span></div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">`;</div></pre></td></tr></table></figure><p></p>
+<p>This would result in the accumulated feed in every query or <code>fetchMore</code> being placed in the store under the <code>feed</code> key, which we could later use of imperative store updates. In this example, we also use the <code>@connection</code> directive’s optional <code>filter</code> argument, which allows us to include some arguments of the query in the store key. In this case, we want to include the <code>type</code> query argument in the store key, which results in multiple store values that accumulate pages from each type of feed.</p>
+
+    </div>
+  </div>
+
+  <div class="pagination">
+    <div class="content-wrapper">
+      
+      
+        <a class="link primary prev"
+          href="meteor.html">
+          <span class="icon-arrow-left-alt"></span>
+          <span class="subtitle-pagination">Previous</span>
+          Meteor
+        </a>
+      
+      
+        <a class="link primary next"
+          href="prefetching.html">
+          <span class="subtitle-pagination">Next</span>
+          Prefetching data
+          <span class="icon-arrow-right-alt"></span>
+        </a>
+      
+    </div>
+  </div>
+
+  <div class="github">
+    <a class="link tertiary " href="https://github.com/apollographql/apollo-client/tree/master/docs/source/recipes/pagination.md" target="_blank">
+      <span class="icon-github"></span>Edit on GitHub</a>
+  </div>
+
+  
+</div>
+
+    <script src="/docs/react/script/smooth-scroll.min.js"></script>
+    <script src="/docs/react/script/main.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/fastclick/1.0.6/fastclick.min.js"></script>
+
+    <script>
+      // nectar ninja
+      (function(){
+        var handle = '@meteorjs';
+        var a = document.createElement('script');
+        var m = document.getElementsByTagName('script')[0];
+        a.async = 1;
+        a.src = 'https://nectar.ninja/api/v1/' + handle.slice(1);
+        m.parentNode.insertBefore(a, m);
+      })();
+
+     
+
+      
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-PNFDVBB');
+      
+
+      
+        // Segment Tracking
+        !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="3.1.0";
+        analytics.load("wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg");
+        analytics.page()
+        }}();
+      
+
+      // search box
+      
+
+      
+    </script>
+  </body>
+</html>

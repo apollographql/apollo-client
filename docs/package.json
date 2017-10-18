@@ -14,19 +14,10 @@
     "hexo-renderer-ejs": "^0.2.0",
     "hexo-renderer-less": "^0.2.0",
     "hexo-renderer-marked": "^0.2.4",
-    "hexo-server": "^0.2.0",
-    "hexo-typescript-api-box": "0.9.1",
-    "typedoc": "^0.7.0",
-    "typescript": "^2.5.3"
-  },
-  "devDependencies": {
-    "hexo-s3-deploy": "^1.2.1"
+    "hexo-server": "^0.2.0"
   },
   "scripts": {
-    "build":
-      "cd ../packages/apollo-client; typedoc --json ../../docs/docs.json --ignoreCompilerErrors",
-    "prestart": "npm run build",
-    "start": "hexo serve",
-    "deploy": "hexo-s3-deploy"
+    "build": "hexo generate",
+    "start": "hexo serve"
   }
 }

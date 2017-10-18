@@ -17,7 +17,7 @@ versions:
 sidebar_categories:
   # Basics
   null:
-    - basics/overview
+    - index
     - basics/integrations
     - basics/setup
     - basics/queries
@@ -26,39 +26,34 @@ sidebar_categories:
     - basics/error-handling
     - basics/fragments
     - basics/subscriptions
-    - basics/developer-tooling
-    - basics/changelog
   Features:
-    - features/customization
+    - features/changelog
     - features/caching
-    - features/request-lifecycle
-    - features/updating-the-cache
+    - features/developer-tooling
+    - features/network-customization
     - features/optimistic-ui
-    - features/static-typing
     - features/react-native
+    - features/static-typing
   Recipes:
-    - recipes/authenticaion
-    - recipes/security
+    - recipes/authentication
+    - recipes/babel
+    - recipes/meteor
     - recipes/pagination
     - recipes/prefetching
+    - recipes/query-splitting
     - recipes/server-side-rendering
+    - recipes/simple-example
     - recipes/webpack
-    - recipes/logging
-    - recipes/custom-fetching
-    - recipes/examples
     # - recipes/client-side-data
     # - recipes/using-with-rest
     # - recipes/offline
+    # - recipes/custom-fetching
   Reference:
-    - reference
-
+    - reference/index
 
 
 github_repo: apollographql/apollo-client
-content_root: source
-
-typescript_api_box:
-  data_file: docs.json
+content_root: docs/source
 
 social_links:
   github: 'https://github.com/apollographql'
@@ -71,14 +66,14 @@ apis:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: https://www.apollographql.com/docs/core
-root: /docs/core/
+url: https://www.apollographql.com/docs/react
+root: /docs/react/
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 
 # Directory
 source_dir: source
-public_dir: public/docs/core
+public_dir: public/docs/react
 tag_dir: tags
 archive_dir: archives
 category_dir: categories

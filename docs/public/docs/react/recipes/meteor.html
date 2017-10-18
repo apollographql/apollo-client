@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <!-- Basic -->
+    <title>Meteor | Apollo Client Guide</title>
+    <meta name="description" content="Specifics about using Apollo in your Meteor application.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="images/favicon.png" sizes="16x16 32x32 64x64">
+
+    <!-- Social -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://www.apollographql.com/docs/react">
+    <meta property="og:title" content="Meteor | Apollo Client Guide">
+    <meta property="og:description" content="Specifics about using Apollo in your Meteor application.">
+    <meta property="og:image" content="">
+    <meta name="twitter:card" content="summary_image_large">
+    <meta name="twitter:site" content="@apollographql">
+    <meta name="twitter:title" content="Meteor | Apollo Client Guide">
+    <meta name="twitter:description" content="Specifics about using Apollo in your Meteor application.">
+    <meta name="twitter:image" content="">
+
+    <!-- Misc -->
+    <meta name="google-site-verification" content="" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,200,300italic,400italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/docs/react/style/style.css">
+  </head>
+  <body class="">
+    
+
+<div class="nav dark">
+  <div class="nav-group">
+    <div class="nav-item show-mobile">
+      <span class="js-sidebar-toggle ">
+        <span class="icon-menu"></span>
+      </span>
+    </div>
+    <div class="nav-item">
+      
+      <a class="logo-wrapper" href="http://dev.apollodata.com/" title="Apollo Developers"  >
+        <img src="../images/logo-apollo-space-left.svg" alt="Apollo" class="logo"/><img src="../images/logo-apollo-subbrands-developers-space.svg" class="logo-subbrand" alt="Developers"/>
+      </a>
+    </div>
+  </div>
+
+  <div class="nav-group right">
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/react"  >
+          <span>React</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/angular2"  >
+          <span>Angular</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/ios"  >
+          <span>iOS</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/android"  >
+          <span>Android</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/core"  >
+          <span>Vanilla JS</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false separator">
+        <a class="link" href="http://dev.apollodata.com/tools"  >
+          <span>Server</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="https://medium.com/apollo-stack" target=_new >
+          <span>Blog</span>
+        </a>
+      </div>
+    
+      
+      <div class="nav-item show-desktop false ">
+        <a class="link" href="http://dev.apollodata.com/community"  >
+          <span>Community</span>
+        </a>
+      </div>
+    
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="panel">
+    <div class="panel-item">
+      <a class="" href="../http:/dev.apollodata.com/" title="Apollo"  >
+        <span>Apollo Developers</span>
+      </a>
+    </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/react"  >
+          <span>React</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/angular2"  >
+          <span>Angular</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/ios"  >
+          <span>iOS</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/android"  >
+          <span>Android</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/core"  >
+          <span>Vanilla JS</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/tools"  >
+          <span>Server</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="https://medium.com/apollo-stack" target=_new >
+          <span>Blog</span>
+        </a>
+      </div>
+    
+      <div class="panel-item "">
+        <a class="" href="http://dev.apollodata.com/community"  >
+          <span>Community</span>
+        </a>
+      </div>
+    
+  </div>
+
+  <div class="sidebar-content">
+    <div class="topcap">
+      <span class="title-sidebar">Apollo Client Guide</span>
+      
+    </div>
+
+    
+
+    <ul class="toc">
+      
+        <li>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../index.html" class="sidebar-link ">
+                  <span>Apollo Client</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/integrations.html" class="sidebar-link ">
+                  <span>View Integrations</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/setup.html" class="sidebar-link ">
+                  <span>Setup and options</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/queries.html" class="sidebar-link ">
+                  <span>Queries</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/mutations.html" class="sidebar-link ">
+                  <span>Mutations</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/network-layer.html" class="sidebar-link ">
+                  <span>Network layer</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/error-handling.html" class="sidebar-link ">
+                  <span>Error Handling</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/fragments.html" class="sidebar-link ">
+                  <span>Using Fragments</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../basics/subscriptions.html" class="sidebar-link ">
+                  <span>Subscriptions</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Features</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../features/changelog.html" class="sidebar-link ">
+                  <span>Changelog</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/caching.html" class="sidebar-link ">
+                  <span>Direct Cache Access</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/developer-tooling.html" class="sidebar-link ">
+                  <span>Developer tools</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/network-customization.html" class="sidebar-link ">
+                  <span></span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/optimistic-ui.html" class="sidebar-link ">
+                  <span>Optimistic UI</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/react-native.html" class="sidebar-link ">
+                  <span>Integrating with React Native</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="../features/static-typing.html" class="sidebar-link ">
+                  <span>Using TypeScript and Flow</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Recipes</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="authentication.html" class="sidebar-link ">
+                  <span>Authentication</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="babel.html" class="sidebar-link ">
+                  <span>Precompilation with babel</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc  current">
+                <a href="" class="sidebar-link  current">
+                  <span>Meteor</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="pagination.html" class="sidebar-link ">
+                  <span>Pagination</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="prefetching.html" class="sidebar-link ">
+                  <span>Prefetching data</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="query-splitting.html" class="sidebar-link ">
+                  <span>Query Splitting</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="server-side-rendering.html" class="sidebar-link ">
+                  <span>Server Side Rendering</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="simple-example.html" class="sidebar-link ">
+                  <span>Small Example: Snack</span>
+                </a>
+              </li>
+            
+              
+              <li class="item-toc ">
+                <a href="webpack.html" class="sidebar-link ">
+                  <span>Webpack loader</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+        <li>
+          
+            <div class="heading-toc">Reference</div>
+          
+          <ul class="list-toc">
+            
+              
+              <li class="item-toc ">
+                <a href="../reference/index.html" class="sidebar-link ">
+                  <span>Title</span>
+                </a>
+              </li>
+            
+          </ul>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="content">
+  <div class="content-wrapper">
+    <div class="header-content">
+      <h1 class="title-page">Meteor</h1>
+      
+        <div class="subtitle-page">Specifics about using Apollo in your Meteor application.</div>
+      
+
+      <div class="page-actions">
+        <div class="actions-group">
+          <a class="btn tertiary small round lowercase" href="https://github.com/apollographql/apollo-client/tree/master/docs/source/recipes/meteor.md" target="_blank"><span class="icon-github"></span> <span>Edit on GitHub</span></a>
+          
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="document-formatting">
+      <p>The Apollo client and server tools are published on npm, which makes them available to all JavaScript applications, including those written with <a href="https://www.meteor.com/" target="_blank" rel="external">Meteor</a> 1.3 and above. When using Meteor with Apollo, you can use those npm packages directly, or you can use the <a href="https://github.com/apollostack/meteor-integration/" target="_blank" rel="external"><code>apollo</code> Atmosphere package</a>, which simplifies things for you.</p>
+<p>To install <code>apollo</code>, run these commands:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">meteor add apollo</div><div class="line">meteor npm install --save apollo-client graphql-server-express express graphql graphql-tools body-parser</div></pre></td></tr></table></figure>
+<h2 id="Usage"><a href="#Usage" class="headerlink" title="Usage"></a>Usage</h2><h3 id="Examples"><a href="#Examples" class="headerlink" title="Examples"></a>Examples</h3><p>You can see this package in action in the <a href="https://github.com/apollostack/meteor-starter-kit" target="_blank" rel="external">Apollo Meteor starter kit</a>. </p>
+<p>If you’d like to understand how this simple package works internally, you are invited to <a href="https://www.codetours.xyz/tour/xavcz/meteor-apollo-codetour" target="_blank" rel="external">take the code tour</a>.</p>
+<h3 id="Client"><a href="#Client" class="headerlink" title="Client"></a>Client</h3><p>Connect to the Apollo server with <a href="#meteorClientConfig"><code>meteorClientConfig</code></a>:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> ApolloClient <span class="keyword">from</span> <span class="string">'apollo-client'</span>;</div><div class="line"><span class="keyword">import</span> &#123; meteorClientConfig &#125; <span class="keyword">from</span> <span class="string">'meteor/apollo'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> client = <span class="keyword">new</span> ApolloClient(meteorClientConfig());</div></pre></td></tr></table></figure>
+<h3 id="Server"><a href="#Server" class="headerlink" title="Server"></a>Server</h3><p>Create the following files:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/imports/api/schema.js         <span class="comment"># a JavaScript file with the schema</span></div><div class="line">/imports/api/resolvers.js      <span class="comment"># a JavaScript file with the Apollo resolvers</span></div></pre></td></tr></table></figure>
+<p>Define a simple <a href="http://dev.apollodata.com/tools/graphql-tools/generate-schema.html" target="_blank" rel="external">schema</a> under <code>schema.js</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">export</span> <span class="keyword">const</span> typeDefs = <span class="string">`</span></div><div class="line"><span class="string">type Query &#123;</span></div><div class="line"><span class="string">  say: String</span></div><div class="line"><span class="string">&#125;</span></div><div class="line"><span class="string">`</span>;</div></pre></td></tr></table></figure>
+<p>Define your first <a href="http://dev.apollodata.com/tools/graphql-tools/resolvers.html" target="_blank" rel="external">resolver</a> under <code>resolvers.js</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">const</span> resolvers = &#123;</div><div class="line">  Query: &#123;</div><div class="line">    say(root, args, context) &#123;</div><div class="line">      <span class="keyword">return</span> <span class="string">'hello world'</span>;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Set up the Apollo server with <a href="#createApolloServer"><code>createApolloServer</code></a>:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; createApolloServer &#125; <span class="keyword">from</span> <span class="string">'meteor/apollo'</span>;</div><div class="line"><span class="keyword">import</span> &#123; makeExecutableSchema, addMockFunctionsToSchema &#125; <span class="keyword">from</span> <span class="string">'graphql-tools'</span>;</div><div class="line"></div><div class="line"><span class="keyword">import</span> &#123; typeDefs &#125; <span class="keyword">from</span> <span class="string">'/imports/api/schema'</span>;</div><div class="line"><span class="keyword">import</span> &#123; resolvers &#125; <span class="keyword">from</span> <span class="string">'/imports/api/resolvers'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> schema = makeExecutableSchema(&#123;</div><div class="line">  typeDefs,</div><div class="line">  resolvers,</div><div class="line">&#125;);</div><div class="line"></div><div class="line">createApolloServer(&#123;</div><div class="line">  schema,</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>The <a href="https://github.com/graphql/graphiql" target="_blank" rel="external">GraphiQL</a> url by default is <a href="http://localhost:3000/graphiql" target="_blank" rel="external">http://localhost:3000/graphiql</a>. You can now test your first query:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  say</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Inside your resolvers, if the user is logged in, their id will be <code>context.userId</code> and their user doc will be <code>context.user</code>:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">const</span> resolvers = &#123;</div><div class="line">  Query: &#123;</div><div class="line">    user(root, args, context) &#123;</div><div class="line">      <span class="comment">// Only return the current user, for security</span></div><div class="line">      <span class="keyword">if</span> (context.userId === args.id) &#123;</div><div class="line">        <span class="keyword">return</span> context.user;</div><div class="line">      &#125;</div><div class="line">    &#125;,</div><div class="line">  &#125;,</div><div class="line">  User: ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="Query-batching"><a href="#Query-batching" class="headerlink" title="Query batching"></a>Query batching</h3><p><code>meteor/apollo</code> gives you a <code>BatchedNetworkInterface</code> by default thanks to <code>createMeteorNetworkInterface</code>. This interface is meant to reduce significantly the number of requests sent to the server.</p>
+<p>In order to get the most out of it, you can attach a <code>dataloader</code> to every request to batch loading your queries (and cache them!).</p>
+<p>Here are some great resources to help you integrating query batching in your Meteor application:</p>
+<ul>
+<li>About batched network interface:<ul>
+<li><a href="http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching" target="_blank" rel="external">Apollo Client documentation</a>, the official documentation explaining how it works and how to set it up.</li>
+<li><a href="https://dev-blog.apollodata.com/query-batching-in-apollo-63acfd859862" target="_blank" rel="external">Query batching in Apollo</a>, an article from the Apollo blog with more in depth explanation.</li>
+</ul>
+</li>
+<li>About Dataloader:<ul>
+<li>Apollo’s <a href="http://dev.apollodata.com/tools/graphql-tools/connectors.html#DataLoader-and-caching" target="_blank" rel="external">Graphql server documentation</a>, get to know how to setup <code>dataloader</code> in your server-side implementation.</li>
+<li><a href="https://github.com/facebook/dataloader" target="_blank" rel="external">Dataloader repository</a>, a detailed explanation of batching &amp; caching processes, plus a bonus of a 30-minute source code walkthrough video.</li>
+</ul>
+</li>
+</ul>
+<h3 id="Deployment"><a href="#Deployment" class="headerlink" title="Deployment"></a>Deployment</h3><p>It is <em>strongly</em> recommended to explictly specify the <code>ROOT_URL</code> environment variable of your deployment. The configuration of the Apollo client and GraphQL server provided by this package depends on a configured <code>ROOT_URL</code>. Read more about that in the <a href="https://guide.meteor.com/deployment.html#custom-deployment" target="_blank" rel="external">Meteor Guide</a>.</p>
+<h3 id="Typings"><a href="#Typings" class="headerlink" title="Typings"></a>Typings</h3><p>Your Meteor apps may rely on static typings with TypeScript. If so, it is recommended to use the <a href="https://github.com/KeithGillette/Apollo-GraphQL-Meteor-Integration-Typings" target="_blank" rel="external">ambient TypeScript definition for this Atmosphere package</a>.</p>
+<h2 id="API"><a href="#API" class="headerlink" title="API"></a>API</h2><h3 id="meteorClientConfig"><a href="#meteorClientConfig" class="headerlink" title="meteorClientConfig"></a>meteorClientConfig</h3><p><code>meteorClientConfig(customClientConfig = {})</code></p>
+<p>The <code>customClientConfig</code> is an optional object that can have any <a href="http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient.constructor" target="_blank" rel="external">Apollo Client options</a>.</p>
+<p>Defining a <code>customClientConfig</code> object extends or replaces fields of the default configuration provided by the package. </p>
+<p>The default configuration of the client is:</p>
+<ul>
+<li><code>networkInterface</code>: <code>createMeteorNetworkInterface()</code>, a pre-configured network interface. See below for more information.</li>
+<li><code>ssrMode</code>: <code>Meteor.isServer</code>, enable server-side rendering mode by default if used server-side.</li>
+</ul>
+<p>The store is normalized by default with <code>__typename</code> + <code>_id</code> identifiers. See <a href="http://dev.apollodata.com/core/how-it-works.html#normalize" target="_blank" rel="external">store normalization</a> section for more information.</p>
+<h3 id="createMeteorNetworkInterface"><a href="#createMeteorNetworkInterface" class="headerlink" title="createMeteorNetworkInterface"></a>createMeteorNetworkInterface</h3><p><code>createMeteorNetworkInterface(customNetworkInterface = {})</code></p>
+<p><code>customNetworkInterface</code> is an optional object that replaces fields of the default configuration:</p>
+<ul>
+<li><code>uri</code>: <code>Meteor.absoluteUrl(&#39;graphql&#39;)</code>, points to the default GraphQL server endpoint, such as <a href="http://locahost:3000/graphql" target="_blank" rel="external">http://locahost:3000/graphql</a> or <a href="https://www.my-app.com/graphql" target="_blank" rel="external">https://www.my-app.com/graphql</a>.</li>
+<li><code>opts</code>: <code>{}</code>, additional <a href="https://github.github.io/fetch#options" target="_blank" rel="external"><code>FetchOptions</code></a> passed to the <a href="http://dev.apollodata.com/core/network.html#createNetworkInterface" target="_blank" rel="external"><code>NetworkInterface</code></a>.</li>
+<li><code>useMeteorAccounts</code>: <code>true</code>, enable the Meteor User Accounts middleware to identify the user with every request thanks to her login token.</li>
+<li><code>batchingInterface</code>: <code>true</code>, use a <a href="http://dev.apollodata.com/core/network.html#query-batching" target="_blank" rel="external"><code>BatchedNetworkInterface</code></a> by default instead of <a href="http://dev.apollodata.com/core/network.html#network-interfaces" target="_blank" rel="external"><code>NetworkInterface</code></a>.</li>
+<li><code>batchInterval</code>: <code>10</code>, if the <code>batchingInterface</code> field is <code>true</code>, this field defines the batch interval to determine how long the network interface batches up queries before sending them to the server.</li>
+</ul>
+<p>Additionally, if the <code>useMeteorAccounts</code> is set to <code>true</code>, you can add to your <code>customNetworkInterface</code> a <code>loginToken</code> field while doing <a href="http://dev.apollodata.com/core/meteor.html#SSR" target="_blank" rel="external">server-side rendering</a> to handle the current user.</p>
+<p><code>createMeteorNetworkInterface</code> example:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> ApolloClient <span class="keyword">from</span> <span class="string">'apollo-client'</span></div><div class="line"><span class="keyword">import</span> &#123; createMeteorNetworkInterface, meteorClientConfig &#125; <span class="keyword">from</span> <span class="string">'meteor/apollo'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> networkInterface = createMeteorNetworkInterface(&#123;</div><div class="line">  <span class="comment">// use a batched network interface instead of a classic network interface</span></div><div class="line">  batchingInterface: <span class="literal">true</span>, </div><div class="line">&#125;);</div><div class="line"></div><div class="line"><span class="keyword">const</span> client = <span class="keyword">new</span> ApolloClient(meteorClientConfig(&#123; networkInterface &#125;));</div></pre></td></tr></table></figure>
+<h3 id="createApolloServer"><a href="#createApolloServer" class="headerlink" title="createApolloServer"></a>createApolloServer</h3><p><code>createApolloServer(customOptions = {}, customConfig = {})</code></p>
+<p><code>createApolloServer</code> is used to create and configure an Express GraphQL server.</p>
+<p><code>customOptions</code> is an object that can have any <a href="http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlOptions" target="_blank" rel="external">GraphQL Server <code>options</code></a>, used to enhance the GraphQL server run thanks to <a href="http://dev.apollodata.com/tools/graphql-server/setup.html#graphqlExpress" target="_blank" rel="external"><code>graphqlExpress</code></a>. Defining a <code>customOptions</code> object extends or replaces fields of the default configuration provided by the package:</p>
+<ul>
+<li><code>context</code>: <code>{}</code> is an object or a function returning an object that extends the context object being passed down to the resolvers.</li>
+<li><code>formatError</code>: a function used to format errors before returning them to clients.</li>
+<li><code>debug</code>: <code>Meteor.isDevelopment</code>, additional debug logging if execution errors occur in dev mode.</li>
+</ul>
+<p><em>This is the object that should have a <code>schema</code> entry created by <a href="http://dev.apollodata.com/core/meteor.html#Server" target="_blank" rel="external"><code>makeExecutableSchema</code></a>.</em></p>
+<p><code>customConfig</code> is an optional object that can be used to replace the configuration of how the Express server itself runs: </p>
+<ul>
+<li><code>path</code>: <a href="http://expressjs.com/en/api.html#app.use" target="_blank" rel="external">path</a> of the GraphQL server. This is the endpoint where the queries &amp; mutations are sent. Default: <code>/graphql</code>.</li>
+<li><code>configServer</code>: a function that is given to the express server for further configuration. You can for instance enable CORS with <code>createApolloServer({}, {configServer: expressServer =&gt; expressServer.use(cors())})</code></li>
+<li><code>graphiql</code>: whether to enable <a href="https://github.com/graphql/graphiql" target="_blank" rel="external">GraphiQL</a>. Default: <code>true</code> in development and <code>false</code> in production.</li>
+<li><code>graphiqlPath</code>: path for GraphiQL. Default: <code>/graphiql</code> (note the <em>i</em>).</li>
+<li><code>graphiqlOptions</code>: <a href="http://dev.apollodata.com/tools/apollo-server/graphiql.html#graphiqlOptions" target="_blank" rel="external">GraphiQL options</a> Default: attempts to use <code>Meteor.loginToken</code> from localStorage to log you in.</li>
+</ul>
+<p>It will use the same port as your Meteor server. Don’t put a route or static asset at the same path as the GraphQL route or the GraphiQL route if in use (again, defaults are <code>/graphql</code> and <code>/graphiql</code> respectively).</p>
+<h2 id="Accounts"><a href="#Accounts" class="headerlink" title="Accounts"></a>Accounts</h2><p>You may still use the authentication based on DDP (Meteor’s default data layer) and <code>apollo</code> will send the current user’s login token to the GraphQL server with each request. </p>
+<p>If you want to use only GraphQL in your app you can use <a href="https://github.com/nicolaslopezj/meteor-apollo-accounts" target="_blank" rel="external">nicolaslopezj:apollo-accounts</a>. This package uses the Meteor Accounts methods in GraphQL, it’s compatible with the accounts you have saved in your database and you may use <code>nicolaslopezj:apollo-accounts</code> and Meteor’s DDP accounts at the same time.</p>
+<p>If you are relying on the current user in your queries, you’ll want to <a href="http://dev.apollodata.com/react/auth.html#login-logout" target="_blank" rel="external">clear the store when the current user state changes</a>. To do so, use <code>client.resetStore()</code> in the <code>Meteor.logout</code> callback:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// The `client` variable refers to your `ApolloClient` instance.</span></div><div class="line"><span class="comment">// It would be imported in your template,</span></div><div class="line"><span class="comment">// or passed via props thanks to `withApollo` in React for example.</span></div><div class="line"></div><div class="line">Meteor.logout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> client.resetStore(); <span class="comment">// make all active queries re-run when the log-out process completed</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h2 id="SSR"><a href="#SSR" class="headerlink" title="SSR"></a>SSR</h2><p>There are two additional configurations that you need to keep in mind when using <a href="http://dev.apollodata.com/react/server-side-rendering.html" target="_blank" rel="external">React Server Side Rendering</a> with Meteor.</p>
+<ol>
+<li>Use <code>isomorphic-fetch</code> to polyfill <code>fetch</code> server-side (used by Apollo Client’s network interface).</li>
+<li>Connect your express server to Meteor’s existing server with <a href="https://docs.meteor.com/packages/webapp.html" target="_blank" rel="external">WebApp.connectHandlers.use</a></li>
+<li>Do not end the connection with <code>res.send()</code> and <code>res.end()</code> use <code>req.dynamicBody</code> and <code>req.dynamicHead</code> instead and call <code>next()</code>. <a href="https://github.com/meteor/meteor/pull/3860" target="_blank" rel="external">more info</a></li>
+</ol>
+<p>The idea is that you need to let Meteor to finally render the html you can just provide it extra <code>body</code> and or <code>head</code> for the html and Meteor will append it, otherwise CSS/JS and or other merged html content that Meteor serve by default (including your application main .js file) will be missing.</p>
+<p>Here is a full working example:<br><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">meteor <span class="keyword">add</span><span class="bash"> apollo webapp</span></div><div class="line"><span class="bash">meteor npm install --save react react-dom apollo-client redux react-apollo react-router react-helmet express isomorphic-fetch</span></div></pre></td></tr></table></figure></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; Meteor &#125; <span class="keyword">from</span> <span class="string">'meteor/meteor'</span>;</div><div class="line"><span class="keyword">import</span> &#123; WebApp &#125; <span class="keyword">from</span> <span class="string">'meteor/webapp'</span>;</div><div class="line"><span class="keyword">import</span> &#123; meteorClientConfig, createMeteorNetworkInterface &#125; <span class="keyword">from</span> <span class="string">'meteor/apollo'</span>;</div><div class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;</div><div class="line"><span class="keyword">import</span> ReactDOM <span class="keyword">from</span> <span class="string">'react-dom/server'</span>;</div><div class="line"><span class="keyword">import</span> ApolloClient <span class="keyword">from</span> <span class="string">'apollo-client'</span>;</div><div class="line"><span class="keyword">import</span> &#123; createStore, combineReducers, applyMiddleware, compose &#125; <span class="keyword">from</span> <span class="string">'redux'</span>;</div><div class="line"><span class="keyword">import</span> &#123; ApolloProvider, renderToStringWithData &#125; <span class="keyword">from</span> <span class="string">'react-apollo'</span>;</div><div class="line"><span class="keyword">import</span> &#123; match, RouterContext &#125; <span class="keyword">from</span> <span class="string">'react-router'</span>;</div><div class="line"><span class="keyword">import</span> Express <span class="keyword">from</span> <span class="string">'express'</span>;</div><div class="line"><span class="comment">// #1 import isomorphic-fetch so the network interface can be created</span></div><div class="line"><span class="keyword">import</span> <span class="string">'isomorphic-fetch'</span>;</div><div class="line"><span class="keyword">import</span> Helmet <span class="keyword">from</span> <span class="string">'react-helmet'</span>;</div><div class="line"></div><div class="line"><span class="keyword">import</span> routes <span class="keyword">from</span> <span class="string">'../both/routes'</span>;</div><div class="line"><span class="keyword">import</span> rootReducer <span class="keyword">from</span> <span class="string">'../../ui/reducers'</span>;</div><div class="line"><span class="keyword">import</span> Body <span class="keyword">from</span> <span class="string">'../both/routes/body'</span>;</div><div class="line"></div><div class="line"><span class="comment">// 1# do not use new</span></div><div class="line"><span class="keyword">const</span> app = Express(); <span class="comment">// eslint-disable-line new-cap</span></div><div class="line"></div><div class="line">app.use(<span class="function">(<span class="params">req, res, next</span>) =&gt;</span> &#123;</div><div class="line">  match(&#123; routes, <span class="attr">location</span>: req.originalUrl &#125;, (error, redirectLocation, renderProps) =&gt; &#123;</div><div class="line">    <span class="keyword">if</span> (redirectLocation) &#123;</div><div class="line">      res.redirect(redirectLocation.pathname + redirectLocation.search);</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (error) &#123;</div><div class="line">      <span class="built_in">console</span>.error(<span class="string">'ROUTER ERROR:'</span>, error); <span class="comment">// eslint-disable-line no-console</span></div><div class="line">      res.status(<span class="number">500</span>);</div><div class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (renderProps) &#123;</div><div class="line">      <span class="comment">// use createMeteorNetworkInterface to get a preconfigured network interface</span></div><div class="line">      <span class="comment">// #1 network interface can be used server-side thanks to polyfilled `fetch`</span></div><div class="line">      <span class="keyword">const</span> networkInterface = createMeteorNetworkInterface(&#123;</div><div class="line">        opts: &#123;</div><div class="line">          credentials: <span class="string">'same-origin'</span>,</div><div class="line">          headers: req.headers,</div><div class="line">        &#125;,</div><div class="line">        <span class="comment">// possible current user login token stored in the cookies thanks to </span></div><div class="line">        <span class="comment">// a third-party package like meteorhacks:fast-render</span></div><div class="line">        loginToken: req.cookies[<span class="string">'meteor-login-token'</span>],</div><div class="line">      &#125;);</div><div class="line"></div><div class="line">      <span class="comment">// use meteorClientConfig to get a preconfigured Apollo Client options object</span></div><div class="line">      <span class="keyword">const</span> client = <span class="keyword">new</span> ApolloClient(meteorClientConfig(&#123; networkInterface &#125;));</div><div class="line"></div><div class="line">      <span class="keyword">const</span> store = createStore(</div><div class="line">        combineReducers(&#123;</div><div class="line">          ...rootReducer,</div><div class="line">          apollo: client.reducer(),</div><div class="line">        &#125;),</div><div class="line">        &#123;&#125;, <span class="comment">// initial state</span></div><div class="line">        compose(</div><div class="line">          applyMiddleware(client.middleware()),</div><div class="line">        ),</div><div class="line">      );</div><div class="line"></div><div class="line">      <span class="keyword">const</span> component = (</div><div class="line">        &lt;ApolloProvider store=&#123;store&#125; client=&#123;client&#125;&gt;</div><div class="line">          &lt;RouterContext &#123;...renderProps&#125; /&gt;</div><div class="line">        &lt;<span class="regexp">/ApolloProvider&gt;</span></div><div class="line"><span class="regexp">      );</span></div><div class="line"><span class="regexp"></span></div><div class="line"><span class="regexp">      renderToStringWithData(component).then((content) =&gt; &#123;</span></div><div class="line"><span class="regexp">        const initialState = client.store.getState()[client.reduxRootKey].data;</span></div><div class="line"><span class="regexp">        /</span><span class="regexp">/ the body content we want to append</span></div><div class="line"><span class="regexp">        const body = &lt;Body content=&#123;content&#125; state=&#123;initialState&#125; /</span>&gt;;</div><div class="line">        <span class="comment">// #3 `req.dynamicBody` will hold that body and meteor will take care of</span></div><div class="line">        <span class="comment">// actually appending it to the end result</span></div><div class="line">        req.dynamicBody = ReactDOM.renderToStaticMarkup(body);</div><div class="line">        <span class="keyword">const</span> head = Helmet.rewind();</div><div class="line">        <span class="comment">// #3 `req.dynamicHead` in this case we use `react-helmet` to add seo tags</span></div><div class="line">        req.dynamicHead = <span class="string">`  <span class="subst">$&#123;head.title.toString()&#125;</span></span></div><div class="line"><span class="string">  <span class="subst">$&#123;head.meta.toString()&#125;</span></span></div><div class="line"><span class="string">  <span class="subst">$&#123;head.link.toString()&#125;</span></span></div><div class="line"><span class="string">`</span>;</div><div class="line">        <span class="comment">// #3 Important we do not want to return this, we just let meteor handle it</span></div><div class="line">        next();</div><div class="line">      &#125;);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">      <span class="built_in">console</span>.log(<span class="string">'not found'</span>); <span class="comment">// eslint-disable-line no-console</span></div><div class="line">    &#125;</div><div class="line">  &#125;);</div><div class="line">&#125;);</div><div class="line"><span class="comment">// #2 connect your express server with meteor's</span></div><div class="line">WebApp.connectHandlers.use(Meteor.bindEnvironment(app));</div></pre></td></tr></table></figure>
+<h2 id="Apollo-Optics"><a href="#Apollo-Optics" class="headerlink" title="Apollo Optics"></a>Apollo Optics</h2><p>Here’s a minimal example of <a href="http://www.apollodata.com/optics" target="_blank" rel="external">Apollo Optics</a> integration:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; createApolloServer &#125; <span class="keyword">from</span> <span class="string">'meteor/apollo'</span>;</div><div class="line"><span class="keyword">import</span> OpticsAgent <span class="keyword">from</span> <span class="string">'optics-agent'</span>;</div><div class="line"></div><div class="line"><span class="keyword">import</span> executableSchema <span class="keyword">from</span> <span class="string">'schema.js'</span>;</div><div class="line"></div><div class="line">OpticsAgent.instrumentSchema(executableSchema);</div><div class="line"></div><div class="line">createApolloServer(<span class="function"><span class="params">req</span> =&gt;</span> (&#123;</div><div class="line">  schema: executableSchema,</div><div class="line">  context: &#123;</div><div class="line">    opticsContext: OpticsAgent.context(req),</div><div class="line">  &#125;,</div><div class="line">&#125;), &#123;</div><div class="line">  configServer: <span class="function">(<span class="params">graphQLServer</span>) =&gt;</span> &#123;</div><div class="line">    graphQLServer.use(<span class="string">'/graphql'</span>, OpticsAgent.middleware());</div><div class="line">  &#125;,</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h2 id="Importing-graphql-files"><a href="#Importing-graphql-files" class="headerlink" title="Importing .graphql files"></a>Importing <code>.graphql</code> files</h2><p>An easy way to work with GraphQL is by importing <code>.graphql</code> files directly using the <code>import</code> syntax.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">meteor add swydo:graphql</div></pre></td></tr></table></figure>
+<p>Instead of the <code>/imports/api/schema.js</code> file, create a <code>/imports/api/schema.graphql</code> file with the same content as before:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">type Query &#123;</div><div class="line">  say: String</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>One of the benefits you’ll get right away is good highlighting by GitHub and your IDE!</p>
+<p>Now we can import the schema:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> typeDefs <span class="keyword">from</span> <span class="string">'/imports/api/schema.graphql'</span>;</div></pre></td></tr></table></figure>
+<p>Use <code>typeDefs</code> as before in the above examples. You can <a href="https://github.com/apollographql/graphql-tools/pull/300" target="_blank" rel="external">pass it directly to <code>makeExecutableSchema</code></a> like before.</p>
+<p>The import syntax will also work for any other <code>.graphql</code> file besides your main schema. So you’ll be able to import query, mutation and subscription files without needing to manually parse them with the <a href="https://github.com/apollographql/graphql-tag" target="_blank" rel="external">graphql-tag</a>.</p>
+<p>For more benefits, see the <a href="https://github.com/Swydo/meteor-graphql/blob/master/README.md#benefits" target="_blank" rel="external">GrahpQL build plugin README</a>.</p>
+<h2 id="Blaze"><a href="#Blaze" class="headerlink" title="Blaze"></a>Blaze</h2><p>If you are looking to integrate Apollo with <a href="http://blazejs.org/" target="_blank" rel="external">Blaze</a>, you can use the <a href="https://github.com/Swydo/blaze-apollo" target="_blank" rel="external">swydo:blaze-apollo</a> package:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; setup &#125; <span class="keyword">from</span> <span class="string">'meteor/swydo:blaze-apollo'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> client = <span class="keyword">new</span> ApolloClient(meteorClientConfig());</div><div class="line"></div><div class="line">setup(&#123; client &#125;);</div></pre></td></tr></table></figure>
+<p>This gives you reactive GraphQL queries in your templates!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Template.hello.helpers(&#123;</div><div class="line">  hello() &#123;</div><div class="line">    <span class="keyword">return</span> Template.instance().gqlQuery(&#123;</div><div class="line">      query: HELLO_QUERY</div><div class="line">    &#125;).get();</div><div class="line">  &#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h2 id="Subscriptions"><a href="#Subscriptions" class="headerlink" title="Subscriptions"></a>Subscriptions</h2><p>You can also use GraphQL subscriptions with your Meteor app if you need to. The following code gives an example of a complete configuration that enables all the features of subscriptions in addition to base GraphQL.</p>
+<h3 id="Client-1"><a href="#Client-1" class="headerlink" title="Client"></a>Client</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; ApolloClient &#125; <span class="keyword">from</span> <span class="string">'apollo-client'</span>;</div><div class="line"><span class="keyword">import</span> &#123; SubscriptionClient, addGraphQLSubscriptions &#125; <span class="keyword">from</span> <span class="string">'subscriptions-transport-ws'</span>;</div><div class="line"><span class="keyword">import</span> &#123; getMeteorLoginToken, createMeteorNetworkInterface &#125; <span class="keyword">from</span> <span class="string">'meteor/apollo'</span>;</div><div class="line"></div><div class="line"><span class="comment">// "basic" Meteor network interface</span></div><div class="line"><span class="keyword">const</span> networkInterface = createMeteorNetworkInterface();</div><div class="line"></div><div class="line"><span class="comment">// create a websocket uri based on your app absolute url (ROOT_URL), ex: ws://localhost:3000</span></div><div class="line"><span class="keyword">const</span> websocketUri = Meteor.absoluteUrl(<span class="string">'subscriptions'</span>).replace(<span class="regexp">/^http/</span>, <span class="string">'ws'</span>);</div><div class="line">   </div><div class="line"><span class="comment">// create a websocket client</span></div><div class="line"><span class="keyword">const</span> wsClient = <span class="keyword">new</span> SubscriptionClient(websocketUri, &#123;</div><div class="line">  reconnect: <span class="literal">true</span>,</div><div class="line">  <span class="comment">// pass some extra information to the subscription, like the current user:</span></div><div class="line">  connectionParams: &#123;</div><div class="line">    <span class="comment">// getMeteorLoginToken = get the Meteor current user login token from local storage</span></div><div class="line">    meteorLoginToken: getMeteorLoginToken(),</div><div class="line">  &#125;,</div><div class="line">&#125;);</div><div class="line"></div><div class="line"><span class="comment">// enhance the interface with graphql subscriptions</span></div><div class="line"><span class="keyword">const</span> networkInterfaceWithSubscriptions = addGraphQLSubscriptions(networkInterface, wsClient);</div><div class="line"></div><div class="line"><span class="comment">// enjoy graphql subscriptions with Apollo Client</span></div><div class="line"><span class="keyword">const</span> client = <span class="keyword">new</span> ApolloClient(&#123; <span class="attr">networkInterface</span>: networkInterfaceWithSubscriptions &#125;);</div></pre></td></tr></table></figure>
+<h3 id="Server-1"><a href="#Server-1" class="headerlink" title="Server"></a>Server</h3><p>The same <code>context</code> is used for both the resolvers and the GraphQL subscriptions. This also means that <a href="http://dev.apollodata.com/tools/graphql-subscriptions/authentication.html" target="_blank" rel="external">authentication in the websocket transport</a> is configured out-of-the-box.</p>
+<p>Note that <code>PubSub</code> from <code>graphql-subscriptions</code> is not suitable for production. You should wire your <code>SubscriptionManager</code> with <a href="https://github.com/davidyaha/graphql-redis-subscriptions" target="_blank" rel="external">Redis subscriptions</a> or <a href="https://github.com/davidyaha/graphql-mqtt-subscriptions" target="_blank" rel="external">MQTT subscriptions</a> in case you want to use them in production apps.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; SubscriptionManager &#125; <span class="keyword">from</span> <span class="string">'graphql-subscriptions'</span>;</div><div class="line"><span class="keyword">import</span> &#123; SubscriptionServer &#125; <span class="keyword">from</span> <span class="string">'subscriptions-transport-ws'</span>;</div><div class="line"><span class="keyword">import</span> &#123; createApolloServer, addCurrentUserToContext &#125; <span class="keyword">from</span> <span class="string">'meteor/apollo'</span>;</div><div class="line"> </div><div class="line"><span class="comment">// your executable schema</span></div><div class="line"><span class="keyword">const</span> schema = ...</div><div class="line"></div><div class="line"><span class="comment">// any additional context you use for your resolvers, if any</span></div><div class="line"><span class="keyword">const</span> context = &#123;&#125;;</div><div class="line"> </div><div class="line"><span class="comment">// the pubsub mechanism of your choice, for instance:</span></div><div class="line"><span class="comment">// - PubSub from graphql-subscriptions (not recommended for production)</span></div><div class="line"><span class="comment">// - RedisPubSub from graphql-redis-subscriptions</span></div><div class="line"><span class="comment">// - MQTTPubSub from graphql-mqtt-subscriptions</span></div><div class="line"><span class="keyword">const</span> pubsub = <span class="keyword">new</span> PubSub();</div><div class="line"> </div><div class="line"><span class="comment">// subscriptions path which fits witht the one you connect to on the client</span></div><div class="line"><span class="keyword">const</span> subscriptionsPath = <span class="string">'/subscriptions'</span>;</div><div class="line"> </div><div class="line"><span class="comment">// start a graphql server with Express handling a possible Meteor current user</span></div><div class="line">createApolloServer(&#123; </div><div class="line">  schema,</div><div class="line">  context </div><div class="line">&#125;);</div><div class="line"> </div><div class="line"><span class="comment">// create the subscription manager thanks to the schema &amp; the pubsub mechanism</span></div><div class="line"><span class="keyword">const</span> subscriptionManager = <span class="keyword">new</span> SubscriptionManager(&#123;</div><div class="line">  schema,</div><div class="line">  pubsub,</div><div class="line">&#125;);</div><div class="line"> </div><div class="line"><span class="comment">// start up a subscription server</span></div><div class="line"><span class="keyword">new</span> SubscriptionServer(</div><div class="line">  &#123;</div><div class="line">    subscriptionManager,</div><div class="line">    <span class="comment">// on connect subscription lifecycle event</span></div><div class="line">    onConnect: <span class="keyword">async</span> (connectionParams, webSocket) =&gt; &#123;</div><div class="line">      <span class="comment">// if a meteor login token is passed to the connection params from the client, </span></div><div class="line">      <span class="comment">// add the current user to the subscription context</span></div><div class="line">      <span class="keyword">const</span> subscriptionContext = connectionParams.meteorLoginToken</div><div class="line">        ? <span class="keyword">await</span> addCurrentUserToContext(context, connectionParams.meteorLoginToken)</div><div class="line">        : context;</div><div class="line"></div><div class="line">      <span class="keyword">return</span> subscriptionContext;</div><div class="line">    &#125;,</div><div class="line">  &#125;,</div><div class="line">  &#123;</div><div class="line">    <span class="comment">// bind the subscription server to Meteor WebApp</span></div><div class="line">    server: WebApp.httpServer,</div><div class="line">    path: subscriptionsPath,</div><div class="line">  &#125;</div><div class="line">);</div></pre></td></tr></table></figure>
+
+    </div>
+  </div>
+
+  <div class="pagination">
+    <div class="content-wrapper">
+      
+      
+        <a class="link primary prev"
+          href="babel.html">
+          <span class="icon-arrow-left-alt"></span>
+          <span class="subtitle-pagination">Previous</span>
+          Precompilation with babel
+        </a>
+      
+      
+        <a class="link primary next"
+          href="pagination.html">
+          <span class="subtitle-pagination">Next</span>
+          Pagination
+          <span class="icon-arrow-right-alt"></span>
+        </a>
+      
+    </div>
+  </div>
+
+  <div class="github">
+    <a class="link tertiary " href="https://github.com/apollographql/apollo-client/tree/master/docs/source/recipes/meteor.md" target="_blank">
+      <span class="icon-github"></span>Edit on GitHub</a>
+  </div>
+
+  
+</div>
+
+    <script src="/docs/react/script/smooth-scroll.min.js"></script>
+    <script src="/docs/react/script/main.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/fastclick/1.0.6/fastclick.min.js"></script>
+
+    <script>
+      // nectar ninja
+      (function(){
+        var handle = '@meteorjs';
+        var a = document.createElement('script');
+        var m = document.getElementsByTagName('script')[0];
+        a.async = 1;
+        a.src = 'https://nectar.ninja/api/v1/' + handle.slice(1);
+        m.parentNode.insertBefore(a, m);
+      })();
+
+     
+
+      
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-PNFDVBB');
+      
+
+      
+        // Segment Tracking
+        !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="3.1.0";
+        analytics.load("wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg");
+        analytics.page()
+        }}();
+      
+
+      // search box
+      
+
+      
+    </script>
+  </body>
+</html>

@@ -21,6 +21,8 @@ import { todoReducer, userReducer } from './reducers';
 
 const client = new ApolloClient();
 
+const rootEl = document.querySelector("#root");
+
 const store = createStore(
   combineReducers({
     todos: todoReducer,

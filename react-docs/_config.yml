@@ -42,6 +42,7 @@ sidebar_categories:
     - react-native
     - redux
     - webpack
+    - babel
     - server-side-rendering
 github_repo: apollographql/react-docs
 content_root: source

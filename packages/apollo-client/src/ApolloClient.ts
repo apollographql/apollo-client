@@ -91,6 +91,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       defaultOptions,
     } = options;
 
+    if (!link || !cache) {
+      throw new Error(`
+        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
+        For more information, please visit:
+          http://dev.apollodata.com/react/initialization.html#creating-client
+        to help you get started.
+      `);
+    }
+
     this.link = link;
     this.cache = cache;
     this.store = new DataStore(cache);

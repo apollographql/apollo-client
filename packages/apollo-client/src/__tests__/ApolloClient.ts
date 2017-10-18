@@ -7,6 +7,30 @@ import { withWarning } from '../util/wrap';
 import ApolloClient from '../';
 
 describe('ApolloClient', () => {
+  describe('constructor', () => {
+    it('will throw an error if link is not passed in', () => {
+      expect(() => {
+        const client = new ApolloClient({ cache: new InMemoryCache() });
+      }).toThrowError(`
+        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
+        For more information, please visit:
+          http://dev.apollodata.com/react/initialization.html#creating-client
+        to help you get started.
+      `);
+    });
+
+    it('will throw an error if cache is not passed in', () => {
+      expect(() => {
+        const client = new ApolloClient({ link: new ApolloLink.empty() });
+      }).toThrowError(`
+        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
+        For more information, please visit:
+          http://dev.apollodata.com/react/initialization.html#creating-client
+        to help you get started.
+      `);
+    });
+  });
+
   describe('readQuery', () => {
     it('will read some data from the store', () => {
       const client = new ApolloClient({

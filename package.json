@@ -3,6 +3,7 @@
   "license": "MIT",
   "scripts": {
     "bootstrap": "npm i && lerna bootstrap",
+    "postinstall": "lerna bootstrap",
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "lerna run -- test",

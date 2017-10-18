@@ -3,6 +3,8 @@
 ### vNext
 - Define and expose `ApolloClientOptions`, Type of an object that represents ApolloClient's constructor argument.
 - Expose `ApolloCurrentResult`
+- Throw an error if cache or data are not supplied to the `ApolloClient` constructor
+- Add `graphql` as a dev dependency
 
 ### 2.0.0-rc.3
 - Only include `data` on subscriptionData when using `subscribeToMore`

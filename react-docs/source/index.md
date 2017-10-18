@@ -18,7 +18,7 @@ Dive into a basic app that displays one view with React Native and Apollo. It's 
 
 <h3 id="full-stack-graphql" title="2. Full-Stack Tutorial">[2. Full-Stack GraphQL + React Tutorial](https://dev-blog.apollodata.com/full-stack-react-graphql-tutorial-582ac8d24e3b#.cwvxzphyc)</h3>
 
-This tutorial covers how to set up Apollo Client, how to write a simple server, and how to connect them together, and more parts are being produced almost every week. It's written by [Jonas Helfer](https://twitter.com/helferjs), the main developer behind React-Apollo.
+This tutorial covers how to set up Apollo Client, how to write a simple server, and how to connect them together, and more parts are being produced almost every week. It's written by the team behind Apollo.
 
 <h3 id="how-to-graphql">[3. How to GraphQL](https://www.howtographql.com)</h3>
 

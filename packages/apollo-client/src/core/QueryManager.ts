@@ -760,7 +760,8 @@ export class QueryManager<TStore> {
   }
 
   public removeObservableQuery(queryId: string) {
-    const { observableQuery } = this.getQuery(queryId);
+    const { observableQuery, cancel } = this.getQuery(queryId);
+    if (cancel) cancel();
     if (!observableQuery) return;
 
     const definition = getQueryDefinition(observableQuery.options.query);
@@ -1084,6 +1085,7 @@ export class QueryManager<TStore> {
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),
           }));
+
           resolve({
             data: resultFromStore,
             errors: errorsFromStore,

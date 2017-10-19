@@ -3844,4 +3844,61 @@ describe('QueryManager', () => {
       done();
     });
   });
+  describe('store watchers', () => {
+    it('does not fill up the store on resolved queries', () => {
+      const query1 = gql`
+        query One {
+          one
+        }
+      `;
+      const query2 = gql`
+        query Two {
+          two
+        }
+      `;
+      const query3 = gql`
+        query Three {
+          three
+        }
+      `;
+      const query4 = gql`
+        query Four {
+          four
+        }
+      `;
+
+      const link = mockSingleLink(
+        { request: { query: query1 }, result: { data: { one: 1 } } },
+        { request: { query: query2 }, result: { data: { two: 2 } } },
+        { request: { query: query3 }, result: { data: { three: 3 } } },
+        { request: { query: query4 }, result: { data: { four: 4 } } },
+      );
+      const cache = new InMemoryCache();
+
+      const queryManager = new QueryManager({
+        link,
+        store: new DataStore(cache),
+      });
+
+      return queryManager
+        .query({ query: query1 })
+        .then(one => {
+          return queryManager.query({ query: query2 });
+        })
+        .then(() => {
+          return queryManager.query({ query: query3 });
+        })
+        .then(() => {
+          return queryManager.query({ query: query4 });
+        })
+        .then(() => {
+          return new Promise(r => {
+            setTimeout(r, 10);
+          });
+        })
+        .then(() => {
+          expect(cache.watches.length).toBe(0);
+        });
+    });
+  });
 });

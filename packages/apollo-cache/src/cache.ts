@@ -48,6 +48,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public transformDocument(document: DocumentNode): DocumentNode {
     return document;
   }
+  // experimental
+  public transformForLink(document: DocumentNode): DocumentNode {
+    return document;
+  }
 
   // DataProxy API
   /**

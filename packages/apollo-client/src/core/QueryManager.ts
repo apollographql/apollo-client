@@ -132,8 +132,9 @@ export class QueryManager<TStore> {
     }
 
     const mutationId = this.generateQueryId();
+    const cache = this.dataStore.getCache();
     mutation = removeConnectionDirectiveFromDocument(
-      this.dataStore.getCache().transformDocument(mutation),
+      cache.transformDocument(mutation),
     );
 
     variables = assign(
@@ -187,7 +188,13 @@ export class QueryManager<TStore> {
     return new Promise((resolve, reject) => {
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
-      execute(this.link, request).subscribe({
+      let newRequest = {
+        ...request,
+        query: cache.transformForLink
+          ? cache.transformForLink(request.query)
+          : request.query,
+      };
+      execute(this.link, newRequest).subscribe({
         next: (result: ExecutionResult) => {
           if (result.errors && errorPolicy === 'none') {
             error = new ApolloError({
@@ -281,8 +288,9 @@ export class QueryManager<TStore> {
       metadata = null,
       fetchPolicy = 'cache-first', // cache-first is the default fetch policy.
     } = options;
+    const cache = this.dataStore.getCache();
 
-    const query = this.dataStore.getCache().transformDocument(options.query);
+    const query = cache.transformDocument(options.query);
 
     let storeResult: any;
     let needToFetch: boolean = fetchPolicy === 'network-only';
@@ -355,7 +363,9 @@ export class QueryManager<TStore> {
       const networkResult = this.fetchRequest({
         requestId,
         queryId,
-        document: query,
+        document: cache.transformForLink
+          ? cache.transformForLink(query)
+          : query,
         options,
         fetchMoreForQueryId,
       }).catch(error => {
@@ -840,7 +850,8 @@ export class QueryManager<TStore> {
     options: SubscriptionOptions,
   ): Observable<any> {
     const { query } = options;
-    let transformedDoc = this.dataStore.getCache().transformDocument(query);
+    const cache = this.dataStore.getCache();
+    let transformedDoc = cache.transformDocument(query);
 
     const variables = assign(
       {},
@@ -890,7 +901,13 @@ export class QueryManager<TStore> {
           },
         };
 
-        sub = execute(this.link, request).subscribe(handler);
+        let newRequest = {
+          ...request,
+          query: cache.transformForLink
+            ? cache.transformForLink(request.query)
+            : request.query,
+        };
+        sub = execute(this.link, newRequest).subscribe(handler);
       }
 
       return () => {

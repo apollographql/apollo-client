@@ -87,7 +87,7 @@ describe('GraphQL Subscriptions', () => {
     const sub = client.subscribe(defaultOptions).subscribe({
       next(result) {
         count++;
-        expect(result).toEqual(results[0].result);
+        expect(result).toEqual(results[0].result.data);
 
         // Test unsubscribing
         if (count > 1) {
@@ -112,7 +112,7 @@ describe('GraphQL Subscriptions', () => {
     let count = 0;
     const sub = client.subscribe(options).subscribe({
       next(result) {
-        expect(result).toEqual(results[0].result);
+        expect(result).toEqual(results[0].result.data);
 
         // Test unsubscribing
         if (count > 1) {
@@ -141,7 +141,7 @@ describe('GraphQL Subscriptions', () => {
     // tslint:disable-next-line
     obs.subscribe({
       next(result) {
-        expect(result).toEqual(results[0].result);
+        expect(result).toEqual(results[0].result.data);
         counter++;
         if (counter === 2) {
           done();
@@ -153,7 +153,7 @@ describe('GraphQL Subscriptions', () => {
     // tslint:disable-next-line
     obs.subscribe({
       next(result) {
-        expect(result).toEqual(results[0].result);
+        expect(result).toEqual(results[0].result.data);
         counter++;
         if (counter === 2) {
           done();
@@ -175,7 +175,7 @@ describe('GraphQL Subscriptions', () => {
     // tslint:disable-next-line
     queryManager.startGraphQLSubscription(options).subscribe({
       next(result) {
-        expect(result).toEqual(results[numResults].result);
+        expect(result).toEqual(results[numResults].result.data);
         numResults++;
         if (numResults === 4) {
           done();

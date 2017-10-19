@@ -183,7 +183,14 @@ export class DataStore<TSerialized> {
     }
   }
 
-  public markMutationComplete(mutationId: string) {
+  public markMutationComplete({
+    mutationId,
+    optimisticResponse,
+  }: {
+    mutationId: string;
+    optimisticResponse?: any;
+  }) {
+    if (!optimisticResponse) return;
     this.cache.removeOptimistic(mutationId);
   }
 

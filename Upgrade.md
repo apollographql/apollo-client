@@ -42,7 +42,7 @@ If you are interested in contributing to the 2.0 release that is SO great!! Ther
 ## Installation instructions
 The 2.0 of apollo is split into a few packages. To try it out in your app you can install the following
 ```bash
-npm i --save apollo-client@beta apollo-cache-inmemory@beta apollo-link-http@beta
+npm i --save apollo-client@next apollo-cache-inmemory@next apollo-link-http
 ```
 
 This will give you the replacement for networkInterfaces (links), the current apollo-cache (cache-inmemory) and the new client.
@@ -83,16 +83,16 @@ import { onPageLoad } from 'meteor/server-render';
 
 // apollo imports
 import ApolloClient from 'apollo-client';
-import Link from 'apollo-link-http';
-import Cache from 'apollo-cache-inmemory'
+import { HttpLink } from 'apollo-link-http';
+import { InMemoryCache } from 'apollo-cache-inmemory'
 import { ApolloProvider } from 'react-apollo';
 
 import { App } from '/imports/app';
 
 export const start = () => {
   const client = new ApolloClient({
-    link: new Link({ uri: 'http://localhost:3000' }),
-    cache: new Cache().restore(window.__APOLLO_STATE__),
+    link: new HttpLink({ uri: 'http://localhost:3000' }),
+    cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
   });
 
   const WrappedApp = (
@@ -128,19 +128,21 @@ becomes
 
 ```js
 import ApolloClient from "apollo-client";
-import InMemoryCache from "apollo-cache-inmemory";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
 const cache = new InMemoryCache({
   fragmentMatcher: // matcher,
   dataIdFromObject: // custom function,
   addTypename: true,
-  customResolvers: // custom resolvers
+  cacheResolvers: // cache resolvers
 });
 
 const client = new ApolloClient({
   cache: cache.restore(window.__APOLLO_STATE__ || {})
 });
 ```
+
+*Note* If you were using `customResolvers`, the name of that has been changed to be `cacheResolvers` to be more descriptive of what it does. `customResolvers` will still be supported throughout the 2.0 though to be backwards compatible and ease the upgrade path
 
 
 If you have previously used `getInitialState` for SSR, that API has been moved to the cache itself instead of on the client. The before:
@@ -159,14 +161,13 @@ becomes
 
 ```js
 import ApolloClient from "apollo-client";
-import InMemoryCache from "apollo-cache-inmemory";
+import { InMemoryCache } from "apollo-cache-inmemory";
 
-const cache = new InMemoryCache();
-const client = new ApolloClient({ cache });
+const client = new ApolloClient({ cache: new InMemoryCache() });
 
 // do some data loading things using getDataFromTree
 
-const state = cache.extract();
+const state = client.cache.extract();
 ```
 
 

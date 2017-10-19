@@ -1,7 +1,7 @@
 import { execute, ApolloLink, GraphQLRequest, FetchResult } from 'apollo-link';
 import { ExecutionResult, DocumentNode } from 'graphql';
 import { print } from 'graphql/language/printer';
-import Deduplicator from 'apollo-link-dedup';
+import { DedupLink as Deduplicator } from 'apollo-link-dedup';
 import { Cache } from 'apollo-cache';
 import {
   assign,
@@ -13,6 +13,7 @@ import {
   isProduction,
   maybeDeepFreeze,
   hasDirectives,
+  removeConnectionDirectiveFromDocument,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -131,7 +132,9 @@ export class QueryManager<TStore> {
     }
 
     const mutationId = this.generateQueryId();
-    mutation = this.dataStore.getCache().transformDocument(mutation);
+    mutation = removeConnectionDirectiveFromDocument(
+      this.dataStore.getCache().transformDocument(mutation),
+    );
 
     variables = assign(
       {},
@@ -169,6 +172,7 @@ export class QueryManager<TStore> {
     };
 
     this.mutationStore.initMutation(mutationId, mutationString, variables);
+
     this.dataStore.markMutationInit({
       mutationId,
       document: mutation,
@@ -182,18 +186,13 @@ export class QueryManager<TStore> {
 
     return new Promise((resolve, reject) => {
       let storeResult: FetchResult<T> | null;
+      let error: ApolloError;
       execute(this.link, request).subscribe({
         next: (result: ExecutionResult) => {
           if (result.errors && errorPolicy === 'none') {
-            const error = new ApolloError({
+            error = new ApolloError({
               graphQLErrors: result.errors,
             });
-
-            this.mutationStore.markMutationError(mutationId, error);
-            this.dataStore.markMutationComplete(mutationId);
-            this.broadcastQueries();
-            this.setQuery(mutationId, () => ({ document: undefined }));
-            reject(error);
             return;
           }
 
@@ -207,8 +206,44 @@ export class QueryManager<TStore> {
             updateQueries: generateUpdateQueriesInfo(),
             update: updateWithProxyFn,
           });
-          this.dataStore.markMutationComplete(mutationId);
+          storeResult = result as FetchResult<T>;
+        },
+        error: (err: Error) => {
+          this.mutationStore.markMutationError(mutationId, err);
+          this.dataStore.markMutationComplete({
+            mutationId,
+            optimisticResponse,
+          });
           this.broadcastQueries();
+
+          this.setQuery(mutationId, () => ({ document: undefined }));
+          reject(
+            new ApolloError({
+              networkError: err,
+            }),
+          );
+        },
+        complete: () => {
+          if (error) {
+            this.mutationStore.markMutationError(mutationId, error);
+          }
+
+          this.dataStore.markMutationComplete({
+            mutationId,
+            optimisticResponse,
+          });
+
+          this.broadcastQueries();
+
+          if (error) {
+            reject(error);
+            return;
+          }
+
+          // allow for conditional refetches
+          // XXX do we want to make this the only API one day?
+          if (typeof refetchQueries === 'function')
+            refetchQueries = refetchQueries(storeResult as ExecutionResult);
 
           refetchQueries.forEach(refetchQuery => {
             if (typeof refetchQuery === 'string') {
@@ -222,22 +257,6 @@ export class QueryManager<TStore> {
               fetchPolicy: 'network-only',
             });
           });
-
-          storeResult = result as FetchResult<T>;
-        },
-        error: (err: Error) => {
-          this.mutationStore.markMutationError(mutationId, err);
-          this.dataStore.markMutationComplete(mutationId);
-          this.broadcastQueries();
-
-          this.setQuery(mutationId, () => ({ document: undefined }));
-          reject(
-            new ApolloError({
-              networkError: err,
-            }),
-          );
-        },
-        complete: () => {
           this.setQuery(mutationId, () => ({ document: undefined }));
           if (errorPolicy === 'ignore' && storeResult && storeResult.errors) {
             delete storeResult.errors;
@@ -360,7 +379,15 @@ export class QueryManager<TStore> {
         }
       });
 
-      if (fetchPolicy !== 'cache-and-network') return networkResult;
+      // we don't return the promise for cache-and-network since it is already
+      // returned below from the cache
+      if (fetchPolicy !== 'cache-and-network') {
+        return networkResult;
+      } else {
+        // however we need to catch the error so it isn't unhandled in case of
+        // network error
+        networkResult.catch(() => {});
+      }
     }
 
     // If we have no query to send to the server, we should return the result
@@ -881,10 +908,13 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
+  public getCurrentQueryResult<T>(
+    observableQuery: ObservableQuery<T>,
+    sameVariables: boolean = true,
+  ) {
     const { variables, query } = observableQuery.options;
     const lastResult = observableQuery.getLastResult();
-    if (lastResult && lastResult.data) {
+    if (lastResult && lastResult.data && sameVariables) {
       return maybeDeepFreeze({ data: lastResult.data, partial: false });
     } else {
       const { newData } = this.getQuery(observableQuery.queryId);
@@ -968,7 +998,7 @@ export class QueryManager<TStore> {
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none' } = options;
     const request = {
-      query: document,
+      query: removeConnectionDirectiveFromDocument(document),
       variables,
       operationName: getOperationName(document) || undefined,
       context: context || {},
@@ -1076,20 +1106,16 @@ export class QueryManager<TStore> {
   // all ObservableQuery instances associated with the query name.
   private refetchQueryByName(queryName: string) {
     const refetchedQueries = this.queryIdsByName[queryName];
-    // Warn if the query named does not exist (misnamed, or merely not yet fetched)
-    if (refetchedQueries === undefined) {
-      console.warn(
-        `Warning: unknown query with name ${queryName} asked to refetch`,
-      );
-      return;
-    } else {
-      return Promise.all(
-        refetchedQueries
-          .map(id => this.getQuery(id).observableQuery)
-          .filter(x => !!x)
-          .map((x: ObservableQuery<any>) => x.refetch()),
-      );
-    }
+    // early return if the query named does not exist (not yet fetched)
+    // this used to warn but it may be inteneded behavoir to try and refetch
+    // un called queries because they could be on different routes
+    if (refetchedQueries === undefined) return;
+    return Promise.all(
+      refetchedQueries
+        .map(id => this.getQuery(id).observableQuery)
+        .filter(x => !!x)
+        .map((x: ObservableQuery<any>) => x.refetch()),
+    );
   }
 
   private generateRequestId() {

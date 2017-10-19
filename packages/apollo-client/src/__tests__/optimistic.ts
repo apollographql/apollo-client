@@ -1,6 +1,6 @@
 import { assign, cloneDeep } from 'lodash';
 import { addTypenameToDocument } from 'apollo-utilities';
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
 
@@ -199,9 +199,7 @@ describe('optimistic mutation results', () => {
               updateQueries,
             });
 
-            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-              true,
-            );
+            const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
             expect((dataInStore['Todo99'] as any).text).toBe(
               'Optimistically generated',
@@ -213,9 +211,7 @@ describe('optimistic mutation results', () => {
             expect(err).toBeInstanceOf(Error);
             expect(err.message).toBe('Network error: forbidden (test error)');
 
-            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-              true,
-            );
+            const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
             expect(dataInStore).not.toHaveProperty('Todo99');
           });
@@ -266,9 +262,7 @@ describe('optimistic mutation results', () => {
               updateQueries,
             });
 
-            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-              true,
-            );
+            const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
             expect((dataInStore['Todo99'] as any).text).toBe(
               'Optimistically generated',
@@ -281,9 +275,7 @@ describe('optimistic mutation results', () => {
           })
           .then(() => {
             subscriptionHandle.unsubscribe();
-            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-              true,
-            );
+            const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
             expect(dataInStore).not.toHaveProperty('Todo99');
             expect(dataInStore).toHaveProperty('Todo66');
@@ -301,9 +293,7 @@ describe('optimistic mutation results', () => {
           expectedText1: any,
           expectedText2: any,
         ) {
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
           expect(dataInStore).toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
@@ -443,9 +433,7 @@ describe('optimistic mutation results', () => {
               update,
             });
 
-            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-              true,
-            );
+            const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
             expect((dataInStore['Todo99'] as any).text).toBe(
               'Optimistically generated',
@@ -457,9 +445,7 @@ describe('optimistic mutation results', () => {
             expect(err).toBeInstanceOf(Error);
             expect(err.message).toBe('Network error: forbidden (test error)');
 
-            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-              true,
-            );
+            const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(3);
             expect(dataInStore).not.toHaveProperty('Todo99');
           });
@@ -510,9 +496,7 @@ describe('optimistic mutation results', () => {
               update,
             });
 
-            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-              true,
-            );
+            const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
             expect((dataInStore['Todo99'] as any).text).toBe(
               'Optimistically generated',
@@ -525,9 +509,7 @@ describe('optimistic mutation results', () => {
           })
           .then(() => {
             subscriptionHandle.unsubscribe();
-            const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-              true,
-            );
+            const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
             expect(dataInStore).not.toHaveProperty('Todo99');
             expect(dataInStore).toHaveProperty('Todo66');
@@ -545,9 +527,7 @@ describe('optimistic mutation results', () => {
           expectedText1: any,
           expectedText2: any,
         ) {
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
           expect(dataInStore).toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
@@ -730,9 +710,7 @@ describe('optimistic mutation results', () => {
             },
           });
 
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
           expect((dataInStore['Todo99'] as any).text).toEqual(
             'Optimistically generated from variables',
@@ -854,9 +832,7 @@ describe('optimistic mutation results', () => {
             },
           });
 
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
           expect((dataInStore['Todo99'] as any).text).toEqual(
             'Optimistically generated',
@@ -924,7 +900,7 @@ describe('optimistic mutation results', () => {
               updateQueries,
             })
             .then(res => {
-              const currentDataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
+              const currentDataInStore = (client.cache as InMemoryCache).extract(
                 true,
               );
               expect(
@@ -945,9 +921,7 @@ describe('optimistic mutation results', () => {
             updateQueries,
           });
 
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toEqual(5);
           expect((dataInStore['Todo99'] as any).text).toEqual(
             'Optimistically generated',
@@ -1041,9 +1015,7 @@ describe('optimistic mutation results', () => {
             updateQueries,
           });
 
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toEqual(5);
           expect((dataInStore['Todo99'] as any).text).toEqual(
             'Optimistically generated',
@@ -1056,9 +1028,7 @@ describe('optimistic mutation results', () => {
         })
         .then(() => {
           subscriptionHandle.unsubscribe();
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toEqual(4);
           expect(dataInStore).not.toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');
@@ -1305,9 +1275,7 @@ describe('optimistic mutation results', () => {
             },
           });
 
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
           expect((dataInStore['Todo99'] as any).text).toBe(
             'Optimistically generated',
@@ -1395,7 +1363,7 @@ describe('optimistic mutation results', () => {
               update,
             })
             .then(res => {
-              const currentDataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
+              const currentDataInStore = (client.cache as InMemoryCache).extract(
                 true,
               );
               expect(
@@ -1416,9 +1384,7 @@ describe('optimistic mutation results', () => {
             update,
           });
 
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
           expect((dataInStore['Todo99'] as any).text).toBe(
             'Optimistically generated',
@@ -1530,9 +1496,7 @@ describe('optimistic mutation results', () => {
             update,
           });
 
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(5);
           expect((dataInStore['Todo99'] as any).text).toBe(
             'Optimistically generated',
@@ -1545,9 +1509,7 @@ describe('optimistic mutation results', () => {
         })
         .then(() => {
           subscriptionHandle.unsubscribe();
-          const dataInStore = (client.queryManager.dataStore.getCache() as InMemoryCache).extract(
-            true,
-          );
+          const dataInStore = (client.cache as InMemoryCache).extract(true);
           expect((dataInStore['TodoList5'] as any).todos.length).toBe(4);
           expect(dataInStore).not.toHaveProperty('Todo99');
           expect(dataInStore).toHaveProperty('Todo66');

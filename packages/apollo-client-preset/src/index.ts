@@ -2,7 +2,7 @@ export * from 'apollo-client';
 export * from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
 export * from 'apollo-cache-inmemory';
-import InMemoryCache, { NormalizedCache } from 'apollo-cache-inmemory';
+import { InMemoryCache, NormalizedCache } from 'apollo-cache-inmemory';
 
 import gql from 'graphql-tag';
 import ApolloClient from 'apollo-client';

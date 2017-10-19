@@ -1,4 +1,4 @@
-import { DocumentNode } from 'graphql';
+import { DocumentNode, ExecutionResult } from 'graphql';
 import { FetchResult } from 'apollo-link';
 import { DataProxy } from 'apollo-cache';
 
@@ -125,6 +125,8 @@ export interface SubscriptionOptions {
   variables?: { [key: string]: any };
 }
 
+export type RefetchQueryDescription = Array<string | PureQueryOptions>;
+
 export interface MutationBaseOptions<T = { [key: string]: any }> {
   /**
    * An object that represents the result of this mutation that will be
@@ -151,7 +153,9 @@ export interface MutationBaseOptions<T = { [key: string]: any }> {
    * refetch the queries that will be affected and achieve a consistent store
    * once these queries return.
    */
-  refetchQueries?: Array<string | PureQueryOptions>;
+  refetchQueries?:
+    | ((result: ExecutionResult) => RefetchQueryDescription)
+    | RefetchQueryDescription;
 
   /**
    * A function which provides a {@link DataProxy} and the result of the

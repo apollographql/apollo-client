@@ -73,6 +73,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
   private lastResult: ApolloQueryResult<T>;
   private lastError: ApolloError;
+  private lastVariables: { [key: string]: any };
 
   constructor({
     scheduler,
@@ -170,7 +171,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       };
     }
 
-    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
+    const { data, partial } = this.queryManager.getCurrentQueryResult(
+      this,
+      isEqual(this.variables, this.lastVariables),
+    );
 
     const queryLoading =
       !queryStoreValue ||
@@ -336,7 +340,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           if (options.updateQuery) {
             this.updateQuery((previous: Object, { variables }) =>
               (options.updateQuery as UpdateQueryFn)(previous, {
-                subscriptionData: data,
+                subscriptionData: data.data,
                 variables,
               }),
             );
@@ -438,6 +442,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       }
       return this.result();
     } else {
+      this.lastVariables = this.variables;
       this.variables = newVariables;
       this.options.variables = newVariables;
 

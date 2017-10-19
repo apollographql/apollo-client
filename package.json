@@ -3,6 +3,7 @@
   "license": "MIT",
   "scripts": {
     "bootstrap": "npm i && lerna bootstrap",
+    "postinstall": "lerna bootstrap",
     "postbootstrap": "npm run build",
     "build": "lerna run -- build",
     "test": "lerna run -- test",
@@ -18,7 +19,7 @@
     "danger": "danger run --verbose",
     "predeploy": "npm run build && npm test",
     "deploy":
-      "lerna publish -m \"chore: Publish\" --independent --cd-version=prerelease --preid=beta --npm-tag=beta && cd packages/apollo-client && npm run deploy"
+      "lerna publish -m \"chore: Publish\" --independent --cd-version=prerelease --preid=rc --npm-tag=next && cd packages/apollo-client && npm run deploy"
   },
   "bundlesize": [
     {

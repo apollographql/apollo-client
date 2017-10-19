@@ -1,4 +1,5 @@
-import { ApolloLink, FetchResult } from 'apollo-link';
+import { ApolloLink, FetchResult, GraphQLRequest, execute } from 'apollo-link';
+import { ExecutionResult } from 'graphql';
 import { Cache, ApolloCache, DataProxy } from 'apollo-cache';
 import { isProduction } from 'apollo-utilities';
 
@@ -28,6 +29,16 @@ export interface DefaultOptions {
 
 let hasSuggestedDevtools = false;
 
+export type ApolloClientOptions<TCacheShape> = {
+  link: ApolloLink;
+  cache: ApolloCache<TCacheShape>;
+  ssrMode?: boolean;
+  ssrForceFetchDelay?: number;
+  connectToDevTools?: boolean;
+  queryDeduplication?: boolean;
+  defaultOptions?: DefaultOptions;
+};
+
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -37,6 +48,7 @@ let hasSuggestedDevtools = false;
 export default class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
   public store: DataStore<TCacheShape>;
+  public cache: ApolloCache<TCacheShape>;
   public queryManager: QueryManager<TCacheShape>;
   public disableNetworkFetches: boolean;
   public version: string;
@@ -68,15 +80,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
    */
 
-  constructor(options: {
-    link: ApolloLink;
-    cache: ApolloCache<TCacheShape>;
-    ssrMode?: boolean;
-    ssrForceFetchDelay?: number;
-    connectToDevTools?: boolean;
-    queryDeduplication?: boolean;
-    defaultOptions?: DefaultOptions;
-  }) {
+  constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
       link,
       cache,
@@ -87,7 +91,17 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       defaultOptions,
     } = options;
 
+    if (!link || !cache) {
+      throw new Error(`
+        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
+        For more information, please visit:
+          https://apollographql.com/docs/react/setup
+        to help you get started.
+      `);
+    }
+
     this.link = link;
+    this.cache = cache;
     this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
@@ -300,13 +314,15 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.devToolsHookCb = cb;
   }
 
+  public __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult> {
+    return execute(this.link, payload);
+  }
+
   /**
    * This initializes the query manager that tracks queries and the cache
    */
   public initQueryManager() {
-    if (this.queryManager) {
-      return;
-    }
+    if (this.queryManager) return;
 
     this.queryManager = new QueryManager({
       link: this.link,
@@ -321,9 +337,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
               queries: this.queryManager.queryStore.getStore(),
               mutations: this.queryManager.mutationStore.getStore(),
             },
-            dataWithOptimisticResults: this.queryManager.dataStore
-              .getCache()
-              .extract(true),
+            dataWithOptimisticResults: this.cache.extract(true),
           });
         }
       },
@@ -360,7 +374,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private initProxy(): DataProxy {
     if (!this.proxy) {
       this.initQueryManager();
-      this.proxy = this.queryManager.dataStore.getCache() as DataProxy;
+      this.proxy = this.cache as DataProxy;
     }
     return this.proxy;
   }

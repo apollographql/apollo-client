@@ -1,4 +1,4 @@
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 import gql from 'graphql-tag';
 
 import { QueryScheduler } from '../scheduler';
@@ -215,41 +215,6 @@ describe('QueryScheduler', () => {
         const queryId = scheduler.intervalQueries[queryOptions.pollInterval][0];
         expect(scheduler.checkInFlight(queryId)).toBe(false);
         subscription.unsubscribe();
-        done();
-      },
-    });
-  });
-
-  it('should handle graphql errors on polling queries correctly', done => {
-    const query = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }
-    `;
-    const errors = [new Error('oh no something went wrong')];
-    const queryOptions = {
-      query,
-      pollInterval: 80,
-    };
-    const link = mockSingleLink({
-      request: queryOptions,
-      result: { errors },
-    });
-    const queryManager = new QueryManager({
-      link,
-      store: new DataStore(new InMemoryCache()),
-    });
-    const scheduler = new QueryScheduler({
-      queryManager,
-    });
-    let observableQuery = scheduler.registerPollingQuery(queryOptions);
-    const subscription = observableQuery.subscribe({
-      error(errorVal) {
-        subscription.unsubscribe();
-        expect(errorVal).toBeDefined();
         done();
       },
     });

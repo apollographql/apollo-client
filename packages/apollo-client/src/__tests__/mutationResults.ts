@@ -1,7 +1,7 @@
 import { ApolloLink, Observable } from 'apollo-link';
 import { cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { mockSingleLink } from '../__mocks__/mockLinks';
 import ApolloClient from '..';
@@ -788,9 +788,7 @@ describe('mutation results', () => {
       }),
     ])
       .then(() => {
-        expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-        ).toEqual({
+        expect((client.cache as InMemoryCache).extract()).toEqual({
           ROOT_MUTATION: {
             'result({"a":1,"b":2})': 'hello',
             'result({"a":1,"c":3})': 'world',
@@ -867,9 +865,7 @@ describe('mutation results', () => {
       }),
     ])
       .then(() => {
-        expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-        ).toEqual({
+        expect((client.cache as InMemoryCache).extract()).toEqual({
           ROOT_MUTATION: {
             'result({"a":1,"b":"water"})': 'hello',
             'result({"a":2,"b":"cheese","c":3})': 'world',
@@ -946,9 +942,7 @@ describe('mutation results', () => {
       }),
     ])
       .then(() => {
-        expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-        ).toEqual({
+        expect((client.cache as InMemoryCache).extract()).toEqual({
           ROOT_MUTATION: {
             'result({"a":1,"b":2,"c":null})': 'hello',
             'result({"a":1,"b":null,"c":3})': 'world',

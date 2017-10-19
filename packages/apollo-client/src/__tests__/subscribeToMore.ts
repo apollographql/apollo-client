@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { ApolloLink, Operation } from 'apollo-link';
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { DocumentNode, OperationDefinitionNode } from 'graphql';
 
@@ -105,7 +105,7 @@ describe('subscribeToMore', () => {
         }
       `,
       updateQuery: (_, { subscriptionData }) => {
-        return { entry: { value: subscriptionData.data.name } };
+        return { entry: { value: subscriptionData.name } };
       },
     });
 
@@ -159,7 +159,7 @@ describe('subscribeToMore', () => {
         }
       `,
       updateQuery: (_, { subscriptionData }) => {
-        return { entry: { value: subscriptionData.data.name } };
+        return { entry: { value: subscriptionData.name } };
       },
       onError: () => {
         errorCount += 1;

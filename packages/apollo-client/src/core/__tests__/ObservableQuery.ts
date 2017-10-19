@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import { ApolloLink, Observable } from 'apollo-link';
-import InMemoryCache, {
+import {
+  InMemoryCache,
   IntrospectionFragmentMatcher,
 } from 'apollo-cache-inmemory';
 
@@ -268,6 +269,59 @@ describe('ObservableQuery', () => {
           observable.refetch();
         } else if (handleCount === 2) {
           expect(result.data).toEqual(data2);
+          done();
+        }
+      });
+    });
+
+    it('rerenders with new variables then shows correct data for previous variables', done => {
+      // This query and variables are copied from react-apollo
+      const query = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
+            }
+          }
+        }
+      `;
+
+      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const variables = { first: 0 };
+
+      const data2 = { allPeople: { people: [{ name: 'Leia Skywalker' }] } };
+      const variables2 = { first: 1 };
+
+      const observable: ObservableQuery<any> = mockWatchQuery(
+        {
+          request: {
+            query,
+            variables,
+          },
+          result: { data },
+        },
+        {
+          request: {
+            query,
+            variables: variables2,
+          },
+          result: { data: data2 },
+        },
+      );
+
+      subscribeAndCount(done, observable, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(result.data).toEqual(data);
+          observable.setOptions({ variables: variables2 });
+        } else if (handleCount === 2) {
+          expect(result.data).toEqual(data);
+          expect(result.loading).toBe(true);
+        } else if (handleCount === 3) {
+          expect(result.data).toEqual(data2);
+          // go back to first set of variables
+          observable.setOptions({ variables });
+          const current = observable.currentResult();
+          expect(current.data).toEqual(data);
           done();
         }
       });
@@ -636,7 +690,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('does not invalidate the currentResult data if the variables change', done => {
+    it('does invalidate the currentResult data if the variables change', done => {
       const observable: ObservableQuery<any> = mockWatchQuery(
         {
           request: { query, variables },
@@ -654,7 +708,7 @@ describe('ObservableQuery', () => {
           expect(result.data).toEqual(dataOne);
           expect(observable.currentResult().data).toEqual(dataOne);
           observable.setVariables(differentVariables);
-          expect(observable.currentResult().data).toEqual(dataOne);
+          expect(observable.currentResult().data).toEqual({});
           expect(observable.currentResult().loading).toBe(true);
         }
         // after loading is false and data has returned
@@ -1057,7 +1111,7 @@ describe('ObservableQuery', () => {
                 ],
               },
             },
-          }).match,
+          }),
         }),
       });
 
@@ -1171,6 +1225,27 @@ describe('ObservableQuery', () => {
         const currentResult = observable.currentResult();
         expect(currentResult.loading).toBe(false);
         expect(currentResult.error!.graphQLErrors).toEqual([error]);
+      });
+    });
+    it('returns referentially equal errors', () => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { errors: [error] },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+      });
+
+      return observable.result().catch((theError: any) => {
+        expect(theError.graphQLErrors).toEqual([error]);
+
+        const currentResult = observable.currentResult();
+        expect(currentResult.loading).toBe(false);
+        expect(currentResult.error!.graphQLErrors).toEqual([error]);
+        const currentResult2 = observable.currentResult();
+        expect(currentResult.error === currentResult2.error).toBe(true);
       });
     });
 

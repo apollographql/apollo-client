@@ -1,7 +1,7 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.0.0-beta.4",
+  "version": "2.0.0-rc.3",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/index.js",
@@ -49,12 +49,14 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "apollo-cache": "^0.2.0-beta.2",
-    "apollo-link": "0.7.0",
-    "apollo-link-dedup": "0.5.0",
-    "apollo-utilities": "^0.2.0-beta.2",
-    "graphql": "^0.11.0",
+    "apollo-cache": "^0.2.0-rc.0",
+    "apollo-link": "0.8.0",
+    "apollo-link-dedup": "0.6.0",
+    "apollo-utilities": "^0.2.0-rc.0",
     "symbol-observable": "^1.0.2"
+  },
+  "peerDependencies": {
+    "graphql": "^0.11.0"
   },
   "devDependencies": {
     "@types/benchmark": "1.0.30",
@@ -63,12 +65,14 @@
     "@types/jest": "21.1.2",
     "@types/lodash": "4.14.77",
     "@types/node": "8.0.41",
-    "apollo-cache-inmemory": "^0.2.0-beta.4",
+    "@types/zen-observable": "^0.5.3",
+    "apollo-cache-inmemory": "^0.2.0-rc.1",
     "benchmark": "2.1.4",
     "browserify": "14.4.0",
     "bundlesize": "0.15.3",
     "danger": "1.1.0",
     "flow-bin": "0.57.2",
+    "graphql": "^0.11.0",
     "graphql-tag": "2.4.2",
     "isomorphic-fetch": "2.2.1",
     "jest": "20.0.4",

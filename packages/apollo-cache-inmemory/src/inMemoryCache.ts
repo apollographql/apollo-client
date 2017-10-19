@@ -17,7 +17,7 @@ import { writeResultToStore } from './writeToStore';
 import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
 
 const defaultConfig: ApolloReducerConfig = {
-  fragmentMatcher: new HeuristicFragmentMatcher().match,
+  fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
 };
@@ -44,6 +44,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   constructor(config: ApolloReducerConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
+    // backwards compat
+    if ((this.config as any).customResolvers)
+      this.config.cacheResolvers = (this.config as any).customResolvers;
     this.addTypename = this.config.addTypename ? true : false;
   }
 
@@ -71,7 +74,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
       query: this.transformDocument(query.query),
       variables: query.variables,
       rootId: query.rootId,
-      fragmentMatcherFunction: this.config.fragmentMatcher,
+      fragmentMatcherFunction: this.config.fragmentMatcher.match,
       previousResult: query.previousResult,
       config: this.config,
     });
@@ -85,7 +88,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
       document: this.transformDocument(write.query),
       store: this.data,
       dataIdFromObject: this.config.dataIdFromObject,
-      fragmentMatcherFunction: this.config.fragmentMatcher,
+      fragmentMatcherFunction: this.config.fragmentMatcher.match,
     });
 
     this.broadcastWatches();
@@ -98,7 +101,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
       variables: query.variables,
       returnPartialData: query.returnPartialData,
       previousResult: query.previousResult,
-      fragmentMatcherFunction: this.config.fragmentMatcher,
+      fragmentMatcherFunction: this.config.fragmentMatcher.match,
       config: this.config,
     });
   }

@@ -1,4 +1,4 @@
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 import { assign, cloneDeep } from 'lodash';
 import gql from 'graphql-tag';
 
@@ -450,6 +450,15 @@ describe('fetchMore on an observable query with connection', () => {
         @connection(key: "repoName") {
         comments {
           text
+        }
+      }
+    }
+  `;
+  const transformedQuery = gql`
+    query Comment($repoName: String!, $start: Int!, $limit: Int!) {
+      entry(repoFullName: $repoName, start: $start, limit: $limit) {
+        comments {
+          text
           __typename
         }
         __typename
@@ -498,7 +507,7 @@ describe('fetchMore on an observable query with connection', () => {
     link = mockSingleLink(
       {
         request: {
-          query,
+          query: transformedQuery,
           variables,
         },
         result,
@@ -534,7 +543,7 @@ describe('fetchMore on an observable query with connection', () => {
     latestResult = null;
     return setup({
       request: {
-        query,
+        query: transformedQuery,
         variables: variablesMore,
       },
       result: resultMore,
@@ -566,9 +575,9 @@ describe('fetchMore on an observable query with connection', () => {
 
   it('will set the network status to `fetchMore`', done => {
     link = mockSingleLink(
-      { request: { query, variables }, result, delay: 5 },
+      { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
-        request: { query, variables: variablesMore },
+        request: { query: transformedQuery, variables: variablesMore },
         result: resultMore,
         delay: 5,
       },
@@ -628,9 +637,9 @@ describe('fetchMore on an observable query with connection', () => {
 
   it('will get an error from `fetchMore` if thrown', done => {
     link = mockSingleLink(
-      { request: { query, variables }, result, delay: 5 },
+      { request: { query: transformedQuery, variables }, result, delay: 5 },
       {
-        request: { query, variables: variablesMore },
+        request: { query: transformedQuery, variables: variablesMore },
         error: new Error('Uh, oh!'),
         delay: 5,
       },

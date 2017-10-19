@@ -235,11 +235,7 @@ export function isInlineFragment(
 }
 
 export function isIdValue(idObject: StoreValue): idObject is IdValue {
-  return (
-    idObject != null &&
-    typeof idObject === 'object' &&
-    (idObject as IdValue | JsonValue).type === 'id'
-  );
+  return idObject && (idObject as IdValue | JsonValue).type === 'id';
 }
 
 export function toIdValue(id: string, generated = false): IdValue {

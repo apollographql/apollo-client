@@ -3,7 +3,8 @@ import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql/language/printer';
 import { ApolloLink, Observable } from 'apollo-link';
-import InMemoryCache, {
+import {
+  InMemoryCache,
   IntrospectionFragmentMatcher,
   FragmentMatcherInterface,
 } from 'apollo-cache-inmemory';
@@ -32,7 +33,7 @@ describe('client', () => {
     // We only create the query manager on the first query
     client.initQueryManager();
     expect(client.queryManager).toBeDefined();
-    expect(client.queryManager.dataStore.getCache()).toBeDefined();
+    expect(client.cache).toBeDefined();
   });
 
   it('can be loaded via require', () => {
@@ -50,7 +51,7 @@ describe('client', () => {
     // We only create the query manager on the first query
     client.initQueryManager();
     expect(client.queryManager).toBeDefined();
-    expect(client.queryManager.dataStore.getCache()).toBeDefined();
+    expect(client.cache).toBeDefined();
   });
 
   it('can allow passing in a link', () => {
@@ -403,7 +404,7 @@ describe('client', () => {
     return client.query({ query }).then(result => {
       expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
+        (client.cache as InMemoryCache).extract(),
       );
     });
   });
@@ -1064,7 +1065,7 @@ describe('client', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({
-        fragmentMatcher: fancyFragmentMatcher,
+        fragmentMatcher: { match: fancyFragmentMatcher },
       }),
     });
     return client.query({ query }).then((actualResult: any) => {
@@ -1132,7 +1133,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ fragmentMatcher: ifm.match }),
+      cache: new InMemoryCache({ fragmentMatcher: ifm }),
     });
 
     return client.query({ query }).then(actualResult => {
@@ -1215,7 +1216,7 @@ describe('client', () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ fragmentMatcher: ifm.match }),
+      cache: new InMemoryCache({ fragmentMatcher: ifm }),
     });
 
     const queryUpdaterSpy = jest.fn();
@@ -1464,11 +1465,7 @@ describe('client', () => {
 
       return client.query({ query }).then(result => {
         expect(result.data).toEqual(data);
-        expect(
-          (client.queryManager.dataStore.getCache() as InMemoryCache).extract()[
-            '1'
-          ],
-        ).toEqual({
+        expect((client.cache as InMemoryCache).extract()['1']).toEqual({
           id: '1',
           name: 'Luke Skywalker',
         });
@@ -1584,7 +1581,46 @@ describe('client', () => {
         error: e => {
           expect(e.message).toMatch(/No more mocked responses/);
           expect(count).toBe(1); // make sure next was called.
-          done();
+          setTimeout(done, 100);
+        },
+      });
+    });
+
+    it('fetches from cache first, then network and does not have an unhandled error', done => {
+      const link = mockSingleLink({
+        request: { query },
+        result: { errors: [{ message: 'network failure' }] },
+      });
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+      });
+
+      client.writeQuery({ query, data: initialData });
+
+      const obs = client.watchQuery({
+        query,
+        fetchPolicy: 'cache-and-network',
+      });
+      let shouldFail = true;
+      process.once('unhandledRejection', rejection => {
+        if (shouldFail) done.fail('promise had an unhandledRejection');
+      });
+      let count = 0;
+      obs.subscribe({
+        next: result => {
+          expect(result.data).toEqual(initialData);
+          expect(result.loading).toBe(true);
+          count++;
+        },
+        error: e => {
+          expect(e.message).toMatch(/network failure/);
+          expect(count).toBe(1); // make sure next was called.
+          setTimeout(() => {
+            shouldFail = false;
+            done();
+          }, 0);
         },
       });
     });
@@ -2004,17 +2040,13 @@ describe('client', () => {
         },
       },
     });
-    expect(
-      (client.queryManager.dataStore.getCache() as any).optimistic.length,
-    ).toBe(1);
+    expect((client.cache as any).optimistic.length).toBe(1);
     mutatePromise
       .then(_ => {
         done.fail(new Error('Returned a result when it should not have.'));
       })
       .catch((_: ApolloError) => {
-        expect(
-          (client.queryManager.dataStore.getCache() as any).optimistic.length,
-        ).toBe(0);
+        expect((client.cache as any).optimistic.length).toBe(0);
         done();
       });
   });
@@ -2188,7 +2220,7 @@ describe('client', () => {
 
     const transformedQuery = gql`
       {
-        books(skip: 0, limit: 2) @connection(key: "abc") {
+        books(skip: 0, limit: 2) {
           name
           __typename
         }
@@ -2219,7 +2251,7 @@ describe('client', () => {
     });
   });
 
-  it('should not remove the connection directive at the store level', () => {
+  it('should remove the connection directive before the link is sent', () => {
     const query = gql`
       {
         books(skip: 0, limit: 2) @connection {
@@ -2230,7 +2262,7 @@ describe('client', () => {
 
     const transformedQuery = gql`
       {
-        books(skip: 0, limit: 2) @connection {
+        books(skip: 0, limit: 2) {
           name
           __typename
         }
@@ -2274,7 +2306,7 @@ describe('@connect', () => {
 
     const transformedQuery = gql`
       {
-        books(skip: 0, limit: 2) @connection(key: "abc") {
+        books(skip: 0, limit: 2) {
           name
           __typename
         }
@@ -2302,9 +2334,7 @@ describe('@connect', () => {
 
     return client.query({ query }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         'ROOT_QUERY.abc.0': { name: 'abcd', __typename: 'Book' },
         ROOT_QUERY: {
           abc: [
@@ -2325,6 +2355,13 @@ describe('@connect', () => {
         books(skip: 0, limit: 2, order: $order)
           @connection(key: "abc", filter: ["order"]) {
           name
+        }
+      }
+    `;
+    const transformedQuery = gql`
+      query books($order: string) {
+        books(skip: 0, limit: 2, order: $order) {
+          name
           __typename
         }
       }
@@ -2342,7 +2379,7 @@ describe('@connect', () => {
     const variables = { order: 'popularity' };
 
     const link = mockSingleLink({
-      request: { query: query, variables },
+      request: { query: transformedQuery, variables },
       result: { data: result },
     });
 
@@ -2353,9 +2390,7 @@ describe('@connect', () => {
 
     return client.query({ query, variables }).then(actualResult => {
       expect(actualResult.data).toEqual(result);
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         'ROOT_QUERY.abc({"order":"popularity"}).0': {
           name: 'abcd',
           __typename: 'Book',
@@ -2485,11 +2520,12 @@ function clientRoundtrip(
     result: data,
   });
 
+  const config = {};
+  if (fragmentMatcher) config.fragmentMatcher = fragmentMatcher;
+
   const client = new ApolloClient({
     link,
-    cache: new InMemoryCache({
-      fragmentMatcher: fragmentMatcher && fragmentMatcher.match,
-    }),
+    cache: new InMemoryCache(config),
   });
 
   return client.query({ query, variables }).then(result => {

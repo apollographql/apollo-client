@@ -1,7 +1,7 @@
 import { DataProxy } from 'apollo-cache';
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import InMemoryCache, { ApolloReducerConfig } from '..';
+import { InMemoryCache, ApolloReducerConfig } from '..';
 
 disableFragmentWarnings();
 
@@ -187,6 +187,33 @@ describe('Cache', () => {
           },
         }),
       ).toEqual({ a: 1, b: 2 });
+    });
+    it('will read some data from the store with null variables', () => {
+      const proxy = createCache({
+        initialState: {
+          apollo: {
+            data: {
+              ROOT_QUERY: {
+                'field({"literal":false,"value":null})': 1,
+              },
+            },
+          },
+        },
+      });
+
+      expect(
+        proxy.readQuery({
+          query: gql`
+            query($literal: Boolean, $value: Int) {
+              a: field(literal: $literal, value: $value)
+            }
+          `,
+          variables: {
+            literal: false,
+            value: null,
+          },
+        }),
+      ).toEqual({ a: 1 });
     });
   });
 
@@ -699,6 +726,33 @@ describe('Cache', () => {
         },
       });
     });
+    it('will write some data to the store with variables where some are null', () => {
+      const proxy = createCache();
+
+      proxy.writeQuery({
+        data: {
+          a: 1,
+          b: 2,
+        },
+        query: gql`
+          query($literal: Boolean, $value: Int) {
+            a: field(literal: true, value: 42)
+            b: field(literal: $literal, value: $value)
+          }
+        `,
+        variables: {
+          literal: false,
+          value: null,
+        },
+      });
+
+      expect((proxy as InMemoryCache).extract()).toEqual({
+        ROOT_QUERY: {
+          'field({"literal":true,"value":42})': 1,
+          'field({"literal":false,"value":null})': 2,
+        },
+      });
+    });
   });
 
   describe('writeFragment', () => {
@@ -988,6 +1042,33 @@ describe('Cache', () => {
           k: 12,
         },
       });
+    });
+    it('writes data that can be read back', () => {
+      const proxy = createCache({
+        config: { addTypename: true },
+      });
+      const readWriteFragment = gql`
+        fragment aFragment on query {
+          getSomething {
+            id
+          }
+        }
+      `;
+      const data = {
+        __typename: 'query',
+        getSomething: { id: '123', __typename: 'Something' },
+      };
+      proxy.writeFragment({
+        data,
+        id: 'query',
+        fragment: readWriteFragment,
+      });
+
+      const result = proxy.readFragment({
+        fragment: readWriteFragment,
+        id: 'query',
+      });
+      expect(result).toEqual(data);
     });
 
     it('will write some data to the store with variables', () => {

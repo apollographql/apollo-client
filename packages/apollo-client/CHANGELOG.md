@@ -1,6 +1,36 @@
 # Change log
 
-### vNEXT
+### vNext
+- Define and expose `ApolloClientOptions`, Type of an object that represents ApolloClient's constructor argument.
+- Expose `ApolloCurrentResult`
+- Throw an error if cache or data are not supplied to the `ApolloClient` constructor
+- Add `graphql` as a dev dependency
+
+### 2.0.0-rc.3
+- Only include `data` on subscriptionData when using `subscribeToMore`
+
+### 2.0.0-rc.2
+- Support devTools with `_renderRaw` to execute link directly (bypass store)
+
+### 2.0.0-rc.1
+- Fix bug where changed variables with different cache data didn't rerender properly
+
+### 2.0.0-beta.8
+- Move graphql to peerDependency
+- Ensure network errors don't cause unhandled rejections on polled queries
+- Improve performance of mutation broadcasts
+- Remove warning on refetching unfetched queries after a mutation
+
+### 2.0.0-beta.6
+- Support conditional refetches for mutations
+- Ensure network errors don't cause unhandled rejections on cache-and-network policies
+- Added the cache to the client for easier SSR
+- Strip connection directive out before reqest sent to link
+
+### 2.0.0-beta.5
+- Fix argument for FragmentMatcher
+
+### 2.0.0-beta.4 (alpha.2 -> beta.4)
 - Update to latest stable link package
 - Fix error handling when recycling observables
 - Fix currentResult when errorPolicy is set to 'all'

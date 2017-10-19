@@ -1,12 +1,36 @@
 import gql from 'graphql-tag';
 import { ApolloLink } from 'apollo-link';
-import InMemoryCache from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { withWarning } from '../util/wrap';
 
 import ApolloClient from '../';
 
 describe('ApolloClient', () => {
+  describe('constructor', () => {
+    it('will throw an error if link is not passed in', () => {
+      expect(() => {
+        const client = new ApolloClient({ cache: new InMemoryCache() });
+      }).toThrowError(`
+        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
+        For more information, please visit:
+          https://apollographql.com/docs/react/setup
+        to help you get started.
+      `);
+    });
+
+    it('will throw an error if cache is not passed in', () => {
+      expect(() => {
+        const client = new ApolloClient({ link: new ApolloLink.empty() });
+      }).toThrowError(`
+        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
+        For more information, please visit:
+          https://apollographql.com/docs/react/setup
+        to help you get started.
+      `);
+    });
+  });
+
   describe('readQuery', () => {
     it('will read some data from the store', () => {
       const client = new ApolloClient({
@@ -547,9 +571,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
         },
@@ -565,9 +587,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -586,9 +606,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 4,
           b: 5,
@@ -615,9 +633,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           d: {
@@ -646,9 +662,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           d: {
@@ -709,9 +723,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -765,9 +777,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 1,
           'field({"literal":false,"value":42})': 2,
@@ -810,9 +820,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           'field({"literal":true,"value":42})': 2,
           'field({"literal":false,"value":-1})': 1,
@@ -957,9 +965,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -995,9 +1001,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1027,9 +1031,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1060,9 +1062,7 @@ describe('ApolloClient', () => {
         `,
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1112,9 +1112,7 @@ describe('ApolloClient', () => {
         fragmentName: 'fooFragment',
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1158,9 +1156,7 @@ describe('ApolloClient', () => {
         fragmentName: 'barFragment',
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           e: 4,
@@ -1206,9 +1202,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
@@ -1391,9 +1385,7 @@ describe('ApolloClient', () => {
         bar: { __typename: 'Bar', d: 8, e: 9, f: 6 },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         foo: {
           __typename: 'Foo',
           a: 7,
@@ -1479,9 +1471,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1564,9 +1554,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1674,9 +1662,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1760,9 +1746,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1825,9 +1809,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1887,9 +1869,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -1947,9 +1927,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -2034,9 +2012,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,
@@ -2146,9 +2122,7 @@ describe('ApolloClient', () => {
         },
       });
 
-      expect(
-        (client.queryManager.dataStore.getCache() as InMemoryCache).extract(),
-      ).toEqual({
+      expect((client.cache as InMemoryCache).extract()).toEqual({
         ROOT_QUERY: {
           a: 1,
           b: 2,

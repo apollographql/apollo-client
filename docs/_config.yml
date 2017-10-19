@@ -1,0 +1,125 @@
+# Hexo Configuration
+## Docs: http://hexo.io/docs/configuration.html
+## Source: https://github.com/hexojs/hexo/
+
+# Site
+title: Apollo Client Guide
+propertytitle: Using GraphQL with Apollo Client
+subtitle: React Guide
+description: A guide to using the Apollo GraphQL Client with React.
+author:
+language:
+timezone:
+versions:
+  - '1'
+
+# This setting also defines the page order used to generate the Previous/Next links at the bottom of each page
+sidebar_categories:
+  # Basics
+  null:
+    - index
+    - basics/integrations
+    - basics/setup
+    - basics/queries
+    - basics/mutations
+    - basics/network-layer
+    - basics/error-handling
+    - basics/fragments
+    - basics/subscriptions
+  Features:
+    - features/changelog
+    - features/caching
+    - features/developer-tooling
+    - features/network-customization
+    - features/optimistic-ui
+    - features/react-native
+    - features/static-typing
+  Recipes:
+    - recipes/authentication
+    - recipes/babel
+    - recipes/meteor
+    - recipes/pagination
+    - recipes/prefetching
+    - recipes/query-splitting
+    - recipes/server-side-rendering
+    - recipes/simple-example
+    - recipes/webpack
+    # - recipes/client-side-data
+    # - recipes/using-with-rest
+    # - recipes/offline
+    # - recipes/custom-fetching
+  Reference:
+    - reference/index
+
+
+github_repo: apollographql/apollo-client
+content_root: docs/source
+
+social_links:
+  github: 'https://github.com/apollographql'
+  twitter: '@apollographql'
+
+# API keys
+apis:
+  segment: wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg
+  gtm: GTM-PNFDVBB
+
+# URL
+## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
+url: https://www.apollographql.com/docs/react
+root: /docs/react/
+permalink: :year/:month/:day/:title/
+permalink_defaults:
+
+# Directory
+source_dir: source
+public_dir: public/docs/react
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+# Writing
+new_post_name: :title.md # File name of new posts
+default_layout: post
+titlecase: false # Transform title into titlecase
+external_link: true # Open external links in new tab
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+future: true
+highlight:
+  enable: true
+  line_number: true
+  auto_detect: true
+  tab_replace:
+
+# Category & Tag
+default_category: uncategorized
+category_map:
+tag_map:
+
+# Date / Time format
+## Hexo uses Moment.js to parse and display date
+## You can customize the date format as defined in
+## http://momentjs.com/docs/#/displaying/format/
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+
+# Pagination
+## Set per_page to 0 to disable pagination
+per_page: 10
+pagination_dir: page
+
+# Extensions
+## Plugins: http://hexo.io/plugins/
+## Themes: http://hexo.io/themes/
+theme: meteor
+
+# Deployment
+## Docs: http://hexo.io/docs/deployment.html
+deploy:
+  type:

@@ -3,9 +3,10 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Apollo Vanilla JS Guide
-subtitle: Core API Documentation for the Apollo JS GraphQL Client
-description:
+title: Apollo Client Guide
+propertytitle: Using GraphQL with Apollo Client
+subtitle: React Guide
+description: A guide to using the Apollo GraphQL Client with React.
 author:
 language:
 timezone:
@@ -14,25 +15,45 @@ versions:
 
 # This setting also defines the page order used to generate the Previous/Next links at the bottom of each page
 sidebar_categories:
+  # Basics
   null:
     - index
-    - apollo-client-api
-  'Technical Documentation':
-    - network
-    - read-and-write
-    - devtools
-    - how-it-works
-  Integrations:
-    - meteor
-    - vue
-    - polymer
-    - ember
+    - basics/integrations
+    - basics/setup
+    - basics/queries
+    - basics/mutations
+    - basics/network-layer
+    - basics/error-handling
+    - basics/fragments
+    - basics/subscriptions
+  Features:
+    - features/changelog
+    - features/caching
+    - features/developer-tooling
+    - features/network-customization
+    - features/optimistic-ui
+    - features/react-native
+    - features/static-typing
+  Recipes:
+    - recipes/authentication
+    - recipes/babel
+    - recipes/meteor
+    - recipes/pagination
+    - recipes/prefetching
+    - recipes/query-splitting
+    - recipes/server-side-rendering
+    - recipes/simple-example
+    - recipes/webpack
+    # - recipes/client-side-data
+    # - recipes/using-with-rest
+    # - recipes/offline
+    # - recipes/custom-fetching
+  Reference:
+    - reference/index
+
 
 github_repo: apollographql/apollo-client
-content_root: source
-
-typescript_api_box:
-  data_file: docs.json
+content_root: docs/source
 
 social_links:
   github: 'https://github.com/apollographql'
@@ -45,14 +66,14 @@ apis:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: https://www.apollographql.com/docs/core
-root: /docs/core/
+url: https://www.apollographql.com/docs/react
+root: /docs/react/
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 
 # Directory
 source_dir: source
-public_dir: public/docs/core
+public_dir: public/docs/react
 tag_dir: tags
 archive_dir: archives
 category_dir: categories

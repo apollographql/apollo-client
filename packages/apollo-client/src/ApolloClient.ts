@@ -1,6 +1,6 @@
 import { ApolloLink, FetchResult, GraphQLRequest, execute } from 'apollo-link';
 import { ExecutionResult } from 'graphql';
-import { Cache, ApolloCache, DataProxy } from 'apollo-cache';
+import { ApolloCache, DataProxy } from 'apollo-cache';
 import { isProduction } from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';
@@ -265,7 +265,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    */
-  public readQuery<T>(options: DataProxy.Query): Cache.DiffResult<T> {
+  public readQuery<T>(options: DataProxy.Query): T {
     return this.initProxy().readQuery<T>(options);
   }
 
@@ -280,9 +280,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public readFragment<T>(
-    options: DataProxy.Fragment,
-  ): Cache.DiffResult<T> | null {
+  public readFragment<T>(options: DataProxy.Fragment): T | null {
     return this.initProxy().readFragment<T>(options);
   }
 

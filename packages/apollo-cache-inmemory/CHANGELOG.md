@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- `readQuery` and `readFragment` return now the result instead of `Cache.DiffResult` [PR #2320](https://github.com/apollographql/apollo-client/pull/2320)
+
 ### 0.2.0-rc.1
 - move to named export to be consistent with rest of apollo ecosystem
 

@@ -77,7 +77,7 @@ export interface DataProxy {
   readQuery<QueryType>(
     options: DataProxy.Query,
     optimistic?: boolean,
-  ): DataProxy.DiffResult<QueryType>;
+  ): QueryType;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there are more then
@@ -87,7 +87,7 @@ export interface DataProxy {
   readFragment<FragmentType>(
     options: DataProxy.Fragment,
     optimistic?: boolean,
-  ): DataProxy.DiffResult<FragmentType> | null;
+  ): FragmentType | null;
 
   /**
    * Writes a GraphQL query to the root query id.

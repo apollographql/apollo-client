@@ -36,7 +36,6 @@ describe('Cache', () => {
           },
         },
       });
-
       expect(
         proxy.readQuery({
           query: gql`

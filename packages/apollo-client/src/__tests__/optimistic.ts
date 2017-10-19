@@ -1248,29 +1248,15 @@ describe('optimistic mutation results', () => {
             mutation,
             optimisticResponse,
             update: (proxy, mResult: any) => {
-              expect(mResult.data.createTodo.id).toBe('99');
+              let data = proxy.readQuery({ query });
 
-              const id = 'TodoList5';
-              const fragment = gql`
-                fragment todoList on TodoList {
-                  todos {
-                    id
-                    text
-                    completed
-                    __typename
-                  }
-                }
-              `;
-
-              const data: any = proxy.readFragment({ id, fragment });
-
-              proxy.writeFragment({
-                data: {
-                  ...data,
-                  todos: [mResult.data.createTodo, ...data.todos],
-                },
-                id,
-                fragment,
+              data.todoList.todos = [
+                mResult.data.createTodo,
+                ...data.todoList.todos,
+              ];
+              proxy.writeQuery({
+                query,
+                data,
               });
             },
           });

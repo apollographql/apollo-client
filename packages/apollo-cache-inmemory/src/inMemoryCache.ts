@@ -103,7 +103,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
       previousResult: query.previousResult,
       fragmentMatcherFunction: this.config.fragmentMatcher.match,
       config: this.config,
-    }).result;
+    });
   }
 
   public watch(watch: Cache.WatchOptions): () => void {

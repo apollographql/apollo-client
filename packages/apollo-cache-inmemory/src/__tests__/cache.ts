@@ -36,16 +36,6 @@ describe('Cache', () => {
           },
         },
       });
-      const foo = proxy.readQuery({
-        query: gql`
-          {
-            a
-          }
-        `,
-      });
-
-      console.log(foo);
-
       expect(
         proxy.readQuery({
           query: gql`

@@ -3844,4 +3844,62 @@ describe('QueryManager', () => {
       done();
     });
   });
+  describe('store watchers', () => {
+    fit('does not fill up the store on resolved queries', () => {
+      const query1 = gql`
+        query One {
+          one
+        }
+      `;
+      const query2 = gql`
+        query Two {
+          two
+        }
+      `;
+      const query3 = gql`
+        query Three {
+          three
+        }
+      `;
+      const query4 = gql`
+        query Four {
+          four
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+      const cache = new InMemoryCache();
+
+      const queryManager = new QueryManager({
+        link,
+        store: new DataStore(cache),
+      });
+
+      const delay = data => {
+        setTimeout(() => {
+          link.simulateResult({ result: { data } });
+        }, 10);
+      };
+
+      delay({ one: 1 });
+      return queryManager
+        .query({ query: query1 })
+        .then(() => {
+          console.log('here');
+          delay({ two: 2 });
+          return queryManager.query({ query: query2 });
+        })
+        .then(() => {
+          delay({ three: 3 });
+          return queryManager.query({ query: query3 });
+        })
+        .then(() => {
+          delay({ four: 4 });
+          return queryManager.query({ query: query3 });
+        })
+        .then(() => {
+          expect(cache.watches.length).toBe(0);
+        });
+    });
+  });
 });

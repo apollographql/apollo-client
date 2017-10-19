@@ -597,9 +597,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
     this.subscriptionHandles.forEach(sub => sub.unsubscribe());
     this.subscriptionHandles = [];
 
-    if (this.shouldSubscribe) {
-      this.queryManager.removeObservableQuery(this.queryId);
-    }
+    this.queryManager.removeObservableQuery(this.queryId);
 
     this.queryManager.stopQuery(this.queryId);
 

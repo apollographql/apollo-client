@@ -1230,6 +1230,7 @@ describe('optimistic mutation results', () => {
       let subscriptionHandle: Subscription;
       return setup({
         request: { query: mutation },
+        delay: 300,
         result: mutationResult,
       })
         .then(() => {
@@ -1244,10 +1245,20 @@ describe('optimistic mutation results', () => {
           });
         })
         .then(() => {
+          let firstTime = true;
+          let before = new Date();
           const promise = client.mutate({
             mutation,
             optimisticResponse,
             update: (proxy, mResult: any) => {
+              const after = new Date();
+              const duration = after - before;
+              if (firstTime) {
+                expect(duration < 300).toBe(true);
+                firstTime = false;
+              } else {
+                expect(duration > 300).toBe(true);
+              }
               let data = proxy.readQuery({ query });
 
               data.todoList.todos = [

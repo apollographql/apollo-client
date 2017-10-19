@@ -6,6 +6,7 @@
 - Throw an error if cache or data are not supplied to the `ApolloClient` constructor
 - Add `graphql` as a dev dependency
 - Fix bug in not cleaning up after individual query operation
+- Return data directly in subscriptions instead of data and errors
 
 ### 2.0.0-rc.3
 - Only include `data` on subscriptionData when using `subscribeToMore`

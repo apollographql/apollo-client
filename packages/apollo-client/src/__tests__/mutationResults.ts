@@ -225,6 +225,83 @@ describe('mutation results', () => {
         expect(newResult.data.todoList.todos[0].completed).toBe(true);
       });
   });
+  it('correctly integrates field changes by default with variables', done => {
+    const query = gql`
+      query getMini($id: ID!) {
+        mini(id: $id) {
+          id
+          cover(maxWidth: 600, maxHeight: 400)
+          __typename
+        }
+      }
+    `;
+    const mutation = gql`
+      mutation upload($signature: String!) {
+        mini: submitMiniCoverS3DirectUpload(signature: $signature) {
+          id
+          cover(maxWidth: 600, maxHeight: 400)
+          __typename
+        }
+      }
+    `;
+
+    const link = mockSingleLink(
+      {
+        request: {
+          query,
+          variables: { id: 1 },
+        },
+        delay: 100,
+        result: {
+          data: { mini: { id: 1, cover: 'image', __typename: 'Mini' } },
+        },
+      },
+      {
+        request: {
+          query: mutation,
+          variables: { signature: '1234' },
+        },
+        delay: 150,
+        result: {
+          data: { mini: { id: 1, cover: 'image2', __typename: 'Mini' } },
+        },
+      },
+    );
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        dataIdFromObject: (obj: any) => {
+          if (obj.id && obj.__typename) {
+            return obj.__typename + obj.id;
+          }
+          return null;
+        },
+      }),
+    });
+
+    const obs = client.watchQuery({
+      query,
+      variables: { id: 1 },
+      notifyOnNetworkStatusChange: false,
+    });
+
+    let count = 0;
+    obs.subscribe({
+      next: result => {
+        if (count === 0) {
+          client.mutate({ mutation, variables: { signature: '1234' } });
+          expect(result.data.mini.cover).toBe('image');
+        }
+        if (count === 1) {
+          expect(result.data.mini.cover).toBe('image2');
+          done();
+        }
+        count++;
+      },
+      error: done.fail,
+    });
+  });
 
   it("should warn when the result fields don't match the query fields", () => {
     let handle: any;

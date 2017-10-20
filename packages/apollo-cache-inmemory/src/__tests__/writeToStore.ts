@@ -12,8 +12,8 @@ import gql from 'graphql-tag';
 import {
   storeKeyNameFromField,
   IdValue,
-  addTypenameToDocument
-} from "apollo-utilities";
+  addTypenameToDocument,
+} from 'apollo-utilities';
 
 import {
   writeQueryToStore,
@@ -1559,8 +1559,8 @@ describe('writing to the store', () => {
           {
             id: '1',
             name: 'Todo 1',
-            description: 'Description 1'
-          }
+            description: 'Description 1',
+          },
         ],
       };
 
@@ -1570,7 +1570,7 @@ describe('writing to the store', () => {
           result,
           document: addTypenameToDocument(query),
           dataIdFromObject: getIdField,
-          fragmentMatcherFunction
+          fragmentMatcherFunction,
         });
 
         expect(newStore['1']).toEqual(result.todos[0]);

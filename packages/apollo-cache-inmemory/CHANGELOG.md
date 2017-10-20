@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+- Don't broadcast query watchers during a transaction (for example, while mutation results are being processed) [Issue #2221](https://github.com/apollographql/apollo-client/issues/2221) [PR #2358](https://github.com/apollographql/apollo-client/pull/2358)
 - `readQuery` and `readFragment` return now the result instead of `Cache.DiffResult` [PR #2320](https://github.com/apollographql/apollo-client/pull/2320)
 
 ### 0.2.0-rc.1

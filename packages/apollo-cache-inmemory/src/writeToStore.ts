@@ -26,9 +26,12 @@ import {
   getQueryDefinition,
 } from 'apollo-utilities';
 
+import { defaultNormalizedCacheFactory, ObjectCache } from './objectCache';
+
 import {
   IdGetter,
   NormalizedCache,
+  NormalizedCacheFactory,
   ReadStoreContext,
   StoreObject,
 } from './types';
@@ -72,7 +75,8 @@ export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
 export function writeQueryToStore({
   result,
   query,
-  store = {} as NormalizedCache,
+  storeFactory = defaultNormalizedCacheFactory,
+  store = storeFactory(),
   variables,
   dataIdFromObject,
   fragmentMap = {} as FragmentMap,
@@ -81,6 +85,7 @@ export function writeQueryToStore({
   result: Object;
   query: DocumentNode;
   store?: NormalizedCache;
+  storeFactory?: NormalizedCacheFactory;
   variables?: Object;
   dataIdFromObject?: IdGetter;
   fragmentMap?: FragmentMap;
@@ -97,6 +102,7 @@ export function writeQueryToStore({
       selectionSet: queryDefinition.selectionSet,
       context: {
         store,
+        storeFactory,
         processedData: {},
         variables,
         dataIdFromObject,
@@ -111,6 +117,7 @@ export function writeQueryToStore({
 
 export type WriteContext = {
   store: NormalizedCache;
+  storeFactory: NormalizedCacheFactory;
   processedData?: { [x: string]: FieldNode[] };
   variables?: any;
   dataIdFromObject?: IdGetter;
@@ -122,7 +129,8 @@ export function writeResultToStore({
   dataId,
   result,
   document,
-  store = {} as NormalizedCache,
+  storeFactory = defaultNormalizedCacheFactory,
+  store = storeFactory(),
   variables,
   dataIdFromObject,
   fragmentMatcherFunction,
@@ -131,6 +139,7 @@ export function writeResultToStore({
   result: any;
   document: DocumentNode;
   store?: NormalizedCache;
+  storeFactory?: NormalizedCacheFactory;
   variables?: Object;
   dataIdFromObject?: IdGetter;
   fragmentMatcherFunction?: FragmentMatcher;
@@ -149,6 +158,7 @@ export function writeResultToStore({
       selectionSet,
       context: {
         store,
+        storeFactory,
         processedData: {},
         variables,
         dataIdFromObject,
@@ -236,7 +246,9 @@ export function writeSelectionSetToStore({
         // on the context.
         const idValue: IdValue = { type: 'id', id: 'self', generated: false };
         const fakeContext: ReadStoreContext = {
-          store: { self: result },
+          // NOTE: fakeContext always uses ObjectCache
+          // since this is only to ensure the return value of 'matches'
+          store: new ObjectCache({ self: result }),
           returnPartialData: false,
           hasMissingField: false,
           cacheResolvers: {},
@@ -276,8 +288,8 @@ function mergeWithGenerated(
   realKey: string,
   cache: NormalizedCache,
 ) {
-  const generated = cache[generatedKey];
-  const real = cache[realKey];
+  const generated = cache.get(generatedKey);
+  const real = cache.get(realKey);
 
   Object.keys(generated).forEach(key => {
     const value = generated[key];
@@ -285,8 +297,8 @@ function mergeWithGenerated(
     if (isIdValue(value) && isGeneratedId(value.id) && isIdValue(realValue)) {
       mergeWithGenerated(value.id, realValue.id, cache);
     }
-    delete cache[generatedKey];
-    cache[realKey] = { ...generated, ...real } as StoreObject;
+    cache.delete(generatedKey);
+    cache.set(realKey, { ...generated, ...real } as StoreObject);
   });
 }
 
@@ -326,6 +338,7 @@ function writeFieldToStore({
   const { variables, dataIdFromObject, store } = context;
 
   let storeValue: any;
+  let storeObject: StoreObject;
 
   const storeFieldName: string = storeKeyNameFromField(field, variables);
   // specifies if we need to merge existing keys in the store
@@ -401,8 +414,9 @@ function writeFieldToStore({
     // check if there was a generated id at the location where we're
     // about to place this new id. If there was, we have to merge the
     // data from that id with the data we're about to write in the store.
-    if (store[dataId] && store[dataId][storeFieldName] !== storeValue) {
-      const escapedId = store[dataId][storeFieldName] as IdValue;
+    storeObject = store.get(dataId);
+    if (storeObject && storeObject[storeFieldName] !== storeValue) {
+      const escapedId = storeObject[storeFieldName] as IdValue;
 
       // If there is already a real id in the store and the current id we
       // are dealing with is generated, we throw an error.
@@ -426,7 +440,7 @@ function writeFieldToStore({
   }
 
   const newStoreObj = {
-    ...store[dataId],
+    ...store.get(dataId),
     [storeFieldName]: storeValue,
   } as StoreObject;
 
@@ -434,8 +448,9 @@ function writeFieldToStore({
     mergeWithGenerated(generatedKey, (storeValue as IdValue).id, store);
   }
 
-  if (!store[dataId] || storeValue !== store[dataId][storeFieldName]) {
-    store[dataId] = newStoreObj;
+  storeObject = store.get(dataId);
+  if (!storeObject || storeValue !== storeObject[storeFieldName]) {
+    store.set(dataId, newStoreObj);
   }
 }
 

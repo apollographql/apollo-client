@@ -65,7 +65,7 @@ const readStoreResolver: Resolver = (
   assertIdValue(idValue);
 
   const objId = idValue.id;
-  const obj = context.store[objId];
+  const obj = context.store.get(objId);
   const storeKeyName = getStoreKeyName(fieldName, args, directives);
   let fieldValue = (obj || {})[storeKeyName];
 

@@ -146,11 +146,16 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   public performTransaction(transaction: Transaction<NormalizedCache>) {
     // TODO: does this need to be different, or is this okay for an in-memory cache?
 
+    let alreadySilenced = this.silenceBroadcast;
     this.silenceBroadcast = true;
 
     transaction(this);
 
-    this.silenceBroadcast = false;
+    if (!alreadySilenced) {
+      // Don't un-silence since this is a nested transaction
+      // (for example, a transaction inside an optimistic record)
+      this.silenceBroadcast = false;
+    }
 
     this.broadcastWatches();
   }
@@ -159,11 +164,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
     transaction: Transaction<NormalizedCache>,
     id: string,
   ) {
+    this.silenceBroadcast = true;
+
     const before = this.extract(true);
 
     const orig = this.data;
     this.data = { ...before };
-    transaction(this);
+    this.performTransaction(transaction);
     const after = this.data;
     this.data = orig;
 
@@ -180,6 +187,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
       transaction,
       data: patch,
     });
+
+    this.silenceBroadcast = false;
 
     this.broadcastWatches();
   }

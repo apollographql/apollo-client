@@ -1105,7 +1105,7 @@ describe('Cache', () => {
   });
 
   describe('performTransaction', () => {
-    it('will write some data to the store', () => {
+    it('will not broadcast mid-transaction', () => {
       const cache = createCache();
 
       let numBroadcasts = 0;
@@ -1147,6 +1147,54 @@ describe('Cache', () => {
 
         expect(numBroadcasts).toEqual(0);
       });
+
+      expect(numBroadcasts).toEqual(1);
+    });
+  });
+
+  describe('performOptimisticTransaction', () => {
+    it('will only broadcast once', () => {
+      const cache = createCache();
+
+      let numBroadcasts = 0;
+
+      const query = gql`
+        {
+          a
+        }
+      `;
+
+      cache.watch({
+        query,
+        optimistic: true,
+        callback: () => {
+          numBroadcasts++;
+        },
+      });
+
+      expect(numBroadcasts).toEqual(0);
+
+      cache.recordOptimisticTransaction(proxy => {
+        proxy.writeQuery({
+          data: { a: 1 },
+          query,
+        });
+
+        expect(numBroadcasts).toEqual(0);
+
+        proxy.writeQuery({
+          data: { a: 4, b: 5, c: 6 },
+          query: gql`
+            {
+              a
+              b
+              c
+            }
+          `,
+        });
+
+        expect(numBroadcasts).toEqual(0);
+      }, 1);
 
       expect(numBroadcasts).toEqual(1);
     });

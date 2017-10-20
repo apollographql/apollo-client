@@ -281,12 +281,11 @@ function resultMapper(resultFields: any, idValue: IdValueWithPreviousResult) {
       // just return the previous result.
       //
       // While we do a shallow comparison of objects, but we do a deep comparison of arrays.
-      currentResultKeys.every(
-	    (key) =>
-          areNestedArrayItemsStrictlyEqual(
-            resultFields[key],
-            idValue.previousResult[key],
-          )
+      currentResultKeys.every(key =>
+        areNestedArrayItemsStrictlyEqual(
+          resultFields[key],
+          idValue.previousResult[key],
+        ),
       );
 
     if (sameAsPreviousResult) {
@@ -329,7 +328,5 @@ function areNestedArrayItemsStrictlyEqual(
   }
   // Otherwise let us compare all of the array items (which are potentially nested arrays!) to see
   // if they are equal.
-  return a.every(
-    (item, i) => areNestedArrayItemsStrictlyEqual(item, b[i])
-  );
+  return a.every((item, i) => areNestedArrayItemsStrictlyEqual(item, b[i]));
 }

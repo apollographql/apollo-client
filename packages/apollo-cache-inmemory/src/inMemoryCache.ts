@@ -41,6 +41,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
 
+  // Set this while in a transaction to prevent broadcasts...
+  // don't forget to turn it back on!
+  private silenceBroadcast: boolean = false;
+
   constructor(config: ApolloReducerConfig = {}) {
     super();
     this.config = { ...defaultConfig, ...config };
@@ -141,7 +145,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
 
   public performTransaction(transaction: Transaction<NormalizedCache>) {
     // TODO: does this need to be different, or is this okay for an in-memory cache?
+
+    this.silenceBroadcast = true;
+
     transaction(this);
+
+    this.silenceBroadcast = false;
+
+    this.broadcastWatches();
   }
 
   public recordOptimisticTransaction(
@@ -224,12 +235,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   }
 
   private broadcastWatches() {
+    // Skip this when silenced (like inside a transaction)
+    if (this.silenceBroadcast) return;
+
     // right now, we invalidate all queries whenever anything changes
-    this.watches.forEach(c => {
+    this.watches.forEach((c: Cache.WatchOptions) => {
       const newData = this.diff({
         query: c.query,
         variables: c.variables,
-        previousResult: c.previousResult(),
+
+        // TODO: previousResult isn't in the types - this will only work
+        // with ObservableQuery which is in a different package
+        previousResult: (c as any).previousResult && c.previousResult(),
         optimistic: c.optimistic,
       });
 

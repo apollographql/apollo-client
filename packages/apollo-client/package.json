@@ -64,7 +64,7 @@
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.2",
     "@types/lodash": "4.14.77",
-    "@types/node": "8.0.41",
+    "@types/node": "8.0.46",
     "@types/zen-observable": "^0.5.3",
     "apollo-cache-inmemory": "^0.2.0-rc.2",
     "benchmark": "2.1.4",

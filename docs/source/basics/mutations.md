@@ -220,7 +220,7 @@ Most of the time it is not necessary to tell Apollo which parts of the cache to 
 For more information about all of the options and features supported by React Apollo for GraphQL mutations be sure to review the [API reference on `graphql()` mutations](api.html#mutations).
 
 <h2 title="API Reference">API Reference</h2>
-<h2 id="graphql-mutation-mutate">`props.mutate`</h2>
+<h3 id="graphql-mutation-mutate">`props.mutate`</h3>
 
 The higher order component created when you pass a mutation to `graphql()` will provide your component with a single prop named `mutate`. Unlike the `data` prop which you get when you pass a query to `graphql()`, `mutate` is a function.
 
@@ -250,7 +250,7 @@ function MyComponent({ mutate }) {
 export default graphql(gql`mutation { ... }`)(MyComponent);
 ```
 
-<h2 id="graphql-mutation-options">`config.options`</h2>
+<h3 id="graphql-mutation-options">`config.options`</h3>
 
 An object or function that returns an object of options that are used to configure how the query is fetched and updated.
 
@@ -404,7 +404,7 @@ Sometimes when you make a mutation you also want to update the data in your quer
 
 `options.refetchQueries` will execute one or more queries using your network interface and will then normalize the results of those queries into your cache. Allowing you to potentially refetch queries you had fetched before, or fetch brand new queries.
 
-`options.refetchQueries` is an array of either strings or objects.
+`options.refetchQueries` is either an array of strings or objects, or a function which takes the result of the mutation and returns an array of strings or objects.
 
 If `options.refetchQueries` is an array of strings then Apollo Client will look for any queries with the same names as the provided strings and will refetch those queries with their current variables. So for example if you have a GraphQL query component with a query named `Comments` (the query may look like: `query Comments { ... }`), and you pass an array of strings containing `Comments` to `options.refetchQueries` then the `Comments` query will be re-executed and when it resolves the latest data will be reflected in your UI.
 
@@ -453,10 +453,22 @@ export default graphql(gql`mutation { ... }`, {
   }),
 })(MyComponent);
 ```
+```js
+export default graphql(gql`mutation { ... }`, {
+  options: {
+    refetchQueries: (mutationResult) => [
+      'CommentList',
+      'PostList',
+    ],
+  },
+})(MyComponent);
+```
+
+
 
 <h3 id="graphql-mutation-options-updateQueries">`options.updateQueries`</h3>
 
-**Note: We recommend using [update](#graphql-mutation-options-update) instead of `updateQueries`.**
+**Note: We recommend using [update](#graphql-mutation-options-update) instead of `updateQueries`. `updateQueries` will be removed in the next version of Apollo Client**
 
 This option allows you to update your store based on your mutation’s result. By default Apollo Client will update all of the overlapping nodes in your store. Anything that shares the same id as returned by the `dataIdFromObject` you defined will be updated with the new fields from your mutation results. However, sometimes this alone is not sufficient. Sometimes you may want to update your cache in a way that is dependent on the data currently in your cache. For these updates you may use an `options.updateQueries` function.
 

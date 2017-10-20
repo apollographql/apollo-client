@@ -1,6 +1,12 @@
 import { DocumentNode } from 'graphql';
 
-import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';
+import {
+  Cache,
+  DataProxy,
+  ApolloCache,
+  Transaction,
+  NormalizedCacheObject,
+} from 'apollo-cache';
 
 import {
   getFragmentQueryDocument,
@@ -15,11 +21,14 @@ import {
 } from './types';
 import { writeResultToStore } from './writeToStore';
 import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
+import { defaultNormalizedCacheFactory } from './objectCache';
+import { record } from './recordingCache';
 
 const defaultConfig: ApolloReducerConfig = {
   fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
+  storeFactory: defaultNormalizedCacheFactory,
 };
 
 export function defaultDataIdFromObject(result: any): string | null {
@@ -34,8 +43,8 @@ export function defaultDataIdFromObject(result: any): string | null {
   return null;
 }
 
-export class InMemoryCache extends ApolloCache<NormalizedCache> {
-  private data: NormalizedCache = {};
+export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
+  private data: NormalizedCache;
   private config: ApolloReducerConfig;
   private optimistic: OptimisticStoreItem[] = [];
   private watches: Cache.WatchOptions[] = [];
@@ -52,29 +61,30 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
     if ((this.config as any).customResolvers)
       this.config.cacheResolvers = (this.config as any).customResolvers;
     this.addTypename = this.config.addTypename ? true : false;
+    this.data = this.config.storeFactory();
   }
 
-  public restore(data: NormalizedCache): ApolloCache<NormalizedCache> {
-    if (data) this.data = data;
+  public restore(data: NormalizedCacheObject): this {
+    if (data) this.data.replace(data);
     return this;
   }
 
-  public extract(optimistic: boolean = false): NormalizedCache {
+  public extract(optimistic: boolean = false): NormalizedCacheObject {
     if (optimistic && this.optimistic.length > 0) {
       const patches = this.optimistic.map(opt => opt.data);
-      return Object.assign({}, this.data, ...patches) as NormalizedCache;
+      return Object.assign(this.data.toObject(), ...patches);
     }
 
-    return this.data;
+    return this.data.toObject();
   }
 
-  public read<T>(query: Cache.ReadOptions): T {
-    if (query.rootId && typeof this.data[query.rootId] === 'undefined') {
+  public read<T>(query: Cache.ReadOptions): T | null {
+    if (query.rootId && this.data.get(query.rootId) === undefined) {
       return null;
     }
 
     return readQueryFromStore({
-      store: this.extract(query.optimistic),
+      store: this.config.storeFactory(this.extract(query.optimistic)),
       query: this.transformDocument(query.query),
       variables: query.variables,
       rootId: query.rootId,
@@ -100,7 +110,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
 
   public diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T> {
     return diffQueryAgainstStore({
-      store: this.extract(query.optimistic),
+      store: this.config.storeFactory(this.extract(query.optimistic)),
       query: this.transformDocument(query.query),
       variables: query.variables,
       returnPartialData: query.returnPartialData,
@@ -123,7 +133,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   }
 
   public reset(): Promise<void> {
-    this.data = {};
+    this.data.clear();
     this.broadcastWatches();
 
     return Promise.resolve();
@@ -143,7 +153,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
     this.broadcastWatches();
   }
 
-  public performTransaction(transaction: Transaction<NormalizedCache>) {
+  public performTransaction(transaction: Transaction<NormalizedCacheObject>) {
     // TODO: does this need to be different, or is this okay for an in-memory cache?
 
     let alreadySilenced = this.silenceBroadcast;
@@ -161,25 +171,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCache> {
   }
 
   public recordOptimisticTransaction(
-    transaction: Transaction<NormalizedCache>,
+    transaction: Transaction<NormalizedCacheObject>,
     id: string,
   ) {
     this.silenceBroadcast = true;
 
-    const before = this.extract(true);
-
-    const orig = this.data;
-    this.data = { ...before };
-    this.performTransaction(transaction);
-    const after = this.data;
-    this.data = orig;
-
-    const patch: any = {};
-
-    Object.keys(after).forEach(key => {
-      if (after[key] !== before[key]) {
-        patch[key] = after[key];
-      }
+    const patch = record(this.extract(true), recordingCache => {
+      // swapping data instance on 'this' is currently necessary
+      // because of the current architecture
+      const dataCache = this.data;
+      this.data = recordingCache;
+      this.performTransaction(transaction);
+      this.data = dataCache;
     });
 
     this.optimistic.push({

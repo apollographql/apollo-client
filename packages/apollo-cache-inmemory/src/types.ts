@@ -1,22 +1,22 @@
 import { DocumentNode } from 'graphql';
 import { FragmentMatcher } from 'graphql-anywhere';
-import { Transaction } from 'apollo-cache';
-import { StoreValue, IdValue } from 'apollo-utilities';
+import {
+  Transaction,
+  NormalizedCacheObject,
+  NormalizedCache,
+} from 'apollo-cache';
+import { IdValue } from 'apollo-utilities';
 
 export type IdGetter = (value: Object) => string | null | undefined;
 
-/**
- * This is a normalized representation of the Apollo query result cache. It consists of
- * a flattened representation of query result trees.
- */
-export interface NormalizedCache {
-  [dataId: string]: StoreObject;
-}
+export type NormalizedCacheFactory = (
+  seed?: NormalizedCacheObject,
+) => NormalizedCache;
 
 export type OptimisticStoreItem = {
   id: string;
-  data: NormalizedCache;
-  transaction: Transaction<NormalizedCache>;
+  data: NormalizedCacheObject;
+  transaction: Transaction<NormalizedCacheObject>;
 };
 
 export type ReadQueryOptions = {
@@ -33,16 +33,12 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean;
 };
 
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldKey: string]: StoreValue;
-}
-
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   fragmentMatcher?: FragmentMatcherInterface;
   addTypename?: boolean;
   cacheResolvers?: CacheResolverMap;
+  storeFactory?: NormalizedCacheFactory;
 };
 
 export type ReadStoreContext = {
@@ -109,3 +105,8 @@ export type CacheResolverMap = {
 // backwards compat
 export type CustomResolver = CacheResolver;
 export type CustomResolverMap = CacheResolverMap;
+export {
+  NormalizedCacheObject,
+  NormalizedCache,
+  StoreObject,
+} from 'apollo-cache';

@@ -1,4 +1,6 @@
 import { IntrospectionFragmentMatcher } from '../fragmentMatcher';
+import { defaultNormalizedCacheFactory } from '../objectCache';
+
 describe('IntrospectionFragmentMatcher', () => {
   it('will throw an error if match is called if it is not ready', () => {
     const ifm = new IntrospectionFragmentMatcher();
@@ -27,11 +29,11 @@ describe('IntrospectionFragmentMatcher', () => {
       },
     });
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       a: {
         __typename: 'ItemB',
       },
-    };
+    });
 
     const idValue = {
       type: 'id',

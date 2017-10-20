@@ -30,7 +30,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     typeCondition: string,
     context: ReadStoreContext,
   ): boolean {
-    const obj = context.store[idValue.id];
+    const obj = context.store.get(idValue.id);
 
     if (!obj) {
       return false;
@@ -116,7 +116,7 @@ export class IntrospectionFragmentMatcher implements FragmentMatcherInterface {
       );
     }
 
-    const obj = context.store[idValue.id];
+    const obj = context.store.get(idValue.id);
 
     if (!obj) {
       return false;

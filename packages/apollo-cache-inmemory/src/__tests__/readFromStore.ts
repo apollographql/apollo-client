@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 
 import { NormalizedCache, StoreObject, HeuristicFragmentMatcher } from '../';
 import { readQueryFromStore } from '../readFromStore';
+import { defaultNormalizedCacheFactory } from '../objectCache';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
 import { withError } from './diffAgainstStore';
@@ -11,7 +12,7 @@ import { withError } from './diffAgainstStore';
 describe('reading from the store', () => {
   it('runs a nested query with proper fragment fields in arrays', () => {
     withError(() => {
-      const store = {
+      const store = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
           __typename: 'Query',
           nestedObj: { type: 'id', id: 'abcde', generated: false },
@@ -26,7 +27,7 @@ describe('reading from the store', () => {
           id: 'abcdef',
           someField: 3,
         } as StoreObject,
-      } as NormalizedCache;
+      });
 
       const queryResult = readQueryFromStore({
         store,
@@ -71,7 +72,7 @@ describe('reading from the store', () => {
   it('rejects malformed queries', () => {
     expect(() => {
       readQueryFromStore({
-        store: {},
+        store: defaultNormalizedCacheFactory(),
         query: gql`
           query {
             name
@@ -86,7 +87,7 @@ describe('reading from the store', () => {
 
     expect(() => {
       readQueryFromStore({
-        store: {},
+        store: defaultNormalizedCacheFactory(),
         query: gql`
           fragment x on y {
             name
@@ -104,9 +105,9 @@ describe('reading from the store', () => {
       nullField: null,
     } as StoreObject;
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: result,
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -141,14 +142,14 @@ describe('reading from the store', () => {
       stringArg: 'This is a string!',
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
         'numberField({"intArg":5,"floatArg":3.14})': 5,
         'stringField({"arg":"This is a string!"})': 'Heyo',
       },
-    } as NormalizedCache;
+    });
 
     const result = readQueryFromStore({
       store,
@@ -182,14 +183,14 @@ describe('reading from the store', () => {
       floatArg: 3.14,
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         id: 'abcd',
         nullField: null,
         'numberField({"intArg":0,"floatArg":3.14})': 5,
         'stringField({"arg":"This is a default string!"})': 'Heyo',
       },
-    } as NormalizedCache;
+    });
 
     const result = readQueryFromStore({
       store,
@@ -219,7 +220,7 @@ describe('reading from the store', () => {
       } as StoreObject,
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: {
           type: 'id',
@@ -228,7 +229,7 @@ describe('reading from the store', () => {
         },
       } as StoreObject),
       abcde: result.nestedObj,
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -276,7 +277,7 @@ describe('reading from the store', () => {
       __typename: 'Item',
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign(
         {},
         assign({}, omit(result, 'nestedObj', 'deepNestedObj')),
@@ -297,7 +298,7 @@ describe('reading from the store', () => {
         },
       }) as StoreObject,
       abcdef: result.deepNestedObj as StoreObject,
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -372,7 +373,7 @@ describe('reading from the store', () => {
       ] as StoreObject[],
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           { type: 'id', generated: true, id: 'abcd.nestedArray.0' } as IdValue,
@@ -381,7 +382,7 @@ describe('reading from the store', () => {
       }) as StoreObject,
       'abcd.nestedArray.0': result.nestedArray[0],
       'abcd.nestedArray.1': result.nestedArray[1],
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -430,7 +431,7 @@ describe('reading from the store', () => {
       ] as StoreObject[],
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [
           null,
@@ -438,7 +439,7 @@ describe('reading from the store', () => {
         ],
       }) as StoreObject,
       'abcd.nestedArray.1': result.nestedArray[1],
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -485,12 +486,12 @@ describe('reading from the store', () => {
       ] as StoreObject[],
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
         nestedArray: [null, { type: 'id', generated: false, id: 'abcde' }],
       }) as StoreObject,
       abcde: result.nestedArray[1],
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -530,7 +531,7 @@ describe('reading from the store', () => {
       nullField: null,
     } as StoreObject;
 
-    const store = { ROOT_QUERY: result } as NormalizedCache;
+    const store = defaultNormalizedCacheFactory({ ROOT_QUERY: result });
 
     expect(() => {
       readQueryFromStore({
@@ -554,11 +555,11 @@ describe('reading from the store', () => {
       nestedObj: null,
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
         nestedObj: null,
       }) as StoreObject,
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -591,14 +592,14 @@ describe('reading from the store', () => {
       simpleArray: ['one', 'two', 'three'],
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           json: result.simpleArray,
         } as JsonValue,
       }) as StoreObject,
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -628,14 +629,14 @@ describe('reading from the store', () => {
       simpleArray: [null, 'two', 'three'],
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign({}, assign({}, omit(result, 'simpleArray')), {
         simpleArray: {
           type: 'json',
           json: result.simpleArray,
         } as JsonValue,
       }) as StoreObject,
-    } as NormalizedCache;
+    });
 
     const queryResult = readQueryFromStore({
       store,
@@ -677,7 +678,7 @@ describe('reading from the store', () => {
       __typename: 'Item',
     };
 
-    const store = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign(
         {},
         assign({}, omit(data, 'nestedObj', 'deepNestedObj')),
@@ -698,7 +699,7 @@ describe('reading from the store', () => {
         },
       }) as StoreObject,
       abcdef: data.deepNestedObj as StoreObject,
-    } as NormalizedCache;
+    });
 
     const queryResult1 = readQueryFromStore({
       store,
@@ -748,7 +749,7 @@ describe('reading from the store', () => {
   });
 
   it('properly handles the connection directive', () => {
-    const store: NormalizedCache = {
+    const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         abc: [
           {
@@ -761,7 +762,7 @@ describe('reading from the store', () => {
       'ROOT_QUERY.abc.0': {
         name: 'efgh',
       },
-    };
+    });
 
     const queryResult = readQueryFromStore({
       store,

@@ -30,7 +30,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
-  public abstract extract(optimistic: boolean): TSerialized;
+  public abstract extract(optimistic?: boolean): TSerialized;
 
   // optimistic API
   public abstract removeOptimistic(id: string): void;

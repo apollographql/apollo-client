@@ -95,7 +95,7 @@ describe('diffing queries against the store', () => {
     });
 
     expect(complete).toBeTruthy();
-    expect(store['1']).toEqual(result.people_one);
+    expect(store.get('1')).toEqual(result.people_one);
   });
 
   it('does not swallow errors other than field errors', () => {

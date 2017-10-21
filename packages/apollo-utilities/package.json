@@ -47,7 +47,7 @@
     "lodash": "4.17.4",
     "rimraf": "2.6.2",
     "ts-jest": "20.0.14",
-    "tslint": "5.7.0",
+    "tslint": "5.8.0",
     "typescript": "2.5.2",
     "uglifyjs": "2.4.11"
   },

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNext
+- Make sure context + cache is on links for mutations
 - Improved error for upgrading to 2.0
 - Fix bug with mutations not updating watchedQueries where variables don't change
 - Define and expose `ApolloClientOptions`, Type of an object that represents ApolloClient's constructor argument.

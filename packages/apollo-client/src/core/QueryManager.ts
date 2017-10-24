@@ -185,11 +185,15 @@ export class QueryManager<TStore> {
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
       let newRequest = {
+        context: {},
         ...request,
         query: cache.transformForLink
           ? cache.transformForLink(request.query)
           : request.query,
       };
+
+      newRequest.context.cache = this.dataStore.getCache();
+
       execute(this.link, newRequest).subscribe({
         next: (result: ExecutionResult) => {
           if (result.errors && errorPolicy === 'none') {

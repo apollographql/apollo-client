@@ -192,7 +192,7 @@ export class QueryManager<TStore> {
           : request.query,
       };
 
-      newRequest.context.cache = this.dataStore.getCache();
+      (newRequest as any).context.cache = this.dataStore.getCache();
 
       execute(this.link, newRequest).subscribe({
         next: (result: ExecutionResult) => {
@@ -885,6 +885,7 @@ export class QueryManager<TStore> {
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {
               // XXX I'd prefer a different way to handle errors for subscriptions
+              console.log({ result });
               if (obs.next && result.data) obs.next(result.data);
               if (obs.error && result.errors)
                 obs.error(

@@ -48,6 +48,7 @@ package-lock.json
 
 # docs
 db.json
+docs.json
 *.log
 docs/public/*
 !docs/public/_redirects

@@ -62,6 +62,9 @@ social_links:
   github: 'https://github.com/apollographql'
   twitter: '@apollographql'
 
+typescript_api_box:
+  data_file: docs.json
+
 # API keys
 apis:
   segment: wgrIo8Bul0Ujl8USETG3DB6hONdy4kTg

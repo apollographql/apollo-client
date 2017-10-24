@@ -21,7 +21,7 @@
   },
   "scripts": {
     "types":
-      "typedoc --json ./docs.json --ignoreCompilerErrors ../packages/apollo-client --exclude \"**/+(benchmark|__tests__|util|__mocks__)/**/*\" --tsconfig ../packages/apollo-client/tsconfig.json",
+      "cd ../packages/apollo-client && typedoc --json ../../docs/docs.json --ignoreCompilerErrors ./src/index.ts",
     "build": "npm run types && hexo generate",
     "start": "hexo serve"
   }

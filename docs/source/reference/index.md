@@ -31,10 +31,8 @@ The `ApolloClient` class is the core API for Apollo, and the one you'll need to 
 {% tsapibox ObservableQuery.startPolling %}
 {% tsapibox ObservableQuery.stopPolling %}
 
-<h2 id="ApolloError">ApolloError</h2>
+<h2 id="types">Types</h2>
 
-{% tsapibox ApolloError.constructor %}
-{% tsapibox ApolloError.message %}
-{% tsapibox ApolloError.graphQLErrors %}
-{% tsapibox ApolloError.networkError %}
-{% tsapibox ApolloError.extraInfo %}
+{% tsapibox ApolloClientOptions %}
+{% tsapibox DefaultOptions %}
+{% tsapibox NetworkStatus %}

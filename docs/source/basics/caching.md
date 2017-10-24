@@ -1,20 +1,18 @@
 ---
 title: Apollo Cache
-description: A guide to custom caches with Apollo
+description: A guide to customizing and directly accessing your Apollo cache
 ---
 
-XXX Add notes about why Apollo has plugable caches.
-XXX Add section about use with redux, ngrx, etc.
 
 <h2>InMemoryCache</h2>
 
-`apollo-cache-inmemory` is the recommended cache implementation for Apollo Client 2.0. `InMemoryCache` is a normalized data store that supports all of Apollo Client 1.0's features without the dependency on Redux.
+`apollo-cache-inmemory` is the default cache implementation for Apollo Client 2.0. `InMemoryCache` is a normalized data store that supports all of Apollo Client 1.0's features without the dependency on Redux.
 
 In some instances, you may need to manipulate the cache directly, such as updating the store after a mutation. We'll cover some common use cases [here](#recipes).
 
 <h3 id="installation">Installation</h3>
 
-```
+```bash
 npm install apollo-cache-inmemory --save
 ```
 
@@ -40,6 +38,7 @@ The `InMemoryCache` constructor takes an optional config object with properties 
 - addTypename: A boolean to determine whether to add __typename to the document (default: `true`)
 - dataIdFromObject: A function that takes a data object and returns a unique identifier to be used when normalizing the data in the store. Learn more about how to customize `dataIdFromObject` in the [Normalization](#normalization) section.
 - fragmentMatcher: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces].
+- cacheResolves: A map of custom ways to resolve data from other parts of the cache.
 <!---
 TODO (PEGGY): Add link to fragment matcher recipe
 -->
@@ -239,91 +238,6 @@ On the client, you can rehydrate the cache using the initial data passed from th
 cache: new Cache().restore(window.__APOLLO_STATE__)
 ```
 
-If you would like to learn more about server side rendering, please check our our more in depth guide [here].
-<!---
-TODO (PEGGY): Add link to SSR
--->
+If you would like to learn more about server side rendering, please check our our more in depth guide [here](../recipes/server-side-rendering.html).
 
-<h3 id="server">Updating the cache after a mutation</h3>
-
-Being able to read and write to the Apollo cache from anywhere in your application gives you a lot of power over your data. However, there is one place where we most often want to update our cached data: after a mutation. As such, Apollo Client has optimized the experience for updating your cache with the read and write methods after a mutation with the `update` function. Let us say that we have the following GraphQL mutation:
-
-```graphql
-mutation TodoCreateMutation($text: String!) {
-  createTodo(text: $text) {
-    id
-    text
-    completed
-  }
-}
-```
-
-We may also have the following GraphQL query:
-
-```graphql
-query TodoAppQuery {
-  todos {
-    id
-    text
-    completed
-  }
-}
-```
-
-At the end of our mutation we want our query to include the new todo like we had sent our `TodoAppQuery` a second time after the mutation finished without actually sending the query. To do this we can use the `update` function provided as an option of the `client.mutate` method. To update your cache with the mutation just write code that looks like:
-
-```js
-// We assume that the GraphQL operations `TodoCreateMutation` and
-// `TodoAppQuery` have already been defined using the `gql` tag.
-
-const text = 'Hello, world!';
-
-client.mutate({
-  mutation: TodoCreateMutation,
-  variables: {
-    text,
-  },
-  update: (proxy, { data: { createTodo } }) => {
-    // Read the data from our cache for this query.
-    const data = proxy.readQuery({ query: TodoAppQuery });
-
-    // Add our todo from the mutation to the end.
-    data.todos.push(createTodo);
-
-    // Write our data back to the cache.
-    proxy.writeQuery({ query: TodoAppQuery, data });
-  },
-});
-```
-
-The first `proxy` argument is an instance of [`DataProxy`][] has the same four methods that we just learned exist on the Apollo Client: `readQuery`, `readFragment`, `writeQuery`, and `writeFragment`. The reason we call them on a `proxy` object here instead of on our `client` instance is that we can easily apply optimistic updates (which we will demonstrate in a bit). The `proxy` object also provides an isolated transaction which shields you from any other mutations going on at the same time, and the `proxy` object also batches writes together until the very end.
-
-If you provide an `optimisticResponse` option to the mutation then the `update` function will be run twice. Once immediately after you call `client.mutate` with the data from `optimisticResponse`. After the mutation successfully executes against the server the changes made in the first call to `update` will be rolled back and `update` will be called with the *actual* data returned by the mutation and not just the optimistic response.
-
-Putting it all together:
-
-```js
-const text = 'Hello, world!';
-
-client.mutate({
-  mutation: TodoCreateMutation,
-  variables: {
-    text,
-  },
-  optimisticResponse: {
-    id: -1, // -1 is a temporary id for the optimistic response.
-    text,
-    completed: false,
-  },
-  update: (proxy, { data: { createTodo } }) => {
-    const data = proxy.readQuery({ query: TodoAppQuery });
-    data.todos.push(createTodo);
-    proxy.writeQuery({ query: TodoAppQuery, data });
-  },
-});
-```
-
-As you can see the `update` function on `client.mutate` provides extra change management functionality specific to the use case of a mutation while still providing you the powerful data control APIs that are available on `client`.
-
-The `update` function is not a good place for side-effects as it may be called multiple times. Also, you may not call any of the methods on `proxy` asynchronously.
 

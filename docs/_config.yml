@@ -26,13 +26,14 @@ sidebar_categories:
     - basics/mutations
     - basics/network-layer
     - basics/caching
-    - basics/fragments
-    - basics/subscriptions
   Features:
     - features/error-handling
     - features/caching
     - features/optimistic-ui
+    - features/cache-updates
+    - features/fragments
     - features/developer-tooling
+    - features/subscriptions
     - features/react-native
     - features/static-typing
   Recipes:
@@ -42,6 +43,7 @@ sidebar_categories:
     - recipes/authentication
     - recipes/prefetching
     - recipes/server-side-rendering
+    # - recipes/fragment-matching
     - recipes/babel
     - recipes/webpack
     - recipes/meteor

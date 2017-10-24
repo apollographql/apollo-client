@@ -6,6 +6,13 @@ description: Handling errors with Apollo
 <h2>Managing errors</h2>
 explain why its important to handle errors and why Apollo puts focus on it.
 
+Catalog of types
+- errors in the graphql results
+- server internal errors
+- errors inside stuff like `update`
+- errors in your ui code
+- errors intenral in AC
+
 <h3 title="Error policies">Error policies</h3>
 explain error policies or link to API docs
 

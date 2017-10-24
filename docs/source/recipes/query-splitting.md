@@ -76,30 +76,30 @@ query seriesEpisodes($seriesId: Int!) {
 }
 ```
 
-By adding a [custom resolver](cache-updates.html#cacheRedirect) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
+By adding a [custom resolver](../features/cache-updates.html#cacheRedirect) for the `oneSeries` field (and having dataIdFromObject function which normalizes the cache), the data can be resolved instantly from the store without a server round trip.
 
 ```javascript
-import ApolloClient, { toIdValue } from 'apollo-client'
-
-// ... your NetworkInterface declaration
-// and also VERY important: Your dataIdFromObject declaration
-
+import { ApolloClient } from 'apollo-client';
+import { toIdValue } from 'apollo-utilities';
+import { InMemoryCache } from 'apollo-cache-imemory';
 
 const client = new ApolloClient({
-  networkInterface,
-  customResolvers: {
-    Query: {
-      oneSeries: (_, { id }) => toIdValue(dataIdFromObject({ __typename: 'Series', id })),
+  link: // your link,
+  cache: new InMemoryCache({
+    cacheResolvers: {
+      Query: {
+        oneSeries: (_, { id }) => toIdValue(dataIdFromObject({ __typename: 'Series', id })),
+      },
     },
-  },
-  dataIdFromObject,
+    dataIdFromObject,
+  })
 })
 ```
 
 A component for the second view that implements the two queries could look like this:
 ```jsx
 import React, { PropTypes, } from 'react'
-import { gql, graphql, compose, } from 'react-apollo'
+import { gql, graphql, compose } from 'react-apollo'
 
 const QUERY_SERIES_DETAIL_VIEW = gql`
   query seriesDetailData($seriesId: Int!) {
@@ -178,4 +178,4 @@ export default SeriesDetailView
 
 ```
 
-Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedNetworkInterface`](/core/apollo-client-api.html#BatchedNetworkInterface) those two queries can be send to the server in one network request.
+Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](/docs/links/links/BatchedHttpLink.html) those two queries can be send to the server in one network request.

@@ -213,11 +213,58 @@ In GraphQL, mutations can return any type, and that type can be queried just lik
 
 In most cases, the data available from a mutation result should be the server developer's best guess of the data a client would need to understand what happened on the server. For example, a mutation that creates a new comment on a blog post might return the comment itself. A mutation that reorders an array might need to return the whole array.
 
-<h2 id="update-after-mutation">Store updates</h2>
 
-Most of the time it is not necessary to tell Apollo which parts of the cache to update, but if your mutation is creating a new object or deleting something, you will need to write some extra logic. Read about it in the [article about updating the store](cache-updates.html).
+<h2 id="store-updates">Updating the cache after a mutation</h2>
 
-For more information about all of the options and features supported by React Apollo for GraphQL mutations be sure to review the [API reference on `graphql()` mutations](api.html#mutations).
+Being able to read and write to the Apollo cache from anywhere in your application gives you a lot of power over your data. However, there is one place where we most often want to update our cached data: after a mutation. As such, Apollo Client has optimized the experience for updating your cache with the read and write methods after a mutation with the `update` function. Let us say that we have the following GraphQL mutation:
+
+```graphql
+mutation TodoCreateMutation($text: String!) {
+  createTodo(text: $text) {
+    id
+    text
+    completed
+  }
+}
+```
+
+We may also have the following GraphQL query:
+
+```graphql
+query TodoAppQuery {
+  todos {
+    id
+    text
+    completed
+  }
+}
+```
+
+At the end of our mutation we want our query to include the new todo like we had sent our `TodoAppQuery` a second time after the mutation finished without actually sending the query. To do this we can use the `update` function provided as an option of the `client.mutate` method. To update your cache with the mutation just write code that looks like:
+
+```js
+// We assume that the GraphQL operations `TodoCreateMutation` and
+// `TodoAppQuery` have already been defined using the `gql` tag.
+
+const text = 'Hello, world!';
+
+client.mutate({
+  mutation: TodoCreateMutation,
+  variables: {
+    text,
+  },
+  update: (proxy, { data: { createTodo } }) => {
+    // Read the data from our cache for this query.
+    const data = proxy.readQuery({ query: TodoAppQuery });
+
+    // Add our todo from the mutation to the end.
+    data.todos.push(createTodo);
+
+    // Write our data back to the cache.
+    proxy.writeQuery({ query: TodoAppQuery, data });
+  },
+});
+```
 
 <h2 title="API Reference">API Reference</h2>
 <h3 id="graphql-mutation-mutate">`props.mutate`</h3>
@@ -249,6 +296,7 @@ function MyComponent({ mutate }) {
 
 export default graphql(gql`mutation { ... }`)(MyComponent);
 ```
+
 
 <h3 id="graphql-mutation-options">`config.options`</h3>
 
@@ -532,3 +580,5 @@ export default graphql(gql`
   },
 })(MyComponent);
 ```
+
+

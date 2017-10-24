@@ -13,9 +13,10 @@ npm install react-apollo --save
 ```js
 import React from 'react';
 import { AppRegistry } from 'react-native';
-import { ApolloClient, ApolloProvider } from 'react-apollo';
+import { ApolloClient } from 'apollo-client';
+import { ApolloProvider } from 'react-apollo';
 
-// Create the client as outlined above
+// Create the client as outlined in the setup guide
 const client = new ApolloClient();
 
 const App = () => (
@@ -27,7 +28,7 @@ const App = () => (
 AppRegistry.registerComponent('MyApplication', () => App);
 ```
 
-If you are new to using Apollo with React, you should probably read the [React guide](index.html).
+If you are new to using Apollo with React, you should probably read the [React guide](../index.html).
 
 <h2 id="examples">Examples</h2>
 

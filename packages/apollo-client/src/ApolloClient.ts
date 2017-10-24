@@ -81,20 +81,16 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    *
    * @param link The {@link ApolloLink} over which GraphQL documents will be resolved into a response.
    *
-   * @param initialState The initial state assigned to the store.
-   *
-   * @param initialCache The initial cache to use in the data store.
+   * @param cache The initial cache to use in the data store.
    *
    * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
    *
    * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
    * server side render.
    *
-   *
    * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
    * with identical parameters (query, variables, operationName) is already in flight.
    *
-   * @param fragmentMatcher A function to use for matching fragment conditions in GraphQL documents
    */
 
   constructor(options: ApolloClientOptions<TCacheShape>) {
@@ -111,6 +107,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     if (!link || !cache) {
       throw new Error(`
         In order to initialize Apollo Client, you must specify link & cache properties on the config object.
+        This is part of the required upgrade when migrating from Apollo Client 1.0 to Apollo Client 2.0.
         For more information, please visit:
           https://apollographql.com/docs/react/setup
         to help you get started.

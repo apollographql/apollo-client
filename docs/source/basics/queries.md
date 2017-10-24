@@ -10,7 +10,7 @@ One of our core values is "it's just GraphQL". When using Apollo Client, you don
 
 When we are running a basic query we can use the `graphql` container in a very simple way. We simply parse our query using the `gql` template literal and then pass it into the `graphql` container as the first argument.
 
-For instance, in [GitHunt](LINK PLZ), we want to display the currently logged-in user in the `Profile` component:
+For instance, in [GitHunt](https://github.com/apollographql/Githunt-React), we want to display the currently logged-in user in the `Profile` component:
 
 ```js
 import React, { Component } from 'react';
@@ -48,7 +48,7 @@ In addition to the `currentUser` field selected in the query, the `data` prop al
 }
 ```
 
-The `data.currentUser` prop will change as what the client knows about the current user changes over time. That information is stored in Apollo Client's global cache, so if some other query fetches new information about the current user, this component will update to remain consistent. You can read more about techniques to bring the cache up to date with the server in the [article about cache updates](LINK PLZ).
+The `data.currentUser` prop will change as what the client knows about the current user changes over time. That information is stored in Apollo Client's global cache, so if some other query fetches new information about the current user, this component will update to remain consistent.
 
 <h2 id="default-result-props" title="The data prop">The structure of the `data` prop</h2>
 
@@ -138,7 +138,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 If you use a function to compute options from props, all of these `options` will be automatically recalculated whenever the props change.
 
-[Read about all of the query options in the API documentation.](api-queries.html#graphql-query-options)
+[Read about all of the query options in the API documentation.](#graphql-query-options)
 
 <h2 id="graphql-skip">Skipping an operation</h2>
 

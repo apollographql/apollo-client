@@ -167,7 +167,7 @@ The overall idea of using `graphql` is to pair a description (GraphQL Operation)
 <h3 id="ready">Ready for more?</h3>
 At this point you are ready to start building something with Apollo! Checkout the [queries](./queries.html) guide to start writing queries instead of a lot of code to get your data!
 
-<h2 id="API" title="Basic API">API Reference</h2>
+<h2 id="API" title="API Reference">API Reference</h2>
 
 <h3 id="ApolloClient">`ApolloClient`</h3>
 The Apollo Client constructor takes a small number of options, of which two are required. These arguments make it easy to customize how Apollo works based on your environment or application needs.
@@ -178,7 +178,7 @@ The Apollo Client constructor takes a small number of options, of which two are 
 - `ssrForceFetchDelay`: determines the time interval before Apollo Client force fetchs queries after a server side render.
 - `connectToDevTools`: This argument allows the [Apollo Client Devtools](./features/devtools.html) to connect to your application's Apollo Client. You can set this to be `true` to use the tools in production (they are on by default in dev mode).
 - `queryDeduplication`: If set to false, this argument will force a query to still be sent to the server even if a query with identical parameters (query, variables, operationName) is already in flight.
-- `defaultOptions`: If you want to set application wide defaults for the options supplied to [`watchQuery`](), [`query`](), or [`mutate`](), you can pass them as a `defaultOptions` object. An example object looks like this:
+- `defaultOptions`: If you want to set application wide defaults for the options supplied to `watchQuery`, `query`, or `mutate`, you can pass them as a `defaultOptions` object. An example object looks like this:
 
 ```js
 const defaultOptions = {

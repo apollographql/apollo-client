@@ -40,7 +40,7 @@ const client = new ApolloClient({
 });
 ```
 
-The client takes a variety of [options](#constructor), but in particular, if you want to change the URL of the GraphQL server, you can customize your [`Apollo Link`](/docs/links):
+The client takes a variety of [options](#constructor), but in particular, if you want to change the URL of the GraphQL server, you can customize your [`Apollo Link`](/docs/link):
 
 ```js
 import { ApolloClient } from 'apollo-client';
@@ -172,7 +172,7 @@ At this point you are ready to start building something with Apollo! Checkout th
 <h3 id="ApolloClient">`ApolloClient`</h3>
 The Apollo Client constructor takes a small number of options, of which two are required. These arguments make it easy to customize how Apollo works based on your environment or application needs.
 
-- `link`: Apollo Client requires an Apollo Link to serve as the network layer. For more infomation about creating links, read the [docs](/docs/links).
+- `link`: Apollo Client requires an Apollo Link to serve as the network layer. For more infomation about creating links, read the [docs](/docs/link).
 - `cache`: The second required argument for using Apollo Client is an instance of an Apollo Cache. The default cache is the `apollo-cache-inmemory` which exports an `{ InMemoryCache }`. For more infomation read the [cache docs](./basics/cache.html).
 - `ssrMode`: When using the client for [server side rendering](./recipes/server-side-rendernig.html), pass `ssrMode` as `true` so that React Apollo's `getDataFromTree` can work effectively.
 - `ssrForceFetchDelay`: determines the time interval before Apollo Client force fetchs queries after a server side render.

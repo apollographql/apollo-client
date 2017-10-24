@@ -166,8 +166,8 @@ Another alternative for network interface is GraphQL over WebSocket, using [`sub
 
 You can the create WebSocket as full-transport, and pass all GraphQL operations over the WebSocket (`Query`, `Mutation` and `Subscription`), or use a hybrid network interface and execute `Query` and `Mutation` over HTTP, and only `Subscription` over the WebSocket.
 
-For more information about using WebSocket's with Apollo Link, check out the [indepth guide](/docs/link/WSlink.html)
+For more information about using WebSocket's with Apollo Link, check out the [indepth guide](/docs/link/links/ws.html)
 
 
 <h3 id="query-batching">Query Batching</h3>
-Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. Batching works only with server that support batched queries (for example graphql-server). Batched requests to servers that don’t support batching will fail. To learn how to use batching with Apollo checkout the [indepth guide](/docs/links/batch-http-link.html)
+Apollo lets you automatically batch multiple queries into one request when they are made within a certain interval. This means that if you render several components, for example a navbar, sidebar, and content, and each of those do their own GraphQL query, they will all be sent in one roundtrip. Batching works only with server that support batched queries (for example graphql-server). Batched requests to servers that don’t support batching will fail. To learn how to use batching with Apollo checkout the [indepth guide](/docs/link/links/batch-http.html)

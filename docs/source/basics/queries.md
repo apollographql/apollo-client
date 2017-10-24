@@ -311,7 +311,7 @@ export default graphql(gql`query { ... }`)(MyComponent);
 
 If an error occurred then this property will be an instance of [`ApolloError`][]. If you do not handle this error you will get a warning in your console that says something like: `"Unhandled (in react-apollo) Error: ..."`.
 
-[`ApolloError`]: /docs/core/error-handling.html#ApolloError
+[`ApolloError`]: /docs/react/reference/index.html#ApolloError
 
 **Example:**
 
@@ -675,4 +675,4 @@ export default graphql(gql`query { ... }`, {
 ```
 
 <h3 id="graphql-config-options-context">`options.context`</h3>
-With the flexiblity and power of [Apollo Link](/docs/links) being part of Apollo Client, you may want to send information from your operation straight to a link in your network chain! This can be used to do things like set `headers` on HTTP requests from props, control which endpoint you send a query to, and so much more depending on what links your app is using. Everything under the `context` object gets passed directly to your network chain. For more information about using context, check out the [docs on context with links](/docs/link/overview.html#context)
+With the flexiblity and power of [Apollo Link](/docs/link) being part of Apollo Client, you may want to send information from your operation straight to a link in your network chain! This can be used to do things like set `headers` on HTTP requests from props, control which endpoint you send a query to, and so much more depending on what links your app is using. Everything under the `context` object gets passed directly to your network chain. For more information about using context, check out the [docs on context with links](/docs/link/overview.html#context)

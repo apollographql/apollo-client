@@ -178,4 +178,4 @@ export default SeriesDetailView
 
 ```
 
-Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](/docs/links/links/BatchedHttpLink.html) those two queries can be send to the server in one network request.
+Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](/docs/link/links/batch-http.html) those two queries can be send to the server in one network request.

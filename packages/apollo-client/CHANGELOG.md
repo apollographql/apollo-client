@@ -1,6 +1,7 @@
 # Change log
 
 ### vNext
+- Fix bug with mutations not updating watchedQueries where variables don't change
 - Define and expose `ApolloClientOptions`, Type of an object that represents ApolloClient's constructor argument.
 - Expose `ApolloCurrentResult`
 - Throw an error if cache or data are not supplied to the `ApolloClient` constructor

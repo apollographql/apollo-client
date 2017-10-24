@@ -1,7 +1,17 @@
-import { ApolloLink, FetchResult, GraphQLRequest, execute } from 'apollo-link';
+import {
+  ApolloLink,
+  Operation,
+  NextLink,
+  FetchResult,
+  GraphQLRequest,
+  execute,
+} from 'apollo-link';
 import { ExecutionResult } from 'graphql';
 import { ApolloCache, DataProxy } from 'apollo-cache';
-import { isProduction } from 'apollo-utilities';
+import {
+  isProduction,
+  removeConnectionDirectiveFromDocument,
+} from 'apollo-utilities';
 
 import { QueryManager } from './core/QueryManager';
 import { ApolloQueryResult } from './core/types';
@@ -38,6 +48,13 @@ export type ApolloClientOptions<TCacheShape> = {
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
 };
+
+const supportedDirectives = new ApolloLink(
+  (operation: Operation, forward: NextLink) => {
+    operation.query = removeConnectionDirectiveFromDocument(operation.query);
+    return forward(operation);
+  },
+);
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
@@ -100,7 +117,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       `);
     }
 
-    this.link = link;
+    // remove apollo-client supported directives
+    this.link = supportedDirectives.concat(link);
     this.cache = cache;
     this.store = new DataStore(cache);
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;

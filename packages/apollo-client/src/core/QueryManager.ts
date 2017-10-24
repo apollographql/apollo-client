@@ -13,7 +13,6 @@ import {
   isProduction,
   maybeDeepFreeze,
   hasDirectives,
-  removeConnectionDirectiveFromDocument,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -133,15 +132,12 @@ export class QueryManager<TStore> {
 
     const mutationId = this.generateQueryId();
     const cache = this.dataStore.getCache();
-    mutation = removeConnectionDirectiveFromDocument(
-      cache.transformDocument(mutation),
-    );
-
-    variables = assign(
-      {},
-      getDefaultValues(getMutationDefinition(mutation)),
-      variables,
-    );
+    (mutation = cache.transformDocument(mutation)),
+      (variables = assign(
+        {},
+        getDefaultValues(getMutationDefinition(mutation)),
+        variables,
+      ));
 
     const mutationString = print(mutation);
     const request = {
@@ -1023,7 +1019,7 @@ export class QueryManager<TStore> {
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none' } = options;
     const request = {
-      query: removeConnectionDirectiveFromDocument(document),
+      query: document,
       variables,
       operationName: getOperationName(document) || undefined,
       context: context || {},

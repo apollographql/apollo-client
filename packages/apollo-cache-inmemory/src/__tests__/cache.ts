@@ -1,7 +1,7 @@
-import { DataProxy } from 'apollo-cache';
+import { ApolloCache } from 'apollo-cache';
 import gql, { disableFragmentWarnings } from 'graphql-tag';
 
-import { InMemoryCache, ApolloReducerConfig } from '..';
+import { InMemoryCache, ApolloReducerConfig, NormalizedCache } from '..';
 
 disableFragmentWarnings();
 
@@ -14,7 +14,7 @@ describe('Cache', () => {
       initialState?: any;
       config?: ApolloReducerConfig;
     } = {},
-  ): DataProxy {
+  ): ApolloCache<NormalizedCache> {
     return new InMemoryCache(
       config || { addTypename: false },
       // XXX this is the old format. The tests need to be updated but since it is mapped down
@@ -1101,6 +1101,102 @@ describe('Cache', () => {
           'field({"literal":false,"value":42})': 2,
         },
       });
+    });
+  });
+
+  describe('performTransaction', () => {
+    it('will not broadcast mid-transaction', () => {
+      const cache = createCache();
+
+      let numBroadcasts = 0;
+
+      const query = gql`
+        {
+          a
+        }
+      `;
+
+      cache.watch({
+        query,
+        optimistic: false,
+        callback: () => {
+          numBroadcasts++;
+        },
+      });
+
+      expect(numBroadcasts).toEqual(0);
+
+      cache.performTransaction(proxy => {
+        proxy.writeQuery({
+          data: { a: 1 },
+          query,
+        });
+
+        expect(numBroadcasts).toEqual(0);
+
+        proxy.writeQuery({
+          data: { a: 4, b: 5, c: 6 },
+          query: gql`
+            {
+              a
+              b
+              c
+            }
+          `,
+        });
+
+        expect(numBroadcasts).toEqual(0);
+      });
+
+      expect(numBroadcasts).toEqual(1);
+    });
+  });
+
+  describe('performOptimisticTransaction', () => {
+    it('will only broadcast once', () => {
+      const cache = createCache();
+
+      let numBroadcasts = 0;
+
+      const query = gql`
+        {
+          a
+        }
+      `;
+
+      cache.watch({
+        query,
+        optimistic: true,
+        callback: () => {
+          numBroadcasts++;
+        },
+      });
+
+      expect(numBroadcasts).toEqual(0);
+
+      cache.recordOptimisticTransaction(proxy => {
+        proxy.writeQuery({
+          data: { a: 1 },
+          query,
+        });
+
+        expect(numBroadcasts).toEqual(0);
+
+        proxy.writeQuery({
+          data: { a: 4, b: 5, c: 6 },
+          query: gql`
+            {
+              a
+              b
+              c
+            }
+          `,
+        });
+
+        expect(numBroadcasts).toEqual(0);
+      }, 1);
+
+      expect(numBroadcasts).toEqual(1);
     });
   });
 });

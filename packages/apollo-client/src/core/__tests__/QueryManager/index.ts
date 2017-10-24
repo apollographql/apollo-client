@@ -3473,8 +3473,8 @@ describe('QueryManager', () => {
         },
       };
       const query = gql`
-        query getAuthors {
-          author {
+        query getAuthors($id: ID!) {
+          author(id: $id) {
             firstName
             lastName
           }
@@ -3492,13 +3492,14 @@ describe('QueryManager', () => {
           lastName: 'Johnson',
         },
       };
+      const variables = { id: '1234' };
       const queryManager = mockQueryManager(
         {
-          request: { query },
+          request: { query, variables },
           result: { data },
         },
         {
-          request: { query },
+          request: { query, variables },
           result: { data: secondReqData },
         },
         {
@@ -3508,6 +3509,7 @@ describe('QueryManager', () => {
       );
       const observable = queryManager.watchQuery<any>({
         query,
+        variables,
         notifyOnNetworkStatusChange: false,
       });
       return observableToPromise(
@@ -3516,7 +3518,10 @@ describe('QueryManager', () => {
           expect(result.data).toEqual(data);
           queryManager.mutate({ mutation, refetchQueries: ['getAuthors'] });
         },
-        result => expect(result.data).toEqual(secondReqData),
+        result => {
+          expect(observable.currentResult().data).toEqual(secondReqData);
+          expect(result.data).toEqual(secondReqData);
+        },
       );
     });
 
@@ -3653,10 +3658,10 @@ describe('QueryManager', () => {
         .then(() => expect(timesWarned).toBe(0));
     });
 
-    it('also works with a query document and variables', () => {
+    it('also works with a query document and variables', done => {
       const mutation = gql`
-        mutation changeAuthorName {
-          changeAuthorName(newName: "Jack Smith") {
+        mutation changeAuthorName($id: ID!) {
+          changeAuthorName(newName: "Jack Smith", id: $id) {
             firstName
             lastName
           }
@@ -3669,8 +3674,8 @@ describe('QueryManager', () => {
         },
       };
       const query = gql`
-        query getAuthors {
-          author {
+        query getAuthors($id: ID!) {
+          author(id: $id) {
             firstName
             lastName
           }
@@ -3688,29 +3693,50 @@ describe('QueryManager', () => {
           lastName: 'Johnson',
         },
       };
+
+      const variables = { id: '1234' };
+      const mutationVariables = { id: '2345' };
       const queryManager = mockQueryManager(
         {
-          request: { query },
+          request: { query, variables },
           result: { data },
+          delay: 10,
         },
         {
-          request: { query },
+          request: { query, variables },
           result: { data: secondReqData },
+          delay: 100,
         },
         {
-          request: { query: mutation },
+          request: { query: mutation, variables: mutationVariables },
           result: { data: mutationData },
+          delay: 10,
         },
       );
-      const observable = queryManager.watchQuery<any>({ query });
-      return observableToPromise(
-        { observable },
-        result => {
-          expect(result.data).toEqual(data);
-          queryManager.mutate({ mutation, refetchQueries: [{ query }] });
+      const observable = queryManager.watchQuery<any>({ query, variables });
+      let count = 0;
+      observable.subscribe({
+        next: result => {
+          if (count === 0) {
+            expect(result.data).toEqual(data);
+            queryManager.mutate({
+              mutation,
+              variables: mutationVariables,
+              refetchQueries: [{ query, variables }],
+            });
+          }
+          if (count === 1) {
+            setTimeout(() => {
+              expect(observable.currentResult().data).toEqual(secondReqData);
+              done();
+            }, 1);
+
+            expect(result.data).toEqual(secondReqData);
+          }
+
+          count++;
         },
-        result => expect(result.data).toEqual(secondReqData),
-      );
+      });
     });
 
     it('also works with a conditional function that returns false', () => {

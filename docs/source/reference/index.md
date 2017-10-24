@@ -1,17 +1,5 @@
 ---
-title: Title
-subtitle: Subtitle
-description: Description
+title: API Reference
 ---
 
-<h2 title="topic">Topic</h2>
-
-<h3 title="subtopic">Sub Topic</h3>
-
-```js
-// code block
-```
-
-<h2 title="best-practices">Best Practices</h2>
-
-<h2 title="API">API Documentation</h2>
+This should just be an ordered page to API docs on each section and a table of contents with methods in a table

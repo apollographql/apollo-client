@@ -19,31 +19,34 @@ sidebar_categories:
   null:
     - index
     - basics/integrations
+    - 2.0-migration
+  Basics:
     - basics/setup
     - basics/queries
     - basics/mutations
     - basics/network-layer
-    - basics/error-handling
-    - basics/fragments
-    - basics/subscriptions
+    - basics/caching
   Features:
-    - features/changelog
+    - features/error-handling
     - features/caching
-    - features/developer-tooling
-    - features/network-customization
     - features/optimistic-ui
+    - features/cache-updates
+    - features/fragments
+    - features/developer-tooling
+    - features/subscriptions
     - features/react-native
     - features/static-typing
   Recipes:
-    - recipes/authentication
-    - recipes/babel
-    - recipes/meteor
-    - recipes/pagination
-    - recipes/prefetching
-    - recipes/query-splitting
-    - recipes/server-side-rendering
     - recipes/simple-example
+    - recipes/query-splitting
+    - recipes/pagination
+    - recipes/authentication
+    - recipes/prefetching
+    - recipes/server-side-rendering
+    # - recipes/fragment-matching
+    - recipes/babel
     - recipes/webpack
+    - recipes/meteor
     # - recipes/client-side-data
     # - recipes/using-with-rest
     # - recipes/offline

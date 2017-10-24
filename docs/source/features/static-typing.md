@@ -3,11 +3,13 @@ title: Using Apollo with TypeScript and Flow
 sidebar_title: Using TypeScript and Flow
 ---
 
+**Note: The flow types are still under development for the 2.0, we plan on launching them as soon as possible but if you are able to help out, please open a PR!**
+
 As your application grows, you may find it helpful to include a type system to assist in development. Apollo supports type definitions for both Flow and TypeScript systems. Both `apollo-client` and `react-apollo` ship with definitions in their npm packages, so installation should be done for you after the libraries are included in your project.
 
 These docs assume you already have either Flow or TypeScript configured in your project, if not start [here for Flow](https://flow.org/en/docs/install/), or [here for TypeScript](https://github.com/Microsoft/TypeScript-React-Conversion-Guide#typescript-react-conversion-guide).
 
-<h2 id="operation-result">operation result</h2>
+<h2 id="operation-result">Operation result</h2>
 
 The most common need when using type systems with GraphQL is to type the results of an operation. Given that a GraphQL server's schema is strongly typed, we can even generate Flow or TypeScript definitions automaticaly using a tool like [apollo-codegen](https://github.com/apollographql/apollo-codegen). In these docs however, we will be writing result types manually.
 
@@ -106,7 +108,7 @@ export default withCharacter(({ data: { loading, hero, error } }) => {
 
 One of the major differences between the two systems is how they handle inferring types. Because TypeScript does not infer types, the React integration of Apollo exports extra type definitions to make adding types easier.
 
-<h2 id="options">options</h2>
+<h2 id="options">Options</h2>
 
 Typically, variables to the query will be computed from the props of the wrapper component. Wherever the component is used in your application, the caller would pass arguments that we want our type system to validate what the shape of these props could look like. Here is an example setting the type of props using Flow:
 
@@ -214,16 +216,21 @@ This is expecially helpful when accessing deeply nested objects that are passed 
 ```javascript
 // @flow
 import React from "react";
-import ApolloClient, { createNetworkInterface } from "apollo-client";
+import { ApolloClient } from "apollo-client";
+import { createHttpLink } from "apollo-link-http";
+import { InMemoryCache } from "apollo-cache-inmemory";
 import { ApolloProvider } from "react-apollo";
 
 import Character from "./Character";
 
-export const networkInterface = createNetworkInterface({
+export const link = createHttpLink({
   uri: "https://mpjk0plp9.lp.gql.zone/graphql"
 });
 
-export const client = new ApolloClient({ networkInterface });
+export const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link,
+});
 
 export default () =>
   <ApolloProvider client={client}>
@@ -232,7 +239,7 @@ export default () =>
   </ApolloProvider>;
 ```
 
-<h2 id="props">props</h2>
+<h2 id="props">Props</h2>
 
 One of the most powerful feature of the React integration is the `props` function which allows you to reshape the result data from an operation into a new shape of props for the wrapped component. GraphQL is awesome at allowing you to only request the data you want from the server. The client still often needs to reshape or do client side calculations based on these results. The return value can even differ depending on the state of the operation (i.e loading, error, recieved data), so informing our type system of choice of these possible values is really important to make sure our components won't have runtime errors.
 
@@ -364,7 +371,7 @@ export const withCharacter: OperationComponent<Response, InputProps, Props> = gr
 
 With this addition, the entirety of the integration between Apollo and React can be statically typed. When combined with the strong tooling each system provides, it can make for a much improved application and developer experience.
 
-<h2 id="classes-vs-functions">classes vs functions</h2>
+<h2 id="classes-vs-functions">Classes vs Functions</h2>
 
 All of the above examples show wrapping a component which is just a function using the result of a `graphql` wrapper. Sometimes, components that depend on GraphQL data require state and are formed using the `class MyComponent extends React.Component` practice. In these use cases, both TypeScript and Flow require adding prop shape to the class instance. In order to support this, `react-apollo` exports types to support creating result types easily. This is the previous example shortened to show just the component when using Flow:
 
@@ -414,7 +421,7 @@ class Character extends React.Component<ChildProps<InputProps, Response>, {}> {
 export default withCharacter(Character);
 ```
 
-<h2 id="using-name">using the `name` property</h2>
+<h2 id="using-name">Using the `name` property</h2>
 If you are using the `name` property in the configuration of the `graphql` wrapper, you will need to manually attach the type of the response to the `props` function. An example using TypeScript would be like this:
 
 ```javascript
@@ -432,7 +439,7 @@ export const withCharacter = graphql<Response, InputProps, Prop>(HERO_QUERY, {
 });
 ```
 
-<h2 id="more-info">more information</h2>
+<h2 id="more-info">More information</h2>
 
 For more information regarding using Flow or TypeScript with Apollo, check out the following articles:
 - [A stronger (typed) React Apollo](https://dev-blog.apollodata.com/a-stronger-typed-react-apollo-c43bd52be0d8)

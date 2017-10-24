@@ -10,7 +10,7 @@ One of our core values is "it's just GraphQL". When using Apollo Client, you don
 
 When we are running a basic query we can use the `graphql` container in a very simple way. We simply parse our query using the `gql` template literal and then pass it into the `graphql` container as the first argument.
 
-For instance, in [GitHunt](LINK PLZ), we want to display the currently logged-in user in the `Profile` component:
+For instance, in [GitHunt](https://github.com/apollographql/Githunt-React), we want to display the currently logged-in user in the `Profile` component:
 
 ```js
 import React, { Component } from 'react';
@@ -48,7 +48,7 @@ In addition to the `currentUser` field selected in the query, the `data` prop al
 }
 ```
 
-The `data.currentUser` prop will change as what the client knows about the current user changes over time. That information is stored in Apollo Client's global cache, so if some other query fetches new information about the current user, this component will update to remain consistent. You can read more about techniques to bring the cache up to date with the server in the [article about cache updates](LINK PLZ).
+The `data.currentUser` prop will change as what the client knows about the current user changes over time. That information is stored in Apollo Client's global cache, so if some other query fetches new information about the current user, this component will update to remain consistent.
 
 <h2 id="default-result-props" title="The data prop">The structure of the `data` prop</h2>
 
@@ -138,7 +138,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 If you use a function to compute options from props, all of these `options` will be automatically recalculated whenever the props change.
 
-[Read about all of the query options in the API documentation.](api-queries.html#graphql-query-options)
+[Read about all of the query options in the API documentation.](#graphql-query-options)
 
 <h2 id="graphql-skip">Skipping an operation</h2>
 
@@ -624,6 +624,26 @@ export default graphql(gql`query { ... }`, {
 })(MyComponent);
 ```
 
+<h3 id="graphql-config-options-errorPolicy">`options.errorPolicy`</h3>
+
+The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside acutal data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
+
+Valid `errorPolicy` values are:
+
+- `none`: This is the default value where we treat GraphQL errors as runtime errors. Apollo will discard any data that came back with the request and render your component with an `error` prop.
+- `ignore`: Much like `none`, this causes Apollo to ignore any data from you server, but it also won't update your UI aside from setting the loading state back to false. 
+- `all`: Selecting all means you want to be notified any time there are any GraphQL errors. It will render your component with any data from the request and any errors with their information. It is particularly helpful for server side rendering so your UI always shows something
+
+
+**Example:**
+
+```js
+export default graphql(gql`query { ... }`, {
+  options: { errorPolicy: 'all' },
+})(MyComponent);
+```
+
+
 <h3 id="graphql-config-options-pollInterval">`options.pollInterval`</h3>
 
 The interval in milliseconds at which you want to start polling. Whenever that number of milliseconds elapses your query will be executed using the network interface and another execution will be scheduled using the configured number of milliseconds.
@@ -653,3 +673,6 @@ export default graphql(gql`query { ... }`, {
   options: { notifyOnNetworkStatusChange: true },
 })(MyComponent);
 ```
+
+<h3 id="graphql-config-options-context">`options.context`</h3>
+With the flexiblity and power of [Apollo Link](/docs/links) being part of Apollo Client, you may want to send information from your operation straight to a link in your network chain! This can be used to do things like set `headers` on HTTP requests from props, control which endpoint you send a query to, and so much more depending on what links your app is using. Everything under the `context` object gets passed directly to your network chain. For more information about using context, check out the [docs on context with links](/docs/link/overview.html#context)

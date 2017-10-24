@@ -18,25 +18,19 @@ For example, a typical approach is to include a script tag that looks something 
 
 ```html
 <script>
-  // `initialState` should have the shape of the Apollo store
-  // state. Make sure to include only the data though. E.g.:
-  // const initialState = {[client.reduxRootKey]: {
-  //   data: client.store.getState()[client.reduxRootKey].data
-  // }};
-  window.__APOLLO_STATE__ = initialState;
+  window.__APOLLO_STATE__ = client.cache.extract();
 </script>
 ```
 
 You can then rehydrate the client using the initial state passed from the server:
 ```js
 const client = new ApolloClient({
-  initialState: window.__APOLLO_STATE__,
+  cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
+  link,
 });
 ```
 
 We'll see below how you can generate both the HTML and the Apollo store's state using Node and `react-apollo`'s server rendering functions. However if you are rendering HTML via some other means, you will have to generate the state manually.
-
-If you are using [Redux](redux.html) externally to Apollo, and already have store rehydration, you should pass the store state into the [`Store` constructor](http://redux.js.org/docs/basics/Store.html).
 
 Then, when the client runs the first set of queries, the data will be returned instantly because it is already in the store!
 
@@ -44,7 +38,8 @@ If you are using [`forceFetch`](cache-updates.html#forceFetch) on some of the in
 
 ```js
 const client = new ApolloClient({
-  initialState: window.__APOLLO_STATE__,
+  cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
+  link,
   ssrForceFetchDelay: 100,
 });
 ```
@@ -61,7 +56,7 @@ In order to render your application on the server, you need to handle a HTTP req
 
 We'll see how to take your component tree and turn it into a string in the next section, but you'll need to be a little careful in how you construct your Apollo Client instance on the server to ensure everything works there as well:
 
-1. When [creating an Apollo Client instance](initialization.html) on the server, you'll need to set up you network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
+1. When [creating an Apollo Client instance](../basics/setup.html) on the server, you'll need to set up you network interface to connect to the API server correctly. This might look different to how you do it on the client, since you'll probably have to use an absolute URL to the server if you were using a relative URL on the client.
 
 2. Since you only want to fetch each query result once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid repeated force-fetching.
 
@@ -73,9 +68,12 @@ Once you put that all together, you'll end up with initialization code that look
 // This example uses React Router v4, although it should work
 // equally well with other routers that support SSR
 
-import { ApolloClient, createNetworkInterface, ApolloProvider } from 'react-apollo';
+import { ApolloProvider } from 'react-apollo';
+import { ApolloClient } from 'apollo-client';
+import { createHttpLink } from 'apollo-link-http';
 import Express from 'express';
 import { StaticRouter } from 'react-router';
+
 import Layout from './routes/Layout';
 
 // Note you don't have to use any particular http server, but
@@ -83,18 +81,15 @@ import Layout from './routes/Layout';
 const app = new Express();
 app.use((req, res) => {
 
-
   const client = new ApolloClient({
     ssrMode: true,
     // Remember that this is the interface the SSR server will use to connect to the
     // API server, so we need to ensure it isn't firewalled, etc
-    networkInterface: createNetworkInterface({
+    link: createHttpLink({
       uri: 'http://localhost:3010',
-      opts: {
-        credentials: 'same-origin',
-        headers: {
-          cookie: req.header('Cookie'),
-        },
+      credentials: 'same-origin',
+      headers: {
+        cookie: req.header('Cookie'),
       },
     }),
   });
@@ -195,7 +190,7 @@ const client = new ApolloClient(....);
 getDataFromTree(app).then(() => {
   // We are ready to render for real
   const content = ReactDOM.renderToString(app);
-  const initialState = {[client.reduxRootKey]: client.getInitialState()  };
+  const initialState = client.cache.extract();
 
   const html = <Html content={content} state={initialState} />;
 
@@ -224,7 +219,7 @@ function Html({ content, state }) {
 
 <h3 id="local-queries">Avoiding the network for local queries</h3>
 
-If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work. One solution to this problem is the [apollo-local-query](https://github.com/af/apollo-local-query) module, which lets you create a `networkInterface` for apollo that doesn't actually use the network.
+If your GraphQL endpoint is on the same server that you're rendering from, you may want to avoid using the network when making your SSR queries. In particular, if localhost is firewalled on your production environment (eg. Heroku), making network requests for these queries will not work. One solution to this problem is to use an Apollo Link to fetch data using a local graphql schema instead of making a network request.
 
 <h3 id="skip-for-ssr">Skipping queries for SSR</h3>
 
@@ -248,7 +243,7 @@ const client = new ApolloClient(....);
 
 // during request
 renderToStringWithData(app).then((content) => {
-  const initialState = {[client.reduxRootKey]: client.getInitialState() };
+  const initialState = client.cache.extract();
   const html = <Html content={content} state={initialState} />;
 
   res.status(200);

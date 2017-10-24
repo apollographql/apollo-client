@@ -59,46 +59,58 @@ The most popular transport for GraphQL subscriptions today is [`subscriptions-tr
 
 Let's look at how to add support for this transport to Apollo Client.
 
-First, install `subscriptions-transport-ws` and `apollo-link-ws` from npm:
+First, install the WebSocket Apollo Link (`apollo-link-ws`) from npm:
 
 ```shell
-npm install --save subscriptions-transport-ws apollo-link-ws
+npm install --save apollo-link-ws
 ```
 
-Then, initialize a GraphQL subscriptions transport client:
+Then, initialize a GraphQL subscriptions transport link:
 
 ```js
-import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { WebSocketLink } from 'apollo-link-ws';
 
-const wsClient = new SubscriptionClient(`ws://localhost:5000/`, {
-  reconnect: true
+const wsClient = new WebSocketLink({
+  uri: `ws://localhost:5000/`,
+  options: {
+    reconnect: true
+  }
 });
 ```
 
-XXX Document using with links below
 
 ```js
-import { ApolloClient, createNetworkInterface } from 'react-apollo';
-import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
+import { split } from 'apollo-link';
+import { HttpLink } from 'apollo-link-http';
+import { WebSocketLink } from 'apollo-link-ws';
+import { getMainDefinition } from 'apollo-utilities';
 
-// Create a normal network interface:
-const networkInterface = createNetworkInterface({
+// Create an http link:
+const httpLink = new HttpLink({
   uri: 'http://localhost:3000/graphql'
 });
 
-// Extend the network interface with the WebSocket
-const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
-  networkInterface,
-  wsClient
+// Create a WebSocket link:
+const wsLink = new WebSocketLink({
+  uri: `ws://localhost:5000/`,
+  options: {
+    reconnect: true
+  }
+});
+
+// using the ability to split links, you can send data to each link
+// depending on what kind of operation is being sent
+const link = split(
+  // split based on operation type
+  ({ query }) => {
+    const { kind, operation } = getMainDefinition(query);
+    return kind === 'OperationDefinition' && operation === 'subscription';
+  },
+  wsLink,
+  httpLink,
 );
 
-// Finally, create your ApolloClient instance with the modified network interface
-const client = new ApolloClient({
-  networkInterface: networkInterfaceWithSubscriptions
-});
 ```
-
-XXX end need to change code sample
 
 Now, queries and mutations will go over HTTP as normal, but subscriptions will be done over the websocket transport.
 
@@ -211,9 +223,11 @@ export class CommentsPage extends Component {
 In many cases it is necessary to authenticate clients before allowing them to receive subscription results. To do this, the `SubscriptionClient` constructor accepts a `connectionParams` field, which passes a custom object that the server can use to validate the connection before setting up any subscriptions.
 
 ```js
-import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { WebSocketLink } from 'apollo-link-ws';
 
-const wsClient = new SubscriptionClient(`ws://localhost:5000/`, {
+const wsLink = new WebSocketLink({
+  uri: `ws://localhost:5000/`,
+  options: {
     reconnect: true,
     connectionParams: {
         authToken: user.authToken,
@@ -221,4 +235,4 @@ const wsClient = new SubscriptionClient(`ws://localhost:5000/`, {
 });
 ```
 
-> You can use `connectionParams` for anything else you might need, not only authentication, and check its payload on the server side with [SubscriptionsServer](/tools/graphql-subscriptions/index.html).
+> You can use `connectionParams` for anything else you might need, not only authentication, and check its payload on the server side with [SubscriptionsServer](/docs/graphql-subscriptions/authentication.html).

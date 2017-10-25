@@ -171,7 +171,7 @@ const state = client.cache.extract();
 ```
 
 
-# Upgrading from custom NetworkInteface with middleware / afterware
+# Upgrading from custom NetworkInterface with middleware / afterware
 
 #### Middleware
 

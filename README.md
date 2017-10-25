@@ -86,7 +86,7 @@ To learn more about all of the features available to you through the `apollo-cli
 ## Learn how to use Apollo Client with your favorite framework
 
 - [React](http://apollographql.com/docs/react/)
-- [Angular 2](http://apollographql.com/docs/angular/)
+- [Angular](http://apollographql.com/docs/angular/)
 - [Vue](https://github.com/Akryum/vue-apollo)
 - [Ember](https://github.com/bgentry/ember-apollo-client)
 - [Polymer](https://github.com/aruntk/polymer-apollo)

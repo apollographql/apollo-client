@@ -49,7 +49,7 @@ If you have a favorite React tool, and something in Apollo makes it difficult to
 
 We believe that using GraphQL should be easy and fun. One of the ways Apollo is designed for this is that if you can write you query in GraphiQL, it'll work with Apollo Client! Because it doesn't assume anything beyond the official GraphQL specification, Apollo works with every GraphQL server implementation, for *every* language. It doesn't impose any requirements on your schema either! If you can send a query to a standard GraphQL server, Apollo can handle it. You can find a list of GraphQL server implementations on [graphql.org](http://graphql.org/code/#server-libraries).
 
-<h3 id="other-platforms" title="Other JS + navtive platforms">Other JavaScript + native platforms</h3>
+<h3 id="other-platforms" title="Other JS + native platforms">Other JavaScript + native platforms</h3>
 
 This documentation site is written with examples using React, but Apollo has an implementation for every client platform:
 

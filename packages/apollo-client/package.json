@@ -51,7 +51,7 @@
   "dependencies": {
     "apollo-cache": "^0.2.0-rc.3",
     "apollo-link": "0.8.0",
-    "apollo-link-dedup": "0.6.0",
+    "apollo-link-dedup": "1.0.0",
     "apollo-utilities": "^0.2.0-rc.3",
     "symbol-observable": "^1.0.2"
   },

@@ -1,6 +1,9 @@
 # Change log
 
-### vNext
+### 2.0.1
+- remove errant console
+
+### 2.0.0
 - Make sure context + cache is on links for mutations
 - Improved error for upgrading to 2.0
 - Fix bug with mutations not updating watchedQueries where variables don't change

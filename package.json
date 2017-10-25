@@ -17,9 +17,8 @@
     "coverage": "lerna run -- coverage",
     "coverage:upload": "codecov",
     "danger": "danger run --verbose",
-    "predeploy": "npm run build && npm test",
     "deploy":
-      "lerna publish -m \"chore: Publish\" --independent --cd-version=prerelease --preid=rc --npm-tag=next && cd packages/apollo-client && npm run deploy"
+      "lerna publish -m \"chore: Publish\" --independent && cd packages/apollo-client && npm run deploy"
   },
   "bundlesize": [
     {

@@ -1,8 +1,5 @@
 # [Apollo client](http://dev.apollodata.com/) [![npm version](https://badge.fury.io/js/apollo-client.svg)](https://badge.fury.io/js/apollo-client) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-**The master branch is the beta version of Apollo Client 2.0. To find the current @latest, take a look at the `latest` branch. For update information, check out the [upgrade guide](Upgrade.md).**
-
-**The documentation site still references the 1.0 API until we are out of beta for 2.0.**
 
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
 
@@ -30,7 +27,7 @@ npm install apollo-client graphql-tag --save
 
 To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3+.
 
-**NEW:** Install the [Apollo Client Developer tools for Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) for a great GraphQL developer experience!
+Install the [Apollo Client Developer tools for Chrome](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) for a great GraphQL developer experience!
 
 ## Usage
 
@@ -46,7 +43,7 @@ const client = new ApolloClient();
 To point `ApolloClient` at a different URL, just create your own `HttpLink` instance, like so, replacing `https://graphql.example.com` with your GraphQL API's URL:
 
 ```js
-import ApolloClient, { HttpLink } from 'apollo-client-preset';
+import { ApolloClient, HttpLink } from 'apollo-client-preset';
 
 const client = new ApolloClient({
   link: new HttpLink({
@@ -79,23 +76,23 @@ Now your client will be primed with some data in its cache. You can continue to 
 
 To learn more about all of the features available to you through the `apollo-client` package, be sure to read through the [**`apollo-client` API reference**][].
 
-[`ApolloClient`]: http://dev.apollodata.com/core/apollo-client-api.html
+[`ApolloClient`]: http://apollographql.com/docs/react
 [`apollo-client-preset`]: https://www.npmjs.com/package/apollo-client-preset
-[reactively watching queries with `watchQuery`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.watchQuery
-[changing data on your server with `mutate`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.mutate
-[reading a fragment from your local cache with `readFragment`]: http://dev.apollodata.com/core/apollo-client-api.html#ApolloClient\.readFragment
-[**`apollo-client` API reference**]: http://dev.apollodata.com/core/apollo-client-api.html
+[reactively watching queries with `watchQuery`]: http://apollographql.com/docs/react/reference/index.html#ApolloClient\.watchQuery
+[changing data on your server with `mutate`]: http://apollographql.com/docs/react/basics/mutations
+[reading a fragment from your local cache with `readFragment`]: https://www.apollographql.com/docs/react/basics/caching.html#readfragment
+[**`apollo-client` API reference**]: http://apollographql.com/docs/react/reference/index.html
 
 ## Learn how to use Apollo Client with your favorite framework
 
-- [React](http://dev.apollodata.com/react/)
-- [Angular 2](http://dev.apollodata.com/angular2/)
+- [React](http://apollographql.com/docs/react/)
+- [Angular](http://apollographql.com/docs/angular/)
 - [Vue](https://github.com/Akryum/vue-apollo)
 - [Ember](https://github.com/bgentry/ember-apollo-client)
 - [Polymer](https://github.com/aruntk/polymer-apollo)
-- [Meteor](http://dev.apollodata.com/core/meteor.html)
+- [Meteor](http://apollographql.com/docs/react/recipes/meteor.html)
 - [Blaze](http://github.com/Swydo/blaze-apollo)
-- [Vanilla JS](http://dev.apollodata.com/core/)
+- [Vanilla JS](http://apollographql.com/docs/react/reference)
 - [Next.js](https://github.com/zeit/next.js/tree/master/examples/with-apollo)
 
 ---

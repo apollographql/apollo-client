@@ -10,10 +10,10 @@ To get started with Apollo and React, you will need to install a few packages fr
 
 ```bash
 # installing the preset package and react integration
-npm install apollo-client-preset react-apollo graphql-tag --save
+npm install apollo-client-preset react-apollo graphql-tag graphql --save
 
 # installing each piece independently
-npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo graphql-tag ---save
+npm install apollo-client apollo-cache-inmemory apollo-link-http react-apollo graphql-tag graphql ---save
 ```
 
 > Note: You don't have to do anything special to get Apollo Client to work in React Native, just install and import it as usual.

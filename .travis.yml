@@ -13,7 +13,8 @@ script:
   - npm run coverage
 
     # run coverage and file size checks
-  - npm run coverage:upload || true #ignore failures
+    # this is timing out?
+  # - npm run coverage:upload || true #ignore failures
 
     # make sure files don't get too large
   - npm run filesize

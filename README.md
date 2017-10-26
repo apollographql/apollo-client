@@ -3,7 +3,7 @@
 
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL. To get the most value out of `apollo-client`, you should use it with one of its view layer integrations.
 
-To get started with the React integration, go to our [**React Apollo documentation website**](http://dev.apollodata.com/react/).
+To get started with the React integration, go to our [**React Apollo documentation website**](https://www.apollographql.com/docs/react/).
 
 Apollo Client also has view layer integrations for [all the popular frontend frameworks](#learn-how-to-use-apollo-client-with-your-favorite-framework). For the best experience, make sure to use the view integration layer for your frontend framework of choice.
 
@@ -17,7 +17,7 @@ Apollo Client can be used in any JavaScript frontend where you want to use data 
 6. **Small and flexible**, so you don't get stuff you don't need. The core is under 25kb compressed.
 7. **Community driven**, because Apollo is driven by the community and serves a variety of use cases. Everything is planned and developed in the open.
 
-Get started on the [home page](http://dev.apollodata.com/), which has great examples for a variety of frameworks.
+Get started on the [home page](http://apollographql.com/client), which has great examples for a variety of frameworks.
 
 ## Installation
 

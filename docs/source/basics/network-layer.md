@@ -92,7 +92,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
       ...headers,
       authorization: localStorage.getItem('token') || null,
     } 
-  });
+  }));
 
   return forward(operation);
 })
@@ -104,7 +104,7 @@ const otherMiddleware = new ApolloLink((operation, forward) => {
       ...headers,
       'recent-activity': localStorage.getItem('lastOnlineTime') || null,
     } 
-  });
+  }));
 
   return forward(operation);
 })

@@ -137,7 +137,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 
 const client = new ApolloClient({
   link: new HttpLink({ uri: 'https://q80vw8qjp.lp.gql.zone/graphql' }),
-  cache: new InMemoryCache();
+  cache: new InMemoryCache()
 });
 
 client.query({ query: gql`{ hello }` }).then(console.log);

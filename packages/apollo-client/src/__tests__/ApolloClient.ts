@@ -11,23 +11,13 @@ describe('ApolloClient', () => {
     it('will throw an error if link is not passed in', () => {
       expect(() => {
         const client = new ApolloClient({ cache: new InMemoryCache() });
-      }).toThrowError(`
-        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
-        For more information, please visit:
-          https://apollographql.com/docs/react/setup
-        to help you get started.
-      `);
+      }).toThrowErrorMatchingSnapshot();
     });
 
     it('will throw an error if cache is not passed in', () => {
       expect(() => {
         const client = new ApolloClient({ link: new ApolloLink.empty() });
-      }).toThrowError(`
-        In order to initialize Apollo Client, you must specify link & cache properties on the config object.
-        For more information, please visit:
-          https://apollographql.com/docs/react/setup
-        to help you get started.
-      `);
+      }).toThrowErrorMatchingSnapshot();
     });
   });
 

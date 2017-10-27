@@ -234,4 +234,42 @@ describe('Link interactions', () => {
       finished = true;
     });
   });
+  it('includes the cache on the context for mutations', done => {
+    const mutation = gql`
+      mutation UpdateLuke {
+        people_one(id: 1) {
+          name
+          friends {
+            name
+          }
+        }
+      }
+    `;
+
+    const initialData = {
+      people_one: {
+        name: 'Luke Skywalker',
+        friends: [{ name: 'Leia Skywalker' }],
+      },
+    };
+
+    const evictionLink = (operation, forward) => {
+      const { cache } = operation.getContext();
+      expect(cache).toBeDefined();
+      done();
+      return forward(operation);
+    };
+
+    const mockLink = new MockSubscriptionLink();
+    const link = ApolloLink.from([evictionLink, mockLink]);
+    const queryManager = new QueryManager({
+      store: new DataStore(new InMemoryCache({ addTypename: false })),
+      link,
+    });
+
+    queryManager.mutate({ mutation });
+
+    // fire off first result
+    mockLink.simulateResult({ result: { data: initialData } });
+  });
 });

@@ -32,25 +32,26 @@ By default, Apollo identifies objects based on two properties: The `__typename` 
 You can also specify a custom function to generate IDs from each object, and supply it as the `dataIdFromObject` in the [`ApolloClient` constructor](initialization.html#creating-client), if you want to specify how Apollo will identify and de-duplicate the objects returned from the server.
 
 ```js
-import { ApolloClient } from 'react-apollo';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
 // If your database has unique IDs across all types of objects, you can use
 // a very simple function!
-const client = new ApolloClient({
+const cache = new InMemoryCache({
   dataIdFromObject: o => o.id
 });
 ```
 
 These IDs allow Apollo Client to reactively tell all queries that fetched a particular object about updates to that part of the store.
 
-If you want to get the dataIdFromObjectFunction (for instance when using the [`readFragment` function](/core/apollo-client-api.html#ApolloClient.readFragment)), you can access it as `client.dataIdFromObject`.
+If you want to get the dataIdFromObjectFunction (for instance when using the [`readFragment` function](LINK PLZ)), you can import it from the InMemoryCache package;
 ```js
+import { defaultDataIdFromObject } from 'apollo-cache-inmemory';
 const person = {
   __typename: 'Person',
   id: '1234',
 };
 
-client.dataIdFromObject(person); // 'Person:1234'
+defaultDataIdFromObject(person); // 'Person:1234'
 ```
 
 <h3 id="automatic-updates">Automatic store updates</h3>
@@ -293,57 +294,6 @@ In our `updateQueries` function for the `Comment` query, we're doing something r
 
 Once the mutation fires and the result arrives from the server (or, a result is provided through optimistic UI), our `updateQueries` function for the `Comment` query will be called and the `Comment` query will be updated accordingly. These changes in the result will be mapped to React props and our UI will update as well with the new information!
 
-<h3 id="resultReducers">Query `reducer`</h3>
-
-**NOTE: We recommend using the more flexible `update` API instead of `reducer`. The `reducer` API may be deprecated in the future.**
-
-While `updateQueries` and `update` can only be used to update other queries based on the result of a mutation, the `reducer` option is a way that lets you update the query result based on any Apollo action, including results of other queries, mutations or subscriptions. It acts just like a Redux reducer on the denormalized query result:
-
-```javascript
-import update from 'immutability-helper';
-
-const CommentsPageWithData = graphql(CommentsPageQuery, {
-  props({ data }) {
-    // ...
-  },
-  options({ params }) {
-    return {
-      reducer: (previousResult, action, variables) => {
-        if (action.type === 'APOLLO_MUTATION_RESULT' && action.operationName === 'submitComment'){
-          // NOTE: some more sanity checks are usually recommended here to make
-          // sure the previousResult is not empty and that the mutation results
-          // contains the data we expect.
-
-          // NOTE: variables contains the current query variables,
-          // not the variables of the query or mutation that caused the action.
-          // Those can be found on the `action` argument.
-
-          return update(previousResult, {
-            entry: {
-              comments: {
-                $unshift: [action.result.data.submitComment],
-              },
-            },
-          });
-        }
-        return previousResult;
-      },
-    };
-  },
-})(CommentsPage);
-```
-
-As you can see, the `reducer` option can be used to achieve the same goal as `updateQueries`, but it is more flexible and works with any type of Apollo action, not just mutations. For example, the query result can be updated based on another query's result.
-
-> It is not currently possible to respond to your custom Redux actions arriving from outside of Apollo in a result reducer. See [this thread](https://github.com/apollographql/apollo-client/issues/1013) for more information.
-
-**When should you use update vs. reducer vs. updateQueries vs. refetchQueries?**
-
-`refetchQueries` should be used whenever the mutation result alone is not enough to infer all the changes to the cache. `refetchQueries` is also a very good option if an extra roundtrip and possible overfetching are not of concern for your application, which is often true during prototyping. Compared with `update`, `updateQueries` and `reducer`, `refetchQueries` is the easiest to write and maintain.
-
-`updateQueries`, `reducer` and `update` all provide similar functionality. They were introduced in that order and each tried to address shortcomings in the previous one. While all three APIs are currently available, we strongly recommend using `update` wherever possible, as the other two APIs (`updateQueries` and `reducer`) may be deprecated in the future. We recommend `update` because its API is both the most powerful and easiest to understand of all three. The reason we are considering deprecating `reducer` and `updateQueries` is that they both depend on state internal to the client, which makes them harder to understand and maintain than `update`, without providing any extra functionality.
-
-
 <h2 id="fetchMore">Incremental loading: `fetchMore`</h2>
 
 `fetchMore` can be used to update the result of a query based on the data returned by another query. Most often, it is used to handle infinite-scroll pagination or other situations where you are loading more data when you already have some.
@@ -411,6 +361,7 @@ Here, the `fetchMore` query is the same as the query associated with the compone
 Although `fetchMore` is often used for pagination, there are many other cases in which it is applicable. For example, suppose you have a list of items (say, a collaborative todo list) and you have a way to fetch items that have been updated after a certain time. Then, you don't have to refetch the whole todo list to get updates: you can just incorporate the newly added items with `fetchMore`, as long as your `updateQuery` function correctly merges the new results.
 
 <h3 id="connection-directive">The `@connection` directive</h3>
+
 By default, the result of a `fetchMore` will be stored in the cache according to the initial query executed and its parameters. Due to this behavior, it can be hard to know the location in the cache to run an imperative update on if the variables from the initial query are not known, which often happens if we are running store updates from a different place than where the queries are executed.
 
 To have a stable cache location for query results, Apollo Client 1.6 introduced the `@connection` directive, which can be used to specify a custom store key for results. To use the `@connection` directive, simply add the directive to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
@@ -447,7 +398,7 @@ client.writeQuery({
 
 Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
 
-<h2 id="cacheRedirect">Cache redirects with `customResolvers`</h2>
+<h2 id="cacheRedirect">Cache redirects with `cacheResolvers`</h2>
 
 In some cases, a query requests data that already exists in the client store under a different key. A very common example of this is when your UI has a list view and a detail view that both use the same data. The list view might run the following query:
 
@@ -478,11 +429,11 @@ query DetailView {
 We know that the data is most likely already in the client cache, but because it's requested with a different query, Apollo Client doesn't know that. In order to tell Apollo Client where to look for the data, we can define custom resolvers:
 
 ```
-import { ApolloClient, toIdValue } from 'apollo-client';
+import { toIdValue } from 'apollo-utilities';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
-const client = new ApolloClient({
-  networkInterface,
-  customResolvers: {
+const cache = new InMemoryCache({
+  cacheResolvers: {
     Query: {
       book: (_, args) => toIdValue(client.dataIdFromObject({ __typename: 'Book', id: args.id })),
     },
@@ -517,7 +468,7 @@ The value that's returned (the name of your type) is what you need to put into t
 It is also possible to return a list of IDs:
 
 ```
-customResolvers: {
+cacheResolvers: {
   Query: {
     books: (_, args) => args.ids.map(id =>
       toIdValue(dataIdFromObject({ __typename: 'Book', id: id }))),

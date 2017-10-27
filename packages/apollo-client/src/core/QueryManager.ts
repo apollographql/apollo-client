@@ -13,7 +13,6 @@ import {
   isProduction,
   maybeDeepFreeze,
   hasDirectives,
-  removeConnectionDirectiveFromDocument,
 } from 'apollo-utilities';
 
 import { QueryScheduler } from '../scheduler/scheduler';
@@ -133,15 +132,12 @@ export class QueryManager<TStore> {
 
     const mutationId = this.generateQueryId();
     const cache = this.dataStore.getCache();
-    mutation = removeConnectionDirectiveFromDocument(
-      cache.transformDocument(mutation),
-    );
-
-    variables = assign(
-      {},
-      getDefaultValues(getMutationDefinition(mutation)),
-      variables,
-    );
+    (mutation = cache.transformDocument(mutation)),
+      (variables = assign(
+        {},
+        getDefaultValues(getMutationDefinition(mutation)),
+        variables,
+      ));
 
     const mutationString = print(mutation);
     const request = {
@@ -189,11 +185,15 @@ export class QueryManager<TStore> {
       let storeResult: FetchResult<T> | null;
       let error: ApolloError;
       let newRequest = {
+        context: {},
         ...request,
         query: cache.transformForLink
           ? cache.transformForLink(request.query)
           : request.query,
       };
+
+      (newRequest as any).context.cache = this.dataStore.getCache();
+
       execute(this.link, newRequest).subscribe({
         next: (result: ExecutionResult) => {
           if (result.errors && errorPolicy === 'none') {
@@ -1023,7 +1023,7 @@ export class QueryManager<TStore> {
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none' } = options;
     const request = {
-      query: removeConnectionDirectiveFromDocument(document),
+      query: document,
       variables,
       operationName: getOperationName(document) || undefined,
       context: context || {},

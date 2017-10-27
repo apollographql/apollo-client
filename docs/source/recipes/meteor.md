@@ -4,6 +4,8 @@ order: 152
 description: Specifics about using Apollo in your Meteor application.
 ---
 
+**Note: These docs are for using Meteor with the 1.0 version of Apollo Client. The 2.0 upgrade is still in progress and these docs will be updated when it is ready**
+
 The Apollo client and server tools are published on npm, which makes them available to all JavaScript applications, including those written with [Meteor](https://www.meteor.com/) 1.3 and above. When using Meteor with Apollo, you can use those npm packages directly, or you can use the [`apollo` Atmosphere package](https://github.com/apollostack/meteor-integration/), which simplifies things for you.
 
 To install `apollo`, run these commands:

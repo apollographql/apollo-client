@@ -118,7 +118,4 @@ if (!isBot) {
 
   // Politely ask for their name in the authors file
   message('Please add your name and email to the AUTHORS file (optional)');
-  message(
-    'If this was a change that affects the external API, please update the docs and post a link to the PR in the discussion',
-  );
 }

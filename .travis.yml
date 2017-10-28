@@ -14,7 +14,7 @@ script:
 
     # run coverage and file size checks
     # this is timing out?
-  # - npm run coverage:upload || true #ignore failures
+  - npm run coverage:upload || true #ignore failures
 
     # make sure files don't get too large
   - npm run filesize

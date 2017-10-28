@@ -96,7 +96,6 @@
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
     "moduleFileExtensions": ["ts", "tsx", "js", "json"],
-    "setupFiles": ["<rootDir>/scripts/tests.js"],
-    "coveragePathIgnorePatterns": ["<rootDir>/src/util/"]
+    "setupFiles": ["<rootDir>/scripts/tests.js"]
   }
 }

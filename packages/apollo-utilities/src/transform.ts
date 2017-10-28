@@ -5,11 +5,17 @@ import {
   OperationDefinitionNode,
   FieldNode,
   DirectiveNode,
+  FragmentDefinitionNode,
 } from 'graphql';
 
 import { cloneDeep } from './util/cloneDeep';
 
-import { checkDocument } from './getFromAST';
+import {
+  checkDocument,
+  getOperationDefinitionOrDie,
+  getFragmentDefinitions,
+  createFragmentMap,
+} from './getFromAST';
 
 const TYPENAME_FIELD: FieldNode = {
   kind: 'Field',
@@ -58,6 +64,7 @@ function addTypenameToSelectionSet(
 export type RemoveDirectiveConfig = {
   name?: string;
   test?: (directive: DirectiveNode) => boolean;
+  remove?: boolean;
 };
 
 function removeDirectivesFromSelectionSet(
@@ -65,22 +72,36 @@ function removeDirectivesFromSelectionSet(
   selectionSet: SelectionSetNode,
 ): SelectionSetNode {
   if (!selectionSet.selections) return selectionSet;
-  selectionSet.selections.forEach(selection => {
-    if (
-      selection.kind !== 'Field' ||
-      !(selection as FieldNode) ||
-      !selection.directives
-    )
-      return;
-    selection.directives = selection.directives.filter(
-      directive =>
-        !directives.some((dir: RemoveDirectiveConfig) => {
+  // if any of the directives are set to remove this selectionSet, remove it
+  const agressiveRemove = directives.some(
+    (dir: RemoveDirectiveConfig) => dir.remove,
+  );
+
+  selectionSet.selections = selectionSet.selections
+    .map(selection => {
+      if (
+        selection.kind !== 'Field' ||
+        !(selection as FieldNode) ||
+        !selection.directives
+      )
+        return selection;
+
+      let remove: boolean;
+      selection.directives = selection.directives.filter(directive => {
+        const shouldKeep = !directives.some((dir: RemoveDirectiveConfig) => {
           if (dir.name && dir.name === directive.name.value) return true;
           if (dir.test && dir.test(directive)) return true;
           return false;
-        }),
-    );
-  });
+        });
+
+        if (!remove && !shouldKeep && agressiveRemove) remove = true;
+
+        return shouldKeep;
+      });
+
+      return remove ? null : selection;
+    })
+    .filter(x => !!x);
 
   selectionSet.selections.forEach(selection => {
     if (
@@ -90,13 +111,14 @@ function removeDirectivesFromSelectionSet(
       removeDirectivesFromSelectionSet(directives, selection.selectionSet);
     }
   });
+
   return selectionSet;
 }
 
 export function removeDirectivesFromDocument(
   directives: RemoveDirectiveConfig[],
   doc: DocumentNode,
-): DocumentNode {
+): DocumentNode | null {
   const docClone = cloneDeep(doc);
 
   docClone.definitions.forEach((definition: DefinitionNode) => {
@@ -105,8 +127,27 @@ export function removeDirectivesFromDocument(
       (definition as OperationDefinitionNode).selectionSet,
     );
   });
+  const operation = getOperationDefinitionOrDie(docClone);
+  const fragments = createFragmentMap(getFragmentDefinitions(docClone));
 
-  return docClone;
+  const isNotEmpty = (
+    op: OperationDefinitionNode | FragmentDefinitionNode,
+  ): Boolean =>
+    // keep selections that are still valid
+    op.selectionSet.selections.filter(
+      selectionSet =>
+        // anything that doesn't match the compound filter is okay
+        !// not an empty array
+        (
+          selectionSet &&
+          // look into fragments to verify they should stay
+          selectionSet.kind === 'FragmentSpread' &&
+          // see if the fragment in the map is valid (recursively)
+          !isNotEmpty(fragments[selectionSet.name.value])
+        ),
+    ).length > 0;
+
+  return isNotEmpty(operation) ? docClone : null;
 }
 
 const added = new Map();

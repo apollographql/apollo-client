@@ -79,7 +79,7 @@
     "lint-staged": "4.2.3",
     "lodash": "4.17.4",
     "rollup": "0.50.0",
-    "rxjs": "5.4.2",
+    "rxjs": "5.5.2",
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
     "typescript": "2.4.2",

@@ -280,8 +280,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    */
-  public readQuery<T>(options: DataProxy.Query): T {
-    return this.initProxy().readQuery<T>(options);
+  public readQuery<T>(
+    options: DataProxy.Query,
+    optimistic: boolean = false,
+  ): T {
+    return this.initProxy().readQuery<T>(options, optimistic);
   }
 
   /**
@@ -295,8 +298,11 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public readFragment<T>(options: DataProxy.Fragment): T | null {
-    return this.initProxy().readFragment<T>(options);
+  public readFragment<T>(
+    options: DataProxy.Fragment
+    optimistic: boolean = false,
+  ): T | null {
+    return this.initProxy().readFragment<T>(options, optimistic);
   }
 
   /**

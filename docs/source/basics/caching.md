@@ -66,7 +66,7 @@ const cache = new InMemoryCache({
   dataIdFromObject: object => {
     switch (object.__typename) {
       case 'foo': return object.key; // use `key` as the primary key
-      case 'bar': return object.blah; // use `blah` as the priamry key
+      case 'bar': return object.blah; // use `blah` as the primary key
       default: return object.id || object._id; // fall back to `id` and `_id` for all other types
     }
   }

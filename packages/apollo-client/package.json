@@ -49,12 +49,12 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/zen-observable": "^0.5.3",
     "apollo-cache": "^1.0.0",
     "apollo-link": "1.0.0",
     "apollo-link-dedup": "1.0.0",
     "apollo-utilities": "^1.0.0",
-    "symbol-observable": "^1.0.2",
-    "zen-observable": "^0.6.0"
+    "symbol-observable": "^1.0.2"
   },
   "peerDependencies": {
     "graphql": "^0.11.0"
@@ -88,8 +88,7 @@
     "webpack-bundle-analyzer": "2.8.3"
   },
   "optionalDependencies": {
-    "@types/async": "2.0.45",
-    "@types/zen-observable": "0.5.3"
+    "@types/async": "2.0.45"
   },
   "jest": {
     "transform": {

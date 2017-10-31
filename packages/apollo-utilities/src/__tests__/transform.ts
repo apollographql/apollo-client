@@ -123,6 +123,162 @@ describe('removeDirectivesFromDocument', () => {
     const doc = removeDirectivesFromDocument(removed, query);
     expect(print(doc)).toBe(print(expected));
   });
+  it('should remove a simple directive and its field if needed', () => {
+    const query = gql`
+      query Simple {
+        field @storage(if: true)
+        keep
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        keep
+      }
+    `;
+    const doc = removeDirectivesFromDocument(
+      [{ name: 'storage', remove: true }],
+      query,
+    );
+    expect(print(doc)).toBe(print(expected));
+  });
+  it('should remove a simple directive [test function]', () => {
+    const query = gql`
+      query Simple {
+        field @storage(if: true)
+        keep
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        keep
+      }
+    `;
+    const test = ({ name: { value } }) => value === 'storage';
+    const doc = removeDirectivesFromDocument([{ test, remove: true }], query);
+    expect(print(doc)).toBe(print(expected));
+  });
+  it('should return null if the query is no longer valid', () => {
+    const query = gql`
+      query Simple {
+        field @storage(if: true)
+      }
+    `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: 'storage', remove: true }],
+      query,
+    );
+
+    expect(doc).toBe(null);
+  });
+  it('should return null if the query is no longer valid [test function]', () => {
+    const query = gql`
+      query Simple {
+        field @storage(if: true)
+      }
+    `;
+
+    const test = ({ name: { value } }) => value === 'storage';
+    const doc = removeDirectivesFromDocument([{ test, remove: true }], query);
+    expect(doc).toBe(null);
+  });
+  it('should return null only if the query is not valid', () => {
+    const query = gql`
+      query Simple {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on Thing {
+        field
+      }
+    `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: 'storage', remove: true }],
+      query,
+    );
+
+    expect(print(doc)).toBe(print(query));
+  });
+  it('should return null only if the query is not valid through nested fragments', () => {
+    const query = gql`
+      query Simple {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on Thing {
+        ...inDirection
+      }
+
+      fragment inDirection on Thing {
+        field @storage
+      }
+    `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: 'storage', remove: true }],
+      query,
+    );
+
+    expect(doc).toBe(null);
+  });
+  it('should only remove values asked through nested fragments', () => {
+    const query = gql`
+      query Simple {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on Thing {
+        ...inDirection
+      }
+
+      fragment inDirection on Thing {
+        field @storage
+        bar
+      }
+    `;
+
+    const expectedQuery = gql`
+      query Simple {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on Thing {
+        ...inDirection
+      }
+
+      fragment inDirection on Thing {
+        bar
+      }
+    `;
+    const doc = removeDirectivesFromDocument(
+      [{ name: 'storage', remove: true }],
+      query,
+    );
+
+    expect(print(doc)).toBe(print(expectedQuery));
+  });
+
+  it('should return null even through fragments if needed', () => {
+    const query = gql`
+      query Simple {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on Thing {
+        field @storage
+      }
+    `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: 'storage', remove: true }],
+      query,
+    );
+
+    expect(doc).toBe(null);
+  });
 });
 
 describe('query transforms', () => {

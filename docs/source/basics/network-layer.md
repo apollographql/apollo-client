@@ -60,11 +60,11 @@ const httpLink = new HttpLink({ uri: '/graphql' });
 
 const authMiddleware = new ApolloLink((operation, forward) => {
   // add the authorization to the headers
-  operation.setContext(({ headers = {} }) => ({
+  operation.setContext({
     headers: {
       authorization: localStorage.getItem('token') || null,
     } 
-  }));
+  });
 
   return forward(operation);
 })
@@ -111,7 +111,11 @@ const otherMiddleware = new ApolloLink((operation, forward) => {
 
 
 const client = new ApolloClient({
-  link: from(authMiddleware, otherMiddleware, httpLink),
+  link: from([
+    authMiddleware,
+    otherMiddleware,
+    httpLink
+  ]),
 });
 
 

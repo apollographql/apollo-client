@@ -128,7 +128,7 @@ const NewEntryWithData = graphql(submitRepository, {
 })(NewEntry);
 ```
 
-Note that, in general, you don't need to use the results from the mutation callback directly. Instead you should usually rely on Apollo's id-based cache updating to take care of it for you. If that doesn't cover your needs, there are [several different options for updating the store after a mutation](cache-updates.html). That way, you can keep your UI components as stateless and declarative as possible.
+Note that, in general, you don't need to use the results from the mutation callback directly. Instead you should usually rely on Apollo's id-based cache updating to take care of it for you. If that doesn't cover your needs, there are [several different options for updating the store after a mutation](../features/cache-updates.html). That way, you can keep your UI components as stateless and declarative as possible.
 
 <h2 id="multiple-mutations">Multiple mutations</h2>
 

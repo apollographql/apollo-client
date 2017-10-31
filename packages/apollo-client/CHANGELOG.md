@@ -1,5 +1,8 @@
 # Change log
 
+### vNEXT
+- Fixed mutation result error checking for empty array
+
 ### 2.0.1
 - remove errant console
 

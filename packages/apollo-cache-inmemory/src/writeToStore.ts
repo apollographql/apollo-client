@@ -44,7 +44,7 @@ export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
       document.loc.source &&
       document.loc.source.body}`,
   );
-  enhancedError.message += '/n' + error.message;
+  enhancedError.message += '\n' + error.message;
   enhancedError.stack = error.stack;
   return enhancedError;
 }

@@ -111,7 +111,11 @@ const otherMiddleware = new ApolloLink((operation, forward) => {
 
 
 const client = new ApolloClient({
-  link: from(authMiddleware, otherMiddleware, httpLink),
+  link: from([
+    authMiddleware,
+    otherMiddleware,
+    httpLink
+  ]),
 });
 
 

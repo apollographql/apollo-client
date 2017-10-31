@@ -37,11 +37,8 @@ The `InMemoryCache` constructor takes an optional config object with properties 
 
 - addTypename: A boolean to determine whether to add __typename to the document (default: `true`)
 - dataIdFromObject: A function that takes a data object and returns a unique identifier to be used when normalizing the data in the store. Learn more about how to customize `dataIdFromObject` in the [Normalization](#normalization) section.
-- fragmentMatcher: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces].
+- fragmentMatcher: By default, the `InMemoryCache` uses a heuristic fragment matcher. If you are using fragments on unions and interfaces, you will need to use an `IntrospectionFragmentMatcher`. For more information, please read [our guide to setting up fragment matching for unions & interfaces](../recipes/fragment-matching.html).
 - cacheResolves: A map of custom ways to resolve data from other parts of the cache.
-<!---
-TODO (PEGGY): Add link to fragment matcher recipe
--->
 
 <h3 id="normalization">Normalization</h3>
 
@@ -75,7 +72,7 @@ const cache = new InMemoryCache({
 
 <h2 id="direct">Direct Cache Access</h2>
 
-To interact directly with your cache, you can use the Apollo Client class methods readQuery, readFragment, writeQuery, and writeFragment. These methods are available to us via the [`DataProxy` interface](http://dev.apollodata.com/core/apollo-client-api.html#DataProxy). Accessing these methods will vary slightly based on your view layer implementation. If you are using React, you can wrap your component in the `withApollo` higher order component, which will give you access to `this.props.client`. From there, you can use the methods to control your data.
+To interact directly with your cache, you can use the Apollo Client class methods readQuery, readFragment, writeQuery, and writeFragment. These methods are available to us via the `DataProxy` interface. Accessing these methods will vary slightly based on your view layer implementation. If you are using React, you can wrap your component in the `withApollo` higher order component, which will give you access to `this.props.client`. From there, you can use the methods to control your data.
 
 Any code demonstration in the following sections will assume that we have already initialized an instance of  `ApolloClient` and that we have imported the `gql` tag from `graphql-tag`.
 

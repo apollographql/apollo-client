@@ -1,8 +1,4 @@
-import {
-  NormalizedCache,
-  NormalizedCacheObject,
-  StoreObject,
-} from 'apollo-cache';
+import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 
 export class RecordingCache implements NormalizedCache {
   constructor(private readonly data: NormalizedCacheObject = {}) {}

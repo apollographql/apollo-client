@@ -1,12 +1,6 @@
 import { DocumentNode } from 'graphql';
 
-import {
-  Cache,
-  DataProxy,
-  ApolloCache,
-  Transaction,
-  NormalizedCacheObject,
-} from 'apollo-cache';
+import { Cache, DataProxy, ApolloCache, Transaction } from 'apollo-cache';
 
 import {
   getFragmentQueryDocument,
@@ -18,6 +12,7 @@ import {
   OptimisticStoreItem,
   ApolloReducerConfig,
   NormalizedCache,
+  NormalizedCacheObject,
 } from './types';
 import { writeResultToStore } from './writeToStore';
 import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';

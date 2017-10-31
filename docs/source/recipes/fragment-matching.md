@@ -96,3 +96,4 @@ const client = new ApolloClient({
   cache,
   link: new HttpLink(),
 });
+```

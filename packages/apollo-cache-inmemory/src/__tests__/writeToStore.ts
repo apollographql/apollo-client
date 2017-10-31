@@ -1212,8 +1212,8 @@ describe('writing to the store', () => {
         writeQueryToStore({
           result: data,
           query,
-        }),
-      ).toEqual(expStore);
+        }).toObject(),
+      ).toEqual(expStore.toObject());
     });
 
     it('should correctly escape real ids', () => {
@@ -1252,8 +1252,8 @@ describe('writing to the store', () => {
           result: data,
           query,
           dataIdFromObject,
-        }),
-      ).toEqual(expStore);
+        }).toObject(),
+      ).toEqual(expStore.toObject());
     });
 
     it('should correctly escape json blobs', () => {
@@ -1297,8 +1297,8 @@ describe('writing to the store', () => {
           result: data,
           query,
           dataIdFromObject,
-        }),
-      ).toEqual(expStore);
+        }).toObject(),
+      ).toEqual(expStore.toObject());
     });
   });
 

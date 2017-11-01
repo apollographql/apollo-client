@@ -70,7 +70,7 @@ Then, initialize a GraphQL subscriptions transport link:
 ```js
 import { WebSocketLink } from 'apollo-link-ws';
 
-const wsClient = new WebSocketLink({
+const wsLink = new WebSocketLink({
   uri: `ws://localhost:5000/`,
   options: {
     reconnect: true

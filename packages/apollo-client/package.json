@@ -49,11 +49,13 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/zen-observable": "^0.5.3",
     "apollo-cache": "^1.0.0",
     "apollo-link": "1.0.0",
     "apollo-link-dedup": "1.0.0",
     "apollo-utilities": "^1.0.0",
-    "symbol-observable": "^1.0.2"
+    "symbol-observable": "^1.0.2",
+    "zen-observable": "^0.6.0"
   },
   "peerDependencies": {
     "graphql": "^0.11.0"
@@ -65,7 +67,6 @@
     "@types/jest": "21.1.2",
     "@types/lodash": "4.14.80",
     "@types/node": "8.0.46",
-    "@types/zen-observable": "0.5.3",
     "apollo-cache-inmemory": "^1.0.0",
     "benchmark": "2.1.4",
     "browserify": "14.5.0",

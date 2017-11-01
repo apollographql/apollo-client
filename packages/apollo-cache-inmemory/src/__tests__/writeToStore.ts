@@ -1655,7 +1655,7 @@ describe('writing to the store', () => {
           },
         },
         query: gql`
-          query {
+          query Failure {
             item {
               stringField
             }
@@ -1663,7 +1663,7 @@ describe('writing to the store', () => {
         `,
         dataIdFromObject: getIdField,
       });
-    }).toThrowError(/stringField(.|\n)*abcd/g);
+    }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
       writeResultToStore({

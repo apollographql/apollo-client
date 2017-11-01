@@ -1,9 +1,5 @@
 import { NormalizedCache, NormalizedCacheObject, StoreObject } from './types';
 
-function getNormalizedDataId(dataId: string | number): string {
-  return typeof dataId === 'number' ? String(dataId) : dataId;
-}
-
 /**
  * A Map-based implementation of the NormalizedCache.
  * Note that you need a polyfill for Object.entries for this to work.
@@ -14,13 +10,13 @@ export class MapCache implements NormalizedCache {
     this.cache = new Map(Object.entries(data));
   }
   get(dataId: string): StoreObject {
-    return this.cache.get(getNormalizedDataId(dataId));
+    return this.cache.get(`${dataId}`);
   }
   set(dataId: string, value: StoreObject): void {
-    this.cache.set(getNormalizedDataId(dataId), value);
+    this.cache.set(`${dataId}`, value);
   }
   delete(dataId: string): void {
-    this.cache.delete(getNormalizedDataId(dataId));
+    this.cache.delete(`${dataId}`);
   }
   clear(): void {
     return this.cache.clear();

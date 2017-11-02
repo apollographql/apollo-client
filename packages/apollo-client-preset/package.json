@@ -38,7 +38,7 @@
     "apollo-cache-inmemory": "^1.0.0",
     "apollo-client": "^2.0.1",
     "apollo-link": "1.0.0",
-    "apollo-link-http": "1.0.0",
+    "apollo-link-http": "1.1.0",
     "graphql-tag": "^2.4.2"
   },
   "devDependencies": {

@@ -13,9 +13,7 @@ If your app is browser based and you are using cookies for login and session man
 ```js
 const link = createHttpLink({
   uri: '/graphql',
-  opts: {
-    credentials: 'same-origin',
-  },
+  credentials: 'same-origin'
 });
 
 const client = new ApolloClient({

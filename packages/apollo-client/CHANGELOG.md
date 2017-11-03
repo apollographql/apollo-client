@@ -2,6 +2,7 @@
 
 ### vNEXT
 - Fixed mutation result error checking for empty array
+- Fix accessing undefined window when forcing connectToDevTools to true
 
 ### 2.0.1
 - remove errant console

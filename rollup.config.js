@@ -8,7 +8,7 @@ export const globals = {
 };
 
 export default name => ({
-  input: 'lib/src/index.js',
+  input: 'lib/index.js',
   output: {
     file: 'lib/bundle.umd.js',
     format: 'umd'

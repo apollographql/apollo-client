@@ -65,7 +65,8 @@ The simplest option is to directly pass options to the default `mutate` prop whe
 
 ```js
 import React, { Component } from 'react';
-import { gql, graphql } from 'react-apollo';
+import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 
 class NewEntry extends Component {
   onClick() {
@@ -111,7 +112,8 @@ Here's that in context with a component, which can now be much simpler because i
 
 ```js
 import React, { Component } from 'react';
-import { gql, graphql } from 'react-apollo';
+import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 
 const NewEntry = ({ submit }) => (
   <div onClick={() => submit('apollographql/apollo-client')}>

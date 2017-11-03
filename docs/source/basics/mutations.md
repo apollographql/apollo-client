@@ -268,7 +268,8 @@ client.mutate({
 });
 ```
 
-<h2 title="API Reference">API Reference</h2>
+<h2 title="API Reference" id="api">API Reference</h2>
+
 <h3 id="graphql-mutation-mutate">`props.mutate`</h3>
 
 The higher order component created when you pass a mutation to `graphql()` will provide your component with a single prop named `mutate`. Unlike the `data` prop which you get when you pass a query to `graphql()`, `mutate` is a function.

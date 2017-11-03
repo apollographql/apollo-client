@@ -22,7 +22,10 @@ Get started on the [home page](http://apollographql.com/client), which has great
 ## Installation
 
 ```bash
-npm install apollo-client graphql-tag --save
+# installing the preset package
+npm install apollo-client-preset graphql-tag graphql --save
+# installing each piece independently
+npm install apollo-client apollo-cache-inmemory apollo-link-http graphql-tag graphql ---save
 ```
 
 To use this client in a web browser or mobile app, you'll need a build system capable of loading NPM packages on the client. Some common choices include Browserify, Webpack, and Meteor 1.3+.
@@ -43,12 +46,12 @@ const client = new ApolloClient();
 To point `ApolloClient` at a different URL, just create your own `HttpLink` instance, like so, replacing `https://graphql.example.com` with your GraphQL API's URL:
 
 ```js
-import { ApolloClient, HttpLink } from 'apollo-client-preset';
-
+import { ApolloClient } from 'apollo-client';
+import { HttpLink } from 'apollo-link-http';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 const client = new ApolloClient({
-  link: new HttpLink({
-    uri: 'https://graphql.example.com',
-  }),
+  link: new HttpLink({ uri: 'https://graphql.example.com' }),
+  cache: new InMemoryCache()
 });
 ```
 

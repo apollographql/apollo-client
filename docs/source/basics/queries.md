@@ -230,7 +230,7 @@ const ProfileWithData = graphql(CurrentUserForLayout, {
 
 This style of usage leads to the greatest decoupling between your presentational component (`Profile`) and Apollo.
 
-<h2 title="API">API Reference</h2>
+<h2 title="API" id="api">API Reference</h2>
 
 <h3 id="graphql-query-data">`props.data`</h3>
 

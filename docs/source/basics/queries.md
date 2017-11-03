@@ -626,12 +626,12 @@ export default graphql(gql`query { ... }`, {
 
 <h3 id="graphql-config-options-errorPolicy">`options.errorPolicy`</h3>
 
-The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside acutal data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
+The error policy is an option which allows you to specify how you want your component to handle errors thats can happen when fetching data from GraphQL. There are two types of errors that can happen during your request; a runtime error on the client or server which results in no data, or some GraphQL errors which may be delivered alongside actual data. In order to control how your UI interacts with these errors, you can use the error policy to tell Apollo when you want to know about GraphQL Errors or not!
 
 Valid `errorPolicy` values are:
 
 - `none`: This is the default value where we treat GraphQL errors as runtime errors. Apollo will discard any data that came back with the request and render your component with an `error` prop.
-- `ignore`: Much like `none`, this causes Apollo to ignore any data from you server, but it also won't update your UI aside from setting the loading state back to false. 
+- `ignore`: Much like `none`, this causes Apollo to ignore any data from your server, but it also won't update your UI aside from setting the loading state back to false. 
 - `all`: Selecting all means you want to be notified any time there are any GraphQL errors. It will render your component with any data from the request and any errors with their information. It is particularly helpful for server side rendering so your UI always shows something
 
 

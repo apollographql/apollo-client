@@ -629,6 +629,10 @@ export class QueryManager<TStore> {
       options.notifyOnNetworkStatusChange = false;
     }
 
+    if (typeof options.errorPolicy === 'undefined') {
+      options.errorPolicy = 'none';
+    }
+
     let transformedOptions = { ...options } as WatchQueryOptions;
 
     return new ObservableQuery<T>({

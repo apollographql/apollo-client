@@ -167,7 +167,7 @@ The overall idea of using `graphql` is to pair a description (GraphQL Operation)
 <h3 id="ready">Ready for more?</h3>
 At this point you are ready to start building something with Apollo! Checkout the [queries](./queries.html) guide to start writing queries instead of a lot of code to get your data!
 
-<h2 id="API" title="API Reference">API Reference</h2>
+<h2 id="api" title="API Reference">API Reference</h2>
 
 <h3 id="ApolloClient">`ApolloClient`</h3>
 The Apollo Client constructor takes a small number of options, of which two are required. These arguments make it easy to customize how Apollo works based on your environment or application needs.

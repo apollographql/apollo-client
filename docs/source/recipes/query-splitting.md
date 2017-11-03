@@ -99,7 +99,8 @@ const client = new ApolloClient({
 A component for the second view that implements the two queries could look like this:
 ```jsx
 import React, { PropTypes, } from 'react'
-import { gql, graphql, compose } from 'react-apollo'
+import { graphql, compose } from 'react-apollo'
+import gql from 'graphql-tag'
 
 const QUERY_SERIES_DETAIL_VIEW = gql`
   query seriesDetailData($seriesId: Int!) {

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Include passed context in the context for mutations
 
 ### 2.0.2
 - Fixed mutation result error checking for empty array

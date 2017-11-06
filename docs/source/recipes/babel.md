@@ -20,7 +20,7 @@ Install the plugin in your dev dependencies:
 npm install --save-dev babel-plugin-graphql-tag
 
 # or with yarn
-yarn add --save-dev babel-plugin-graphql-tag
+yarn add --dev babel-plugin-graphql-tag
 ```
 
 Then add the plugin in your `.babelrc` configuration file:

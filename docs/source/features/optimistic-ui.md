@@ -57,7 +57,8 @@ Here is a concrete example from GitHunt, which inserts a comment into an existin
 
 ```js
 import React from 'react';
-import { gql, graphql } from 'react-apollo';
+import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 import update from 'immutability-helper';
 
 import CommentAppQuery from '../queries/CommentAppQuery';

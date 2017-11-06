@@ -386,6 +386,33 @@ describe('query transforms', () => {
     expect(print(expectedQuery)).toBe(print(getQueryDefinition(modifiedQuery)));
   });
 
+  it('should add __typename to the root query to allow IntrospectionMatcher validate fragments on root query', () => {
+    const testQuery = gql`
+      query withRootFragment {
+        ...fragmentSpread
+      }
+
+      fragment fragmentSpread on RootQueryType {
+        field
+      }
+    `;
+    const expectedQuery = gql`
+      query withRootFragment {
+        ...fragmentSpread
+        __typename
+      }
+
+      fragment fragmentSpread on RootQueryType {
+        field
+        __typename
+      }
+    `;
+
+    const modifiedQuery = addTypenameToDocument(testQuery);
+    console.log(modifiedQuery);
+    expect(print(expectedQuery)).toBe(print(modifiedQuery));
+  });
+
   it('should modify all definitions in a document', () => {
     const testQuery = gql`
       query withFragments {

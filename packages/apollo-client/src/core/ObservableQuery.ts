@@ -47,7 +47,10 @@ export interface UpdateQueryOptions {
   variables?: Object;
 }
 
-export const hasError = (storeValue: QueryStoreValue, policy?: ErrorPolicy) =>
+export const hasError = (
+  storeValue: QueryStoreValue,
+  policy: ErrorPolicy = 'none',
+) =>
   storeValue &&
   ((storeValue.graphQLErrors &&
     storeValue.graphQLErrors.length > 0 &&

@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Revert returning `data` directly in subscriptions, now returns `data` and `errors`
 
 ### 2.0.2
 - Fixed mutation result error checking for empty array

@@ -179,7 +179,11 @@ export class QueryManager<TStore> {
       optimisticResponse,
     });
 
-    this.broadcastQueries();
+    this.broadcastQueries({
+        operationId: mutationId,
+        requestId: null,
+        action: 'mutation-init',
+    });
 
     return new Promise((resolve, reject) => {
       let storeResult: FetchResult<T> | null;
@@ -221,7 +225,11 @@ export class QueryManager<TStore> {
             mutationId,
             optimisticResponse,
           });
-          this.broadcastQueries();
+          this.broadcastQueries({
+              operationId: mutationId,
+              requestId: null,
+              action: 'mutation-error',
+          });
 
           this.setQuery(mutationId, () => ({ document: undefined }));
           reject(
@@ -240,7 +248,11 @@ export class QueryManager<TStore> {
             optimisticResponse,
           });
 
-          this.broadcastQueries();
+          this.broadcastQueries({
+              operationId: mutationId,
+              requestId: null,
+              action: error ? 'mutation-error' : 'mutation-complete',
+          });
 
           if (error) {
             reject(error);
@@ -344,7 +356,11 @@ export class QueryManager<TStore> {
       fetchMoreForQueryId,
     });
 
-    this.broadcastQueries();
+    this.broadcastQueries({
+        operationId: queryId,
+        requestId,
+        action: 'query-init',
+    });
 
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
@@ -356,7 +372,11 @@ export class QueryManager<TStore> {
 
       this.invalidate(true, queryId, fetchMoreForQueryId);
 
-      this.broadcastQueries();
+      this.broadcastQueries({
+          operationId: queryId,
+          requestId,
+          action: 'should-dispatch'
+      });
     }
 
     if (shouldFetch) {
@@ -380,7 +400,11 @@ export class QueryManager<TStore> {
 
             this.invalidate(true, queryId, fetchMoreForQueryId);
 
-            this.broadcastQueries();
+            this.broadcastQueries({
+                operationId: queryId,
+                requestId,
+                action: 'refetch-error',
+            });
           }
 
           this.removeFetchQueryPromise(requestId);
@@ -692,7 +716,11 @@ export class QueryManager<TStore> {
   public stopQueryInStore(queryId: string) {
     this.queryStore.stopQuery(queryId);
     this.invalidate(true, queryId);
-    this.broadcastQueries();
+    this.broadcastQueries({
+        operationId: queryId,
+        requestId: null,
+        action: 'query-stop',
+    });
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
@@ -826,7 +854,12 @@ export class QueryManager<TStore> {
       this.invalidate(true, queryId);
     });
 
-    this.broadcastQueries();
+    this.broadcastQueries({
+        operationId: resetIds,
+        requestId: null,
+        action: 'query-reset',
+    });
+
 
     return dataStoreReset.then(() => Promise.all(observableQueryPromises));
   }
@@ -880,7 +913,11 @@ export class QueryManager<TStore> {
               transformedDoc,
               variables,
             );
-            this.broadcastQueries();
+            this.broadcastQueries({
+                operationId: null,
+                requestId: null,
+                action: 'subscription-init',
+            });
 
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {
@@ -991,8 +1028,12 @@ export class QueryManager<TStore> {
     };
   }
 
-  public broadcastQueries() {
-    this.onBroadcast();
+  public updateDevTools(devToolsData){
+    this.onBroadcast(devToolsData)
+  }
+
+  public broadcastQueries(devToolsData) {
+    this.updateDevTools(devToolsData);
     this.queries.forEach((info, id) => {
       if (!info.invalidated || !info.listeners) return;
       info.listeners
@@ -1064,7 +1105,12 @@ export class QueryManager<TStore> {
 
             this.invalidate(true, queryId, fetchMoreForQueryId);
 
-            this.broadcastQueries();
+            this.broadcastQueries({
+                operationId: queryId,
+                requestId,
+                action: fetchMoreForQueryId ? 'query-fetchMore' : 'query-fetch',
+            });
+
           }
 
           if (result.errors && errorPolicy === 'none') {

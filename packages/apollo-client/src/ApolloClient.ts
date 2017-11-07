@@ -342,10 +342,17 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       store: this.store,
       queryDeduplication: this.queryDeduplication,
       ssrMode: this.ssrMode,
-      onBroadcast: () => {
+      onBroadcast: ({operationId, requestId, action}) => {
+        console.log('onBroadcast called');
+        console.log({queries: this.queryManager.queryStore.getStore()});
+        console.log({mutations: this.queryManager.mutationStore.getStore()});
+        console.log({data: this.cache.extract(true)});
+        
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
-            action: {},
+            operationId,
+            requestId,
+            action,
             state: {
               queries: this.queryManager.queryStore.getStore(),
               mutations: this.queryManager.mutationStore.getStore(),

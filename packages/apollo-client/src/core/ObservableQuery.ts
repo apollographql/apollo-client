@@ -484,7 +484,11 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         variables,
         newResult,
       );
-      this.queryManager.broadcastQueries();
+      this.queryManager.broadcastQueries({
+          operationId: this.queryId,
+          requestId: null,
+          action: 'query-update',
+      });
     }
   }
 

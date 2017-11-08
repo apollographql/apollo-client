@@ -865,7 +865,11 @@ export class QueryManager<TStore> {
       this.invalidate(true, queryId);
     });
 
-    this.broadcastQueries();
+    this.broadcastQueries({
+        operationId: undefined,
+        instanceId: undefined,
+        action: 'reset-store',
+    });
 
 
     return dataStoreReset.then(() => Promise.all(observableQueryPromises));
@@ -920,6 +924,11 @@ export class QueryManager<TStore> {
               transformedDoc,
               variables,
             );
+              this.broadcastQueries({
+                operationId: undefined,
+                instanceId: undefined,
+                action: 'subscription-init',
+              });
 
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {

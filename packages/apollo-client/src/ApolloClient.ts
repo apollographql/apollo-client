@@ -57,9 +57,9 @@ const supportedDirectives = new ApolloLink(
 );
 
 export type Config = {
-    operationId: Array<string>,
-    instanceId: number,
-    action: string,
+    operationId?: Array<string>,
+    instanceId?: number,
+    action?: string,
 };
 
 /**

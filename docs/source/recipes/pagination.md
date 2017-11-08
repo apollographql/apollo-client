@@ -212,6 +212,7 @@ const CommentsWithData = graphql(CommentsQuery, {
               // Put the new comments at the end of the list and update `pageInfo`
               // so we have the new `endCursor` and `hasNextPage` values
               comments: {
+                ...previousResult.comments,
                 edges: [...previousResult.comments.edges, ...newEdges],
                 pageInfo,
               },

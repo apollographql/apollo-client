@@ -1,7 +1,7 @@
 {
   "name": "apollo-client",
   "private": true,
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A simple yet functional GraphQL client.",
   "main": "./lib/apollo.umd.js",
   "module": "./lib/index.js",
@@ -66,8 +66,8 @@
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.2",
     "@types/lodash": "4.14.82",
-    "@types/node": "8.0.46",
-    "apollo-cache-inmemory": "1.1.0-beta.1",
+    "@types/node": "8.0.50",
+    "apollo-cache-inmemory": "1.1.0",
     "benchmark": "2.1.4",
     "browserify": "14.5.0",
     "bundlesize": "0.15.3",
@@ -84,7 +84,7 @@
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
     "typescript": "2.4.2",
-    "uglify-js": "3.1.7",
+    "uglify-js": "3.1.8",
     "webpack": "3.7.1",
     "webpack-bundle-analyzer": "2.8.3"
   },

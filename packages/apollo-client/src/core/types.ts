@@ -27,6 +27,7 @@ export enum FetchType {
   poll = 3,
 }
 
+
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,

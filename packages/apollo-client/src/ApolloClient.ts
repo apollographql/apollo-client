@@ -56,6 +56,12 @@ const supportedDirectives = new ApolloLink(
   },
 );
 
+export type Config = {
+    operationId: Array<string>,
+    instanceId: number,
+    action: string,
+};
+
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -342,8 +348,8 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       store: this.store,
       queryDeduplication: this.queryDeduplication,
       ssrMode: this.ssrMode,
-      onBroadcast: ({operationId, requestId, action}) => {
-        console.log('onBroadcast called': operationId, requestId, action);
+      onBroadcast: ({ operationId, instanceId, action } : Config) => {
+        console.log('onBroadcast called', 'operationId:', (operationId && operationId.length == 1 ? operationId[0] : operationId), 'instanceId:', instanceId, 'action:', action);
         console.log({queries: this.queryManager.queryStore.getStore()});
         console.log({mutations: this.queryManager.mutationStore.getStore()});
         console.log({data: this.cache.extract(true)});
@@ -351,7 +357,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
         if (this.devToolsHookCb) {
           this.devToolsHookCb({
             operationId,
-            requestId,
+            instanceId,
             action,
             state: {
               queries: this.queryManager.queryStore.getStore(),

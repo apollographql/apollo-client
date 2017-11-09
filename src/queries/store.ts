@@ -123,6 +123,7 @@ export class QueryStore {
     // explanation about this process.
     if (typeof fetchMoreForQueryId === 'string') {
       this.store[fetchMoreForQueryId].networkStatus = NetworkStatus.ready;
+      this.store[fetchMoreForQueryId].networkError = null;
     }
   }
 

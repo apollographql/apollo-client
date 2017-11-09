@@ -31,7 +31,7 @@ The above mutation will submit a new GitHub repository to GitHunt, saving an ent
 }
 ```
 
-When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](../features/cache-updates.html#normalization), which in turn updates the UI automatically, so we often don't need to explicitly handle the results. In order for the client to correctly do this, we need to ensure we select the necessary fields in the result. One good strategy can be to simply ask for any fields that might have been affected by the mutation. Alternatively, you can use [fragments](fragments.html) to share the fields between a query and a mutation that updates that query.
+When we use mutations in Apollo, the result is typically integrated into the cache automatically [based on the id of the result](../features/cache-updates.html#normalization), which in turn updates the UI automatically, so we often don't need to explicitly handle the results. In order for the client to correctly do this, we need to ensure we select the necessary fields in the result. One good strategy can be to simply ask for any fields that might have been affected by the mutation. Alternatively, you can use [fragments](../features/fragments.html) to share the fields between a query and a mutation that updates that query.
 
 <h2 id="basics">Basic mutations</h2>
 

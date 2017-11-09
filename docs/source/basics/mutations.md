@@ -370,7 +370,7 @@ export default graphql(gql`
 
 Often when you mutate data it is fairly easy to predict what the response of the mutation will be before asking your server. The optimistic response option allows you to make your mutations feel faster by simulating the result of your mutation in your UI before the mutation actually finishes.
 
-To learn more about the benefits of optimistic data and how to use it be sure to read the recipe on [Optimistic UI](optimistic-ui.html).
+To learn more about the benefits of optimistic data and how to use it be sure to read the recipe on [Optimistic UI](../features/optimistic-ui.html).
 
 This optimistic response will be used with [`options.update`](#graphql-mutation-options-update) and [`options.updateQueries`](#graphql-mutation-options-updateQueries) to apply an update to your cache which will be rolled back before applying the update from the actual response.
 

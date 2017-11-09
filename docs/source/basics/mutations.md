@@ -555,7 +555,7 @@ The second argument to your function value will be an object with three properti
 
 The return value of your `options.updateQueries` functions _must_ have the same shape as your first `previousData` argument. However, you _must not_ mutate the `previousData` object. Instead you must create a new object with your changes. Just like in a Redux reducer.
 
-To learn more about `options.updateQueries` read our usage documentation on [controlling the store with `updateQueries`](cache-updates.html#updateQueries).
+To learn more about `options.updateQueries` read our usage documentation on [controlling the store with `updateQueries`](../features/cache-updates.html#updateQueries).
 
 **Example:**
 

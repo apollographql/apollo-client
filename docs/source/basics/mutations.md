@@ -160,7 +160,7 @@ This does the exact same thing as the previous snippet, but with a nicer syntax 
 
 <h2 id="optimistic-ui">Optimistic UI</h2>
 
-Sometimes your client code can easily predict the result of a successful mutation even before the server responds with the result. For instance, in GitHunt, when a user comments on a repository, we want to show the new comment in the UI immediately, without waiting on the latency of a round trip to the server, giving the user a faster UI experience. This is what we call [Optimistic UI](optimistic-ui.html). This is possible with Apollo if the client can predict an *optimistic response* for the mutation.
+Sometimes your client code can easily predict the result of a successful mutation even before the server responds with the result. For instance, in GitHunt, when a user comments on a repository, we want to show the new comment in the UI immediately, without waiting on the latency of a round trip to the server, giving the user a faster UI experience. This is what we call [Optimistic UI](../features/optimistic-ui.html). This is possible with Apollo if the client can predict an *optimistic response* for the mutation.
 
 All you need to do is specify the `optimisticResponse` option. This "fake result" will be used to update active queries immediately, in the same way that the server's mutation response would have done. The optimistic patches are stored in a separate place in the cache, so once the actual mutation returns, the relevant optimistic update is automatically thrown away and replaced with the real result.
 

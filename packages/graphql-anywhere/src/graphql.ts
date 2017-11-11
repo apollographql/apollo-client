@@ -38,7 +38,9 @@ export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
   context: any,
-) => boolean;
+) => boolean | Promise<boolean>;
+export type DeferrableOrImmediate = (obj: any, fn: any) => any;
+export type ArrayOrDeferrable = (arr: any[]) => any;
 
 export type ExecContext = {
   fragmentMap: FragmentMap;
@@ -47,6 +49,8 @@ export type ExecContext = {
   resultMapper: ResultMapper;
   resolver: Resolver;
   fragmentMatcher: FragmentMatcher;
+  deferrableOrImmediate: DeferrableOrImmediate;
+  arrayOrDeferrable: ArrayOrDeferrable;
 };
 
 export type ExecInfo = {
@@ -58,6 +62,8 @@ export type ExecInfo = {
 export type ExecOptions = {
   resultMapper?: ResultMapper;
   fragmentMatcher?: FragmentMatcher;
+  deferrableOrImmediate?: DeferrableOrImmediate;
+  arrayOrDeferrable?: ArrayOrDeferrable;
 };
 
 // Based on graphql function from graphql-js:
@@ -87,6 +93,11 @@ export function graphql(
   // Default matcher always matches all fragments
   const fragmentMatcher = execOptions.fragmentMatcher || (() => true);
 
+  // Default deferrable is a promise
+  const deferrableOrImmediate =
+    execOptions.deferrableOrImmediate || promiseOrImmediate;
+  const arrayOrDeferrable = execOptions.arrayOrDeferrable || arrayOrPromise;
+
   const execContext: ExecContext = {
     fragmentMap,
     contextValue,
@@ -94,6 +105,8 @@ export function graphql(
     resultMapper,
     resolver,
     fragmentMatcher,
+    deferrableOrImmediate,
+    arrayOrDeferrable,
   };
 
   return executeSelectionSet(
@@ -108,61 +121,88 @@ function executeSelectionSet(
   rootValue: any,
   execContext: ExecContext,
 ) {
-  const { fragmentMap, contextValue, variableValues: variables } = execContext;
+  const {
+    fragmentMap,
+    contextValue,
+    variableValues: variables,
+    deferrableOrImmediate,
+    arrayOrDeferrable,
+  } = execContext;
 
   const result = {};
 
-  selectionSet.selections.forEach(selection => {
-    if (!shouldInclude(selection, variables)) {
-      // Skip this entirely
-      return;
-    }
+  deferrableOrImmediate(
+    arrayOrDeferrable(
+      selectionSet.selections.map(selection => {
+        if (!shouldInclude(selection, variables)) {
+          // Skip this entirely
+          return;
+        }
 
-    if (isField(selection)) {
-      const fieldResult = executeField(selection, rootValue, execContext);
+        if (isField(selection)) {
+          const fieldResultOrDeferrable = executeField(
+            selection,
+            rootValue,
+            execContext,
+          );
 
-      const resultFieldKey = resultKeyNameFromField(selection);
+          return deferrableOrImmediate(fieldResultOrDeferrable, fieldResult => {
+            const resultFieldKey = resultKeyNameFromField(selection);
 
-      if (fieldResult !== undefined) {
-        if (result[resultFieldKey] === undefined) {
-          result[resultFieldKey] = fieldResult;
+            if (fieldResult !== undefined) {
+              if (result[resultFieldKey] === undefined) {
+                result[resultFieldKey] = fieldResult;
+              } else {
+                merge(result[resultFieldKey], fieldResult);
+              }
+            }
+          });
         } else {
-          merge(result[resultFieldKey], fieldResult);
+          let fragment: InlineFragmentNode | FragmentDefinitionNode;
+
+          if (isInlineFragment(selection)) {
+            fragment = selection;
+          } else {
+            // This is a named fragment
+            fragment = fragmentMap[selection.name.value];
+
+            if (!fragment) {
+              throw new Error(`No fragment named ${selection.name.value}`);
+            }
+          }
+
+          const typeCondition = fragment.typeCondition.name.value;
+
+          return deferrableOrImmediate(
+            execContext.fragmentMatcher(rootValue, typeCondition, contextValue),
+            fragmentMatcherResult => {
+              if (fragmentMatcherResult) {
+                const fragmentResultOrDeferrable = executeSelectionSet(
+                  fragment.selectionSet,
+                  rootValue,
+                  execContext,
+                );
+
+                return deferrableOrImmediate(
+                  fragmentResultOrDeferrable,
+                  fragmentResult => {
+                    merge(result, fragmentResult);
+                  },
+                );
+              }
+            },
+          );
         }
-      }
-    } else {
-      let fragment: InlineFragmentNode | FragmentDefinitionNode;
-
-      if (isInlineFragment(selection)) {
-        fragment = selection;
-      } else {
-        // This is a named fragment
-        fragment = fragmentMap[selection.name.value];
-
-        if (!fragment) {
-          throw new Error(`No fragment named ${selection.name.value}`);
-        }
+      }),
+    ),
+    () => {
+      if (execContext.resultMapper) {
+        return execContext.resultMapper(result, rootValue);
       }
 
-      const typeCondition = fragment.typeCondition.name.value;
-
-      if (execContext.fragmentMatcher(rootValue, typeCondition, contextValue)) {
-        const fragmentResult = executeSelectionSet(
-          fragment.selectionSet,
-          rootValue,
-          execContext,
-        );
-
-        merge(result, fragmentResult);
-      }
-    }
-  });
-
-  if (execContext.resultMapper) {
-    return execContext.resultMapper(result, rootValue);
-  }
-
-  return result;
+      return result;
+    },
+  );
 }
 
 function executeField(
@@ -170,7 +210,12 @@ function executeField(
   rootValue: any,
   execContext: ExecContext,
 ): any {
-  const { variableValues: variables, contextValue, resolver } = execContext;
+  const {
+    variableValues: variables,
+    contextValue,
+    resolver,
+    deferrableOrImmediate,
+  } = execContext;
 
   const fieldName = field.name.value;
   const args = argumentsObjectFromField(field, variables);
@@ -181,43 +226,53 @@ function executeField(
     directives: getDirectiveInfoFromField(field, variables),
   };
 
-  const result = resolver(fieldName, rootValue, args, contextValue, info);
+  const resultOrDeferrable = resolver(
+    fieldName,
+    rootValue,
+    args,
+    contextValue,
+    info,
+  );
 
-  // Handle all scalar types here
-  if (!field.selectionSet) {
-    return result;
-  }
+  return deferrableOrImmediate(resultOrDeferrable, result => {
+    // Handle all scalar types here
+    if (!field.selectionSet) {
+      return result;
+    }
 
-  // From here down, the field has a selection set, which means it's trying to
-  // query a GraphQLObjectType
-  if (result == null) {
-    // Basically any field in a GraphQL response can be null, or missing
-    return result;
-  }
+    // From here down, the field has a selection set, which means it's trying to
+    // query a GraphQLObjectType
+    if (result == null) {
+      // Basically any field in a GraphQL response can be null, or missing
+      return result;
+    }
 
-  if (Array.isArray(result)) {
-    return executeSubSelectedArray(field, result, execContext);
-  }
+    if (Array.isArray(result)) {
+      return executeSubSelectedArray(field, result, execContext);
+    }
 
-  // Returned value is an object, and the query has a sub-selection. Recurse.
-  return executeSelectionSet(field.selectionSet, result, execContext);
+    // Returned value is an object, and the query has a sub-selection. Recurse.
+    return executeSelectionSet(field.selectionSet, result, execContext);
+  });
 }
 
 function executeSubSelectedArray(field, result, execContext) {
-  return result.map(item => {
-    // null value in array
-    if (item === null) {
-      return null;
-    }
+  return execContext.arrayOrDeferrable(
+    result.map(item => {
+      // null value in array
+      if (item === null) {
+        return null;
+      }
 
-    // This is a nested array, recurse
-    if (Array.isArray(item)) {
-      return executeSubSelectedArray(field, item, execContext);
-    }
+      // This is a nested array, recurse
+      if (Array.isArray(item)) {
+        return executeSubSelectedArray(field, item, execContext);
+      }
 
-    // This is an object, run the selection set on it
-    return executeSelectionSet(field.selectionSet, item, execContext);
-  });
+      // This is an object, run the selection set on it
+      return executeSelectionSet(field.selectionSet, item, execContext);
+    }),
+  );
 }
 
 function merge(dest, src) {
@@ -239,4 +294,24 @@ function merge(dest, src) {
       dest[srcKey] = src[srcKey];
     }
   });
+}
+
+function isPromise(obj) {
+  return obj && typeof obj === 'object' && typeof obj.then === 'function';
+}
+
+function promiseOrImmediate(obj, fn) {
+  if (isPromise(obj)) {
+    return obj.then(fn);
+  } else {
+    return fn(obj);
+  }
+}
+
+function arrayOrPromise(arr) {
+  if (arr.some(isPromise)) {
+    return Promise.all(arr);
+  } else {
+    return arr;
+  }
 }

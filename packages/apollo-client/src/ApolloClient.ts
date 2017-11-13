@@ -337,6 +337,13 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   public initQueryManager() {
     if (this.queryManager) return;
 
+    console.log('init query manager!!');
+
+    if (this.devToolsHookCb) {
+      this.link.connectToDevTools(this.devToolsHookCb);
+      console.log('connected yo');
+    }
+
     this.queryManager = new QueryManager({
       link: this.link,
       store: this.store,

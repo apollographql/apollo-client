@@ -3,6 +3,7 @@
 ### vNEXT
 - Revert returning `data` directly in subscriptions, now returns `data` and `errors`
 - Include passed context in the context for mutations
+- Remove locked dep on apollo-link and apollo-link-dedup
 
 ### 2.0.2
 - Fixed mutation result error checking for empty array

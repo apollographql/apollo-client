@@ -320,26 +320,39 @@ app.use((req, res, next) => {
 WebApp.connectHandlers.use(Meteor.bindEnvironment(app));
 ```
 
-## Apollo Optics
+## Apollo Engine
 
-Here's a minimal example of [Apollo Optics](http://www.apollodata.com/optics) integration:
+Here's a minimal example of [Apollo Engine](https://www.apollographql.com/engine/) integration:
 
 ```js
 import { createApolloServer } from 'meteor/apollo';
-import OpticsAgent from 'optics-agent';
+import { Engine } from 'apollo-engine';
 
 import executableSchema from 'schema.js';
 
-OpticsAgent.instrumentSchema(executableSchema);
+const PORT = process.env.PORT || 3000;
+
+// Initialize Apollo Engine
+const engine = new Engine({
+  engineConfig: {
+    apiKey: 'your_apollo_engine_api_key',
+    logging: {
+      level: 'DEBUG', // DEBUG, INFO, WARN or ERROR
+    },
+  },
+  graphqlPort: PORT,
+  endpoint: '/graphql',
+});
 
 createApolloServer(req => ({
   schema: executableSchema,
-  context: {
-    opticsContext: OpticsAgent.context(req),
-  },
+  context: {},
+  tracing: true,
+  cacheControl: true,
 }), {
   configServer: (graphQLServer) => {
-    graphQLServer.use('/graphql', OpticsAgent.middleware());
+    app.use(engine.expressMiddleware());
+    // Any other config server stuff
   },
 });
 ```

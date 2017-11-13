@@ -123,6 +123,7 @@ export class QueryManager<TStore> {
     refetchQueries = [],
     update: updateWithProxyFn,
     errorPolicy = 'none',
+    context = {},
   }: MutationOptions): Promise<FetchResult<T>> {
     if (!mutation) {
       throw new Error(
@@ -144,6 +145,7 @@ export class QueryManager<TStore> {
       query: mutation,
       variables,
       operationName: getOperationName(mutation) || undefined,
+      context,
     } as GraphQLRequest;
 
     this.setQuery(mutationId, () => ({ document: mutation }));

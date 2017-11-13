@@ -8,3 +8,4 @@ coverage:
         target: "83%"
     patch:
       enabled: false
+comment: false

@@ -21,8 +21,6 @@ meteor npm install --save apollo-client graphql-server-express express graphql g
 
 You can see this package in action in the [Apollo Meteor starter kit](https://github.com/apollostack/meteor-starter-kit). 
 
-If you'd like to understand how this simple package works internally, you are invited to [take the code tour](https://www.codetours.xyz/tour/xavcz/meteor-apollo-codetour).
-
 ### Client
 
 Connect to the Apollo server with [`meteorClientConfig`](#meteorClientConfig):

@@ -57,9 +57,10 @@ const supportedDirectives = new ApolloLink(
 );
 
 export type Config = {
-    operationId?: Array<string>,
+    operationId?: string,
     instanceId?: number,
     action?: string,
+    result?: ExecutionResult,
 };
 
 /**
@@ -81,7 +82,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
   private ssrMode: boolean;
-
+  private devToolLog: any;
   /**
    * Constructs an instance of {@link ApolloClient}.
    *
@@ -128,6 +129,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
     this.defaultOptions = defaultOptions || {};
+    this.devToolLog = [];
 
     if (ssrForceFetchDelay) {
       setTimeout(
@@ -348,23 +350,26 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       store: this.store,
       queryDeduplication: this.queryDeduplication,
       ssrMode: this.ssrMode,
-      onBroadcast: ({ operationId, instanceId, action } : Config) => {
-        console.log('onBroadcast called', 'operationId:', (operationId && operationId.length == 1 ? operationId[0] : operationId), 'instanceId:', instanceId, 'action:', action);
-        console.log({queries: this.queryManager.queryStore.getStore()});
-        console.log({mutations: this.queryManager.mutationStore.getStore()});
-        console.log({data: this.cache.extract(true)});
-
+      onBroadcast: ({ operationId, instanceId, action, result } : Config) => {
         if (this.devToolsHookCb) {
+          const logItem = {
+              operationId,
+              instanceId,
+              action,
+              result,
+              state: {
+                  queries: this.queryManager.queryStore.getStore(),
+                  mutations: this.queryManager.mutationStore.getStore(),
+              },
+              dataWithOptimisticResults: this.cache.extract(true),
+          };
+          this.devToolLog.push(logItem);
+          const newHistory = [... this.devToolLog];
           this.devToolsHookCb({
-            operationId,
-            instanceId,
-            action,
-            state: {
-              queries: this.queryManager.queryStore.getStore(),
-              mutations: this.queryManager.mutationStore.getStore(),
-            },
-            dataWithOptimisticResults: this.cache.extract(true),
+            ...logItem,
+            history: newHistory,
           });
+          if (result) console.log('result', result);
         }
       },
     });

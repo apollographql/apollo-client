@@ -497,9 +497,10 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       this.queryManager.broadcastQueries();
       if (queryId && refetchInstanceId) {
         this.queryManager.updateDevTools({
-            operationId: [queryId],
+            operationId: queryId,
             instanceId: refetchInstanceId,
             action: 'query-fetchMore-updated',
+            result: undefined,
         });
       }
     }

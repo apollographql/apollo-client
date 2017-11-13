@@ -184,9 +184,10 @@ export class QueryManager<TStore> {
     });
 
     this.broadcastQueries({
-        operationId: [mutationId],
+        operationId: mutationId,
         instanceId,
         action: 'mutation-init',
+        result: undefined,
     });
 
     return new Promise((resolve, reject) => {
@@ -222,6 +223,12 @@ export class QueryManager<TStore> {
             update: updateWithProxyFn,
           });
           storeResult = result as FetchResult<T>;
+          this.updateDevTools({
+              operationId: mutationId,
+              instanceId,
+              action: 'mutation-next',
+              result,
+          })
         },
         error: (err: Error) => {
           this.mutationStore.markMutationError(mutationId, err);
@@ -230,9 +237,10 @@ export class QueryManager<TStore> {
             optimisticResponse,
           });
           this.broadcastQueries({
-              operationId: [mutationId],
+              operationId: mutationId,
               instanceId,
               action: 'mutation-error',
+              result: undefined,
           });
 
           this.setQuery(mutationId, () => ({ document: undefined }));
@@ -253,9 +261,10 @@ export class QueryManager<TStore> {
           });
 
           this.broadcastQueries({
-              operationId: [mutationId],
+              operationId: mutationId,
               instanceId,
               action: error ? 'mutation-error' : 'mutation-complete',
+              result: undefined,
           });
 
           if (error) {
@@ -366,9 +375,10 @@ export class QueryManager<TStore> {
     if (fetchType === FetchType.poll) fetchTypeName = 'poll';
     else if (fetchType === FetchType.refetch) fetchTypeName = 'refetch';
     this.broadcastQueries({
-      operationId: [queryId],
-      instanceId,
-      action: `query-init ${fetchTypeName}`,
+        operationId: queryId,
+        instanceId,
+        action: `query-init ${fetchTypeName}`,
+        result: undefined,
     });
 
     // If there is no part of the query we need to fetch from the server (or,
@@ -382,9 +392,10 @@ export class QueryManager<TStore> {
       this.invalidate(true, queryId, fetchMoreForQueryId);
 
       this.broadcastQueries({
-          operationId: [queryId],
+          operationId: queryId,
           instanceId,
-          action: 'should-dispatch'
+          action: 'should-dispatch',
+          result: undefined,
       });
     }
 
@@ -411,9 +422,10 @@ export class QueryManager<TStore> {
             this.invalidate(true, queryId, fetchMoreForQueryId);
 
             this.broadcastQueries({
-                operationId: [queryId],
+                operationId: queryId,
                 instanceId,
                 action: 'refetch-error',
+                result: undefined,
             });
           }
 
@@ -728,9 +740,10 @@ export class QueryManager<TStore> {
     this.invalidate(true, queryId);
     const instanceId = this.generateInstanceId();
     this.broadcastQueries({
-      operationId: [queryId],
-      instanceId,
-      action: 'query-stop',
+        operationId: queryId,
+        instanceId,
+        action: 'query-stop',
+        result: undefined,
     });
   }
 
@@ -869,6 +882,7 @@ export class QueryManager<TStore> {
         operationId: undefined,
         instanceId: undefined,
         action: 'reset-store',
+        result: undefined,
     });
 
 
@@ -925,9 +939,10 @@ export class QueryManager<TStore> {
               variables,
             );
               this.broadcastQueries({
-                operationId: undefined,
-                instanceId: undefined,
-                action: 'subscription-init',
+                  operationId: undefined,
+                  instanceId: undefined,
+                  action: 'subscription-init',
+                  result: undefined,
               });
 
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
@@ -1119,9 +1134,10 @@ export class QueryManager<TStore> {
             this.invalidate(true, queryId, fetchMoreForQueryId);
 
             this.broadcastQueries({
-              operationId: [queryId],
-              instanceId,
-              action: fetchMoreForQueryId ? 'query-fetchMore' : 'query-fetch',
+                operationId: queryId,
+                instanceId,
+                action: fetchMoreForQueryId ? 'query-fetchMore' : 'query-fetch',
+                result,
             });
 
           }
@@ -1162,9 +1178,10 @@ export class QueryManager<TStore> {
           }));
 
           this.updateDevTools({
-            operationId: [queryId],
-            instanceId,
-            action: 'query-error',
+              operationId: queryId,
+              instanceId,
+              action: 'query-error',
+              result: undefined,
           });
           reject(error);
         },
@@ -1174,9 +1191,10 @@ export class QueryManager<TStore> {
             subscriptions: subscriptions.filter(x => x !== subscription),
           }));
           this.updateDevTools({
-            operationId: [queryId],
-            instanceId,
-            action: 'query-complete',
+              operationId: queryId,
+              instanceId,
+              action: 'query-complete',
+              result: undefined,
           });
           resolve({
             data: resultFromStore,

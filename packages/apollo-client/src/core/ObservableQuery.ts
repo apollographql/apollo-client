@@ -214,7 +214,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       queryStoreValue.graphQLErrors &&
       this.options.errorPolicy === 'all'
     ) {
-      result.errors = queryStoreValue.graphQLErrors;
+      result.error = queryStoreValue.graphQLErrors;
     }
 
     if (!partial) {

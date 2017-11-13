@@ -1,6 +1,7 @@
 # Change log
 
 ### vNEXT
+- Revert returning `data` directly in subscriptions, now returns `data` and `errors`
 - Include passed context in the context for mutations
 
 ### 2.0.2

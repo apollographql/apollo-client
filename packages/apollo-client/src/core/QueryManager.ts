@@ -887,13 +887,7 @@ export class QueryManager<TStore> {
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {
               // XXX I'd prefer a different way to handle errors for subscriptions
-              if (obs.next && result.data) obs.next(result.data);
-              if (obs.error && result.errors)
-                obs.error(
-                  new ApolloError({
-                    graphQLErrors: result.errors,
-                  }),
-                );
+              if (obs.next) obs.next(result);
             });
           },
           error: (error: Error) => {

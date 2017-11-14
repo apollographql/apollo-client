@@ -4,14 +4,15 @@ export const globals = {
   'apollo-cache': 'apollo.cache.core',
   'apollo-link': 'apolloLinkCore',
   'apollo-link-dedup': 'dedupLink',
-  'apollo-utilities': 'apollo.utilities'
+  'apollo-utilities': 'apollo.utilities',
+  'graphql-anywhere': 'graphqlAnywhere',
 };
 
 export default name => ({
   input: 'lib/index.js',
   output: {
     file: 'lib/bundle.umd.js',
-    format: 'umd'
+    format: 'umd',
   },
   name,
   exports: 'named',
@@ -22,10 +23,7 @@ export default name => ({
 });
 
 function onwarn(message) {
-  const suppressed = [
-    'UNRESOLVED_IMPORT',
-    'THIS_IS_UNDEFINED'
-  ];
+  const suppressed = ['UNRESOLVED_IMPORT', 'THIS_IS_UNDEFINED'];
 
   if (!suppressed.find(code => message.code === code)) {
     return console.warn(message.message);

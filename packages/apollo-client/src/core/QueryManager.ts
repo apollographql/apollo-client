@@ -33,6 +33,7 @@ import {
 import { ObservableQuery } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
 import { QueryListener, ApolloQueryResult, FetchType } from './types';
+import { Config } from '../ApolloClient';
 
 export interface QueryInfo {
   listeners: QueryListener[];
@@ -74,10 +75,13 @@ export class QueryManager<TStore> {
   private deduplicator: ApolloLink;
   private queryDeduplication: boolean;
 
-  private onBroadcast: () => void;
+  private onBroadcast: (config: Config) => void;
 
   // let's not start at zero to avoid pain with bad checks
   private idCounter = 1;
+
+  // counter for dev tools
+  private devInstanceCounter = 1;
 
   // XXX merge with ObservableQuery but that needs to be expanded to support mutations and
   // subscriptions as well
@@ -85,7 +89,7 @@ export class QueryManager<TStore> {
 
   // A map going from a requestId to a promise that has not yet been resolved. We use this to keep
   // track of queries that are inflight and reject them in case some
-  // destabalizing action occurs (e.g. reset of the Apollo store).
+  // destabilizing action occurs (e.g. reset of the Apollo store).
   private fetchQueryPromises: Map<string, QueryPromise> = new Map();
 
   // A map going from the name of a query to an observer issued for it by watchQuery. This is
@@ -103,7 +107,7 @@ export class QueryManager<TStore> {
     link: ApolloLink;
     queryDeduplication?: boolean;
     store: DataStore<TStore>;
-    onBroadcast?: () => void;
+    onBroadcast?: (config: Config) => void;
     ssrMode?: boolean;
   }) {
     this.link = link;
@@ -147,7 +151,7 @@ export class QueryManager<TStore> {
       operationName: getOperationName(mutation) || undefined,
       context,
     } as GraphQLRequest;
-
+    const instanceId = this.generateInstanceId();
     this.setQuery(mutationId, () => ({ document: mutation }));
 
     // Create a map of update queries by id to the query instead of by name.
@@ -181,7 +185,12 @@ export class QueryManager<TStore> {
       optimisticResponse,
     });
 
-    this.broadcastQueries();
+    this.broadcastQueries({
+        operationId: mutationId,
+        instanceId,
+        action: 'mutation-init',
+        result: undefined,
+    });
 
     return new Promise((resolve, reject) => {
       let storeResult: FetchResult<T> | null;
@@ -216,6 +225,12 @@ export class QueryManager<TStore> {
             update: updateWithProxyFn,
           });
           storeResult = result as FetchResult<T>;
+          this.updateDevTools({
+              operationId: mutationId,
+              instanceId,
+              action: 'mutation-next',
+              result,
+          })
         },
         error: (err: Error) => {
           this.mutationStore.markMutationError(mutationId, err);
@@ -223,7 +238,12 @@ export class QueryManager<TStore> {
             mutationId,
             optimisticResponse,
           });
-          this.broadcastQueries();
+          this.broadcastQueries({
+              operationId: mutationId,
+              instanceId,
+              action: 'mutation-error',
+              result: undefined,
+          });
 
           this.setQuery(mutationId, () => ({ document: undefined }));
           reject(
@@ -242,7 +262,12 @@ export class QueryManager<TStore> {
             optimisticResponse,
           });
 
-          this.broadcastQueries();
+          this.broadcastQueries({
+              operationId: mutationId,
+              instanceId,
+              action: error ? 'mutation-error' : 'mutation-complete',
+              result: undefined,
+          });
 
           if (error) {
             reject(error);
@@ -283,6 +308,7 @@ export class QueryManager<TStore> {
     // This allows us to track if this is a query spawned by a `fetchMore`
     // call for another query. We need this data to compute the `fetchMore`
     // network status for the query this is fetching for.
+    givenInstanceId?: number,
     fetchMoreForQueryId?: string,
   ): Promise<FetchResult<T>> {
     const {
@@ -320,6 +346,7 @@ export class QueryManager<TStore> {
     if (hasDirectives(['live'], query)) shouldFetch = true;
 
     const requestId = this.generateRequestId();
+    const instanceId = givenInstanceId || this.generateInstanceId();
 
     // set up a watcher to listen to cache updates
     const cancel = this.updateQueryWatch(queryId, query, options);
@@ -346,7 +373,15 @@ export class QueryManager<TStore> {
       fetchMoreForQueryId,
     });
 
-    this.broadcastQueries();
+    let fetchTypeName = 'normal';
+    if (fetchType === FetchType.poll) fetchTypeName = 'poll';
+    else if (fetchType === FetchType.refetch) fetchTypeName = 'refetch';
+    this.broadcastQueries({
+        operationId: queryId,
+        instanceId,
+        action: `query-init ${fetchTypeName}`,
+        result: undefined,
+    });
 
     // If there is no part of the query we need to fetch from the server (or,
     // fetchPolicy is cache-only), we just write the store result as the final result.
@@ -358,7 +393,12 @@ export class QueryManager<TStore> {
 
       this.invalidate(true, queryId, fetchMoreForQueryId);
 
-      this.broadcastQueries();
+      this.broadcastQueries({
+          operationId: queryId,
+          instanceId,
+          action: 'should-dispatch',
+          result: undefined,
+      });
     }
 
     if (shouldFetch) {
@@ -370,6 +410,7 @@ export class QueryManager<TStore> {
           : query,
         options,
         fetchMoreForQueryId,
+        instanceId,
       }).catch(error => {
         // This is for the benefit of `refetch` promises, which currently don't get their errors
         // through the store like watchQuery observers do
@@ -382,7 +423,12 @@ export class QueryManager<TStore> {
 
             this.invalidate(true, queryId, fetchMoreForQueryId);
 
-            this.broadcastQueries();
+            this.broadcastQueries({
+                operationId: queryId,
+                instanceId,
+                action: 'refetch-error',
+                result: undefined,
+            });
           }
 
           this.removeFetchQueryPromise(requestId);
@@ -694,7 +740,13 @@ export class QueryManager<TStore> {
   public stopQueryInStore(queryId: string) {
     this.queryStore.stopQuery(queryId);
     this.invalidate(true, queryId);
-    this.broadcastQueries();
+    const instanceId = this.generateInstanceId();
+    this.broadcastQueries({
+        operationId: queryId,
+        instanceId,
+        action: 'query-stop',
+        result: undefined,
+    });
   }
 
   public addQueryListener(queryId: string, listener: QueryListener) {
@@ -828,7 +880,13 @@ export class QueryManager<TStore> {
       this.invalidate(true, queryId);
     });
 
-    this.broadcastQueries();
+    this.broadcastQueries({
+        operationId: undefined,
+        instanceId: undefined,
+        action: 'reset-store',
+        result: undefined,
+    });
+
 
     return dataStoreReset.then(() => Promise.all(observableQueryPromises));
   }
@@ -882,7 +940,12 @@ export class QueryManager<TStore> {
               transformedDoc,
               variables,
             );
-            this.broadcastQueries();
+              this.broadcastQueries({
+                  operationId: undefined,
+                  instanceId: undefined,
+                  action: 'subscription-init',
+                  result: undefined,
+              });
 
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {
@@ -987,8 +1050,12 @@ export class QueryManager<TStore> {
     };
   }
 
-  public broadcastQueries() {
-    this.onBroadcast();
+  public updateDevTools(devToolsData: Config){
+    this.onBroadcast(devToolsData)
+  }
+
+  public broadcastQueries(devToolsData?: Config) {
+    if (devToolsData) this.updateDevTools(devToolsData);
     this.queries.forEach((info, id) => {
       if (!info.invalidated || !info.listeners) return;
       info.listeners
@@ -1010,12 +1077,14 @@ export class QueryManager<TStore> {
     document,
     options,
     fetchMoreForQueryId,
+    instanceId,
   }: {
     requestId: number;
     queryId: string;
     document: DocumentNode;
     options: WatchQueryOptions;
     fetchMoreForQueryId?: string;
+    instanceId: number,
   }): Promise<ExecutionResult> {
     const { variables, context, errorPolicy = 'none' } = options;
     const request = {
@@ -1060,7 +1129,13 @@ export class QueryManager<TStore> {
 
             this.invalidate(true, queryId, fetchMoreForQueryId);
 
-            this.broadcastQueries();
+            this.broadcastQueries({
+                operationId: queryId,
+                instanceId,
+                action: fetchMoreForQueryId ? 'query-fetchMore' : 'query-fetch',
+                result,
+            });
+
           }
 
           if (result.errors && errorPolicy === 'none') {
@@ -1098,6 +1173,12 @@ export class QueryManager<TStore> {
             subscriptions: subscriptions.filter(x => x !== subscription),
           }));
 
+          this.updateDevTools({
+              operationId: queryId,
+              instanceId,
+              action: 'query-error',
+              result: undefined,
+          });
           reject(error);
         },
         complete: () => {
@@ -1105,7 +1186,12 @@ export class QueryManager<TStore> {
           this.setQuery(queryId, ({ subscriptions }) => ({
             subscriptions: subscriptions.filter(x => x !== subscription),
           }));
-
+          this.updateDevTools({
+              operationId: queryId,
+              instanceId,
+              action: 'query-complete',
+              result: undefined,
+          });
           resolve({
             data: resultFromStore,
             errors: errorsFromStore,
@@ -1140,11 +1226,20 @@ export class QueryManager<TStore> {
     );
   }
 
+  //
   private generateRequestId() {
     const requestId = this.idCounter;
     this.idCounter++;
     return requestId;
   }
+
+  // used for dev tools to keep track of instances
+  public generateInstanceId() {
+    const instanceId = this.devInstanceCounter;
+    this.devInstanceCounter++;
+    return instanceId;
+  }
+
 
   private getQuery(queryId: string) {
     return this.queries.get(queryId) || { ...defaultQueryInfo };

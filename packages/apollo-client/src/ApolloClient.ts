@@ -56,6 +56,13 @@ const supportedDirectives = new ApolloLink(
   },
 );
 
+export type Config = {
+    operationId?: string,
+    instanceId?: number,
+    action?: string,
+    result?: ExecutionResult,
+};
+
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
  * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
@@ -75,7 +82,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
   private devToolsHookCb: Function;
   private proxy: DataProxy | undefined;
   private ssrMode: boolean;
-
+  private devToolLog: any;
   /**
    * Constructs an instance of {@link ApolloClient}.
    *
@@ -122,6 +129,7 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
     this.queryDeduplication = queryDeduplication;
     this.ssrMode = ssrMode;
     this.defaultOptions = defaultOptions || {};
+    this.devToolLog = [];
 
     if (ssrForceFetchDelay) {
       setTimeout(
@@ -342,16 +350,26 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
       store: this.store,
       queryDeduplication: this.queryDeduplication,
       ssrMode: this.ssrMode,
-      onBroadcast: () => {
+      onBroadcast: ({ operationId, instanceId, action, result } : Config) => {
         if (this.devToolsHookCb) {
+          const logItem = {
+              operationId,
+              instanceId,
+              action,
+              result,
+              state: {
+                  queries: this.queryManager.queryStore.getStore(),
+                  mutations: this.queryManager.mutationStore.getStore(),
+              },
+              dataWithOptimisticResults: this.cache.extract(true),
+          };
+          this.devToolLog.push(logItem);
+          const newHistory = [... this.devToolLog];
           this.devToolsHookCb({
-            action: {},
-            state: {
-              queries: this.queryManager.queryStore.getStore(),
-              mutations: this.queryManager.mutationStore.getStore(),
-            },
-            dataWithOptimisticResults: this.cache.extract(true),
+            ...logItem,
+            history: newHistory,
           });
+          if (result) console.log('result', result);
         }
       },
     });

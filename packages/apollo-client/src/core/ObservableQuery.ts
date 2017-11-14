@@ -288,9 +288,13 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       );
     }
 
+    // need to set instanceId outside bc fetchRequest won't write write to store for fetchMore cases
+    // updateQuery updates the cache instead and needs to be passed instanceId + qId for sending info to dev tools
+    const qid = this.queryManager.generateQueryId();
+    const instanceId = this.queryManager.generateInstanceId();
     return Promise.resolve()
       .then(() => {
-        const qid = this.queryManager.generateQueryId();
+
         let combinedOptions: any;
 
         if (fetchMoreOptions.query) {
@@ -314,6 +318,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
           qid,
           combinedOptions as WatchQueryOptions,
           FetchType.normal,
+          instanceId,
           this.queryId,
         );
       })
@@ -324,6 +329,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
               fetchMoreResult: fetchMoreResult.data,
               variables,
             }),
+            qid,
+            instanceId,
         );
 
         return fetchMoreResult as ApolloQueryResult<T>;
@@ -467,6 +474,8 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
 
   public updateQuery(
     mapFn: (previousQueryResult: any, options: UpdateQueryOptions) => any,
+    queryId?: string,
+    refetchInstanceId?: number,
   ): void {
     const {
       previousResult,
@@ -484,7 +493,16 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
         variables,
         newResult,
       );
+
       this.queryManager.broadcastQueries();
+      if (queryId && refetchInstanceId) {
+        this.queryManager.updateDevTools({
+            operationId: queryId,
+            instanceId: refetchInstanceId,
+            action: 'query-fetchMore-updated',
+            result: undefined,
+        });
+      }
     }
   }
 

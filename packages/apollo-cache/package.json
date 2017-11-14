@@ -34,7 +34,7 @@
     "clean": "rimraf coverage/* && rimraf lib/*",
     "prepublishOnly": "npm run clean && npm run build",
     "build:browser":
-      "browserify ./lib/index.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
+      "browserify ./lib/bundle.umd.js --i apollo-utilities -o=./lib/bundle.js && npm run minify:browser",
     "minify:browser":
       "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build && npm run build:browser"
@@ -51,6 +51,7 @@
     "jest": "20.0.4",
     "rimraf": "2.6.2",
     "rollup": "0.50.0",
+    "rollup-plugin-node-resolve": "^3.0.0",
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
     "typescript": "2.5.2",

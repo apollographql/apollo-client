@@ -16,7 +16,7 @@
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "build:browser":
-      "browserify ./lib/index.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
     "minify:browser":
       "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"

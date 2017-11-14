@@ -1,9 +1,9 @@
 export const globals = {
   // Apollo
   'apollo-client': 'apollo.core',
-  'apollo-cache': 'apollo.cache.core',
-  'apollo-link': 'apollo.link.core',
-  'apollo-link-dedup': 'apollo.link.dedup',
+  'apollo-cache': 'apolloCache.core',
+  'apollo-link': 'apolloLink.core',
+  'apollo-link-dedup': 'apolloLink.dedup',
   'apollo-utilities': 'apollo.utilities',
   'graphql-anywhere': 'graphqlAnywhere',
 };

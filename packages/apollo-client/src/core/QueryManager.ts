@@ -123,6 +123,7 @@ export class QueryManager<TStore> {
     refetchQueries = [],
     update: updateWithProxyFn,
     errorPolicy = 'none',
+    context = {},
   }: MutationOptions): Promise<FetchResult<T>> {
     if (!mutation) {
       throw new Error(
@@ -144,6 +145,7 @@ export class QueryManager<TStore> {
       query: mutation,
       variables,
       operationName: getOperationName(mutation) || undefined,
+      context,
     } as GraphQLRequest;
 
     this.setQuery(mutationId, () => ({ document: mutation }));
@@ -885,13 +887,7 @@ export class QueryManager<TStore> {
             // It's slightly awkward that the data for subscriptions doesn't come from the store.
             observers.forEach(obs => {
               // XXX I'd prefer a different way to handle errors for subscriptions
-              if (obs.next && result.data) obs.next(result.data);
-              if (obs.error && result.errors)
-                obs.error(
-                  new ApolloError({
-                    graphQLErrors: result.errors,
-                  }),
-                );
+              if (obs.next) obs.next(result);
             });
           },
           error: (error: Error) => {

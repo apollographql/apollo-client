@@ -1,22 +1,53 @@
 import { DocumentNode } from 'graphql';
 import { FragmentMatcher } from 'graphql-anywhere';
 import { Transaction } from 'apollo-cache';
-import { StoreValue, IdValue } from 'apollo-utilities';
+import { IdValue, StoreValue } from 'apollo-utilities';
+import { NormalizedCacheObject, NormalizedCache } from './types';
 
 export type IdGetter = (value: Object) => string | null | undefined;
+
+/**
+ * This is an interface used to access, set and remove
+ * StoreObjects from the cache
+ */
+export interface NormalizedCache {
+  get(dataId: string): StoreObject;
+  set(dataId: string, value: StoreObject): void;
+  delete(dataId: string): void;
+  clear(): void;
+
+  // non-Map elements:
+  /**
+   * returns an Object with key-value pairs matching the contents of the store
+   */
+  toObject(): NormalizedCacheObject;
+  /**
+   * replace the state of the store
+   */
+  replace(newData: NormalizedCacheObject): void;
+}
 
 /**
  * This is a normalized representation of the Apollo query result cache. It consists of
  * a flattened representation of query result trees.
  */
-export interface NormalizedCache {
+export interface NormalizedCacheObject {
   [dataId: string]: StoreObject;
 }
 
+export interface StoreObject {
+  __typename?: string;
+  [storeFieldKey: string]: StoreValue;
+}
+
+export type NormalizedCacheFactory = (
+  seed?: NormalizedCacheObject,
+) => NormalizedCache;
+
 export type OptimisticStoreItem = {
   id: string;
-  data: NormalizedCache;
-  transaction: Transaction<NormalizedCache>;
+  data: NormalizedCacheObject;
+  transaction: Transaction<NormalizedCacheObject>;
 };
 
 export type ReadQueryOptions = {
@@ -33,16 +64,12 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean;
 };
 
-export interface StoreObject {
-  __typename?: string;
-  [storeFieldKey: string]: StoreValue;
-}
-
 export type ApolloReducerConfig = {
   dataIdFromObject?: IdGetter;
   fragmentMatcher?: FragmentMatcherInterface;
   addTypename?: boolean;
   cacheResolvers?: CacheResolverMap;
+  storeFactory?: NormalizedCacheFactory;
 };
 
 export type ReadStoreContext = {

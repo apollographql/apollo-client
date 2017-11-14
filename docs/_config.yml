@@ -43,7 +43,7 @@ sidebar_categories:
     - recipes/authentication
     - recipes/prefetching
     - recipes/server-side-rendering
-    # - recipes/fragment-matching
+    - recipes/fragment-matching
     - recipes/babel
     - recipes/webpack
     - recipes/meteor

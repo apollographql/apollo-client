@@ -31,7 +31,7 @@ export abstract class ApolloCache<TCache, TSerializedCache = TCache>
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
-  public abstract extract(optimistic: boolean): TSerializedCache;
+  public abstract extract(optimistic?: boolean): TSerializedCache;
 
   // optimistic API
   public abstract removeOptimistic(id: string): void;

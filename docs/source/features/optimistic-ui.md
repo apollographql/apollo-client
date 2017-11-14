@@ -57,7 +57,8 @@ Here is a concrete example from GitHunt, which inserts a comment into an existin
 
 ```js
 import React from 'react';
-import { gql, graphql } from 'react-apollo';
+import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
 import update from 'immutability-helper';
 
 import CommentAppQuery from '../queries/CommentAppQuery';
@@ -90,13 +91,13 @@ const CommentsPageWithMutations = graphql(SUBMIT_COMMENT_MUTATION, {
               content: commentContent,
             },
           },
-          update: (store, { data: { submitComment } }) => {
+          update: (proxy, { data: { submitComment } }) => {
             // Read the data from our cache for this query.
-            const data = store.readQuery({ query: CommentAppQuery });
+            const data = proxy.readQuery({ query: CommentAppQuery });
             // Add our comment from the mutation to the end.
             data.comments.push(submitComment);
             // Write our data back to the cache.
-            store.writeQuery({ query: CommentAppQuery, data });
+            proxy.writeQuery({ query: CommentAppQuery, data });
           },
         });
       },

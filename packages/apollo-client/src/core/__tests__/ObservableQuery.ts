@@ -1334,7 +1334,7 @@ describe('ObservableQuery', () => {
       });
     });
 
-    it('returns errors from the store immediately', () => {
+    it('returns errors from the store immediately', done => {
       const queryManager = mockQueryManager({
         request: { query, variables },
         result: { errors: [error] },
@@ -1345,14 +1345,18 @@ describe('ObservableQuery', () => {
         variables,
       });
 
-      return observable.result().catch((theError: any) => {
-        expect(theError.graphQLErrors).toEqual([error]);
+      observable.subscribe({
+        error: theError => {
+          expect(theError.graphQLErrors).toEqual([error]);
 
-        const currentResult = observable.currentResult();
-        expect(currentResult.loading).toBe(false);
-        expect(currentResult.error!.graphQLErrors).toEqual([error]);
+          const currentResult = observable.currentResult();
+          expect(currentResult.loading).toBe(false);
+          expect(currentResult.error!.graphQLErrors).toEqual([error]);
+          done();
+        },
       });
     });
+
     it('returns referentially equal errors', () => {
       const queryManager = mockQueryManager({
         request: { query, variables },

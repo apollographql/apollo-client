@@ -1,5 +1,14 @@
 # Change log
 
+### vNEXT
+- Revert returning `data` directly in subscriptions, now returns `data` and `errors`
+- Include passed context in the context for mutations
+
+### 2.0.2
+- Fixed mutation result error checking for empty array
+- Fix accessing undefined window when forcing connectToDevTools to true
+- Fix GraphQL errors not being attached to currentResult if no policy passed
+
 ### 2.0.1
 - remove errant console
 

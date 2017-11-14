@@ -9,7 +9,7 @@ Now that you have learned how to read and update your data, its helpful to know 
 
 Apollo Client has a pluggable network interface layer, which can let you configure how queries are sent over HTTP, or replace the whole network part with something completely custom, like a websocket transport, mocked server data, or anything else you can imagine.
 
-<h3 title="Using a link">Using an link</h3>
+<h3 title="Using a link">Using a link</h3>
 
 To create a link to use with Apollo Client, you can install and import one from npm or create your own. We recommend using `apollo-link-http` for most setups!.
 
@@ -64,7 +64,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
     headers: {
       authorization: localStorage.getItem('token') || null,
     } 
-  }));
+  });
 
   return forward(operation);
 })
@@ -111,7 +111,11 @@ const otherMiddleware = new ApolloLink((operation, forward) => {
 
 
 const client = new ApolloClient({
-  link: from(authMiddleware, otherMiddleware, httpLink),
+  link: from([
+    authMiddleware,
+    otherMiddleware,
+    httpLink
+  ]),
 });
 
 

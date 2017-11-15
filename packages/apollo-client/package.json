@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.0.2",
   "description": "A simple yet functional GraphQL client.",
-  "main": "./lib/apollo.umd.js",
+  "main": "./lib/bundle.umd.js",
   "module": "./lib/index.js",
   "jsnext:main": "/lib/index.js",
   "typings": "./lib/index.d.ts",
@@ -21,11 +21,11 @@
     "build": "tsc",
     "build:benchmark": "tsc -p tsconfig.benchmark.json",
     "build:browser":
-      "browserify ./lib/apollo.umd.js -o=./lib/bundle.js --i apollo-utilities --i apollo-cache --i apollo-link && npm run minify:browser",
+      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities --i apollo-cache --i apollo-link --i apollo-link-dedup && npm run minify:browser",
     "minify:browser":
       "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "watch": "tsc -w",
-    "bundle": "rollup -c",
+    "bundle": "rollup -c rollup.config.js",
     "postbuild": "npm run bundle",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "testonly": "jest",

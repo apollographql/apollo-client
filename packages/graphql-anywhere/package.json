@@ -2,17 +2,21 @@
   "name": "graphql-anywhere",
   "version": "4.0.0",
   "description": "Run GraphQL queries with no schema and just one resolver",
-  "main": "./lib/index.js",
+  "main": "./lib/bundle.umd.js",
+  "module": "./lib/index.js",
+  "jsnext:main": "/lib/index.js",
   "typings": "./lib/index.d.ts",
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest",
     "build": "tsc",
+    "postbuild": "npm run bundle",
+    "bundle": "rollup -c rollup.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "build:browser":
-      "browserify ./lib/index.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
     "minify:browser":
       "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
@@ -49,6 +53,7 @@
     "jest": "20.0.4",
     "react": "15.6.2",
     "react-dom": "15.6.2",
+    "rollup": "0.50.0",
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
     "typescript": "2.5.2",

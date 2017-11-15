@@ -373,7 +373,9 @@ times(50, index => {
       })
       .then(() => {
         myBenchmark(
-          `read result with ${reservationCount} items associated with the result`,
+          `read result with ${
+            reservationCount
+          } items associated with the result`,
           done => {
             client
               .query({

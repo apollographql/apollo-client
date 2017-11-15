@@ -174,11 +174,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       };
     }
 
-    const { data, partial } = this.queryManager.getCurrentQueryResult(
-      this,
-      false,
-      // isEqual(this.variables, this.lastVariables)
-    );
+    const { data, partial } = this.queryManager.getCurrentQueryResult(this);
 
     const queryLoading =
       !queryStoreValue ||
@@ -571,6 +567,7 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       next: (result: ApolloQueryResult<T>) => {
         this.lastResult = result;
         this.observers.forEach(obs => obs.next && obs.next(result));
+        this.lastError = null;
       },
       error: (error: ApolloError) => {
         this.lastError = error;

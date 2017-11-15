@@ -187,19 +187,19 @@ describe('QueryScheduler', () => {
       }
     `;
     const data = [
-      {someAuthorAlias: {firstName: 'John', lastName: 'Smith'}},
-      {someAuthorAlias: {firstName: 'John', lastName: 'Doe'}},
+      { someAuthorAlias: { firstName: 'John', lastName: 'Smith' } },
+      { someAuthorAlias: { firstName: 'John', lastName: 'Doe' } },
       // When the test passes, this one doesn't get delivered.
-      {someAuthorAlias: {firstName: 'Jane', lastName: 'Doe'}},
+      { someAuthorAlias: { firstName: 'Jane', lastName: 'Doe' } },
     ];
     const queryOptions = {
       query: myQuery,
       pollInterval: 20,
     };
     const link = mockSingleLink(
-      {request: queryOptions, result: { data: data[0] } },
-      {request: queryOptions, result: { data: data[1] } },
-      {request: queryOptions, result: { data: data[2] } },
+      { request: queryOptions, result: { data: data[0] } },
+      { request: queryOptions, result: { data: data[1] } },
+      { request: queryOptions, result: { data: data[2] } },
     );
     const queryManager = new QueryManager({
       store: new DataStore(new InMemoryCache({ addTypename: false })),

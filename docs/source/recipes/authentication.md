@@ -8,14 +8,12 @@ Apollo Client uses the ultra flexible [Apollo Link](/docs/link) that includes se
 
 ## Cookie
 
-If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `{ credentials: 'same-origin' }` as shown below, if your backend server is the same domain or else `{ credentials: 'include' }` if your backend is a different domain. 
+If your app is browser based and you are using cookies for login and session management with a backend, it's very easy to tell your network interface to send the cookie along with every request. You just need to pass the credentials option. e.g.  `credentials: 'same-origin'` as shown below, if your backend server is the same domain or else `credentials: 'include'` if your backend is a different domain. 
 
 ```js
 const link = createHttpLink({
   uri: '/graphql',
-  opts: {
-    credentials: 'same-origin',
-  },
+  credentials: 'same-origin'
 });
 
 const client = new ApolloClient({
@@ -81,7 +79,7 @@ Another option is to reload the page, which will have a similar effect.
 ```js
 import { withApollo, graphql } from 'react-apollo';
 import { ApolloClient } from 'apollo-client';
-import gql from 'graphql-tools';
+import gql from 'graphql-tag';
 
 
 class Profile extends React.Component {

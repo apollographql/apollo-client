@@ -6,6 +6,7 @@ import {
   OperationDefinitionNode,
   FragmentDefinitionNode,
 } from 'graphql';
+import { print } from 'graphql/language/printer';
 import { FragmentMatcher } from 'graphql-anywhere';
 
 import {
@@ -43,9 +44,7 @@ export class WriteError extends Error {
 export function enhanceErrorWithDocument(error: Error, document: DocumentNode) {
   // XXX A bit hacky maybe ...
   const enhancedError = new WriteError(
-    `Error writing result to store for query ${document.loc &&
-      document.loc.source &&
-      document.loc.source.body}`,
+    `Error writing result to store for query:\n ${print(document)}`,
   );
   enhancedError.message += '\n' + error.message;
   enhancedError.stack = error.stack;
@@ -428,7 +427,9 @@ function writeFieldToStore({
       ) {
         throw new Error(
           `Store error: the application attempted to write an object with no provided id` +
-            ` but the store already contains an id of ${escapedId.id} for this object.`,
+            ` but the store already contains an id of ${escapedId.id} for this object. The selectionSet` +
+            ` that was trying to be written is:\n` +
+            print(field),
         );
       }
 

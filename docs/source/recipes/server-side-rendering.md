@@ -73,6 +73,7 @@ import { ApolloClient } from 'apollo-client';
 import { createHttpLink } from 'apollo-link-http';
 import Express from 'express';
 import { StaticRouter } from 'react-router';
+import { InMemoryCache } from "apollo-cache-inmemory";
 
 import Layout from './routes/Layout';
 
@@ -92,6 +93,7 @@ app.use((req, res) => {
         cookie: req.header('Cookie'),
       },
     }),
+    cache: new InMemoryCache(),
   });
 
   const context = {};

@@ -12,6 +12,7 @@
 - Remove uneeded code causing equality failures [PR#2574](https://github.com/apollographql/apollo-client/pull/2574)
 - Potentially fix missing data when rerendering from cache bug in RA [PR#2574](https://github.com/apollographql/apollo-client/pull/2574)
 - Preserve referential equality when calling currentResult if possible
+- Include `null` in types of cache reading results [PR#2572](https://github.com/apollographql/apollo-client/pull/2572)
 
 ### 2.0.2
 - Fixed mutation result error checking for empty array

@@ -1,6 +1,11 @@
 # Change log
 
 ## vNEXT
+
+### 4.0.1
+- Improved rollup builds
+
+### 4.0.0
 - Replace core utils with apollo-utilities
 - Move to using lerna for the repo [PR #1984](https://github.com/apollographql/apollo-client/pull/1984)
 

@@ -117,8 +117,9 @@ export function valueToObjectRepresentation(
   } else if (isEnumValue(value)) {
     argObj[name.value] = (value as EnumValueNode).value;
   } else {
-    throw new Error(`The inline argument "${name.value}" of kind "${(value as any)
-      .kind}" is not supported.
+    throw new Error(`The inline argument "${name.value}" of kind "${
+      (value as any).kind
+    }" is not supported.
                     Use variables instead of inline arguments to overcome this limitation.`);
   }
 }
@@ -178,7 +179,7 @@ export function getStoreKeyName(
       (directives['connection']['filter'] as string[]).length > 0
     ) {
       const filterKeys = directives['connection']['filter']
-        ? directives['connection']['filter'] as string[]
+        ? (directives['connection']['filter'] as string[])
         : [];
       filterKeys.sort();
 

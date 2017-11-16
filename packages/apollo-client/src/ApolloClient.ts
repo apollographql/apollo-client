@@ -305,7 +305,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
    */
   public writeQuery(options: DataProxy.WriteQueryOptions): void {
-    return this.initProxy().writeQuery(options);
+    const result = this.initProxy().writeQuery(options);
+    this.queryManager.broadcastQueries();
+    return result;
   }
 
   /**
@@ -320,7 +322,9 @@ export default class ApolloClient<TCacheShape> implements DataProxy {
    * `fragmentName`.
    */
   public writeFragment(options: DataProxy.WriteFragmentOptions): void {
-    return this.initProxy().writeFragment(options);
+    const result = this.initProxy().writeFragment(options);
+    this.queryManager.broadcastQueries();
+    return result;
   }
 
   public __actionHookForDevTools(cb: () => any) {

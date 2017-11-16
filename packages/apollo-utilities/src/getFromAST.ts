@@ -38,7 +38,9 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`)
     .map(definition => {
       if (definition.kind !== 'OperationDefinition') {
         throw new Error(
-          `Schema type definitions not allowed in queries. Found: "${definition.kind}"`,
+          `Schema type definitions not allowed in queries. Found: "${
+            definition.kind
+          }"`,
         );
       }
       return definition;

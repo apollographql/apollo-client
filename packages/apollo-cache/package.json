@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Core abstract of Caching layer for Apollo Client",
   "author": "James Baxley <james@meteor.com>",
   "contributors": [
@@ -40,7 +40,7 @@
     "filesize": "npm run build && npm run build:browser"
   },
   "dependencies": {
-    "apollo-utilities": "^1.0.0"
+    "apollo-utilities": "^1.0.2"
   },
   "devDependencies": {
     "@types/graphql": "0.9.4",

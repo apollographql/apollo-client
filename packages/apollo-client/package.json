@@ -61,7 +61,7 @@
     "graphql": "^0.11.0"
   },
   "devDependencies": {
-    "@types/benchmark": "1.0.30",
+    "@types/benchmark": "1.0.31",
     "@types/graphql": "0.11.6",
     "@types/isomorphic-fetch": "0.0.34",
     "@types/jest": "21.1.6",

@@ -942,6 +942,7 @@ export class QueryManager<TStore> {
 
   public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
     const { variables, query } = observableQuery.options;
+    const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
     // XXX test this
     if (newData) {
@@ -952,6 +953,7 @@ export class QueryManager<TStore> {
         const data = this.dataStore.getCache().read({
           query,
           variables,
+          previousResult: lastResult ? lastResult.data : undefined,
           optimistic: true,
         });
 

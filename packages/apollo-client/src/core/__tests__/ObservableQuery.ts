@@ -322,6 +322,9 @@ describe('ObservableQuery', () => {
           observable.setOptions({ variables });
           const current = observable.currentResult();
           expect(current.data).toEqual(data);
+          const secondCurrent = observable.currentResult();
+          // ensure ref equality
+          expect(current.data).toBe(secondCurrent.data);
           done();
         }
       });

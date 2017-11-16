@@ -2,6 +2,8 @@
 # Change log
 
 ### vNEXT
+
+### 2.0.3
 - Revert returning `data` directly in subscriptions, now returns `data` and `errors`
 - Include passed context in the context for mutations
 - Remove locked dep on apollo-link and apollo-link-dedup

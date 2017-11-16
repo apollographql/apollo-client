@@ -1,7 +1,10 @@
 # Change log
 
 ### vNEXT
+
+### 1.1.1
 - Change some access modifiers "private" to "protected" to allow code reuse by InMemoryCache subclasses. 
+- improved rollup builds
 
 ### 1.1.0
 - improve errors for id mismatch when writing to the store

@@ -419,27 +419,30 @@ describe('ObservableQuery', () => {
       observable = queryManager.watchQuery({ query: testQuery });
 
       subscribeAndCount(done, observable, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.data).toEqual(data);
-          expect(timesFired).toBe(1);
+        try {
+          if (handleCount === 1) {
+            expect(result.data).toEqual(data);
+            expect(timesFired).toBe(1);
 
-          setTimeout(() => {
-            observable.setOptions({ fetchPolicy: 'cache-only' });
+            setTimeout(() => {
+              observable.setOptions({ fetchPolicy: 'cache-only' });
+              queryManager.resetStore();
+            }, 0);
+          } else if (handleCount === 2) {
+            expect(result.data).toEqual({});
+            expect(timesFired).toBe(1);
 
-            queryManager.resetStore();
-          }, 0);
-        } else if (handleCount === 2) {
-          expect(result.data).toEqual({});
-          expect(timesFired).toBe(1);
+            setTimeout(() => {
+              observable.setOptions({ fetchPolicy: 'cache-first' });
+            }, 0);
+          } else if (handleCount === 3) {
+            expect(result.data).toEqual(data);
+            expect(timesFired).toBe(2);
 
-          setTimeout(() => {
-            observable.setOptions({ fetchPolicy: 'cache-first' });
-          }, 0);
-        } else if (handleCount === 3) {
-          expect(result.data).toEqual(data);
-          expect(timesFired).toBe(2);
-
-          done();
+            done();
+          }
+        } catch (e) {
+          done.fail(e);
         }
       });
     });

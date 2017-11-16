@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { ApolloLink } from 'apollo-link';
+import { ApolloLink, Observable } from 'apollo-link';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
 import { withWarning } from '../util/wrap';
@@ -1219,6 +1219,87 @@ describe('ApolloClient', () => {
           `,
         });
       }, /Missing field e/);
+    });
+
+    it('will correctly call the next observable after a change', done => {
+      const query = gql`
+        query nestedData {
+          people {
+            id
+            friends {
+              id
+              type
+            }
+          }
+        }
+      `;
+      const data = {
+        people: {
+          id: 1,
+          __typename: 'Person',
+          friends: [
+            { id: 1, type: 'best', __typename: 'Friend' },
+            { id: 2, type: 'bad', __typename: 'Friend' },
+          ],
+        },
+      };
+      const link = new ApolloLink(() => {
+        return Observable.of({ data });
+      });
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          dataIdFromObject: result => {
+            if (result.id && result.__typename) {
+              return result.__typename + result.id;
+            }
+            return null;
+          },
+          addTypename: true,
+        }),
+      });
+
+      let count = 0;
+      const observable = client.watchQuery({ query });
+      observable.subscribe({
+        next: result => {
+          count++;
+          if (count === 1) {
+            expect(result.data).toEqual(data);
+            expect(observable.currentResult().data).toEqual(data);
+            const bestFriends = result.data.people.friends.filter(
+              x => x.type === 'best',
+            );
+            // this should re call next
+            client.writeFragment({
+              id: `Person${result.data.people.id}`,
+              fragment: gql`
+                fragment bestFriends on Person {
+                  friends {
+                    id
+                  }
+                }
+              `,
+              data: {
+                friends: bestFriends,
+                __typename: 'Person',
+              },
+            });
+
+            setTimeout(() => {
+              if (count === 1)
+                done.fail(new Error('fragment did not recall observable'));
+            }, 50);
+          }
+
+          if (count === 2) {
+            expect(result.data.people.friends).toEqual([
+              data.people.friends[0],
+            ]);
+            done();
+          }
+        },
+      });
     });
   });
 

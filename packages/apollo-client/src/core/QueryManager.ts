@@ -37,7 +37,7 @@ import { QueryListener, ApolloQueryResult, FetchType } from './types';
 export interface QueryInfo {
   listeners: QueryListener[];
   invalidated: boolean;
-  newData: ApolloQueryResult<any> | null;
+  newData: Cache.DiffResult<any> | null;
   document: DocumentNode | null;
   lastRequestId: number | null;
   // A map going from queryId to an observer for a query issued by watchQuery. We use
@@ -445,14 +445,24 @@ export class QueryManager<TStore> {
 
       const lastError = observableQuery ? observableQuery.getLastError() : null;
 
-      const shouldNotifyIfLoading =
-        queryStoreValue.previousVariables ||
+      let shouldNotifyIfLoading =
+        (!newData && queryStoreValue.previousVariables != null) ||
         fetchPolicy === 'cache-only' ||
         fetchPolicy === 'cache-and-network';
 
-      const networkStatusChanged =
+      // if this caused by a cache broadcast but the query is still in flight
+      // don't notify the observer
+      // if (
+      //   isCacheBroadcast &&
+      //   isNetworkRequestInFlight(queryStoreValue.networkStatus)
+      // ) {
+      //   shouldNotifyIfLoading = false;
+      // }
+
+      const networkStatusChanged = Boolean(
         lastResult &&
-        queryStoreValue.networkStatus !== lastResult.networkStatus;
+          queryStoreValue.networkStatus !== lastResult.networkStatus,
+      );
 
       const errorStatusChanged =
         errorPolicy &&
@@ -711,23 +721,23 @@ export class QueryManager<TStore> {
   ) {
     const { cancel } = this.getQuery(queryId);
     if (cancel) cancel();
+    const previousResult = () => {
+      let previousResult = null;
+      const { observableQuery } = this.getQuery(queryId);
+      if (observableQuery) {
+        const lastResult = observableQuery.getLastResult();
+        if (lastResult) {
+          previousResult = lastResult.data;
+        }
+      }
 
+      return previousResult;
+    };
     return this.dataStore.getCache().watch({
       query: document as DocumentNode,
       variables: options.variables,
       optimistic: true,
-      previousResult: () => {
-        let previousResult = null;
-        const { observableQuery } = this.getQuery(queryId);
-        if (observableQuery) {
-          const lastResult = observableQuery.getLastResult();
-          if (lastResult) {
-            previousResult = lastResult.data;
-          }
-        }
-
-        return previousResult;
-      },
+      previousResult,
       callback: (newData: ApolloQueryResult<any>) => {
         this.setQuery(queryId, () => ({ invalidated: true, newData }));
       },
@@ -780,11 +790,11 @@ export class QueryManager<TStore> {
     const queryName = definition.name ? definition.name.value : null;
     this.setQuery(queryId, () => ({ observableQuery: null }));
     if (queryName) {
-      this.queryIdsByName[queryName] = this.queryIdsByName[
-        queryName
-      ].filter(val => {
-        return !(observableQuery.queryId === val);
-      });
+      this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter(
+        val => {
+          return !(observableQuery.queryId === val);
+        },
+      );
     }
   }
 
@@ -825,6 +835,7 @@ export class QueryManager<TStore> {
         observableQueryPromises.push(observableQuery.refetch());
       }
 
+      this.setQuery(queryId, () => ({ newData: null }));
       this.invalidate(true, queryId);
     });
 
@@ -929,31 +940,24 @@ export class QueryManager<TStore> {
     this.queries.delete(queryId);
   }
 
-  public getCurrentQueryResult<T>(
-    observableQuery: ObservableQuery<T>,
-    sameVariables: boolean = true,
-  ) {
+  public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
     const { variables, query } = observableQuery.options;
-    const lastResult = observableQuery.getLastResult();
-    if (lastResult && lastResult.data && sameVariables) {
-      return maybeDeepFreeze({ data: lastResult.data, partial: false });
+    const { newData } = this.getQuery(observableQuery.queryId);
+    // XXX test this
+    if (newData) {
+      return maybeDeepFreeze({ data: newData.result, partial: false });
     } else {
-      const { newData } = this.getQuery(observableQuery.queryId);
-      if (newData) {
-        return maybeDeepFreeze({ data: newData.data, partial: false });
-      } else {
-        try {
-          // the query is brand new, so we read from the store to see if anything is there
-          const diffResult = this.dataStore.getCache().read({
-            query,
-            variables,
-            optimistic: true,
-          });
+      try {
+        // the query is brand new, so we read from the store to see if anything is there
+        const data = this.dataStore.getCache().read({
+          query,
+          variables,
+          optimistic: true,
+        });
 
-          return maybeDeepFreeze({ data: diffResult, partial: false });
-        } catch (e) {
-          return maybeDeepFreeze({ data: {}, partial: true });
-        }
+        return maybeDeepFreeze({ data, partial: false });
+      } catch (e) {
+        return maybeDeepFreeze({ data: {}, partial: true });
       }
     }
   }

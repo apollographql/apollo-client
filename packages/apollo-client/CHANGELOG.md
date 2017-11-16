@@ -6,6 +6,9 @@
 - Include passed context in the context for mutations
 - Remove locked dep on apollo-link and apollo-link-dedup
 - Fix bug where setting options didn't adjust pollInterval correctly [PR#2573](https://github.com/apollographql/apollo-client/pull/2573)
+- Fix issue where write(Fragment|Query) didn't rerender store [PR#2574](https://github.com/apollographql/apollo-client/pull/2574)
+- Remove uneeded code causing equality failures [PR#2574](https://github.com/apollographql/apollo-client/pull/2574)
+- Potentially fix missing data when rerendering from cache bug in RA [PR#2574](https://github.com/apollographql/apollo-client/pull/2574)
 
 ### 2.0.2
 - Fixed mutation result error checking for empty array

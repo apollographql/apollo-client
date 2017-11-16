@@ -567,7 +567,6 @@ export class ObservableQuery<T> extends Observable<ApolloQueryResult<T>> {
       next: (result: ApolloQueryResult<T>) => {
         this.lastResult = result;
         this.observers.forEach(obs => obs.next && obs.next(result));
-        this.lastError = null;
       },
       error: (error: ApolloError) => {
         this.lastError = error;

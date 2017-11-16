@@ -37,7 +37,7 @@ import { QueryListener, ApolloQueryResult, FetchType } from './types';
 export interface QueryInfo {
   listeners: QueryListener[];
   invalidated: boolean;
-  newData: ApolloQueryResult<any> | null;
+  newData: Cache.DiffResult<any> | null;
   document: DocumentNode | null;
   lastRequestId: number | null;
   // A map going from queryId to an observer for a query issued by watchQuery. We use
@@ -942,7 +942,6 @@ export class QueryManager<TStore> {
 
   public getCurrentQueryResult<T>(observableQuery: ObservableQuery<T>) {
     const { variables, query } = observableQuery.options;
-    const lastResult = observableQuery.getLastResult();
     const { newData } = this.getQuery(observableQuery.queryId);
     // XXX test this
     if (newData) {

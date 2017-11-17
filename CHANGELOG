@@ -1,0 +1,2 @@
+inMemoryCache.ts
+- changed return type of read function from `T | null` to `T`

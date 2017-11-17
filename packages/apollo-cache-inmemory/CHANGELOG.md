@@ -1,9 +1,10 @@
 # Change log
 
 ### vNEXT
+- Changed return type of read function from `T | null` to `T`
 
 ### 1.1.1
-- Change some access modifiers "private" to "protected" to allow code reuse by InMemoryCache subclasses. 
+- Change some access modifiers "private" to "protected" to allow code reuse by InMemoryCache subclasses.
 - improved rollup builds
 
 ### 1.1.0

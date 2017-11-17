@@ -131,7 +131,7 @@ function executeSelectionSet(
 
   const result = {};
 
-  deferrableOrImmediate(
+  return deferrableOrImmediate(
     arrayOrDeferrable(
       selectionSet.selections.map(selection => {
         if (!shouldInclude(selection, variables)) {

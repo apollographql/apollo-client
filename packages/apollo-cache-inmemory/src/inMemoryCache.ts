@@ -73,7 +73,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.data.toObject();
   }
 
-  public read<T>(query: Cache.ReadOptions): T | null {
+  public read<T>(query: Cache.ReadOptions): T {
     if (query.rootId && this.data.get(query.rootId) === undefined) {
       return null;
     }

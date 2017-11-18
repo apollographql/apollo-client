@@ -1,20 +1,13 @@
 {
+  "extends": "../../tsconfig.base",
   "compilerOptions": {
-    "target": "es5",
-    "module": "es2015",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "declaration": true,
     "rootDir": "src",
     "outDir": "lib",
     "noLib": true,
     "allowSyntheticDefaultImports": true,
-    "removeComments": true,
-    "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
-    "noUnusedLocals": true,
     "noUnusedParameters": true
   },
   "files": [

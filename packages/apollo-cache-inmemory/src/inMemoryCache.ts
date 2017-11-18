@@ -40,8 +40,8 @@ export function defaultDataIdFromObject(result: any): string | null {
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private data: NormalizedCache;
-  private config: ApolloReducerConfig;
-  private optimistic: OptimisticStoreItem[] = [];
+  protected config: ApolloReducerConfig;
+  protected optimistic: OptimisticStoreItem[] = [];
   private watches: Cache.WatchOptions[] = [];
   private addTypename: boolean;
 
@@ -241,7 +241,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     });
   }
 
-  private broadcastWatches() {
+  protected broadcastWatches() {
     // Skip this when silenced (like inside a transaction)
     if (this.silenceBroadcast) return;
 

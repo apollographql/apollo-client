@@ -1,18 +1,22 @@
 {
   "name": "graphql-anywhere",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Run GraphQL queries with no schema and just one resolver",
-  "main": "./lib/index.js",
+  "main": "./lib/bundle.umd.js",
+  "module": "./lib/index.js",
+  "jsnext:main": "/lib/index.js",
   "typings": "./lib/index.d.ts",
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest",
     "build": "tsc",
+    "postbuild": "npm run bundle",
+    "bundle": "rollup -c rollup.config.js",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build",
     "lint": "tslint --type-check -p tsconfig.json src/*.ts",
     "build:browser":
-      "browserify ./lib/index.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
+      "browserify ./lib/bundle.umd.js -o=./lib/bundle.js --i apollo-utilities && npm run minify:browser",
     "minify:browser":
       "uglifyjs -c -m -o ./lib/bundle.min.js -- ./lib/bundle.js",
     "filesize": "npm run build:browser"
@@ -33,22 +37,23 @@
   "author": "Sashko Stubailo <sashko@stubailo.com>",
   "license": "MIT",
   "dependencies": {
-    "apollo-utilities": "^1.0.0"
+    "apollo-utilities": "^1.0.2"
   },
   "devDependencies": {
-    "@types/graphql": "0.9.4",
+    "@types/graphql": "0.11.6",
     "@types/isomorphic-fetch": "0.0.34",
-    "@types/jest": "21.1.2",
-    "@types/lodash": "4.14.82",
-    "@types/node": "8.0.48",
-    "@types/react": "16.0.20",
-    "@types/react-dom": "16.0.2",
+    "@types/jest": "21.1.6",
+    "@types/lodash": "4.14.85",
+    "@types/node": "8.0.52",
+    "@types/react": "16.0.24",
+    "@types/react-dom": "16.0.3",
     "browserify": "14.5.0",
     "graphql": "0.11.7",
     "graphql-tag": "2.4.2",
     "jest": "20.0.4",
     "react": "15.6.2",
     "react-dom": "15.6.2",
+    "rollup": "0.51.7",
     "ts-jest": "20.0.14",
     "tslint": "5.8.0",
     "typescript": "2.5.2",

@@ -37,9 +37,9 @@ export function getFragmentQueryDocument(
     // define our own operation definition later on.
     if (definition.kind === 'OperationDefinition') {
       throw new Error(
-        `Found a ${definition.operation} operation${definition.name
-          ? ` named '${definition.name.value}'`
-          : ''}. ` +
+        `Found a ${definition.operation} operation${
+          definition.name ? ` named '${definition.name.value}'` : ''
+        }. ` +
           'No operations are allowed when using a fragment as a query. Only fragments are allowed.',
       );
     }
@@ -55,7 +55,9 @@ export function getFragmentQueryDocument(
   if (typeof actualFragmentName === 'undefined') {
     if (fragments.length !== 1) {
       throw new Error(
-        `Found ${fragments.length} fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
+        `Found ${
+          fragments.length
+        } fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
       );
     }
     actualFragmentName = fragments[0].name.value;

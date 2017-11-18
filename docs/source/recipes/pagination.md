@@ -208,14 +208,15 @@ const CommentsWithData = graphql(CommentsQuery, {
             const newEdges = fetchMoreResult.comments.edges;
             const pageInfo = fetchMoreResult.comments.pageInfo;
 
-            return {
+            return newEdges.length ? {
               // Put the new comments at the end of the list and update `pageInfo`
               // so we have the new `endCursor` and `hasNextPage` values
               comments: {
+                __typename: previousResult.comments.__typename,
                 edges: [...previousResult.comments.edges, ...newEdges],
                 pageInfo,
               },
-            };
+            } : previousResult;
           },
         });
       },

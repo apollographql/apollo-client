@@ -1553,7 +1553,7 @@ describe('client', () => {
           expect(result.loading).toBe(true);
         } else if (handleCount === 2) {
           expect(result.data).toEqual(networkFetch);
-          expect(!result.loading).toBe(true);
+          expect(result.loading).toBe(false);
           done();
         }
       });
